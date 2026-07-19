@@ -1,0 +1,14 @@
+app-store-connect-mcp
+
+Tool definitions in src/generated/ are produced by scripts/generate.ts from
+Apple Inc.'s published App Store Connect OpenAPI specification (spec/openapi.json).
+That specification is Apple's factual description of its own public API, and is
+redistributed here so the generator is reproducible without network access.
+
+App Store Connect, TestFlight, StoreKit, Xcode and Game Center are trademarks
+of Apple Inc. This project is not affiliated with, endorsed by, or sponsored
+by Apple Inc.
+
+Third-party runtime dependencies and their licenses:
+  @modelcontextprotocol/sdk      MIT
+  @apple/app-store-server-library  MIT (Apple Inc.)

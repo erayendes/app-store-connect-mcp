@@ -1,0 +1,25 @@
+Spec version:   4.4.1
+Paths:          966
+Tools:          1263
+  read-only:    797
+  mutating:     466
+  deprecated:   159
+
+By domain:
+  game_center          337
+  apps                 174
+  subscriptions        133
+  versions             130
+  iap                  89
+  testflight           86
+  marketing            70
+  xcode_cloud          59
+  builds               57
+  provisioning         49
+  users                17
+  analytics            15
+  background_assets    15
+  webhooks             12
+  pricing              11
+  reviews              6
+  sandbox              3

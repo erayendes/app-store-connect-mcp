@@ -1,0 +1,68 @@
+{
+  "name": "app-store-connect-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the Apple App Store Connect API and App Store Server API. Tools generated from Apple's official OpenAPI specification.",
+  "author": {
+    "name": "Eray Endeş",
+    "email": "erayendes@gmail.com",
+    "url": "https://github.com/erayendes"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erayendes/app-store-connect-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/erayendes/app-store-connect-mcp/issues"
+  },
+  "homepage": "https://github.com/erayendes/app-store-connect-mcp#readme",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "app-store-connect-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "spec/openapi.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "build": "npm run generate && tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "spec:update": "tsx scripts/update-spec.ts",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "app-store-connect",
+    "appstore",
+    "apple",
+    "ios",
+    "testflight",
+    "storekit",
+    "subscriptions",
+    "in-app-purchase",
+    "xcode-cloud",
+    "claude"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@apple/app-store-server-library": "^1.6.0",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

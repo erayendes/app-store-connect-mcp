@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run generate
+      - name: Fail if generated output is stale
+        run: git diff --exit-code src/generated/
+      - run: npm run typecheck
+      - run: npm test
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Server starts and lists tools
+        run: |
+          node -e "
+          const { generateKeyPairSync } = require('crypto');
+          const { privateKey } = generateKeyPairSync('ec', {
+            namedCurve: 'P-256',
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
+          });
+          require('fs').writeFileSync('/tmp/ci.p8', privateKey);
+          "
+          ASC_KEY_ID=CI0000000 \
+          ASC_ISSUER_ID=00000000-0000-0000-0000-000000000000 \
+          ASC_PRIVATE_KEY_PATH=/tmp/ci.p8 \
+          node -e "
+          const { spawn } = require('child_process');
+          const p = spawn('node', ['dist/index.js'], { env: process.env });
+          let out = '';
+          p.stdout.on('data', d => out += d);
+          p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'ci',version:'1'}}}) + '\n');
+          setTimeout(() => {
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'}) + '\n');
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/list'}) + '\n');
+          }, 500);
+          setTimeout(() => {
+            p.kill();
+            const listed = out.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(r => r && r.id === 2);
+            const count = listed?.result?.tools?.length ?? 0;
+            console.log('Tools listed:', count);
+            process.exit(count > 100 ? 0 : 1);
+          }, 2500);
+          "
