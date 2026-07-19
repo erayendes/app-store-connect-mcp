@@ -9,6 +9,7 @@ import { ToolRegistry, DEFAULT_DOMAINS, type McpToolDefinition } from './core/re
 import { AscApiError } from './core/errors.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
+import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import { SPEC_VERSION } from './generated/operations.js';
 
@@ -45,7 +46,7 @@ export function createServer(config: ServerConfig): Server {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    const tools: McpToolDefinition[] = [...META_TOOLS, ...registry.listTools()];
+    const tools: McpToolDefinition[] = [...META_TOOLS, ...REVIEWS_AI_TOOLS, ...registry.listTools()];
 
     if (storekit) {
       const storekitTools = config.readOnly
@@ -72,6 +73,8 @@ export function createServer(config: ServerConfig): Server {
           readOnly: config.readOnly,
           loadedDomains,
         });
+      } else if (REVIEWS_AI_TOOL_NAMES.has(name)) {
+        result = await executeReviewsAiTool(name, args, { server, http });
       } else if (STOREKIT_TOOL_NAMES.has(name)) {
         if (!storekit) {
           throw new Error(
