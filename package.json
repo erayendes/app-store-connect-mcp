@@ -1,6 +1,9 @@
 {
-  "name": "ascmcp",
+  "name": "@erayendes/asc-mcp",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "MCP server for the Apple App Store Connect API and App Store Server API. Tools generated from Apple's official OpenAPI specification.",
   "author": {
     "name": "Eray Endeş",
@@ -20,7 +23,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "ascmcp": "dist/index.js"
+    "asc-mcp": "dist/index.js"
   },
   "files": [
     "dist",
