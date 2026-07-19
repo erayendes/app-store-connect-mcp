@@ -10,6 +10,28 @@ npm run build
 npm test
 ```
 
+### Project layout
+
+| Path | Contains |
+|---|---|
+| `src/core/` | JWT signing, HTTP client, rate limiting, tool registry |
+| `src/generated/` | Generated operations — do not edit by hand |
+| `src/storekit/` | App Store Server API tools |
+| `src/tools/` | Introspection tools |
+| `scripts/generate.ts` | The generator |
+| `scripts/domains.ts` | Resource → domain mapping |
+| `scripts/describe.ts` | Description synthesis and curated overrides |
+
+### Keeping current with Apple
+
+```bash
+npm run spec:update   # fetch the latest OpenAPI spec from Apple
+npm run generate      # regenerate tools; prints a diff-friendly report
+npm test              # verify nothing broke
+```
+
+The generated report shows exactly what changed, so a new Apple API version is a reviewable diff rather than a guess.
+
 ### The generated code is generated
 
 Everything in `src/generated/` is produced by `scripts/generate.ts`. Edits there will be overwritten. Change the generator instead, then run `npm run generate` and commit the result — CI fails if the committed output doesn't match what the generator produces.
@@ -41,6 +63,28 @@ npm install
 npm run build
 npm test
 ```
+
+### Proje yapısı
+
+| Yol | İçeriği |
+|---|---|
+| `src/core/` | JWT imzalama, HTTP istemcisi, rate limiting, araç registry'si |
+| `src/generated/` | Üretilmiş işlemler — elle düzenleme |
+| `src/storekit/` | App Store Server API araçları |
+| `src/tools/` | İçgözlem araçları |
+| `scripts/generate.ts` | Üretici (generator) |
+| `scripts/domains.ts` | Kaynak → domain eşlemesi |
+| `scripts/describe.ts` | Açıklama sentezi ve elle düzenlenmiş override'lar |
+
+### Apple ile güncel kalmak
+
+```bash
+npm run spec:update   # Apple'dan en güncel OpenAPI spec'ini çek
+npm run generate      # araçları yeniden üret; diff-dostu bir rapor basar
+npm test              # hiçbir şeyin bozulmadığını doğrula
+```
+
+Üretilen rapor tam olarak neyin değiştiğini gösterir; böylece yeni bir Apple API sürümü bir tahmin değil, gözden geçirilebilir bir diff olur.
 
 ### Üretilmiş kod üretilmiştir
 

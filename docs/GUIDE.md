@@ -1,4 +1,8 @@
-# Installation / Kurulum
+# Guide / Rehber
+
+Installation, configuration and example prompts — everything to go from zero to a working setup.
+
+Kurulum, yapılandırma ve örnek istekler — sıfırdan çalışan bir kuruluma kadar her şey.
 
 ## English
 
@@ -8,7 +12,7 @@ Go to [Users and Access → Integrations → Keys](https://appstoreconnect.apple
 
 Note the **Key ID** and **Issuer ID** from that page.
 
-| Role | Unlocks these domains (see [DOMAINS.md](DOMAINS.md)) | Risk if the agent goes wrong |
+| Role | Unlocks these domains (see [README.md](README.md#domains)) | Risk if the agent goes wrong |
 |---|---|---|
 | Admin | Everything, including `users`, `provisioning`, `webhooks` | **Highest.** Can revoke other users' access, delete certificates/profiles (breaks signing for the whole team), delete webhooks. Blast radius extends beyond your own app. |
 | App Manager | `apps`, `versions`, `builds`, `testflight`, `subscriptions`, `iap`, `pricing` | **High.** `versions` and `subscriptions` alone carry 15 delete-capable operations each. Can submit/withdraw a live version, delete an in-app purchase or subscription group. Directly affects the live store listing and revenue. |
@@ -73,7 +77,55 @@ Config file locations — macOS: `~/Library/Application Support/Claude/claude_de
 
 Ask your client: *"Check the App Store Connect connection."* It will call `asc__status`, which validates your credentials with a single lightweight request.
 
-See [CONFIGURATION.md](CONFIGURATION.md) for the full list of environment variables and flags.
+### 5. Configure
+
+**Environment**
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `ASC_KEY_ID` | yes | Key ID from App Store Connect |
+| `ASC_ISSUER_ID` | yes | Issuer ID from App Store Connect |
+| `ASC_PRIVATE_KEY_PATH` | yes\* | Absolute path to the `.p8` file |
+| `ASC_PRIVATE_KEY` | yes\* | PEM contents, as an alternative to the path |
+| `ASC_VENDOR_NUMBER` | no | Required by sales and finance report tools |
+| `ASC_BUNDLE_ID` | no | Enables App Store Server API (StoreKit 2) tools |
+| `ASC_APP_APPLE_ID` | no | Your app's numeric Apple ID |
+| `ASC_ENVIRONMENT` | no | `Sandbox` (default) or `Production`, for StoreKit 2 |
+
+\* Supply either `ASC_PRIVATE_KEY_PATH` or `ASC_PRIVATE_KEY`.
+
+**Flags**
+
+| Flag | Effect |
+|---|---|
+| `--domains=<list>` | Comma-separated domains to load, or `all` |
+| `--read-only` | Expose only tools that cannot modify anything |
+| `--include-deprecated` | Also load the 159 operations Apple has deprecated |
+
+See [README.md](README.md#domains) for the full domain list and `--domains` examples.
+
+### 6. Examples
+
+Once connected, talk to your client in plain language:
+
+> **Release management**
+> "List my apps, then show the current version state for Acme and what's blocking release."
+>
+> "Submit version 3.2 for review, then start a phased release once it's approved."
+
+> **TestFlight**
+> "Create a beta group called Insiders and add the latest build to it."
+>
+> "Show me crash submissions from TestFlight in the last week, grouped by device model."
+
+> **Reviews**
+> "Find 1-star reviews from the last 30 days that don't have a response yet, and draft replies."
+
+> **Monetization** *(needs `--domains=...,subscriptions`)*
+> "Show my subscription groups and the price of each tier in Turkey, Germany and the US."
+
+> **Customer support** *(needs `ASC_BUNDLE_ID`)*
+> "This customer says they were charged twice — transaction ID 2000000891234567. What does their purchase history show, and are they currently entitled?"
 
 ## Türkçe
 
@@ -83,7 +135,7 @@ See [CONFIGURATION.md](CONFIGURATION.md) for the full list of environment variab
 
 Aynı sayfadan **Key ID** ve **Issuer ID** değerlerini not al.
 
-| Rol | Açtığı domainler ([DOMAINS.md](DOMAINS.md)'e bak) | Agent hata yaparsa risk |
+| Rol | Açtığı domainler ([README.md](README.md#domainler)'e bak) | Agent hata yaparsa risk |
 |---|---|---|
 | Admin | Her şey, `users`, `provisioning`, `webhooks` dahil | **En yüksek.** Başka kullanıcıların erişimini iptal edebilir, sertifika/profilleri silebilir (tüm ekibin imzalamasını bozar), webhook'ları silebilir. Etki alanı kendi uygulamanın dışına taşar. |
 | App Manager | `apps`, `versions`, `builds`, `testflight`, `subscriptions`, `iap`, `pricing` | **Yüksek.** `versions` ve `subscriptions` tek başına 15'er silme yapabilen işlem barındırıyor. Canlı bir sürümü gönderebilir/geri çekebilir, bir uygulama içi satın alma veya abonelik grubunu silebilir. Canlı mağaza listesini ve geliri doğrudan etkiler. |
@@ -148,4 +200,52 @@ Yapılandırma dosyası konumları — macOS: `~/Library/Application Support/Cla
 
 İstemcine sor: *"App Store Connect bağlantısını kontrol et."* Bu, kimlik bilgilerini tek bir hafif istekle doğrulayan `asc__status` aracını çağırır.
 
-Tüm ortam değişkenleri ve bayraklar için [CONFIGURATION.md](CONFIGURATION.md) sayfasına bak.
+### 5. Yapılandır
+
+**Ortam değişkenleri**
+
+| Değişken | Zorunlu | Amaç |
+|---|---|---|
+| `ASC_KEY_ID` | evet | App Store Connect'ten Key ID |
+| `ASC_ISSUER_ID` | evet | App Store Connect'ten Issuer ID |
+| `ASC_PRIVATE_KEY_PATH` | evet\* | `.p8` dosyasının mutlak yolu |
+| `ASC_PRIVATE_KEY` | evet\* | Yol yerine PEM içeriğinin kendisi |
+| `ASC_VENDOR_NUMBER` | hayır | Satış ve finans rapor araçları için gerekli |
+| `ASC_BUNDLE_ID` | hayır | App Store Server API (StoreKit 2) araçlarını etkinleştirir |
+| `ASC_APP_APPLE_ID` | hayır | Uygulamanın sayısal Apple ID'si |
+| `ASC_ENVIRONMENT` | hayır | StoreKit 2 için `Sandbox` (varsayılan) veya `Production` |
+
+\* `ASC_PRIVATE_KEY_PATH` veya `ASC_PRIVATE_KEY`'den birini ver.
+
+**Bayraklar**
+
+| Bayrak | Etki |
+|---|---|
+| `--domains=<liste>` | Yüklenecek domainler, virgülle ayrılmış, ya da `all` |
+| `--read-only` | Yalnızca hiçbir şeyi değiştiremeyen araçları göster |
+| `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 159 işlemi de yükle |
+
+Tam domain listesi ve `--domains` örnekleri için [README.md](README.md#domainler) sayfasına bak.
+
+### 6. Örnekler
+
+Bağlandıktan sonra istemcinle sade bir dille konuş:
+
+> **Release yönetimi**
+> "Uygulamalarımı listele, sonra Acme için mevcut sürüm durumunu ve release'i neyin engellediğini göster."
+>
+> "3.2 sürümünü incelemeye gönder, onaylandıktan sonra kademeli yayına başla."
+
+> **TestFlight**
+> "Insiders adında bir beta grubu oluştur ve son build'i ekle."
+>
+> "Son bir haftadaki TestFlight crash gönderimlerini cihaz modeline göre grupla göster."
+
+> **Yorumlar**
+> "Son 30 gündeki, henüz yanıtlanmamış 1 yıldızlı yorumları bul ve yanıt taslakları hazırla."
+
+> **Monetizasyon** *(`--domains=...,subscriptions` gerekir)*
+> "Abonelik gruplarımı ve her katmanın Türkiye, Almanya ve ABD'deki fiyatını göster."
+
+> **Müşteri desteği** *(`ASC_BUNDLE_ID` gerekir)*
+> "Bu müşteri iki kez ücretlendirildiğini söylüyor — işlem ID'si 2000000891234567. Satın alma geçmişi ne gösteriyor, şu anda hak sahibi mi?"

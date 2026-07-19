@@ -26,16 +26,13 @@ npx -y @erayendes/asc-mcp
 
 Full docs live in [`docs/`](docs/README.md), in English and Türkçe:
 
-- [Installation](docs/INSTALLATION.md) — API key, client registration, verification
-- [Configuration](docs/CONFIGURATION.md) — environment variables, flags
-- [Domains](docs/DOMAINS.md) — the full domain table, `--domains` usage
-- [Examples](docs/EXAMPLES.md) — example prompts by use case
-- [Reviews AI](docs/REVIEWS_AI.md) — the `reviews_ai__*` tools
-- [Tool naming](docs/TOOL_NAMING.md) — naming conventions, pagination
+- [Overview](docs/README.md) — what this is, domains, tool naming, Reviews AI
+- [Guide](docs/GUIDE.md) — API key, install, configuration, example prompts
 - [Security](docs/SECURITY.md) — credential handling, safety modes
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Development](docs/DEVELOPMENT.md) — local setup, project layout
-- [Contributing](docs/CONTRIBUTING.md)
+- [Support](docs/SUPPORT.md) — getting help, troubleshooting
+- [Contributing](docs/CONTRIBUTING.md) — how to contribute, local dev setup
+- [Code of Conduct](docs/CODE_OF_CONDUCT.md)
+- [Governance](GOVERNANCE.md)
 
 ### Why this exists
 
@@ -77,16 +74,13 @@ npx -y @erayendes/asc-mcp
 
 Tam dokümanlar [`docs/`](docs/README.md) altında, İngilizce ve Türkçe:
 
-- [Kurulum](docs/INSTALLATION.md) — API anahtarı, istemci kaydı, doğrulama
-- [Yapılandırma](docs/CONFIGURATION.md) — ortam değişkenleri, bayraklar
-- [Domainler](docs/DOMAINS.md) — tam domain tablosu, `--domains` kullanımı
-- [Örnekler](docs/EXAMPLES.md) — kullanım senaryosuna göre örnek istekler
-- [Reviews AI](docs/REVIEWS_AI.md) — `reviews_ai__*` araçları
-- [Araç isimlendirme](docs/TOOL_NAMING.md) — isimlendirme kuralları, sayfalama
+- [Genel bakış](docs/README.md) — bu nedir, domainler, araç isimlendirme, Reviews AI
+- [Rehber](docs/GUIDE.md) — API anahtarı, kurulum, yapılandırma, örnek istekler
 - [Güvenlik](docs/SECURITY.md) — kimlik bilgisi yönetimi, güvenlik modları
-- [Sorun giderme](docs/TROUBLESHOOTING.md)
-- [Geliştirme](docs/DEVELOPMENT.md) — yerel kurulum, proje yapısı
-- [Katkıda bulunma](docs/CONTRIBUTING.md)
+- [Destek](docs/SUPPORT.md) — yardım alma, sorun giderme
+- [Katkıda bulunma](docs/CONTRIBUTING.md) — nasıl katkı sağlanır, yerel geliştirme kurulumu
+- [Davranış kuralları](docs/CODE_OF_CONDUCT.md)
+- [Yönetişim](GOVERNANCE.md)
 
 ### Bu neden var
 
