@@ -10,12 +10,15 @@ Note the **Key ID** and **Issuer ID** from that page.
 
 | Role | Needed for |
 |---|---|
-| App Manager | Apps, versions, submissions, metadata |
-| Developer | TestFlight, builds |
-| Finance | Sales and finance reports |
-| Admin | Users, provisioning |
+| Admin | Everything — users, provisioning, all app and financial data |
+| App Manager | Apps, versions, submissions, metadata, TestFlight, in-app purchases |
+| Developer | TestFlight builds, read-only app access |
+| Marketing | App Store metadata, promo codes, marketing tools |
+| Sales | Sales and trends reports |
+| Finance | Financial and payment reports |
+| Customer Support | Customer reviews and review responses |
 
-Pick the narrowest role that covers your use case.
+These are the roles App Store Connect lets you assign to an API key — Account Holder isn't one of them. Pick the narrowest role that covers your use case.
 
 ### 2. Install
 
@@ -82,12 +85,15 @@ Aynı sayfadan **Key ID** ve **Issuer ID** değerlerini not al.
 
 | Rol | Ne için gerekli |
 |---|---|
-| App Manager | Uygulamalar, sürümler, gönderimler, metadata |
-| Developer | TestFlight, build'ler |
-| Finance | Satış ve finans raporları |
-| Admin | Kullanıcılar, provisioning |
+| Admin | Her şey — kullanıcılar, provisioning, tüm uygulama ve finans verisi |
+| App Manager | Uygulamalar, sürümler, gönderimler, metadata, TestFlight, uygulama içi satın almalar |
+| Developer | TestFlight build'leri, salt okunur uygulama erişimi |
+| Marketing | App Store metadata, promosyon kodları, pazarlama araçları |
+| Sales | Satış ve trend raporları |
+| Finance | Finans ve ödeme raporları |
+| Customer Support | Müşteri yorumları ve yorum yanıtları |
 
-Kullanım amacını karşılayan en dar rolü seç.
+Bunlar App Store Connect'in bir API anahtarına atamana izin verdiği roller — Account Holder bunların arasında değil. Kullanım amacını karşılayan en dar rolü seç.
 
 ### 2. Kur
 
