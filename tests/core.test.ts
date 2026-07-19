@@ -3,7 +3,7 @@ import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { TokenProvider } from '../src/core/jwt.js';
 import { RateLimiter } from '../src/core/rate-limit.js';
 import { AscHttpClient } from '../src/core/http.js';
-import { ToolRegistry, encodeToolName, decodeToolName, toMcpTool } from '../src/core/registry.js';
+import { ToolRegistry, encodeToolName, decodeToolName, toMcpTool, toolNameFor } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 
 const { privateKey, publicKey } = generateKeyPairSync('ec', {
@@ -125,6 +125,17 @@ describe('tool name encoding', () => {
     for (const op of OPERATIONS) {
       expect(encodeToolName(op.name)).toMatch(/^[a-zA-Z0-9_-]{1,128}$/);
     }
+  });
+
+  it('keeps public tool names within the Anthropic API 64-char limit', () => {
+    for (const op of OPERATIONS) {
+      expect(toolNameFor(op)).toMatch(/^[a-zA-Z0-9_.-]{1,64}$/);
+    }
+  });
+
+  it('produces unique public tool names across all operations', () => {
+    const names = OPERATIONS.map((o) => toolNameFor(o));
+    expect(new Set(names).size).toBe(names.length);
   });
 });
 

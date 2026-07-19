@@ -58,6 +58,39 @@ export function decodeToolName(name: string): string {
 }
 
 /**
+ * The Anthropic Messages API is stricter than the MCP spec: tool names must
+ * match ^[a-zA-Z0-9_.-]{1,64}$. The MCP spec allows up to 128 chars, so deeply
+ * nested resource names like
+ * `app_store_version_experiment_treatments__..._localizations__list_ids` (103
+ * chars) pass MCP validation but make Claude reject the ENTIRE request with a
+ * 400 — every tool in the batch becomes uncallable, not just the long one.
+ *
+ * Names over 64 chars are truncated and suffixed with a short deterministic
+ * hash of the full name to preserve uniqueness. The registry keeps the
+ * reverse map (display name -> operation) so dispatch still works.
+ */
+const MAX_TOOL_NAME = 64;
+
+function hashToolName(name: string): string {
+  let h = 5381;
+  for (let i = 0; i < name.length; i++) {
+    h = ((h * 33) ^ name.charCodeAt(i)) >>> 0;
+  }
+  return h.toString(36).padStart(7, '0').slice(0, 6);
+}
+
+export function shortenToolName(name: string): string {
+  if (name.length <= MAX_TOOL_NAME) return name;
+  const suffix = '_' + hashToolName(name);
+  return name.slice(0, MAX_TOOL_NAME - suffix.length) + suffix;
+}
+
+/** The public tool name Claude sees: MCP-safe and within the API's 64-char cap. */
+export function toolNameFor(op: { name: string }): string {
+  return shortenToolName(encodeToolName(op.name));
+}
+
+/**
  * JSON Schema property keys sent to the Anthropic API must match
  * ^[a-zA-Z0-9_.-]{1,64}$. Apple query params like `filter[platform]` or
  * `fields[apps]` contain brackets, which the API rejects (400) for the whole
@@ -127,7 +160,7 @@ export function toMcpTool(op: Operation): McpToolDefinition {
   }
 
   return {
-    name: encodeToolName(op.name),
+    name: toolNameFor(op),
     description: describeOperation(op),
     inputSchema: {
       type: 'object',
@@ -144,6 +177,8 @@ export function toMcpTool(op: Operation): McpToolDefinition {
 
 export class ToolRegistry {
   private readonly ops = new Map<string, Operation>();
+  /** Public tool name (what Claude sends) -> operation. */
+  private readonly byToolName = new Map<string, Operation>();
 
   constructor(private readonly options: RegistryOptions) {
     const requested = options.domains?.length
@@ -158,6 +193,17 @@ export class ToolRegistry {
       if (op.deprecated && !options.includeDeprecated) continue;
       if (options.readOnly && !op.readOnly) continue;
       this.ops.set(op.name, op);
+
+      const toolName = toolNameFor(op);
+      const clash = this.byToolName.get(toolName);
+      if (clash && clash.name !== op.name) {
+        // Two distinct operations collapsed to the same 64-char name. Fail
+        // loudly at startup rather than silently shadowing one of them.
+        throw new Error(
+          `Tool name collision on "${toolName}": ${clash.name} vs ${op.name}`
+        );
+      }
+      this.byToolName.set(toolName, op);
     }
   }
 
@@ -170,7 +216,9 @@ export class ToolRegistry {
   }
 
   get(name: string): Operation | undefined {
-    return this.ops.get(decodeToolName(name));
+    // Prefer the display-name map (handles shortened names); fall back to the
+    // dotted/encoded form for callers that pass the raw operation name.
+    return this.byToolName.get(name) ?? this.ops.get(decodeToolName(name));
   }
 
   /** Domains that exist in the spec but are not currently loaded. */
