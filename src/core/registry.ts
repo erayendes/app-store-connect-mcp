@@ -57,6 +57,17 @@ export function decodeToolName(name: string): string {
   return name.replace(/__/g, '.');
 }
 
+/**
+ * JSON Schema property keys sent to the Anthropic API must match
+ * ^[a-zA-Z0-9_.-]{1,64}$. Apple query params like `filter[platform]` or
+ * `fields[apps]` contain brackets, which the API rejects (400) for the whole
+ * request. We expose a sanitized key in the schema and map it back to the real
+ * Apple param name at execution time.
+ */
+export function encodeParamName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_.-]+/g, '_').replace(/_+$/, '');
+}
+
 function describeOperation(op: Operation): string {
   // The endpoint is appended so the model can reason about REST semantics
   // (and so a human reading the tool list can cross-reference Apple's docs).
@@ -91,7 +102,7 @@ export function toMcpTool(op: Operation): McpToolDefinition {
         schema.enum = q.enum;
       }
     }
-    properties[q.name] = schema;
+    properties[encodeParamName(q.name)] = schema;
   }
 
   if (op.hasBody) {
@@ -202,7 +213,9 @@ export class ToolRegistry {
 
     const query: Query = {};
     for (const q of op.queryParams) {
-      const value = args[q.name];
+      // The model supplies args under the sanitized schema key; the Apple API
+      // needs the real param name (e.g. `filter[platform]`).
+      const value = args[encodeParamName(q.name)];
       if (value === undefined || value === null || value === '') continue;
       query[q.name] = value as Query[string];
     }
