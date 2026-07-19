@@ -28,6 +28,7 @@
   "files": [
     "dist",
     "spec/openapi.json",
+    "docs",
     "README.md",
     "LICENSE"
   ],
