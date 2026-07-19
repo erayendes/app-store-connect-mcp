@@ -27,7 +27,9 @@ ${ALL_DOMAINS.map((d) => `  ${d}`).join('\n')}
 Required environment:
   ASC_KEY_ID             Key ID from App Store Connect.
   ASC_ISSUER_ID          Issuer ID from App Store Connect.
-  ASC_PRIVATE_KEY_PATH   Absolute path to the .p8 file (or ASC_PRIVATE_KEY inline).
+  ASC_PRIVATE_KEY_PATH   Absolute path to the .p8 file.
+                         Alternatives: ASC_PRIVATE_KEY (inline PEM), or
+                         ASC_PRIVATE_KEY_KEYCHAIN ("service/account", macOS only).
 
 Optional environment:
   ASC_VENDOR_NUMBER      Required by sales and finance report tools.

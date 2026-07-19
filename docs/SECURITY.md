@@ -32,9 +32,11 @@ Running an agent against a production store listing deserves some care.
 - Review any tool call annotated `destructiveHint` before approving it.
 - Rotate keys periodically, and revoke immediately if a key may have leaked.
 
-### Known limitation: no OS keychain integration
+### Keeping the private key out of plain text
 
-Credentials are read from plain environment variables (`ASC_PRIVATE_KEY_PATH` / `ASC_PRIVATE_KEY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`) — see `src/core/config.ts`. There is currently no macOS Keychain (or other OS secret store) integration, so the `.p8` path or contents can sit in plain text inside your client's config file (e.g. `claude_desktop_config.json`) or shell profile. Nothing is embedded in the server's source, but treat that config file itself as a secret: restrict its permissions, and don't commit it.
+On **macOS**, store the `.p8` in the Keychain and reference it with `ASC_PRIVATE_KEY_KEYCHAIN=service/account` — the key never appears in your client config. See [Choosing how to supply the key](GUIDE.md#choosing-how-to-supply-the-key).
+
+Otherwise (or if you use `ASC_PRIVATE_KEY_PATH` / `ASC_PRIVATE_KEY`), the `.p8` path or contents sit in plain text inside your client's config file (e.g. `claude_desktop_config.json`) or shell profile. The `ASC_KEY_ID` and `ASC_ISSUER_ID` are read the same way, but those are identifiers, not secrets. Nothing is embedded in the server's source, but treat that config file itself as a secret: restrict its permissions, and don't commit it. There is no Keychain equivalent on Linux/Windows yet.
 
 ## Türkçe
 
@@ -68,6 +70,8 @@ Bir agent'ı canlı bir mağaza listesine karşı çalıştırmak biraz özen is
 - `destructiveHint` etiketli her araç çağrısını onaylamadan önce gözden geçir.
 - Anahtarları periyodik olarak döndür, sızmış olabileceğini düşündüğünde derhal iptal et.
 
-### Bilinen sınırlama: OS anahtar zinciri entegrasyonu yok
+### Özel anahtarı düz metinden uzak tutmak
 
-Kimlik bilgileri düz ortam değişkenlerinden okunuyor (`ASC_PRIVATE_KEY_PATH` / `ASC_PRIVATE_KEY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`) — bkz. `src/core/config.ts`. Şu an macOS Keychain'e (veya başka bir OS secret store'a) entegrasyon yok; bu yüzden `.p8` yolu veya içeriği, istemci config dosyanda (örn. `claude_desktop_config.json`) veya shell profilinde düz metin olarak durabilir. Sunucunun kaynak koduna gömülü bir şey yok, ama bu config dosyasının kendisini bir secret gibi düşün: izinlerini kısıtla, commit'leme.
+**macOS'ta** `.p8`'i Keychain'e koy ve `ASC_PRIVATE_KEY_KEYCHAIN=service/account` ile referans ver — anahtar client config'inde hiç görünmez. Bkz. [Anahtarı verme yöntemini seçme](GUIDE.md#anahtarı-verme-yöntemini-seçme).
+
+Aksi halde (ya da `ASC_PRIVATE_KEY_PATH` / `ASC_PRIVATE_KEY` kullanırsan), `.p8` yolu veya içeriği istemci config dosyanda (örn. `claude_desktop_config.json`) veya shell profilinde düz metin durur. `ASC_KEY_ID` ve `ASC_ISSUER_ID` de aynı şekilde okunur, ama bunlar secret değil, tanımlayıcıdır. Sunucunun kaynak koduna gömülü bir şey yok, ama bu config dosyasının kendisini bir secret gibi düşün: izinlerini kısıtla, commit'leme. Linux/Windows'ta henüz Keychain karşılığı yok.

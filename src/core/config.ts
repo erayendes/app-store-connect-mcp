@@ -1,4 +1,5 @@
 import { ConfigError } from './errors.js';
+import { readKeychainPassword } from './keychain.js';
 import type { JwtCredentials } from './jwt.js';
 
 export interface ServerConfig {
@@ -45,12 +46,18 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
   const keyId = env.ASC_KEY_ID;
   const issuerId = env.ASC_ISSUER_ID;
   const privateKeyPath = env.ASC_PRIVATE_KEY_PATH;
-  const privateKey = env.ASC_PRIVATE_KEY;
+  const keychainRef = env.ASC_PRIVATE_KEY_KEYCHAIN;
+  // Resolve the key from the Keychain unless an inline PEM already wins.
+  // Precedence: ASC_PRIVATE_KEY > ASC_PRIVATE_KEY_KEYCHAIN > ASC_PRIVATE_KEY_PATH.
+  const privateKey =
+    env.ASC_PRIVATE_KEY ?? (keychainRef ? readKeychainPassword(keychainRef) : undefined);
 
   const missing: string[] = [];
   if (!keyId) missing.push('ASC_KEY_ID');
   if (!issuerId) missing.push('ASC_ISSUER_ID');
-  if (!privateKeyPath && !privateKey) missing.push('ASC_PRIVATE_KEY_PATH (or ASC_PRIVATE_KEY)');
+  if (!privateKeyPath && !privateKey) {
+    missing.push('ASC_PRIVATE_KEY_PATH (or ASC_PRIVATE_KEY, or ASC_PRIVATE_KEY_KEYCHAIN)');
+  }
 
   if (missing.length) {
     throw new ConfigError(

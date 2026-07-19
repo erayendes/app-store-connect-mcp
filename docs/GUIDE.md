@@ -87,12 +87,29 @@ Ask your client: *"Check the App Store Connect connection."* It will call `asc__
 | `ASC_ISSUER_ID` | yes | Issuer ID from App Store Connect |
 | `ASC_PRIVATE_KEY_PATH` | yes\* | Absolute path to the `.p8` file |
 | `ASC_PRIVATE_KEY` | yes\* | PEM contents, as an alternative to the path |
+| `ASC_PRIVATE_KEY_KEYCHAIN` | yes\* | `service/account` of a macOS Keychain entry holding the `.p8` (macOS only) |
 | `ASC_VENDOR_NUMBER` | no | Required by sales and finance report tools |
 | `ASC_BUNDLE_ID` | no | Enables App Store Server API (StoreKit 2) tools |
 | `ASC_APP_APPLE_ID` | no | Your app's numeric Apple ID |
 | `ASC_ENVIRONMENT` | no | `Sandbox` (default) or `Production`, for StoreKit 2 |
 
-\* Supply either `ASC_PRIVATE_KEY_PATH` or `ASC_PRIVATE_KEY`.
+\* Supply the private key exactly one way. If more than one is set, the order of precedence is `ASC_PRIVATE_KEY` (inline) → `ASC_PRIVATE_KEY_KEYCHAIN` → `ASC_PRIVATE_KEY_PATH`. See [Choosing how to supply the key](#choosing-how-to-supply-the-key).
+
+### Choosing how to supply the key
+
+The `.p8` private key can reach the server three ways. All three produce the same result — pick based on how much you care about keeping the key out of plain-text config.
+
+**Option 1 — File path (simplest, all platforms).** Point `ASC_PRIVATE_KEY_PATH` at the `.p8`. The file stays on disk; the config only holds its path.
+
+**Option 2 — Inline PEM (all platforms).** Put the PEM contents in `ASC_PRIVATE_KEY`. Convenient for CI secrets, but the key lives verbatim in your config/secret store.
+
+**Option 3 — macOS Keychain (most private, macOS only).** Store the key in the Keychain once, then reference it — nothing sensitive stays in your client config:
+
+```bash
+security add-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX -w "$(cat AuthKey_XXXXXXXXXX.p8)"
+```
+
+Then set `ASC_PRIVATE_KEY_KEYCHAIN=asc-mcp/AuthKey_XXXXXXXXXX` (the `service/account` you used above). The server reads it at startup via the `security` CLI; the OS gates access.
 
 **Flags**
 
@@ -210,12 +227,29 @@ Yapılandırma dosyası konumları — macOS: `~/Library/Application Support/Cla
 | `ASC_ISSUER_ID` | evet | App Store Connect'ten Issuer ID |
 | `ASC_PRIVATE_KEY_PATH` | evet\* | `.p8` dosyasının mutlak yolu |
 | `ASC_PRIVATE_KEY` | evet\* | Yol yerine PEM içeriğinin kendisi |
+| `ASC_PRIVATE_KEY_KEYCHAIN` | evet\* | `.p8`'i tutan bir macOS Keychain girdisinin `service/account`'u (sadece macOS) |
 | `ASC_VENDOR_NUMBER` | hayır | Satış ve finans rapor araçları için gerekli |
 | `ASC_BUNDLE_ID` | hayır | App Store Server API (StoreKit 2) araçlarını etkinleştirir |
 | `ASC_APP_APPLE_ID` | hayır | Uygulamanın sayısal Apple ID'si |
 | `ASC_ENVIRONMENT` | hayır | StoreKit 2 için `Sandbox` (varsayılan) veya `Production` |
 
-\* `ASC_PRIVATE_KEY_PATH` veya `ASC_PRIVATE_KEY`'den birini ver.
+\* Özel anahtarı tam olarak tek bir yolla ver. Birden fazlası set edilmişse öncelik sırası: `ASC_PRIVATE_KEY` (inline) → `ASC_PRIVATE_KEY_KEYCHAIN` → `ASC_PRIVATE_KEY_PATH`. Bkz. [Anahtarı verme yöntemini seçme](#anahtarı-verme-yöntemini-seçme).
+
+### Anahtarı verme yöntemini seçme
+
+`.p8` özel anahtarı sunucuya üç yolla ulaşabilir. Üçü de aynı sonucu verir — anahtarı düz metin config'den ne kadar uzak tutmak istediğine göre seç.
+
+**Seçenek 1 — Dosya yolu (en basit, tüm platformlar).** `ASC_PRIVATE_KEY_PATH`'i `.p8`'e yönlendir. Dosya diskte kalır; config sadece yolunu tutar.
+
+**Seçenek 2 — Inline PEM (tüm platformlar).** PEM içeriğini `ASC_PRIVATE_KEY`'e koy. CI secret'ları için pratik, ama anahtar config/secret store'unda birebir durur.
+
+**Seçenek 3 — macOS Keychain (en gizli, sadece macOS).** Anahtarı bir kere Keychain'e koy, sonra referans ver — client config'inde hassas hiçbir şey durmaz:
+
+```bash
+security add-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX -w "$(cat AuthKey_XXXXXXXXXX.p8)"
+```
+
+Sonra `ASC_PRIVATE_KEY_KEYCHAIN=asc-mcp/AuthKey_XXXXXXXXXX` ayarla (yukarıda kullandığın `service/account`). Sunucu başlangıçta `security` CLI ile okur; erişimi işletim sistemi denetler.
 
 **Bayraklar**
 
