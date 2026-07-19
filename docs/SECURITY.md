@@ -1,5 +1,7 @@
 # Security / Güvenlik
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 ## English
 
 ### Reporting a vulnerability

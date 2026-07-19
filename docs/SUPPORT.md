@@ -1,5 +1,7 @@
 # Support / Destek
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 ## English
 
 ### Getting help

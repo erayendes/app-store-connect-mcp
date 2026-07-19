@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
 
-**English** | [Türkçe](#türkçe)
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
 
 ## English
 

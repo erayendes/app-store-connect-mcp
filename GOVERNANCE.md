@@ -1,5 +1,7 @@
 # Governance / Yönetişim
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 ## English
 
 ### Maintainer model

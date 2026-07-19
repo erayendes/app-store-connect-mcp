@@ -1,5 +1,7 @@
 # Code of Conduct / Davranış Kuralları
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 ## English
 
 ### Our pledge

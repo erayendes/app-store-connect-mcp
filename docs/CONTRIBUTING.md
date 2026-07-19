@@ -1,5 +1,7 @@
 # Contributing / Katkıda Bulunma
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 ## English
 
 ### Getting set up

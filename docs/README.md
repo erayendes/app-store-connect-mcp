@@ -1,5 +1,7 @@
 # app-store-connect-mcp — Documentation
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 Full documentation index, in **English** and **Türkçe**.
 
 Tam dokümantasyon indeksi, **İngilizce** ve **Türkçe**.

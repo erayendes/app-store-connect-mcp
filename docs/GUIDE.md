@@ -1,5 +1,7 @@
 # Guide / Rehber
 
+🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
+
 Installation, configuration and example prompts — everything to go from zero to a working setup.
 
 Kurulum, yapılandırma ve örnek istekler — sıfırdan çalışan bir kuruluma kadar her şey.
