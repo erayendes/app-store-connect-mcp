@@ -1,5 +1,5 @@
 {
-  "name": "app-store-connect-mcp",
+  "name": "ascmcp",
   "version": "1.0.0",
   "description": "MCP server for the Apple App Store Connect API and App Store Server API. Tools generated from Apple's official OpenAPI specification.",
   "author": {
@@ -20,7 +20,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "app-store-connect-mcp": "dist/index.js"
+    "ascmcp": "dist/index.js"
   },
   "files": [
     "dist",

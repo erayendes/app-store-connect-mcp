@@ -1,6 +1,6 @@
 # app-store-connect-mcp
 
-[![npm version](https://img.shields.io/npm/v/app-store-connect-mcp.svg)](https://www.npmjs.com/package/app-store-connect-mcp)
+[![npm version](https://img.shields.io/npm/v/ascmcp.svg)](https://www.npmjs.com/package/ascmcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
 
@@ -13,13 +13,13 @@ An MCP server for the **App Store Connect API** and the **App Store Server API (
 Every tool is generated from Apple's own OpenAPI specification, so coverage is complete by construction — **1,263 operations across 17 domains** — and staying current with Apple means regenerating, not hand-writing.
 
 ```bash
-npm install -g app-store-connect-mcp
+npm install -g ascmcp
 ```
 
 Or run it directly with `npx` — no install step:
 
 ```bash
-npx -y app-store-connect-mcp
+npx -y ascmcp
 ```
 
 ### Documentation
@@ -64,13 +64,13 @@ Not affiliated with Apple Inc. See [NOTICE](NOTICE).
 Her araç, Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor — **17 domainde 1.263 işlem** — bu yüzden kapsam yapısı gereği eksiksiz; Apple'a ayak uydurmak elle yazmak değil yeniden üretmek anlamına geliyor.
 
 ```bash
-npm install -g app-store-connect-mcp
+npm install -g ascmcp
 ```
 
 Ya da kurulum yapmadan doğrudan `npx` ile çalıştır:
 
 ```bash
-npx -y app-store-connect-mcp
+npx -y ascmcp
 ```
 
 ### Dokümantasyon

@@ -20,7 +20,7 @@ Pick the narrowest role that covers your use case.
 ### 2. Install
 
 ```bash
-npm install -g app-store-connect-mcp
+npm install -g ascmcp
 ```
 
 Or install from source:
@@ -41,7 +41,7 @@ claude mcp add -s user app-store-connect \
   -e ASC_KEY_ID=YOUR_KEY_ID \
   -e ASC_ISSUER_ID=YOUR_ISSUER_ID \
   -e ASC_PRIVATE_KEY_PATH=/absolute/path/to/AuthKey_XXXXXXXXXX.p8 \
-  -- npx -y app-store-connect-mcp
+  -- npx -y ascmcp
 ```
 
 **Claude Desktop** — add to `claude_desktop_config.json`:
@@ -51,7 +51,7 @@ claude mcp add -s user app-store-connect \
   "mcpServers": {
     "app-store-connect": {
       "command": "npx",
-      "args": ["-y", "app-store-connect-mcp"],
+      "args": ["-y", "ascmcp"],
       "env": {
         "ASC_KEY_ID": "YOUR_KEY_ID",
         "ASC_ISSUER_ID": "YOUR_ISSUER_ID",
@@ -92,7 +92,7 @@ Kullanım amacını karşılayan en dar rolü seç.
 ### 2. Kur
 
 ```bash
-npm install -g app-store-connect-mcp
+npm install -g ascmcp
 ```
 
 Ya da kaynaktan kur:
@@ -113,7 +113,7 @@ claude mcp add -s user app-store-connect \
   -e ASC_KEY_ID=ANAHTAR_ID \
   -e ASC_ISSUER_ID=ISSUER_ID \
   -e ASC_PRIVATE_KEY_PATH=/mutlak/yol/AuthKey_XXXXXXXXXX.p8 \
-  -- npx -y app-store-connect-mcp
+  -- npx -y ascmcp
 ```
 
 **Claude Desktop** — `claude_desktop_config.json` dosyasına ekle:
@@ -123,7 +123,7 @@ claude mcp add -s user app-store-connect \
   "mcpServers": {
     "app-store-connect": {
       "command": "npx",
-      "args": ["-y", "app-store-connect-mcp"],
+      "args": ["-y", "ascmcp"],
       "env": {
         "ASC_KEY_ID": "ANAHTAR_ID",
         "ASC_ISSUER_ID": "ISSUER_ID",
