@@ -4,8 +4,13 @@ An MCP server for the **App Store Connect API** and the **App Store Server API (
 
 Every tool is generated from Apple's own OpenAPI specification, so coverage is complete by construction — **1,263 operations across 17 domains** — and staying current with Apple means regenerating, not hand-writing.
 
-```
-npm install -g app-store-connect-mcp
+Not published to npm yet — install from source:
+
+```bash
+git clone https://github.com/erayendes/app-store-connect-mcp.git
+cd app-store-connect-mcp
+npm install
+npm run build
 ```
 
 ---
@@ -52,7 +57,7 @@ claude mcp add -s user app-store-connect \
   -e ASC_KEY_ID=YOUR_KEY_ID \
   -e ASC_ISSUER_ID=YOUR_ISSUER_ID \
   -e ASC_PRIVATE_KEY_PATH=/absolute/path/to/AuthKey_XXXXXXXXXX.p8 \
-  -- npx -y app-store-connect-mcp
+  -- node /absolute/path/to/app-store-connect-mcp/dist/index.js
 ```
 
 **Claude Desktop** — add to `claude_desktop_config.json`:
@@ -61,8 +66,8 @@ claude mcp add -s user app-store-connect \
 {
   "mcpServers": {
     "app-store-connect": {
-      "command": "npx",
-      "args": ["-y", "app-store-connect-mcp"],
+      "command": "node",
+      "args": ["/absolute/path/to/app-store-connect-mcp/dist/index.js"],
       "env": {
         "ASC_KEY_ID": "YOUR_KEY_ID",
         "ASC_ISSUER_ID": "YOUR_ISSUER_ID",
@@ -72,6 +77,8 @@ claude mcp add -s user app-store-connect \
   }
 }
 ```
+
+Once published to npm, `node /absolute/path/to/.../dist/index.js` can be swapped for `npx -y app-store-connect-mcp`.
 
 Config file locations — macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows: `%APPDATA%\Claude\claude_desktop_config.json`.
 
