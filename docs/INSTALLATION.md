@@ -8,17 +8,17 @@ Go to [Users and Access → Integrations → Keys](https://appstoreconnect.apple
 
 Note the **Key ID** and **Issuer ID** from that page.
 
-| Role | Needed for |
+| Role | Unlocks these domains (see [DOMAINS.md](DOMAINS.md)) |
 |---|---|
-| Admin | Everything — users, provisioning, all app and financial data |
-| App Manager | Apps, versions, submissions, metadata, TestFlight, in-app purchases |
-| Developer | TestFlight builds, read-only app access |
-| Marketing | App Store metadata, promo codes, marketing tools |
-| Sales | Sales and trends reports |
-| Finance | Financial and payment reports |
-| Customer Support | Customer reviews and review responses |
+| Admin | Everything, including `users`, `provisioning`, `webhooks` |
+| App Manager | `apps`, `versions`, `builds`, `testflight`, `subscriptions`, `iap`, `pricing` |
+| Developer | `builds`, `testflight`, `xcode_cloud` (read/upload, not submission) |
+| Marketing | `marketing` |
+| Sales | `analytics` (sales and trends reports only) |
+| Finance | `analytics` (financial and payment reports; also needs `ASC_VENDOR_NUMBER`) |
+| Customer Support | `reviews`, including the `reviews_ai__*` tools |
 
-These are the roles App Store Connect lets you assign to an API key — Account Holder isn't one of them. Pick the narrowest role that covers your use case.
+These are the roles App Store Connect lets you assign to an API key — Account Holder isn't one of them. Most day-to-day release work only needs **App Manager**; add **Developer** for build uploads from CI, or **Finance**/**Sales** only if you're actually running `analytics` tools. Pick the narrowest role that covers your use case.
 
 ### 2. Install
 
@@ -83,17 +83,17 @@ See [CONFIGURATION.md](CONFIGURATION.md) for the full list of environment variab
 
 Aynı sayfadan **Key ID** ve **Issuer ID** değerlerini not al.
 
-| Rol | Ne için gerekli |
+| Rol | Açtığı domainler ([DOMAINS.md](DOMAINS.md)'e bak) |
 |---|---|
-| Admin | Her şey — kullanıcılar, provisioning, tüm uygulama ve finans verisi |
-| App Manager | Uygulamalar, sürümler, gönderimler, metadata, TestFlight, uygulama içi satın almalar |
-| Developer | TestFlight build'leri, salt okunur uygulama erişimi |
-| Marketing | App Store metadata, promosyon kodları, pazarlama araçları |
-| Sales | Satış ve trend raporları |
-| Finance | Finans ve ödeme raporları |
-| Customer Support | Müşteri yorumları ve yorum yanıtları |
+| Admin | Her şey, `users`, `provisioning`, `webhooks` dahil |
+| App Manager | `apps`, `versions`, `builds`, `testflight`, `subscriptions`, `iap`, `pricing` |
+| Developer | `builds`, `testflight`, `xcode_cloud` (okuma/yükleme, gönderim değil) |
+| Marketing | `marketing` |
+| Sales | `analytics` (sadece satış ve trend raporları) |
+| Finance | `analytics` (finans ve ödeme raporları; ayrıca `ASC_VENDOR_NUMBER` gerekir) |
+| Customer Support | `reviews`, `reviews_ai__*` araçları dahil |
 
-Bunlar App Store Connect'in bir API anahtarına atamana izin verdiği roller — Account Holder bunların arasında değil. Kullanım amacını karşılayan en dar rolü seç.
+Bunlar App Store Connect'in bir API anahtarına atamana izin verdiği roller — Account Holder bunların arasında değil. Günlük release işlerinin çoğu sadece **App Manager** ister; CI'dan build yüklüyorsan **Developer** ekle, sadece gerçekten `analytics` araçlarını kullanacaksan **Finance**/**Sales** ekle. Kullanım amacını karşılayan en dar rolü seç.
 
 ### 2. Kur
 
