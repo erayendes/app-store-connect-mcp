@@ -115,7 +115,22 @@ export async function executeMetaTool(
           deprecated: op.deprecated,
         }));
 
-      return { matches, count: matches.length };
+      // A match the caller cannot invoke is a dead end unless we say how to
+      // reach it — the tool only appears after the server restarts.
+      const unloadedDomains = [...new Set(matches.filter((m) => !m.loaded).map((m) => m.domain))];
+
+      return {
+        matches,
+        count: matches.length,
+        ...(unloadedDomains.length
+          ? {
+              hint:
+                `${matches.filter((m) => !m.loaded).length} of these are not loaded and cannot be ` +
+                `called yet. Restart the server with --domains=${unloadedDomains.join(',')} ` +
+                `(added to any domains you already load) to expose them.`,
+            }
+          : {}),
+      };
     }
 
     case 'asc__status': {

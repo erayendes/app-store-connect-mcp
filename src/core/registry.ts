@@ -252,7 +252,29 @@ export class ToolRegistry {
   ): Promise<unknown> {
     const op = this.get(name);
     if (!op) {
-      throw new AscApiError(`Unknown tool: ${name}`, 0);
+      // A missing tool has three very different causes and the caller cannot
+      // tell them apart. Each one points at a different fix.
+      const known = OPERATIONS.find((o) => toolNameFor(o) === name || o.name === decodeToolName(name));
+      if (!known) throw new AscApiError(`Unknown tool: ${name}`, 0);
+
+      if (this.options.readOnly && !known.readOnly) {
+        throw new AscApiError(
+          `Tool "${name}" mutates App Store Connect and the server is running in read-only mode. ` +
+            `Restart without --read-only to use it.`,
+          0
+        );
+      }
+      if (this.unloadedDomains().includes(known.domain)) {
+        throw new AscApiError(
+          `Tool "${name}" exists in the "${known.domain}" domain, which is not loaded. ` +
+            `Restart the server with --domains=${known.domain} (alongside your current domains) to use it.`,
+          0
+        );
+      }
+      throw new AscApiError(
+        `Tool "${name}" is deprecated by Apple and hidden. Restart with --include-deprecated to use it.`,
+        0
+      );
     }
 
     if (this.options.readOnly && !op.readOnly) {

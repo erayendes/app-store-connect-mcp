@@ -305,3 +305,43 @@ describe('configured parameter defaults', () => {
     expect(sent?.['filter[vendorNumber]']).toBe('999999');
   });
 });
+
+describe('unloaded-domain guidance', () => {
+  it('names the domain and flag when a real tool is not loaded', async () => {
+    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    await expect(
+      registry.execute('game_center_leaderboards__get', { id: 'x' }, {} as never)
+    ).rejects.toThrow(/"game_center" domain, which is not loaded.*--domains=game_center/s);
+  });
+
+  it('still reports a genuinely unknown tool as unknown', async () => {
+    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    await expect(
+      registry.execute('not_a_real_tool__ever', {}, {} as never)
+    ).rejects.toThrow(/Unknown tool/);
+  });
+});
+
+describe('missing-tool diagnosis', () => {
+  const mk = (o: any) => new ToolRegistry({ includeDeprecated: false, readOnly: false, ...o });
+
+  it('blames read-only mode, not the domain, when the tool is hidden by --read-only', async () => {
+    const mutating = OPERATIONS.find((o) => !o.readOnly && !o.deprecated && o.domain === 'apps')!;
+    await expect(
+      mk({ domains: ['all'], readOnly: true }).execute(toolNameFor(mutating), {}, {} as never)
+    ).rejects.toThrow(/read-only mode/);
+  });
+
+  it('blames the unloaded domain when the domain really is unloaded', async () => {
+    await expect(
+      mk({ domains: ['apps'] }).execute('game_center_leaderboards__get', { id: 'x' }, {} as never)
+    ).rejects.toThrow(/"game_center" domain, which is not loaded/);
+  });
+
+  it('flags a deprecated tool as deprecated', async () => {
+    const dep = OPERATIONS.find((o) => o.deprecated)!;
+    await expect(
+      mk({ domains: ['all'] }).execute(toolNameFor(dep), {}, {} as never)
+    ).rejects.toThrow(/deprecated/);
+  });
+});
