@@ -90,7 +90,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[id]",
         "type": "array",
-        "description": "filter by id(s)"
+        "description": "filter by id(s)",
+        "required": true
       },
       {
         "name": "limit",
@@ -7448,7 +7449,8 @@ export const OPERATIONS: Operation[] = [
           "MAC_OS",
           "TV_OS",
           "VISION_OS"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "filter[territory]",
@@ -9319,7 +9321,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app'",
+        "required": true
       },
       {
         "name": "limit",
@@ -9440,7 +9443,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[build]",
         "type": "array",
-        "description": "filter by id(s) of related 'build'"
+        "description": "filter by id(s) of related 'build'",
+        "required": true
       },
       {
         "name": "limit",
@@ -10466,7 +10470,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[apps]",
         "type": "string",
-        "description": "filter by 'apps' relationship dimension"
+        "description": "filter by 'apps' relationship dimension",
+        "required": true
       },
       {
         "name": "limit",
@@ -13861,7 +13866,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[vendorNumber]",
         "type": "array",
-        "description": "filter by attribute 'vendorNumber'"
+        "description": "filter by attribute 'vendorNumber'",
+        "required": true
       },
       {
         "name": "filter[reportType]",
@@ -13870,20 +13876,24 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "FINANCIAL",
           "FINANCE_DETAIL"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "filter[regionCode]",
         "type": "array",
-        "description": "filter by attribute 'regionCode'"
+        "description": "filter by attribute 'regionCode'",
+        "required": true
       },
       {
         "name": "filter[reportDate]",
         "type": "array",
-        "description": "filter by attribute 'reportDate'"
+        "description": "filter by attribute 'reportDate'",
+        "required": true
       }
     ],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "application/a-gzip"
   },
   {
     "name": "game_center_achievement_images_v2.create",
@@ -16195,7 +16205,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -17138,7 +17149,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -18979,12 +18991,14 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterLeaderboardSet]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboardSet'"
+        "description": "filter by id(s) of related 'gameCenterLeaderboardSet'",
+        "required": true
       },
       {
         "name": "filter[gameCenterLeaderboard]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboard'"
+        "description": "filter by id(s) of related 'gameCenterLeaderboard'",
+        "required": true
       },
       {
         "name": "limit",
@@ -20286,7 +20300,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "sort",
@@ -20331,7 +20346,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -20451,7 +20467,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "sort",
@@ -20496,7 +20513,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -20565,7 +20583,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "sort",
@@ -20889,7 +20908,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -20947,7 +20967,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -21005,7 +21026,8 @@ export const OPERATIONS: Operation[] = [
           "P1D",
           "PT1H",
           "PT15M"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "groupBy",
@@ -21638,7 +21660,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "text/csv"
   },
   {
     "name": "in_app_purchase_offer_codes.create",
@@ -23201,7 +23224,8 @@ export const OPERATIONS: Operation[] = [
           "DRAFT",
           "SUBMITTED",
           "ARCHIVED"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "filter[hasInAppEvents]",
@@ -24162,7 +24186,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app'",
+        "required": true
       },
       {
         "name": "limit",
@@ -24277,7 +24302,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[vendorNumber]",
         "type": "array",
-        "description": "filter by attribute 'vendorNumber'"
+        "description": "filter by attribute 'vendorNumber'",
+        "required": true
       },
       {
         "name": "filter[reportType]",
@@ -24294,7 +24320,8 @@ export const OPERATIONS: Operation[] = [
           "INSTALLS",
           "FIRST_ANNUAL",
           "WIN_BACK_ELIGIBILITY"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "filter[reportSubType]",
@@ -24306,7 +24333,8 @@ export const OPERATIONS: Operation[] = [
           "SUMMARY_INSTALL_TYPE",
           "SUMMARY_TERRITORY",
           "SUMMARY_CHANNEL"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "filter[frequency]",
@@ -24317,7 +24345,8 @@ export const OPERATIONS: Operation[] = [
           "WEEKLY",
           "MONTHLY",
           "YEARLY"
-        ]
+        ],
+        "required": true
       },
       {
         "name": "filter[reportDate]",
@@ -24330,7 +24359,8 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'version'"
       }
     ],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "application/a-gzip"
   },
   {
     "name": "sandbox_testers_clear_purchase_history_request_v2.create",
@@ -25743,7 +25773,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "text/csv"
   },
   {
     "name": "subscription_offer_codes.create",

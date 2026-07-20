@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
@@ -13,7 +14,9 @@ import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from '.
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import { SPEC_VERSION } from './generated/operations.js';
 
-export const VERSION = '1.0.0';
+// Read from package.json at runtime so the banner can't drift from the published
+// version. Not a JSON import: package.json sits outside tsconfig's rootDir.
+export const VERSION: string = createRequire(import.meta.url)('../package.json').version;
 
 export function createServer(config: ServerConfig): Server {
   const tokens = new TokenProvider(config.credentials);
@@ -22,6 +25,9 @@ export function createServer(config: ServerConfig): Server {
     domains: config.domains,
     readOnly: config.readOnly,
     includeDeprecated: config.includeDeprecated,
+    paramDefaults: config.vendorNumber
+      ? { 'filter[vendorNumber]': config.vendorNumber }
+      : undefined,
   });
 
   const loadedDomains = config.domains?.length

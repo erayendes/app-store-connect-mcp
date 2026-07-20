@@ -11,6 +11,12 @@ export interface RegistryOptions {
   domains?: string[];
   readOnly: boolean;
   includeDeprecated: boolean;
+  /**
+   * Fallback values for required query params, keyed by Apple's parameter name.
+   * Lets a caller configure `ASC_VENDOR_NUMBER` once instead of repeating it on
+   * every sales and finance report call.
+   */
+  paramDefaults?: Record<string, string>;
 }
 
 /**
@@ -107,7 +113,10 @@ function describeOperation(op: Operation): string {
   return `${op.description} [${op.method} ${op.path}]`;
 }
 
-export function toMcpTool(op: Operation): McpToolDefinition {
+export function toMcpTool(
+  op: Operation,
+  paramDefaults?: Record<string, string>
+): McpToolDefinition {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
 
@@ -135,6 +144,15 @@ export function toMcpTool(op: Operation): McpToolDefinition {
         schema.enum = q.enum;
       }
     }
+    // A server-configured default covers the param, so don't force the model to
+    // invent a value it has no way of knowing (e.g. the vendor number).
+    const defaulted = paramDefaults?.[q.name];
+    if (defaulted) {
+      schema.description = `${schema.description} Defaults to the server's configured value.`;
+    } else if (q.required) {
+      required.push(encodeParamName(q.name));
+    }
+
     properties[encodeParamName(q.name)] = schema;
   }
 
@@ -212,7 +230,7 @@ export class ToolRegistry {
   }
 
   listTools(): McpToolDefinition[] {
-    return [...this.ops.values()].map(toMcpTool);
+    return [...this.ops.values()].map((op) => toMcpTool(op, this.options.paramDefaults));
   }
 
   get(name: string): Operation | undefined {
@@ -247,7 +265,7 @@ export class ToolRegistry {
     // Pagination shortcut: follow the cursor Apple gave us verbatim.
     const nextUrl = args.next_url;
     if (typeof nextUrl === 'string' && nextUrl) {
-      return http.request(op.method, nextUrl);
+      return http.request(op.method, nextUrl, { accept: op.accept });
     }
 
     let path = op.path;
@@ -263,14 +281,25 @@ export class ToolRegistry {
     for (const q of op.queryParams) {
       // The model supplies args under the sanitized schema key; the Apple API
       // needs the real param name (e.g. `filter[platform]`).
-      const value = args[encodeParamName(q.name)];
-      if (value === undefined || value === null || value === '') continue;
+      const value =
+        args[encodeParamName(q.name)] ?? this.options.paramDefaults?.[q.name];
+      if (value === undefined || value === null || value === '') {
+        // Apple answers 400 for these anyway; say so in terms the caller can act on.
+        if (q.required) {
+          throw new AscApiError(
+            `Missing required parameter "${encodeParamName(q.name)}" (Apple: "${q.name}") for ${name}.`,
+            0
+          );
+        }
+        continue;
+      }
       query[q.name] = value as Query[string];
     }
 
     return http.request(op.method, path, {
       query: Object.keys(query).length ? query : undefined,
       body: op.hasBody ? args.body : undefined,
+      accept: op.accept,
     });
   }
 }

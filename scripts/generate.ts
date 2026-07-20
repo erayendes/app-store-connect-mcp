@@ -22,6 +22,7 @@ interface OpenApiOperation {
   deprecated?: boolean;
   parameters?: OpenApiParameter[];
   requestBody?: { content?: Record<string, { schema?: any }> };
+  responses?: Record<string, { content?: Record<string, unknown> }>;
 }
 
 interface OpenApiParameter {
@@ -41,9 +42,16 @@ interface GeneratedTool {
   readOnly: boolean;
   deprecated: boolean;
   pathParams: string[];
-  queryParams: Array<{ name: string; type: string; description: string; enum?: string[] }>;
+  queryParams: Array<{
+    name: string;
+    type: string;
+    description: string;
+    enum?: string[];
+    required?: boolean;
+  }>;
   hasBody: boolean;
   bodyRef?: string;
+  accept?: string;
 }
 
 const HTTP_METHODS = ['get', 'post', 'patch', 'delete', 'put'] as const;
@@ -151,18 +159,30 @@ function main(): void {
         .map((p) => p.name);
 
       const queryParams = allParams
-        .filter((p) => p.in === 'query' && isUsefulQueryParam(p.name))
+        // A required parameter is never "not useful" — dropping one makes the
+        // endpoint permanently uncallable.
+        .filter((p) => p.in === 'query' && (p.required || isUsefulQueryParam(p.name)))
         .map((p) => ({
           name: p.name,
           type: schemaType(p.schema),
           description: (p.description ?? '').replace(/\s+/g, ' ').slice(0, 200),
           enum: enumValues(p.schema)?.slice(0, 40),
+          ...(p.required ? { required: true } : {}),
         }));
 
       const bodySchema = op.requestBody?.content?.['application/json']?.schema;
       const bodyRef: string | undefined = bodySchema?.$ref
         ? String(bodySchema.$ref).split('/').pop()
         : undefined;
+
+      // Most endpoints serve JSON; a handful (sales/finance reports) only serve
+      // gzipped TSV and reject a JSON Accept header with 406.
+      const responseTypes = Object.keys(
+        op.responses?.['200']?.content ?? op.responses?.['201']?.content ?? {}
+      );
+      const accept = responseTypes.some((t) => t.includes('json'))
+        ? undefined
+        : responseTypes[0];
 
       let name = toolNameFrom(op.operationId, method);
       if (seen.has(name)) {
@@ -189,6 +209,7 @@ function main(): void {
         queryParams,
         hasBody: Boolean(bodySchema),
         bodyRef,
+        accept,
       });
     }
   }

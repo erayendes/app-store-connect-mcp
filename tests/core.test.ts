@@ -206,6 +206,37 @@ describe('ToolRegistry', () => {
     ).rejects.toThrow(/read-only|Unknown tool/);
   });
 
+  it('forwards the non-JSON Accept header reports require', async () => {
+    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const calls: Array<Record<string, unknown>> = [];
+    const http = { request: (_m: string, _p: string, opts: Record<string, unknown>) => {
+      calls.push(opts);
+      return Promise.resolve({});
+    } };
+
+    const salesArgs = {
+      filter_vendorNumber: '123456',
+      filter_reportType: 'SALES',
+      filter_reportSubType: 'SUMMARY',
+      filter_frequency: 'DAILY',
+    };
+    await registry.execute(toolNameFor({ name: 'sales_reports.list' }), salesArgs, http as never);
+    await registry.execute(toolNameFor({ name: 'apps.list' }), {}, http as never);
+
+    expect(calls[0].accept).toBe('application/a-gzip');
+    expect(calls[1].accept).toBeUndefined();
+  });
+
+  it('marks and enforces query params Apple requires', async () => {
+    const op = OPERATIONS.find((o) => o.name === 'sales_reports.list')!;
+    expect(toMcpTool(op).inputSchema.required).toContain('filter_vendorNumber');
+
+    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    await expect(
+      registry.execute(toolNameFor(op), {}, {} as never)
+    ).rejects.toThrow(/Missing required parameter "filter_vendorNumber"/);
+  });
+
   it('rejects a call that omits a required path parameter', async () => {
     const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
     await expect(registry.execute('apps__get', {}, {} as never)).rejects.toThrow(
@@ -229,5 +260,48 @@ describe('MCP tool schema', () => {
   it('flags DELETE operations as destructive', () => {
     const op = OPERATIONS.find((o) => o.method === 'DELETE')!;
     expect(toMcpTool(op).annotations?.destructiveHint).toBe(true);
+  });
+});
+
+describe('configured parameter defaults', () => {
+  it('fills a required param from config and drops it from the schema', async () => {
+    const op = OPERATIONS.find((o) => o.name === 'sales_reports.list')!;
+    const defaults = { 'filter[vendorNumber]': '99999999' };
+
+    expect(toMcpTool(op, defaults).inputSchema.required).not.toContain('filter_vendorNumber');
+
+    const registry = new ToolRegistry({
+      domains: ['all'],
+      readOnly: true,
+      includeDeprecated: false,
+      paramDefaults: defaults,
+    });
+    let sent: Record<string, unknown> | undefined;
+    const http = { request: (_m: string, _p: string, o: any) => { sent = o.query; return Promise.resolve({}); } };
+
+    await registry.execute(
+      toolNameFor(op),
+      { filter_reportType: 'SALES', filter_reportSubType: 'SUMMARY', filter_frequency: 'DAILY' },
+      http as never
+    );
+    expect(sent?.['filter[vendorNumber]']).toBe('99999999');
+  });
+
+  it('lets an explicit argument beat the configured default', async () => {
+    const registry = new ToolRegistry({
+      domains: ['all'],
+      readOnly: true,
+      includeDeprecated: false,
+      paramDefaults: { 'filter[vendorNumber]': '99999999' },
+    });
+    let sent: Record<string, unknown> | undefined;
+    const http = { request: (_m: string, _p: string, o: any) => { sent = o.query; return Promise.resolve({}); } };
+
+    await registry.execute(
+      toolNameFor({ name: 'sales_reports.list' }),
+      { filter_vendorNumber: '999999', filter_reportType: 'SALES', filter_reportSubType: 'SUMMARY', filter_frequency: 'DAILY' },
+      http as never
+    );
+    expect(sent?.['filter[vendorNumber]']).toBe('999999');
   });
 });

@@ -15,7 +15,14 @@ export interface Operation {
     type: string;
     description: string;
     enum?: string[];
+    /** Apple rejects the call with 400 when this filter is missing. */
+    required?: boolean;
   }>;
   hasBody: boolean;
   bodyRef?: string;
+  /**
+   * Accept header the endpoint requires, when it is not JSON. Sales and finance
+   * reports only serve `application/a-gzip` and answer 406 to anything else.
+   */
+  accept?: string;
 }
