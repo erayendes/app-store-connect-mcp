@@ -57,7 +57,7 @@
     "claude"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^1.6.0",
