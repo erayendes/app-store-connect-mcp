@@ -111,16 +111,15 @@ export function runChecklist(
       (opts.title ? `${opts.title}\n` : '') +
       '(↑/↓ move · space toggle · a all/none · enter confirm)\n\n';
 
-    let lastLineCount = 0;
-    const draw = (first = false) => {
-      const body = renderChecklist(items, state);
-      const lineCount = body.split('\n').length;
-      if (!first) {
-        // Move cursor up over the previous body and clear to end of screen.
-        stdout.write(`\x1b[${lastLineCount}A\x1b[0J`);
-      }
-      stdout.write(body + '\n');
-      lastLineCount = lineCount;
+    // The alternate screen buffer is a fresh, non-scrolling page. Redrawing the
+    // whole frame from home each time sidesteps cursor-up math entirely — the
+    // reason the earlier in-place version corrupted once the list scrolled.
+    const ALT_ENTER = '\x1b[?1049h\x1b[?25l'; // enter alt screen, hide cursor
+    const ALT_LEAVE = '\x1b[?25h\x1b[?1049l'; // show cursor, leave alt screen
+
+    const draw = () => {
+      const body = renderChecklist(items, state, stdout.columns ?? 80);
+      stdout.write(`\x1b[2J\x1b[H${header}${body}\n`);
     };
 
     emitKeypressEvents(stdin);
@@ -128,13 +127,21 @@ export function runChecklist(
     if (stdin.isTTY) stdin.setRawMode(true);
     stdin.resume();
 
-    stdout.write(header);
-    draw(true);
+    stdout.write(ALT_ENTER);
+    draw();
 
+    const onResize = () => draw();
+    stdout.on('resize', onResize);
+
+    let cleaned = false;
     const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
       stdin.removeListener('keypress', onKey);
+      stdout.removeListener('resize', onResize);
       if (stdin.isTTY) stdin.setRawMode(Boolean(wasRaw));
       stdin.pause();
+      stdout.write(ALT_LEAVE);
     };
 
     const onKey = (_str: string, key: Key) => {
