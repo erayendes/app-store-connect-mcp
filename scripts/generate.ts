@@ -138,12 +138,26 @@ function isUsefulQueryParam(name: string): boolean {
 }
 
 
+/**
+ * GET relationship endpoints (`.../relationships/x`) return only resource IDs.
+ * Their full-object twin (`.../x`) returns the same records with the IDs
+ * included, so exposing both doubles the tool count for zero capability.
+ * A relationship endpoint is dropped only when its twin really exists in the
+ * spec — an orphan (none today, but Apple's spec changes) is kept.
+ */
+function relationshipTwinPath(path: string, method: string, opId: string): string | null {
+  if (method !== 'get') return null;
+  if (!/_(getToManyRelationship|getToOneRelationship)$/.test(opId)) return null;
+  return path.replace('/relationships/', '/');
+}
+
 function main(): void {
   const specPath = resolve(ROOT, 'spec/openapi.json');
   const spec = JSON.parse(readFileSync(specPath, 'utf8'));
 
   const tools: GeneratedTool[] = [];
   const seen = new Set<string>();
+  let droppedTwins = 0;
 
   for (const [path, pathItem] of Object.entries<any>(spec.paths ?? {})) {
     const sharedParams: OpenApiParameter[] = pathItem.parameters ?? [];
@@ -151,6 +165,12 @@ function main(): void {
     for (const method of HTTP_METHODS) {
       const op: OpenApiOperation | undefined = pathItem[method];
       if (!op?.operationId) continue;
+
+      const twinPath = relationshipTwinPath(path, method, op.operationId);
+      if (twinPath && spec.paths?.[twinPath]?.get) {
+        droppedTwins++;
+        continue;
+      }
 
       const allParams = [...sharedParams, ...(op.parameters ?? [])];
 
@@ -257,6 +277,7 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {${descMatch ? descMa
     `Spec version:   ${spec.info?.version}`,
     `Paths:          ${Object.keys(spec.paths ?? {}).length}`,
     `Tools:          ${tools.length}`,
+    `  id-only twins dropped: ${droppedTwins}`,
     `  read-only:    ${tools.filter((t) => t.readOnly).length}`,
     `  mutating:     ${tools.filter((t) => !t.readOnly).length}`,
     `  deprecated:   ${tools.filter((t) => t.deprecated).length}`,

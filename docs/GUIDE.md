@@ -41,9 +41,46 @@ npm install
 npm run build
 ```
 
-### 3. Register the server
+### 3. Store credentials once
+
+```bash
+npx -y @erayendes/asc-mcp setup
+```
+
+An interactive wizard asks for the Key ID, Issuer ID, `.p8` path, vendor number and bundle ID, stores the key in the macOS Keychain (file reference elsewhere), and writes everything else to `~/.config/asc-mcp/config.json`. Every profile reads this shared config — server entries need **no env block**, and rotating the key later means re-running `setup` once instead of editing every entry.
+
+Environment variables still work and always win over the shared config (see below) — useful for CI or a second account.
+
+### 4. Register profiles
+
+One install backs eleven small, purpose-scoped MCP servers. Pass a profile name and only that area's tools are served:
+
+| Profile | Serves | ~Tools |
+|---|---|---|
+| `app-info` | App identity, store metadata, availability | 115 |
+| `distribution` | Versions, review submission, phased release, builds | 138 |
+| `user-management` | TestFlight, team members, sandbox testers | 95 |
+| `monetization` | Subscriptions, IAP, pricing, StoreKit 2 | 189 |
+| `marketing` | Screenshots, product pages, events, reviews | 73 |
+| `analytics` | Sales/finance reports, analytics, metrics | 17 |
+| `game-center` | Achievements, leaderboards, matchmaking | 176 |
+| `xcode-cloud` | CI workflows, build runs, artifacts | 46 |
+| `account-management` | Certificates, profiles, devices, bundle IDs | 45 |
+| `background-assets` | Background Assets (iOS 26) | 18 |
+| `webhooks` | Webhook configuration and diagnostics | 12 |
+
+Every profile carries the gateway tools (`apps__list`, `apps__get`, `asc__status`, `asc__search_tools`, `asc__discover_domains`), so any of them can look up an app ID and tell you which sibling server owns a tool it doesn't have.
+
+**Pick per project.** MCP has no "load the right server for the topic" mechanism — every server in a config connects at session start. The realistic version of on-demand loading is: register only the profiles a project actually uses. A revenue-tracking project gets `asc-analytics` + `asc-marketing` (~90 tools); a game project adds `asc-game-center`. (Claude Code additionally defers tool schemas until first use, which keeps even several connected profiles cheap.)
 
 **Claude Code:**
+
+```bash
+claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics
+claude mcp add -s user asc-monetization -- npx -y @erayendes/asc-mcp monetization
+```
+
+Running without a profile still serves the classic combined server, and the old env-based registration keeps working unchanged:
 
 ```bash
 claude mcp add -s user app-store-connect \
@@ -53,33 +90,26 @@ claude mcp add -s user app-store-connect \
   -- npx -y @erayendes/asc-mcp
 ```
 
-**Claude Desktop** — add to `claude_desktop_config.json`:
+**Claude Desktop** — add profiles to `claude_desktop_config.json` (no env needed after `setup`):
 
 ```json
 {
   "mcpServers": {
-    "app-store-connect": {
-      "command": "npx",
-      "args": ["-y", "@erayendes/asc-mcp"],
-      "env": {
-        "ASC_KEY_ID": "YOUR_KEY_ID",
-        "ASC_ISSUER_ID": "YOUR_ISSUER_ID",
-        "ASC_PRIVATE_KEY_PATH": "/absolute/path/to/AuthKey_XXXXXXXXXX.p8"
-      }
-    }
+    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] },
+    "asc-marketing": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "marketing"] }
   }
 }
 ```
 
-If you installed from source, replace the `command`/`args` with `node /absolute/path/to/app-store-connect-mcp/dist/index.js`.
+If you installed from source, replace the `command`/`args` with `node /absolute/path/to/app-store-connect-mcp/dist/index.js analytics`.
 
 Config file locations — macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows: `%APPDATA%\Claude\claude_desktop_config.json`.
 
-### 4. Verify
+### 5. Verify
 
 Ask your client: *"Check the App Store Connect connection."* It will call `asc__status`, which validates your credentials with a single lightweight request.
 
-### 5. Configure
+### 6. Configure
 
 **Environment**
 
@@ -123,7 +153,7 @@ Then set `ASC_PRIVATE_KEY_KEYCHAIN=asc-mcp/AuthKey_XXXXXXXXXX` (the `service/acc
 
 See [README.md](README.md#domains) for the full domain list and `--domains` examples.
 
-### 6. Examples
+### 7. Examples
 
 Once connected, talk to your client in plain language:
 
@@ -181,45 +211,67 @@ npm install
 npm run build
 ```
 
-### 3. Sunucuyu kaydet
+### 3. Kimlik bilgisini bir kez kaydet
+
+```bash
+npx -y @erayendes/asc-mcp setup
+```
+
+İnteraktif sihirbaz Key ID, Issuer ID, `.p8` yolu, vendor number ve bundle ID sorar; anahtarı macOS Keychain'e (diğer platformlarda dosya referansı) koyar, gerisini `~/.config/asc-mcp/config.json` dosyasına yazar. Her profil bu ortak yapılandırmayı okur — sunucu girdilerinde **env bloğu gerekmez**, anahtar değişince tek yerden `setup` yeniden çalıştırılır.
+
+Env değişkenleri çalışmaya devam eder ve her zaman ortak yapılandırmayı ezer — CI veya ikinci hesap için kullanışlı.
+
+### 4. Profilleri kaydet
+
+Tek kurulum, on bir küçük, amaca göre daraltılmış MCP sunucusu sunar. Profil adını verirsen sadece o alanın araçları yüklenir:
+
+| Profil | Kapsam | ~Araç |
+|---|---|---|
+| `app-info` | Uygulama kimliği, mağaza metadata'sı, ülke uygunluğu | 115 |
+| `distribution` | Sürümler, inceleme gönderimi, kademeli yayın, build'ler | 138 |
+| `user-management` | TestFlight, ekip üyeleri, sandbox testçileri | 95 |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, StoreKit 2 | 189 |
+| `marketing` | Ekran görüntüleri, ürün sayfaları, etkinlikler, yorumlar | 73 |
+| `analytics` | Satış/finans raporları, analytics, metrikler | 17 |
+| `game-center` | Başarımlar, liderlik tabloları, eşleştirme | 176 |
+| `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 46 |
+| `account-management` | Sertifikalar, profiller, cihazlar, bundle ID'ler | 45 |
+| `background-assets` | Background Assets (iOS 26) | 18 |
+| `webhooks` | Webhook yapılandırma ve teşhis | 12 |
+
+Her profilde giriş kapısı araçları var (`apps__list`, `apps__get`, `asc__status`, `asc__search_tools`, `asc__discover_domains`) — herhangi biri uygulama ID'si bulabilir ve sahip olmadığı bir aracın hangi kardeş sunucuda olduğunu söyler.
+
+**Projeye göre seç.** MCP'de "konuya göre doğru sunucuyu yükle" mekanizması yok — config'deki her sunucu oturum başında bağlanır. İstediğin davranışın gerçekçi hâli: her projeye sadece kullandığı profilleri yazmak. Gelir takibi yapan proje `asc-analytics` + `asc-marketing` alır (~90 araç); oyun projesi `asc-game-center` ekler. (Claude Code ayrıca araç şemalarını ilk kullanıma kadar ertelediği için birkaç profil bağlı olsa bile maliyet düşük kalır.)
 
 **Claude Code:**
 
 ```bash
-claude mcp add -s user app-store-connect \
-  -e ASC_KEY_ID=ANAHTAR_ID \
-  -e ASC_ISSUER_ID=ISSUER_ID \
-  -e ASC_PRIVATE_KEY_PATH=/mutlak/yol/AuthKey_XXXXXXXXXX.p8 \
-  -- npx -y @erayendes/asc-mcp
+claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics
+claude mcp add -s user asc-monetization -- npx -y @erayendes/asc-mcp monetization
 ```
 
-**Claude Desktop** — `claude_desktop_config.json` dosyasına ekle:
+Profil vermeden çalıştırırsan klasik birleşik sunucu açılır; eski env tabanlı kayıt da aynen çalışmaya devam eder.
+
+**Claude Desktop** — `claude_desktop_config.json` dosyasına profilleri ekle (`setup` sonrası env gerekmez):
 
 ```json
 {
   "mcpServers": {
-    "app-store-connect": {
-      "command": "npx",
-      "args": ["-y", "@erayendes/asc-mcp"],
-      "env": {
-        "ASC_KEY_ID": "ANAHTAR_ID",
-        "ASC_ISSUER_ID": "ISSUER_ID",
-        "ASC_PRIVATE_KEY_PATH": "/mutlak/yol/AuthKey_XXXXXXXXXX.p8"
-      }
-    }
+    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] },
+    "asc-marketing": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "marketing"] }
   }
 }
 ```
 
-Kaynaktan kurduysan `command`/`args` yerine `node /mutlak/yol/app-store-connect-mcp/dist/index.js` kullan.
+Kaynaktan kurduysan `command`/`args` yerine `node /mutlak/yol/app-store-connect-mcp/dist/index.js analytics` kullan.
 
 Yapılandırma dosyası konumları — macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows: `%APPDATA%\Claude\claude_desktop_config.json`.
 
-### 4. Doğrula
+### 5. Doğrula
 
 İstemcine sor: *"App Store Connect bağlantısını kontrol et."* Bu, kimlik bilgilerini tek bir hafif istekle doğrulayan `asc__status` aracını çağırır.
 
-### 5. Yapılandır
+### 6. Yapılandır
 
 **Ortam değişkenleri**
 
@@ -263,7 +315,7 @@ Sonra `ASC_PRIVATE_KEY_KEYCHAIN=asc-mcp/AuthKey_XXXXXXXXXX` ayarla (yukarıda ku
 
 Tam domain listesi ve `--domains` örnekleri için [README.md](README.md#domainler) sayfasına bak.
 
-### 6. Örnekler
+### 7. Örnekler
 
 Bağlandıktan sonra istemcinle sade bir dille konuş:
 

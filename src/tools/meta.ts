@@ -66,6 +66,8 @@ export async function executeMetaTool(
     tokens: TokenProvider;
     readOnly: boolean;
     loadedDomains: string[];
+    /** In profile mode: how to reach domains this server doesn't carry. */
+    unloadedDomainsHint?: (domains: string[]) => string;
   }
 ): Promise<unknown> {
   switch (name) {
@@ -88,8 +90,9 @@ export async function executeMetaTool(
         })),
         hint:
           unloaded.size > 0
-            ? `To load more, restart the server with --domains=${[...unloaded].slice(0, 3).join(',')} ` +
-              `(or --domains=all for every operation).`
+            ? ctx.unloadedDomainsHint?.([...unloaded]) ??
+              `To load more, restart the server with --domains=${[...unloaded].slice(0, 3).join(',')} ` +
+                `(or --domains=all for every operation).`
             : 'All domains are loaded.',
       };
     }
@@ -126,8 +129,10 @@ export async function executeMetaTool(
           ? {
               hint:
                 `${matches.filter((m) => !m.loaded).length} of these are not loaded and cannot be ` +
-                `called yet. Restart the server with --domains=${unloadedDomains.join(',')} ` +
-                `(added to any domains you already load) to expose them.`,
+                `called from this server. ` +
+                (ctx.unloadedDomainsHint?.(unloadedDomains) ??
+                  `Restart the server with --domains=${unloadedDomains.join(',')} ` +
+                    `(added to any domains you already load) to expose them.`),
             }
           : {}),
       };

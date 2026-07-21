@@ -13,32 +13,53 @@ import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import { SPEC_VERSION } from './generated/operations.js';
+import { GATEWAY_OPERATIONS, profileForDomain, type Profile } from './profiles.js';
 
 // Read from package.json at runtime so the banner can't drift from the published
 // version. Not a JSON import: package.json sits outside tsconfig's rootDir.
 export const VERSION: string = createRequire(import.meta.url)('../package.json').version;
 
-export function createServer(config: ServerConfig): Server {
+export function createServer(config: ServerConfig, profile?: Profile): Server {
   const tokens = new TokenProvider(config.credentials);
   const http = new AscHttpClient(tokens);
+
+  // In profile mode, "how do I reach that tool" answers name the sibling MCP
+  // server; the --domains flag only makes sense on the monolithic server.
+  const unloadedDomainHint = profile
+    ? (domain: string) => {
+        const home = profileForDomain(domain);
+        return home
+          ? `It is served by the "asc-${home.name}" MCP server — call it there, or add that server to your client config.`
+          : `Run the server without a profile and with --domains=${domain} to reach it.`;
+      }
+    : undefined;
+
   const registry = new ToolRegistry({
-    domains: config.domains,
+    domains: profile ? profile.domains : config.domains,
     readOnly: config.readOnly,
     includeDeprecated: config.includeDeprecated,
     paramDefaults: config.vendorNumber
       ? { 'filter[vendorNumber]': config.vendorNumber }
       : undefined,
+    // apps.list/apps.get ride along in every profile: nearly every workflow
+    // starts from an app ID. The app-info profile has them natively.
+    extraOperations: profile ? GATEWAY_OPERATIONS : undefined,
+    unloadedDomainHint,
   });
 
-  const loadedDomains = config.domains?.length
-    ? config.domains
-    : [...DEFAULT_DOMAINS];
+  const loadedDomains = profile
+    ? profile.domains
+    : config.domains?.length
+      ? config.domains
+      : [...DEFAULT_DOMAINS];
 
   // StoreKit tools are only offered when a bundle ID is configured, since the
-  // App Store Server API is scoped to a single app.
+  // App Store Server API is scoped to a single app. A profile additionally has
+  // to opt in (monetization does).
+  const storekitWanted = profile ? Boolean(profile.storekit) : true;
   let storekit: StoreKitService | undefined;
   let storekitError: string | undefined;
-  if (config.storekit) {
+  if (config.storekit && storekitWanted) {
     try {
       storekit = new StoreKitService(config);
     } catch (err) {
@@ -46,13 +67,19 @@ export function createServer(config: ServerConfig): Server {
     }
   }
 
+  const reviewsAiWanted = profile ? Boolean(profile.reviewsAi) : true;
+
   const server = new Server(
-    { name: 'app-store-connect-mcp', version: VERSION },
+    { name: profile ? `asc-${profile.name}` : 'app-store-connect-mcp', version: VERSION },
     { capabilities: { tools: {} } }
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    const tools: McpToolDefinition[] = [...META_TOOLS, ...REVIEWS_AI_TOOLS, ...registry.listTools()];
+    const tools: McpToolDefinition[] = [
+      ...META_TOOLS,
+      ...(reviewsAiWanted ? REVIEWS_AI_TOOLS : []),
+      ...registry.listTools(),
+    ];
 
     if (storekit) {
       const storekitTools = config.readOnly
@@ -78,8 +105,19 @@ export function createServer(config: ServerConfig): Server {
           tokens,
           readOnly: config.readOnly,
           loadedDomains,
+          unloadedDomainsHint: profile
+            ? (domains) => {
+                const homes = [...new Set(
+                  domains.map((d) => profileForDomain(d)?.name).filter(Boolean)
+                )].map((n) => `asc-${n}`);
+                return homes.length
+                  ? `These live on sibling MCP servers: ${homes.join(', ')}. ` +
+                    `Call the tool there, or add that server to your client config.`
+                  : `Run the server without a profile to combine domains freely.`;
+              }
+            : undefined,
         });
-      } else if (REVIEWS_AI_TOOL_NAMES.has(name)) {
+      } else if (reviewsAiWanted && REVIEWS_AI_TOOL_NAMES.has(name)) {
         result = await executeReviewsAiTool(name, args, { server, http });
       } else if (STOREKIT_TOOL_NAMES.has(name)) {
         if (!storekit) {

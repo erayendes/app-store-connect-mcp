@@ -17,6 +17,18 @@ export interface RegistryOptions {
    * every sales and finance report call.
    */
   paramDefaults?: Record<string, string>;
+  /**
+   * Operations (dotted names) exposed regardless of domain selection. Profiles
+   * inject `apps.list`/`apps.get` here: nearly every call needs an app ID, so
+   * a profile without them cannot start a conversation.
+   */
+  extraOperations?: string[];
+  /**
+   * Overrides the "domain not loaded" remedy sentence. Profile mode points at
+   * the sibling MCP server (`use the asc-monetization server`) instead of the
+   * --domains flag, which is meaningless to a profile user.
+   */
+  unloadedDomainHint?: (domain: string) => string;
 }
 
 /**
@@ -205,9 +217,10 @@ export class ToolRegistry {
 
     const wantsAll = requested.includes('all');
     const selected = new Set(requested);
+    const extras = new Set(options.extraOperations ?? []);
 
     for (const op of OPERATIONS) {
-      if (!wantsAll && !selected.has(op.domain)) continue;
+      if (!wantsAll && !selected.has(op.domain) && !extras.has(op.name)) continue;
       if (op.deprecated && !options.includeDeprecated) continue;
       if (options.readOnly && !op.readOnly) continue;
       this.ops.set(op.name, op);
@@ -267,7 +280,8 @@ export class ToolRegistry {
       if (this.unloadedDomains().includes(known.domain)) {
         throw new AscApiError(
           `Tool "${name}" exists in the "${known.domain}" domain, which is not loaded. ` +
-            `Restart the server with --domains=${known.domain} (alongside your current domains) to use it.`,
+            `${this.options.unloadedDomainHint?.(known.domain) ??
+              `Restart the server with --domains=${known.domain} (alongside your current domains) to use it.`}`,
           0
         );
       }

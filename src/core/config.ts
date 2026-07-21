@@ -1,5 +1,6 @@
 import { ConfigError } from './errors.js';
 import { readKeychainPassword } from './keychain.js';
+import { readSharedConfig } from './shared-config.js';
 import type { JwtCredentials } from './jwt.js';
 
 export interface ServerConfig {
@@ -43,12 +44,21 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
     return undefined;
   };
 
-  const keyId = env.ASC_KEY_ID;
-  const issuerId = env.ASC_ISSUER_ID;
-  const privateKeyPath = env.ASC_PRIVATE_KEY_PATH;
-  const keychainRef = env.ASC_PRIVATE_KEY_KEYCHAIN;
+  // The environment wins outright; the shared file (written by `setup`) fills
+  // in only when the env carries no credentials at all, so one stray env var
+  // can't silently mix two accounts.
+  const envHasCreds = Boolean(
+    env.ASC_KEY_ID || env.ASC_ISSUER_ID || env.ASC_PRIVATE_KEY ||
+    env.ASC_PRIVATE_KEY_KEYCHAIN || env.ASC_PRIVATE_KEY_PATH
+  );
+  const shared = envHasCreds ? undefined : readSharedConfig(env);
+
+  const keyId = env.ASC_KEY_ID ?? shared?.keyId;
+  const issuerId = env.ASC_ISSUER_ID ?? shared?.issuerId;
+  const privateKeyPath = env.ASC_PRIVATE_KEY_PATH ?? shared?.privateKeyPath;
+  const keychainRef = env.ASC_PRIVATE_KEY_KEYCHAIN ?? shared?.privateKeyKeychain;
   // Resolve the key from the Keychain unless an inline PEM already wins.
-  // Precedence: ASC_PRIVATE_KEY > ASC_PRIVATE_KEY_KEYCHAIN > ASC_PRIVATE_KEY_PATH.
+  // Precedence: ASC_PRIVATE_KEY > keychain reference > file path.
   const privateKey =
     env.ASC_PRIVATE_KEY ?? (keychainRef ? readKeychainPassword(keychainRef) : undefined);
 
@@ -62,12 +72,13 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
   if (missing.length) {
     throw new ConfigError(
       `Missing required configuration: ${missing.join(', ')}.\n` +
-        `Create an API key at https://appstoreconnect.apple.com/access/integrations/api ` +
+        `Either run "app-store-connect-mcp setup" once (shared by every profile), or ` +
+        `create an API key at https://appstoreconnect.apple.com/access/integrations/api ` +
         `and set these as environment variables in your MCP client config.`
     );
   }
 
-  const bundleId = env.ASC_BUNDLE_ID;
+  const bundleId = env.ASC_BUNDLE_ID ?? shared?.bundleId;
 
   return {
     credentials: {
@@ -76,12 +87,17 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       privateKeyPath,
       privateKey,
     },
-    vendorNumber: env.ASC_VENDOR_NUMBER,
+    vendorNumber: env.ASC_VENDOR_NUMBER ?? shared?.vendorNumber,
     storekit: bundleId
       ? {
           bundleId,
-          appAppleId: env.ASC_APP_APPLE_ID ? Number(env.ASC_APP_APPLE_ID) : undefined,
-          environment: env.ASC_ENVIRONMENT === 'Production' ? 'Production' : 'Sandbox',
+          appAppleId: env.ASC_APP_APPLE_ID
+            ? Number(env.ASC_APP_APPLE_ID)
+            : shared?.appAppleId,
+          environment:
+            (env.ASC_ENVIRONMENT ?? shared?.environment) === 'Production'
+              ? 'Production'
+              : 'Sandbox',
         }
       : undefined,
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),

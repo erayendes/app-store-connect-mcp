@@ -111,7 +111,7 @@ export const CURATED: Record<string, string> = {
     'Create a new App Store version. Do this before attaching a build and submitting for review.',
   'app_store_versions.update':
     'Update an App Store version, including its release type and earliest release date.',
-  'app_store_version_submissions.create':
+  'review_submissions.create':
     'Submit an App Store version for Apple review. The version must already have a build attached.',
   'app_store_version_submissions.delete':
     'Cancel a pending App Store review submission.',
@@ -126,7 +126,7 @@ export const CURATED: Record<string, string> = {
   'customer_review_responses.delete': 'Delete your response to a customer review.',
   'beta_groups.create':
     'Create a TestFlight beta group. Internal groups are limited to team members; external groups require beta review.',
-  'beta_groups.betas_testers.add':
+  'beta_groups.beta_testers.add':
     'Add existing beta testers to a TestFlight group.',
   'beta_testers.create':
     'Invite a new TestFlight tester by email and add them to one or more beta groups.',
@@ -138,9 +138,9 @@ export const CURATED: Record<string, string> = {
     'Register a device UDID so it can be included in development provisioning profiles.',
   'profiles.create':
     'Create a provisioning profile from a bundle ID, certificate and (for development) device list.',
-  'sales_reports.get':
+  'sales_reports.list':
     'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.',
-  'finance_reports.get':
+  'finance_reports.list':
     'Download a finance report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance role on the API key.',
   'in_app_purchases_v2.create':
     'Create an in-app purchase. Set the product ID, type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION) and reference name.',

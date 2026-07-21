@@ -78,3 +78,37 @@ export function readKeychainPassword(
   }
   return pem;
 }
+
+/**
+ * Store a `.p8` private key in the macOS Keychain as a generic password.
+ * `-U` updates in place when the entry already exists, so re-running setup
+ * with a new key never leaves a stale duplicate behind.
+ *
+ * Uses execFileSync with an argument array — no shell, no injection surface.
+ * The secret does ride in argv, which is briefly visible in the local process
+ * list; `security` offers no stdin path for non-interactive adds, and this is
+ * the same exposure as the documented manual command.
+ */
+export function writeKeychainPassword(
+  service: string,
+  account: string,
+  secret: string,
+  exec: ExecFile = execFileSync
+): void {
+  if (process.platform !== 'darwin') {
+    throw new ConfigError('The macOS Keychain is only available on macOS.');
+  }
+  try {
+    exec(
+      'security',
+      ['add-generic-password', '-U', '-s', service, '-a', account, '-w', secret],
+      { encoding: 'utf8' }
+    );
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new ConfigError(
+      `Could not write the private key to the macOS Keychain ` +
+        `(service "${service}", account "${account}"): ${detail}`
+    );
+  }
+}

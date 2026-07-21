@@ -345,3 +345,42 @@ describe('missing-tool diagnosis', () => {
     ).rejects.toThrow(/deprecated/);
   });
 });
+
+describe('curated descriptions', () => {
+  it('every curated key matches a real operation', async () => {
+    const { CURATED } = await import('../scripts/describe.js');
+    const names = new Set(OPERATIONS.map((o) => o.name));
+    const orphans = Object.keys(CURATED).filter((k) => !names.has(k));
+    // A stale key fails silently: the model quietly gets the generic sentence
+    // instead of the hand-written one. sales_reports.get cost three days.
+    expect(orphans).toEqual([]);
+  });
+
+  it('reaches the report tools, which carry the vendor-number requirement', () => {
+    for (const n of ['sales_reports.list', 'finance_reports.list']) {
+      const op = OPERATIONS.find((o) => o.name === n)!;
+      expect(op.description).toMatch(/ASC_VENDOR_NUMBER/);
+    }
+  });
+});
+
+describe('id-only twin elimination', () => {
+  it('generates no GET relationship endpoint whose full-object twin exists', () => {
+    const paths = new Set(OPERATIONS.map((o) => `${o.method} ${o.path}`));
+    const survivors = OPERATIONS.filter(
+      (o) => o.method === 'GET' && o.path.includes('/relationships/')
+    );
+    // A surviving GET relationship endpoint is legitimate only when its twin
+    // is absent from the spec (orphan guard).
+    for (const s of survivors) {
+      expect(paths.has(`GET ${s.path.replace('/relationships/', '/')}`)).toBe(false);
+    }
+  });
+
+  it('keeps relationship write endpoints (link/unlink/replace)', () => {
+    const writes = OPERATIONS.filter(
+      (o) => o.path.includes('/relationships/') && o.method !== 'GET'
+    );
+    expect(writes.length).toBeGreaterThan(50);
+  });
+});

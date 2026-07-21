@@ -288,26 +288,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "alternative_distribution_package_versions.deltas.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/alternativeDistributionPackageVersions/{id}/relationships/deltas",
-    "description": "List only the IDs of the deltas linked to an alternative distribution package version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "alternative_distribution_package_versions.get",
     "domain": "apps",
     "method": "GET",
@@ -338,26 +318,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/alternativeDistributionPackageVersions/{id}/variants",
     "description": "List the variants belonging to an alternative distribution package version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "alternative_distribution_package_versions.variants.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/alternativeDistributionPackageVersions/{id}/relationships/variants",
-    "description": "List only the IDs of the variants linked to an alternative distribution package version. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -448,26 +408,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "alternative_distribution_packages.versions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/alternativeDistributionPackages/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to an alternative distribution package. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "analytics_report_instances.get",
     "domain": "analytics",
     "method": "GET",
@@ -487,26 +427,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/analyticsReportInstances/{id}/segments",
     "description": "List the segments belonging to an analytics report instance.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "analytics_report_instances.segments.list_ids",
-    "domain": "analytics",
-    "method": "GET",
-    "path": "/v1/analyticsReportInstances/{id}/relationships/segments",
-    "description": "List only the IDs of the segments linked to an analytics report instance. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -609,26 +529,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "analytics_report_requests.reports.list_ids",
-    "domain": "analytics",
-    "method": "GET",
-    "path": "/v1/analyticsReportRequests/{id}/relationships/reports",
-    "description": "List only the IDs of the reports linked to an analytics report request. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "analytics_report_segments.get",
     "domain": "analytics",
     "method": "GET",
@@ -683,26 +583,6 @@ export const OPERATIONS: Operation[] = [
         "type": "array",
         "description": "filter by attribute 'processingDate'"
       },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "analytics_reports.instances.list_ids",
-    "domain": "analytics",
-    "method": "GET",
-    "path": "/v1/analyticsReports/{id}/relationships/instances",
-    "description": "List only the IDs of the instances linked to an analytics report. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
       {
         "name": "limit",
         "type": "number",
@@ -832,26 +712,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_availabilities_v2.territory_availabilities.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v2/appAvailabilities/{id}/relationships/territoryAvailabilities",
-    "description": "List only the IDs of the territory availabilities linked to an app availabilities (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_categories.get",
     "domain": "apps",
     "method": "GET",
@@ -933,45 +793,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_categories.parent.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appCategories/{id}/relationships/parent",
-    "description": "Read only the ID of the parent linked to an app category.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_categories.subcategories.list",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/appCategories/{id}/subcategories",
     "description": "List the subcategories belonging to an app category.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_categories.subcategories.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appCategories/{id}/relationships/subcategories",
-    "description": "List only the IDs of the subcategories linked to an app category. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -1156,20 +982,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_clip_default_experience_localizations.app_clip_header_image.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appClipDefaultExperienceLocalizations/{id}/relationships/appClipHeaderImage",
-    "description": "Read only the ID of the App Clip header image linked to an App Clip default experience localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_clip_default_experience_localizations.create",
     "domain": "versions",
     "method": "POST",
@@ -1259,20 +1071,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_clip_default_experiences.app_clip_app_store_review_detail.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appClipDefaultExperiences/{id}/relationships/appClipAppStoreReviewDetail",
-    "description": "Read only the ID of the App Clip App Store review detail linked to an App Clip default experience.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_clip_default_experiences.app_clip_default_experience_localizations.list",
     "domain": "versions",
     "method": "GET",
@@ -1302,26 +1100,6 @@ export const OPERATIONS: Operation[] = [
           "appClipDefaultExperience",
           "appClipHeaderImage"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_clip_default_experiences.app_clip_default_experience_localizations.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appClipDefaultExperiences/{id}/relationships/appClipDefaultExperienceLocalizations",
-    "description": "List only the IDs of the App Clip default experience localizations linked to an App Clip default experience. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -1411,20 +1189,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_clip_default_experiences.release_with_app_store_version.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appClipDefaultExperiences/{id}/relationships/releaseWithAppStoreVersion",
-    "description": "Read only the ID of the release with App Store version linked to an App Clip default experience.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -1583,26 +1347,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_clips.app_clip_advanced_experiences.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appClips/{id}/relationships/appClipAdvancedExperiences",
-    "description": "List only the IDs of the App Clip advanced experiences linked to an App Clip. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_clips.app_clip_default_experiences.list",
     "domain": "versions",
     "method": "GET",
@@ -1634,26 +1378,6 @@ export const OPERATIONS: Operation[] = [
           "appClipDefaultExperienceLocalizations",
           "appClipAppStoreReviewDetail"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_clips.app_clip_default_experiences.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appClips/{id}/relationships/appClipDefaultExperiences",
-    "description": "List only the IDs of the App Clip default experiences linked to an App Clip. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -1747,26 +1471,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_custom_product_page_localizations.app_preview_sets.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPageLocalizations/{id}/relationships/appPreviewSets",
-    "description": "List only the IDs of the app preview sets linked to an app custom product page localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_custom_product_page_localizations.app_screenshot_sets.list",
     "domain": "marketing",
     "method": "GET",
@@ -1843,26 +1547,6 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersionExperimentTreatmentLocalization",
           "appScreenshots"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_custom_product_page_localizations.app_screenshot_sets.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPageLocalizations/{id}/relationships/appScreenshotSets",
-    "description": "List only the IDs of the app screenshot sets linked to an app custom product page localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -1966,26 +1650,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_custom_product_page_localizations.search_keywords.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPageLocalizations/{id}/relationships/searchKeywords",
-    "description": "List only the IDs of the search keywords linked to an app custom product page localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_custom_product_page_localizations.search_keywords.remove",
     "domain": "marketing",
     "method": "DELETE",
@@ -2047,26 +1711,6 @@ export const OPERATIONS: Operation[] = [
           "appPreviewSets",
           "searchKeywords"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_custom_product_page_versions.app_custom_product_page_localizations.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPageVersions/{id}/relationships/appCustomProductPageLocalizations",
-    "description": "List only the IDs of the app custom product page localizations linked to an app custom product page version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -2163,26 +1807,6 @@ export const OPERATIONS: Operation[] = [
           "appCustomProductPage",
           "appCustomProductPageLocalizations"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_custom_product_pages.app_custom_product_page_versions.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPages/{id}/relationships/appCustomProductPageVersions",
-    "description": "List only the IDs of the app custom product page versions linked to an app custom product page. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -2310,39 +1934,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_encryption_declarations.app_encryption_declaration_document.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appEncryptionDeclarations/{id}/relationships/appEncryptionDeclarationDocument",
-    "description": "Read only the ID of the app encryption declaration document linked to an app encryption declaration.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_encryption_declarations.app.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/appEncryptionDeclarations/{id}/app",
     "description": "Read the app for an app encryption declaration. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "app_encryption_declarations.app.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appEncryptionDeclarations/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to an app encryption declaration. DEPRECATED by Apple.",
     "readOnly": true,
     "deprecated": true,
     "pathParams": [
@@ -2482,26 +2078,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_event_localizations.app_event_screenshots.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEventLocalizations/{id}/relationships/appEventScreenshots",
-    "description": "List only the IDs of the app event screenshots linked to an app event localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_event_localizations.app_event_video_clips.list",
     "domain": "marketing",
     "method": "GET",
@@ -2525,26 +2101,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appEventLocalization"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_event_localizations.app_event_video_clips.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEventLocalizations/{id}/relationships/appEventVideoClips",
-    "description": "List only the IDs of the app event video clips linked to an app event localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -2827,26 +2383,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_events.localizations.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEvents/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to an app event. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_events.update",
     "domain": "marketing",
     "method": "PATCH",
@@ -2941,20 +2477,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_infos.age_rating_declaration.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/ageRatingDeclaration",
-    "description": "Read only the ID of the age rating declaration linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_infos.app_info_localizations.list",
     "domain": "apps",
     "method": "GET",
@@ -2983,26 +2505,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appInfo"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_infos.app_info_localizations.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/appInfoLocalizations",
-    "description": "List only the IDs of the app info localizations linked to an app info. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -3063,20 +2565,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_infos.primary_category.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/primaryCategory",
-    "description": "Read only the ID of the primary category linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_infos.primary_subcategory_one.get",
     "domain": "apps",
     "method": "GET",
@@ -3098,20 +2586,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_infos.primary_subcategory_one.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/primarySubcategoryOne",
-    "description": "Read only the ID of the primary subcategory one linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -3139,20 +2613,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_infos.primary_subcategory_two.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/primarySubcategoryTwo",
-    "description": "Read only the ID of the primary subcategory two linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_infos.secondary_category.get",
     "domain": "apps",
     "method": "GET",
@@ -3174,20 +2634,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_infos.secondary_category.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/secondaryCategory",
-    "description": "Read only the ID of the secondary category linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -3215,20 +2661,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_infos.secondary_subcategory_one.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/secondarySubcategoryOne",
-    "description": "Read only the ID of the secondary subcategory one linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_infos.secondary_subcategory_two.get",
     "domain": "apps",
     "method": "GET",
@@ -3250,20 +2682,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_infos.secondary_subcategory_two.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/secondarySubcategoryTwo",
-    "description": "Read only the ID of the secondary subcategory two linked to an app info.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -3290,26 +2708,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "territory"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_infos.territory_age_ratings.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appInfos/{id}/relationships/territoryAgeRatings",
-    "description": "List only the IDs of the territory age ratings linked to an app info. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -3353,26 +2751,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appPreviewSet"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_preview_sets.app_previews.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appPreviewSets/{id}/relationships/appPreviews",
-    "description": "List only the IDs of the app previews linked to an app preview set. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -3545,26 +2923,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_price_points_v3.equalizations.list_ids",
-    "domain": "pricing",
-    "method": "GET",
-    "path": "/v3/appPricePoints/{id}/relationships/equalizations",
-    "description": "List only the IDs of the equalizations linked to an app price points v3. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_price_points_v3.get",
     "domain": "pricing",
     "method": "GET",
@@ -3633,45 +2991,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_price_schedules.automatic_prices.list_ids",
-    "domain": "pricing",
-    "method": "GET",
-    "path": "/v1/appPriceSchedules/{id}/relationships/automaticPrices",
-    "description": "List only the IDs of the automatic prices linked to an app price schedule. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_price_schedules.base_territory.get",
     "domain": "pricing",
     "method": "GET",
     "path": "/v1/appPriceSchedules/{id}/baseTerritory",
     "description": "Read the base territory for an app price schedule.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "app_price_schedules.base_territory.get_id",
-    "domain": "pricing",
-    "method": "GET",
-    "path": "/v1/appPriceSchedules/{id}/relationships/baseTerritory",
-    "description": "Read only the ID of the base territory linked to an app price schedule.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -3764,26 +3088,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_price_schedules.manual_prices.list_ids",
-    "domain": "pricing",
-    "method": "GET",
-    "path": "/v1/appPriceSchedules/{id}/relationships/manualPrices",
-    "description": "List only the IDs of the manual prices linked to an app price schedule. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_screenshot_sets.app_screenshots.list",
     "domain": "marketing",
     "method": "GET",
@@ -3807,26 +3111,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appScreenshotSet"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_screenshot_sets.app_screenshots.list_ids",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appScreenshotSets/{id}/relationships/appScreenshots",
-    "description": "List only the IDs of the app screenshots linked to an app screenshot set. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -4058,26 +3342,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_review_details.app_store_review_attachments.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreReviewDetails/{id}/relationships/appStoreReviewAttachments",
-    "description": "List only the IDs of the App Store review attachments linked to an App Store review detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_review_details.create",
     "domain": "versions",
     "method": "POST",
@@ -4194,26 +3458,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_version_experiment_treatment_localizations.app_preview_sets.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/relationships/appPreviewSets",
-    "description": "List only the IDs of the app preview sets linked to an App Store version experiment treatment localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_version_experiment_treatment_localizations.app_screenshot_sets.list",
     "domain": "versions",
     "method": "GET",
@@ -4290,26 +3534,6 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersionExperimentTreatmentLocalization",
           "appScreenshots"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_experiment_treatment_localizations.app_screenshot_sets.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/relationships/appScreenshotSets",
-    "description": "List only the IDs of the app screenshot sets linked to an App Store version experiment treatment localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -4397,26 +3621,6 @@ export const OPERATIONS: Operation[] = [
           "appScreenshotSets",
           "appPreviewSets"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_experiment_treatments.app_store_version_experiment_treatment_localizations.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperimentTreatments/{id}/relationships/appStoreVersionExperimentTreatmentLocalizations",
-    "description": "List only the IDs of the App Store version experiment treatment localizations linked to an App Store version experiment treatment. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -4519,26 +3723,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_version_experiments_v2.app_store_version_experiment_treatments.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v2/appStoreVersionExperiments/{id}/relationships/appStoreVersionExperimentTreatments",
-    "description": "List only the IDs of the App Store version experiment treatments linked to an App Store version experiments (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_version_experiments_v2.create",
     "domain": "versions",
     "method": "POST",
@@ -4632,26 +3816,6 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersionExperimentV2",
           "appStoreVersionExperimentTreatmentLocalizations"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_experiments.app_store_version_experiment_treatments.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperiments/{id}/relationships/appStoreVersionExperimentTreatments",
-    "description": "List only the IDs of the App Store version experiment treatments linked to an App Store version experiment. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -4787,26 +3951,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_version_localizations.app_preview_sets.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionLocalizations/{id}/relationships/appPreviewSets",
-    "description": "List only the IDs of the app preview sets linked to an App Store version localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_version_localizations.app_screenshot_sets.list",
     "domain": "versions",
     "method": "GET",
@@ -4883,26 +4027,6 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersionExperimentTreatmentLocalization",
           "appScreenshots"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_localizations.app_screenshot_sets.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionLocalizations/{id}/relationships/appScreenshotSets",
-    "description": "List only the IDs of the app screenshot sets linked to an App Store version localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -4997,26 +4121,6 @@ export const OPERATIONS: Operation[] = [
         "type": "array",
         "description": "filter by locale"
       },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_localizations.search_keywords.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionLocalizations/{id}/relationships/searchKeywords",
-    "description": "List only the IDs of the search keywords linked to an App Store version localization. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
       {
         "name": "limit",
         "type": "number",
@@ -5161,20 +4265,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.alternative_distribution_package.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/alternativeDistributionPackage",
-    "description": "Read only the ID of the alternative distribution package linked to an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.app_clip_default_experience.get",
     "domain": "versions",
     "method": "GET",
@@ -5198,20 +4288,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_versions.app_clip_default_experience.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appClipDefaultExperience",
-    "description": "Read only the ID of the App Clip default experience linked to an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -5251,20 +4327,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_versions.app_store_review_detail.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appStoreReviewDetail",
-    "description": "Read only the ID of the App Store review detail linked to an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -5315,26 +4377,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.app_store_version_experiments_v2.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appStoreVersionExperimentsV2",
-    "description": "List only the IDs of the App Store version experiments (v2) linked to an App Store version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.app_store_version_experiments.list",
     "domain": "versions",
     "method": "GET",
@@ -5380,26 +4422,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.app_store_version_experiments.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appStoreVersionExperiments",
-    "description": "List only the IDs of the App Store version experiments linked to an App Store version. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.app_store_version_localizations.list",
     "domain": "versions",
     "method": "GET",
@@ -5436,45 +4458,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.app_store_version_localizations.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appStoreVersionLocalizations",
-    "description": "List only the IDs of the App Store version localizations linked to an App Store version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.app_store_version_phased_release.get",
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersions/{id}/appStoreVersionPhasedRelease",
     "description": "Read the App Store version phased release for an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_versions.app_store_version_phased_release.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appStoreVersionPhasedRelease",
-    "description": "Read only the ID of the App Store version phased release linked to an App Store version.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -5507,39 +4495,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.app_store_version_submission.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/appStoreVersionSubmission",
-    "description": "Read only the ID of the App Store version submission linked to an App Store version. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.build.get",
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersions/{id}/build",
     "description": "Read the build for an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_versions.build.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/build",
-    "description": "Read only the ID of the build linked to an App Store version.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -5679,26 +4639,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.customer_reviews.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/customerReviews",
-    "description": "List only the IDs of the customer reviews linked to an App Store version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.delete",
     "domain": "versions",
     "method": "DELETE",
@@ -5734,20 +4674,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_versions.game_center_app_version.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/gameCenterAppVersion",
-    "description": "Read only the ID of the Game Center app version linked to an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -5808,20 +4734,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.routing_app_coverage.get_id",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/relationships/routingAppCoverage",
-    "description": "Read only the ID of the routing app coverage linked to an App Store version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.update",
     "domain": "versions",
     "method": "PATCH",
@@ -5842,26 +4754,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/appTags/{id}/territories",
     "description": "List the territories belonging to an app tag.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_tags.territories.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appTags/{id}/relationships/territories",
-    "description": "List only the IDs of the territories linked to an app tag. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -5935,45 +4827,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.accessibility_declarations.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/accessibilityDeclarations",
-    "description": "List only the IDs of the accessibility declarations linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.alternative_distribution_key.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/alternativeDistributionKey",
     "description": "Read the alternative distribution key for an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "apps.alternative_distribution_key.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/alternativeDistributionKey",
-    "description": "Read only the ID of the alternative distribution key linked to an app.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -6020,51 +4878,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.analytics_report_requests.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/analyticsReportRequests",
-    "description": "List only the IDs of the analytics report requests linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.android_to_ios_app_mapping_details.list",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/androidToIosAppMappingDetails",
     "description": "List the android to iOS app mapping details belonging to an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.android_to_ios_app_mapping_details.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/androidToIosAppMappingDetails",
-    "description": "List only the IDs of the android to iOS app mapping details linked to an app. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -6103,20 +4921,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.app_availability_v2.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appAvailabilityV2",
-    "description": "Read only the ID of the app availability (v2) linked to an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "apps.app_clips.list",
     "domain": "apps",
     "method": "GET",
@@ -6151,26 +4955,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.app_clips.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appClips",
-    "description": "List only the IDs of the App Clips linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.app_custom_product_pages.list",
     "domain": "apps",
     "method": "GET",
@@ -6200,26 +4984,6 @@ export const OPERATIONS: Operation[] = [
           "app",
           "appCustomProductPageVersions"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.app_custom_product_pages.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appCustomProductPages",
-    "description": "List only the IDs of the app custom product pages linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -6266,26 +5030,6 @@ export const OPERATIONS: Operation[] = [
           "builds",
           "appEncryptionDeclarationDocument"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.app_encryption_declarations.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appEncryptionDeclarations",
-    "description": "List only the IDs of the app encryption declarations linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -6341,26 +5085,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.app_events.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appEvents",
-    "description": "List only the IDs of the app events linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.app_infos.list",
     "domain": "apps",
     "method": "GET",
@@ -6392,26 +5116,6 @@ export const OPERATIONS: Operation[] = [
           "secondarySubcategoryOne",
           "secondarySubcategoryTwo"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.app_infos.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appInfos",
-    "description": "List only the IDs of the app infos linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -6451,26 +5155,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.app_price_points.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appPricePoints",
-    "description": "List only the IDs of the app price points linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.app_price_schedule.get",
     "domain": "apps",
     "method": "GET",
@@ -6494,20 +5178,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.app_price_schedule.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appPriceSchedule",
-    "description": "Read only the ID of the app price schedule linked to an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -6553,26 +5223,6 @@ export const OPERATIONS: Operation[] = [
           "controlVersions",
           "appStoreVersionExperimentTreatments"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.app_store_version_experiments_v2.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appStoreVersionExperimentsV2",
-    "description": "List only the IDs of the App Store version experiments (v2) linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -6687,26 +5337,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.app_store_versions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appStoreVersions",
-    "description": "List only the IDs of the App Store versions linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.app_tags.list",
     "domain": "apps",
     "method": "GET",
@@ -6744,26 +5374,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "territories"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.app_tags.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/appTags",
-    "description": "List only the IDs of the app tags linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -6837,26 +5447,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.background_assets.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/backgroundAssets",
-    "description": "List only the IDs of the background assets linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.beta_app_localizations.list",
     "domain": "apps",
     "method": "GET",
@@ -6877,45 +5467,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.beta_app_localizations.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/betaAppLocalizations",
-    "description": "List only the IDs of the beta app localizations linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.beta_app_review_detail.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/betaAppReviewDetail",
     "description": "Read the beta app review detail for an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "apps.beta_app_review_detail.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/betaAppReviewDetail",
-    "description": "Read only the ID of the beta app review detail linked to an app.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -7010,26 +5566,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.beta_feedback_crash_submissions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/betaFeedbackCrashSubmissions",
-    "description": "List only the IDs of the beta feedback crash submissions linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.beta_feedback_screenshot_submissions.list",
     "domain": "apps",
     "method": "GET",
@@ -7115,26 +5651,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.beta_feedback_screenshot_submissions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/betaFeedbackScreenshotSubmissions",
-    "description": "List only the IDs of the beta feedback screenshot submissions linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.beta_groups.list",
     "domain": "apps",
     "method": "GET",
@@ -7155,45 +5671,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.beta_groups.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/betaGroups",
-    "description": "List only the IDs of the beta groups linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.beta_license_agreement.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/betaLicenseAgreement",
     "description": "Read the beta license agreement for an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "apps.beta_license_agreement.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/betaLicenseAgreement",
-    "description": "Read only the ID of the beta license agreement linked to an app.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -7330,51 +5812,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.build_uploads.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/buildUploads",
-    "description": "List only the IDs of the build uploads linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.builds.list",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/builds",
     "description": "List builds uploaded for an app, newest first when sorted by -uploadedDate.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.builds.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/builds",
-    "description": "List only the IDs of the builds linked to an app. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -7412,20 +5854,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.ci_product.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/ciProduct",
-    "description": "Read only the ID of the Xcode Cloud product linked to an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -7576,45 +6004,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.customer_reviews.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/customerReviews",
-    "description": "List only the IDs of the customer reviews linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.end_user_license_agreement.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/endUserLicenseAgreement",
     "description": "Read the end user license agreement for an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "apps.end_user_license_agreement.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/endUserLicenseAgreement",
-    "description": "Read only the ID of the end user license agreement linked to an app.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -7664,20 +6058,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.game_center_detail.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/gameCenterDetail",
-    "description": "Read only the ID of the Game Center detail linked to an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -7735,26 +6115,6 @@ export const OPERATIONS: Operation[] = [
           "compatibleVersions",
           "app"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.game_center_enabled_versions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/gameCenterEnabledVersions",
-    "description": "List only the IDs of the Game Center enabled versions linked to an app. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -7893,26 +6253,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.in_app_purchases_v2.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/inAppPurchasesV2",
-    "description": "List only the IDs of the in-app purchases (v2) linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.in_app_purchases.list",
     "domain": "apps",
     "method": "GET",
@@ -7966,26 +6306,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "apps"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.in_app_purchases.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/inAppPurchases",
-    "description": "List only the IDs of the in-app purchases linked to an app. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -8183,20 +6503,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.marketplace_search_detail.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/marketplaceSearchDetail",
-    "description": "Read only the ID of the marketplace search detail linked to an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "apps.perf_power_metrics.list",
     "domain": "apps",
     "method": "GET",
@@ -8260,26 +6566,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.pre_release_versions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/preReleaseVersions",
-    "description": "List only the IDs of the pre release versions linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.promoted_purchases.list",
     "domain": "apps",
     "method": "GET",
@@ -8304,26 +6590,6 @@ export const OPERATIONS: Operation[] = [
           "inAppPurchaseV2",
           "subscription"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.promoted_purchases.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/promotedPurchases",
-    "description": "List only the IDs of the promoted purchases linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -8401,26 +6667,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.review_submissions.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/reviewSubmissions",
-    "description": "List only the IDs of the review submissions linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.search_keywords.list",
     "domain": "apps",
     "method": "GET",
@@ -8451,45 +6697,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.search_keywords.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/searchKeywords",
-    "description": "List only the IDs of the search keywords linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.subscription_grace_period.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/subscriptionGracePeriod",
     "description": "Read the subscription grace period for an app.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "apps.subscription_grace_period.get_id",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/subscriptionGracePeriod",
-    "description": "Read only the ID of the subscription grace period linked to an app.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -8560,26 +6772,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.subscription_groups.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/subscriptionGroups",
-    "description": "List only the IDs of the subscription groups linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.update",
     "domain": "apps",
     "method": "PATCH",
@@ -8618,26 +6810,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "app"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "apps.webhooks.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/relationships/webhooks",
-    "description": "List only the IDs of the webhooks linked to an app. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -8759,26 +6931,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/backgroundAssetVersions/{id}/backgroundAssetUploadFiles",
     "description": "List the background asset upload files belonging to a background asset version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "background_asset_versions.background_asset_upload_files.list_ids",
-    "domain": "background_assets",
-    "method": "GET",
-    "path": "/v1/backgroundAssetVersions/{id}/relationships/backgroundAssetUploadFiles",
-    "description": "List only the IDs of the background asset upload files linked to a background asset version. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -9002,26 +7154,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "background_assets.versions.list_ids",
-    "domain": "background_assets",
-    "method": "GET",
-    "path": "/v1/backgroundAssets/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a background asset. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "beta_app_clip_invocation_localizations.create",
     "domain": "testflight",
     "method": "POST",
@@ -9134,20 +7266,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaAppLocalizations/{id}/app",
     "description": "Read the app for a beta app localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "beta_app_localizations.app.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaAppLocalizations/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a beta app localization.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -9272,20 +7390,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_app_review_details.app.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaAppReviewDetails/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a beta app review detail.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_app_review_details.get",
     "domain": "testflight",
     "method": "GET",
@@ -9361,20 +7465,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaAppReviewSubmissions/{id}/build",
     "description": "Read the build for a beta app review submission.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "beta_app_review_submissions.build.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaAppReviewSubmissions/{id}/relationships/build",
-    "description": "Read only the ID of the build linked to a beta app review submission.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -9468,20 +7558,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaBuildLocalizations/{id}/build",
     "description": "Read the build for a beta build localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "beta_build_localizations.build.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaBuildLocalizations/{id}/relationships/build",
-    "description": "Read only the ID of the build linked to a beta build localization.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -9620,20 +7696,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_feedback_crash_submissions.crash_log.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaFeedbackCrashSubmissions/{id}/relationships/crashLog",
-    "description": "Read only the ID of the crash log linked to a beta feedback crash submission.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_feedback_crash_submissions.delete",
     "domain": "testflight",
     "method": "DELETE",
@@ -9724,20 +7786,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_groups.app.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaGroups/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a beta group.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_groups.beta_recruitment_criteria.get",
     "domain": "testflight",
     "method": "GET",
@@ -9752,39 +7800,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_groups.beta_recruitment_criteria.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaGroups/{id}/relationships/betaRecruitmentCriteria",
-    "description": "Read only the ID of the beta recruitment criteria linked to a beta group.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_groups.beta_recruitment_criterion_compatible_build_check.get",
     "domain": "testflight",
     "method": "GET",
     "path": "/v1/betaGroups/{id}/betaRecruitmentCriterionCompatibleBuildCheck",
     "description": "Read the beta recruitment criterion compatible build check for a beta group.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "beta_groups.beta_recruitment_criterion_compatible_build_check.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaGroups/{id}/relationships/betaRecruitmentCriterionCompatibleBuildCheck",
-    "description": "Read only the ID of the beta recruitment criterion compatible build check linked to a beta group.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -9842,7 +7862,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "testflight",
     "method": "POST",
     "path": "/v1/betaGroups/{id}/relationships/betaTesters",
-    "description": "Link beta testers to a beta group.",
+    "description": "Add existing beta testers to a TestFlight group.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [
@@ -9858,26 +7878,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaGroups/{id}/betaTesters",
     "description": "List the beta testers belonging to a beta group.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "beta_groups.beta_testers.list_ids",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaGroups/{id}/relationships/betaTesters",
-    "description": "List only the IDs of the beta testers linked to a beta group. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -9928,26 +7928,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaGroups/{id}/builds",
     "description": "List the builds belonging to a beta group.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "beta_groups.builds.list_ids",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaGroups/{id}/relationships/builds",
-    "description": "List only the IDs of the builds linked to a beta group. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -10164,20 +8144,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_license_agreements.app.get_id",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaLicenseAgreements/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a beta license agreement.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_license_agreements.get",
     "domain": "testflight",
     "method": "GET",
@@ -10340,26 +8306,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_testers.apps.list_ids",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaTesters/{id}/relationships/apps",
-    "description": "List only the IDs of the apps linked to a beta tester. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "beta_testers.apps.remove",
     "domain": "testflight",
     "method": "DELETE",
@@ -10395,26 +8341,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaTesters/{id}/betaGroups",
     "description": "List the beta groups belonging to a beta tester.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "beta_testers.beta_groups.list_ids",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaTesters/{id}/relationships/betaGroups",
-    "description": "List only the IDs of the beta groups linked to a beta tester. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -10502,26 +8428,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/betaTesters/{id}/builds",
     "description": "List the builds belonging to a beta tester.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "beta_testers.builds.list_ids",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaTesters/{id}/relationships/builds",
-    "description": "List only the IDs of the builds linked to a beta tester. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -10727,20 +8633,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "build_beta_details.build.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildBetaDetails/{id}/relationships/build",
-    "description": "Read only the ID of the build linked to a build beta detail.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "build_beta_details.get",
     "domain": "builds",
     "method": "GET",
@@ -10842,39 +8734,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "build_bundles.app_clip_domain_cache_status.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildBundles/{id}/relationships/appClipDomainCacheStatus",
-    "description": "Read only the ID of the App Clip domain cache statu linked to a build bundle.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "build_bundles.app_clip_domain_debug_status.get",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/buildBundles/{id}/appClipDomainDebugStatus",
     "description": "Read the App Clip domain debug statu for a build bundle.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "build_bundles.app_clip_domain_debug_status.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildBundles/{id}/relationships/appClipDomainDebugStatus",
-    "description": "Read only the ID of the App Clip domain debug statu linked to a build bundle.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -10912,51 +8776,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "build_bundles.beta_app_clip_invocations.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildBundles/{id}/relationships/betaAppClipInvocations",
-    "description": "List only the IDs of the beta App Clip invocations linked to a build bundle. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "build_bundles.build_bundle_file_sizes.list",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/buildBundles/{id}/buildBundleFileSizes",
     "description": "List the build bundle file sizes belonging to a build bundle.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "build_bundles.build_bundle_file_sizes.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildBundles/{id}/relationships/buildBundleFileSizes",
-    "description": "List only the IDs of the build bundle file sizes linked to a build bundle. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -11019,26 +8843,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/buildUploads/{id}/buildUploadFiles",
     "description": "List the build upload files belonging to a build upload.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "build_uploads.build_upload_files.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildUploads/{id}/relationships/buildUploadFiles",
-    "description": "List only the IDs of the build upload files linked to a build upload. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -11121,20 +8925,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.app_encryption_declaration.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/appEncryptionDeclaration",
-    "description": "Read only the ID of the app encryption declaration linked to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "builds.app_encryption_declaration.set",
     "domain": "builds",
     "method": "PATCH",
@@ -11184,39 +8974,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.app_store_version.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/appStoreVersion",
-    "description": "Read only the ID of the App Store version linked to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "builds.app.get",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/builds/{id}/app",
     "description": "Read the app for a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "builds.app.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a build.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -11240,45 +9002,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.beta_app_review_submission.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/betaAppReviewSubmission",
-    "description": "Read only the ID of the beta app review submission linked to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "builds.beta_build_localizations.list",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/builds/{id}/betaBuildLocalizations",
     "description": "List the beta build localizations belonging to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "builds.beta_build_localizations.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/betaBuildLocalizations",
-    "description": "List only the IDs of the beta build localizations linked to a build. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -11367,20 +9095,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.build_beta_detail.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/buildBetaDetail",
-    "description": "Read only the ID of the build beta detail linked to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "builds.diagnostic_signatures.list",
     "domain": "builds",
     "method": "GET",
@@ -11402,26 +9116,6 @@ export const OPERATIONS: Operation[] = [
           "LAUNCHES"
         ]
       },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "builds.diagnostic_signatures.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/diagnosticSignatures",
-    "description": "List only the IDs of the diagnostic signatures linked to a build. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
       {
         "name": "limit",
         "type": "number",
@@ -11485,26 +9179,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.icons.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/icons",
-    "description": "List only the IDs of the icons linked to a build. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "builds.individual_testers.add",
     "domain": "builds",
     "method": "POST",
@@ -11525,26 +9199,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/builds/{id}/individualTesters",
     "description": "List the individual testers belonging to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "builds.individual_testers.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/individualTesters",
-    "description": "List only the IDs of the individual testers linked to a build. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -11774,20 +9428,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.pre_release_version.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/builds/{id}/relationships/preReleaseVersion",
-    "description": "Read only the ID of the pre release version linked to a build.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "builds.update",
     "domain": "builds",
     "method": "PATCH",
@@ -11859,45 +9499,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "bundle_ids.app.get_id",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/bundleIds/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a bundle ID.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "bundle_ids.bundle_id_capabilities.list",
     "domain": "provisioning",
     "method": "GET",
     "path": "/v1/bundleIds/{id}/bundleIdCapabilities",
     "description": "List the bundle ID capabilities belonging to a bundle ID.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "bundle_ids.bundle_id_capabilities.list_ids",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/bundleIds/{id}/relationships/bundleIdCapabilities",
-    "description": "List only the IDs of the bundle ID capabilities linked to a bundle ID. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -12045,26 +9651,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/bundleIds/{id}/profiles",
     "description": "List the profiles belonging to a bundle ID.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "bundle_ids.profiles.list_ids",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/bundleIds/{id}/relationships/profiles",
-    "description": "List only the IDs of the profiles linked to a bundle ID. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -12249,20 +9835,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "certificates.pass_type_id.get_id",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/certificates/{id}/relationships/passTypeId",
-    "description": "Read only the ID of the pass type ID linked to a certificate.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "certificates.update",
     "domain": "provisioning",
     "method": "PATCH",
@@ -12312,26 +9884,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "ci_build_actions.artifacts.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciBuildActions/{id}/relationships/artifacts",
-    "description": "List only the IDs of the artifacts linked to an Xcode Cloud build action. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "ci_build_actions.build_run.get",
     "domain": "xcode_cloud",
     "method": "GET",
@@ -12357,20 +9909,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_build_actions.build_run.get_id",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciBuildActions/{id}/relationships/buildRun",
-    "description": "Read only the ID of the build run linked to an Xcode Cloud build action.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -12417,51 +9955,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "ci_build_actions.issues.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciBuildActions/{id}/relationships/issues",
-    "description": "List only the IDs of the issues linked to an Xcode Cloud build action. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "ci_build_actions.test_results.list",
     "domain": "xcode_cloud",
     "method": "GET",
     "path": "/v1/ciBuildActions/{id}/testResults",
     "description": "List the test results belonging to an Xcode Cloud build action.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_build_actions.test_results.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciBuildActions/{id}/relationships/testResults",
-    "description": "List only the IDs of the test results linked to an Xcode Cloud build action. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -12500,26 +9998,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "buildRun"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_build_runs.actions.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciBuildRuns/{id}/relationships/actions",
-    "description": "List only the IDs of the actions linked to an Xcode Cloud build run. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -12669,26 +10147,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "ci_build_runs.builds.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciBuildRuns/{id}/relationships/builds",
-    "description": "List only the IDs of the builds linked to an Xcode Cloud build run. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "ci_build_runs.create",
     "domain": "xcode_cloud",
     "method": "POST",
@@ -12821,26 +10279,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "ci_mac_os_versions.xcode_versions.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciMacOsVersions/{id}/relationships/xcodeVersions",
-    "description": "List only the IDs of the Xcode versions linked to an Xcode Cloud mac os version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "ci_products.additional_repositories.list",
     "domain": "xcode_cloud",
     "method": "GET",
@@ -12870,26 +10308,6 @@ export const OPERATIONS: Operation[] = [
           "scmProvider",
           "defaultBranch"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_products.additional_repositories.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciProducts/{id}/relationships/additionalRepositories",
-    "description": "List only the IDs of the additional repositories linked to an Xcode Cloud product. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -12942,20 +10360,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "ci_products.app.get_id",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciProducts/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to an Xcode Cloud product.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "ci_products.build_runs.list",
     "domain": "xcode_cloud",
     "method": "GET",
@@ -12998,26 +10402,6 @@ export const OPERATIONS: Operation[] = [
           "destinationBranch",
           "pullRequest"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_products.build_runs.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciProducts/{id}/relationships/buildRuns",
-    "description": "List only the IDs of the build runs linked to an Xcode Cloud product. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -13138,26 +10522,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "ci_products.primary_repositories.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciProducts/{id}/relationships/primaryRepositories",
-    "description": "List only the IDs of the primary repositories linked to an Xcode Cloud product. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "ci_products.workflows.list",
     "domain": "xcode_cloud",
     "method": "GET",
@@ -13184,26 +10548,6 @@ export const OPERATIONS: Operation[] = [
           "xcodeVersion",
           "macOsVersion"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_products.workflows.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciProducts/{id}/relationships/workflows",
-    "description": "List only the IDs of the workflows linked to an Xcode Cloud product. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -13265,26 +10609,6 @@ export const OPERATIONS: Operation[] = [
           "destinationBranch",
           "pullRequest"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_workflows.build_runs.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciWorkflows/{id}/relationships/buildRuns",
-    "description": "List only the IDs of the build runs linked to an Xcode Cloud workflow. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -13364,20 +10688,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_workflows.repository.get_id",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciWorkflows/{id}/relationships/repository",
-    "description": "Read only the ID of the repository linked to an Xcode Cloud workflow.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -13468,26 +10778,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "xcodeVersions"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "ci_xcode_versions.mac_os_versions.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/ciXcodeVersions/{id}/relationships/macOsVersions",
-    "description": "List only the IDs of the mac os versions linked to an Xcode Cloud Xcode version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -13587,20 +10877,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "customer_reviews.response.get_id",
-    "domain": "reviews",
-    "method": "GET",
-    "path": "/v1/customerReviews/{id}/relationships/response",
-    "description": "Read only the ID of the response linked to a customer review.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -13819,26 +11095,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "end_user_license_agreements.territories.list_ids",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/endUserLicenseAgreements/{id}/relationships/territories",
-    "description": "List only the IDs of the territories linked to an end user license agreement. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "end_user_license_agreements.update",
     "domain": "apps",
     "method": "PATCH",
@@ -13858,7 +11114,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "analytics",
     "method": "GET",
     "path": "/v1/financeReports",
-    "description": "List finance reports.",
+    "description": "Download a finance report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance role on the API key.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [],
@@ -14100,20 +11356,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievement_localizations_v2.image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterAchievementLocalizations/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to a Game Center achievement localizations (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievement_localizations_v2.update",
     "domain": "game_center",
     "method": "PATCH",
@@ -14179,20 +11421,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievement_localizations.game_center_achievement_image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}/relationships/gameCenterAchievementImage",
-    "description": "Read only the ID of the Game Center achievement image linked to a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievement_localizations.game_center_achievement.get",
     "domain": "game_center",
     "method": "GET",
@@ -14218,20 +11446,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievement_localizations.game_center_achievement.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}/relationships/gameCenterAchievement",
-    "description": "Read only the ID of the Game Center achievement linked to a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -14391,26 +11605,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievement_versions_v2.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterAchievementVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center achievement versions (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievements_v2.activity.set",
     "domain": "game_center",
     "method": "PATCH",
@@ -14523,26 +11717,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievements_v2.versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterAchievements/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a Game Center achievements (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievements.activity.set",
     "domain": "game_center",
     "method": "PATCH",
@@ -14641,20 +11815,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievements.group_achievement.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}/relationships/groupAchievement",
-    "description": "Read only the ID of the group achievement linked to a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievements.group_achievement.set",
     "domain": "game_center",
     "method": "PATCH",
@@ -14699,26 +11859,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievements.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center achievement. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievements.releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -14753,26 +11893,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterDetail",
           "gameCenterAchievement"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievements.releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}/relationships/releases",
-    "description": "List only the IDs of the releases linked to a Game Center achievement. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -15015,26 +12135,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_activities.versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterActivities/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a Game Center activity. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_activity_images.create",
     "domain": "game_center",
     "method": "POST",
@@ -15156,20 +12256,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_activity_localizations.image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterActivityLocalizations/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to a Game Center activity localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_activity_localizations.update",
     "domain": "game_center",
     "method": "PATCH",
@@ -15262,20 +12348,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_activity_versions.default_image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterActivityVersions/{id}/relationships/defaultImage",
-    "description": "Read only the ID of the default image linked to a Game Center activity version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_activity_versions.get",
     "domain": "game_center",
     "method": "GET",
@@ -15331,26 +12403,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_activity_versions.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterActivityVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center activity version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_activity_versions.update",
     "domain": "game_center",
     "method": "PATCH",
@@ -15400,20 +12452,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_app_versions.app_store_version.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAppVersions/{id}/relationships/appStoreVersion",
-    "description": "Read only the ID of the App Store version linked to a Game Center app version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_app_versions.compatibility_versions.add",
     "domain": "game_center",
     "method": "POST",
@@ -15458,26 +12496,6 @@ export const OPERATIONS: Operation[] = [
           "compatibilityVersions",
           "appStoreVersion"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_app_versions.compatibility_versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAppVersions/{id}/relationships/compatibilityVersions",
-    "description": "List only the IDs of the compatibility versions linked to a Game Center app version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -15671,20 +12689,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_challenge_localizations.image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterChallengeLocalizations/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to a Game Center challenge localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_challenge_localizations.update",
     "domain": "game_center",
     "method": "PATCH",
@@ -15777,20 +12781,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_challenge_versions.default_image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterChallengeVersions/{id}/relationships/defaultImage",
-    "description": "Read only the ID of the default image linked to a Game Center challenge version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_challenge_versions.get",
     "domain": "game_center",
     "method": "GET",
@@ -15841,26 +12831,6 @@ export const OPERATIONS: Operation[] = [
           "version",
           "image"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_challenge_versions.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterChallengeVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center challenge version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -15996,26 +12966,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_challenges.versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterChallenges/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a Game Center challenge. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.achievement_releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -16055,26 +13005,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.achievement_releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/achievementReleases",
-    "description": "List only the IDs of the achievement releases linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.activity_releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -16103,26 +13033,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.activity_releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/activityReleases",
-    "description": "List only the IDs of the activity releases linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.challenge_releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -16146,26 +13056,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "version"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.challenge_releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/challengeReleases",
-    "description": "List only the IDs of the challenge releases linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -16309,26 +13199,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.game_center_achievements_v2.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2",
-    "description": "List only the IDs of the Game Center achievements (v2) linked to a Game Center detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.game_center_achievements_v2.replace",
     "domain": "game_center",
     "method": "PATCH",
@@ -16392,26 +13262,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.game_center_achievements.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterAchievements",
-    "description": "List only the IDs of the Game Center achievements linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.game_center_achievements.replace",
     "domain": "game_center",
     "method": "PATCH",
@@ -16461,26 +13311,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.game_center_activities.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterActivities",
-    "description": "List only the IDs of the Game Center activities linked to a Game Center detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.game_center_app_versions.list",
     "domain": "game_center",
     "method": "GET",
@@ -16510,26 +13340,6 @@ export const OPERATIONS: Operation[] = [
           "compatibilityVersions",
           "appStoreVersion"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_app_versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterAppVersions",
-    "description": "List only the IDs of the Game Center app versions linked to a Game Center detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -16582,26 +13392,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.game_center_challenges.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterChallenges",
-    "description": "List only the IDs of the Game Center challenges linked to a Game Center detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.game_center_group.get",
     "domain": "game_center",
     "method": "GET",
@@ -16630,20 +13420,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_group.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterGroup",
-    "description": "Read only the ID of the Game Center group linked to a Game Center detail.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -16683,26 +13459,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterLeaderboards",
           "versions"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_leaderboard_sets_v2.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2",
-    "description": "List only the IDs of the Game Center leaderboard sets (v2) linked to a Game Center detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -16761,26 +13517,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterLeaderboards",
           "releases"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_leaderboard_sets.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSets",
-    "description": "List only the IDs of the Game Center leaderboard sets linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -16849,26 +13585,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.game_center_leaderboards_v2.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2",
-    "description": "List only the IDs of the Game Center leaderboards (v2) linked to a Game Center detail. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.game_center_leaderboards_v2.replace",
     "domain": "game_center",
     "method": "PATCH",
@@ -16929,26 +13645,6 @@ export const OPERATIONS: Operation[] = [
           "activity",
           "challenge"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_leaderboards.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboards",
-    "description": "List only the IDs of the Game Center leaderboards linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -17051,26 +13747,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.leaderboard_releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/leaderboardReleases",
-    "description": "List only the IDs of the leaderboard releases linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.leaderboard_set_releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -17105,26 +13781,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterDetail",
           "gameCenterLeaderboardSet"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.leaderboard_set_releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/relationships/leaderboardSetReleases",
-    "description": "List only the IDs of the leaderboard set releases linked to a Game Center detail. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -17288,26 +13944,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_enabled_versions.compatible_versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterEnabledVersions/{id}/relationships/compatibleVersions",
-    "description": "List only the IDs of the compatible versions linked to a Game Center enabled version. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_enabled_versions.compatible_versions.remove",
     "domain": "game_center",
     "method": "DELETE",
@@ -17411,26 +14047,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_groups.game_center_achievements_v2.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterAchievementsV2",
-    "description": "List only the IDs of the Game Center achievements (v2) linked to a Game Center group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_groups.game_center_achievements_v2.replace",
     "domain": "game_center",
     "method": "PATCH",
@@ -17494,26 +14110,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_groups.game_center_achievements.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterAchievements",
-    "description": "List only the IDs of the Game Center achievements linked to a Game Center group. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_groups.game_center_achievements.replace",
     "domain": "game_center",
     "method": "PATCH",
@@ -17563,26 +14159,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_groups.game_center_activities.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterActivities",
-    "description": "List only the IDs of the Game Center activities linked to a Game Center group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_groups.game_center_challenges.list",
     "domain": "game_center",
     "method": "GET",
@@ -17625,26 +14201,6 @@ export const OPERATIONS: Operation[] = [
           "leaderboard",
           "leaderboardV2"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_challenges.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterChallenges",
-    "description": "List only the IDs of the Game Center challenges linked to a Game Center group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -17703,26 +14259,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_groups.game_center_details.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterDetails",
-    "description": "List only the IDs of the Game Center details linked to a Game Center group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_groups.game_center_leaderboard_sets_v2.list",
     "domain": "game_center",
     "method": "GET",
@@ -17759,26 +14295,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterLeaderboards",
           "versions"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_leaderboard_sets_v2.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardSetsV2",
-    "description": "List only the IDs of the Game Center leaderboard sets (v2) linked to a Game Center group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -17837,26 +14353,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterLeaderboards",
           "releases"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_leaderboard_sets.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardSets",
-    "description": "List only the IDs of the Game Center leaderboard sets linked to a Game Center group. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -17925,26 +14421,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_groups.game_center_leaderboards_v2.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardsV2",
-    "description": "List only the IDs of the Game Center leaderboards (v2) linked to a Game Center group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_groups.game_center_leaderboards_v2.replace",
     "domain": "game_center",
     "method": "PATCH",
@@ -18005,26 +14481,6 @@ export const OPERATIONS: Operation[] = [
           "activity",
           "challenge"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_leaderboards.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboards",
-    "description": "List only the IDs of the Game Center leaderboards linked to a Game Center group. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -18347,20 +14803,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_localizations_v2.image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboardLocalizations/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to a Game Center leaderboard localizations (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_localizations_v2.update",
     "domain": "game_center",
     "method": "PATCH",
@@ -18423,20 +14865,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_localizations.game_center_leaderboard_image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardLocalizations/{id}/relationships/gameCenterLeaderboardImage",
-    "description": "Read only the ID of the Game Center leaderboard image linked to a Game Center leaderboard localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -18734,20 +15162,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_set_localizations_v2.image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboardSetLocalizations/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to a Game Center leaderboard set localizations (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_set_localizations_v2.update",
     "domain": "game_center",
     "method": "PATCH",
@@ -18810,20 +15224,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_set_localizations.game_center_leaderboard_set_image.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetLocalizations/{id}/relationships/gameCenterLeaderboardSetImage",
-    "description": "Read only the ID of the Game Center leaderboard set image linked to a Game Center leaderboard set localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -18921,20 +15321,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_set_member_localizations.game_center_leaderboard_set.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetMemberLocalizations/{id}/relationships/gameCenterLeaderboardSet",
-    "description": "Read only the ID of the Game Center leaderboard set linked to a Game Center leaderboard set member localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_set_member_localizations.game_center_leaderboard.get",
     "domain": "game_center",
     "method": "GET",
@@ -18962,20 +15348,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_set_member_localizations.game_center_leaderboard.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetMemberLocalizations/{id}/relationships/gameCenterLeaderboard",
-    "description": "Read only the ID of the Game Center leaderboard linked to a Game Center leaderboard set member localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -19150,26 +15522,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_set_versions_v2.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboardSetVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center leaderboard set versions (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_sets_v2.create",
     "domain": "game_center",
     "method": "POST",
@@ -19255,26 +15607,6 @@ export const OPERATIONS: Operation[] = [
           "challenge",
           "versions"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets_v2.game_center_leaderboards.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
-    "description": "List only the IDs of the Game Center leaderboards linked to a Game Center leaderboard sets (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -19380,26 +15712,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_sets_v2.versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboardSets/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a Game Center leaderboard sets (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_sets.create",
     "domain": "game_center",
     "method": "POST",
@@ -19492,26 +15804,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_sets.game_center_leaderboards.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
-    "description": "List only the IDs of the Game Center leaderboards linked to a Game Center leaderboard set. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_sets.game_center_leaderboards.remove",
     "domain": "game_center",
     "method": "DELETE",
@@ -19598,20 +15890,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_sets.group_leaderboard_set.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/groupLeaderboardSet",
-    "description": "Read only the ID of the group leaderboard set linked to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_sets.group_leaderboard_set.set",
     "domain": "game_center",
     "method": "PATCH",
@@ -19656,26 +15934,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_sets.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center leaderboard set. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_sets.releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -19710,26 +15968,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterDetail",
           "gameCenterLeaderboardSet"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets.releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/releases",
-    "description": "List only the IDs of the releases linked to a Game Center leaderboard set. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -19811,26 +16049,6 @@ export const OPERATIONS: Operation[] = [
           "version",
           "image"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_versions_v2.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboardVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center leaderboard versions (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -19965,26 +16183,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboards_v2.versions.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v2/gameCenterLeaderboards/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a Game Center leaderboards (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboards.activity.set",
     "domain": "game_center",
     "method": "PATCH",
@@ -20102,20 +16300,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboards.group_leaderboard.get_id",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}/relationships/groupLeaderboard",
-    "description": "Read only the ID of the group leaderboard linked to a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboards.group_leaderboard.set",
     "domain": "game_center",
     "method": "PATCH",
@@ -20160,26 +16344,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboards.localizations.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a Game Center leaderboard. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboards.releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -20214,26 +16378,6 @@ export const OPERATIONS: Operation[] = [
           "gameCenterDetail",
           "gameCenterLeaderboard"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboards.releases.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}/relationships/releases",
-    "description": "List only the IDs of the releases linked to a Game Center leaderboard. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -20747,26 +16891,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_matchmaking_rule_sets.matchmaking_queues.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterMatchmakingRuleSets/{id}/relationships/matchmakingQueues",
-    "description": "List only the IDs of the matchmaking queues linked to a Game Center matchmaking rule set. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_matchmaking_rule_sets.rules.list",
     "domain": "game_center",
     "method": "GET",
@@ -20787,51 +16911,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_matchmaking_rule_sets.rules.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterMatchmakingRuleSets/{id}/relationships/rules",
-    "description": "List only the IDs of the rules linked to a Game Center matchmaking rule set. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_matchmaking_rule_sets.teams.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}/teams",
     "description": "List the teams belonging to a Game Center matchmaking rule set.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_matchmaking_rule_sets.teams.list_ids",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterMatchmakingRuleSets/{id}/relationships/teams",
-    "description": "List only the IDs of the teams linked to a Game Center matchmaking rule set. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -21200,26 +17284,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/inAppPurchaseAvailabilities/{id}/availableTerritories",
     "description": "List the available territories belonging to an in-app purchase availability.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchase_availabilities.available_territories.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseAvailabilities/{id}/relationships/availableTerritories",
-    "description": "List only the IDs of the available territories linked to an in-app purchase availability. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -21706,26 +17770,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_offer_codes.custom_codes.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseOfferCodes/{id}/relationships/customCodes",
-    "description": "List only the IDs of the custom codes linked to an in-app purchase offer code. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_offer_codes.get",
     "domain": "iap",
     "method": "GET",
@@ -21780,26 +17824,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_offer_codes.one_time_use_codes.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseOfferCodes/{id}/relationships/oneTimeUseCodes",
-    "description": "List only the IDs of the one time use codes linked to an in-app purchase offer code. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_offer_codes.prices.list",
     "domain": "iap",
     "method": "GET",
@@ -21829,26 +17853,6 @@ export const OPERATIONS: Operation[] = [
           "territory",
           "pricePoint"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchase_offer_codes.prices.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseOfferCodes/{id}/relationships/prices",
-    "description": "List only the IDs of the prices linked to an in-app purchase offer code. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -21907,26 +17911,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_price_points.equalizations.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchasePricePoints/{id}/relationships/equalizations",
-    "description": "List only the IDs of the equalizations linked to an in-app purchase price point. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_price_schedules.automatic_prices.list",
     "domain": "iap",
     "method": "GET",
@@ -21961,45 +17945,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_price_schedules.automatic_prices.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchasePriceSchedules/{id}/relationships/automaticPrices",
-    "description": "List only the IDs of the automatic prices linked to an in-app purchase price schedule. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_price_schedules.base_territory.get",
     "domain": "iap",
     "method": "GET",
     "path": "/v1/inAppPurchasePriceSchedules/{id}/baseTerritory",
     "description": "Read the base territory for an in-app purchase price schedule.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchase_price_schedules.base_territory.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchasePriceSchedules/{id}/relationships/baseTerritory",
-    "description": "Read only the ID of the base territory linked to an in-app purchase price schedule.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -22081,26 +18031,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_price_schedules.manual_prices.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchasePriceSchedules/{id}/relationships/manualPrices",
-    "description": "List only the IDs of the manual prices linked to an in-app purchase price schedule. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_submissions.create",
     "domain": "iap",
     "method": "POST",
@@ -22167,45 +18097,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_versions.image.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseVersions/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to an in-app purchase version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_versions.images.list",
     "domain": "iap",
     "method": "GET",
     "path": "/v1/inAppPurchaseVersions/{id}/images",
     "description": "List the images belonging to an in-app purchase version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchase_versions.images.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseVersions/{id}/relationships/images",
-    "description": "List only the IDs of the images linked to an in-app purchase version. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -22249,26 +18145,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_versions.localizations.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to an in-app purchase version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.app_store_review_screenshot.get",
     "domain": "iap",
     "method": "GET",
@@ -22292,20 +18168,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.app_store_review_screenshot.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/appStoreReviewScreenshot",
-    "description": "Read only the ID of the App Store review screenshot linked to an in-app purchases (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.content.get",
     "domain": "iap",
     "method": "GET",
@@ -22326,20 +18188,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchases_v2.content.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/content",
-    "description": "Read only the ID of the content linked to an in-app purchases (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -22427,20 +18275,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.iap_price_schedule.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/iapPriceSchedule",
-    "description": "Read only the ID of the IAP price schedule linked to an in-app purchases (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.images.list",
     "domain": "iap",
     "method": "GET",
@@ -22469,26 +18303,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.images.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/images",
-    "description": "List only the IDs of the images linked to an in-app purchases (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.in_app_purchase_availability.get",
     "domain": "iap",
     "method": "GET",
@@ -22509,20 +18323,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchases_v2.in_app_purchase_availability.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/inAppPurchaseAvailability",
-    "description": "Read only the ID of the in-app purchase availability linked to an in-app purchases (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -22549,26 +18349,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "inAppPurchaseV2"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchases_v2.in_app_purchase_localizations.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/inAppPurchaseLocalizations",
-    "description": "List only the IDs of the in-app purchase localizations linked to an in-app purchases (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -22609,26 +18389,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.offer_codes.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/offerCodes",
-    "description": "List only the IDs of the offer codes linked to an in-app purchases (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.price_points.list",
     "domain": "iap",
     "method": "GET",
@@ -22662,26 +18422,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.price_points.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/pricePoints",
-    "description": "List only the IDs of the price points linked to an in-app purchases (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.promoted_purchase.get",
     "domain": "iap",
     "method": "GET",
@@ -22703,20 +18443,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchases_v2.promoted_purchase.get_id",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/promotedPurchase",
-    "description": "Read only the ID of the promoted purchase linked to an in-app purchases (v2).",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -22777,26 +18503,6 @@ export const OPERATIONS: Operation[] = [
           "images",
           "localizations"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchases_v2.versions.list_ids",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to an in-app purchases (v2). Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -23005,26 +18711,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "passTypeId"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "merchant_ids.certificates.list_ids",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/merchantIds/{id}/relationships/certificates",
-    "description": "List only the IDs of the certificates linked to a merchant ID. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -23374,26 +19060,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "pass_type_ids.certificates.list_ids",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/passTypeIds/{id}/relationships/certificates",
-    "description": "List only the IDs of the certificates linked to a pass type ID. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "pass_type_ids.create",
     "domain": "provisioning",
     "method": "POST",
@@ -23527,45 +19193,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "pre_release_versions.app.get_id",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/preReleaseVersions/{id}/relationships/app",
-    "description": "Read only the ID of the app linked to a pre release version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "pre_release_versions.builds.list",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/preReleaseVersions/{id}/builds",
     "description": "List the builds belonging to a pre release version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "pre_release_versions.builds.list_ids",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/preReleaseVersions/{id}/relationships/builds",
-    "description": "List only the IDs of the builds linked to a pre release version. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -23711,45 +19343,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "profiles.bundle_id.get_id",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/profiles/{id}/relationships/bundleId",
-    "description": "Read only the ID of the bundle ID linked to a profile.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "profiles.certificates.list",
     "domain": "provisioning",
     "method": "GET",
     "path": "/v1/profiles/{id}/certificates",
     "description": "List the certificates belonging to a profile.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "profiles.certificates.list_ids",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/profiles/{id}/relationships/certificates",
-    "description": "List only the IDs of the certificates linked to a profile. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -23797,26 +19395,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/profiles/{id}/devices",
     "description": "List the devices belonging to a profile.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "profiles.devices.list_ids",
-    "domain": "provisioning",
-    "method": "GET",
-    "path": "/v1/profiles/{id}/relationships/devices",
-    "description": "List only the IDs of the devices linked to a profile. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -24052,7 +19630,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "POST",
     "path": "/v1/reviewSubmissions",
-    "description": "Create a review submission.",
+    "description": "Submit an App Store version for Apple review. The version must already have a build attached.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -24124,26 +19702,6 @@ export const OPERATIONS: Operation[] = [
           "subscriptionVersion",
           "subscriptionGroupVersion"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "review_submissions.items.list_ids",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/reviewSubmissions/{id}/relationships/items",
-    "description": "List only the IDs of the items linked to a review submission. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -24294,7 +19852,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "analytics",
     "method": "GET",
     "path": "/v1/salesReports",
-    "description": "List sales reports.",
+    "description": "Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [],
@@ -24498,26 +20056,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "scm_providers.repositories.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/scmProviders/{id}/relationships/repositories",
-    "description": "List only the IDs of the repositories linked to an SCM provider. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "scm_pull_requests.get",
     "domain": "xcode_cloud",
     "method": "GET",
@@ -24593,26 +20131,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "scm_repositories.git_references.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/scmRepositories/{id}/relationships/gitReferences",
-    "description": "List only the IDs of the git references linked to an SCM repository. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "scm_repositories.list",
     "domain": "xcode_cloud",
     "method": "GET",
@@ -24668,26 +20186,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "repository"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "scm_repositories.pull_requests.list_ids",
-    "domain": "xcode_cloud",
-    "method": "GET",
-    "path": "/v1/scmRepositories/{id}/relationships/pullRequests",
-    "description": "List only the IDs of the pull requests linked to an SCM repository. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -24763,26 +20261,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/subscriptionAvailabilities/{id}/availableTerritories",
     "description": "List the available territories belonging to a subscription availability. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_availabilities.available_territories.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionAvailabilities/{id}/relationships/availableTerritories",
-    "description": "List only the IDs of the available territories linked to a subscription availability. Use the related-resource tool instead if you need full records. DEPRECATED by Apple.",
     "readOnly": true,
     "deprecated": true,
     "pathParams": [
@@ -25071,26 +20549,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_group_versions.localizations.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionGroupVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a subscription group version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_groups.create",
     "domain": "subscriptions",
     "method": "POST",
@@ -25166,26 +20624,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "subscriptionGroup"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_groups.subscription_group_localizations.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionGroups/{id}/relationships/subscriptionGroupLocalizations",
-    "description": "List only the IDs of the subscription group localizations linked to a subscription group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -25267,26 +20705,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_groups.subscriptions.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionGroups/{id}/relationships/subscriptions",
-    "description": "List only the IDs of the subscriptions linked to a subscription group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_groups.update",
     "domain": "subscriptions",
     "method": "PATCH",
@@ -25342,26 +20760,6 @@ export const OPERATIONS: Operation[] = [
           "subscriptionGroup",
           "localizations"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_groups.versions.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionGroups/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a subscription group. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -25818,26 +21216,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_offer_codes.custom_codes.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionOfferCodes/{id}/relationships/customCodes",
-    "description": "List only the IDs of the custom codes linked to a subscription offer code. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_offer_codes.get",
     "domain": "subscriptions",
     "method": "GET",
@@ -25892,26 +21270,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_offer_codes.one_time_use_codes.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionOfferCodes/{id}/relationships/oneTimeUseCodes",
-    "description": "List only the IDs of the one time use codes linked to a subscription offer code. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_offer_codes.prices.list",
     "domain": "subscriptions",
     "method": "GET",
@@ -25946,26 +21304,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_offer_codes.prices.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionOfferCodes/{id}/relationships/prices",
-    "description": "List only the IDs of the prices linked to a subscription offer code. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_offer_codes.update",
     "domain": "subscriptions",
     "method": "PATCH",
@@ -25986,26 +21324,6 @@ export const OPERATIONS: Operation[] = [
     "method": "GET",
     "path": "/v1/subscriptionPlanAvailabilities/{id}/availableTerritories",
     "description": "List the available territories belonging to a subscription plan availability.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_plan_availabilities.available_territories.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionPlanAvailabilities/{id}/relationships/availableTerritories",
-    "description": "List only the IDs of the available territories linked to a subscription plan availability. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -26183,26 +21501,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_price_points.equalizations.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionPricePoints/{id}/relationships/equalizations",
-    "description": "List only the IDs of the equalizations linked to a subscription price point. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_price_points.get",
     "domain": "subscriptions",
     "method": "GET",
@@ -26338,26 +21636,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_promotional_offers.prices.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionPromotionalOffers/{id}/relationships/prices",
-    "description": "List only the IDs of the prices linked to a subscription promotional offer. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_promotional_offers.update",
     "domain": "subscriptions",
     "method": "PATCH",
@@ -26439,45 +21717,11 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_versions.image.get_id",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionVersions/{id}/relationships/image",
-    "description": "Read only the ID of the image linked to a subscription version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "subscription_versions.images.list",
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionVersions/{id}/images",
     "description": "List the images belonging to a subscription version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_versions.images.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionVersions/{id}/relationships/images",
-    "description": "List only the IDs of the images linked to a subscription version. Use the related-resource tool instead if you need full records.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -26521,26 +21765,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_versions.localizations.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionVersions/{id}/relationships/localizations",
-    "description": "List only the IDs of the localizations linked to a subscription version. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.app_store_review_screenshot.get",
     "domain": "subscriptions",
     "method": "GET",
@@ -26561,20 +21785,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.app_store_review_screenshot.get_id",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/appStoreReviewScreenshot",
-    "description": "Read only the ID of the App Store review screenshot linked to a subscription.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -26668,26 +21878,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.images.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/images",
-    "description": "List only the IDs of the images linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.introductory_offers.list",
     "domain": "subscriptions",
     "method": "GET",
@@ -26718,26 +21908,6 @@ export const OPERATIONS: Operation[] = [
           "territory",
           "subscriptionPricePoint"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.introductory_offers.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/introductoryOffers",
-    "description": "List only the IDs of the introductory offers linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -26794,26 +21964,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.offer_codes.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/offerCodes",
-    "description": "List only the IDs of the offer codes linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.plan_availabilities.list",
     "domain": "subscriptions",
     "method": "GET",
@@ -26837,26 +21987,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "availableTerritories"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.plan_availabilities.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/planAvailabilities",
-    "description": "List only the IDs of the plan availabilities linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -26900,26 +22030,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "territory"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.price_points.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/pricePoints",
-    "description": "List only the IDs of the price points linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -26973,26 +22083,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.prices.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/prices",
-    "description": "List only the IDs of the prices linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.prices.remove",
     "domain": "subscriptions",
     "method": "DELETE",
@@ -27032,20 +22122,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.promoted_purchase.get_id",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/promotedPurchase",
-    "description": "Read only the ID of the promoted purchase linked to a subscription.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.promotional_offers.list",
     "domain": "subscriptions",
     "method": "GET",
@@ -27080,26 +22156,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.promotional_offers.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/promotionalOffers",
-    "description": "List only the IDs of the promotional offers linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.subscription_availability.get",
     "domain": "subscriptions",
     "method": "GET",
@@ -27120,20 +22176,6 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.subscription_availability.get_id",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/subscriptionAvailability",
-    "description": "Read only the ID of the subscription availability linked to a subscription. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
     "hasBody": false
   },
   {
@@ -27160,26 +22202,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "subscription"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.subscription_localizations.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/subscriptionLocalizations",
-    "description": "List only the IDs of the subscription localizations linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -27247,26 +22269,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.versions.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/versions",
-    "description": "List only the IDs of the versions linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.win_back_offers.list",
     "domain": "subscriptions",
     "method": "GET",
@@ -27290,26 +22292,6 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "prices"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.win_back_offers.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/relationships/winBackOffers",
-    "description": "List only the IDs of the win back offers linked to a subscription. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -27485,26 +22467,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "user_invitations.visible_apps.list_ids",
-    "domain": "users",
-    "method": "GET",
-    "path": "/v1/userInvitations/{id}/relationships/visibleApps",
-    "description": "List only the IDs of the visible apps linked to a user invitation. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "users.delete",
     "domain": "users",
     "method": "DELETE",
@@ -27659,26 +22621,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "users.visible_apps.list_ids",
-    "domain": "users",
-    "method": "GET",
-    "path": "/v1/users/{id}/relationships/visibleApps",
-    "description": "List only the IDs of the visible apps linked to a user. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "users.visible_apps.remove",
     "domain": "users",
     "method": "DELETE",
@@ -27810,26 +22752,6 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "webhooks.deliveries.list_ids",
-    "domain": "webhooks",
-    "method": "GET",
-    "path": "/v1/webhooks/{id}/relationships/deliveries",
-    "description": "List only the IDs of the deliveries linked to a webhook. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "webhooks.get",
     "domain": "webhooks",
     "method": "GET",
@@ -27947,26 +22869,6 @@ export const OPERATIONS: Operation[] = [
           "territory",
           "subscriptionPricePoint"
         ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "win_back_offers.prices.list_ids",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/winBackOffers/{id}/relationships/prices",
-    "description": "List only the IDs of the prices linked to a win back offer. Use the related-resource tool instead if you need full records.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
