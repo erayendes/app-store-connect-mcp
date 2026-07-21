@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PROFILES, resolveProfile, profileForDomain, GATEWAY_OPERATIONS } from '../src/profiles.js';
@@ -134,5 +134,22 @@ describe('shared config fallback', () => {
         process.env = saved;
       }
     });
+  });
+});
+
+describe('cleanPath (drag-and-drop friendly .p8 entry)', () => {
+  it('strips quotes, unescapes spaces, expands ~', async () => {
+    const { cleanPath } = await import('../src/setup.js');
+    const home = process.env.HOME ?? '';
+    expect(cleanPath('  "/a/App Store Connect/k.p8"  ')).toBe('/a/App Store Connect/k.p8');
+    expect(cleanPath("'/a/App Store Connect/k.p8'")).toBe('/a/App Store Connect/k.p8');
+    expect(cleanPath('/a/App\\ Store\\ Connect/k.p8')).toBe('/a/App Store Connect/k.p8');
+    expect(cleanPath('~/Documents/k.p8')).toBe(`${home}/Documents/k.p8`);
+    expect(cleanPath('/plain/no-space.p8')).toBe('/plain/no-space.p8');
+  });
+
+  it('does not leak a real key id as the example prompt', () => {
+    const src = readFileSync(new URL('../src/setup.ts', import.meta.url), 'utf8');
+    expect(src).not.toMatch(/7RDCD6GXG6/);
   });
 });
