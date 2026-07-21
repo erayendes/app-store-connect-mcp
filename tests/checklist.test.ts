@@ -50,3 +50,22 @@ describe('checklist render', () => {
     expect(lines[2]).toContain('◉ c');
   });
 });
+
+import { PROFILES, GATEWAY_OPERATIONS } from '../src/profiles.js';
+import { ToolRegistry } from '../src/core/registry.js';
+
+describe('profile size hint inputs', () => {
+  it('computes a plausible, ordered tool count per profile', () => {
+    const count = (p: (typeof PROFILES)[number]) =>
+      new ToolRegistry({
+        domains: p.domains, readOnly: false, includeDeprecated: false,
+        extraOperations: GATEWAY_OPERATIONS,
+      }).size + 3 + (p.reviewsAi ? 3 : 0);
+    const byName = Object.fromEntries(PROFILES.map((p) => [p.name, count(p)]));
+    expect(byName['analytics']).toBeLessThan(byName['monetization']);
+    expect(byName['webhooks']).toBeLessThan(30);
+    expect(byName['game-center']).toBeGreaterThan(100);
+    // gateway means even the smallest profile can look up an app
+    expect(byName['webhooks']).toBeGreaterThanOrEqual(3 + 2);
+  });
+});

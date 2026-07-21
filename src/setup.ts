@@ -14,11 +14,35 @@ import {
   sharedConfigPath,
   type SharedConfig,
 } from './core/shared-config.js';
-import { PROFILES, type Profile } from './profiles.js';
+import { PROFILES, GATEWAY_OPERATIONS, type Profile } from './profiles.js';
+import { ToolRegistry } from './core/registry.js';
 import { runChecklist } from './checklist.js';
 
 /** Sensible starting selection: reports, reviews, and app lookup. */
 const DEFAULT_PROFILE_NAMES = ['analytics', 'marketing', 'app-info'];
+
+/** Rough tokens a tool definition costs in context — for the size hint only. */
+const TOKENS_PER_TOOL = 150;
+
+/**
+ * How many tools a profile actually serves: its domains plus the gateway
+ * tools, the three meta tools, and (where the profile opts in) the review-AI
+ * helpers. Computed from the spec so the numbers can't drift out of date.
+ */
+function profileToolCount(p: Profile): number {
+  const registry = new ToolRegistry({
+    domains: p.domains,
+    readOnly: false,
+    includeDeprecated: false,
+    extraOperations: GATEWAY_OPERATIONS,
+  });
+  return registry.size + 3 + (p.reviewsAi ? 3 : 0); // + meta tools (+ reviews-ai)
+}
+
+function sizeHint(p: Profile): string {
+  const n = profileToolCount(p);
+  return `${n} tools, ~${Math.round((n * TOKENS_PER_TOOL) / 1000)}k tokens`;
+}
 
 /**
  * Let the user pick which profiles to register. A TTY gets the space-to-toggle
@@ -32,10 +56,17 @@ async function selectProfiles(
     (i) => i >= 0
   );
 
+  const title =
+    '\nWhich profiles do you want to register?\n' +
+    'Each profile is its own small MCP server. Every one you register loads its\n' +
+    'tools into every session, so pick the areas you actually use — leaner is\n' +
+    'faster. You can re-run setup anytime to change this. (Reports, reviews and\n' +
+    'app lookup are pre-checked.)';
+
   if (process.stdin.isTTY) {
     const picked = await runChecklist(
-      PROFILES.map((p) => ({ label: `asc-${p.name}`, hint: p.description })),
-      { title: '\nWhich profiles do you want to register?', preselected }
+      PROFILES.map((p) => ({ label: `asc-${p.name}`, hint: `${sizeHint(p)} · ${p.description}` })),
+      { title, preselected }
     );
     if (picked && picked.length) return picked.map((i) => PROFILES[i]);
     // Cancelled or nothing chosen — fall through to printing all as reference.
