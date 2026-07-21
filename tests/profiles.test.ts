@@ -154,6 +154,27 @@ describe('cleanPath (drag-and-drop friendly .p8 entry)', () => {
   });
 });
 
+describe('credential format validators (catch paste errors at the prompt)', () => {
+  it('accepts real-shaped Key IDs, rejects obvious mistakes', async () => {
+    const { isValidKeyId } = await import('../src/setup.js');
+    expect(isValidKeyId('ABC123XYZ9')).toBe(true);
+    expect(isValidKeyId('  ABC123XYZ9  ')).toBe(true); // trimmed
+    expect(isValidKeyId('')).toBe(false);
+    expect(isValidKeyId('short')).toBe(false);
+    expect(isValidKeyId('has-a-dash-1')).toBe(false);
+    expect(isValidKeyId('me@example.com')).toBe(false);
+  });
+
+  it('accepts a UUID Issuer ID, rejects malformed ones', async () => {
+    const { isValidIssuerId } = await import('../src/setup.js');
+    expect(isValidIssuerId('57246e4f-1a2b-4c3d-9e8f-0123456789ab')).toBe(true);
+    expect(isValidIssuerId('')).toBe(false);
+    expect(isValidIssuerId('57246e4f1a2b4c3d9e8f0123456789ab')).toBe(false); // no dashes
+    expect(isValidIssuerId('57246e4f-1a2b-4c3d-9e8f')).toBe(false); // truncated
+    expect(isValidIssuerId('ABC123XYZ9')).toBe(false); // a Key ID, not a UUID
+  });
+});
+
 import { registerCommand } from '../src/profiles.js';
 import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 

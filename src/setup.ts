@@ -118,6 +118,18 @@ export function cleanPath(input: string): string {
   return p;
 }
 
+// Cheap format checks so an obvious paste error is caught at the prompt rather
+// than surfacing as a 401 the first time a server starts. Deliberately lenient:
+// they reject clearly-wrong shapes (a whole file pasted, an email, a truncated
+// UUID), not borderline-valid ones — Apple stays the source of truth on whether
+// the credential actually works.
+export function isValidKeyId(v: string): boolean {
+  return /^[A-Za-z0-9]{8,12}$/.test(v.trim());
+}
+export function isValidIssuerId(v: string): boolean {
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(v.trim());
+}
+
 export async function runSetup(): Promise<void> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const ask = async (q: string, required = true): Promise<string> => {
@@ -125,6 +137,15 @@ export async function runSetup(): Promise<void> {
       const a = (await rl.question(q)).trim();
       if (a || !required) return a;
       console.log('  This field is required.');
+    }
+  };
+  // Like ask(), but also re-prompts when the answer is present yet malformed,
+  // so a mistyped Key ID / Issuer ID is caught here instead of at first run.
+  const askValid = async (q: string, ok: (v: string) => boolean, hint: string): Promise<string> => {
+    for (;;) {
+      const a = await ask(q);
+      if (ok(a)) return a;
+      console.log(`  ${hint}`);
     }
   };
 
@@ -164,28 +185,44 @@ export async function runSetup(): Promise<void> {
       }
     }
 
-    const keyId = await ask('\nKey ID: ');
-    const issuerId = await ask('Issuer ID: ');
-    const p8Path = cleanPath(await ask('Path to the .p8 file (tip: drag the file into this window): '));
+    const keyId = await askValid(
+      '\nKey ID: ',
+      isValidKeyId,
+      'A Key ID is 8–12 letters and digits, e.g. "ABC123XYZ9". Check it and try again.'
+    );
+    const issuerId = await askValid(
+      'Issuer ID: ',
+      isValidIssuerId,
+      'An Issuer ID is a UUID, e.g. "57246e4f-1a2b-4c3d-9e8f-0123456789ab". Check it and try again.'
+    );
+
+    // Ask for the .p8 until it points at a readable private key, so a wrong path
+    // or a non-key file re-prompts instead of aborting the whole wizard.
+    let resolvedPath: string;
+    let pem: string;
+    for (;;) {
+      const p8Path = cleanPath(
+        await ask('Path to the .p8 file (tip: drag the file into this window): ')
+      );
+      try {
+        const rp = realpathSync(p8Path);
+        const contents = readFileSync(rp, 'utf8').trim();
+        if (!contents.includes('PRIVATE KEY')) {
+          console.log(`  ${rp} doesn't look like a .p8 private key (no PEM header). Try another file.`);
+          continue;
+        }
+        resolvedPath = rp;
+        pem = contents;
+        break;
+      } catch {
+        console.log(`  Couldn't read a .p8 at "${p8Path}". Drag the file from Finder into this window and try again.`);
+      }
+    }
+
     const vendorNumber = await ask(
       'Vendor number (Payments and Financial Reports page; needed for sales/finance reports, Enter to skip): ',
       false
     );
-
-    // Read the key up front so a typo'd path fails here, not at first server start.
-    let resolvedPath: string;
-    try {
-      resolvedPath = realpathSync(p8Path);
-    } catch {
-      throw new Error(
-        `No file found at "${p8Path}". Tip: drag the .p8 from Finder into this window ` +
-          `to fill the path automatically.`
-      );
-    }
-    const pem = readFileSync(resolvedPath, 'utf8').trim();
-    if (!pem.includes('PRIVATE KEY')) {
-      throw new Error(`${resolvedPath} does not look like a .p8 private key (no PEM header).`);
-    }
 
     const registered = listRegisteredProfileNames();
     const preselected = PROFILES.map((p, i) => (registered.has(p.name) ? i : -1)).filter((i) => i >= 0);

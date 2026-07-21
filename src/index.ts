@@ -64,7 +64,13 @@ async function main(): Promise<void> {
 
   if (positional[0] === 'setup') {
     const { runSetup } = await import('./setup.js');
-    await runSetup();
+    try {
+      await runSetup();
+    } catch (err) {
+      // Setup is user-facing: print the message on its own, not a raw stack.
+      console.error(`\nSetup failed: ${(err as Error).message}\n`);
+      process.exit(1);
+    }
     return;
   }
 
