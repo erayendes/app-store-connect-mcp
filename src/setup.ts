@@ -39,9 +39,13 @@ function profileToolCount(p: Profile): number {
   return registry.size + 3 + (p.reviewsAi ? 3 : 0); // + meta tools (+ reviews-ai)
 }
 
-function sizeHint(p: Profile): string {
+/** One compact picker row: `app-info(115) ~17k · names, bundle IDs, …` */
+function profileRow(p: Profile): { label: string; hint: string } {
   const n = profileToolCount(p);
-  return `${String(n).padStart(3)} tools ~${Math.round((n * TOKENS_PER_TOOL) / 1000)}k`;
+  const k = Math.round((n * TOKENS_PER_TOOL) / 1000);
+  // Drop the leading "Category: " heading — the detail after it is what helps.
+  const detail = p.description.replace(/^[^:]*:\s*/, '');
+  return { label: `${p.name}(${n})`, hint: `~${k}k · ${detail}` };
 }
 
 /**
@@ -64,10 +68,7 @@ async function selectProfiles(
     'app lookup are pre-checked.)';
 
   if (process.stdin.isTTY) {
-    const picked = await runChecklist(
-      PROFILES.map((p) => ({ label: `asc-${p.name}`, hint: `${sizeHint(p)} · ${p.description}` })),
-      { title, preselected }
-    );
+    const picked = await runChecklist(PROFILES.map(profileRow), { title, preselected });
     if (picked && picked.length) return picked.map((i) => PROFILES[i]);
     // Cancelled or nothing chosen — fall through to printing all as reference.
     return PROFILES;
