@@ -7,6 +7,7 @@
  * profile entry in a client config needs zero environment variables.
  */
 import { createInterface } from 'node:readline/promises';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';
 import { writeKeychainPassword } from './core/keychain.js';
 import {
@@ -178,28 +179,83 @@ export async function runSetup(): Promise<void> {
     console.log(`✓ Shared config written to ${configPath}.`);
     console.log('  Every profile reads it automatically; env vars still win when set.');
 
-    // npx form is portable — no absolute install path baked into the user's
-    // config, works the same however the package was installed.
-    const entries = chosen
-      .map(
-        (p) =>
-          `    "asc-${p.name}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(p.name)}] }`
-      )
-      .join(',\n');
-    const cliLines = chosen
-      .map((p) => `  claude mcp add -s user asc-${p.name} -- npx -y @erayendes/asc-mcp ${p.name}`)
-      .join('\n');
+    // The selection should just register the profiles — printing commands for
+    // the user to re-run is a confusing second step. If the Claude Code CLI is
+    // present, register them directly; otherwise fall back to printing.
+    if (await registerWithClaudeCode(chosen, ask)) return;
 
-    console.log(
-      `\nRegistering ${chosen.length} profile${chosen.length === 1 ? '' : 's'}. Pick one of these ` +
-        'two equivalent ways — nothing connects until you do:\n\n' +
-        'A) Run these in your terminal (Claude Code CLI):\n\n' +
-        cliLines +
-        '\n\nB) Or paste this into your MCP client config — no env block needed:\n\n' +
-        '{\n  "mcpServers": {\n' + entries + '\n  }\n}\n\n' +
-        'Then restart your client and ask it to check the App Store Connect connection.\n'
-    );
+    printManualRegistration(chosen);
   } finally {
     rl.close();
   }
+}
+
+/**
+ * Register the chosen profiles by running `claude mcp add` for each. Returns
+ * true when registration was handled (so setup can stop), false to fall back
+ * to printing manual instructions.
+ */
+async function registerWithClaudeCode(
+  chosen: Profile[],
+  ask: (q: string, required?: boolean) => Promise<string>
+): Promise<boolean> {
+  let claudeAvailable = false;
+  try {
+    execFileSync('claude', ['--version'], { stdio: 'ignore' });
+    claudeAvailable = true;
+  } catch {
+    // `claude` not on PATH — the user uses a different client; print instead.
+  }
+  if (!claudeAvailable) return false;
+
+  const answer = (
+    await ask(`\nRegister these ${chosen.length} profile(s) with Claude Code now? [Y/n]: `, false)
+  ).trim();
+  if (/^n/i.test(answer)) return false;
+
+  let allOk = true;
+  for (const p of chosen) {
+    try {
+      execFileSync(
+        'claude',
+        ['mcp', 'add', '-s', 'user', `asc-${p.name}`, '--', 'npx', '-y', '@erayendes/asc-mcp', p.name],
+        { stdio: 'ignore' }
+      );
+      console.log(`  ✓ asc-${p.name}`);
+    } catch (err) {
+      allOk = false;
+      console.log(`  ✗ asc-${p.name}: ${(err as Error).message.split('\n')[0]}`);
+    }
+  }
+
+  if (allOk) {
+    console.log('\nDone. Restart Claude Code, then ask it to check the App Store Connect connection.');
+    return true;
+  }
+  console.log('\nSome did not register. Do the rest by hand:');
+  printManualRegistration(chosen);
+  return true;
+}
+
+function printManualRegistration(chosen: Profile[]): void {
+  // npx form is portable — no absolute install path baked into the user's
+  // config, works the same however the package was installed.
+  const entries = chosen
+    .map(
+      (p) =>
+        `    "asc-${p.name}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(p.name)}] }`
+    )
+    .join(',\n');
+  const cliLines = chosen
+    .map((p) => `  claude mcp add -s user asc-${p.name} -- npx -y @erayendes/asc-mcp ${p.name}`)
+    .join('\n');
+
+  console.log(
+    `\nRegister ${chosen.length} profile${chosen.length === 1 ? '' : 's'} one of these two ways:\n\n` +
+      'A) Run these in your terminal (Claude Code CLI):\n\n' +
+      cliLines +
+      '\n\nB) Or paste this into your MCP client config — no env block needed:\n\n' +
+      '{\n  "mcpServers": {\n' + entries + '\n  }\n}\n\n' +
+      'Then restart your client and ask it to check the App Store Connect connection.'
+  );
 }
