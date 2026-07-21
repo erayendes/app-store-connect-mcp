@@ -14,7 +14,46 @@ import {
   sharedConfigPath,
   type SharedConfig,
 } from './core/shared-config.js';
-import { PROFILES } from './profiles.js';
+import { PROFILES, type Profile } from './profiles.js';
+import { runChecklist } from './checklist.js';
+
+/** Sensible starting selection: reports, reviews, and app lookup. */
+const DEFAULT_PROFILE_NAMES = ['analytics', 'marketing', 'app-info'];
+
+/**
+ * Let the user pick which profiles to register. A TTY gets the space-to-toggle
+ * checklist; a non-interactive run falls back to a typed answer so the wizard
+ * still works when piped.
+ */
+async function selectProfiles(
+  ask: (q: string, required?: boolean) => Promise<string>
+): Promise<Profile[]> {
+  const preselected = PROFILES.map((p, i) => (DEFAULT_PROFILE_NAMES.includes(p.name) ? i : -1)).filter(
+    (i) => i >= 0
+  );
+
+  if (process.stdin.isTTY) {
+    const picked = await runChecklist(
+      PROFILES.map((p) => ({ label: `asc-${p.name}`, hint: p.description })),
+      { title: '\nWhich profiles do you want to register?', preselected }
+    );
+    if (picked && picked.length) return picked.map((i) => PROFILES[i]);
+    // Cancelled or nothing chosen — fall through to printing all as reference.
+    return PROFILES;
+  }
+
+  const answer = (
+    await ask(
+      `Profiles to register — comma-separated names, "all", or Enter for [${DEFAULT_PROFILE_NAMES.join(', ')}]: `,
+      false
+    )
+  ).trim();
+  if (!answer) return PROFILES.filter((p) => DEFAULT_PROFILE_NAMES.includes(p.name));
+  if (answer.toLowerCase() === 'all') return PROFILES;
+  const wanted = new Set(answer.split(',').map((s) => s.trim().replace(/^asc-/, '')));
+  const chosen = PROFILES.filter((p) => wanted.has(p.name));
+  return chosen.length ? chosen : PROFILES;
+}
 
 const KEYCHAIN_SERVICE = 'asc-mcp';
 
@@ -106,21 +145,26 @@ export async function runSetup(): Promise<void> {
     console.log(`✓ Shared config written to ${configPath}.`);
     console.log('  Every profile reads it automatically; env vars still win when set.');
 
+    const chosen = await selectProfiles(ask);
+
     // npx form is portable — no absolute install path baked into the user's
     // config, works the same however the package was installed.
-    const entries = PROFILES.map(
-      (p) =>
-        `    "asc-${p.name}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(p.name)}] }`
-    ).join(',\n');
+    const entries = chosen
+      .map(
+        (p) =>
+          `    "asc-${p.name}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(p.name)}] }`
+      )
+      .join(',\n');
+    const cliLines = chosen
+      .map((p) => `  claude mcp add -s user asc-${p.name} -- npx -y @erayendes/asc-mcp ${p.name}`)
+      .join('\n');
 
     console.log(
-      '\nCredentials are ready. Now register the profiles you want — nothing is\n' +
-        'connected until you do this step. Two equivalent ways:\n\n' +
-        'A) Claude Code CLI, one line per profile you want:\n' +
-        '     claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics\n' +
-        '     claude mcp add -s user asc-marketing -- npx -y @erayendes/asc-mcp marketing\n\n' +
-        'B) Or paste the block below into your MCP client config (keep only the\n' +
-        '   profiles you need) — no env block required:\n\n' +
+      `\nRegistering ${chosen.length} profile${chosen.length === 1 ? '' : 's'}. Pick one of these ` +
+        'two equivalent ways — nothing connects until you do:\n\n' +
+        'A) Run these in your terminal (Claude Code CLI):\n\n' +
+        cliLines +
+        '\n\nB) Or paste this into your MCP client config — no env block needed:\n\n' +
         '{\n  "mcpServers": {\n' + entries + '\n  }\n}\n\n' +
         'Then restart your client and ask it to check the App Store Connect connection.\n'
     );
