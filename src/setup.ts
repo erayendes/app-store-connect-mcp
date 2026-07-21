@@ -106,13 +106,23 @@ export async function runSetup(): Promise<void> {
     }
   };
 
-  console.log(
-    '\nApp Store Connect MCP — shared credential setup\n' +
-      'Values come from https://appstoreconnect.apple.com/access/integrations/api\n'
-  );
+  const KEYS_URL = 'https://appstoreconnect.apple.com/access/integrations/api';
+  console.log('\nApp Store Connect MCP — shared credential setup');
+  console.log(`The Key ID, Issuer ID and .p8 all come from:\n  ${KEYS_URL}\n`);
 
   try {
-    const keyId = await ask('Key ID: ');
+    const open = (await ask('Open that page in your browser now? [y/N]: ', false)).trim();
+    if (/^y/i.test(open)) {
+      const opener =
+        process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+      try {
+        execFileSync(opener, [KEYS_URL], { stdio: 'ignore' });
+      } catch {
+        console.log(`  Could not open a browser — visit ${KEYS_URL} manually.`);
+      }
+    }
+
+    const keyId = await ask('\nKey ID: ');
     const issuerId = await ask('Issuer ID: ');
     const p8Path = cleanPath(await ask('Path to the .p8 file (tip: drag the file into this window): '));
     const vendorNumber = await ask(
@@ -187,6 +197,9 @@ export async function runSetup(): Promise<void> {
     printManualRegistration(chosen);
   } finally {
     rl.close();
+    // The picker leaves stdin flowing so later prompts work; release it now so
+    // the process can exit instead of hanging on an open TTY handle.
+    if (process.stdin.isTTY) process.stdin.pause();
   }
 }
 

@@ -65,27 +65,19 @@ export function applyAction(state: ChecklistState, action: KeyAction, count: num
   }
 }
 
-function truncate(s: string, width: number): string {
-  return s.length <= width ? s : s.slice(0, Math.max(0, width - 1)) + '…';
-}
-
 /**
- * Render the checklist to a string. Each item is truncated to one terminal
- * row: a wrapped line would throw off the cursor-up redraw math and turn the
- * list into a scrolling mess. `width` defaults to the terminal width.
+ * Render the checklist to a string. Lines are shown in full (no truncation);
+ * the alternate-screen redraw clears the whole frame each time, so a line that
+ * wraps costs an extra row but never corrupts the display.
  */
-export function renderChecklist(
-  items: ChecklistItem[],
-  state: ChecklistState,
-  width: number = process.stdout.columns ?? 80
-): string {
+export function renderChecklist(items: ChecklistItem[], state: ChecklistState): string {
   const labelWidth = Math.max(...items.map((i) => i.label.length));
   return items
     .map((item, i) => {
       const pointer = i === state.cursor ? '›' : ' ';
       const box = state.selected.has(i) ? '◉' : '◯';
       const hint = item.hint ? `  ${item.hint}` : '';
-      return truncate(`${pointer} ${box} ${item.label.padEnd(labelWidth)}${hint}`, width);
+      return `${pointer} ${box} ${item.label.padEnd(labelWidth)}${hint}`;
     })
     .join('\n');
 }
@@ -118,7 +110,7 @@ export function runChecklist(
     const ALT_LEAVE = '\x1b[?25h\x1b[?1049l'; // show cursor, leave alt screen
 
     const draw = () => {
-      const body = renderChecklist(items, state, stdout.columns ?? 80);
+      const body = renderChecklist(items, state);
       stdout.write(`\x1b[2J\x1b[H${header}${body}\n`);
     };
 
@@ -140,7 +132,10 @@ export function runChecklist(
       stdin.removeListener('keypress', onKey);
       stdout.removeListener('resize', onResize);
       if (stdin.isTTY) stdin.setRawMode(Boolean(wasRaw));
-      stdin.pause();
+      // Do NOT pause stdin here: setup keeps asking readline questions after
+      // the picker (bundle ID, the register prompt). Pausing it left the next
+      // rl.question with no input and the process exited mid-setup. The caller
+      // owns stdin's lifecycle and releases it when fully done.
       stdout.write(ALT_LEAVE);
     };
 
