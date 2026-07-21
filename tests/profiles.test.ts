@@ -153,3 +153,25 @@ describe('cleanPath (drag-and-drop friendly .p8 entry)', () => {
     expect(src).not.toMatch(/7RDCD6GXG6/);
   });
 });
+
+import { registerCommand } from '../src/profiles.js';
+import { STOREKIT_TOOLS } from '../src/storekit/index.js';
+
+describe('AI-136 improvements', () => {
+  it('registerCommand emits a runnable claude mcp add line', () => {
+    expect(registerCommand('monetization')).toBe(
+      'claude mcp add -s user asc-monetization -- npx -y @erayendes/asc-mcp monetization'
+    );
+  });
+
+  it('every StoreKit tool accepts an optional environment override', () => {
+    for (const t of STOREKIT_TOOLS) {
+      const env = (t.inputSchema.properties as Record<string, any>).environment;
+      expect(env?.enum).toEqual(['Production', 'Sandbox']);
+    }
+    // environment is optional — never forced into required
+    for (const t of STOREKIT_TOOLS) {
+      expect(t.inputSchema.required ?? []).not.toContain('environment');
+    }
+  });
+});

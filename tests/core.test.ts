@@ -384,3 +384,32 @@ describe('id-only twin elimination', () => {
     expect(writes.length).toBeGreaterThan(50);
   });
 });
+
+describe('AI-136: StoreKit discoverability in search', () => {
+  it('surfaces StoreKit tools in asc__search_tools with an enable hint', async () => {
+    const { executeMetaTool } = await import('../src/tools/meta.js');
+    const registry = new ToolRegistry({ domains: ['analytics'], readOnly: false, includeDeprecated: false });
+    const res: any = await executeMetaTool(
+      'asc__search_tools',
+      { query: 'refund' },
+      { registry, http: {} as never, tokens: {} as never, readOnly: false, loadedDomains: ['analytics'], storekitEnabled: false }
+    );
+    const sk = res.matches.filter((m: any) => m.domain === 'storekit');
+    expect(sk.length).toBeGreaterThan(0);
+    expect(sk.every((m: any) => m.loaded === false)).toBe(true);
+    expect(res.hint).toMatch(/ASC_BUNDLE_ID/);
+  });
+
+  it('marks StoreKit as loaded when the server has it enabled', async () => {
+    const { executeMetaTool } = await import('../src/tools/meta.js');
+    const registry = new ToolRegistry({ domains: ['analytics'], readOnly: false, includeDeprecated: false });
+    const res: any = await executeMetaTool(
+      'asc__search_tools',
+      { query: 'transaction' },
+      { registry, http: {} as never, tokens: {} as never, readOnly: false, loadedDomains: ['analytics'], storekitEnabled: true }
+    );
+    const sk = res.matches.filter((m: any) => m.domain === 'storekit');
+    expect(sk.length).toBeGreaterThan(0);
+    expect(sk.every((m: any) => m.loaded === true)).toBe(true);
+  });
+});

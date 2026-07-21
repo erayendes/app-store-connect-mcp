@@ -86,6 +86,11 @@ export function resolveProfile(name: string): Profile | undefined {
   return PROFILES.find((p) => p.name === name);
 }
 
+/** The exact command that registers a profile's server — a copy-paste remedy. */
+export function registerCommand(profileName: string): string {
+  return `claude mcp add -s user asc-${profileName} -- npx -y @erayendes/asc-mcp ${profileName}`;
+}
+
 /** Which profile serves a domain — used by "tool not here" guidance. */
 export function profileForDomain(domain: string): Profile | undefined {
   return PROFILES.find((p) => p.domains.includes(domain));

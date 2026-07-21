@@ -18,9 +18,6 @@ import { PROFILES, GATEWAY_OPERATIONS, type Profile } from './profiles.js';
 import { ToolRegistry } from './core/registry.js';
 import { runChecklist } from './checklist.js';
 
-/** Sensible starting selection: reports, reviews, and app lookup. */
-const DEFAULT_PROFILE_NAMES = ['analytics', 'marketing', 'app-info'];
-
 /** Rough tokens a tool definition costs in context — for the size hint only. */
 const TOKENS_PER_TOOL = 150;
 
@@ -39,12 +36,12 @@ function profileToolCount(p: Profile): number {
   return registry.size + 3 + (p.reviewsAi ? 3 : 0); // + meta tools (+ reviews-ai)
 }
 
-/** One compact picker row: `app-info(115) ~17k · names, bundle IDs, …` */
+/** One compact picker row: `app-info(115) ~17k · names, bundle ids, …` */
 function profileRow(p: Profile): { label: string; hint: string } {
   const n = profileToolCount(p);
   const k = Math.round((n * TOKENS_PER_TOOL) / 1000);
-  // Drop the leading "Category: " heading — the detail after it is what helps.
-  const detail = p.description.replace(/^[^:]*:\s*/, '');
+  // Drop the leading "Category: " heading; lowercase for a uniform look.
+  const detail = p.description.replace(/^[^:]*:\s*/, '').toLowerCase();
   return { label: `${p.name}(${n})`, hint: `~${k}k · ${detail}` };
 }
 
@@ -56,32 +53,23 @@ function profileRow(p: Profile): { label: string; hint: string } {
 async function selectProfiles(
   ask: (q: string, required?: boolean) => Promise<string>
 ): Promise<Profile[]> {
-  const preselected = PROFILES.map((p, i) => (DEFAULT_PROFILE_NAMES.includes(p.name) ? i : -1)).filter(
-    (i) => i >= 0
-  );
-
   const title =
     '\nWhich profiles do you want to register?\n' +
     'Each profile is its own small MCP server. Every one you register loads its\n' +
     'tools into every session, so pick the areas you actually use — leaner is\n' +
-    'faster. You can re-run setup anytime to change this. (Reports, reviews and\n' +
-    'app lookup are pre-checked.)';
+    'faster. You can re-run setup anytime to change this.';
 
   if (process.stdin.isTTY) {
-    const picked = await runChecklist(PROFILES.map(profileRow), { title, preselected });
+    const picked = await runChecklist(PROFILES.map(profileRow), { title, preselected: [] });
     if (picked && picked.length) return picked.map((i) => PROFILES[i]);
     // Cancelled or nothing chosen — fall through to printing all as reference.
     return PROFILES;
   }
 
   const answer = (
-    await ask(
-      `Profiles to register — comma-separated names, "all", or Enter for [${DEFAULT_PROFILE_NAMES.join(', ')}]: `,
-      false
-    )
+    await ask('Profiles to register — comma-separated names, or "all" (default): ', false)
   ).trim();
-  if (!answer) return PROFILES.filter((p) => DEFAULT_PROFILE_NAMES.includes(p.name));
-  if (answer.toLowerCase() === 'all') return PROFILES;
+  if (!answer || answer.toLowerCase() === 'all') return PROFILES;
   const wanted = new Set(answer.split(',').map((s) => s.trim().replace(/^asc-/, '')));
   const chosen = PROFILES.filter((p) => wanted.has(p.name));
   return chosen.length ? chosen : PROFILES;
@@ -123,21 +111,13 @@ export async function runSetup(): Promise<void> {
   );
 
   try {
-    const keyId = await ask('Key ID (e.g. ABCD123456): ');
-    const issuerId = await ask('Issuer ID (e.g. 12345678-abcd-1234-abcd-1234567890ab): ');
+    const keyId = await ask('Key ID: ');
+    const issuerId = await ask('Issuer ID: ');
     const p8Path = cleanPath(await ask('Path to the .p8 file (tip: drag the file into this window): '));
     const vendorNumber = await ask(
       'Vendor number (Payments and Financial Reports page; needed for sales/finance reports, Enter to skip): ',
       false
     );
-    const bundleId = await ask(
-      'App bundle ID (enables StoreKit 2 transaction tools, Enter to skip): ',
-      false
-    );
-    const environment = bundleId
-      ? (await ask('StoreKit environment [Production/Sandbox] (default Production): ', false)) ||
-        'Production'
-      : undefined;
 
     // Read the key up front so a typo'd path fails here, not at first server start.
     let resolvedPath: string;
@@ -154,12 +134,33 @@ export async function runSetup(): Promise<void> {
       throw new Error(`${resolvedPath} does not look like a .p8 private key (no PEM header).`);
     }
 
+    const chosen = await selectProfiles(ask);
+
+    // A bundle ID is per-app, not account-global, and only the monetization
+    // profile's StoreKit tools use it — so ask for it only when that profile
+    // was picked, not as a blanket setup question.
+    let bundleId: string | undefined;
+    let environment: 'Production' | 'Sandbox' | undefined;
+    if (chosen.some((p) => p.storekit)) {
+      bundleId =
+        (await ask(
+          '\nApp bundle ID for the monetization profile (StoreKit 2 transaction tools; ' +
+            'binds to one app, Enter to skip): ',
+          false
+        )) || undefined;
+      if (bundleId) {
+        const env = (await ask('StoreKit environment [Production/Sandbox] (default Production): ', false)) ||
+          'Production';
+        environment = env.toLowerCase() === 'sandbox' ? 'Sandbox' : 'Production';
+      }
+    }
+
     const shared: SharedConfig = {
       keyId,
       issuerId,
       vendorNumber: vendorNumber || undefined,
-      bundleId: bundleId || undefined,
-      environment: environment === 'Sandbox' ? 'Sandbox' : bundleId ? 'Production' : undefined,
+      bundleId,
+      environment,
     };
 
     if (process.platform === 'darwin') {
@@ -176,8 +177,6 @@ export async function runSetup(): Promise<void> {
     const configPath = writeSharedConfig(shared);
     console.log(`✓ Shared config written to ${configPath}.`);
     console.log('  Every profile reads it automatically; env vars still win when set.');
-
-    const chosen = await selectProfiles(ask);
 
     // npx form is portable — no absolute install path baked into the user's
     // config, works the same however the package was installed.

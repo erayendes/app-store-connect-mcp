@@ -6,6 +6,7 @@ import type { McpToolDefinition } from '../core/registry.js';
 import { ALL_DOMAINS, ToolRegistry } from '../core/registry.js';
 import { DOMAIN_DESCRIPTIONS } from '../generated/domain-info.js';
 import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
+import { STOREKIT_TOOLS } from '../storekit/index.js';
 import type { AscHttpClient } from '../core/http.js';
 import type { TokenProvider } from '../core/jwt.js';
 
@@ -68,6 +69,8 @@ export async function executeMetaTool(
     loadedDomains: string[];
     /** In profile mode: how to reach domains this server doesn't carry. */
     unloadedDomainsHint?: (domains: string[]) => string;
+    /** Whether StoreKit (App Store Server API) tools are active on this server. */
+    storekitEnabled?: boolean;
   }
 ): Promise<unknown> {
   switch (name) {
@@ -102,37 +105,66 @@ export async function executeMetaTool(
       const limit = Number(args.limit ?? 25);
       if (!query) return { matches: [], count: 0 };
 
-      const matches = OPERATIONS.filter(
+      const apiMatches = OPERATIONS.filter(
         (op) =>
           op.name.toLowerCase().includes(query) ||
           op.description.toLowerCase().includes(query) ||
           op.path.toLowerCase().includes(query)
-      )
-        .slice(0, Math.max(1, Math.min(limit, 100)))
-        .map((op) => ({
-          tool: op.name,
-          domain: op.domain,
-          endpoint: `${op.method} ${op.path}`,
-          description: op.description,
-          loaded: Boolean(ctx.registry.get(op.name)),
-          deprecated: op.deprecated,
-        }));
+      ).map((op) => ({
+        tool: op.name,
+        domain: op.domain,
+        endpoint: `${op.method} ${op.path}`,
+        description: op.description,
+        loaded: Boolean(ctx.registry.get(op.name)),
+        deprecated: op.deprecated,
+      }));
+
+      // StoreKit tools live outside the OpenAPI spec (App Store Server API), so
+      // they'd be invisible to search without this. They belong to the
+      // monetization profile and need ASC_BUNDLE_ID.
+      const storekitMatches = STOREKIT_TOOLS.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          t.description.toLowerCase().includes(query)
+      ).map((t) => ({
+        tool: t.name,
+        domain: 'storekit',
+        endpoint: 'App Store Server API',
+        description: t.description,
+        loaded: Boolean(ctx.storekitEnabled),
+        deprecated: false,
+      }));
+
+      const matches = [...apiMatches, ...storekitMatches].slice(0, Math.max(1, Math.min(limit, 100)));
 
       // A match the caller cannot invoke is a dead end unless we say how to
       // reach it — the tool only appears after the server restarts.
-      const unloadedDomains = [...new Set(matches.filter((m) => !m.loaded).map((m) => m.domain))];
+      const unloaded = matches.filter((m) => !m.loaded);
+      const unloadedApiDomains = [...new Set(unloaded.filter((m) => m.domain !== 'storekit').map((m) => m.domain))];
+      const storekitUnloaded = unloaded.some((m) => m.domain === 'storekit');
+
+      const hints: string[] = [];
+      if (unloadedApiDomains.length) {
+        hints.push(
+          ctx.unloadedDomainsHint?.(unloadedApiDomains) ??
+            `Restart the server with --domains=${unloadedApiDomains.join(',')} ` +
+              `(added to any domains you already load) to expose them.`
+        );
+      }
+      if (storekitUnloaded) {
+        hints.push(
+          'StoreKit tools need the monetization profile with ASC_BUNDLE_ID set ' +
+            '(run `asc-mcp setup` and pick the monetization profile, or set ASC_BUNDLE_ID).'
+        );
+      }
 
       return {
         matches,
         count: matches.length,
-        ...(unloadedDomains.length
+        ...(hints.length
           ? {
-              hint:
-                `${matches.filter((m) => !m.loaded).length} of these are not loaded and cannot be ` +
-                `called from this server. ` +
-                (ctx.unloadedDomainsHint?.(unloadedDomains) ??
-                  `Restart the server with --domains=${unloadedDomains.join(',')} ` +
-                    `(added to any domains you already load) to expose them.`),
+              hint: `${unloaded.length} of these are not loaded and cannot be called from this server. ` +
+                hints.join(' '),
             }
           : {}),
       };

@@ -13,7 +13,7 @@ import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import { SPEC_VERSION } from './generated/operations.js';
-import { GATEWAY_OPERATIONS, profileForDomain, type Profile } from './profiles.js';
+import { GATEWAY_OPERATIONS, profileForDomain, registerCommand, type Profile } from './profiles.js';
 
 // Read from package.json at runtime so the banner can't drift from the published
 // version. Not a JSON import: package.json sits outside tsconfig's rootDir.
@@ -29,7 +29,9 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     ? (domain: string) => {
         const home = profileForDomain(domain);
         return home
-          ? `It is served by the "asc-${home.name}" MCP server — call it there, or add that server to your client config.`
+          ? `It is served by the "asc-${home.name}" MCP server. Register it with:\n` +
+            `  ${registerCommand(home.name)}\n` +
+            `(or add the same entry to your MCP client config), then restart your client.`
           : `Run the server without a profile and with --domains=${domain} to reach it.`;
       }
     : undefined;
@@ -105,14 +107,16 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
           tokens,
           readOnly: config.readOnly,
           loadedDomains,
+          storekitEnabled: Boolean(storekit),
           unloadedDomainsHint: profile
             ? (domains) => {
                 const homes = [...new Set(
-                  domains.map((d) => profileForDomain(d)?.name).filter(Boolean)
-                )].map((n) => `asc-${n}`);
+                  domains.map((d) => profileForDomain(d)?.name).filter((n): n is string => Boolean(n))
+                )];
                 return homes.length
-                  ? `These live on sibling MCP servers: ${homes.join(', ')}. ` +
-                    `Call the tool there, or add that server to your client config.`
+                  ? `These live on sibling MCP servers. Register the ones you need:\n` +
+                    homes.map((n) => `  ${registerCommand(n)}`).join('\n') +
+                    `\n(or add the same entries to your MCP client config), then restart your client.`
                   : `Run the server without a profile to combine domains freely.`;
               }
             : undefined,

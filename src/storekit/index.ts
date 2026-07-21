@@ -195,10 +195,30 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
   },
 ];
 
+// Every StoreKit tool accepts an optional environment override. A transaction
+// ID exists in exactly one environment, so a caller who has a sandbox ID can
+// force the sandbox client without reconfiguring the server.
+for (const tool of STOREKIT_TOOLS) {
+  (tool.inputSchema.properties as Record<string, unknown>).environment = {
+    type: 'string',
+    enum: ['Production', 'Sandbox'],
+    description:
+      'Which App Store environment to query. Defaults to the server-configured ' +
+      'environment (ASC_ENVIRONMENT). A transaction ID belongs to one environment only.',
+  };
+}
+
 export const STOREKIT_TOOL_NAMES = new Set(STOREKIT_TOOLS.map((t) => t.name));
 
 export class StoreKitService {
-  private readonly client: AppStoreServerAPIClient;
+  private readonly key: string;
+  private readonly keyId: string;
+  private readonly issuerId: string;
+  private readonly bundleId: string;
+  private readonly defaultEnvironment: 'Production' | 'Sandbox';
+  // One transaction lives in exactly one environment, so callers can override
+  // per request; clients are built lazily and cached per environment.
+  private readonly clients = new Map<'Production' | 'Sandbox', AppStoreServerAPIClient>();
 
   constructor(config: ServerConfig) {
     if (!config.storekit) {
@@ -207,32 +227,47 @@ export class StoreKitService {
       );
     }
 
-    const key = config.credentials.privateKey?.replace(/\\n/g, '\n')
+    this.key = config.credentials.privateKey?.replace(/\\n/g, '\n')
       ?? readFileSync(config.credentials.privateKeyPath!, 'utf8');
+    this.keyId = config.credentials.keyId;
+    this.issuerId = config.credentials.issuerId;
+    this.bundleId = config.storekit.bundleId;
+    this.defaultEnvironment = config.storekit.environment === 'Production' ? 'Production' : 'Sandbox';
+  }
 
-    this.client = new AppStoreServerAPIClient(
-      key,
-      config.credentials.keyId,
-      config.credentials.issuerId,
-      config.storekit.bundleId,
-      config.storekit.environment === 'Production'
-        ? Environment.PRODUCTION
-        : Environment.SANDBOX
-    );
+  /** Client for the requested environment, or the configured default. */
+  private clientFor(environment?: unknown): AppStoreServerAPIClient {
+    const env: 'Production' | 'Sandbox' =
+      environment === 'Production' || environment === 'Sandbox'
+        ? environment
+        : this.defaultEnvironment;
+    let client = this.clients.get(env);
+    if (!client) {
+      client = new AppStoreServerAPIClient(
+        this.key,
+        this.keyId,
+        this.issuerId,
+        this.bundleId,
+        env === 'Production' ? Environment.PRODUCTION : Environment.SANDBOX
+      );
+      this.clients.set(env, client);
+    }
+    return client;
   }
 
   async execute(name: string, args: Record<string, any>): Promise<unknown> {
+    const client = this.clientFor(args.environment);
     switch (name) {
       case 'storekit__get_transaction_history':
-        return this.transactionHistory(args);
+        return this.transactionHistory(client, args);
 
       case 'storekit__get_transaction_info': {
-        const res = await this.client.getTransactionInfo(args.transaction_id);
+        const res = await client.getTransactionInfo(args.transaction_id);
         return { signedTransactionInfo: res.signedTransactionInfo };
       }
 
       case 'storekit__get_subscription_statuses': {
-        const res = await this.client.getAllSubscriptionStatuses(
+        const res = await client.getAllSubscriptionStatuses(
           args.transaction_id,
           args.status
         );
@@ -240,13 +275,13 @@ export class StoreKitService {
       }
 
       case 'storekit__check_entitlement':
-        return this.checkEntitlement(args);
+        return this.checkEntitlement(client, args);
 
       case 'storekit__get_refund_history': {
         const items: unknown[] = [];
         let revision: string | null = null;
         for (let page = 0; page < 10; page++) {
-          const res: any = await this.client.getRefundHistory(
+          const res: any = await client.getRefundHistory(
             args.transaction_id,
             revision
           );
@@ -261,12 +296,12 @@ export class StoreKitService {
       }
 
       case 'storekit__lookup_order': {
-        const res = await this.client.lookUpOrderId(args.order_id);
+        const res = await client.lookUpOrderId(args.order_id);
         return res;
       }
 
       case 'storekit__get_notification_history': {
-        const res = await this.client.getNotificationHistory(null, {
+        const res = await client.getNotificationHistory(null, {
           startDate: args.start_date,
           endDate: args.end_date,
           notificationType: args.notification_type,
@@ -276,14 +311,14 @@ export class StoreKitService {
       }
 
       case 'storekit__request_test_notification':
-        return this.client.requestTestNotification();
+        return client.requestTestNotification();
 
       case 'storekit__extend_renewal_date': {
         const days = Number(args.extend_by_days);
         if (!Number.isInteger(days) || days < 1 || days > 90) {
           throw new Error('extend_by_days must be an integer between 1 and 90.');
         }
-        return this.client.extendSubscriptionRenewalDate(
+        return client.extendSubscriptionRenewalDate(
           args.original_transaction_id,
           {
             extendByDays: days,
@@ -298,7 +333,10 @@ export class StoreKitService {
     }
   }
 
-  private async transactionHistory(args: Record<string, any>): Promise<unknown> {
+  private async transactionHistory(
+    client: AppStoreServerAPIClient,
+    args: Record<string, any>
+  ): Promise<unknown> {
     const request: TransactionHistoryRequest = {
       sort: args.sort,
       productIds: args.product_id ? [args.product_id] : undefined,
@@ -311,7 +349,7 @@ export class StoreKitService {
     let revision: string | null = null;
 
     for (let page = 0; page < maxPages; page++) {
-      const res: any = await this.client.getTransactionHistory(
+      const res: any = await client.getTransactionHistory(
         args.transaction_id,
         revision,
         request,
@@ -328,8 +366,11 @@ export class StoreKitService {
     return { signedTransactions: transactions, count: transactions.length };
   }
 
-  private async checkEntitlement(args: Record<string, any>): Promise<unknown> {
-    const res: any = await this.client.getAllSubscriptionStatuses(
+  private async checkEntitlement(
+    client: AppStoreServerAPIClient,
+    args: Record<string, any>
+  ): Promise<unknown> {
+    const res: any = await client.getAllSubscriptionStatuses(
       args.transaction_id,
       [1, 4] // Active and GracePeriod both grant access.
     );
