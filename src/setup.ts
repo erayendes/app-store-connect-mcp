@@ -41,7 +41,7 @@ function profileToolCount(p: Profile): number {
 
 function sizeHint(p: Profile): string {
   const n = profileToolCount(p);
-  return `${n} tools, ~${Math.round((n * TOKENS_PER_TOOL) / 1000)}k tokens`;
+  return `${String(n).padStart(3)} tools ~${Math.round((n * TOKENS_PER_TOOL) / 1000)}k`;
 }
 
 /**

@@ -69,3 +69,19 @@ describe('profile size hint inputs', () => {
     expect(byName['webhooks']).toBeGreaterThanOrEqual(3 + 2);
   });
 });
+
+describe('checklist render truncation (prevents wrap-induced redraw corruption)', () => {
+  it('never emits a line wider than the given width', () => {
+    const items = [{ label: 'asc-monetization', hint: 'x'.repeat(200) }];
+    const out = renderChecklist(items, st(0, []), 60);
+    for (const line of out.split('\n')) {
+      expect([...line].length).toBeLessThanOrEqual(60);
+    }
+    expect(out.endsWith('…')).toBe(true);
+  });
+
+  it('leaves short lines untouched', () => {
+    const out = renderChecklist([{ label: 'a', hint: 'b' }], st(0, []), 80);
+    expect(out).not.toContain('…');
+  });
+});

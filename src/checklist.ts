@@ -65,15 +65,29 @@ export function applyAction(state: ChecklistState, action: KeyAction, count: num
   }
 }
 
-/** Render the checklist to a string (no cursor movement — the caller handles redraw). */
-export function renderChecklist(items: ChecklistItem[], state: ChecklistState): string {
-  const lines = items.map((item, i) => {
-    const pointer = i === state.cursor ? '›' : ' ';
-    const box = state.selected.has(i) ? '◉' : '◯';
-    const hint = item.hint ? `  — ${item.hint}` : '';
-    return `${pointer} ${box} ${item.label}${hint}`;
-  });
-  return lines.join('\n');
+function truncate(s: string, width: number): string {
+  return s.length <= width ? s : s.slice(0, Math.max(0, width - 1)) + '…';
+}
+
+/**
+ * Render the checklist to a string. Each item is truncated to one terminal
+ * row: a wrapped line would throw off the cursor-up redraw math and turn the
+ * list into a scrolling mess. `width` defaults to the terminal width.
+ */
+export function renderChecklist(
+  items: ChecklistItem[],
+  state: ChecklistState,
+  width: number = process.stdout.columns ?? 80
+): string {
+  const labelWidth = Math.max(...items.map((i) => i.label.length));
+  return items
+    .map((item, i) => {
+      const pointer = i === state.cursor ? '›' : ' ';
+      const box = state.selected.has(i) ? '◉' : '◯';
+      const hint = item.hint ? `  ${item.hint}` : '';
+      return truncate(`${pointer} ${box} ${item.label.padEnd(labelWidth)}${hint}`, width);
+    })
+    .join('\n');
 }
 
 /**
