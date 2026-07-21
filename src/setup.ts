@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';
 import { writeKeychainPassword } from './core/keychain.js';
 import {
+  readSharedConfig,
   writeSharedConfig,
   sharedConfigPath,
   type SharedConfig,
@@ -47,24 +48,46 @@ function profileRow(p: Profile): { label: string; hint: string } {
 }
 
 /**
- * Let the user pick which profiles to register. A TTY gets the space-to-toggle
+ * Names of the asc-* profiles currently registered with the Claude Code CLI, so
+ * the picker can show them pre-checked. Empty set when `claude` is absent or the
+ * command fails — setup then behaves as a first-time run.
+ */
+function listRegisteredProfileNames(): Set<string> {
+  const known = new Set(PROFILES.map((p) => p.name));
+  const found = new Set<string>();
+  try {
+    const out = execFileSync('claude', ['mcp', 'list'], { encoding: 'utf8' });
+    for (const line of out.split('\n')) {
+      const m = line.match(/^asc-([a-z0-9-]+):/);
+      if (m && known.has(m[1])) found.add(m[1]);
+    }
+  } catch {
+    // `claude` not on PATH, or the listing failed — treat as none registered.
+  }
+  return found;
+}
+
+/**
+ * Let the user pick which profiles to register. Already-registered profiles
+ * come pre-checked so unchecking one removes it. A TTY gets the space-to-toggle
  * checklist; a non-interactive run falls back to a typed answer so the wizard
- * still works when piped.
+ * still works when piped. Returns null when the picker was cancelled (Esc/^C);
+ * an empty array is a deliberate "none" and is honoured (removes everything).
  */
 async function selectProfiles(
-  ask: (q: string, required?: boolean) => Promise<string>
-): Promise<Profile[]> {
+  ask: (q: string, required?: boolean) => Promise<string>,
+  preselected: number[]
+): Promise<Profile[] | null> {
   const title =
-    '\nWhich profiles do you want to register?\n' +
-    'Each profile is its own small MCP server. Every one you register loads its\n' +
-    'tools into every session, so pick the areas you actually use — leaner is\n' +
-    'faster. You can re-run setup anytime to change this.';
+    '\nWhich profiles do you want registered?\n' +
+    'Already-registered ones are checked — uncheck to remove, check to add.\n' +
+    'Each profile is its own small MCP server whose tools load into every\n' +
+    'session, so keep only the areas you actually use — leaner is faster.';
 
   if (process.stdin.isTTY) {
-    const picked = await runChecklist(PROFILES.map(profileRow), { title, preselected: [] });
-    if (picked && picked.length) return picked.map((i) => PROFILES[i]);
-    // Cancelled or nothing chosen — fall through to printing all as reference.
-    return PROFILES;
+    const picked = await runChecklist(PROFILES.map(profileRow), { title, preselected });
+    if (picked === null) return null; // cancelled — leave registration untouched
+    return picked.map((i) => PROFILES[i]);
   }
 
   const answer = (
@@ -72,8 +95,7 @@ async function selectProfiles(
   ).trim();
   if (!answer || answer.toLowerCase() === 'all') return PROFILES;
   const wanted = new Set(answer.split(',').map((s) => s.trim().replace(/^asc-/, '')));
-  const chosen = PROFILES.filter((p) => wanted.has(p.name));
-  return chosen.length ? chosen : PROFILES;
+  return PROFILES.filter((p) => wanted.has(p.name));
 }
 
 const KEYCHAIN_SERVICE = 'asc-mcp';
@@ -107,10 +129,30 @@ export async function runSetup(): Promise<void> {
   };
 
   const KEYS_URL = 'https://appstoreconnect.apple.com/access/integrations/api';
-  console.log('\nApp Store Connect MCP — shared credential setup');
-  console.log(`The Key ID, Issuer ID and .p8 all come from:\n  ${KEYS_URL}\n`);
 
   try {
+    // Credentials already stored? Offer to skip straight to the profile picker,
+    // so registering another profile later doesn't mean re-entering the key.
+    // env-only setups (no shared file) fall through to the full flow.
+    const existing = readSharedConfig();
+    if (existing) {
+      console.log('\nApp Store Connect MCP — setup');
+      console.log(`Found saved credentials (Key ID ${existing.keyId}, Issuer ${existing.issuerId}).`);
+      const reuse = (await ask('Reuse them and just pick profiles? [Y/n]: ', false)).trim();
+      if (!/^n/i.test(reuse)) {
+        const registered = listRegisteredProfileNames();
+        const preselected = PROFILES.map((p, i) => (registered.has(p.name) ? i : -1)).filter((i) => i >= 0);
+        const chosen = await selectProfiles(ask, preselected);
+        if (chosen === null) console.log('\nCancelled — registration left unchanged.');
+        else await reconcileRegistration(chosen, registered, ask);
+        return;
+      }
+      console.log('\nEntering new credentials instead.');
+    }
+
+    console.log('\nApp Store Connect MCP — shared credential setup');
+    console.log(`The Key ID, Issuer ID and .p8 all come from:\n  ${KEYS_URL}\n`);
+
     const open = (await ask('Open that page in your browser now? [y/N]: ', false)).trim();
     if (/^y/i.test(open)) {
       const opener =
@@ -145,14 +187,17 @@ export async function runSetup(): Promise<void> {
       throw new Error(`${resolvedPath} does not look like a .p8 private key (no PEM header).`);
     }
 
-    const chosen = await selectProfiles(ask);
+    const registered = listRegisteredProfileNames();
+    const preselected = PROFILES.map((p, i) => (registered.has(p.name) ? i : -1)).filter((i) => i >= 0);
+    const chosen = await selectProfiles(ask, preselected);
+    const picked = chosen ?? []; // null = picker cancelled; keep saving creds regardless
 
     // A bundle ID is per-app, not account-global, and only the monetization
     // profile's StoreKit tools use it — so ask for it only when that profile
     // was picked, not as a blanket setup question.
     let bundleId: string | undefined;
     let environment: 'Production' | 'Sandbox' | undefined;
-    if (chosen.some((p) => p.storekit)) {
+    if (picked.some((p) => p.storekit)) {
       bundleId =
         (await ask(
           '\nApp bundle ID for the monetization profile (StoreKit 2 transaction tools; ' +
@@ -189,12 +234,13 @@ export async function runSetup(): Promise<void> {
     console.log(`✓ Shared config written to ${configPath}.`);
     console.log('  Every profile reads it automatically; env vars still win when set.');
 
-    // The selection should just register the profiles — printing commands for
-    // the user to re-run is a confusing second step. If the Claude Code CLI is
-    // present, register them directly; otherwise fall back to printing.
-    if (await registerWithClaudeCode(chosen, ask)) return;
-
-    printManualRegistration(chosen);
+    // The picker drives registration directly — add what was checked, remove
+    // what was unchecked. A cancelled picker leaves registration untouched.
+    if (chosen === null) {
+      console.log('\nProfile selection skipped — credentials saved. Re-run setup to pick profiles.');
+    } else {
+      await reconcileRegistration(chosen, registered, ask);
+    }
   } finally {
     rl.close();
     // The picker leaves stdin flowing so later prompts work; release it now so
@@ -204,14 +250,26 @@ export async function runSetup(): Promise<void> {
 }
 
 /**
- * Register the chosen profiles by running `claude mcp add` for each. Returns
- * true when registration was handled (so setup can stop), false to fall back
- * to printing manual instructions.
+ * Reconcile registered profiles with the picker's selection: `claude mcp add`
+ * the newly checked ones and `claude mcp remove` the ones unchecked since they
+ * were registered. Only touches profiles that actually change, and confirms the
+ * plan first because removal edits the user's client config. Falls back to
+ * printing manual instructions when the Claude Code CLI is absent.
  */
-async function registerWithClaudeCode(
+async function reconcileRegistration(
   chosen: Profile[],
+  registered: Set<string>,
   ask: (q: string, required?: boolean) => Promise<string>
-): Promise<boolean> {
+): Promise<void> {
+  const chosenNames = new Set(chosen.map((p) => p.name));
+  const toAdd = chosen.filter((p) => !registered.has(p.name));
+  const toRemove = [...registered].filter((n) => !chosenNames.has(n));
+
+  if (!toAdd.length && !toRemove.length) {
+    console.log('\nNo changes — the registered profiles already match your selection.');
+    return;
+  }
+
   let claudeAvailable = false;
   try {
     execFileSync('claude', ['--version'], { stdio: 'ignore' });
@@ -219,35 +277,42 @@ async function registerWithClaudeCode(
   } catch {
     // `claude` not on PATH — the user uses a different client; print instead.
   }
-  if (!claudeAvailable) return false;
+  if (!claudeAvailable) {
+    console.log('\nClaude Code CLI not found — register the profiles you want manually:');
+    printManualRegistration(chosen);
+    return;
+  }
 
-  const answer = (
-    await ask(`\nRegister these ${chosen.length} profile(s) with Claude Code now? [Y/n]: `, false)
-  ).trim();
-  if (/^n/i.test(answer)) return false;
+  console.log('\nPlanned changes:');
+  if (toAdd.length) console.log(`  + add:    ${toAdd.map((p) => `asc-${p.name}`).join(', ')}`);
+  if (toRemove.length) console.log(`  - remove: ${toRemove.map((n) => `asc-${n}`).join(', ')}`);
+  const answer = (await ask('Apply these changes? [Y/n]: ', false)).trim();
+  if (/^n/i.test(answer)) {
+    console.log('Left registration unchanged.');
+    return;
+  }
 
-  let allOk = true;
-  for (const p of chosen) {
+  for (const p of toAdd) {
     try {
       execFileSync(
         'claude',
         ['mcp', 'add', '-s', 'user', `asc-${p.name}`, '--', 'npx', '-y', '@erayendes/asc-mcp', p.name],
         { stdio: 'ignore' }
       );
-      console.log(`  ✓ asc-${p.name}`);
+      console.log(`  ✓ added asc-${p.name}`);
     } catch (err) {
-      allOk = false;
-      console.log(`  ✗ asc-${p.name}: ${(err as Error).message.split('\n')[0]}`);
+      console.log(`  ✗ add asc-${p.name}: ${(err as Error).message.split('\n')[0]}`);
     }
   }
-
-  if (allOk) {
-    console.log('\nDone. Restart Claude Code, then ask it to check the App Store Connect connection.');
-    return true;
+  for (const n of toRemove) {
+    try {
+      execFileSync('claude', ['mcp', 'remove', `asc-${n}`], { stdio: 'ignore' });
+      console.log(`  ✓ removed asc-${n}`);
+    } catch (err) {
+      console.log(`  ✗ remove asc-${n}: ${(err as Error).message.split('\n')[0]}`);
+    }
   }
-  console.log('\nSome did not register. Do the rest by hand:');
-  printManualRegistration(chosen);
-  return true;
+  console.log('\nDone. Restart Claude Code for the change to take effect.');
 }
 
 function printManualRegistration(chosen: Profile[]): void {
