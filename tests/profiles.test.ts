@@ -175,6 +175,18 @@ describe('credential format validators (catch paste errors at the prompt)', () =
   });
 });
 
+describe('classifyVerifyError (offline saves, 401 re-prompts)', () => {
+  it('treats 401/403 as invalid and everything else as unreachable', async () => {
+    const { classifyVerifyError } = await import('../src/setup.js');
+    const { AscApiError } = await import('../src/core/errors.js');
+    expect(classifyVerifyError(new AscApiError('unauthorized', 401))).toBe('invalid');
+    expect(classifyVerifyError(new AscApiError('forbidden', 403))).toBe('invalid');
+    expect(classifyVerifyError(new AscApiError('network', 0))).toBe('unreachable'); // offline
+    expect(classifyVerifyError(new AscApiError('server', 500))).toBe('unreachable'); // Apple hiccup
+    expect(classifyVerifyError(new Error('bad key'))).toBe('invalid'); // token signing failed
+  });
+});
+
 import { registerCommand } from '../src/profiles.js';
 import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 

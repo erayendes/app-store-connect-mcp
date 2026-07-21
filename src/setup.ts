@@ -18,7 +18,12 @@ import {
 } from './core/shared-config.js';
 import { PROFILES, GATEWAY_OPERATIONS, type Profile } from './profiles.js';
 import { ToolRegistry } from './core/registry.js';
+import { TokenProvider } from './core/jwt.js';
+import { AscHttpClient } from './core/http.js';
+import { AscApiError } from './core/errors.js';
 import { runChecklist } from './checklist.js';
+
+type Ask = (q: string, required?: boolean) => Promise<string>;
 
 /** Rough tokens a tool definition costs in context — for the size hint only. */
 const TOKENS_PER_TOOL = 150;
@@ -130,6 +135,66 @@ export function isValidIssuerId(v: string): boolean {
   return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(v.trim());
 }
 
+/**
+ * Ask for the .p8 until it points at a readable PRIVATE KEY file. A missing or
+ * unreadable path, or a file with no PEM header, re-prompts with a hint rather
+ * than aborting the wizard.
+ */
+async function readP8(ask: Ask): Promise<{ resolvedPath: string; pem: string }> {
+  for (;;) {
+    const p8Path = cleanPath(
+      await ask('Path to the .p8 file (tip: drag the file into this window): ')
+    );
+    try {
+      const resolvedPath = realpathSync(p8Path);
+      const pem = readFileSync(resolvedPath, 'utf8').trim();
+      if (!pem.includes('PRIVATE KEY')) {
+        console.log(`  ${resolvedPath} doesn't look like a .p8 private key (no PEM header). Try another file.`);
+        continue;
+      }
+      return { resolvedPath, pem };
+    } catch {
+      console.log(`  Couldn't read a .p8 at "${p8Path}". Drag the file from Finder into this window and try again.`);
+    }
+  }
+}
+
+/**
+ * Verify a credential set against Apple with one lightweight request.
+ * - 'ok'          : Apple accepted it.
+ * - 'invalid'     : Apple rejected it (401/403), or the key can't sign a token
+ *                   — the Key ID / Issuer ID / .p8 don't match; re-prompt.
+ * - 'unreachable' : no network or an Apple-side error — can't tell, so save the
+ *                   config with a warning instead of blocking an offline setup.
+ */
+/**
+ * Map a failed verification to a verdict. 401/403 means Apple actively rejected
+ * the credentials → 'invalid'. Any other API status (network status 0, a 5xx
+ * hiccup) means we couldn't get a verdict → 'unreachable', so we don't force a
+ * re-entry over a transient problem. A non-API error is a token-signing failure,
+ * i.e. the .p8 doesn't match → 'invalid'.
+ */
+export function classifyVerifyError(err: unknown): 'invalid' | 'unreachable' {
+  if (err instanceof AscApiError) {
+    return err.status === 401 || err.status === 403 ? 'invalid' : 'unreachable';
+  }
+  return 'invalid';
+}
+
+async function verifyCredentials(
+  keyId: string,
+  issuerId: string,
+  pem: string
+): Promise<'ok' | 'invalid' | 'unreachable'> {
+  try {
+    const tokens = new TokenProvider({ keyId, issuerId, privateKey: pem });
+    await new AscHttpClient(tokens).get('/v1/apps', { limit: 1 });
+    return 'ok';
+  } catch (err) {
+    return classifyVerifyError(err);
+  }
+}
+
 export async function runSetup(): Promise<void> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const ask = async (q: string, required = true): Promise<string> => {
@@ -185,38 +250,42 @@ export async function runSetup(): Promise<void> {
       }
     }
 
-    const keyId = await askValid(
-      '\nKey ID: ',
-      isValidKeyId,
-      'A Key ID is 8–12 letters and digits, e.g. "ABC123XYZ9". Check it and try again.'
-    );
-    const issuerId = await askValid(
-      'Issuer ID: ',
-      isValidIssuerId,
-      'An Issuer ID is a UUID, e.g. "57246e4f-1a2b-4c3d-9e8f-0123456789ab". Check it and try again.'
-    );
-
-    // Ask for the .p8 until it points at a readable private key, so a wrong path
-    // or a non-key file re-prompts instead of aborting the whole wizard.
+    // Gather Key ID + Issuer ID + .p8, then verify against Apple. On rejection,
+    // re-enter all three (they must belong to the same key); offline, save with
+    // a warning rather than blocking the setup.
+    let keyId: string;
+    let issuerId: string;
     let resolvedPath: string;
     let pem: string;
     for (;;) {
-      const p8Path = cleanPath(
-        await ask('Path to the .p8 file (tip: drag the file into this window): ')
+      keyId = await askValid(
+        '\nKey ID: ',
+        isValidKeyId,
+        'A Key ID is 8–12 letters and digits, e.g. "ABC123XYZ9". Check it and try again.'
       );
-      try {
-        const rp = realpathSync(p8Path);
-        const contents = readFileSync(rp, 'utf8').trim();
-        if (!contents.includes('PRIVATE KEY')) {
-          console.log(`  ${rp} doesn't look like a .p8 private key (no PEM header). Try another file.`);
-          continue;
-        }
-        resolvedPath = rp;
-        pem = contents;
+      issuerId = await askValid(
+        'Issuer ID: ',
+        isValidIssuerId,
+        'An Issuer ID is a UUID, e.g. "57246e4f-1a2b-4c3d-9e8f-0123456789ab". Check it and try again.'
+      );
+      ({ resolvedPath, pem } = await readP8(ask));
+
+      console.log('\nVerifying with Apple…');
+      const verdict = await verifyCredentials(keyId, issuerId, pem);
+      if (verdict === 'ok') {
+        console.log('✓ Credentials verified.');
         break;
-      } catch {
-        console.log(`  Couldn't read a .p8 at "${p8Path}". Drag the file from Finder into this window and try again.`);
       }
+      if (verdict === 'unreachable') {
+        console.log(
+          '⚠ Could not reach Apple to verify (offline?). Saving anyway — run a status check once you are online.'
+        );
+        break;
+      }
+      console.log(
+        '✗ Apple rejected these credentials. Make sure the Key ID, Issuer ID and .p8 ' +
+          'all belong to the same key, then re-enter them.\n'
+      );
     }
 
     const vendorNumber = await ask(
