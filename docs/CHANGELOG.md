@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
-### [Unreleased]
+### [1.1.0] — 2026-07-22
 
 - **Rebrand to Heimdall.** The project is now *Heimdall — App Store Connect MCP*. The npm package (`@erayendes/asc-mcp`) and the command (`asc-mcp`) are unchanged.
 - **Docs moved to the repository root** (`docs/` removed) so GitHub recognises the community-health files, and corrected throughout: **982 operations / 966 paths / 123 deprecated** (previously reported as 1,263 / 159).
@@ -52,7 +52,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ## Türkçe
 
-### [Yayınlanmamış]
+### [1.1.0] — 2026-07-22
 
 - **Heimdall'a yeniden adlandırma.** Proje artık *Heimdall — App Store Connect MCP*. npm paketi (`@erayendes/asc-mcp`) ve komut (`asc-mcp`) değişmedi.
 - **Dokümanlar depo köküne taşındı** (`docs/` kaldırıldı); böylece GitHub community-health dosyalarını tanır. Rakamlar baştan sona düzeltildi: **982 işlem / 966 path / 123 deprecated** (önceden 1.263 / 159 yazıyordu).
