@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen.svg)](package.json)
+[![Patreon](https://img.shields.io/badge/Patreon-become%20a%20member-f96854.svg)](https://www.patreon.com/cw/erayendes/membership)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-orange.svg)](https://buymeacoffee.com/erayendes)
 
 🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
@@ -88,7 +89,7 @@ Three tools ride on top of the `reviews` domain and use **MCP Sampling** — you
 
 ### Support the project
 
-Heimdall is free and open. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/erayendes) ☕.
+Heimdall is free and open. If it saves you time, you can [become a member on Patreon](https://www.patreon.com/cw/erayendes/membership) or [buy me a coffee](https://buymeacoffee.com/erayendes) ☕.
 
 ### License
 
@@ -177,7 +178,7 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 
 ### Projeye destek
 
-Heimdall ücretsiz ve açık. Zamanınızı kurtardıysa [bana bir kahve ısmarlayabilirsiniz](https://buymeacoffee.com/erayendes) ☕.
+Heimdall ücretsiz ve açık. Zamanınızı kurtardıysa [Patreon'da üye olabilir](https://www.patreon.com/cw/erayendes/membership) ya da [bana bir kahve ısmarlayabilirsiniz](https://buymeacoffee.com/erayendes) ☕.
 
 ### Lisans
 
