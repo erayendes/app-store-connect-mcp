@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [1.1.2] — 2026-07-22
+
+- Added the `mcpName` field (`io.github.erayendes/asc-mcp`) to `package.json` so the server can be published to the official [MCP Registry](https://registry.modelcontextprotocol.io). No functional change.
+
 ### [1.1.1] — 2026-07-22
 
 - **CLI messages now show a command that works without a global install.** The help text, the "missing config" and "invalid config" errors, and the StoreKit hint print `npx -y @erayendes/asc-mcp setup` instead of a bare `asc-mcp setup` — the latter only exists after `npm i -g`. `GUIDE.md §7` spells out the re-run command too.
@@ -55,6 +59,10 @@ All notable changes to this project are documented here. The format is based on 
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [1.1.2] — 2026-07-22
+
+- `package.json`'a `mcpName` alanı (`io.github.erayendes/asc-mcp`) eklendi; böylece sunucu resmi [MCP Registry](https://registry.modelcontextprotocol.io)'ye yayınlanabilir. İşlevsel değişiklik yok.
 
 ### [1.1.1] — 2026-07-22
 
