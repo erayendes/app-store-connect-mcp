@@ -43,7 +43,7 @@ export function readSharedConfig(env: NodeJS.ProcessEnv = process.env): SharedCo
     return parsed.keyId && parsed.issuerId ? parsed : undefined;
   } catch {
     throw new Error(
-      `${sharedConfigPath(env)} is not valid JSON. Re-run "app-store-connect-mcp setup" ` +
+      `${sharedConfigPath(env)} is not valid JSON. Re-run "asc-mcp setup" ` +
         `or delete the file.`
     );
   }

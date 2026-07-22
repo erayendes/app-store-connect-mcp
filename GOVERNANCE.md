@@ -4,54 +4,62 @@
 
 ## English
 
-### Maintainer model
+### Hi, I'm Eray
 
-This project is currently maintained by a single maintainer, [Eray Endeş](https://github.com/erayendes), who has final say on:
+I'm Eray Endeş, a product manager, and I genuinely love this craft. There's a particular joy in taking something tangled, understanding it, and making it work — solving a problem, fixing what's broken, watching the rough edge disappear. Heimdall started from exactly that feeling.
 
-- What gets merged and released
-- Roadmap and scope (e.g. which Apple domains/operations are prioritized)
-- Breaking changes and versioning (semver)
-- Adding co-maintainers or transferring ownership
+### Why I built it
 
-There is no formal committee or voting process — this reflects the project's current size, not a permanent design choice. As the contributor base grows, this document will be updated to reflect a more distributed model (e.g. multiple maintainers with defined areas of ownership).
+I build several apps, and the more of them I run, the more I needed real automation around the App Store — not click-through-the-dashboard automation, but something I could drive from an AI client and trust.
 
-### Decision process
+The tools that already existed were piecemeal. Each wrapped a different slice of App Store Connect, each made its own choices, and none covered the whole surface. The moment I needed the one endpoint a tool hadn't wrapped, I was stuck.
 
-- **Small changes** (bug fixes, description improvements, new curated overrides): reviewed and merged directly by the maintainer, typically within a few days.
-- **Larger changes** (new domains, architectural changes, breaking changes to tool names or schemas): discussed in an issue first before a PR is opened, so the direction is agreed on before the work is done.
-- **Security issues**: handled privately per [SECURITY.md](docs/SECURITY.md), outside the normal PR/issue flow.
+So I wanted something built to a standard and comprehensive by construction: every tool generated from Apple's own OpenAPI specification, so coverage is complete and staying current means regenerating rather than hand-writing. Once it worked for me, sharing it openly was the natural next step — if it saves me time across my apps, it can save someone else's too.
 
-### Becoming a maintainer
+### How it's run
 
-There's no fixed bar, but a track record of good contributions (see [CONTRIBUTING.md](docs/CONTRIBUTING.md)) — accurate description improvements, correctly mapped domains, tests that hold up — is how trust gets built. If you're contributing regularly and want to take on more (triage, review, release management), open an issue proposing it.
+For now this is a single-maintainer project: I have the final say on what gets merged and released, on scope and roadmap, and on versioning. That reflects the project's size today, not a permanent design — if a contributor community grows around it, this document will grow with it.
 
-### Project independence
+- **Small changes** (bug fixes, clearer descriptions, curated overrides) — reviewed and merged directly, usually within a few days.
+- **Larger changes** (new domains, architectural or breaking changes) — best discussed in an issue first, so we agree on direction before the work is done.
+- **Security issues** — handled privately per [SECURITY.md](SECURITY.md), outside the normal issue flow.
 
-This project is not affiliated with, endorsed by, or sponsored by Apple Inc. (see [NOTICE](NOTICE)). Its direction is set by the maintainer and the community, not by any corporate roadmap.
+### Reaching me
+
+- Questions, ideas, bug reports: open an issue, or email **erayendes@gmail.com**.
+- If Heimdall saves you time and you'd like to support it, you can [buy me a coffee](https://buymeacoffee.com/erayendes) ☕. Entirely optional — the project is and stays free.
+
+### Independence
+
+Heimdall is not affiliated with, endorsed by, or sponsored by Apple Inc. (see [NOTICE](NOTICE)). Its direction is set by me and the people who use it, not by any corporate roadmap.
 
 ## Türkçe
 
-### Maintainer modeli
+### Merhaba, ben Eray
 
-Bu proje şu anda tek bir maintainer tarafından yönetiliyor: [Eray Endeş](https://github.com/erayendes). Son söz kendisinde:
+Ben Eray Endeş, bir product manager'ım ve bu işi gerçekten seviyorum. Karışık bir şeyi alıp anlamanın, çalışır hâle getirmenin — bir problemi çözmenin, bozuk olanı fikslemenin, o pürüzün kaybolmasını izlemenin — kendine özgü bir keyfi var. Heimdall tam da bu histen doğdu.
 
-- Neyin merge edilip yayınlanacağı
-- Roadmap ve kapsam (örn. hangi Apple domain/işlemlerinin öncelikli olduğu)
-- Breaking change'ler ve versiyonlama (semver)
-- Co-maintainer eklemek veya sahipliği devretmek
+### Neden yaptım
 
-Resmi bir komite veya oylama süreci yok — bu, projenin şu anki büyüklüğünü yansıtır, kalıcı bir tasarım tercihi değil. Katkıda bulunan tabanı büyüdükçe bu doküman daha dağıtık bir modeli (örn. tanımlı sorumluluk alanlarına sahip birden fazla maintainer) yansıtacak şekilde güncellenecek.
+Birden çok uygulama geliştiriyorum ve ne kadar çoğaldılarsa App Store çevresinde o kadar çok gerçek otomasyona ihtiyaç duydum — panele tıklaya tıklaya değil, bir yapay zekâ istemcisinden yönetebileceğim ve güvenebileceğim bir otomasyon.
 
-### Karar süreci
+Zaten var olan çözümler parça parçaydı. Her biri App Store Connect'in farklı bir dilimini sarıyor, her biri kendi tercihlerini yapıyor ve hiçbiri tüm yüzeyi kapsamıyordu. Bir aracın sarmadığı o tek uç noktaya ihtiyaç duyduğum anda tıkanıp kalıyordum.
 
-- **Küçük değişiklikler** (bug fix'ler, açıklama iyileştirmeleri, yeni curated override'lar): maintainer tarafından doğrudan gözden geçirilir ve genellikle birkaç gün içinde merge edilir.
-- **Büyük değişiklikler** (yeni domainler, mimari değişiklikler, araç isimlerinde/şemalarında breaking change): PR açılmadan önce bir issue'da tartışılır; böylece iş yapılmadan önce yön üzerinde anlaşılır.
-- **Güvenlik sorunları**: [SECURITY.md](docs/SECURITY.md)'ye göre, normal PR/issue akışının dışında özel olarak ele alınır.
+Bu yüzden standartlara uygun ve yapısı gereği kapsamlı bir şey istedim: her araç Apple'ın kendi OpenAPI spesifikasyonundan üretilsin ki kapsam eksiksiz olsun ve güncel kalmak elle yazmak değil yeniden üretmek anlamına gelsin. Bende çalışır hâle geldikten sonra açıkça paylaşmak doğal bir sonraki adımdı — benim uygulamalarımda zaman kazandırıyorsa, başkasının işine de yarar.
 
-### Maintainer olmak
+### Nasıl yürütülüyor
 
-Sabit bir eşik yok, ama iyi katkıların ([CONTRIBUTING.md](docs/CONTRIBUTING.md)'ye bak) — doğru açıklama iyileştirmeleri, doğru eşlenmiş domainler, ayakta duran testler — geçmişi güven inşa etmenin yolu. Düzenli katkıda bulunuyorsan ve daha fazlasını (triage, review, release yönetimi) üstlenmek istiyorsan, bunu öneren bir issue aç.
+Şimdilik bu tek maintainer'lı bir proje: neyin merge edilip yayınlanacağına, kapsam ve roadmap'e, versiyonlamaya son sözü ben veriyorum. Bu, projenin bugünkü büyüklüğünü yansıtır, kalıcı bir tasarım değil — etrafında bir katkıcı topluluğu büyürse, bu doküman da onunla birlikte büyür.
 
-### Proje bağımsızlığı
+- **Küçük değişiklikler** (bug fix'ler, daha net açıklamalar, curated override'lar) — doğrudan gözden geçirilir ve genellikle birkaç gün içinde merge edilir.
+- **Büyük değişiklikler** (yeni domainler, mimari ya da breaking değişiklikler) — önce bir issue'da konuşmak en iyisi; böylece iş yapılmadan yön üzerinde anlaşırız.
+- **Güvenlik sorunları** — [SECURITY.md](SECURITY.md)'ye göre, normal issue akışının dışında özel olarak ele alınır.
 
-Bu proje Apple Inc. ile bağlantılı değildir, onaylanmamıştır veya sponsor edilmemiştir (bkz. [NOTICE](NOTICE)). Yönü, herhangi bir kurumsal roadmap tarafından değil, maintainer ve topluluk tarafından belirlenir.
+### Bana ulaşmak
+
+- Soru, fikir, hata bildirimi: bir issue açın ya da **erayendes@gmail.com** adresine yazın.
+- Heimdall zamanınızı kurtarıyorsa ve desteklemek isterseniz [bana bir kahve ısmarlayabilirsiniz](https://buymeacoffee.com/erayendes) ☕. Tamamen isteğe bağlı — proje ücretsiz ve öyle kalıyor.
+
+### Bağımsızlık
+
+Heimdall, Apple Inc. ile bağlantılı değildir, onaylanmamıştır veya sponsor edilmemiştir (bkz. [NOTICE](NOTICE)). Yönü, herhangi bir kurumsal roadmap tarafından değil, benim ve onu kullananlar tarafından belirlenir.

@@ -8,12 +8,12 @@ import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import { PROFILES, resolveProfile } from './profiles.js';
 
 function printHelp(): void {
-  console.log(`app-store-connect-mcp v${VERSION}
+  console.log(`Heimdall — App Store Connect MCP (asc-mcp) v${VERSION}
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
-  app-store-connect-mcp [profile] [options]
-  app-store-connect-mcp setup
+  asc-mcp [profile] [options]
+  asc-mcp setup
 
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "asc-<profile>"). Add one entry per profile to
@@ -43,7 +43,7 @@ Credentials (in resolution order):
      ASC_PRIVATE_KEY_KEYCHAIN ("service/account", macOS) / ASC_PRIVATE_KEY_PATH.
      Optional: ASC_VENDOR_NUMBER (sales/finance reports), ASC_BUNDLE_ID
      (StoreKit 2), ASC_ENVIRONMENT (Sandbox|Production).
-  2. Shared config written by "app-store-connect-mcp setup" — recommended when
+  2. Shared config written by "asc-mcp setup" — recommended when
      running several profiles, so credentials live in exactly one place.
 `);
 }
@@ -104,7 +104,7 @@ async function main(): Promise<void> {
 
   // stderr is safe: stdout carries the MCP protocol itself.
   console.error(
-    `${profile ? `asc-${profile.name}` : 'app-store-connect-mcp'} v${VERSION} ready ` +
+    `${profile ? `asc-${profile.name}` : 'asc-mcp'} v${VERSION} ready ` +
       `(spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
   );
 }

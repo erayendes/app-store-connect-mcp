@@ -1,4 +1,5 @@
-app-store-connect-mcp
+Heimdall — App Store Connect MCP
+(npm package: @erayendes/asc-mcp)
 
 Tool definitions in src/generated/ are produced by scripts/generate.ts from
 Apple Inc.'s published App Store Connect OpenAPI specification (spec/openapi.json).

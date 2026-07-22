@@ -114,9 +114,13 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
                   domains.map((d) => profileForDomain(d)?.name).filter((n): n is string => Boolean(n))
                 )];
                 return homes.length
-                  ? `These live on sibling MCP servers. Register the ones you need:\n` +
+                  ? `These live on sibling MCP servers. Register the ones you need in your ` +
+                    `MCP client — the command is the same everywhere:\n` +
+                    homes.map((n) => `  asc-${n}  ->  npx -y @erayendes/asc-mcp ${n}`).join('\n') +
+                    `\nFor example, in Claude Code:\n` +
                     homes.map((n) => `  ${registerCommand(n)}`).join('\n') +
-                    `\n(or add the same entries to your MCP client config), then restart your client.`
+                    `\nOn other clients (Codex, Antigravity, Claude Desktop, …) add the same ` +
+                    `command/args to their config. Then restart your client.`
                   : `Run the server without a profile to combine domains freely.`;
               }
             : undefined,

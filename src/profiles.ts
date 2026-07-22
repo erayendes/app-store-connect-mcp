@@ -60,9 +60,9 @@ export const PROFILES: Profile[] = [
     description: "Apple's CI/CD: workflows, build runs, artifacts, source control.",
   },
   {
-    name: 'account-management',
+    name: 'provisioning',
     domains: ['provisioning'],
-    description: 'Code signing infrastructure: bundle IDs, certificates, devices, profiles.',
+    description: 'Code signing infrastructure: bundle IDs, certificates, devices, provisioning profiles.',
   },
   {
     name: 'background-assets',

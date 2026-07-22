@@ -19,6 +19,7 @@
     "url": "https://github.com/erayendes/app-store-connect-mcp/issues"
   },
   "homepage": "https://github.com/erayendes/app-store-connect-mcp#readme",
+  "funding": "https://buymeacoffee.com/erayendes",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,9 +29,16 @@
   "files": [
     "dist",
     "spec/openapi.json",
-    "docs",
     "README.md",
-    "LICENSE"
+    "GUIDE.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "CONTRIBUTING.md",
+    "CODE_OF_CONDUCT.md",
+    "GOVERNANCE.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "scripts": {
     "generate": "tsx scripts/generate.ts",

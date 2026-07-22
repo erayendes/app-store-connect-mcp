@@ -34,10 +34,10 @@ export interface RegistryOptions {
 /**
  * Loaded when the caller doesn't ask for anything specific.
  *
- * The full spec is 1,263 operations, which costs well over 100k tokens of tool
+ * The full spec is 982 operations, which costs well over 100k tokens of tool
  * definitions — more than most context windows can spare. This set covers the
  * everyday release, TestFlight, review and monetization workflows. Game Center
- * alone is 337 tools and is opt-in for that reason.
+ * alone is 273 tools and is opt-in for that reason.
  */
 export const DEFAULT_DOMAINS = [
   'meta',

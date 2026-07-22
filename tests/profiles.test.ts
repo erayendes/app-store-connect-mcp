@@ -24,6 +24,12 @@ describe('profiles', () => {
     expect(profileForDomain('game_center')?.name).toBe('game-center');
   });
 
+  it('exposes the code-signing profile as "provisioning", not the old name', () => {
+    expect(resolveProfile('provisioning')?.domains).toEqual(['provisioning']);
+    expect(profileForDomain('provisioning')?.name).toBe('provisioning');
+    expect(resolveProfile('account-management')).toBeUndefined(); // renamed, no alias
+  });
+
   it('loads only the profile domains plus gateway tools', () => {
     const p = resolveProfile('analytics')!;
     const registry = new ToolRegistry({
