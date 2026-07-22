@@ -72,7 +72,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
   if (missing.length) {
     throw new ConfigError(
       `Missing required configuration: ${missing.join(', ')}.\n` +
-        `Either run "asc-mcp setup" once (shared by every profile), or ` +
+        `Either run "npx -y @erayendes/asc-mcp setup" once (shared by every profile), or ` +
         `create an API key at https://appstoreconnect.apple.com/access/integrations/api ` +
         `and set these as environment variables in your MCP client config.`
     );

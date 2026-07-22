@@ -154,7 +154,7 @@ export async function executeMetaTool(
       if (storekitUnloaded) {
         hints.push(
           'StoreKit tools need the monetization profile with ASC_BUNDLE_ID set ' +
-            '(run `asc-mcp setup` and pick the monetization profile, or set ASC_BUNDLE_ID).'
+            '(run `npx -y @erayendes/asc-mcp setup` and pick the monetization profile, or set ASC_BUNDLE_ID).'
         );
       }
 

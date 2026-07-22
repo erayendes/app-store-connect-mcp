@@ -12,8 +12,8 @@ function printHelp(): void {
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
-  asc-mcp [profile] [options]
-  asc-mcp setup
+  npx -y @erayendes/asc-mcp [profile] [options]
+  npx -y @erayendes/asc-mcp setup
 
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "asc-<profile>"). Add one entry per profile to
@@ -43,7 +43,7 @@ Credentials (in resolution order):
      ASC_PRIVATE_KEY_KEYCHAIN ("service/account", macOS) / ASC_PRIVATE_KEY_PATH.
      Optional: ASC_VENDOR_NUMBER (sales/finance reports), ASC_BUNDLE_ID
      (StoreKit 2), ASC_ENVIRONMENT (Sandbox|Production).
-  2. Shared config written by "asc-mcp setup" — recommended when
+  2. Shared config written by "npx -y @erayendes/asc-mcp setup" — recommended when
      running several profiles, so credentials live in exactly one place.
 `);
 }

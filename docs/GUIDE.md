@@ -212,7 +212,7 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 > [!TIP]
 > **You don't have to set everything up front.** Start with a couple of profiles and add more when a project needs them.
 
-- **Re-run `setup`** — it reuses your saved credentials and shows the profile picker again. Check or uncheck; it registers and de-registers for you.
+- **Re-run setup** — `npx -y @erayendes/asc-mcp setup`. It reuses your saved credentials and shows the profile picker again. Check or uncheck; it registers and de-registers for you.
 - **Add one directly:** `claude mcp add -s user asc-game-center -- npx -y @erayendes/asc-mcp game-center`
 - **Remove one:** `claude mcp remove asc-game-center`
 - **On the combined server**, widen or narrow with `--domains`.
@@ -478,7 +478,7 @@ claude mcp add -s user app-store-connect \
 > [!TIP]
 > **Her şeyi baştan kurmanız gerekmez.** Birkaç profille başlayın, proje ihtiyaç duydukça ekleyin.
 
-- **`setup`'ı yeniden çalıştırın** — kayıtlı kimlik bilgilerinizi yeniden kullanır ve profil seçicisini tekrar gösterir. İşaretleyin/kaldırın; kaydı sizin için ekler ve siler.
+- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`. Kayıtlı kimlik bilgilerinizi yeniden kullanır ve profil seçicisini tekrar gösterir. İşaretleyin/kaldırın; kaydı sizin için ekler ve siler.
 - **Tek birini ekleyin:** `claude mcp add -s user asc-game-center -- npx -y @erayendes/asc-mcp game-center`
 - **Tek birini kaldırın:** `claude mcp remove asc-game-center`
 - **Birleşik sunucuda** `--domains` ile genişletin ya da daraltın.

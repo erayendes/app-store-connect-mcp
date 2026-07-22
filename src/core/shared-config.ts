@@ -1,5 +1,5 @@
 /**
- * One credential entry shared by every profile. `asc-mcp setup` writes it;
+ * One credential entry shared by every profile. `npx -y @erayendes/asc-mcp setup` writes it;
  * loadConfig falls back to it whenever the environment carries nothing. The
  * private key itself never lives in this file — on macOS it sits in the
  * Keychain and the file only holds the reference; elsewhere the file points
@@ -43,7 +43,7 @@ export function readSharedConfig(env: NodeJS.ProcessEnv = process.env): SharedCo
     return parsed.keyId && parsed.issuerId ? parsed : undefined;
   } catch {
     throw new Error(
-      `${sharedConfigPath(env)} is not valid JSON. Re-run "asc-mcp setup" ` +
+      `${sharedConfigPath(env)} is not valid JSON. Re-run "npx -y @erayendes/asc-mcp setup" ` +
         `or delete the file.`
     );
   }
