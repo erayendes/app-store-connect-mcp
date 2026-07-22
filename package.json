@@ -30,6 +30,7 @@
     "dist",
     "spec/openapi.json",
     "README.md",
+    "AGENTS.md",
     "GUIDE.md",
     "SECURITY.md",
     "SUPPORT.md",

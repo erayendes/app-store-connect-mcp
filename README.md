@@ -23,6 +23,9 @@ npx -y @erayendes/asc-mcp setup
 
 The setup wizard collects your API key once, stores it securely, and registers the profiles you choose. Full walkthrough in the [Guide](GUIDE.md).
 
+> [!NOTE]
+> **Installing this through an AI agent?** See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent registers the server, then you run `setup` yourself — your private key never goes through the chat.
+
 ### Why it's different
 
 Most App Store Connect MCP servers wrap a hand-picked subset of endpoints. That works until you need the one endpoint nobody wrapped. Heimdall takes the opposite approach:
@@ -108,6 +111,9 @@ npx -y @erayendes/asc-mcp setup
 ```
 
 Setup sihirbazı API anahtarınızı bir kez toplar, güvenle saklar ve seçtiğiniz profilleri kaydeder. Adım adım anlatım [Rehber](GUIDE.md)'de.
+
+> [!NOTE]
+> **Bunu bir AI agent ile mi kuruyorsunuz?** Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent sunucuyu kaydeder, `setup`'ı siz çalıştırırsınız — özel anahtarınız sohbetten hiç geçmez.
 
 ### Neden farklı
 
