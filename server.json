@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.erayendes/asc-mcp",
+  "description": "App Store Connect + StoreKit 2 from any AI client. 982 tools from Apple's OpenAPI spec.",
+  "repository": {
+    "url": "https://github.com/erayendes/app-store-connect-mcp",
+    "source": "github"
+  },
+  "version": "1.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@erayendes/asc-mcp",
+      "version": "1.1.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
