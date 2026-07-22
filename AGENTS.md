@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and any other MCP client). Human-facing docs live in [README.md](README.md) and [GUIDE.md](GUIDE.md).
+Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and any other MCP client). Human-facing docs live in [README.md](README.md) and [GUIDE.md](docs/GUIDE.md).
 
 ## What this is
 
@@ -12,7 +12,7 @@ Heimdall is an MCP server for the App Store Connect API and the App Store Server
    - **Claude Code:** `claude mcp add -s user asc-<profile> -- npx -y @erayendes/asc-mcp <profile>`
    - **Codex:** `codex mcp add asc-<profile> -- npx -y @erayendes/asc-mcp <profile>` (or a `[mcp_servers.asc-<profile>]` block in `~/.codex/config.toml`)
    - **Claude Desktop / Antigravity / other JSON clients:** add an `mcpServers` entry with `command: "npx"`, `args: ["-y", "@erayendes/asc-mcp", "<profile>"]`
-   - If the user didn't name an area, register `analytics`, `marketing` and `app-info` as a sensible default, or ask which areas they use. Each profile is a small scoped server; see the profile table in [GUIDE.md](GUIDE.md#4-register-profiles).
+   - If the user didn't name an area, register `analytics`, `marketing` and `app-info` as a sensible default, or ask which areas they use. Each profile is a small scoped server; see the profile table in [GUIDE.md](docs/GUIDE.md#4-register-profiles).
 
 2. **Do not handle credentials yourself.** Connecting needs an App Store Connect API key. The `.p8` private key is a secret:
    - **Never** ask the user to paste the `.p8` contents into the chat, and never write the key into a config file yourself.
@@ -28,4 +28,4 @@ Heimdall is an MCP server for the App Store Connect API and the App Store Server
 
 ## If you are working ON this repository
 
-Tools are generated from Apple's OpenAPI spec. **Do not edit `src/generated/`** — change `scripts/generate.ts`, run `npm run generate`, and commit the result. `npm test` and `npm run typecheck` must pass. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Tools are generated from Apple's OpenAPI spec. **Do not edit `src/generated/`** — change `scripts/generate.ts`, run `npm run generate`, and commit the result. `npm test` and `npm run typecheck` must pass. See [CONTRIBUTING.md](docs/CONTRIBUTING.md).

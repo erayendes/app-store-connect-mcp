@@ -31,7 +31,7 @@ For now this is a single-maintainer project: I have the final say on what gets m
 
 ### Independence
 
-Heimdall is not affiliated with, endorsed by, or sponsored by Apple Inc. (see [NOTICE](NOTICE)). Its direction is set by me and the people who use it, not by any corporate roadmap.
+Heimdall is not affiliated with, endorsed by, or sponsored by Apple Inc. (see [NOTICE](../NOTICE)). Its direction is set by me and the people who use it, not by any corporate roadmap.
 
 ## Türkçe
 
@@ -62,4 +62,4 @@ Bu yüzden standartlara uygun ve yapısı gereği kapsamlı bir şey istedim: he
 
 ### Bağımsızlık
 
-Heimdall, Apple Inc. ile bağlantılı değildir, onaylanmamıştır veya sponsor edilmemiştir (bkz. [NOTICE](NOTICE)). Yönü, herhangi bir kurumsal roadmap tarafından değil, benim ve onu kullananlar tarafından belirlenir.
+Heimdall, Apple Inc. ile bağlantılı değildir, onaylanmamıştır veya sponsor edilmemiştir (bkz. [NOTICE](../NOTICE)). Yönü, herhangi bir kurumsal roadmap tarafından değil, benim ve onu kullananlar tarafından belirlenir.

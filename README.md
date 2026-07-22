@@ -21,7 +21,7 @@ Manage your entire App Store Connect account from your AI client: apps and metad
 npx -y @erayendes/asc-mcp setup
 ```
 
-The setup wizard collects your API key once, stores it securely, and registers the profiles you choose. Full walkthrough in the [Guide](GUIDE.md).
+The setup wizard collects your API key once, stores it securely, and registers the profiles you choose. Full walkthrough in the [Guide](docs/GUIDE.md).
 
 > [!NOTE]
 > **Installing this through an AI agent?** See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent registers the server, then you run `setup` yourself — your private key never goes through the chat.
@@ -59,7 +59,7 @@ One install backs eleven small, purpose-built MCP servers. Register only the are
 | **background-assets** | 18 | Asset packs downloaded outside the app binary |
 | **webhooks** | 12 | Webhooks pushing App Store Connect events to your endpoint |
 
-See the [Guide](GUIDE.md#4-register-profiles) for setup, and [§7](GUIDE.md#7-adding-and-removing-tools-later) for adding or removing profiles later.
+See the [Guide](docs/GUIDE.md#4-register-profiles) for setup, and [§7](docs/GUIDE.md#7-adding-and-removing-tools-later) for adding or removing profiles later.
 
 ### Loading the right tools
 
@@ -78,13 +78,13 @@ Three tools ride on top of the `reviews` domain and use **MCP Sampling** — you
 
 ### Documentation
 
-- [Guide](GUIDE.md) — API key, install, setup wizard, profiles, configuration, examples
-- [Security](SECURITY.md) — credential handling, safety modes, pre-install audit, vulnerability reporting
-- [Support](SUPPORT.md) — getting help, troubleshooting
-- [Changelog](CHANGELOG.md) — release history
-- [Contributing](CONTRIBUTING.md) — how to contribute, local dev setup
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Governance](GOVERNANCE.md) — who maintains this and why
+- [Guide](docs/GUIDE.md) — API key, install, setup wizard, profiles, configuration, examples
+- [Security](docs/SECURITY.md) — credential handling, safety modes, pre-install audit, vulnerability reporting
+- [Support](docs/SUPPORT.md) — getting help, troubleshooting
+- [Changelog](docs/CHANGELOG.md) — release history
+- [Contributing](docs/CONTRIBUTING.md) — how to contribute, local dev setup
+- [Code of Conduct](docs/CODE_OF_CONDUCT.md)
+- [Governance](docs/GOVERNANCE.md) — who maintains this and why
 
 ### Support the project
 
@@ -110,7 +110,7 @@ Tüm App Store Connect hesabınızı yapay zekâ istemcinizden yönetin: uygulam
 npx -y @erayendes/asc-mcp setup
 ```
 
-Setup sihirbazı API anahtarınızı bir kez toplar, güvenle saklar ve seçtiğiniz profilleri kaydeder. Adım adım anlatım [Rehber](GUIDE.md)'de.
+Setup sihirbazı API anahtarınızı bir kez toplar, güvenle saklar ve seçtiğiniz profilleri kaydeder. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
 
 > [!NOTE]
 > **Bunu bir AI agent ile mi kuruyorsunuz?** Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent sunucuyu kaydeder, `setup`'ı siz çalıştırırsınız — özel anahtarınız sohbetten hiç geçmez.
@@ -148,7 +148,7 @@ Tek kurulum, on bir küçük, amaca özel MCP sunucusu sunar. Sadece projenizin 
 | **background-assets** | 18   | Uygulama binary'sinin dışında indirilen varlık paketleri                                         |
 | **webhooks**          | 12   | App Store Connect olaylarını uç noktanıza gönderen webhook'lar                                   |
 
-Kurulum için [Rehber](GUIDE.md#4-profilleri-kaydedin)'e, sonradan profil ekleme/çıkarma için [§7](GUIDE.md#7-sonradan-araç-ekleme-ve-çıkarma)'ye bakın.
+Kurulum için [Rehber](docs/GUIDE.md#4-profilleri-kaydedin)'e, sonradan profil ekleme/çıkarma için [§7](docs/GUIDE.md#7-sonradan-araç-ekleme-ve-çıkarma)'ye bakın.
 
 ### Doğru araçları yükleme
 
@@ -167,13 +167,13 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 
 ### Dokümantasyon
 
-- [Rehber](GUIDE.md) — API anahtarı, kurulum, setup sihirbazı, profiller, yapılandırma, örnekler
-- [Güvenlik](SECURITY.md) — kimlik bilgisi yönetimi, güvenlik modları, kurulum öncesi denetim, açık bildirimi
-- [Destek](SUPPORT.md) — yardım alma, sorun giderme
-- [Değişiklik günlüğü](CHANGELOG.md) — sürüm geçmişi
-- [Katkıda bulunma](CONTRIBUTING.md) — nasıl katkı sağlanır, yerel geliştirme kurulumu
-- [Davranış kuralları](CODE_OF_CONDUCT.md)
-- [Yönetişim](GOVERNANCE.md) — bunu kim, neden sürdürüyor
+- [Rehber](docs/GUIDE.md) — API anahtarı, kurulum, setup sihirbazı, profiller, yapılandırma, örnekler
+- [Güvenlik](docs/SECURITY.md) — kimlik bilgisi yönetimi, güvenlik modları, kurulum öncesi denetim, açık bildirimi
+- [Destek](docs/SUPPORT.md) — yardım alma, sorun giderme
+- [Değişiklik günlüğü](docs/CHANGELOG.md) — sürüm geçmişi
+- [Katkıda bulunma](docs/CONTRIBUTING.md) — nasıl katkı sağlanır, yerel geliştirme kurulumu
+- [Davranış kuralları](docs/CODE_OF_CONDUCT.md)
+- [Yönetişim](docs/GOVERNANCE.md) — bunu kim, neden sürdürüyor
 
 ### Projeye destek
 
