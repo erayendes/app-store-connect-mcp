@@ -54,13 +54,21 @@ function loadKey(creds: JwtCredentials): KeyObject {
 }
 
 export class TokenProvider {
-  private readonly key: KeyObject;
+  // Parsed lazily on the first mint, not at construction: listing tools never
+  // signs anything, so the server can start (and expose tools/list to
+  // introspection harnesses) without a usable key. An invalid key surfaces on
+  // the first real API call instead of blocking startup.
+  private key?: KeyObject;
   private cached?: { token: string; expiresAt: number };
 
   constructor(private readonly creds: JwtCredentials) {
     if (!creds.keyId) throw new Error('Missing key ID (ASC_KEY_ID).');
     if (!creds.issuerId) throw new Error('Missing issuer ID (ASC_ISSUER_ID).');
-    this.key = loadKey(creds);
+  }
+
+  private getKey(): KeyObject {
+    if (!this.key) this.key = loadKey(this.creds);
+    return this.key;
   }
 
   /** Returns a cached token when one is still comfortably valid. */
@@ -105,7 +113,7 @@ export class TokenProvider {
     signer.end();
 
     // 'ieee-p1363' gives us the raw r||s pair that JOSE requires.
-    const signature = signer.sign({ key: this.key, dsaEncoding: 'ieee-p1363' });
+    const signature = signer.sign({ key: this.getKey(), dsaEncoding: 'ieee-p1363' });
     const token = `${signingInput}.${base64url(signature)}`;
 
     this.cached = { token, expiresAt: exp };
