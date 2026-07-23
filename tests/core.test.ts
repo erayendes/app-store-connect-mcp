@@ -63,9 +63,10 @@ describe('TokenProvider', () => {
   });
 
   it('rejects a missing key with an actionable message', () => {
-    expect(() => new TokenProvider({ keyId: 'A', issuerId: 'B' })).toThrow(
-      /ASC_PRIVATE_KEY_PATH/
-    );
+    // The key loads lazily (construction stays cheap so tools/list works
+    // without credentials); the actionable error surfaces on the first mint.
+    const provider = new TokenProvider({ keyId: 'A', issuerId: 'B' });
+    expect(() => provider.getToken()).toThrow(/ASC_PRIVATE_KEY_PATH/);
   });
 });
 
