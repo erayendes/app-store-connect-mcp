@@ -6,12 +6,12 @@
     "url": "https://github.com/erayendes/app-store-connect-mcp",
     "source": "github"
   },
-  "version": "1.1.2",
+  "version": "1.1.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@erayendes/asc-mcp",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "transport": {
         "type": "stdio"
       }

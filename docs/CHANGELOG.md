@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [1.1.3] — 2026-07-23
+
+- **The server starts without a usable private key.** The signing key is now parsed lazily on the first API call instead of at startup, so tool discovery — and automated introspection harnesses like Glama that only call `tools/list` — no longer need valid credentials to boot. An invalid key surfaces on the first real request rather than blocking startup.
+
 ### [1.1.2] — 2026-07-22
 
 - Added the `mcpName` field (`io.github.erayendes/asc-mcp`) to `package.json` so the server can be published to the official [MCP Registry](https://registry.modelcontextprotocol.io). No functional change.
@@ -59,6 +63,10 @@ All notable changes to this project are documented here. The format is based on 
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [1.1.3] — 2026-07-23
+
+- **Sunucu, kullanılabilir bir private key olmadan başlar.** İmzalama anahtarı artık açılışta değil ilk API çağrısında (lazy) parse edilir; böylece araç keşfi — ve yalnızca `tools/list` çağıran Glama gibi otomatik introspection araçları — boot için geçerli kimlik bilgisi gerektirmez. Hatalı anahtar, açılışı kilitlemek yerine ilk gerçek istekte ortaya çıkar.
 
 ### [1.1.2] — 2026-07-22
 
