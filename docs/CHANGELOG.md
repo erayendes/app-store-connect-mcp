@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [1.1.4] — 2026-07-25
+
+- First npm release carrying the lazy private-key parsing from 1.1.3 — the server boots without valid credentials, so tool discovery and introspection work before setup. Funding simplified to Buy Me a Coffee only (Patreon removed). No API changes.
+
 ### [1.1.3] — 2026-07-23
 
 - **The server starts without a usable private key.** The signing key is now parsed lazily on the first API call instead of at startup, so tool discovery — and automated introspection harnesses like Glama that only call `tools/list` — no longer need valid credentials to boot. An invalid key surfaces on the first real request rather than blocking startup.
@@ -63,6 +67,10 @@ All notable changes to this project are documented here. The format is based on 
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [1.1.4] — 2026-07-25
+
+- 1.1.3'teki lazy private-key parse'ı taşıyan ilk npm sürümü — sunucu geçerli kimlik bilgisi olmadan başlar; böylece araç keşfi ve introspection setup'tan önce çalışır. Bağış tek seçeneğe indirildi: yalnızca Buy Me a Coffee (Patreon kaldırıldı). API değişikliği yok.
 
 ### [1.1.3] — 2026-07-23
 
