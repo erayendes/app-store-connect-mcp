@@ -31,6 +31,9 @@ Options:
   --domains=<list>       (no-profile mode) Comma-separated domains, or "all".
                          Default: ${DEFAULT_DOMAINS.join(',')}
   --read-only            Expose only tools that cannot modify anything.
+  --no-confirm           Don't ask the user to confirm before a mutating tool
+                         runs. Confirmation (via MCP elicitation) is on by
+                         default; ASC_CONFIRM_WRITES=0 does the same.
   --include-deprecated   Also load operations Apple has marked deprecated.
   --version              Print version and exit.
   --help                 Print this message.

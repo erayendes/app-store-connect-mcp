@@ -8,6 +8,7 @@ import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { ToolRegistry, DEFAULT_DOMAINS, type McpToolDefinition } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
+import { confirmWrite, type WriteConfirmer } from './core/confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -76,6 +77,34 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     { capabilities: { tools: {} } }
   );
 
+  // Names of every mutating tool that can actually be called here, so the write
+  // guard knows what to confirm. Read-only tools (meta, reviews_ai) never appear.
+  const writeToolNames = new Set<string>();
+  for (const t of registry.listTools()) {
+    if (t.annotations?.readOnlyHint !== true) writeToolNames.add(t.name);
+  }
+  if (storekit && !config.readOnly) {
+    for (const t of STOREKIT_TOOLS) {
+      if (t.annotations?.readOnlyHint !== true) writeToolNames.add(t.name);
+    }
+  }
+
+  const confirmer: WriteConfirmer = {
+    getClientCapabilities: () => server.getClientCapabilities(),
+    elicitInput: (params) =>
+      server.elicitInput(params as Parameters<typeof server.elicitInput>[0]),
+  };
+  let warnedNoElicitation = false;
+  const warnNoElicitation = () => {
+    if (warnedNoElicitation) return;
+    warnedNoElicitation = true;
+    console.error(
+      "Heimdall: write confirmation is on, but this client doesn't support " +
+        "elicitation — writes fall back to the client's own approval. Set " +
+        'ASC_CONFIRM_WRITES=0 to turn the guard off.'
+    );
+  };
+
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     const tools: McpToolDefinition[] = [
       ...META_TOOLS,
@@ -98,6 +127,21 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     const args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
     try {
+      if (config.confirmWrites && writeToolNames.has(name)) {
+        const decision = await confirmWrite(confirmer, name, warnNoElicitation);
+        if (!decision.allowed) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `"${name}" was cancelled — the write was not confirmed (${decision.reason}). Nothing was changed.`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+
       let result: unknown;
 
       if (META_TOOL_NAMES.has(name)) {

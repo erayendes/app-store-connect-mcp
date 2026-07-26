@@ -28,4 +28,4 @@ Heimdall is an MCP server for the App Store Connect API and the App Store Server
 
 ## If you are working ON this repository
 
-Tools are generated from Apple's OpenAPI spec. **Do not edit `src/generated/`** — change `scripts/generate.ts`, run `npm run generate`, and commit the result. `npm test` and `npm run typecheck` must pass. See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
+Tools are generated from Apple's OpenAPI spec. **Do not edit `src/generated/`** — change `scripts/generate.ts`, run `npm run generate`, and commit the result. `npm test` and `npm run typecheck` must pass. See [CONTRIBUTING.md](.github/CONTRIBUTING.md).

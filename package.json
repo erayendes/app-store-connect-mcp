@@ -1,11 +1,11 @@
 {
   "name": "@erayendes/asc-mcp",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "mcpName": "io.github.erayendes/asc-mcp",
   "publishConfig": {
     "access": "public"
   },
-  "description": "MCP server for the Apple App Store Connect API and App Store Server API. Tools generated from Apple's official OpenAPI specification.",
+  "description": "MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2) — 982 tools generated from Apple's official OpenAPI spec, AI-powered review triage and reply drafting, and confirm-before-write safety.",
   "author": {
     "name": "Eray Endeş",
     "email": "erayendes@gmail.com",
@@ -33,14 +33,8 @@
     "README.md",
     "AGENTS.md",
     "docs/GUIDE.md",
-    "docs/SECURITY.md",
-    "docs/SUPPORT.md",
-    "docs/CONTRIBUTING.md",
-    "docs/CODE_OF_CONDUCT.md",
-    "docs/GOVERNANCE.md",
     "docs/CHANGELOG.md",
-    "LICENSE",
-    "NOTICE"
+    "LICENSE"
   ],
   "scripts": {
     "generate": "tsx scripts/generate.ts",
@@ -54,8 +48,10 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
     "model-context-protocol",
     "app-store-connect",
+    "app-store-server-api",
     "appstore",
     "apple",
     "ios",
@@ -63,7 +59,9 @@
     "storekit",
     "subscriptions",
     "in-app-purchase",
+    "app-reviews",
     "xcode-cloud",
+    "ai",
     "claude"
   ],
   "engines": {

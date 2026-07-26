@@ -17,6 +17,8 @@ export interface ServerConfig {
   domains?: string[];
   /** Blocks every mutating tool. */
   readOnly: boolean;
+  /** Ask the user to confirm (via MCP elicitation) before any mutating tool runs. */
+  confirmWrites: boolean;
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
 }
@@ -102,6 +104,12 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       : undefined,
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),
     readOnly: flag('read-only') || env.ASC_READ_ONLY === 'true',
+    // On by default; disabled only when explicitly turned off.
+    confirmWrites: !(
+      flag('no-confirm') ||
+      env.ASC_CONFIRM_WRITES === 'false' ||
+      env.ASC_CONFIRM_WRITES === '0'
+    ),
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
   };

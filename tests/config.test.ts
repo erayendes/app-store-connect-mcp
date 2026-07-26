@@ -61,3 +61,22 @@ describe('loadConfig private key source', () => {
     expect(() => loadConfig([])).toThrow(ConfigError);
   });
 });
+
+describe('loadConfig confirmWrites', () => {
+  beforeEach(() => {
+    process.env.ASC_PRIVATE_KEY = 'INLINE_PEM';
+  });
+
+  it('is on by default', () => {
+    expect(loadConfig([]).confirmWrites).toBe(true);
+  });
+
+  it('is disabled by ASC_CONFIRM_WRITES=0', () => {
+    process.env.ASC_CONFIRM_WRITES = '0';
+    expect(loadConfig([]).confirmWrites).toBe(false);
+  });
+
+  it('is disabled by the --no-confirm flag', () => {
+    expect(loadConfig(['--no-confirm']).confirmWrites).toBe(false);
+  });
+});

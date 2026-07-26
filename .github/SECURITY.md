@@ -44,6 +44,7 @@ Heimdall has **no backend and no telemetry**. There is nothing to opt out of.
 
 Running an agent against a production store listing deserves some care.
 
+- **Confirm before writes (on by default)** — before any mutating tool runs, the server asks the user to confirm via [MCP elicitation](https://modelcontextprotocol.io/), so a misread instruction can't execute unchecked. Disable with `ASC_CONFIRM_WRITES=0` / `--no-confirm`. Clients without elicitation support fall back to their own per-call approval (with a one-time notice), so don't rely on it alone on those clients — pair it with `--read-only` or a narrow scope.
 - **`--read-only`** blocks every mutating operation at the registry level, before any handler runs. In this mode `tools/list` doesn't even advertise them, and the two mutating StoreKit tools are hidden and blocked too.
 - **Annotations** — each tool declares `readOnlyHint`, `destructiveHint` and `idempotentHint`, so clients can prompt for confirmation where it matters.
 - **Narrow scope** — loading a single profile (or fewer domains) leaves fewer ways for an unexpected instruction to reach something it shouldn't.
@@ -52,7 +53,7 @@ Running an agent against a production store listing deserves some care.
 
 ### Recommendations
 
-- Give the API key the narrowest role that does the job. `Admin` is rarely necessary; `App Manager` covers most release work. See the role/risk table in [GUIDE.md](GUIDE.md#1-create-an-app-store-connect-api-key).
+- Give the API key the narrowest role that does the job. `Admin` is rarely necessary; `App Manager` covers most release work. See the role/risk table in [GUIDE.md](../docs/GUIDE.md#1-create-an-app-store-connect-api-key).
 - Never commit `.p8`, `.pem` or `.env` files — the bundled `.gitignore` already excludes them.
 - Use `--read-only` when you only need to inspect, with the smallest useful profile or `--domains` set.
 - Review any tool call annotated `destructiveHint` before approving it.
@@ -105,6 +106,7 @@ Heimdall'ın **backend'i ve telemetrisi yok**. Kapatılacak bir şey de yok.
 
 Bir agent'ı canlı bir mağaza listesine karşı çalıştırmak biraz özen ister.
 
+- **Yazmadan önce onay (varsayılan açık)** — değişiklik yapan bir araç çalışmadan önce, sunucu kullanıcıdan [MCP elicitation](https://modelcontextprotocol.io/) ile onay ister; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. `ASC_CONFIRM_WRITES=0` / `--no-confirm` ile kapatılır. Elicitation desteklemeyen client'lar kendi çağrı-başı onaylarına düşer (tek seferlik uyarıyla), o yüzden bu client'larda tek başına buna güvenmeyin — `--read-only` veya dar kapsam ile birlikte kullanın.
 - **`--read-only`** her mutasyon işlemini, herhangi bir handler çalışmadan önce registry seviyesinde engeller. Bu modda `tools/list` bu araçları hiç göstermez bile; mutasyon yapan iki StoreKit aracı da gizlenir ve engellenir.
 - **Etiketler** — her araç `readOnlyHint`, `destructiveHint` ve `idempotentHint` bildirir; böylece istemciler gereken yerde onay isteyebilir.
 - **Dar kapsam** — tek bir profil (ya da daha az domain) yüklemek, beklenmedik bir talimatın olmaması gereken bir yere ulaşma yollarını azaltır.
@@ -113,7 +115,7 @@ Bir agent'ı canlı bir mağaza listesine karşı çalıştırmak biraz özen is
 
 ### Öneriler
 
-- API anahtarına işi gören en dar rolü verin. `Admin` nadiren gereklidir; `App Manager` çoğu release işini kapsar. Rol/risk tablosu için [GUIDE.md](GUIDE.md#1-app-store-connect-api-anahtarı-oluşturun)'ye bakın.
+- API anahtarına işi gören en dar rolü verin. `Admin` nadiren gereklidir; `App Manager` çoğu release işini kapsar. Rol/risk tablosu için [GUIDE.md](../docs/GUIDE.md#1-app-store-connect-api-anahtarı-oluşturun)'ye bakın.
 - `.p8`, `.pem` veya `.env` dosyalarını asla commit'lemeyin — birlikte gelen `.gitignore` zaten bunları hariç tutuyor.
 - Sadece inceleme yapacaksanız, en küçük gerekli profil ya da `--domains` seti ile `--read-only` kullanın.
 - `destructiveHint` etiketli her araç çağrısını onaylamadan önce gözden geçirin.

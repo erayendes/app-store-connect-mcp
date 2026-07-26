@@ -29,7 +29,7 @@ The role you give the key decides which permissions an agent gets — and what i
 | **Finance** | Read financial and payment reports (`analytics`; also needs `ASC_VENDOR_NUMBER`). | **Low.** Same read-heavy `analytics` domain as Sales. |
 | **Customer Support** | Read and reply to customer reviews (`reviews`, including `reviews_ai__*`). | **Low–medium.** One operation posts a public reply — reversible, but visible to customers before you catch a mistake. |
 
-Most day-to-day release work needs only **App Manager**; add **Developer** for CI build uploads, or **Finance**/**Sales** only if you actually run `analytics` tools. For how to cap the risk regardless of role, see [SECURITY.md](SECURITY.md) — `--read-only` mode removes all mutation risk.
+Most day-to-day release work needs only **App Manager**; add **Developer** for CI build uploads, or **Finance**/**Sales** only if you actually run `analytics` tools. For how to cap the risk regardless of role, see [SECURITY.md](../.github/SECURITY.md) — `--read-only` mode removes all mutation risk.
 
 ### 2. Install
 
@@ -161,6 +161,10 @@ claude mcp add -s user app-store-connect \
 | `sandbox` | 3 | | Sandbox testers |
 | `storekit` | 9 | ○ | App Store Server API — enabled by `ASC_BUNDLE_ID` |
 
+**Tool naming**
+
+Tool names mirror the resource hierarchy, with the action last (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Every tool carries its `METHOD /path` in the description, so you can cross-reference [Apple's API documentation](https://developer.apple.com/documentation/appstoreconnectapi) directly.
+
 ### 5. Verify
 
 Ask your client: *"Check the App Store Connect connection."* It calls `asc__status`, which validates your credentials with a single lightweight request.
@@ -182,6 +186,7 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `ASC_ENVIRONMENT` | no | `Sandbox` (default) or `Production`, for StoreKit 2 |
 | `ASC_DOMAINS` | no | Comma-separated domains to load, or `all` (env form of `--domains`) |
 | `ASC_READ_ONLY` | no | `true` to expose only non-mutating tools |
+| `ASC_CONFIRM_WRITES` | no | `0` / `false` to skip the confirm-before-write prompt (on by default) |
 | `ASC_INCLUDE_DEPRECATED` | no | `true` to also load deprecated operations |
 | `ASC_CONFIG_DIR` | no | Override the shared-config directory (default `~/.config/asc-mcp`) |
 
@@ -205,7 +210,11 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 |:--|:--|
 | `--domains=<list>` | Comma-separated domains to load, or `all` (combined server only) |
 | `--read-only` | Expose only tools that cannot modify anything |
+| `--no-confirm` | Skip the confirm-before-write prompt (on by default) |
 | `--include-deprecated` | Also load the 123 operations Apple has deprecated |
+
+> [!TIP]
+> **Confirm before writes (on by default).** Before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)). So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Clients that don't support elicitation fall back to their own per-call approval. Turn the guard off with `ASC_CONFIRM_WRITES=0` (or `--no-confirm`), or go further with `--read-only` to remove every mutating tool entirely.
 
 ### 7. Adding and removing tools later
 
@@ -295,7 +304,7 @@ Anahtara verdiğiniz rol, bir agent'ın hangi yetkileri aldığını — ve bir 
 | **Finance** | Finans ve ödeme raporlarını okur (`analytics`; ayrıca `ASC_VENDOR_NUMBER` gerekir). | **Düşük.** Sales ile aynı, ağırlıklı okuma yapan `analytics` domaini. |
 | **Customer Support** | Müşteri yorumlarını okur ve yanıtlar (`reviews`, `reviews_ai__*` dahil). | **Düşük-orta.** Bir işlem kamuya açık yanıt gönderir — geri alınabilir, ama bir hatayı fark etmeden önce müşterilere görünür. |
 
-Günlük release işlerinin çoğu yalnızca **App Manager** ister; CI build yüklemeleri için **Developer** ekleyin, sadece gerçekten `analytics` araçlarını kullanacaksanız **Finance**/**Sales** ekleyin. Role bakılmaksızın riski nasıl sınırlayacağınız için [SECURITY.md](SECURITY.md)'ye bakın — `--read-only` modu tüm mutasyon riskini kaldırır.
+Günlük release işlerinin çoğu yalnızca **App Manager** ister; CI build yüklemeleri için **Developer** ekleyin, sadece gerçekten `analytics` araçlarını kullanacaksanız **Finance**/**Sales** ekleyin. Role bakılmaksızın riski nasıl sınırlayacağınız için [SECURITY.md](../.github/SECURITY.md)'ye bakın — `--read-only` modu tüm mutasyon riskini kaldırır.
 
 ### 2. Kurun
 
@@ -427,6 +436,10 @@ claude mcp add -s user app-store-connect \
 | `sandbox` | 3 | | Sandbox test kullanıcıları |
 | `storekit` | 9 | ○ | App Store Server API — `ASC_BUNDLE_ID` ile etkinleşir |
 
+**Araç isimlendirme**
+
+Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Her araç açıklamasında `METHOD /path` bilgisini taşır; böylece doğrudan [Apple'ın API dokümantasyonuyla](https://developer.apple.com/documentation/appstoreconnectapi) çapraz kontrol yapabilirsiniz.
+
 ### 5. Doğrulayın
 
 İstemcinize sorun: *"App Store Connect bağlantısını kontrol et."* Bu, kimlik bilgilerini tek bir hafif istekle doğrulayan `asc__status`'ı çağırır.
@@ -448,6 +461,7 @@ claude mcp add -s user app-store-connect \
 | `ASC_ENVIRONMENT` | hayır | StoreKit 2 için `Sandbox` (varsayılan) veya `Production` |
 | `ASC_DOMAINS` | hayır | Yüklenecek domainler, virgülle ayrılmış ya da `all` |
 | `ASC_READ_ONLY` | hayır | Yalnızca değiştirmeyen araçları göstermek için `true` |
+| `ASC_CONFIRM_WRITES` | hayır | Yazma-öncesi onay istemini atlamak için `0` / `false` (varsayılan açık) |
 | `ASC_INCLUDE_DEPRECATED` | hayır | Kullanımdan kaldırılmış işlemleri de yüklemek için `true` |
 | `ASC_CONFIG_DIR` | hayır | Ortak yapılandırma dizinini değiştir (varsayılan `~/.config/asc-mcp`) |
 
@@ -471,7 +485,11 @@ claude mcp add -s user app-store-connect \
 |:--|:--|
 | `--domains=<liste>` | Yüklenecek domainler, virgülle ayrılmış ya da `all` (sadece birleşik sunucu) |
 | `--read-only` | Yalnızca hiçbir şeyi değiştiremeyen araçları göster |
+| `--no-confirm` | Yazma-öncesi onay istemini atla (varsayılan açık) |
 | `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükle |
+
+> [!TIP]
+> **Yazmadan önce onay (varsayılan açık).** Değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. Elicitation desteklemeyen client'lar kendi çağrı-başı onaylarına düşer. Guard'ı `ASC_CONFIRM_WRITES=0` (veya `--no-confirm`) ile kapatın; ya da tüm mutasyon araçlarını tamamen kaldırmak için `--read-only` kullanın.
 
 ### 7. Sonradan araç ekleme ve çıkarma
 
