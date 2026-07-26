@@ -1,0 +1,40 @@
+# Publishes to npm via trusted publishing (OIDC) — no NPM_TOKEN anywhere.
+# npmjs.com is configured to trust this repository and this workflow filename,
+# so renaming this file means updating the trusted publisher on npm too.
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  id-token: write # mint the OIDC token npm verifies
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+
+      # Rebuild from the spec and fail if the committed output drifted, so a
+      # release can never ship generated tools that don't match the source.
+      - run: npm run generate
+      - name: Fail if generated output is stale
+        run: git diff --exit-code src/generated/
+
+      - run: npm run build
+      - run: npm test
+
+      # --provenance publishes a signed attestation linking the tarball to this
+      # repository, commit and workflow run.
+      - run: npm publish --provenance
