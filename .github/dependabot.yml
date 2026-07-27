@@ -11,3 +11,11 @@ updates:
     groups:
       actions:
         patterns: ['*']
+
+  # Same reasoning for the introspection image, pinned by digest.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

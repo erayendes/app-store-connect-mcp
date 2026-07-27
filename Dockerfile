@@ -3,7 +3,7 @@
 # throwaway placeholders: a self-generated EC key that is NOT registered with Apple and
 # authorizes nothing — it only lets the server start for introspection (which never calls
 # Apple). Real users configure credentials via `npx -y @erayendes/asc-mcp setup`; see README.
-FROM node:22-alpine
+FROM node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
