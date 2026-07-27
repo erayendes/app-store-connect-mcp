@@ -1,0 +1,13 @@
+# Actions are pinned to commit SHAs, which freezes them until something bumps
+# them deliberately — that something is this file. Without it the pins rot.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']

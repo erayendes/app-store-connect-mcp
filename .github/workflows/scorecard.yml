@@ -1,0 +1,37 @@
+# OpenSSF Scorecard — scores this repository's supply-chain practices
+# (branch protection, pinned dependencies, token permissions, signed releases)
+# and files the results as code-scanning alerts.
+name: Scorecard
+
+on:
+  branch_protection_rule:
+  schedule:
+    - cron: '31 4 * * 1' # Mondays, 04:31 UTC
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # file the SARIF as code-scanning alerts
+      id-token: write # publish the score to the OpenSSF public dataset
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - uses: github/codeql-action/upload-sarif@e58424170fb0262c8d7ed60a2e84b9bffe205c67 # codeql-bundle-v2.26.1
+        with:
+          sarif_file: results.sarif

@@ -17,9 +17,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
@@ -49,7 +49,21 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `npm sbom` reads the installed tree, so the deps have to be there;
+      # lifecycle scripts contribute nothing to the manifest.
+      - run: npm ci --ignore-scripts
+
+      - name: Generate an SPDX SBOM of the shipped dependencies
+        env:
+          TAG: ${{ github.ref_name }}
+        run: npm sbom --sbom-format spdx --omit=dev > "asc-mcp-${TAG}-sbom.spdx.json"
 
       - name: Create GitHub release from the changelog
         env:
@@ -69,9 +83,13 @@ jobs:
             found { print }
           ' docs/CHANGELOG.md > /tmp/notes.md
 
+          # Release immutability freezes assets at publish time, so the SBOM has
+          # to go up with the release rather than being attached afterwards.
+          sbom="asc-mcp-${TAG}-sbom.spdx.json"
+
           if [ -s /tmp/notes.md ]; then
-            gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md
+            gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md "$sbom"
           else
             echo "No changelog entry for $TAG — falling back to generated notes."
-            gh release create "$TAG" --title "$TAG" --generate-notes
+            gh release create "$TAG" --title "$TAG" --generate-notes "$sbom"
           fi
