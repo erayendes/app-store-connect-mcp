@@ -3,7 +3,12 @@
  *
  * Two things this client is strict about:
  *  - every request goes to the pinned Apple host, including paginated follow-ups
- *  - transient failures (429, 5xx) are retried with exponential backoff + jitter
+ *  - transient failures are retried with exponential backoff + jitter, but only
+ *    when a retry cannot duplicate a write: reads retry on 408/429/5xx, writes
+ *    retry only on 429 (Apple rejected the request before processing it). A
+ *    write that fails ambiguously (timeout, network drop, 5xx) is surfaced as
+ *    an unknown outcome instead of being silently resent — resending a POST
+ *    Apple already processed would create the resource twice.
  */
 import { TokenProvider } from './jwt.js';
 import { RateLimiter, type RateLimitOptions } from './rate-limit.js';
@@ -76,6 +81,11 @@ export class AscHttpClient {
 
     if (opts.query) applyQuery(url, opts.query);
 
+    // Writes may not be idempotent (a resent POST can create a second version,
+    // IAP or price entry), so they only retry when Apple provably did not
+    // process the request — a 429 rate rejection. Reads retry freely.
+    const isWrite = method !== 'GET' && method !== 'HEAD';
+
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -109,7 +119,8 @@ export class AscHttpClient {
 
         const err = await toApiError(res);
 
-        if (RETRYABLE.has(res.status) && attempt < this.maxRetries) {
+        const retryable = RETRYABLE.has(res.status) && (!isWrite || res.status === 429);
+        if (retryable && attempt < this.maxRetries) {
           await sleep(backoffMs(attempt, res.headers.get('retry-after')));
           lastError = err;
           continue;
@@ -123,6 +134,17 @@ export class AscHttpClient {
         const message = isAbort
           ? `Request timed out after ${this.timeoutMs}ms`
           : `Network error: ${(err as Error).message}`;
+
+        // No response means we cannot know whether Apple processed the
+        // request. For a write, resending could apply it twice — report the
+        // unknown outcome instead of retrying or pretending it failed cleanly.
+        if (isWrite) {
+          throw new AscApiError(
+            `${message}. This ${method} request may or may not have been processed by ` +
+              `Apple — verify whether the change was applied before sending it again.`,
+            0
+          );
+        }
 
         if (attempt < this.maxRetries) {
           await sleep(backoffMs(attempt, null));
@@ -185,11 +207,18 @@ function applyQuery(url: URL, query: Query): void {
   }
 }
 
-function backoffMs(attempt: number, retryAfter: string | null): number {
+/** Exported for tests; not part of the client's public surface. */
+export function backoffMs(attempt: number, retryAfter: string | null): number {
   if (retryAfter) {
+    // Retry-After is either delay-seconds or an HTTP-date (RFC 9110 §10.2.3).
     const seconds = Number(retryAfter);
     if (Number.isFinite(seconds) && seconds > 0) {
       return Math.min(seconds * 1000, 60_000);
+    }
+    const dateMs = Date.parse(retryAfter);
+    if (!Number.isNaN(dateMs)) {
+      const delta = dateMs - Date.now();
+      if (delta > 0) return Math.min(delta, 60_000);
     }
   }
   const base = Math.min(1000 * 2 ** attempt, 30_000);

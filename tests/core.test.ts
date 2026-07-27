@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { TokenProvider } from '../src/core/jwt.js';
 import { RateLimiter } from '../src/core/rate-limit.js';
-import { AscHttpClient } from '../src/core/http.js';
+import { AscHttpClient, backoffMs } from '../src/core/http.js';
 import { ToolRegistry, encodeToolName, decodeToolName, toMcpTool, toolNameFor } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 
@@ -86,6 +86,92 @@ describe('AscHttpClient pagination host pinning', () => {
     'https://api.appstoreconnect.apple.com.evil.com/v1/apps',
   ])('refuses to follow %s', (bad) => {
     expect(() => client.resolvePaginationUrl(bad)).toThrow();
+  });
+});
+
+describe('AscHttpClient retry policy (a resent write can duplicate a resource)', () => {
+  const ok = () =>
+    new Response(JSON.stringify({ data: [] }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  const fail = (status: number) =>
+    new Response(JSON.stringify({ errors: [] }), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  /** Kick off the request, flush every backoff sleep, then hand back the result. */
+  async function settle<T>(p: Promise<T>): Promise<T> {
+    p.catch(() => {}); // avoid an unhandled rejection while timers drain
+    await vi.runAllTimersAsync();
+    return p;
+  }
+
+  it('retries a GET that hits a 500', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(fail(500)).mockResolvedValueOnce(ok());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 2 });
+
+    await settle(client.get('/v1/apps'));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT retry a POST that hits a 500 — Apple may have processed it', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(fail(500)).mockResolvedValueOnce(ok());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 2 });
+
+    await expect(settle(client.post('/v1/appStoreVersions', {}))).rejects.toThrow(/500/);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a POST on 429 — rejected before processing, so resending is safe', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(fail(429)).mockResolvedValueOnce(ok());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 2 });
+
+    await settle(client.post('/v1/appStoreVersions', {}));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports an unknown outcome when a POST dies on the network, without retrying', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 2 });
+
+    await expect(settle(client.post('/v1/appStoreVersions', {}))).rejects.toThrow(
+      /may or may not have been processed/
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('still retries a GET through a network error', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('fetch failed'))
+      .mockResolvedValueOnce(ok());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 2 });
+
+    await settle(client.get('/v1/apps'));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('understands both Retry-After forms: delay-seconds and HTTP-date', () => {
+    expect(backoffMs(0, '7')).toBe(7000);
+    const inTenSeconds = new Date(Date.now() + 10_000).toUTCString();
+    const ms = backoffMs(0, inTenSeconds);
+    expect(ms).toBeGreaterThan(8000);
+    expect(ms).toBeLessThanOrEqual(10_000);
+    // A date in the past falls back to exponential backoff, not a negative wait.
+    expect(backoffMs(0, new Date(Date.now() - 5000).toUTCString())).toBeGreaterThan(0);
   });
 });
 
