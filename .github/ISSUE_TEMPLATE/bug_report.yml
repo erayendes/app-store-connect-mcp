@@ -1,0 +1,83 @@
+name: Bug report
+description: Something behaves differently than documented.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before you post:** redact your Key ID, Issuer ID and any `.p8` contents — they are secrets.
+
+        If the tool returned an Apple API error (401, 403, 409, 429), check the
+        [troubleshooting table](https://github.com/erayendes/app-store-connect-mcp/blob/main/.github/SUPPORT.md#troubleshooting)
+        first — most of them have a known cause.
+
+        Türkçe yazabilirsiniz.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you asked for, what the server did, and what you expected instead.
+      placeholder: |
+        I asked the agent to update the subtitle for app 123456. It returned 409 Conflict,
+        but the version is still in "Prepare for Submission".
+    validations:
+      required: true
+
+  - type: input
+    id: tool
+    attributes:
+      label: Tool involved
+      description: The tool name, e.g. `app_store_version_localizations__update`. Leave blank if it failed before any tool ran.
+      placeholder: apps__customer_reviews__list
+
+  - type: input
+    id: version
+    attributes:
+      label: Heimdall version
+      description: Run `npx -y @erayendes/asc-mcp --version`, or check the version in your MCP client config.
+      placeholder: 1.2.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      description: Elicitation and sampling support differ per client, and several behaviours depend on it.
+      options:
+        - Claude Code
+        - Claude Desktop
+        - Cursor
+        - Codex
+        - Other (name it below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      description: Key storage differs — Keychain is macOS-only.
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: server
+    attributes:
+      label: Profile or flags
+      description: Which server you registered, plus any `--domains`, `--read-only` or `--no-confirm` flags.
+      placeholder: asc-marketing, no extra flags
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: The full error the tool returned, including the Apple request ID if present. Rendered as a code block — no backticks needed.
+      render: text

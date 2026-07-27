@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a capability, a better description, or an Apple operation that seems missing.
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Looking for an Apple operation that isn't in your tool list?** Ask your agent to run
+        `asc__search_tools` first — it searches all 982 operations, including the ones your
+        current profile hasn't loaded, and prints the command to register the profile that has it.
+
+        Türkçe yazabilirsiniz.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The task you're stuck on, not the solution you have in mind. It often turns out an existing tool covers it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like instead
+      description: If it maps to a specific Apple endpoint, include the `METHOD /path` from [Apple's documentation](https://developer.apple.com/documentation/appstoreconnectapi).
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Checks
+      options:
+        - label: I searched with `asc__search_tools` and the operation isn't there under another profile.
+        - label: This is about Heimdall, not about how Apple's own API behaves.
