@@ -38,6 +38,12 @@ export interface ServerConfig {
    * normally. For CI and agent rehearsals.
    */
   dryRun: boolean;
+  /** Optional brand settings for the reviews-AI draft tools (ASC_REVIEWS_*). */
+  reviewsBrand?: {
+    voice?: string;
+    bannedPhrases?: string[];
+    supportUrl?: string;
+  };
 }
 
 function parseList(value: string | undefined): string[] | undefined {
@@ -135,5 +141,13 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     baseUrl: env.ASC_BASE_URL || undefined,
     dryRun: flag('dry-run') || env.ASC_DRY_RUN === 'true' || env.ASC_DRY_RUN === '1',
+    reviewsBrand:
+      env.ASC_REVIEWS_BRAND_VOICE || env.ASC_REVIEWS_BANNED_PHRASES || env.ASC_REVIEWS_SUPPORT_URL
+        ? {
+            voice: env.ASC_REVIEWS_BRAND_VOICE || undefined,
+            bannedPhrases: parseList(env.ASC_REVIEWS_BANNED_PHRASES),
+            supportUrl: env.ASC_REVIEWS_SUPPORT_URL || undefined,
+          }
+        : undefined,
   };
 }

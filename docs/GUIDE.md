@@ -189,6 +189,9 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `ASC_CONFIRM_WRITES` | no | `0` / `false` to skip the confirm-before-write prompt (on by default) |
 | `ASC_ALLOW_UNCONFIRMED_WRITES` | no | `1` / `true` to allow writes on clients that can't show a confirmation prompt (blocked by default) |
 | `ASC_DRY_RUN` | no | `1` / `true`: writes never reach Apple — each mutating call returns what would have been sent (method, path, body, risk) after validation. Reads run normally |
+| `ASC_REVIEWS_BRAND_VOICE` | no | Brand-voice guidance for `reviews_ai__draft_response`, e.g. "friendly, concise, we say 'folks'" |
+| `ASC_REVIEWS_BANNED_PHRASES` | no | Comma-separated phrases the draft must never contain |
+| `ASC_REVIEWS_SUPPORT_URL` | no | Support URL the draft points customers at for follow-ups |
 | `ASC_BASE_URL` | no | Override the API origin (e.g. `http://localhost:4010`) to test against a local fixture server — requests, pagination and host-pinning all follow it. Leave unset for Apple's real API |
 | `ASC_INCLUDE_DEPRECATED` | no | `true` to also load deprecated operations |
 | `ASC_CONFIG_DIR` | no | Override the shared-config directory (default `~/.config/asc-mcp`) |
@@ -469,6 +472,9 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 | `ASC_CONFIRM_WRITES` | hayır | Yazma-öncesi onay istemini atlamak için `0` / `false` (varsayılan açık) |
 | `ASC_ALLOW_UNCONFIRMED_WRITES` | hayır | Onay istemi gösteremeyen client'larda yazmaya izin vermek için `1` / `true` (varsayılan engelli) |
 | `ASC_DRY_RUN` | hayır | `1` / `true`: yazmalar Apple'a hiç gitmez — her mutasyon çağrısı, doğrulamadan sonra gönderilecek olanı (metod, path, body, risk) döndürür. Okumalar normal çalışır |
+| `ASC_REVIEWS_BRAND_VOICE` | hayır | `reviews_ai__draft_response` için marka sesi, ör. "samimi, kısa" |
+| `ASC_REVIEWS_BANNED_PHRASES` | hayır | Taslakta asla geçmeyecek ifadeler (virgülle ayrılmış) |
+| `ASC_REVIEWS_SUPPORT_URL` | hayır | Taslağın müşteriyi yönlendireceği destek adresi |
 | `ASC_BASE_URL` | hayır | API origin'ini değiştir (ör. `http://localhost:4010`) — yerel fixture sunucusuyla test için; istekler, pagination ve host-pinning onu izler. Apple'ın gerçek API'si için boş bırakın |
 | `ASC_INCLUDE_DEPRECATED` | hayır | Kullanımdan kaldırılmış işlemleri de yüklemek için `true` |
 | `ASC_CONFIG_DIR` | hayır | Ortak yapılandırma dizinini değiştir (varsayılan `~/.config/asc-mcp`) |

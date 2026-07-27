@@ -108,10 +108,15 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     );
   };
 
+  // Reviews-AI tools generate text via MCP Sampling — useless on a client
+  // that never declared the capability, so they are hidden from the list
+  // there (and guarded again at call time for clients that call blind).
+  const clientSupportsSampling = () => Boolean(server.getClientCapabilities()?.sampling);
+
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     const tools: McpToolDefinition[] = [
       ...META_TOOLS,
-      ...(reviewsAiWanted ? REVIEWS_AI_TOOLS : []),
+      ...(reviewsAiWanted && clientSupportsSampling() ? REVIEWS_AI_TOOLS : []),
       ...registry.listTools(),
     ];
 
@@ -211,7 +216,12 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
             : undefined,
         });
       } else if (reviewsAiWanted && REVIEWS_AI_TOOL_NAMES.has(name)) {
-        result = await executeReviewsAiTool(name, args, { server, http });
+        result = await executeReviewsAiTool(name, args, {
+          server,
+          http,
+          samplingSupported: clientSupportsSampling,
+          brand: config.reviewsBrand,
+        });
       } else if (STOREKIT_TOOL_NAMES.has(name)) {
         if (!storekit) {
           throw new Error(
