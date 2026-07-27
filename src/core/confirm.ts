@@ -8,9 +8,12 @@
  * turned off with ASC_CONFIRM_WRITES=0 / --no-confirm.
  *
  * Elicitation only works on clients that declared the capability. On clients
- * that didn't, we can't pop a prompt, so we proceed and rely on the client's own
- * per-call approval — warning once on stderr so the weaker guarantee is visible
- * rather than silent.
+ * that didn't, we can't pop a prompt — and silently proceeding would mean the
+ * guard the user thinks is on is actually off. So the default is fail-closed:
+ * the write is blocked with an error naming the escape hatch. Passing
+ * `allowUnconfirmed` (--allow-unconfirmed-writes / ASC_ALLOW_UNCONFIRMED_WRITES=1)
+ * restores the old behaviour: proceed and rely on the client's own per-call
+ * approval, warning once on stderr.
  */
 
 /** The slice of the MCP Server we need — kept tiny so the logic is unit-testable. */
@@ -23,7 +26,7 @@ export interface WriteConfirmer {
 
 export interface ConfirmDecision {
   allowed: boolean;
-  /** Present when blocked: 'decline' | 'cancel' | 'not confirmed'. */
+  /** Present when blocked: 'decline' | 'cancel' | 'not confirmed' | 'no-elicitation'. */
   reason?: string;
 }
 
@@ -34,11 +37,18 @@ export interface ConfirmDecision {
 export async function confirmWrite(
   confirmer: WriteConfirmer,
   toolName: string,
-  warnNoElicitation: () => void
+  warnNoElicitation: () => void,
+  allowUnconfirmed = false
 ): Promise<ConfirmDecision> {
   if (!confirmer.getClientCapabilities()?.elicitation?.form) {
-    warnNoElicitation();
-    return { allowed: true };
+    // No way to ask the user. Fail closed unless they explicitly opted into
+    // unconfirmed writes — a guard that silently stops guarding is worse than
+    // an error that says why.
+    if (allowUnconfirmed) {
+      warnNoElicitation();
+      return { allowed: true };
+    }
+    return { allowed: false, reason: 'no-elicitation' };
   }
 
   const result = await confirmer.elicitInput({

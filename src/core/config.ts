@@ -19,6 +19,12 @@ export interface ServerConfig {
   readOnly: boolean;
   /** Ask the user to confirm (via MCP elicitation) before any mutating tool runs. */
   confirmWrites: boolean;
+  /**
+   * On clients without elicitation support, writes are blocked by default
+   * (fail-closed). This opt-in lets them through, relying on the client's own
+   * per-call tool approval instead.
+   */
+  allowUnconfirmedWrites: boolean;
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
 }
@@ -110,6 +116,10 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       env.ASC_CONFIRM_WRITES === 'false' ||
       env.ASC_CONFIRM_WRITES === '0'
     ),
+    allowUnconfirmedWrites:
+      flag('allow-unconfirmed-writes') ||
+      env.ASC_ALLOW_UNCONFIRMED_WRITES === 'true' ||
+      env.ASC_ALLOW_UNCONFIRMED_WRITES === '1',
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
   };

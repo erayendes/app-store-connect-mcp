@@ -16,15 +16,38 @@ function confirmer(
 }
 
 describe('confirmWrite', () => {
-  it('proceeds and warns once when the client has no elicitation support', async () => {
+  it('fails closed by default when the client has no elicitation support', async () => {
     const { c, elicit } = confirmer({});
     const warn = vi.fn();
 
     const decision = await confirmWrite(c, 'subscriptions__update', warn);
 
+    expect(decision).toEqual({ allowed: false, reason: 'no-elicitation' });
+    expect(warn).not.toHaveBeenCalled();
+    expect(elicit).not.toHaveBeenCalled();
+  });
+
+  it('proceeds and warns when unconfirmed writes were explicitly allowed', async () => {
+    const { c, elicit } = confirmer({});
+    const warn = vi.fn();
+
+    const decision = await confirmWrite(c, 'subscriptions__update', warn, true);
+
     expect(decision.allowed).toBe(true);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(elicit).not.toHaveBeenCalled();
+  });
+
+  it('ignores allowUnconfirmed when elicitation IS available — still prompts', async () => {
+    const { c, elicit } = confirmer(
+      { elicitation: { form: true } },
+      { action: 'accept', content: { confirm: true } }
+    );
+
+    const decision = await confirmWrite(c, 'subscriptions__update', vi.fn(), true);
+
+    expect(decision.allowed).toBe(true);
+    expect(elicit).toHaveBeenCalledTimes(1);
   });
 
   it('allows the write when the user accepts and checks confirm', async () => {

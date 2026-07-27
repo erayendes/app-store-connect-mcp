@@ -187,6 +187,7 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `ASC_DOMAINS` | no | Comma-separated domains to load, or `all` (env form of `--domains`) |
 | `ASC_READ_ONLY` | no | `true` to expose only non-mutating tools |
 | `ASC_CONFIRM_WRITES` | no | `0` / `false` to skip the confirm-before-write prompt (on by default) |
+| `ASC_ALLOW_UNCONFIRMED_WRITES` | no | `1` / `true` to allow writes on clients that can't show a confirmation prompt (blocked by default) |
 | `ASC_INCLUDE_DEPRECATED` | no | `true` to also load deprecated operations |
 | `ASC_CONFIG_DIR` | no | Override the shared-config directory (default `~/.config/asc-mcp`) |
 
@@ -211,10 +212,11 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `--domains=<list>` | Comma-separated domains to load, or `all` (combined server only) |
 | `--read-only` | Expose only tools that cannot modify anything |
 | `--no-confirm` | Skip the confirm-before-write prompt (on by default) |
+| `--allow-unconfirmed-writes` | Allow writes on clients that can't show a confirmation prompt (blocked by default) |
 | `--include-deprecated` | Also load the 123 operations Apple has deprecated |
 
 > [!TIP]
-> **Confirm before writes (on by default).** Before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)). So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Clients that don't support elicitation fall back to their own per-call approval. Turn the guard off with `ASC_CONFIRM_WRITES=0` (or `--no-confirm`), or go further with `--read-only` to remove every mutating tool entirely.
+> **Confirm before writes (on by default).** Before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)). So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Clients that can't show the prompt (no elicitation support) **block writes by default** — opt in with `--allow-unconfirmed-writes` (or `ASC_ALLOW_UNCONFIRMED_WRITES=1`) to rely on the client's own per-call approval instead. Turn the guard off with `ASC_CONFIRM_WRITES=0` (or `--no-confirm`), or go further with `--read-only` to remove every mutating tool entirely.
 
 ### 7. Adding and removing tools later
 
@@ -462,6 +464,7 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 | `ASC_DOMAINS` | hayır | Yüklenecek domainler, virgülle ayrılmış ya da `all` |
 | `ASC_READ_ONLY` | hayır | Yalnızca değiştirmeyen araçları göstermek için `true` |
 | `ASC_CONFIRM_WRITES` | hayır | Yazma-öncesi onay istemini atlamak için `0` / `false` (varsayılan açık) |
+| `ASC_ALLOW_UNCONFIRMED_WRITES` | hayır | Onay istemi gösteremeyen client'larda yazmaya izin vermek için `1` / `true` (varsayılan engelli) |
 | `ASC_INCLUDE_DEPRECATED` | hayır | Kullanımdan kaldırılmış işlemleri de yüklemek için `true` |
 | `ASC_CONFIG_DIR` | hayır | Ortak yapılandırma dizinini değiştir (varsayılan `~/.config/asc-mcp`) |
 
@@ -486,10 +489,11 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 | `--domains=<liste>` | Yüklenecek domainler, virgülle ayrılmış ya da `all` (sadece birleşik sunucu) |
 | `--read-only` | Yalnızca hiçbir şeyi değiştiremeyen araçları göster |
 | `--no-confirm` | Yazma-öncesi onay istemini atla (varsayılan açık) |
+| `--allow-unconfirmed-writes` | Onay istemi gösteremeyen client'larda yazmaya izin ver (varsayılan engelli) |
 | `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükle |
 
 > [!TIP]
-> **Yazmadan önce onay (varsayılan açık).** Değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. Elicitation desteklemeyen client'lar kendi çağrı-başı onaylarına düşer. Guard'ı `ASC_CONFIRM_WRITES=0` (veya `--no-confirm`) ile kapatın; ya da tüm mutasyon araçlarını tamamen kaldırmak için `--read-only` kullanın.
+> **Yazmadan önce onay (varsayılan açık).** Değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. İstemi gösteremeyen client'larda (elicitation desteği yok) yazmalar **varsayılan olarak engellenir** — client'ın kendi çağrı-başı onayına güvenmek için `--allow-unconfirmed-writes` (veya `ASC_ALLOW_UNCONFIRMED_WRITES=1`) ile opt-in yapın. Guard'ı `ASC_CONFIRM_WRITES=0` (veya `--no-confirm`) ile kapatın; ya da tüm mutasyon araçlarını tamamen kaldırmak için `--read-only` kullanın.
 
 ### 7. Sonradan araç ekleme ve çıkarma
 

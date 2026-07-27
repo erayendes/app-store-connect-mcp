@@ -99,9 +99,9 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     if (warnedNoElicitation) return;
     warnedNoElicitation = true;
     console.error(
-      "Heimdall: write confirmation is on, but this client doesn't support " +
-        "elicitation — writes fall back to the client's own approval. Set " +
-        'ASC_CONFIRM_WRITES=0 to turn the guard off.'
+      "Heimdall: this client doesn't support elicitation, and unconfirmed " +
+        'writes were explicitly allowed (--allow-unconfirmed-writes) — writes ' +
+        "rely on the client's own tool approval only."
     );
   };
 
@@ -128,15 +128,23 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
 
     try {
       if (config.confirmWrites && writeToolNames.has(name)) {
-        const decision = await confirmWrite(confirmer, name, warnNoElicitation);
+        const decision = await confirmWrite(
+          confirmer,
+          name,
+          warnNoElicitation,
+          config.allowUnconfirmedWrites
+        );
         if (!decision.allowed) {
+          const text =
+            decision.reason === 'no-elicitation'
+              ? `"${name}" was blocked: write confirmation is on, but this client cannot ` +
+                `show a confirmation prompt (no elicitation support). Nothing was changed. ` +
+                `To allow writes on this client anyway, restart the server with ` +
+                `--allow-unconfirmed-writes (or ASC_ALLOW_UNCONFIRMED_WRITES=1) — writes ` +
+                `will then rely on the client's own tool approval. Or use --read-only.`
+              : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). Nothing was changed.`;
           return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `"${name}" was cancelled — the write was not confirmed (${decision.reason}). Nothing was changed.`,
-              },
-            ],
+            content: [{ type: 'text' as const, text }],
             isError: true,
           };
         }
