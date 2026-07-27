@@ -27,6 +27,11 @@ export interface ServerConfig {
   allowUnconfirmedWrites: boolean;
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
+  /**
+   * Override the API origin (ASC_BASE_URL) — for tests against a local
+   * fixture server. Host-pinning then pins to this origin instead of Apple's.
+   */
+  baseUrl?: string;
 }
 
 function parseList(value: string | undefined): string[] | undefined {
@@ -122,5 +127,6 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       env.ASC_ALLOW_UNCONFIRMED_WRITES === '1',
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
+    baseUrl: env.ASC_BASE_URL || undefined,
   };
 }

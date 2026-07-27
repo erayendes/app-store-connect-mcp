@@ -22,7 +22,9 @@ export const VERSION: string = createRequire(import.meta.url)('../package.json')
 
 export function createServer(config: ServerConfig, profile?: Profile): Server {
   const tokens = new TokenProvider(config.credentials);
-  const http = new AscHttpClient(tokens);
+  // ASC_BASE_URL redirects everything to a local fixture server for testing;
+  // host-pinning then pins to that origin instead of Apple's.
+  const http = new AscHttpClient(tokens, { baseUrl: config.baseUrl });
 
   // In profile mode, "how do I reach that tool" answers name the sibling MCP
   // server; the --domains flag only makes sense on the monolithic server.

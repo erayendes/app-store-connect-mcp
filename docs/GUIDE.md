@@ -188,6 +188,7 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `ASC_READ_ONLY` | no | `true` to expose only non-mutating tools |
 | `ASC_CONFIRM_WRITES` | no | `0` / `false` to skip the confirm-before-write prompt (on by default) |
 | `ASC_ALLOW_UNCONFIRMED_WRITES` | no | `1` / `true` to allow writes on clients that can't show a confirmation prompt (blocked by default) |
+| `ASC_BASE_URL` | no | Override the API origin (e.g. `http://localhost:4010`) to test against a local fixture server — requests, pagination and host-pinning all follow it. Leave unset for Apple's real API |
 | `ASC_INCLUDE_DEPRECATED` | no | `true` to also load deprecated operations |
 | `ASC_CONFIG_DIR` | no | Override the shared-config directory (default `~/.config/asc-mcp`) |
 
@@ -465,6 +466,7 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 | `ASC_READ_ONLY` | hayır | Yalnızca değiştirmeyen araçları göstermek için `true` |
 | `ASC_CONFIRM_WRITES` | hayır | Yazma-öncesi onay istemini atlamak için `0` / `false` (varsayılan açık) |
 | `ASC_ALLOW_UNCONFIRMED_WRITES` | hayır | Onay istemi gösteremeyen client'larda yazmaya izin vermek için `1` / `true` (varsayılan engelli) |
+| `ASC_BASE_URL` | hayır | API origin'ini değiştir (ör. `http://localhost:4010`) — yerel fixture sunucusuyla test için; istekler, pagination ve host-pinning onu izler. Apple'ın gerçek API'si için boş bırakın |
 | `ASC_INCLUDE_DEPRECATED` | hayır | Kullanımdan kaldırılmış işlemleri de yüklemek için `true` |
 | `ASC_CONFIG_DIR` | hayır | Ortak yapılandırma dizinini değiştir (varsayılan `~/.config/asc-mcp`) |
 

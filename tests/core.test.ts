@@ -89,6 +89,41 @@ describe('AscHttpClient pagination host pinning', () => {
   });
 });
 
+describe('AscHttpClient custom base URL (ASC_BASE_URL fixture mode)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('sends requests to the custom origin', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), {
+      baseUrl: 'http://localhost:4010',
+    });
+
+    await client.get('/v1/apps');
+    expect(String(fetchMock.mock.calls[0][0])).toBe('http://localhost:4010/v1/apps');
+  });
+
+  it('pins pagination to the custom origin — protocol included', () => {
+    const client = new AscHttpClient(new TokenProvider(creds), {
+      baseUrl: 'http://localhost:4010',
+    });
+    // The fixture's own http next-link is fine…
+    expect(client.resolvePaginationUrl('http://localhost:4010/v1/apps?cursor=x').host).toBe(
+      'localhost:4010'
+    );
+    // …anything else — other hosts, even Apple itself — is not.
+    expect(() => client.resolvePaginationUrl('https://localhost:4010/v1/apps')).toThrow();
+    expect(() =>
+      client.resolvePaginationUrl('https://api.appstoreconnect.apple.com/v1/apps')
+    ).toThrow();
+  });
+});
+
 describe('AscHttpClient retry policy (a resent write can duplicate a resource)', () => {
   const ok = () =>
     new Response(JSON.stringify({ data: [] }), {

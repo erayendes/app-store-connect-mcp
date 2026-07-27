@@ -35,6 +35,7 @@ export class AscHttpClient {
   private readonly timeoutMs: number;
   private readonly baseUrl: string;
   private readonly allowedHost: string;
+  private readonly allowedProtocol: string;
   readonly limiter: RateLimiter;
 
   constructor(
@@ -44,7 +45,11 @@ export class AscHttpClient {
     this.maxRetries = opts.maxRetries ?? 3;
     this.timeoutMs = opts.timeoutMs ?? 60_000;
     this.baseUrl = (opts.baseUrl ?? ASC_BASE_URL).replace(/\/$/, '');
-    this.allowedHost = new URL(this.baseUrl).host;
+    const base = new URL(this.baseUrl);
+    this.allowedHost = base.host;
+    // Pin the protocol too: https against Apple (the default), but a local
+    // fixture server (ASC_BASE_URL=http://localhost:…) paginates over http.
+    this.allowedProtocol = base.protocol;
     this.limiter = new RateLimiter(opts.rateLimit);
   }
 
@@ -60,7 +65,7 @@ export class AscHttpClient {
     } catch {
       throw new AscApiError(`Malformed pagination URL: ${raw}`, 0);
     }
-    if (url.protocol !== 'https:' || url.host !== this.allowedHost) {
+    if (url.protocol !== this.allowedProtocol || url.host !== this.allowedHost) {
       throw new AscApiError(
         `Refusing to follow pagination URL to unexpected host "${url.host}". ` +
           `Only ${this.allowedHost} is allowed.`,
@@ -75,7 +80,7 @@ export class AscHttpClient {
     path: string,
     opts: { query?: Query; body?: unknown; accept?: string } = {}
   ): Promise<T> {
-    const url = path.startsWith('https://')
+    const url = /^https?:\/\//.test(path)
       ? this.resolvePaginationUrl(path)
       : new URL(this.baseUrl + (path.startsWith('/') ? path : `/${path}`));
 
