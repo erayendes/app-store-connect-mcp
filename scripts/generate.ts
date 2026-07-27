@@ -11,6 +11,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { domainFor } from './domains.js';
 import { describe } from './describe.js';
+import { riskFor } from '../src/core/risk.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -52,6 +53,7 @@ interface GeneratedTool {
   hasBody: boolean;
   bodyRef?: string;
   accept?: string;
+  risk?: string;
 }
 
 const HTTP_METHODS = ['get', 'post', 'patch', 'delete', 'put'] as const;
@@ -308,6 +310,7 @@ function main(): void {
         hasBody: Boolean(bodySchema),
         bodyRef,
         accept,
+        ...(method !== 'get' ? { risk: riskFor(name, method.toUpperCase()) } : {}),
       });
     }
   }
@@ -369,6 +372,15 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {${descMatch ? descMa
     `  read-only:    ${tools.filter((t) => t.readOnly).length}`,
     `  mutating:     ${tools.filter((t) => !t.readOnly).length}`,
     `  deprecated:   ${tools.filter((t) => t.deprecated).length}`,
+    `Risk levels:    ${Object.entries(
+      tools.reduce<Record<string, number>>((acc, t) => {
+        if (t.risk) acc[t.risk] = (acc[t.risk] ?? 0) + 1;
+        return acc;
+      }, {})
+    )
+      .sort((a, b) => b[1] - a[1])
+      .map(([l, c]) => `${l}:${c}`)
+      .join(' ')}`,
     `Body schemas:   ${Object.keys(bodySchemas).length} ` +
       `(${Math.round(JSON.stringify(bodySchemas).length / 1024)} KB resolved, ` +
       `avg ${Math.round(JSON.stringify(bodySchemas).length / Math.max(1, Object.keys(bodySchemas).length))} chars)`,

@@ -32,6 +32,12 @@ export interface ServerConfig {
    * fixture server. Host-pinning then pins to this origin instead of Apple's.
    */
   baseUrl?: string;
+  /**
+   * Writes never reach Apple: each mutating call returns what WOULD have been
+   * sent (method, path, query, body, risk) after passing validation. Reads run
+   * normally. For CI and agent rehearsals.
+   */
+  dryRun: boolean;
 }
 
 function parseList(value: string | undefined): string[] | undefined {
@@ -128,5 +134,6 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     baseUrl: env.ASC_BASE_URL || undefined,
+    dryRun: flag('dry-run') || env.ASC_DRY_RUN === 'true' || env.ASC_DRY_RUN === '1',
   };
 }

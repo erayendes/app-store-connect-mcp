@@ -8,7 +8,7 @@ import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { ToolRegistry, DEFAULT_DOMAINS, type McpToolDefinition } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
-import { confirmWrite, type WriteConfirmer } from './core/confirm.js';
+import { confirmWrite, buildWritePreview, type WriteConfirmer } from './core/confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -50,6 +50,7 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     // starts from an app ID. The app-info profile has them natively.
     extraOperations: profile ? GATEWAY_OPERATIONS : undefined,
     unloadedDomainHint,
+    dryRun: config.dryRun,
   });
 
   const loadedDomains = profile
@@ -129,12 +130,42 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     const args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
     try {
-      if (config.confirmWrites && writeToolNames.has(name)) {
+      // Dry-run: registry writes return their would-send preview instead of
+      // calling Apple, so confirmation would be noise. StoreKit tools bypass
+      // the registry and WOULD hit Apple for real — block their writes hard.
+      if (config.dryRun && writeToolNames.has(name) && STOREKIT_TOOL_NAMES.has(name)) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `"${name}" is blocked in dry-run mode (App Store Server API calls have no dry-run).`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      if (config.confirmWrites && !config.dryRun && writeToolNames.has(name)) {
+        const op = registry.get(name);
+        const preview = op
+          ? buildWritePreview(name, op, args, config.credentials.keyId)
+          : buildWritePreview(
+              name,
+              // StoreKit tools live outside the spec; renewal-date extension is
+              // the one that moves money.
+              {
+                method: 'POST',
+                path: 'App Store Server API',
+                risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
+              },
+              args
+            );
         const decision = await confirmWrite(
           confirmer,
           name,
           warnNoElicitation,
-          config.allowUnconfirmedWrites
+          config.allowUnconfirmedWrites,
+          preview
         );
         if (!decision.allowed) {
           const text =

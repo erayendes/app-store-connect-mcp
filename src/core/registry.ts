@@ -31,6 +31,8 @@ export interface RegistryOptions {
    * --domains flag, which is meaningless to a profile user.
    */
   unloadedDomainHint?: (domain: string) => string;
+  /** Mutating calls stop after validation and return what WOULD have been sent. */
+  dryRun?: boolean;
 }
 
 /**
@@ -356,6 +358,22 @@ export class ToolRegistry {
           );
         }
       }
+    }
+
+    // Dry run: everything up to and including validation ran, so the caller
+    // knows the request is well-formed — but nothing leaves the machine.
+    if (this.options.dryRun && !op.readOnly) {
+      return {
+        dryRun: true,
+        note: 'Dry-run mode: this write was validated but NOT sent to Apple.',
+        wouldSend: {
+          method: op.method,
+          path,
+          ...(Object.keys(query).length ? { query } : {}),
+          ...(op.hasBody && args.body !== undefined ? { body: args.body } : {}),
+        },
+        risk: op.risk ?? 'low',
+      };
     }
 
     return http.request(op.method, path, {

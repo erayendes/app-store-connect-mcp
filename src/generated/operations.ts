@@ -18,7 +18,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AccessibilityDeclarationCreateRequest"
+    "bodyRef": "AccessibilityDeclarationCreateRequest",
+    "risk": "low"
   },
   {
     "name": "accessibility_declarations.delete",
@@ -32,7 +33,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "accessibility_declarations.get",
@@ -61,7 +63,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AccessibilityDeclarationUpdateRequest"
+    "bodyRef": "AccessibilityDeclarationUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "actors.get",
@@ -114,7 +117,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AgeRatingDeclarationUpdateRequest"
+    "bodyRef": "AgeRatingDeclarationUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "alternative_distribution_domains.create",
@@ -127,7 +131,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AlternativeDistributionDomainCreateRequest"
+    "bodyRef": "AlternativeDistributionDomainCreateRequest",
+    "risk": "low"
   },
   {
     "name": "alternative_distribution_domains.delete",
@@ -141,7 +146,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "alternative_distribution_domains.get",
@@ -186,7 +192,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AlternativeDistributionKeyCreateRequest"
+    "bodyRef": "AlternativeDistributionKeyCreateRequest",
+    "risk": "low"
   },
   {
     "name": "alternative_distribution_keys.delete",
@@ -200,7 +207,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "alternative_distribution_keys.get",
@@ -343,7 +351,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AlternativeDistributionPackageCreateRequest"
+    "bodyRef": "AlternativeDistributionPackageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "alternative_distribution_packages.get",
@@ -452,7 +461,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AnalyticsReportRequestCreateRequest"
+    "bodyRef": "AnalyticsReportRequestCreateRequest",
+    "risk": "low"
   },
   {
     "name": "analytics_report_requests.delete",
@@ -466,7 +476,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "analytics_report_requests.get",
@@ -602,7 +613,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AndroidToIosAppMappingDetailCreateRequest"
+    "bodyRef": "AndroidToIosAppMappingDetailCreateRequest",
+    "risk": "low"
   },
   {
     "name": "android_to_ios_app_mapping_details.delete",
@@ -616,7 +628,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "android_to_ios_app_mapping_details.get",
@@ -645,7 +658,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AndroidToIosAppMappingDetailUpdateRequest"
+    "bodyRef": "AndroidToIosAppMappingDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_availabilities_v2.create",
@@ -658,7 +672,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppAvailabilityV2CreateRequest"
+    "bodyRef": "AppAvailabilityV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_availabilities_v2.get",
@@ -823,7 +838,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipAdvancedExperienceImageCreateRequest"
+    "bodyRef": "AppClipAdvancedExperienceImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_advanced_experience_images.get",
@@ -852,7 +868,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipAdvancedExperienceImageUpdateRequest"
+    "bodyRef": "AppClipAdvancedExperienceImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_advanced_experiences.create",
@@ -865,7 +882,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipAdvancedExperienceCreateRequest"
+    "bodyRef": "AppClipAdvancedExperienceCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_advanced_experiences.get",
@@ -905,7 +923,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipAdvancedExperienceUpdateRequest"
+    "bodyRef": "AppClipAdvancedExperienceUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_app_store_review_details.create",
@@ -918,7 +937,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipAppStoreReviewDetailCreateRequest"
+    "bodyRef": "AppClipAppStoreReviewDetailCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_app_store_review_details.get",
@@ -956,7 +976,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipAppStoreReviewDetailUpdateRequest"
+    "bodyRef": "AppClipAppStoreReviewDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_default_experience_localizations.app_clip_header_image.get",
@@ -992,7 +1013,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipDefaultExperienceLocalizationCreateRequest"
+    "bodyRef": "AppClipDefaultExperienceLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_clip_default_experience_localizations.delete",
@@ -1006,7 +1028,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_clip_default_experience_localizations.get",
@@ -1045,7 +1068,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipDefaultExperienceLocalizationUpdateRequest"
+    "bodyRef": "AppClipDefaultExperienceLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_clip_default_experiences.app_clip_app_store_review_detail.get",
@@ -1115,7 +1139,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipDefaultExperienceCreateRequest"
+    "bodyRef": "AppClipDefaultExperienceCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_default_experiences.delete",
@@ -1129,7 +1154,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_clip_default_experiences.get",
@@ -1204,7 +1230,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipDefaultExperienceReleaseWithAppStoreVersionLinkageRequest"
+    "bodyRef": "AppClipDefaultExperienceReleaseWithAppStoreVersionLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_default_experiences.update",
@@ -1219,7 +1246,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipDefaultExperienceUpdateRequest"
+    "bodyRef": "AppClipDefaultExperienceUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_header_images.create",
@@ -1232,7 +1260,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipHeaderImageCreateRequest"
+    "bodyRef": "AppClipHeaderImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clip_header_images.delete",
@@ -1246,7 +1275,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_clip_header_images.get",
@@ -1284,7 +1314,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppClipHeaderImageUpdateRequest"
+    "bodyRef": "AppClipHeaderImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_clips.app_clip_advanced_experiences.list",
@@ -1562,7 +1593,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageLocalizationCreateRequest"
+    "bodyRef": "AppCustomProductPageLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_custom_product_page_localizations.delete",
@@ -1576,7 +1608,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_custom_product_page_localizations.get",
@@ -1617,7 +1650,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageLocalizationSearchKeywordsLinkagesRequest"
+    "bodyRef": "AppCustomProductPageLocalizationSearchKeywordsLinkagesRequest",
+    "risk": "public"
   },
   {
     "name": "app_custom_product_page_localizations.search_keywords.list",
@@ -1662,7 +1696,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageLocalizationSearchKeywordsLinkagesRequest"
+    "bodyRef": "AppCustomProductPageLocalizationSearchKeywordsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "app_custom_product_page_localizations.update",
@@ -1677,7 +1712,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageLocalizationUpdateRequest"
+    "bodyRef": "AppCustomProductPageLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_custom_product_page_versions.app_custom_product_page_localizations.list",
@@ -1726,7 +1762,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageVersionCreateRequest"
+    "bodyRef": "AppCustomProductPageVersionCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_custom_product_page_versions.get",
@@ -1765,7 +1802,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageVersionUpdateRequest"
+    "bodyRef": "AppCustomProductPageVersionUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_custom_product_pages.app_custom_product_page_versions.list",
@@ -1822,7 +1860,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageCreateRequest"
+    "bodyRef": "AppCustomProductPageCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_custom_product_pages.delete",
@@ -1836,7 +1875,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_custom_product_pages.get",
@@ -1875,7 +1915,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppCustomProductPageUpdateRequest"
+    "bodyRef": "AppCustomProductPageUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_encryption_declaration_documents.create",
@@ -1888,7 +1929,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEncryptionDeclarationDocumentCreateRequest"
+    "bodyRef": "AppEncryptionDeclarationDocumentCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_encryption_declaration_documents.get",
@@ -1917,7 +1959,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEncryptionDeclarationDocumentUpdateRequest"
+    "bodyRef": "AppEncryptionDeclarationDocumentUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_encryption_declarations.app_encryption_declaration_document.get",
@@ -1960,7 +2003,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEncryptionDeclarationBuildsLinkagesRequest"
+    "bodyRef": "AppEncryptionDeclarationBuildsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "app_encryption_declarations.create",
@@ -1973,7 +2017,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEncryptionDeclarationCreateRequest"
+    "bodyRef": "AppEncryptionDeclarationCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_encryption_declarations.get",
@@ -2116,7 +2161,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventLocalizationCreateRequest"
+    "bodyRef": "AppEventLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_event_localizations.delete",
@@ -2130,7 +2176,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_event_localizations.get",
@@ -2170,7 +2217,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventLocalizationUpdateRequest"
+    "bodyRef": "AppEventLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_event_screenshots.create",
@@ -2183,7 +2231,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventScreenshotCreateRequest"
+    "bodyRef": "AppEventScreenshotCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_event_screenshots.delete",
@@ -2197,7 +2246,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_event_screenshots.get",
@@ -2235,7 +2285,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventScreenshotUpdateRequest"
+    "bodyRef": "AppEventScreenshotUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_event_video_clips.create",
@@ -2248,7 +2299,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventVideoClipCreateRequest"
+    "bodyRef": "AppEventVideoClipCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_event_video_clips.delete",
@@ -2262,7 +2314,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_event_video_clips.get",
@@ -2300,7 +2353,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventVideoClipUpdateRequest"
+    "bodyRef": "AppEventVideoClipUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_events.create",
@@ -2313,7 +2367,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventCreateRequest"
+    "bodyRef": "AppEventCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_events.delete",
@@ -2327,7 +2382,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_events.get",
@@ -2395,7 +2451,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppEventUpdateRequest"
+    "bodyRef": "AppEventUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_info_localizations.create",
@@ -2408,7 +2465,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppInfoLocalizationCreateRequest"
+    "bodyRef": "AppInfoLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_info_localizations.delete",
@@ -2422,7 +2480,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_info_localizations.get",
@@ -2460,7 +2519,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppInfoLocalizationUpdateRequest"
+    "bodyRef": "AppInfoLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_infos.age_rating_declaration.get",
@@ -2725,7 +2785,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppInfoUpdateRequest"
+    "bodyRef": "AppInfoUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_preview_sets.app_previews.list",
@@ -2768,7 +2829,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppPreviewSetAppPreviewsLinkagesRequest"
+    "bodyRef": "AppPreviewSetAppPreviewsLinkagesRequest",
+    "risk": "public"
   },
   {
     "name": "app_preview_sets.create",
@@ -2781,7 +2843,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppPreviewSetCreateRequest"
+    "bodyRef": "AppPreviewSetCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_preview_sets.delete",
@@ -2795,7 +2858,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_preview_sets.get",
@@ -2834,7 +2898,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppPreviewCreateRequest"
+    "bodyRef": "AppPreviewCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_previews.delete",
@@ -2848,7 +2913,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_previews.get",
@@ -2886,7 +2952,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppPreviewUpdateRequest"
+    "bodyRef": "AppPreviewUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_price_points_v3.equalizations.list",
@@ -3015,7 +3082,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppPriceScheduleCreateRequest"
+    "bodyRef": "AppPriceScheduleCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "app_price_schedules.get",
@@ -3128,7 +3196,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppScreenshotSetAppScreenshotsLinkagesRequest"
+    "bodyRef": "AppScreenshotSetAppScreenshotsLinkagesRequest",
+    "risk": "public"
   },
   {
     "name": "app_screenshot_sets.create",
@@ -3141,7 +3210,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppScreenshotSetCreateRequest"
+    "bodyRef": "AppScreenshotSetCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_screenshot_sets.delete",
@@ -3155,7 +3225,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_screenshot_sets.get",
@@ -3194,7 +3265,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppScreenshotCreateRequest"
+    "bodyRef": "AppScreenshotCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_screenshots.delete",
@@ -3208,7 +3280,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_screenshots.get",
@@ -3246,7 +3319,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppScreenshotUpdateRequest"
+    "bodyRef": "AppScreenshotUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_store_review_attachments.create",
@@ -3259,7 +3333,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreReviewAttachmentCreateRequest"
+    "bodyRef": "AppStoreReviewAttachmentCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_review_attachments.delete",
@@ -3273,7 +3348,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_review_attachments.get",
@@ -3311,7 +3387,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreReviewAttachmentUpdateRequest"
+    "bodyRef": "AppStoreReviewAttachmentUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_review_details.app_store_review_attachments.list",
@@ -3352,7 +3429,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreReviewDetailCreateRequest"
+    "bodyRef": "AppStoreReviewDetailCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_review_details.get",
@@ -3391,7 +3469,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreReviewDetailUpdateRequest"
+    "bodyRef": "AppStoreReviewDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_experiment_treatment_localizations.app_preview_sets.list",
@@ -3549,7 +3628,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentTreatmentLocalizationCreateRequest"
+    "bodyRef": "AppStoreVersionExperimentTreatmentLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_store_version_experiment_treatment_localizations.delete",
@@ -3563,7 +3643,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_experiment_treatment_localizations.get",
@@ -3636,7 +3717,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentTreatmentCreateRequest"
+    "bodyRef": "AppStoreVersionExperimentTreatmentCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_experiment_treatments.delete",
@@ -3650,7 +3732,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_experiment_treatments.get",
@@ -3690,7 +3773,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentTreatmentUpdateRequest"
+    "bodyRef": "AppStoreVersionExperimentTreatmentUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_experiments_v2.app_store_version_experiment_treatments.list",
@@ -3733,7 +3817,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentV2CreateRequest"
+    "bodyRef": "AppStoreVersionExperimentV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_experiments_v2.delete",
@@ -3747,7 +3832,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_experiments_v2.get",
@@ -3788,7 +3874,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentV2UpdateRequest"
+    "bodyRef": "AppStoreVersionExperimentV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_experiments.app_store_version_experiment_treatments.list",
@@ -3831,7 +3918,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentCreateRequest"
+    "bodyRef": "AppStoreVersionExperimentCreateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_experiments.delete",
@@ -3845,7 +3933,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_experiments.get",
@@ -3884,7 +3973,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentUpdateRequest"
+    "bodyRef": "AppStoreVersionExperimentUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_version_localizations.app_preview_sets.list",
@@ -4042,7 +4132,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionLocalizationCreateRequest"
+    "bodyRef": "AppStoreVersionLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "app_store_version_localizations.delete",
@@ -4056,7 +4147,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_localizations.get",
@@ -4097,7 +4189,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionLocalizationSearchKeywordsLinkagesRequest"
+    "bodyRef": "AppStoreVersionLocalizationSearchKeywordsLinkagesRequest",
+    "risk": "public"
   },
   {
     "name": "app_store_version_localizations.search_keywords.list",
@@ -4142,7 +4235,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionLocalizationSearchKeywordsLinkagesRequest"
+    "bodyRef": "AppStoreVersionLocalizationSearchKeywordsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_localizations.update",
@@ -4157,7 +4251,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionLocalizationUpdateRequest"
+    "bodyRef": "AppStoreVersionLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "app_store_version_phased_releases.create",
@@ -4170,7 +4265,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionPhasedReleaseCreateRequest"
+    "bodyRef": "AppStoreVersionPhasedReleaseCreateRequest",
+    "risk": "release"
   },
   {
     "name": "app_store_version_phased_releases.delete",
@@ -4184,7 +4280,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_version_phased_releases.update",
@@ -4199,7 +4296,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionPhasedReleaseUpdateRequest"
+    "bodyRef": "AppStoreVersionPhasedReleaseUpdateRequest",
+    "risk": "release"
   },
   {
     "name": "app_store_version_promotions.create",
@@ -4212,7 +4310,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionPromotionCreateRequest"
+    "bodyRef": "AppStoreVersionPromotionCreateRequest",
+    "risk": "release"
   },
   {
     "name": "app_store_version_release_requests.create",
@@ -4225,7 +4324,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionReleaseRequestCreateRequest"
+    "bodyRef": "AppStoreVersionReleaseRequestCreateRequest",
+    "risk": "release"
   },
   {
     "name": "app_store_version_submissions.delete",
@@ -4239,7 +4339,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_versions.alternative_distribution_package.get",
@@ -4303,7 +4404,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionAppClipDefaultExperienceLinkageRequest"
+    "bodyRef": "AppStoreVersionAppClipDefaultExperienceLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_versions.app_store_review_detail.get",
@@ -4521,7 +4623,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionBuildLinkageRequest"
+    "bodyRef": "AppStoreVersionBuildLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "app_store_versions.create",
@@ -4534,7 +4637,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionCreateRequest"
+    "bodyRef": "AppStoreVersionCreateRequest",
+    "risk": "release"
   },
   {
     "name": "app_store_versions.customer_reviews.list",
@@ -4650,7 +4754,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "app_store_versions.game_center_app_version.get",
@@ -4746,7 +4851,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppStoreVersionUpdateRequest"
+    "bodyRef": "AppStoreVersionUpdateRequest",
+    "risk": "release"
   },
   {
     "name": "app_tags.territories.list",
@@ -4781,7 +4887,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppTagUpdateRequest"
+    "bodyRef": "AppTagUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "apps.accessibility_declarations.list",
@@ -5741,7 +5848,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppBetaTestersLinkagesRequest"
+    "bodyRef": "AppBetaTestersLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "apps.build_uploads.list",
@@ -6607,7 +6715,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppPromotedPurchasesLinkagesRequest"
+    "bodyRef": "AppPromotedPurchasesLinkagesRequest",
+    "risk": "revenue"
   },
   {
     "name": "apps.review_submissions.list",
@@ -6784,7 +6893,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "AppUpdateRequest"
+    "bodyRef": "AppUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "apps.webhooks.list",
@@ -6825,7 +6935,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BackgroundAssetUploadFileCreateRequest"
+    "bodyRef": "BackgroundAssetUploadFileCreateRequest",
+    "risk": "low"
   },
   {
     "name": "background_asset_upload_files.get",
@@ -6854,7 +6965,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BackgroundAssetUploadFileUpdateRequest"
+    "bodyRef": "BackgroundAssetUploadFileUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "background_asset_version_app_store_releases.get",
@@ -6956,7 +7068,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BackgroundAssetVersionCreateRequest"
+    "bodyRef": "BackgroundAssetVersionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "background_asset_versions.get",
@@ -6997,7 +7110,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BackgroundAssetCreateRequest"
+    "bodyRef": "BackgroundAssetCreateRequest",
+    "risk": "low"
   },
   {
     "name": "background_assets.get",
@@ -7038,7 +7152,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BackgroundAssetUpdateRequest"
+    "bodyRef": "BackgroundAssetUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "background_assets.versions.list",
@@ -7164,7 +7279,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppClipInvocationLocalizationCreateRequest"
+    "bodyRef": "BetaAppClipInvocationLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "beta_app_clip_invocation_localizations.delete",
@@ -7178,7 +7294,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_app_clip_invocation_localizations.update",
@@ -7193,7 +7310,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppClipInvocationLocalizationUpdateRequest"
+    "bodyRef": "BetaAppClipInvocationLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "beta_app_clip_invocations.create",
@@ -7206,7 +7324,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppClipInvocationCreateRequest"
+    "bodyRef": "BetaAppClipInvocationCreateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_app_clip_invocations.delete",
@@ -7220,7 +7339,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_app_clip_invocations.get",
@@ -7258,7 +7378,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppClipInvocationUpdateRequest"
+    "bodyRef": "BetaAppClipInvocationUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_app_localizations.app.get",
@@ -7285,7 +7406,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppLocalizationCreateRequest"
+    "bodyRef": "BetaAppLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "beta_app_localizations.delete",
@@ -7299,7 +7421,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_app_localizations.get",
@@ -7373,7 +7496,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppLocalizationUpdateRequest"
+    "bodyRef": "BetaAppLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "beta_app_review_details.app.get",
@@ -7457,7 +7581,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppReviewDetailUpdateRequest"
+    "bodyRef": "BetaAppReviewDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_app_review_submissions.build.get",
@@ -7484,7 +7609,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaAppReviewSubmissionCreateRequest"
+    "bodyRef": "BetaAppReviewSubmissionCreateRequest",
+    "risk": "release"
   },
   {
     "name": "beta_app_review_submissions.get",
@@ -7577,7 +7703,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaBuildLocalizationCreateRequest"
+    "bodyRef": "BetaBuildLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "beta_build_localizations.delete",
@@ -7591,7 +7718,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_build_localizations.get",
@@ -7665,7 +7793,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaBuildLocalizationUpdateRequest"
+    "bodyRef": "BetaBuildLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "beta_crash_logs.get",
@@ -7707,7 +7836,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_feedback_crash_submissions.get",
@@ -7745,7 +7875,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_feedback_screenshot_submissions.get",
@@ -7870,7 +8001,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaGroupBetaTestersLinkagesRequest"
+    "bodyRef": "BetaGroupBetaTestersLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "beta_groups.beta_testers.list",
@@ -7905,7 +8037,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaGroupBetaTestersLinkagesRequest"
+    "bodyRef": "BetaGroupBetaTestersLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "beta_groups.builds.add",
@@ -7920,7 +8053,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaGroupBuildsLinkagesRequest"
+    "bodyRef": "BetaGroupBuildsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "beta_groups.builds.list",
@@ -7955,7 +8089,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaGroupBuildsLinkagesRequest"
+    "bodyRef": "BetaGroupBuildsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "beta_groups.create",
@@ -7968,7 +8103,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaGroupCreateRequest"
+    "bodyRef": "BetaGroupCreateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_groups.delete",
@@ -7982,7 +8118,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_groups.get",
@@ -8127,7 +8264,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaGroupUpdateRequest"
+    "bodyRef": "BetaGroupUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_license_agreements.app.get",
@@ -8210,7 +8348,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaLicenseAgreementUpdateRequest"
+    "bodyRef": "BetaLicenseAgreementUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_recruitment_criteria.create",
@@ -8223,7 +8362,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaRecruitmentCriterionCreateRequest"
+    "bodyRef": "BetaRecruitmentCriterionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_recruitment_criteria.delete",
@@ -8237,7 +8377,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_recruitment_criteria.update",
@@ -8252,7 +8393,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaRecruitmentCriterionUpdateRequest"
+    "bodyRef": "BetaRecruitmentCriterionUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_recruitment_criterion_options.list",
@@ -8283,7 +8425,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterInvitationCreateRequest"
+    "bodyRef": "BetaTesterInvitationCreateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_testers.apps.list",
@@ -8318,7 +8461,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterAppsLinkagesRequest"
+    "bodyRef": "BetaTesterAppsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "beta_testers.beta_groups.add",
@@ -8333,7 +8477,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterBetaGroupsLinkagesRequest"
+    "bodyRef": "BetaTesterBetaGroupsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "beta_testers.beta_groups.list",
@@ -8368,7 +8513,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterBetaGroupsLinkagesRequest"
+    "bodyRef": "BetaTesterBetaGroupsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "beta_testers.beta_tester_usages.metrics",
@@ -8420,7 +8566,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterBuildsLinkagesRequest"
+    "bodyRef": "BetaTesterBuildsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "beta_testers.builds.list",
@@ -8455,7 +8602,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterBuildsLinkagesRequest"
+    "bodyRef": "BetaTesterBuildsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "beta_testers.create",
@@ -8468,7 +8616,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BetaTesterCreateRequest"
+    "bodyRef": "BetaTesterCreateRequest",
+    "risk": "low"
   },
   {
     "name": "beta_testers.delete",
@@ -8482,7 +8631,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "beta_testers.get",
@@ -8704,7 +8854,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildBetaDetailUpdateRequest"
+    "bodyRef": "BuildBetaDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "build_beta_notifications.create",
@@ -8717,7 +8868,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildBetaNotificationCreateRequest"
+    "bodyRef": "BuildBetaNotificationCreateRequest",
+    "risk": "low"
   },
   {
     "name": "build_bundles.app_clip_domain_cache_status.get",
@@ -8806,7 +8958,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildUploadFileCreateRequest"
+    "bodyRef": "BuildUploadFileCreateRequest",
+    "risk": "low"
   },
   {
     "name": "build_upload_files.get",
@@ -8835,7 +8988,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildUploadFileUpdateRequest"
+    "bodyRef": "BuildUploadFileUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "build_uploads.build_upload_files.list",
@@ -8868,7 +9022,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildUploadCreateRequest"
+    "bodyRef": "BuildUploadCreateRequest",
+    "risk": "release"
   },
   {
     "name": "build_uploads.delete",
@@ -8882,7 +9037,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "build_uploads.get",
@@ -8937,7 +9093,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildAppEncryptionDeclarationLinkageRequest"
+    "bodyRef": "BuildAppEncryptionDeclarationLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "builds.app_store_version.get",
@@ -9054,7 +9211,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildBetaGroupsLinkagesRequest"
+    "bodyRef": "BuildBetaGroupsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "builds.beta_groups.remove",
@@ -9069,7 +9227,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildBetaGroupsLinkagesRequest"
+    "bodyRef": "BuildBetaGroupsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "builds.build_beta_detail.get",
@@ -9191,7 +9350,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildIndividualTestersLinkagesRequest"
+    "bodyRef": "BuildIndividualTestersLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "builds.individual_testers.list",
@@ -9226,7 +9386,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildIndividualTestersLinkagesRequest"
+    "bodyRef": "BuildIndividualTestersLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "builds.list",
@@ -9440,7 +9601,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BuildUpdateRequest"
+    "bodyRef": "BuildUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "bundle_id_capabilities.create",
@@ -9453,7 +9615,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BundleIdCapabilityCreateRequest"
+    "bodyRef": "BundleIdCapabilityCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "bundle_id_capabilities.delete",
@@ -9467,7 +9630,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "bundle_id_capabilities.update",
@@ -9482,7 +9646,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BundleIdCapabilityUpdateRequest"
+    "bodyRef": "BundleIdCapabilityUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "bundle_ids.app.get",
@@ -9529,7 +9694,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BundleIdCreateRequest"
+    "bodyRef": "BundleIdCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "bundle_ids.delete",
@@ -9543,7 +9709,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "bundle_ids.get",
@@ -9678,7 +9845,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "BundleIdUpdateRequest"
+    "bodyRef": "BundleIdUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "certificates.create",
@@ -9691,7 +9859,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "CertificateCreateRequest"
+    "bodyRef": "CertificateCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "certificates.delete",
@@ -9705,7 +9874,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "certificates.get",
@@ -9847,7 +10017,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "CertificateUpdateRequest"
+    "bodyRef": "CertificateUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "ci_artifacts.get",
@@ -10157,7 +10328,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "CiBuildRunCreateRequest"
+    "bodyRef": "CiBuildRunCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "ci_build_runs.get",
@@ -10418,7 +10590,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "ci_products.get",
@@ -10624,7 +10797,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "CiWorkflowCreateRequest"
+    "bodyRef": "CiWorkflowCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "ci_workflows.delete",
@@ -10638,7 +10812,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "ci_workflows.get",
@@ -10703,7 +10878,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "CiWorkflowUpdateRequest"
+    "bodyRef": "CiWorkflowUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "ci_xcode_versions.get",
@@ -10793,7 +10969,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "CustomerReviewResponseV1CreateRequest"
+    "bodyRef": "CustomerReviewResponseV1CreateRequest",
+    "risk": "public"
   },
   {
     "name": "customer_review_responses.delete",
@@ -10807,7 +10984,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "customer_review_responses.get",
@@ -10890,7 +11068,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "DeviceCreateRequest"
+    "bodyRef": "DeviceCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "devices.get",
@@ -10988,7 +11167,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "DeviceUpdateRequest"
+    "bodyRef": "DeviceUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "diagnostic_signatures.logs.list",
@@ -11021,7 +11201,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "EndAppAvailabilityPreOrderCreateRequest"
+    "bodyRef": "EndAppAvailabilityPreOrderCreateRequest",
+    "risk": "low"
   },
   {
     "name": "end_user_license_agreements.create",
@@ -11034,7 +11215,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "EndUserLicenseAgreementCreateRequest"
+    "bodyRef": "EndUserLicenseAgreementCreateRequest",
+    "risk": "low"
   },
   {
     "name": "end_user_license_agreements.delete",
@@ -11048,7 +11230,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "end_user_license_agreements.get",
@@ -11107,7 +11290,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "EndUserLicenseAgreementUpdateRequest"
+    "bodyRef": "EndUserLicenseAgreementUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "finance_reports.list",
@@ -11162,7 +11346,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementImageV2CreateRequest"
+    "bodyRef": "GameCenterAchievementImageV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievement_images_v2.delete",
@@ -11176,7 +11361,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievement_images_v2.get",
@@ -11214,7 +11400,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementImageV2UpdateRequest"
+    "bodyRef": "GameCenterAchievementImageV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievement_images.create",
@@ -11227,7 +11414,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementImageCreateRequest"
+    "bodyRef": "GameCenterAchievementImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievement_images.delete",
@@ -11241,7 +11429,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievement_images.get",
@@ -11279,7 +11468,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementImageUpdateRequest"
+    "bodyRef": "GameCenterAchievementImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievement_localizations_v2.create",
@@ -11292,7 +11482,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementLocalizationV2CreateRequest"
+    "bodyRef": "GameCenterAchievementLocalizationV2CreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_achievement_localizations_v2.delete",
@@ -11306,7 +11497,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievement_localizations_v2.get",
@@ -11368,7 +11560,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementLocalizationV2UpdateRequest"
+    "bodyRef": "GameCenterAchievementLocalizationV2UpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_achievement_localizations.create",
@@ -11381,7 +11574,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementLocalizationCreateRequest"
+    "bodyRef": "GameCenterAchievementLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_achievement_localizations.delete",
@@ -11395,7 +11589,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievement_localizations.game_center_achievement_image.get",
@@ -11485,7 +11680,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementLocalizationUpdateRequest"
+    "bodyRef": "GameCenterAchievementLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_achievement_releases.create",
@@ -11498,7 +11694,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementReleaseCreateRequest"
+    "bodyRef": "GameCenterAchievementReleaseCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievement_releases.delete",
@@ -11512,7 +11709,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievement_releases.get",
@@ -11549,7 +11747,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementVersionV2CreateRequest"
+    "bodyRef": "GameCenterAchievementVersionV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievement_versions_v2.get",
@@ -11617,7 +11816,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementV2ActivityLinkageRequest"
+    "bodyRef": "GameCenterAchievementV2ActivityLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievements_v2.create",
@@ -11630,7 +11830,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementV2CreateRequest"
+    "bodyRef": "GameCenterAchievementV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievements_v2.delete",
@@ -11644,7 +11845,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievements_v2.get",
@@ -11685,7 +11887,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementV2UpdateRequest"
+    "bodyRef": "GameCenterAchievementV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievements_v2.versions.list",
@@ -11729,7 +11932,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementActivityLinkageRequest"
+    "bodyRef": "GameCenterAchievementActivityLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievements.create",
@@ -11742,7 +11946,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementCreateRequest"
+    "bodyRef": "GameCenterAchievementCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievements.delete",
@@ -11756,7 +11961,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_achievements.get",
@@ -11827,7 +12033,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementGroupAchievementLinkageRequest"
+    "bodyRef": "GameCenterAchievementGroupAchievementLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_achievements.localizations.list",
@@ -11910,7 +12117,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAchievementUpdateRequest"
+    "bodyRef": "GameCenterAchievementUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.achievements_v2.add",
@@ -11925,7 +12133,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityAchievementsV2LinkagesRequest"
+    "bodyRef": "GameCenterActivityAchievementsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.achievements_v2.remove",
@@ -11940,7 +12149,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityAchievementsV2LinkagesRequest"
+    "bodyRef": "GameCenterActivityAchievementsV2LinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_activities.achievements.add",
@@ -11955,7 +12165,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityAchievementsLinkagesRequest"
+    "bodyRef": "GameCenterActivityAchievementsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.achievements.remove",
@@ -11970,7 +12181,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityAchievementsLinkagesRequest"
+    "bodyRef": "GameCenterActivityAchievementsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_activities.create",
@@ -11983,7 +12195,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityCreateRequest"
+    "bodyRef": "GameCenterActivityCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.delete",
@@ -11997,7 +12210,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_activities.get",
@@ -12041,7 +12255,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityLeaderboardsV2LinkagesRequest"
+    "bodyRef": "GameCenterActivityLeaderboardsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.leaderboards_v2.remove",
@@ -12056,7 +12271,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityLeaderboardsV2LinkagesRequest"
+    "bodyRef": "GameCenterActivityLeaderboardsV2LinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_activities.leaderboards.add",
@@ -12071,7 +12287,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterActivityLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.leaderboards.remove",
@@ -12086,7 +12303,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterActivityLeaderboardsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_activities.update",
@@ -12101,7 +12319,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityUpdateRequest"
+    "bodyRef": "GameCenterActivityUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activities.versions.list",
@@ -12145,7 +12364,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityImageCreateRequest"
+    "bodyRef": "GameCenterActivityImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activity_images.delete",
@@ -12159,7 +12379,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_activity_images.get",
@@ -12188,7 +12409,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityImageUpdateRequest"
+    "bodyRef": "GameCenterActivityImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activity_localizations.create",
@@ -12201,7 +12423,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityLocalizationCreateRequest"
+    "bodyRef": "GameCenterActivityLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_activity_localizations.delete",
@@ -12215,7 +12438,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_activity_localizations.get",
@@ -12268,7 +12492,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityLocalizationUpdateRequest"
+    "bodyRef": "GameCenterActivityLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_activity_version_releases.create",
@@ -12281,7 +12506,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityVersionReleaseCreateRequest"
+    "bodyRef": "GameCenterActivityVersionReleaseCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activity_version_releases.delete",
@@ -12295,7 +12521,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_activity_version_releases.get",
@@ -12331,7 +12558,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityVersionCreateRequest"
+    "bodyRef": "GameCenterActivityVersionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_activity_versions.default_image.get",
@@ -12415,7 +12643,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterActivityVersionUpdateRequest"
+    "bodyRef": "GameCenterActivityVersionUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_app_versions.app_store_version.get",
@@ -12464,7 +12693,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAppVersionCompatibilityVersionsLinkagesRequest"
+    "bodyRef": "GameCenterAppVersionCompatibilityVersionsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_app_versions.compatibility_versions.list",
@@ -12513,7 +12743,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAppVersionCompatibilityVersionsLinkagesRequest"
+    "bodyRef": "GameCenterAppVersionCompatibilityVersionsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_app_versions.create",
@@ -12526,7 +12757,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAppVersionCreateRequest"
+    "bodyRef": "GameCenterAppVersionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_app_versions.get",
@@ -12565,7 +12797,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterAppVersionUpdateRequest"
+    "bodyRef": "GameCenterAppVersionUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenge_images.create",
@@ -12578,7 +12811,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeImageCreateRequest"
+    "bodyRef": "GameCenterChallengeImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenge_images.delete",
@@ -12592,7 +12826,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_challenge_images.get",
@@ -12621,7 +12856,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeImageUpdateRequest"
+    "bodyRef": "GameCenterChallengeImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenge_localizations.create",
@@ -12634,7 +12870,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeLocalizationCreateRequest"
+    "bodyRef": "GameCenterChallengeLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_challenge_localizations.delete",
@@ -12648,7 +12885,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_challenge_localizations.get",
@@ -12701,7 +12939,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeLocalizationUpdateRequest"
+    "bodyRef": "GameCenterChallengeLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_challenge_version_releases.create",
@@ -12714,7 +12953,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeVersionReleaseCreateRequest"
+    "bodyRef": "GameCenterChallengeVersionReleaseCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenge_version_releases.delete",
@@ -12728,7 +12968,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_challenge_version_releases.get",
@@ -12764,7 +13005,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeVersionCreateRequest"
+    "bodyRef": "GameCenterChallengeVersionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenge_versions.default_image.get",
@@ -12846,7 +13088,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeCreateRequest"
+    "bodyRef": "GameCenterChallengeCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenges.delete",
@@ -12860,7 +13103,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_challenges.get",
@@ -12902,7 +13146,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeLeaderboardV2LinkageRequest"
+    "bodyRef": "GameCenterChallengeLeaderboardV2LinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenges.leaderboard.set",
@@ -12917,7 +13162,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeLeaderboardLinkageRequest"
+    "bodyRef": "GameCenterChallengeLeaderboardLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenges.update",
@@ -12932,7 +13178,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterChallengeUpdateRequest"
+    "bodyRef": "GameCenterChallengeUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_challenges.versions.list",
@@ -13073,7 +13320,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailChallengesMinimumPlatformVersionsLinkagesRequest"
+    "bodyRef": "GameCenterDetailChallengesMinimumPlatformVersionsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.classic_matchmaking_requests.metrics",
@@ -13150,7 +13398,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailCreateRequest"
+    "bodyRef": "GameCenterDetailCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.game_center_achievements_v2.list",
@@ -13211,7 +13460,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterAchievementsV2LinkagesRequest"
+    "bodyRef": "GameCenterDetailGameCenterAchievementsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.game_center_achievements.list",
@@ -13274,7 +13524,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterAchievementsLinkagesRequest"
+    "bodyRef": "GameCenterDetailGameCenterAchievementsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.game_center_activities.list",
@@ -13476,7 +13727,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsV2LinkagesRequest"
+    "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.game_center_leaderboard_sets.list",
@@ -13534,7 +13786,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsLinkagesRequest"
+    "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.game_center_leaderboards_v2.list",
@@ -13597,7 +13850,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterLeaderboardsV2LinkagesRequest"
+    "bodyRef": "GameCenterDetailGameCenterLeaderboardsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.game_center_leaderboards.list",
@@ -13662,7 +13916,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterDetailGameCenterLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_details.get",
@@ -13862,7 +14117,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterDetailUpdateRequest"
+    "bodyRef": "GameCenterDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_enabled_versions.compatible_versions.add",
@@ -13877,7 +14133,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest"
+    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_enabled_versions.compatible_versions.list",
@@ -13956,7 +14213,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest"
+    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_enabled_versions.compatible_versions.replace",
@@ -13971,7 +14229,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest"
+    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.create",
@@ -13984,7 +14243,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupCreateRequest"
+    "bodyRef": "GameCenterGroupCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.delete",
@@ -13998,7 +14258,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.game_center_achievements_v2.list",
@@ -14059,7 +14320,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterAchievementsV2LinkagesRequest"
+    "bodyRef": "GameCenterGroupGameCenterAchievementsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.game_center_achievements.list",
@@ -14122,7 +14384,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterAchievementsLinkagesRequest"
+    "bodyRef": "GameCenterGroupGameCenterAchievementsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.game_center_activities.list",
@@ -14312,7 +14575,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsV2LinkagesRequest"
+    "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.game_center_leaderboard_sets.list",
@@ -14370,7 +14634,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsLinkagesRequest"
+    "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.game_center_leaderboards_v2.list",
@@ -14433,7 +14698,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterLeaderboardsV2LinkagesRequest"
+    "bodyRef": "GameCenterGroupGameCenterLeaderboardsV2LinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.game_center_leaderboards.list",
@@ -14498,7 +14764,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterGroupGameCenterLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_groups.get",
@@ -14583,7 +14850,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterGroupUpdateRequest"
+    "bodyRef": "GameCenterGroupUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_entry_submissions.create",
@@ -14596,7 +14864,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardEntrySubmissionCreateRequest"
+    "bodyRef": "GameCenterLeaderboardEntrySubmissionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_images_v2.create",
@@ -14609,7 +14878,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardImageV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardImageV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_images_v2.delete",
@@ -14623,7 +14893,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_images_v2.get",
@@ -14661,7 +14932,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardImageV2UpdateRequest"
+    "bodyRef": "GameCenterLeaderboardImageV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_images.create",
@@ -14674,7 +14946,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardImageCreateRequest"
+    "bodyRef": "GameCenterLeaderboardImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_images.delete",
@@ -14688,7 +14961,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_images.get",
@@ -14726,7 +15000,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardImageUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_localizations_v2.create",
@@ -14739,7 +15014,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardLocalizationV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardLocalizationV2CreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_localizations_v2.delete",
@@ -14753,7 +15029,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_localizations_v2.get",
@@ -14815,7 +15092,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardLocalizationV2UpdateRequest"
+    "bodyRef": "GameCenterLeaderboardLocalizationV2UpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_localizations.create",
@@ -14828,7 +15106,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardLocalizationCreateRequest"
+    "bodyRef": "GameCenterLeaderboardLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_localizations.delete",
@@ -14842,7 +15121,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_localizations.game_center_leaderboard_image.get",
@@ -14904,7 +15184,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardLocalizationUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_releases.create",
@@ -14917,7 +15198,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardReleaseCreateRequest"
+    "bodyRef": "GameCenterLeaderboardReleaseCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_releases.delete",
@@ -14931,7 +15213,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_releases.get",
@@ -14968,7 +15251,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetImageV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetImageV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_set_images_v2.delete",
@@ -14982,7 +15266,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_set_images_v2.get",
@@ -15020,7 +15305,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetImageV2UpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetImageV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_set_images.create",
@@ -15033,7 +15319,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetImageCreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetImageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_set_images.delete",
@@ -15047,7 +15334,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_set_images.get",
@@ -15085,7 +15373,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetImageUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetImageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_set_localizations_v2.create",
@@ -15098,7 +15387,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetLocalizationV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetLocalizationV2CreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_set_localizations_v2.delete",
@@ -15112,7 +15402,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_set_localizations_v2.get",
@@ -15174,7 +15465,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetLocalizationV2UpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetLocalizationV2UpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_set_localizations.create",
@@ -15187,7 +15479,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetLocalizationCreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_set_localizations.delete",
@@ -15201,7 +15494,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_set_localizations.game_center_leaderboard_set_image.get",
@@ -15263,7 +15557,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetLocalizationUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_set_member_localizations.create",
@@ -15276,7 +15571,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetMemberLocalizationCreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetMemberLocalizationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_set_member_localizations.delete",
@@ -15290,7 +15586,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_set_member_localizations.game_center_leaderboard_set.get",
@@ -15402,7 +15699,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetMemberLocalizationUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetMemberLocalizationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "game_center_leaderboard_set_releases.create",
@@ -15415,7 +15713,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetReleaseCreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetReleaseCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_set_releases.delete",
@@ -15429,7 +15728,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_set_releases.get",
@@ -15466,7 +15766,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetVersionV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetVersionV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_set_versions_v2.get",
@@ -15532,7 +15833,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets_v2.delete",
@@ -15546,7 +15848,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_sets_v2.game_center_leaderboards.add",
@@ -15561,7 +15864,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets_v2.game_center_leaderboards.list",
@@ -15624,7 +15928,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_sets_v2.game_center_leaderboards.replace",
@@ -15639,7 +15944,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets_v2.get",
@@ -15680,7 +15986,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetV2UpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets_v2.versions.list",
@@ -15722,7 +16029,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetCreateRequest"
+    "bodyRef": "GameCenterLeaderboardSetCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets.delete",
@@ -15736,7 +16044,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_sets.game_center_leaderboards.add",
@@ -15751,7 +16060,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets.game_center_leaderboards.list",
@@ -15816,7 +16126,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_sets.game_center_leaderboards.replace",
@@ -15831,7 +16142,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest"
+    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets.get",
@@ -15902,7 +16214,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGroupLeaderboardSetLinkageRequest"
+    "bodyRef": "GameCenterLeaderboardSetGroupLeaderboardSetLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_sets.localizations.list",
@@ -15985,7 +16298,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardSetUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_versions_v2.create",
@@ -15998,7 +16312,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardVersionV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardVersionV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboard_versions_v2.get",
@@ -16066,7 +16381,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardV2ActivityLinkageRequest"
+    "bodyRef": "GameCenterLeaderboardV2ActivityLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards_v2.challenge.set",
@@ -16081,7 +16397,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardV2ChallengeLinkageRequest"
+    "bodyRef": "GameCenterLeaderboardV2ChallengeLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards_v2.create",
@@ -16094,7 +16411,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardV2CreateRequest"
+    "bodyRef": "GameCenterLeaderboardV2CreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards_v2.delete",
@@ -16108,7 +16426,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboards_v2.get",
@@ -16151,7 +16470,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardV2UpdateRequest"
+    "bodyRef": "GameCenterLeaderboardV2UpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards_v2.versions.list",
@@ -16195,7 +16515,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardActivityLinkageRequest"
+    "bodyRef": "GameCenterLeaderboardActivityLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards.challenge.set",
@@ -16210,7 +16531,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardChallengeLinkageRequest"
+    "bodyRef": "GameCenterLeaderboardChallengeLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards.create",
@@ -16223,7 +16545,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardCreateRequest"
+    "bodyRef": "GameCenterLeaderboardCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards.delete",
@@ -16237,7 +16560,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboards.get",
@@ -16312,7 +16636,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardGroupLeaderboardLinkageRequest"
+    "bodyRef": "GameCenterLeaderboardGroupLeaderboardLinkageRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_leaderboards.localizations.list",
@@ -16395,7 +16720,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardUpdateRequest"
+    "bodyRef": "GameCenterLeaderboardUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_queues.create",
@@ -16408,7 +16734,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingQueueCreateRequest"
+    "bodyRef": "GameCenterMatchmakingQueueCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_queues.delete",
@@ -16422,7 +16749,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_matchmaking_queues.experiment_matchmaking_queue_sizes.metrics",
@@ -16766,7 +17094,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingQueueUpdateRequest"
+    "bodyRef": "GameCenterMatchmakingQueueUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_rule_set_tests.create",
@@ -16779,7 +17108,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingRuleSetTestCreateRequest"
+    "bodyRef": "GameCenterMatchmakingRuleSetTestCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_rule_sets.create",
@@ -16792,7 +17122,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingRuleSetCreateRequest"
+    "bodyRef": "GameCenterMatchmakingRuleSetCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_rule_sets.delete",
@@ -16806,7 +17137,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_matchmaking_rule_sets.get",
@@ -16943,7 +17275,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingRuleSetUpdateRequest"
+    "bodyRef": "GameCenterMatchmakingRuleSetUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_rules.create",
@@ -16956,7 +17289,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingRuleCreateRequest"
+    "bodyRef": "GameCenterMatchmakingRuleCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_rules.delete",
@@ -16970,7 +17304,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_matchmaking_rules.matchmaking_boolean_rule_results.metrics",
@@ -17156,7 +17491,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingRuleUpdateRequest"
+    "bodyRef": "GameCenterMatchmakingRuleUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_teams.create",
@@ -17169,7 +17505,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingTeamCreateRequest"
+    "bodyRef": "GameCenterMatchmakingTeamCreateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_matchmaking_teams.delete",
@@ -17183,7 +17520,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "game_center_matchmaking_teams.update",
@@ -17198,7 +17536,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterMatchmakingTeamUpdateRequest"
+    "bodyRef": "GameCenterMatchmakingTeamUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "game_center_player_achievement_submissions.create",
@@ -17211,7 +17550,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "GameCenterPlayerAchievementSubmissionCreateRequest"
+    "bodyRef": "GameCenterPlayerAchievementSubmissionCreateRequest",
+    "risk": "low"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.create",
@@ -17224,7 +17564,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseAppStoreReviewScreenshotCreateRequest"
+    "bodyRef": "InAppPurchaseAppStoreReviewScreenshotCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.delete",
@@ -17238,7 +17579,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.get",
@@ -17276,7 +17618,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseAppStoreReviewScreenshotUpdateRequest"
+    "bodyRef": "InAppPurchaseAppStoreReviewScreenshotUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_availabilities.available_territories.list",
@@ -17309,7 +17652,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseAvailabilityCreateRequest"
+    "bodyRef": "InAppPurchaseAvailabilityCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_availabilities.get",
@@ -17368,7 +17712,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseImageV2CreateRequest"
+    "bodyRef": "InAppPurchaseImageV2CreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_images_v2.delete",
@@ -17382,7 +17727,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_images_v2.get",
@@ -17411,7 +17757,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseImageV2UpdateRequest"
+    "bodyRef": "InAppPurchaseImageV2UpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_images.create",
@@ -17424,7 +17771,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseImageCreateRequest"
+    "bodyRef": "InAppPurchaseImageCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_images.delete",
@@ -17438,7 +17786,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_images.get",
@@ -17476,7 +17825,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseImageUpdateRequest"
+    "bodyRef": "InAppPurchaseImageUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_localizations_v2.create",
@@ -17489,7 +17839,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseLocalizationV2CreateRequest"
+    "bodyRef": "InAppPurchaseLocalizationV2CreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_localizations_v2.delete",
@@ -17503,7 +17854,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_localizations_v2.get",
@@ -17541,7 +17893,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseLocalizationV2UpdateRequest"
+    "bodyRef": "InAppPurchaseLocalizationV2UpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_localizations.create",
@@ -17554,7 +17907,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseLocalizationCreateRequest"
+    "bodyRef": "InAppPurchaseLocalizationCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_localizations.delete",
@@ -17568,7 +17922,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_localizations.get",
@@ -17606,7 +17961,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseLocalizationUpdateRequest"
+    "bodyRef": "InAppPurchaseLocalizationUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_offer_code_custom_codes.create",
@@ -17619,7 +17975,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseOfferCodeCustomCodeCreateRequest"
+    "bodyRef": "InAppPurchaseOfferCodeCustomCodeCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_offer_code_custom_codes.get",
@@ -17658,7 +18015,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseOfferCodeCustomCodeUpdateRequest"
+    "bodyRef": "InAppPurchaseOfferCodeCustomCodeUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_offer_code_one_time_use_codes.create",
@@ -17671,7 +18029,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest"
+    "bodyRef": "InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_offer_code_one_time_use_codes.get",
@@ -17710,7 +18069,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseOfferCodeOneTimeUseCodeUpdateRequest"
+    "bodyRef": "InAppPurchaseOfferCodeOneTimeUseCodeUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_offer_code_one_time_use_codes.values.get",
@@ -17738,7 +18098,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseOfferCodeCreateRequest"
+    "bodyRef": "InAppPurchaseOfferCodeCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_offer_codes.custom_codes.list",
@@ -17870,7 +18231,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseOfferCodeUpdateRequest"
+    "bodyRef": "InAppPurchaseOfferCodeUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_price_points.equalizations.list",
@@ -17969,7 +18331,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchasePriceScheduleCreateRequest"
+    "bodyRef": "InAppPurchasePriceScheduleCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_price_schedules.get",
@@ -18041,7 +18404,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseSubmissionCreateRequest"
+    "bodyRef": "InAppPurchaseSubmissionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_versions.create",
@@ -18054,7 +18418,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseVersionCreateRequest"
+    "bodyRef": "InAppPurchaseVersionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchase_versions.get",
@@ -18201,7 +18566,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseV2CreateRequest"
+    "bodyRef": "InAppPurchaseV2CreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchases_v2.delete",
@@ -18215,7 +18581,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchases_v2.get",
@@ -18458,7 +18825,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "InAppPurchaseV2UpdateRequest"
+    "bodyRef": "InAppPurchaseV2UpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "in_app_purchases_v2.versions.list",
@@ -18541,7 +18909,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "MarketplaceSearchDetailCreateRequest"
+    "bodyRef": "MarketplaceSearchDetailCreateRequest",
+    "risk": "low"
   },
   {
     "name": "marketplace_search_details.delete",
@@ -18555,7 +18924,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "marketplace_search_details.update",
@@ -18570,7 +18940,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "MarketplaceSearchDetailUpdateRequest"
+    "bodyRef": "MarketplaceSearchDetailUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "marketplace_webhooks.create",
@@ -18583,7 +18954,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "MarketplaceWebhookCreateRequest"
+    "bodyRef": "MarketplaceWebhookCreateRequest",
+    "risk": "low"
   },
   {
     "name": "marketplace_webhooks.delete",
@@ -18597,7 +18969,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "marketplace_webhooks.list",
@@ -18630,7 +19003,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "MarketplaceWebhookUpdateRequest"
+    "bodyRef": "MarketplaceWebhookUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "merchant_ids.certificates.list",
@@ -18726,7 +19100,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "MerchantIdCreateRequest"
+    "bodyRef": "MerchantIdCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "merchant_ids.delete",
@@ -18740,7 +19115,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "merchant_ids.get",
@@ -18825,7 +19201,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "MerchantIdUpdateRequest"
+    "bodyRef": "MerchantIdUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "nominations.create",
@@ -18838,7 +19215,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "NominationCreateRequest"
+    "bodyRef": "NominationCreateRequest",
+    "risk": "public"
   },
   {
     "name": "nominations.delete",
@@ -18852,7 +19230,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "nominations.get",
@@ -18974,7 +19353,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "NominationUpdateRequest"
+    "bodyRef": "NominationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "pass_type_ids.certificates.list",
@@ -19070,7 +19450,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "PassTypeIdCreateRequest"
+    "bodyRef": "PassTypeIdCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "pass_type_ids.delete",
@@ -19084,7 +19465,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "pass_type_ids.get",
@@ -19176,7 +19558,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "PassTypeIdUpdateRequest"
+    "bodyRef": "PassTypeIdUpdateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "pre_release_versions.app.get",
@@ -19373,7 +19756,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "ProfileCreateRequest"
+    "bodyRef": "ProfileCreateRequest",
+    "risk": "infrastructure"
   },
   {
     "name": "profiles.delete",
@@ -19387,7 +19771,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "profiles.devices.list",
@@ -19528,7 +19913,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "PromotedPurchaseCreateRequest"
+    "bodyRef": "PromotedPurchaseCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "promoted_purchases.delete",
@@ -19542,7 +19928,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "promoted_purchases.get",
@@ -19581,7 +19968,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "PromotedPurchaseUpdateRequest"
+    "bodyRef": "PromotedPurchaseUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "review_submission_items.create",
@@ -19594,7 +19982,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "ReviewSubmissionItemCreateRequest"
+    "bodyRef": "ReviewSubmissionItemCreateRequest",
+    "risk": "release"
   },
   {
     "name": "review_submission_items.delete",
@@ -19608,7 +19997,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "review_submission_items.update",
@@ -19623,7 +20013,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "ReviewSubmissionItemUpdateRequest"
+    "bodyRef": "ReviewSubmissionItemUpdateRequest",
+    "risk": "release"
   },
   {
     "name": "review_submissions.create",
@@ -19636,7 +20027,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "ReviewSubmissionCreateRequest"
+    "bodyRef": "ReviewSubmissionCreateRequest",
+    "risk": "release"
   },
   {
     "name": "review_submissions.get",
@@ -19780,7 +20172,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "ReviewSubmissionUpdateRequest"
+    "bodyRef": "ReviewSubmissionUpdateRequest",
+    "risk": "release"
   },
   {
     "name": "routing_app_coverages.create",
@@ -19793,7 +20186,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "RoutingAppCoverageCreateRequest"
+    "bodyRef": "RoutingAppCoverageCreateRequest",
+    "risk": "low"
   },
   {
     "name": "routing_app_coverages.delete",
@@ -19807,7 +20201,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "routing_app_coverages.get",
@@ -19845,7 +20240,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "RoutingAppCoverageUpdateRequest"
+    "bodyRef": "RoutingAppCoverageUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "sales_reports.list",
@@ -19931,7 +20327,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SandboxTestersClearPurchaseHistoryRequestV2CreateRequest"
+    "bodyRef": "SandboxTestersClearPurchaseHistoryRequestV2CreateRequest",
+    "risk": "access"
   },
   {
     "name": "sandbox_testers_v2.list",
@@ -19964,7 +20361,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SandboxTesterV2UpdateRequest"
+    "bodyRef": "SandboxTesterV2UpdateRequest",
+    "risk": "access"
   },
   {
     "name": "scm_git_references.get",
@@ -20201,7 +20599,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionAppStoreReviewScreenshotCreateRequest"
+    "bodyRef": "SubscriptionAppStoreReviewScreenshotCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_app_store_review_screenshots.delete",
@@ -20215,7 +20614,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_app_store_review_screenshots.get",
@@ -20253,7 +20653,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionAppStoreReviewScreenshotUpdateRequest"
+    "bodyRef": "SubscriptionAppStoreReviewScreenshotUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_availabilities.available_territories.list",
@@ -20286,7 +20687,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionAvailabilityCreateRequest"
+    "bodyRef": "SubscriptionAvailabilityCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_availabilities.get",
@@ -20338,7 +20740,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGracePeriodUpdateRequest"
+    "bodyRef": "SubscriptionGracePeriodUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_localizations_v2.create",
@@ -20351,7 +20754,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupLocalizationV2CreateRequest"
+    "bodyRef": "SubscriptionGroupLocalizationV2CreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_localizations_v2.delete",
@@ -20365,7 +20769,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_localizations_v2.get",
@@ -20403,7 +20808,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupLocalizationV2UpdateRequest"
+    "bodyRef": "SubscriptionGroupLocalizationV2UpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_localizations.create",
@@ -20416,7 +20822,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupLocalizationCreateRequest"
+    "bodyRef": "SubscriptionGroupLocalizationCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_localizations.delete",
@@ -20430,7 +20837,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_localizations.get",
@@ -20468,7 +20876,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupLocalizationUpdateRequest"
+    "bodyRef": "SubscriptionGroupLocalizationUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_submissions.create",
@@ -20481,7 +20890,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupSubmissionCreateRequest"
+    "bodyRef": "SubscriptionGroupSubmissionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_versions.create",
@@ -20494,7 +20904,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupVersionCreateRequest"
+    "bodyRef": "SubscriptionGroupVersionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_group_versions.get",
@@ -20559,7 +20970,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupCreateRequest"
+    "bodyRef": "SubscriptionGroupCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_groups.delete",
@@ -20573,7 +20985,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_groups.get",
@@ -20717,7 +21130,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionGroupUpdateRequest"
+    "bodyRef": "SubscriptionGroupUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_groups.versions.list",
@@ -20775,7 +21189,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionImageV2CreateRequest"
+    "bodyRef": "SubscriptionImageV2CreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_images_v2.delete",
@@ -20789,7 +21204,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_images_v2.get",
@@ -20818,7 +21234,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionImageV2UpdateRequest"
+    "bodyRef": "SubscriptionImageV2UpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_images.create",
@@ -20831,7 +21248,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionImageCreateRequest"
+    "bodyRef": "SubscriptionImageCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_images.delete",
@@ -20845,7 +21263,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_images.get",
@@ -20883,7 +21302,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionImageUpdateRequest"
+    "bodyRef": "SubscriptionImageUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_introductory_offers.create",
@@ -20896,7 +21316,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionIntroductoryOfferCreateRequest"
+    "bodyRef": "SubscriptionIntroductoryOfferCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_introductory_offers.delete",
@@ -20910,7 +21331,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_introductory_offers.update",
@@ -20925,7 +21347,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionIntroductoryOfferUpdateRequest"
+    "bodyRef": "SubscriptionIntroductoryOfferUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_localizations_v2.create",
@@ -20938,7 +21361,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionLocalizationV2CreateRequest"
+    "bodyRef": "SubscriptionLocalizationV2CreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_localizations_v2.delete",
@@ -20952,7 +21376,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_localizations_v2.get",
@@ -20990,7 +21415,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionLocalizationV2UpdateRequest"
+    "bodyRef": "SubscriptionLocalizationV2UpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_localizations.create",
@@ -21003,7 +21429,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionLocalizationCreateRequest"
+    "bodyRef": "SubscriptionLocalizationCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_localizations.delete",
@@ -21017,7 +21444,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_localizations.get",
@@ -21055,7 +21483,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionLocalizationUpdateRequest"
+    "bodyRef": "SubscriptionLocalizationUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_offer_code_custom_codes.create",
@@ -21068,7 +21497,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionOfferCodeCustomCodeCreateRequest"
+    "bodyRef": "SubscriptionOfferCodeCustomCodeCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_offer_code_custom_codes.get",
@@ -21106,7 +21536,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionOfferCodeCustomCodeUpdateRequest"
+    "bodyRef": "SubscriptionOfferCodeCustomCodeUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_offer_code_one_time_use_codes.create",
@@ -21119,7 +21550,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionOfferCodeOneTimeUseCodeCreateRequest"
+    "bodyRef": "SubscriptionOfferCodeOneTimeUseCodeCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_offer_code_one_time_use_codes.get",
@@ -21157,7 +21589,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionOfferCodeOneTimeUseCodeUpdateRequest"
+    "bodyRef": "SubscriptionOfferCodeOneTimeUseCodeUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_offer_code_one_time_use_codes.values.get",
@@ -21185,7 +21618,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionOfferCodeCreateRequest"
+    "bodyRef": "SubscriptionOfferCodeCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_offer_codes.custom_codes.list",
@@ -21316,7 +21750,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionOfferCodeUpdateRequest"
+    "bodyRef": "SubscriptionOfferCodeUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_plan_availabilities.available_territories.list",
@@ -21351,7 +21786,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPlanAvailabilityAvailableTerritoriesLinkagesRequest"
+    "bodyRef": "SubscriptionPlanAvailabilityAvailableTerritoriesLinkagesRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_plan_availabilities.create",
@@ -21364,7 +21800,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPlanAvailabilityCreateRequest"
+    "bodyRef": "SubscriptionPlanAvailabilityCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_plan_availabilities.get",
@@ -21402,7 +21839,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPlanAvailabilityUpdateRequest"
+    "bodyRef": "SubscriptionPlanAvailabilityUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_price_points.adjusted_equalizations.list",
@@ -21534,7 +21972,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPriceCreateRequest"
+    "bodyRef": "SubscriptionPriceCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_prices.delete",
@@ -21548,7 +21987,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_promotional_offers.create",
@@ -21561,7 +22001,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPromotionalOfferCreateRequest"
+    "bodyRef": "SubscriptionPromotionalOfferCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_promotional_offers.delete",
@@ -21575,7 +22016,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscription_promotional_offers.get",
@@ -21648,7 +22090,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPromotionalOfferUpdateRequest"
+    "bodyRef": "SubscriptionPromotionalOfferUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_submissions.create",
@@ -21661,7 +22104,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionSubmissionCreateRequest"
+    "bodyRef": "SubscriptionSubmissionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_versions.create",
@@ -21674,7 +22118,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionVersionCreateRequest"
+    "bodyRef": "SubscriptionVersionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscription_versions.get",
@@ -21798,7 +22243,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionCreateRequest"
+    "bodyRef": "SubscriptionCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscriptions.delete",
@@ -21812,7 +22258,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "subscriptions.get",
@@ -21925,7 +22372,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionIntroductoryOffersLinkagesRequest"
+    "bodyRef": "SubscriptionIntroductoryOffersLinkagesRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscriptions.offer_codes.list",
@@ -22095,7 +22543,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionPricesLinkagesRequest"
+    "bodyRef": "SubscriptionPricesLinkagesRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscriptions.promoted_purchase.get",
@@ -22219,7 +22668,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "SubscriptionUpdateRequest"
+    "bodyRef": "SubscriptionUpdateRequest",
+    "risk": "revenue"
   },
   {
     "name": "subscriptions.versions.list",
@@ -22327,7 +22777,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "TerritoryAvailabilityUpdateRequest"
+    "bodyRef": "TerritoryAvailabilityUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "user_invitations.create",
@@ -22340,7 +22791,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "UserInvitationCreateRequest"
+    "bodyRef": "UserInvitationCreateRequest",
+    "risk": "access"
   },
   {
     "name": "user_invitations.delete",
@@ -22354,7 +22806,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "user_invitations.get",
@@ -22478,7 +22931,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "users.get",
@@ -22583,7 +23037,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "UserUpdateRequest"
+    "bodyRef": "UserUpdateRequest",
+    "risk": "access"
   },
   {
     "name": "users.visible_apps.add",
@@ -22598,7 +23053,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "UserVisibleAppsLinkagesRequest"
+    "bodyRef": "UserVisibleAppsLinkagesRequest",
+    "risk": "access"
   },
   {
     "name": "users.visible_apps.list",
@@ -22633,7 +23089,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "UserVisibleAppsLinkagesRequest"
+    "bodyRef": "UserVisibleAppsLinkagesRequest",
+    "risk": "destructive"
   },
   {
     "name": "users.visible_apps.replace",
@@ -22648,7 +23105,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "UserVisibleAppsLinkagesRequest"
+    "bodyRef": "UserVisibleAppsLinkagesRequest",
+    "risk": "access"
   },
   {
     "name": "webhook_deliveries.create",
@@ -22661,7 +23119,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "WebhookDeliveryCreateRequest"
+    "bodyRef": "WebhookDeliveryCreateRequest",
+    "risk": "low"
   },
   {
     "name": "webhook_pings.create",
@@ -22674,7 +23133,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "WebhookPingCreateRequest"
+    "bodyRef": "WebhookPingCreateRequest",
+    "risk": "low"
   },
   {
     "name": "webhooks.create",
@@ -22687,7 +23147,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "WebhookCreateRequest"
+    "bodyRef": "WebhookCreateRequest",
+    "risk": "low"
   },
   {
     "name": "webhooks.delete",
@@ -22701,7 +23162,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "destructive"
   },
   {
     "name": "webhooks.deliveries.list",
@@ -22787,7 +23249,8 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "WebhookUpdateRequest"
+    "bodyRef": "WebhookUpdateRequest",
+    "risk": "low"
   },
   {
     "name": "win_back_offers.create",
@@ -22800,7 +23263,8 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "WinBackOfferCreateRequest"
+    "bodyRef": "WinBackOfferCreateRequest",
+    "risk": "revenue"
   },
   {
     "name": "win_back_offers.delete",
@@ -22814,7 +23278,8 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
+    "hasBody": false,
+    "risk": "revenue"
   },
   {
     "name": "win_back_offers.get",
@@ -22886,6 +23351,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": true,
-    "bodyRef": "WinBackOfferUpdateRequest"
+    "bodyRef": "WinBackOfferUpdateRequest",
+    "risk": "revenue"
   }
 ];

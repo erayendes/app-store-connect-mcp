@@ -40,6 +40,10 @@ Options:
                          anyway, relying on the client's own tool approval.
                          ASC_ALLOW_UNCONFIRMED_WRITES=1 does the same.
   --include-deprecated   Also load operations Apple has marked deprecated.
+  --dry-run              Writes never reach Apple: each mutating call returns
+                         what WOULD have been sent (method, path, body, risk)
+                         after validation. Reads run normally. ASC_DRY_RUN=1
+                         does the same.
   --version              Print version and exit.
   --help                 Print this message.
 

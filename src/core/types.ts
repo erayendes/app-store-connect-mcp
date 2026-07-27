@@ -21,6 +21,11 @@ export interface Operation {
   hasBody: boolean;
   bodyRef?: string;
   /**
+   * Risk classification for mutating operations (absent on reads). Assigned by
+   * the generator from the hand-reviewed manifest in src/core/risk.ts.
+   */
+  risk?: string;
+  /**
    * Accept header the endpoint requires, when it is not JSON. Sales and finance
    * reports only serve `application/a-gzip` and answer 406 to anything else.
    */
