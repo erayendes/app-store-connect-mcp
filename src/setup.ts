@@ -25,8 +25,12 @@ import { runChecklist } from './checklist.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
 
-/** Rough tokens a tool definition costs in context — for the size hint only. */
-const TOKENS_PER_TOOL = 150;
+/**
+ * Rough tokens a tool definition costs in context — for the size hint only.
+ * Measured across profiles after request-body schemas were inlined (AI-188):
+ * total definition JSON / tool count lands at ~210-240 depending on profile.
+ */
+const TOKENS_PER_TOOL = 225;
 
 /**
  * How many tools a profile actually serves: its domains plus the gateway

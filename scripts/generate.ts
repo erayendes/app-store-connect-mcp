@@ -139,6 +139,78 @@ function isUsefulQueryParam(name: string): boolean {
 
 
 /**
+ * Resolves a request-body component schema into a self-contained, simplified
+ * JSON Schema the model can actually follow: $ref/allOf/oneOf expanded, enums
+ * and required kept, `title` dropped, descriptions clipped. Objects get
+ * `additionalProperties: false` so a typo'd field fails validation locally
+ * instead of surfacing as an opaque Apple 409.
+ */
+function simplifyBodySchema(
+  schemas: Record<string, any>,
+  node: any,
+  refStack: string[] = [],
+  depth = 0
+): any {
+  if (!node || typeof node !== 'object' || depth > 14) return { type: 'object' };
+
+  if (node.$ref) {
+    const name = String(node.$ref).split('/').pop()!;
+    // A cycle can't be inlined — fall back to a plain object at the loop point.
+    if (refStack.includes(name)) return { type: 'object' };
+    return simplifyBodySchema(schemas, schemas[name], [...refStack, name], depth + 1);
+  }
+
+  if (Array.isArray(node.allOf)) {
+    const merged: any = {};
+    for (const part of node.allOf) {
+      const resolved = simplifyBodySchema(schemas, part, refStack, depth + 1);
+      // Later parts win on scalar keys; properties/required merge.
+      merged.properties = { ...merged.properties, ...resolved.properties };
+      merged.required = [...new Set([...(merged.required ?? []), ...(resolved.required ?? [])])];
+      for (const [k, v] of Object.entries(resolved)) {
+        if (k !== 'properties' && k !== 'required') merged[k] = v;
+      }
+    }
+    if (!merged.required?.length) delete merged.required;
+    return merged;
+  }
+
+  const out: any = {};
+  for (const [key, value] of Object.entries<any>(node)) {
+    switch (key) {
+      case 'title':
+        break; // pure token cost
+      case 'description':
+        out.description = String(value).replace(/\s+/g, ' ').slice(0, 160);
+        break;
+      case 'properties': {
+        const props: any = {};
+        for (const [p, sub] of Object.entries<any>(value)) {
+          props[p] = simplifyBodySchema(schemas, sub, refStack, depth + 1);
+        }
+        out.properties = props;
+        break;
+      }
+      case 'items':
+        out.items = simplifyBodySchema(schemas, value, refStack, depth + 1);
+        break;
+      case 'oneOf':
+        out.oneOf = value.map((v: any) => simplifyBodySchema(schemas, v, refStack, depth + 1));
+        break;
+      default:
+        // type, required, enum, nullable, format, deprecated, minimum, maximum,
+        // pattern — copy through untouched.
+        out[key] = value;
+    }
+  }
+  // Closed-world objects: unknown fields are almost always typos.
+  if (out.type === 'object' && out.properties && out.additionalProperties === undefined) {
+    out.additionalProperties = false;
+  }
+  return out;
+}
+
+/**
  * GET relationship endpoints (`.../relationships/x`) return only resource IDs.
  * Their full-object twin (`.../x`) returns the same records with the IDs
  * included, so exposing both doubles the tool count for zero capability.
@@ -158,6 +230,9 @@ function main(): void {
   const tools: GeneratedTool[] = [];
   const seen = new Set<string>();
   let droppedTwins = 0;
+  /** bodyRef -> simplified, self-contained JSON Schema (deduped across ops). */
+  const bodySchemas: Record<string, unknown> = {};
+  const componentSchemas: Record<string, any> = spec.components?.schemas ?? {};
 
   for (const [path, pathItem] of Object.entries<any>(spec.paths ?? {})) {
     const sharedParams: OpenApiParameter[] = pathItem.parameters ?? [];
@@ -194,6 +269,9 @@ function main(): void {
       const bodyRef: string | undefined = bodySchema?.$ref
         ? String(bodySchema.$ref).split('/').pop()
         : undefined;
+      if (bodyRef && !bodySchemas[bodyRef]) {
+        bodySchemas[bodyRef] = simplifyBodySchema(componentSchemas, bodySchema);
+      }
 
       // Most endpoints serve JSON; a handful (sales/finance reports) only serve
       // gzipped TSV and reject a JSON Accept header with 406.
@@ -259,6 +337,16 @@ export const OPERATIONS: Operation[] = ${JSON.stringify(tools, null, 2)};
 `
   );
 
+  // Request-body schemas, keyed by Apple's component name (Operation.bodyRef).
+  // Kept in their own file so operations.ts stays reviewable in diffs.
+  writeFileSync(
+    resolve(ROOT, 'src/generated/body-schemas.ts'),
+    `${header}
+/** Simplified JSON Schemas for request bodies, keyed by Operation.bodyRef. */
+export const BODY_SCHEMAS: Record<string, unknown> = ${JSON.stringify(bodySchemas, null, 1)};
+`
+  );
+
   // Emit domain descriptions alongside operations so the runtime has no
   // dependency on the scripts/ directory.
   const domainInfoSource = readFileSync(resolve(__dirname, 'domains.ts'), 'utf8');
@@ -281,6 +369,9 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {${descMatch ? descMa
     `  read-only:    ${tools.filter((t) => t.readOnly).length}`,
     `  mutating:     ${tools.filter((t) => !t.readOnly).length}`,
     `  deprecated:   ${tools.filter((t) => t.deprecated).length}`,
+    `Body schemas:   ${Object.keys(bodySchemas).length} ` +
+      `(${Math.round(JSON.stringify(bodySchemas).length / 1024)} KB resolved, ` +
+      `avg ${Math.round(JSON.stringify(bodySchemas).length / Math.max(1, Object.keys(bodySchemas).length))} chars)`,
     '',
     'By domain:',
     ...Object.entries(byDomain)

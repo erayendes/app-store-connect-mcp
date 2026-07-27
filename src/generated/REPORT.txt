@@ -5,6 +5,7 @@ Tools:          982
   read-only:    516
   mutating:     466
   deprecated:   123
+Body schemas:   334 (298 KB resolved, avg 914 chars)
 
 By domain:
   game_center          273

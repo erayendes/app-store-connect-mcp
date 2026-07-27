@@ -4,7 +4,9 @@
 import type { Operation } from './types.js';
 import type { AscHttpClient, Query } from './http.js';
 import { OPERATIONS } from '../generated/operations.js';
+import { BODY_SCHEMAS } from '../generated/body-schemas.js';
 import { AscApiError } from './errors.js';
+import { validateBody } from './validate.js';
 
 export interface RegistryOptions {
   /** Restrict to these domains. Undefined means the default working set. */
@@ -169,13 +171,20 @@ export function toMcpTool(
   }
 
   if (op.hasBody) {
-    properties.body = {
-      type: 'object',
-      description:
-        `JSON:API request body. Shape: {"data": {"type": "...", "attributes": {...}, ` +
-        `"relationships": {...}}}.` +
-        (op.bodyRef ? ` Apple schema: ${op.bodyRef}.` : ''),
-    };
+    const schema = op.bodyRef ? BODY_SCHEMAS[op.bodyRef] : undefined;
+    properties.body = schema
+      ? {
+          description: `JSON:API request body (Apple schema: ${op.bodyRef}).`,
+          ...(schema as Record<string, unknown>),
+        }
+      : {
+          // No resolvable schema in the spec — keep the generic shape hint.
+          type: 'object',
+          description:
+            `JSON:API request body. Shape: {"data": {"type": "...", "attributes": {...}, ` +
+            `"relationships": {...}}}.` +
+            (op.bodyRef ? ` Apple schema: ${op.bodyRef}.` : ''),
+        };
     if (op.method === 'POST' || op.method === 'PATCH') required.push('body');
   }
 
@@ -330,6 +339,23 @@ export class ToolRegistry {
         continue;
       }
       query[q.name] = value as Query[string];
+    }
+
+    // Validate the body against the generated schema before anything leaves
+    // the machine — a typo'd field or wrong enum comes back with a field path
+    // instead of an opaque Apple 409.
+    if (op.hasBody && op.bodyRef && args.body !== undefined) {
+      const schema = BODY_SCHEMAS[op.bodyRef];
+      if (schema) {
+        const problems = validateBody(schema, args.body);
+        if (problems.length) {
+          throw new AscApiError(
+            `Invalid request body for ${name} (nothing was sent to Apple):\n` +
+              problems.map((p) => `  - ${p}`).join('\n'),
+            0
+          );
+        }
+      }
     }
 
     return http.request(op.method, path, {
