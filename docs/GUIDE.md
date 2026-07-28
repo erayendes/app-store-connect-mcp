@@ -224,6 +224,31 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 > [!TIP]
 > **Confirm before writes (on by default).** Before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)). So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Clients that can't show the prompt (no elicitation support) **block writes by default** — opt in with `--allow-unconfirmed-writes` (or `ASC_ALLOW_UNCONFIRMED_WRITES=1`) to rely on the client's own per-call approval instead. Turn the guard off with `ASC_CONFIRM_WRITES=0` (or `--no-confirm`), or go further with `--read-only` to remove every mutating tool entirely.
 
+#### Multiple accounts
+
+Heimdall keeps one shared credential set, but you can still work with several
+App Store Connect accounts today — no extra feature needed:
+
+- **Per-server environment.** Environment variables override the shared config
+  entirely, so give a second MCP server entry its own credentials:
+
+  ```json
+  "asc-clientB": {
+    "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "app-info"],
+    "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/path/AuthKey_B.p8" }
+  }
+  ```
+
+- **Separate config directories.** `ASC_CONFIG_DIR` points a server (and the
+  setup wizard) at a different shared config: run
+  `ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp setup` once,
+  then set the same `ASC_CONFIG_DIR` in that server's `env` block. Each
+  directory keeps its own key reference, vendor number and bundle ID.
+
+The two servers appear side by side in your client (name them by account), and
+nothing is ever mixed: env-provided credentials never fall back to the shared
+file for missing pieces.
+
 ### 7. Adding and removing tools later
 
 > [!TIP]
@@ -506,6 +531,32 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 
 > [!TIP]
 > **Yazmadan önce onay (varsayılan açık).** Değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. İstemi gösteremeyen client'larda (elicitation desteği yok) yazmalar **varsayılan olarak engellenir** — client'ın kendi çağrı-başı onayına güvenmek için `--allow-unconfirmed-writes` (veya `ASC_ALLOW_UNCONFIRMED_WRITES=1`) ile opt-in yapın. Guard'ı `ASC_CONFIRM_WRITES=0` (veya `--no-confirm`) ile kapatın; ya da tüm mutasyon araçlarını tamamen kaldırmak için `--read-only` kullanın.
+
+#### Birden çok hesap
+
+Heimdall tek bir ortak kimlik seti tutar; yine de birden çok App Store Connect
+hesabıyla bugün çalışabilirsiniz — ek özellik gerekmez:
+
+- **Sunucu-başına environment.** Environment değişkenleri ortak yapılandırmayı
+  tamamen ezer; ikinci bir MCP sunucu girdisine kendi kimliğini verin:
+
+  ```json
+  "asc-musteriB": {
+    "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "app-info"],
+    "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/yol/AuthKey_B.p8" }
+  }
+  ```
+
+- **Ayrı yapılandırma dizinleri.** `ASC_CONFIG_DIR`, bir sunucuyu (ve setup
+  sihirbazını) farklı bir ortak yapılandırmaya yönlendirir:
+  `ASC_CONFIG_DIR=~/.config/asc-musteriB npx -y @erayendes/asc-mcp setup`
+  komutunu bir kez çalıştırın, sonra aynı `ASC_CONFIG_DIR`'ı o sunucunun `env`
+  bloğuna koyun. Her dizin kendi anahtar referansını, vendor numarasını ve
+  bundle ID'sini tutar.
+
+İki sunucu istemcinizde yan yana görünür (hesaba göre adlandırın) ve hiçbir şey
+karışmaz: env ile verilen kimlik, eksik parçalar için ortak dosyaya asla geri
+düşmez.
 
 ### 7. Sonradan araç ekleme ve çıkarma
 
