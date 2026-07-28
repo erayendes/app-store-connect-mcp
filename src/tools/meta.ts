@@ -52,11 +52,68 @@ export const META_TOOLS: McpToolDefinition[] = [
           type: 'boolean',
           description: 'Issue one real API call to verify credentials (default true).',
         },
+        check_expirations: {
+          type: 'boolean',
+          description:
+            'Also list signing certificates and provisioning profiles expiring within 30 days ' +
+            '(two extra API calls; default false).',
+        },
       },
     },
     annotations: { readOnlyHint: true },
   },
 ];
+
+/** Days ahead that counts as "expiring soon" for certificates and profiles. */
+const EXPIRY_WINDOW_DAYS = 30;
+
+/**
+ * Summarises expirations from certificates__list / profiles__list responses.
+ * Pure — exported for tests.
+ */
+export function summarizeExpirations(
+  certificates: any[],
+  profiles: any[],
+  now = Date.now()
+): {
+  certificates: { total: number; expiringSoon: Array<{ id: string; name: string; expirationDate: string }> };
+  profiles: { total: number; expiringSoon: Array<{ id: string; name: string; expirationDate: string }> };
+  summary: string;
+} {
+  const cutoff = now + EXPIRY_WINDOW_DAYS * 86_400_000;
+  const pick = (items: any[], nameAttr: string) =>
+    items
+      .filter((i) => {
+        const exp = Date.parse(i?.attributes?.expirationDate ?? '');
+        return Number.isFinite(exp) && exp <= cutoff;
+      })
+      .map((i) => ({
+        id: String(i.id),
+        name: String(i.attributes?.[nameAttr] ?? i.attributes?.name ?? ''),
+        expirationDate: String(i.attributes?.expirationDate ?? ''),
+      }))
+      .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate));
+
+  const certSoon = pick(certificates, 'displayName');
+  const profSoon = pick(profiles, 'name');
+  const parts: string[] = [];
+  parts.push(
+    certSoon.length
+      ? `${certSoon.length} certificate(s) expire within ${EXPIRY_WINDOW_DAYS} days`
+      : `No certificates expiring within ${EXPIRY_WINDOW_DAYS} days`
+  );
+  parts.push(
+    profSoon.length
+      ? `${profSoon.length} provisioning profile(s) expire within ${EXPIRY_WINDOW_DAYS} days`
+      : `no profiles either`
+  );
+
+  return {
+    certificates: { total: certificates.length, expiringSoon: certSoon },
+    profiles: { total: profiles.length, expiringSoon: profSoon },
+    summary: parts.join('; ') + '.',
+  };
+}
 
 export async function executeMetaTool(
   name: string,
@@ -191,6 +248,20 @@ export async function executeMetaTool(
           };
         } catch (err) {
           result.connection = { ok: false, error: (err as Error).message };
+        }
+      }
+
+      if (args.check_expirations === true) {
+        // Two extra calls, so opt-in only. A key without the provisioning role
+        // gets a 403 here — report it instead of failing the whole status.
+        try {
+          const [certs, profiles] = await Promise.all([
+            ctx.http.get<any>('/v1/certificates', { limit: 200 }),
+            ctx.http.get<any>('/v1/profiles', { limit: 200 }),
+          ]);
+          result.expirations = summarizeExpirations(certs?.data ?? [], profiles?.data ?? []);
+        } catch (err) {
+          result.expirations = { error: (err as Error).message };
         }
       }
 
