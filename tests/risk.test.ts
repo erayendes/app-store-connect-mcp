@@ -58,8 +58,8 @@ describe('buildWritePreview', () => {
     },
   };
 
-  it('shows operation, changes, risk and typed-confirm instruction', () => {
-    const preview = buildWritePreview('subscription_prices__create', op, args, 'ABCD123456');
+  it('shows operation, changes, risk and typed-confirm instruction', async () => {
+    const preview = await buildWritePreview('subscription_prices__create', op, args, 'ABCD123456');
     expect(preview.strong).toBe(true);
     expect(preview.message).toContain('REVENUE-level write');
     expect(preview.message).toContain('POST /v1/subscriptionPrices');
@@ -68,8 +68,8 @@ describe('buildWritePreview', () => {
     expect(preview.message).toContain('Type CONFIRM');
   });
 
-  it('shows the target id and territory count', () => {
-    const preview = buildWritePreview(
+  it('shows the target id and territory count', async () => {
+    const preview = await buildWritePreview(
       'subscription_plan_availabilities__create',
       { method: 'POST', path: '/v1/subscriptionPlanAvailabilities/{id}', risk: 'revenue' },
       {
@@ -94,14 +94,99 @@ describe('buildWritePreview', () => {
     expect(preview.message).toContain('Territories in request: 3');
   });
 
-  it('keeps a checkbox (not typed confirm) for low-stakes writes', () => {
-    const preview = buildWritePreview(
+  it('keeps a checkbox (not typed confirm) for low-stakes writes', async () => {
+    const preview = await buildWritePreview(
       'beta_groups__create',
       { method: 'POST', path: '/v1/betaGroups', risk: 'low' },
       {}
     );
     expect(preview.strong).toBe(false);
     expect(preview.message).not.toContain('Type CONFIRM');
+  });
+});
+
+describe('preview reference resolution (AI-202)', () => {
+  const pricePointId = 'eyJzIjoiNjYzOTU5OTk5OSIsInQiOiJUVVIiLCJwIjoiMTAxNDcifQ';
+  const priceArgs = {
+    body: {
+      data: {
+        type: 'subscriptionPrices',
+        attributes: { preserveCurrentPrice: false },
+        relationships: {
+          subscription: { data: { type: 'subscriptions', id: '6639599999' } },
+          subscriptionPricePoint: {
+            data: { type: 'subscriptionPricePoints', id: pricePointId },
+          },
+        },
+      },
+    },
+  };
+  const op = { method: 'POST', path: '/v1/subscriptionPrices', risk: 'revenue' };
+
+  function fakeHttp() {
+    return {
+      get: vi.fn(async (path: string) => {
+        if (path.includes('/subscriptionPricePoints/')) {
+          return {
+            data: {
+              attributes: { customerPrice: '99.99' },
+              relationships: { territory: { data: { type: 'territories', id: 'TUR' } } },
+            },
+            included: [{ type: 'territories', id: 'TUR', attributes: { currency: 'TRY' } }],
+          };
+        }
+        if (path.includes('/subscriptions/')) {
+          return {
+            data: { attributes: { name: 'ask quran base 1week', productId: 'askquran.base.1week' } },
+          };
+        }
+        return {};
+      }),
+    };
+  }
+
+  it('translates opaque ids into Product and Price lines', async () => {
+    const preview = await buildWritePreview(
+      'subscription_prices__create',
+      op,
+      priceArgs,
+      'milowda',
+      fakeHttp()
+    );
+    expect(preview.message).toContain('Price:      99.99 TRY (TUR)');
+    expect(preview.message).toContain('Product:    ask quran base 1week (askquran.base.1week)');
+    // The relationship line carries the label inline too.
+    expect(preview.message).toContain('— "ask quran base 1week (askquran.base.1week)"');
+  });
+
+  it('spells out preserveCurrentPrice instead of showing a bare flag', async () => {
+    const preview = await buildWritePreview('x', op, priceArgs, undefined, fakeHttp());
+    expect(preview.message).toContain('WILL be moved to the new price');
+  });
+
+  it('falls back to raw ids when resolution fails — display only, never blocking', async () => {
+    const failing = { get: vi.fn().mockRejectedValue(new Error('offline')) };
+    const preview = await buildWritePreview('x', op, priceArgs, undefined, failing);
+    expect(preview.message).toContain(`subscriptionPricePoints/${pricePointId}`);
+    expect(preview.message).not.toContain('Price:');
+  });
+
+  it('caps reference lookups at 4 per preview', async () => {
+    const http = fakeHttp();
+    const many = {
+      body: {
+        data: {
+          relationships: Object.fromEntries(
+            Array.from({ length: 8 }, (_, i) => [
+              `rel${i}`,
+              { data: { type: 'subscriptions', id: `id-${i}` } },
+            ])
+          ),
+        },
+      },
+    };
+    await buildWritePreview('x', op, many, undefined, http);
+    expect(http.get.mock.calls.length).toBeLessThanOrEqual(4);
   });
 });
 

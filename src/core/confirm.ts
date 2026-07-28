@@ -50,17 +50,125 @@ export interface PreviewableOp {
 
 const MAX_CHANGE_LINES = 10;
 
+/** The slice of AscHttpClient the resolver needs — mockable in tests. */
+export interface RefReader {
+  get<T = unknown>(path: string, query?: Record<string, unknown>): Promise<T>;
+}
+
+/**
+ * Meaning-heavy fields, spelled out in the prompt. A raw
+ * `preserveCurrentPrice = false` reads like a technical flag; its real meaning
+ * is a customer-facing revenue decision, so it must never look routine.
+ */
+export const FIELD_NOTES: Record<string, (value: unknown) => string | undefined> = {
+  preserveCurrentPrice: (v) =>
+    v === false
+      ? '⚠ Existing subscribers WILL be moved to the new price.'
+      : v === true
+        ? 'Existing subscribers keep their current price.'
+        : undefined,
+};
+
+/** Max reference lookups per preview — keeps confirmation latency bounded. */
+const MAX_REF_LOOKUPS = 4;
+
+type RefResolver = (http: RefReader, id: string) => Promise<string | undefined>;
+
+/** Human labels for the reference types that matter most in previews. */
+const REF_RESOLVERS: Record<string, RefResolver> = {
+  subscriptionPricePoints: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionPricePoints/${encodeURIComponent(id)}`, {
+      include: 'territory',
+    });
+    const price = res?.data?.attributes?.customerPrice;
+    if (!price) return undefined;
+    const territory: any = (res?.included ?? []).find((i: any) => i?.type === 'territories');
+    const territoryId = territory?.id ?? res?.data?.relationships?.territory?.data?.id;
+    const currency = territory?.attributes?.currency;
+    return `${price}${currency ? ` ${currency}` : ''}${territoryId ? ` (${territoryId})` : ''}`;
+  },
+  subscriptions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptions/${encodeURIComponent(id)}`);
+    const a = res?.data?.attributes;
+    return a?.name ? `${a.name}${a.productId ? ` (${a.productId})` : ''}` : undefined;
+  },
+  apps: async (http, id) => {
+    const res: any = await http.get(`/v1/apps/${encodeURIComponent(id)}`);
+    const a = res?.data?.attributes;
+    return a?.name ? `${a.name}${a.bundleId ? ` (${a.bundleId})` : ''}` : undefined;
+  },
+  betaGroups: async (http, id) => {
+    const res: any = await http.get(`/v1/betaGroups/${encodeURIComponent(id)}`);
+    return res?.data?.attributes?.name ?? undefined;
+  },
+};
+
+/** Collects every {type,id} reference in a JSON:API body. */
+function collectRefs(node: unknown, refs: Array<{ type: string; id: string }>): void {
+  if (!node || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    node.forEach((n) => collectRefs(n, refs));
+    return;
+  }
+  const rec = node as Record<string, unknown>;
+  if (typeof rec.type === 'string' && typeof rec.id === 'string' && REF_RESOLVERS[rec.type]) {
+    refs.push({ type: rec.type, id: rec.id });
+  }
+  for (const v of Object.values(rec)) collectRefs(v, refs);
+}
+
+/**
+ * Resolves the opaque ids in a write body to human labels ("99.99 TRY (TUR)",
+ * "ask quran base 1week (askquran.base.1week)") with at most MAX_REF_LOOKUPS
+ * GET calls. Display is best-effort: a failed lookup leaves the raw id — the
+ * write itself is never affected.
+ */
+export async function resolveBodyRefs(
+  http: RefReader,
+  body: unknown
+): Promise<Map<string, string>> {
+  const refs: Array<{ type: string; id: string }> = [];
+  collectRefs(body, refs);
+
+  const seen = new Set<string>();
+  const unique = refs.filter((r) => {
+    const key = `${r.type}/${r.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const labels = new Map<string, string>();
+  await Promise.all(
+    unique.slice(0, MAX_REF_LOOKUPS).map(async ({ type, id }) => {
+      try {
+        const label = await REF_RESOLVERS[type](http, id);
+        if (label) labels.set(`${type}/${id}`, label);
+      } catch {
+        // Best-effort display only — the raw id stays in the preview.
+      }
+    })
+  );
+  return labels;
+}
+
 /**
  * Flattens a JSON:API body into human-readable "field = value" lines:
  * attributes become dotted paths, relationships become "→ type/id" arrows.
  */
-function summarizeBody(body: unknown, lines: string[], prefix = ''): void {
+function summarizeBody(
+  body: unknown,
+  lines: string[],
+  prefix = '',
+  labels?: Map<string, string>
+): void {
   if (lines.length > MAX_CHANGE_LINES || !body || typeof body !== 'object') return;
   for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
     if (lines.length > MAX_CHANGE_LINES) return;
     const path = prefix ? `${prefix}.${key}` : key;
     if (value === null || typeof value !== 'object') {
-      lines.push(`${path} = ${JSON.stringify(value)}`);
+      const note = FIELD_NOTES[key]?.(value);
+      lines.push(`${path} = ${JSON.stringify(value)}${note ? ` — ${note}` : ''}`);
     } else if (Array.isArray(value)) {
       // Relationship arrays are lists of {type,id}; summarize as ids.
       const ids = value
@@ -72,9 +180,12 @@ function summarizeBody(body: unknown, lines: string[], prefix = ''): void {
         lines.push(`${path} = ${JSON.stringify(value).slice(0, 100)}`);
       }
     } else if ('type' in (value as any) && 'id' in (value as any)) {
-      lines.push(`${path} → ${(value as any).type}/${(value as any).id}`);
+      const label = labels?.get(`${(value as any).type}/${(value as any).id}`);
+      lines.push(
+        `${path} → ${(value as any).type}/${(value as any).id}${label ? ` — "${label}"` : ''}`
+      );
     } else {
-      summarizeBody(value, lines, path);
+      summarizeBody(value, lines, path, labels);
     }
   }
 }
@@ -100,14 +211,18 @@ function countTerritories(body: unknown): number {
 
 /**
  * Builds the impact preview shown in the confirmation prompt (and used by
- * --dry-run). Pure — unit-tested without a client.
+ * --dry-run). When an http reader is provided, opaque reference ids in the
+ * body are resolved to human labels (best-effort): a price-point id becomes
+ * "Price: 99.99 TRY (TUR)", a subscription id becomes the product name — so
+ * the user sees WHAT they are confirming, not a base64 blob.
  */
-export function buildWritePreview(
+export async function buildWritePreview(
   toolName: string,
   op: PreviewableOp,
   args: Record<string, unknown>,
-  account?: string
-): WritePreview {
+  account?: string,
+  http?: RefReader
+): Promise<WritePreview> {
   const risk = (op.risk ?? 'low') as RiskLevel;
   const strong = STRONG_CONFIRM_LEVELS.has(risk);
 
@@ -125,8 +240,17 @@ export function buildWritePreview(
 
   const body = (args.body as any)?.data;
   if (body) {
+    const labels = http ? await resolveBodyRefs(http, body) : new Map<string, string>();
+
+    // The two labels that answer "what am I approving?" get their own lines.
+    for (const [key, label] of labels) {
+      if (key.startsWith('subscriptions/')) lines.push(`Product:    ${label}`);
+      else if (key.startsWith('apps/')) lines.push(`App:        ${label}`);
+      else if (key.startsWith('subscriptionPricePoints/')) lines.push(`Price:      ${label}`);
+    }
+
     const changes: string[] = [];
-    summarizeBody(body, changes);
+    summarizeBody(body, changes, '', labels);
     if (changes.length) {
       lines.push('Changes:');
       for (const c of changes.slice(0, MAX_CHANGE_LINES)) lines.push(`  ${c}`);
