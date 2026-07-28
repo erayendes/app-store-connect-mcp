@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2) — 982 tools generated from Apple's official OpenAPI spec, AI-powered review triage and reply drafting, and confirm-before-write safety.",
+  "description": "Heimdall — MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2). 982 tools generated from Apple's official OpenAPI spec, AI-powered review triage and reply drafting, and confirm-before-write safety. Works with Claude, Codex, Cursor and any MCP client.",
   "author": {
     "name": "Eray Endeş",
     "email": "erayendes@gmail.com",
@@ -47,12 +47,16 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
+    "heimdall",
     "mcp",
     "mcp-server",
     "model-context-protocol",
     "app-store-connect",
+    "appstoreconnect",
+    "app-store",
     "app-store-server-api",
     "appstore",
+    "asc",
     "apple",
     "ios",
     "testflight",
@@ -60,9 +64,14 @@
     "subscriptions",
     "in-app-purchase",
     "app-reviews",
+    "game-center",
     "xcode-cloud",
+    "openapi",
     "ai",
-    "claude"
+    "claude",
+    "claude-code",
+    "cursor",
+    "codex"
   ],
   "engines": {
     "node": ">=20.19.0"
