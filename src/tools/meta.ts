@@ -64,6 +64,31 @@ export const META_TOOLS: McpToolDefinition[] = [
   },
 ];
 
+/**
+ * Keyword search over every operation (loaded or not). Extracted from the
+ * asc__search_tools handler so intent coverage is unit-testable — the 20-intent
+ * regression suite in tests/search-intents.test.ts runs against this.
+ *
+ * Multi-word queries are matched token by token and ranked by how many tokens
+ * hit: the old whole-phrase `includes` returned nothing for natural queries
+ * like "change subscription price territory", because no description contains
+ * that exact phrase. Single-word queries behave as before.
+ */
+export function searchOperations(query: string): Array<(typeof OPERATIONS)[number]> {
+  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+
+  const scored = OPERATIONS.map((op) => {
+    const haystack = `${op.name} ${op.description} ${op.path}`.toLowerCase();
+    const score = tokens.reduce((n, t) => n + (haystack.includes(t) ? 1 : 0), 0);
+    return { op, score };
+  }).filter((s) => s.score > 0 && s.score >= Math.ceil(tokens.length / 2));
+
+  return scored
+    .sort((a, b) => b.score - a.score || a.op.name.localeCompare(b.op.name))
+    .map((s) => s.op);
+}
+
 /** Days ahead that counts as "expiring soon" for certificates and profiles. */
 const EXPIRY_WINDOW_DAYS = 30;
 
@@ -162,12 +187,7 @@ export async function executeMetaTool(
       const limit = Number(args.limit ?? 25);
       if (!query) return { matches: [], count: 0 };
 
-      const apiMatches = OPERATIONS.filter(
-        (op) =>
-          op.name.toLowerCase().includes(query) ||
-          op.description.toLowerCase().includes(query) ||
-          op.path.toLowerCase().includes(query)
-      ).map((op) => ({
+      const apiMatches = searchOperations(query).map((op) => ({
         tool: op.name,
         domain: op.domain,
         endpoint: `${op.method} ${op.path}`,

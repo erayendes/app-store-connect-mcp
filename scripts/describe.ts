@@ -153,6 +153,98 @@ export const CURATED: Record<string, string> = {
     'Start an Xcode Cloud build for a workflow, optionally targeting a specific branch, tag or pull request.',
   'webhooks.create':
     'Create a webhook so Apple pushes App Store Connect events to your endpoint.',
+
+  // --- subscription pricing (the "change the price" flow) -----------------
+  'subscriptions.price_points.list':
+    'List the allowed price points for a subscription — the first step when you want to ' +
+    'change, set, raise or lower a subscription price. ALWAYS filter by territory ' +
+    '(filter_territory, e.g. TUR, USA) — unfiltered, this returns thousands of rows. ' +
+    'Find the price point whose customerPrice matches the price you want, then pass its ' +
+    'ID to subscription_prices__create.',
+  'subscription_prices.create':
+    'Change or set a subscription price in a specific territory (country). This is the ' +
+    'write step for raising or lowering a subscription price: first find the price point ' +
+    'ID with subscriptions__price_points__list (filtered by territory), then create the ' +
+    'price with it. preserveCurrentPrice decides whether existing subscribers keep their ' +
+    'old price or move to the new one.',
+  'subscription_prices.delete':
+    'Cancel a scheduled subscription price change before it takes effect.',
+  'subscriptions.prices.list':
+    'List the current and scheduled prices of a subscription per territory (country) — ' +
+    'use this to see what a subscription costs today in each storefront.',
+  'subscription_price_points.equalizations.list':
+    'Given one price point in a base country, list the equivalent (equalized) price ' +
+    'points in every other territory — for per-country pricing aligned to one anchor price.',
+  'app_price_schedules.create':
+    "Change or set an app's price: create a price schedule with base territory and " +
+    'manual prices. Find price point IDs with apps__app_price_points__list first.',
+  'apps.app_price_points.list':
+    "List the allowed price points for an app's purchase price. Filter by territory " +
+    '(country) to find the price point ID matching the price you want to set.',
+  'in_app_purchase_price_schedules.create':
+    'Change or set an in-app purchase (IAP) price: create a price schedule from price ' +
+    'point IDs. Find them with in_app_purchases_v2__price_points__list, filtered by territory.',
+  'in_app_purchases_v2.price_points.list':
+    'List the allowed price points for an in-app purchase. Filter by territory (country) ' +
+    'to find the price point ID for a specific price before scheduling a price change.',
+
+  // --- metadata & localization -------------------------------------------
+  'app_store_version_localizations.create':
+    'Add a new language (locale) to an App Store version — description, keywords, ' +
+    "what's new, promotional text for that language.",
+  'app_store_version_localizations.update':
+    "Update the store listing text for one language of a version: description, keywords, " +
+    "what's new (release notes), promotional text, support and marketing URLs.",
+  'app_info_localizations.update':
+    "Update an app's name, subtitle or privacy policy text for one language. App name " +
+    'and subtitle are capped at 30 characters.',
+  'app_info_localizations.create':
+    "Add a new language for the app-level listing fields: name, subtitle, privacy policy.",
+  'app_store_version_localizations.search_keywords.add':
+    'Add App Store search keywords to a version localization (ASO keyword optimization).',
+
+  // --- TestFlight ---------------------------------------------------------
+  'beta_groups.builds.add':
+    'Distribute a build to a TestFlight beta group so its testers can install it.',
+  'beta_tester_invitations.create':
+    'Re-send a TestFlight invitation email to a tester who has not accepted yet.',
+  'beta_build_localizations.update':
+    "Set the tester-facing \"what to test\" notes for a TestFlight build in one language.",
+
+  // --- review-screenshot tools: keep them out of pricing searches ---------
+  // These upload the screenshot App Review looks at; their auto-generated
+  // descriptions said "App Store review screenshot", which hijacked every
+  // generic "app store" search (including price queries).
+  'subscription_app_store_review_screenshots.create':
+    'Upload the reviewer screenshot for a subscription — the image App Review checks. ' +
+    'Not related to store listing screenshots or pricing.',
+  'subscription_app_store_review_screenshots.update':
+    'Commit the uploaded reviewer screenshot for a subscription after the file transfer.',
+  'subscription_app_store_review_screenshots.delete':
+    'Delete the reviewer screenshot attached to a subscription.',
+  'subscription_app_store_review_screenshots.get':
+    'Read the reviewer screenshot attached to a subscription.',
+  'subscriptions.app_store_review_screenshot.get':
+    'Read the reviewer screenshot attached to a subscription.',
+  'in_app_purchase_app_store_review_screenshots.create':
+    'Upload the reviewer screenshot for an in-app purchase — the image App Review checks. ' +
+    'Not related to store listing screenshots or pricing.',
+  'in_app_purchase_app_store_review_screenshots.update':
+    'Commit the uploaded reviewer screenshot for an in-app purchase after the file transfer.',
+  'in_app_purchase_app_store_review_screenshots.delete':
+    'Delete the reviewer screenshot attached to an in-app purchase.',
+  'in_app_purchase_app_store_review_screenshots.get':
+    'Read the reviewer screenshot attached to an in-app purchase.',
+  'in_app_purchases_v2.app_store_review_screenshot.get':
+    'Read the reviewer screenshot attached to an in-app purchase.',
+
+  // --- store listing screenshots (the ones users usually mean) ------------
+  'app_screenshots.create':
+    'Upload a store listing screenshot: reserve the upload for a screenshot set, then ' +
+    'transfer the image data. These are the screenshots customers see on the App Store page.',
+  'app_screenshot_sets.create':
+    'Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version ' +
+    'localization, then upload screenshots into it.',
 };
 
 interface DescribeInput {
