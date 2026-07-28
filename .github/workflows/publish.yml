@@ -35,6 +35,11 @@ jobs:
       - run: npm run build
       - run: npm test
 
+      # Trusted publishing (OIDC -> registry token exchange) needs npm >= 11.5;
+      # Node 22 ships npm 10, which signs provenance but then PUTs without
+      # credentials and npm masks the rejection as a 404.
+      - run: npm install -g npm@latest
+
       # --provenance publishes a signed attestation linking the tarball to this
       # repository, commit and workflow run.
       - run: npm publish --provenance
