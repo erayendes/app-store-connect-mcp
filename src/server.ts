@@ -15,6 +15,18 @@ import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from '.
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import { SPEC_VERSION } from './generated/operations.js';
 import { GATEWAY_OPERATIONS, profileForDomain, registerCommand, type Profile } from './profiles.js';
+import {
+  stripApiNoise,
+  capResponseSize,
+  truncateText,
+  DEFAULT_MAX_RESPONSE_CHARS,
+} from './core/shape.js';
+
+/** Configurable response ceiling (chars of pretty-printed JSON). */
+function maxResponseChars(): number {
+  const raw = Number(process.env.ASC_MAX_RESPONSE_CHARS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_MAX_RESPONSE_CHARS;
+}
 
 // Read from package.json at runtime so the banner can't drift from the published
 // version. Not a JSON import: package.json sits outside tsconfig's rootDir.
@@ -238,13 +250,22 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
         result = await storekit.execute(name, args);
       } else {
         result = await registry.execute(name, args, http);
+        // Apple payloads are mostly URL noise the model never follows; strip
+        // it and cap the size so one listing can't flood the context window.
+        if (process.env.ASC_KEEP_RAW_RESPONSES !== '1') {
+          result = stripApiNoise(result);
+        }
+        result = capResponseSize(result, maxResponseChars());
       }
 
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(result ?? { ok: true }, null, 2),
+            text: truncateText(
+              JSON.stringify(result ?? { ok: true }, null, 2),
+              maxResponseChars()
+            ),
           },
         ],
       };

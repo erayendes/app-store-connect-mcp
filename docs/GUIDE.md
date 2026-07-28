@@ -189,6 +189,8 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `ASC_CONFIRM_WRITES` | no | `0` / `false` to skip the confirm-before-write prompt (on by default) |
 | `ASC_ALLOW_UNCONFIRMED_WRITES` | no | `1` / `true` to allow writes on clients that can't show a confirmation prompt (blocked by default) |
 | `ASC_DRY_RUN` | no | `1` / `true`: writes never reach Apple — each mutating call returns what would have been sent (method, path, body, risk) after validation. Reads run normally |
+| `ASC_MAX_RESPONSE_CHARS` | no | Response size ceiling in characters (default 100000). Oversized lists are cut to the items that fit, with an explicit truncation note |
+| `ASC_KEEP_RAW_RESPONSES` | no | `1` to pass Apple's payloads through untouched — by default per-resource `links` and links-only `relationships` URL noise is stripped (~85% smaller listings) |
 | `ASC_REVIEWS_BRAND_VOICE` | no | Brand-voice guidance for `reviews_ai__draft_response`, e.g. "friendly, concise, we say 'folks'" |
 | `ASC_REVIEWS_BANNED_PHRASES` | no | Comma-separated phrases the draft must never contain |
 | `ASC_REVIEWS_SUPPORT_URL` | no | Support URL the draft points customers at for follow-ups |
@@ -497,6 +499,8 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 | `ASC_CONFIRM_WRITES` | hayır | Yazma-öncesi onay istemini atlamak için `0` / `false` (varsayılan açık) |
 | `ASC_ALLOW_UNCONFIRMED_WRITES` | hayır | Onay istemi gösteremeyen client'larda yazmaya izin vermek için `1` / `true` (varsayılan engelli) |
 | `ASC_DRY_RUN` | hayır | `1` / `true`: yazmalar Apple'a hiç gitmez — her mutasyon çağrısı, doğrulamadan sonra gönderilecek olanı (metod, path, body, risk) döndürür. Okumalar normal çalışır |
+| `ASC_MAX_RESPONSE_CHARS` | hayır | Cevap boyutu tavanı, karakter (varsayılan 100000). Büyük listeler sığan öğelere kırpılır, açık kesme notuyla |
+| `ASC_KEEP_RAW_RESPONSES` | hayır | Apple cevaplarını olduğu gibi geçirmek için `1` — varsayılan olarak kaynak-başı `links` ve links-only `relationships` URL gürültüsü atılır (listeler ~%85 küçülür) |
 | `ASC_REVIEWS_BRAND_VOICE` | hayır | `reviews_ai__draft_response` için marka sesi, ör. "samimi, kısa" |
 | `ASC_REVIEWS_BANNED_PHRASES` | hayır | Taslakta asla geçmeyecek ifadeler (virgülle ayrılmış) |
 | `ASC_REVIEWS_SUPPORT_URL` | hayır | Taslağın müşteriyi yönlendireceği destek adresi |
