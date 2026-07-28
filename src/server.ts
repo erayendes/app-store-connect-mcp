@@ -8,7 +8,12 @@ import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { ToolRegistry, DEFAULT_DOMAINS, type McpToolDefinition } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
-import { confirmWrite, buildWritePreview, type WriteConfirmer } from './core/confirm.js';
+import {
+  confirmWrite,
+  buildWritePreview,
+  resolveBodyRefs,
+  type WriteConfirmer,
+} from './core/confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -165,8 +170,8 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
       if (config.confirmWrites && !config.dryRun && writeToolNames.has(name)) {
         const op = registry.get(name);
         const preview = op
-          ? buildWritePreview(name, op, args, config.credentials.keyId)
-          : buildWritePreview(
+          ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
+          : await buildWritePreview(
               name,
               // StoreKit tools live outside the spec; renewal-date extension is
               // the one that moves money.
@@ -250,6 +255,14 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
         result = await storekit.execute(name, args);
       } else {
         result = await registry.execute(name, args, http);
+        // Dry-run rehearsals get the same human translation as the live
+        // confirmation prompt, so the rehearsal shows what the real run would.
+        if ((result as any)?.dryRun === true && args.body !== undefined) {
+          const labels = await resolveBodyRefs(http, (args.body as any)?.data);
+          if (labels.size) {
+            (result as any).humanReadable = Object.fromEntries(labels);
+          }
+        }
         // Apple payloads are mostly URL noise the model never follows; strip
         // it and cap the size so one listing can't flood the context window.
         if (process.env.ASC_KEEP_RAW_RESPONSES !== '1') {
