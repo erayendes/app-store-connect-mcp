@@ -269,7 +269,7 @@ export async function executeReviewsAiTool(
       const limit = Math.max(1, Math.min(Number(args.limit ?? 50), 200));
       const unansweredOnly = args.unanswered_only !== false;
 
-      const items = await ctx.http.collect(
+      const { items, hasMore } = await ctx.http.collect(
         `/v1/apps/${encodeURIComponent(appId)}/customerReviews`,
         {
           sort: '-createdDate',
@@ -280,6 +280,7 @@ export async function executeReviewsAiTool(
       );
 
       const reviews = items.slice(0, limit);
+      const moreExist = hasMore || items.length > limit;
       if (reviews.length === 0) {
         return { appId, fetchedCount: 0, analyzedCount: 0, triage: 'No reviews matched the filters.' };
       }
@@ -299,6 +300,7 @@ export async function executeReviewsAiTool(
       return {
         appId,
         fetchedCount: reviews.length,
+        ...(moreExist ? { moreReviewsExist: true } : {}),
         analyzedCount,
         truncated: analyzedCount < reviews.length,
         coverage: `${analyzedCount} of ${reviews.length} fetched reviews analyzed`,
@@ -317,7 +319,7 @@ export async function executeReviewsAiTool(
       // period, computed in code — "up vs down" is not the model's guess.
       const previousSince = now - 2 * days * 86_400_000;
 
-      const items = await ctx.http.collect(
+      const { items } = await ctx.http.collect(
         `/v1/apps/${encodeURIComponent(appId)}/customerReviews`,
         { sort: '-createdDate', limit: 200 },
         3

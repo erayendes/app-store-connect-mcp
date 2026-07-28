@@ -178,19 +178,25 @@ export class AscHttpClient {
     return this.request<T>('DELETE', path, { body });
   }
 
-  /** Follows `links.next` until the collection is exhausted or `maxPages` is hit. */
+  /**
+   * Follows `links.next` until the collection is exhausted or `maxPages` is
+   * hit. The result says whether it stopped early (`hasMore` + `nextUrl`), so
+   * callers can't mistake a page-capped fetch for the complete collection.
+   */
   async collect<T = unknown>(
     path: string,
     query?: Query,
     maxPages = 10
-  ): Promise<T[]> {
+  ): Promise<{ items: T[]; pagesFetched: number; hasMore: boolean; nextUrl?: string }> {
     const items: T[] = [];
     let next: string | undefined;
+    let pagesFetched = 0;
 
     for (let page = 0; page < maxPages; page++) {
       const res: any = next
         ? await this.request('GET', next)
         : await this.get(path, query);
+      pagesFetched++;
 
       if (Array.isArray(res?.data)) items.push(...res.data);
       else if (res?.data) items.push(res.data);
@@ -198,7 +204,7 @@ export class AscHttpClient {
       next = res?.links?.next;
       if (!next) break;
     }
-    return items;
+    return { items, pagesFetched, hasMore: Boolean(next), nextUrl: next };
   }
 }
 

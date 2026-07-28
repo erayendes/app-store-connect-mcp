@@ -30,9 +30,18 @@ function makeCtx(overrides: {
   const createMessage =
     overrides.createMessage ??
     vi.fn().mockResolvedValue({ content: { type: 'text', text: 'model output' } });
+  // collect() returns { items, pagesFetched, hasMore, nextUrl }; tests may
+  // still hand in a plain array for brevity — wrap it here.
+  const rawCollect = overrides.collect ?? vi.fn().mockResolvedValue([]);
+  const collect = vi.fn(async (...a: unknown[]) => {
+    const res = await rawCollect(...a);
+    return Array.isArray(res)
+      ? { items: res, pagesFetched: 1, hasMore: false, nextUrl: undefined }
+      : res;
+  });
   const http = {
     get: overrides.get ?? vi.fn(),
-    collect: overrides.collect ?? vi.fn().mockResolvedValue([]),
+    collect,
     post: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn(),
