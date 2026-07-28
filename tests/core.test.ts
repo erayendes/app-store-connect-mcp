@@ -199,6 +199,18 @@ describe('AscHttpClient retry policy (a resent write can duplicate a resource)',
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it.each([
+    [403, /Finance role|lacks permission/],
+    [409, /resource state|locked/],
+    [401, /ASC_KEY_ID/],
+  ])('appends an actionable hint to a %s error', async (status, pattern) => {
+    const fetchMock = vi.fn().mockResolvedValue(fail(status as number));
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 0 });
+
+    await expect(settle(client.post('/v1/apps', {}))).rejects.toThrow(pattern as RegExp);
+  });
+
   it('understands both Retry-After forms: delay-seconds and HTTP-date', () => {
     expect(backoffMs(0, '7')).toBe(7000);
     const inTenSeconds = new Date(Date.now() + 10_000).toUTCString();

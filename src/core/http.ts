@@ -230,6 +230,26 @@ export function backoffMs(attempt: number, retryAfter: string | null): number {
   return base + Math.random() * 250; // jitter, so parallel callers desynchronise
 }
 
+/**
+ * Actionable hints for the Apple errors people actually hit, appended to the
+ * error message so the fix travels with the failure (mirrors SUPPORT.md).
+ */
+const STATUS_HINTS: Record<number, string> = {
+  401: 'Check that ASC_KEY_ID, ASC_ISSUER_ID and the .p8 key match and are not revoked.',
+  403:
+    "The API key's role lacks permission for this operation: sales/finance reports need " +
+    'the Finance role, user management needs Admin, and app creation is restricted on ' +
+    'some accounts — create the app once in the App Store Connect web UI, then manage it here.',
+  409:
+    'App Store Connect rejected the change for the current resource state — a version in ' +
+    'review or already released is locked, and many fields are only editable in specific ' +
+    "states. Fetch the resource first to see its state; the error details above name the " +
+    'field when Apple provides it.',
+  429:
+    "Apple's rate limit was hit even though requests are paced locally — something else " +
+    'may be sharing this API key.',
+};
+
 async function toApiError(res: Response): Promise<AscApiError> {
   let errors: Array<{ code?: string; title?: string; detail?: string }> = [];
   let message = `App Store Connect API returned ${res.status}`;
@@ -247,9 +267,8 @@ async function toApiError(res: Response): Promise<AscApiError> {
     // Non-JSON error body; the status line is all we have.
   }
 
-  if (res.status === 401) {
-    message += '. Check that ASC_KEY_ID, ASC_ISSUER_ID and the .p8 key match and are not revoked.';
-  }
+  const hint = STATUS_HINTS[res.status];
+  if (hint) message += `. ${hint}`;
 
   return new AscApiError(
     message,
