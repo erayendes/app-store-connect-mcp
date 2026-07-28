@@ -29,7 +29,7 @@ All notable changes to this project are documented here. The format is based on 
 ### [1.1.0] — 2026-07-22
 
 - **Rebrand to Heimdall.** The project is now *Heimdall — App Store Connect MCP*. The npm package (`@erayendes/asc-mcp`) and the command (`asc-mcp`) are unchanged.
-- **Docs moved to the repository root** (`docs/` removed) so GitHub recognises the community-health files, and corrected throughout: **982 operations / 966 paths / 123 deprecated** (previously reported as 1,263 / 159).
+- **Docs reorganised:** community-health files (security, support, contributing, conduct) live under `.github/` so GitHub recognises them; the guide and this changelog live under `docs/`. Numbers corrected throughout: **982 operations / 966 paths / 123 deprecated** (previously reported as 1,263 / 159).
 - New `GUIDE.md` sections: platform support, the real setup-wizard flow, adding/removing tools later, StoreKit environments, a sample session, and uninstall steps.
 - `SECURITY.md`: a "review it yourself before installing" section and an explicit no-telemetry / no-data-collection statement.
 - Setup verifies credentials against Apple before saving, re-prompts on invalid input, and reuses saved credentials while reconciling registered profiles.
@@ -54,11 +54,7 @@ All notable changes to this project are documented here. The format is based on 
 - Removed 281 id-only twin operations, shrinking the surface from 1,263 to 982.
 - Fixed sales and finance report endpoints; added App Store Connect API integration tests.
 - Tool names capped at 64 characters and query-parameter names sanitised for the Anthropic API.
-
-### [1.1.0] — 2026-07-19
-
-- Optional **macOS Keychain** source for the private key.
-- Bilingual **English / Türkçe** documentation with a flag-based language switcher.
+- Optional **macOS Keychain** source for the private key, and bilingual **English / Türkçe** documentation with a flag-based language switcher. (These landed in the repo on 2026-07-19 under a "1.1.0" heading that was never published — 1.0.2 is the first npm release that shipped them.)
 
 ### [1.0.1] — 2026-07-19
 
@@ -95,7 +91,7 @@ All notable changes to this project are documented here. The format is based on 
 ### [1.1.0] — 2026-07-22
 
 - **Heimdall'a yeniden adlandırma.** Proje artık *Heimdall — App Store Connect MCP*. npm paketi (`@erayendes/asc-mcp`) ve komut (`asc-mcp`) değişmedi.
-- **Dokümanlar depo köküne taşındı** (`docs/` kaldırıldı); böylece GitHub community-health dosyalarını tanır. Rakamlar baştan sona düzeltildi: **982 işlem / 966 path / 123 deprecated** (önceden 1.263 / 159 yazıyordu).
+- **Dokümanlar yeniden düzenlendi:** community-health dosyaları (güvenlik, destek, katkı, davranış kuralları) GitHub'ın tanıması için `.github/` altında; rehber ve bu değişiklik günlüğü `docs/` altında. Rakamlar baştan sona düzeltildi: **982 işlem / 966 path / 123 deprecated** (önceden 1.263 / 159 yazıyordu).
 - Yeni `GUIDE.md` bölümleri: platform desteği, gerçek setup-sihirbazı akışı, sonradan araç ekleme/çıkarma, StoreKit ortamları, örnek bir oturum ve kaldırma adımları.
 - `SECURITY.md`: "kurmadan önce kendin denetle" bölümü ve açık bir telemetri-yok / veri-toplama-yok beyanı.
 - Setup, kaydetmeden önce kimlik bilgilerini Apple'a doğrular, hatalı girdide yeniden sorar ve kayıtlı kimlik bilgilerini yeniden kullanırken kayıtlı profilleri uzlaştırır.
@@ -120,11 +116,7 @@ All notable changes to this project are documented here. The format is based on 
 - 281 id-only twin işlem kaldırıldı; yüzey 1.263'ten 982'ye indi.
 - Satış ve finans rapor uç noktaları düzeltildi; App Store Connect API entegrasyon testleri eklendi.
 - Araç isimleri 64 karakterle sınırlandı ve sorgu-parametre isimleri Anthropic API için temizlendi.
-
-### [1.1.0] — 2026-07-19
-
-- Özel anahtar için opsiyonel **macOS Keychain** kaynağı.
-- Bayrak tabanlı dil geçişi olan iki dilli **İngilizce / Türkçe** dokümantasyon.
+- Özel anahtar için opsiyonel **macOS Keychain** kaynağı ve bayrak tabanlı dil geçişli iki dilli **İngilizce / Türkçe** dokümantasyon. (Bunlar depoya 2026-07-19'da hiç yayınlanmamış bir "1.1.0" başlığı altında girmişti — kullanıcıya ulaştıran ilk npm sürümü 1.0.2'dir.)
 
 ### [1.0.1] — 2026-07-19
 
