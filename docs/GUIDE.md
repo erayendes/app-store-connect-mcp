@@ -207,6 +207,8 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 | `ASC_REVIEWS_SUPPORT_URL` | no | Support URL the draft points customers at for follow-ups |
 | `ASC_BASE_URL` | no | Override the API origin (e.g. `http://localhost:4010`) to test against a local fixture server — requests, pagination and host-pinning all follow it. Leave unset for Apple's real API |
 | `ASC_INCLUDE_DEPRECATED` | no | `true` to also load deprecated operations |
+| `ASC_RATE_LIMIT_PER_HOUR` | no | Lower the hourly pacing budget below Apple's 3,600. Each process paces itself as if it were the only client of the key, so several agents sharing one team key will together burn the quota — give each a slice |
+| `ASC_RATE_LIMIT_PER_MINUTE` | no | Same for the per-minute window (default 300) |
 | `ASC_CONFIG_DIR` | no | Override the shared-config directory (default `~/.config/asc-mcp`) |
 
 \* Supply the private key exactly one way. If more than one is set, precedence is `ASC_PRIVATE_KEY` (inline) → `ASC_PRIVATE_KEY_KEYCHAIN` → `ASC_PRIVATE_KEY_PATH`. Env credentials override the shared config file entirely, so you can't accidentally mix two accounts.
@@ -528,6 +530,8 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 | `ASC_REVIEWS_SUPPORT_URL` | hayır | Taslağın müşteriyi yönlendireceği destek adresi |
 | `ASC_BASE_URL` | hayır | API origin'ini değiştir (ör. `http://localhost:4010`) — yerel fixture sunucusuyla test için; istekler, pagination ve host-pinning onu izler. Apple'ın gerçek API'si için boş bırakın |
 | `ASC_INCLUDE_DEPRECATED` | hayır | Kullanımdan kaldırılmış işlemleri de yüklemek için `true` |
+| `ASC_RATE_LIMIT_PER_HOUR` | hayır | Saatlik pacing bütçesini Apple'ın 3.600'ünün altına çeker. Her süreç kendini anahtarın tek istemcisi sanarak pacing yapar; tek takım anahtarını paylaşan birden çok ajan kotayı birlikte yakar — her birine bir dilim verin |
+| `ASC_RATE_LIMIT_PER_MINUTE` | hayır | Dakikalık pencere için aynısı (varsayılan 300) |
 | `ASC_CONFIG_DIR` | hayır | Ortak yapılandırma dizinini değiştir (varsayılan `~/.config/asc-mcp`) |
 
 \* Özel anahtarı tam olarak tek bir yolla verin. Birden fazlası set edilmişse öncelik: `ASC_PRIVATE_KEY` (inline) → `ASC_PRIVATE_KEY_KEYCHAIN` → `ASC_PRIVATE_KEY_PATH`. Env kimlik bilgileri ortak yapılandırma dosyasını tümüyle ezer, böylece iki hesabı yanlışlıkla karıştıramazsınız.

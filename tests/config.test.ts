@@ -80,3 +80,28 @@ describe('loadConfig confirmWrites', () => {
     expect(loadConfig(['--no-confirm']).confirmWrites).toBe(false);
   });
 });
+
+describe('loadConfig rateLimit', () => {
+  beforeEach(() => {
+    process.env.ASC_PRIVATE_KEY = 'INLINE_PEM';
+  });
+
+  it('is unset by default, so the limiter keeps Apple’s ceiling', () => {
+    expect(loadConfig([]).rateLimit).toBeUndefined();
+  });
+
+  it('carries either window through on its own', () => {
+    process.env.ASC_RATE_LIMIT_PER_HOUR = '1200';
+    expect(loadConfig([]).rateLimit).toEqual({
+      requestsPerHour: 1200,
+      requestsPerMinute: undefined,
+    });
+  });
+
+  // A zero would stall every request forever; a typo would do it silently.
+  it('ignores values that are not a positive number', () => {
+    process.env.ASC_RATE_LIMIT_PER_HOUR = '0';
+    process.env.ASC_RATE_LIMIT_PER_MINUTE = 'lots';
+    expect(loadConfig([]).rateLimit).toBeUndefined();
+  });
+});
