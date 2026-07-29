@@ -370,12 +370,41 @@ export class ToolRegistry {
       path = path.replace(`{${param}}`, encodeURIComponent(String(value)));
     }
 
+    // An argument nobody recognises used to be dropped without a word, and the
+    // call would succeed on whatever was left. `apps.list` with a misspelled
+    // `filter[bundleId]` returns the account's first app, cheerfully, and every
+    // write that follows lands on the wrong app. Apple's own docs spell the
+    // parameter with brackets, so a model that has read them types exactly the
+    // name that gets discarded. Both forms are accepted now, and anything still
+    // unrecognised stops the call instead of quietly changing its meaning.
+    const knownArgs = new Set<string>([
+      'body',
+      ...op.pathParams,
+      ...op.queryParams.flatMap((q) => [q.name, encodeParamName(q.name)]),
+    ]);
+    const unknown = Object.keys(args).filter((k) => !knownArgs.has(k));
+    if (unknown.length) {
+      const accepted = op.queryParams.map((q) => encodeParamName(q.name));
+      throw new AscApiError(
+        `Unknown parameter${unknown.length === 1 ? '' : 's'} for ${name}: ${unknown.join(', ')}.` +
+          (accepted.length
+            ? ` This operation accepts: ${accepted.join(', ')}.`
+            : ' This operation takes no query parameters.') +
+          ` Apple's bracketed spelling (filter[x]) works too.`,
+        0
+      );
+    }
+
     const query: Query = {};
     for (const q of op.queryParams) {
       // The model supplies args under the sanitized schema key; the Apple API
-      // needs the real param name (e.g. `filter[platform]`).
+      // needs the real param name (e.g. `filter[platform]`). Apple's own
+      // spelling is accepted as well — it is what the docs and the parameter
+      // description both show.
       const value =
-        args[encodeParamName(q.name)] ?? this.options.paramDefaults?.[q.name];
+        args[encodeParamName(q.name)] ??
+        args[q.name] ??
+        this.options.paramDefaults?.[q.name];
       if (value === undefined || value === null || value === '') {
         // Apple answers 400 for these anyway; say so in terms the caller can act on.
         if (q.required) {
