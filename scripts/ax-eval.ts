@@ -136,7 +136,7 @@ async function main(): Promise<void> {
   for (const intent of INTENTS) {
     const rank =
       searchOperations(intent.searchQuery)
-        .slice(0, 5)
+        .slice(0, 3)
         .findIndex((op) => [intent.expectedTool].flat().includes(op.name)) + 1;
 
     const chain = intent.chain ?? [];
@@ -158,7 +158,7 @@ async function main(): Promise<void> {
 
     console.log(`\n${bold(intent.intent)}`);
     console.log(
-      `  AXIS1 search  ${rank ? `rank ${rank}/5 for "${intent.searchQuery}"` : `\x1b[31mMISSED\x1b[0m — ${[intent.expectedTool].flat().join(' / ')} not in top 5 for "${intent.searchQuery}"`}`
+      `  AXIS1 search  ${rank ? `rank ${rank}/3 for "${intent.searchQuery}"` : `\x1b[31mMISSED\x1b[0m — ${[intent.expectedTool].flat().join(' / ')} not in top 3 for "${intent.searchQuery}"`}`
     );
     console.log(
       `  AXIS4 path    ${chain.length > 0 ? `${chain.length} read${chain.length === 1 ? '' : 's'} + 1 write` : dim('no chain')}` +
@@ -180,8 +180,9 @@ async function main(): Promise<void> {
         );
       }
     }
+    const readsStr = chain.length > 0 ? `${String(chain.length).padStart(2)} reads` : ' no chain';
     rows.push(
-      `${rank ? `rank ${rank}` : 'MISSED'.padEnd(6)} · ${String(chain.length).padStart(2)} reads · ` +
+      `${rank ? `rank ${rank}` : 'MISSED'.padEnd(6)} · ${readsStr} · ` +
         `${kb(rawChars).padStart(9)} → ${kb(shapedChars).padStart(9)}  ${intent.intent}`
     );
     if (worst && worst.rawChars > 50_000) {
