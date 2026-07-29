@@ -6,6 +6,7 @@ import type { McpToolDefinition } from '../core/registry.js';
 import { ALL_DOMAINS, ToolRegistry } from '../core/registry.js';
 import { DOMAIN_DESCRIPTIONS } from '../generated/domain-info.js';
 import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
+import { expandQueryTokens } from '../core/query-language.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
 import type { AscHttpClient } from '../core/http.js';
 import type { TokenProvider } from '../core/jwt.js';
@@ -73,9 +74,18 @@ export const META_TOOLS: McpToolDefinition[] = [
  * hit: the old whole-phrase `includes` returned nothing for natural queries
  * like "change subscription price territory", because no description contains
  * that exact phrase. Single-word queries behave as before.
+ *
+ * Words the catalogue has never seen get translated first — see
+ * `expandQueryTokens`. Everything else is left exactly as typed.
  */
+const CORPUS_TEXT = OPERATIONS.map(
+  (op) => `${op.name} ${op.description} ${op.path}`
+)
+  .join(' ')
+  .toLowerCase();
+
 export function searchOperations(query: string): Array<(typeof OPERATIONS)[number]> {
-  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const tokens = expandQueryTokens(query, CORPUS_TEXT);
   if (!tokens.length) return [];
 
   const scored = OPERATIONS.map((op) => {
