@@ -74,8 +74,14 @@ const MAX_REF_LOOKUPS = 4;
 
 type RefResolver = (http: RefReader, id: string) => Promise<string | undefined>;
 
-/** Human labels for the reference types that matter most in previews. */
-const REF_RESOLVERS: Record<string, RefResolver> = {
+/**
+ * Human labels for the reference types that matter most in previews.
+ *
+ * Exported so the AX audit can measure coverage against the reference types
+ * that actually appear in write bodies — a hardcoded copy of these keys would
+ * go stale the moment a resolver is added.
+ */
+export const REF_RESOLVERS: Record<string, RefResolver> = {
   subscriptionPricePoints: async (http, id) => {
     const res: any = await http.get(`/v1/subscriptionPricePoints/${encodeURIComponent(id)}`, {
       include: 'territory',
