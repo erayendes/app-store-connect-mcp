@@ -574,3 +574,25 @@ describe('AI-136: StoreKit discoverability in search', () => {
     expect(sk.every((m: any) => m.loaded === true)).toBe(true);
   });
 });
+
+describe('unknown parameters are refused, not dropped', () => {
+  const registry = new ToolRegistry({ domains: ['apps'] });
+
+  // The failure this prevents: apps.list ignored a misspelled bundle-id filter,
+  // returned the account's first app with isError false, and every write that
+  // followed landed on the wrong app. Silence was the bug, not the typo.
+  it('names the accepted parameters instead of guessing', async () => {
+    await expect(
+      registry.execute('apps__list', { notARealParameter: 'x' }, {} as never)
+    ).rejects.toThrow(/Unknown parameter.*notARealParameter.*accepts/s);
+  });
+
+  // Apple documents the bracketed spelling, the parameter description shows it,
+  // and the JSON Schema cannot carry it — so both have to work.
+  it('accepts Apple’s bracketed spelling and the sanitized one alike', () => {
+    const tool = registry.listTools().find((t) => t.name === 'apps__list');
+    const props = Object.keys(tool?.inputSchema?.properties ?? {});
+    expect(props).toContain('filter_bundleId');
+    expect(props.every((p) => /^[a-zA-Z0-9_.-]{1,64}$/.test(p))).toBe(true);
+  });
+});
