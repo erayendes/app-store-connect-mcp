@@ -14,6 +14,8 @@ export interface Profile {
   storekit?: boolean;
   /** AI-assisted review tools (triage, drafts, briefing). */
   reviewsAi?: boolean;
+  /** One-call pricing macros (set a subscription price in one step). */
+  pricing?: boolean;
 }
 
 export const PROFILES: Profile[] = [
@@ -37,6 +39,7 @@ export const PROFILES: Profile[] = [
     domains: ['subscriptions', 'iap', 'pricing'],
     description: 'Money: subscriptions, in-app purchases, offers, app pricing, StoreKit 2 transactions.',
     storekit: true,
+    pricing: true,
   },
   {
     name: 'marketing',

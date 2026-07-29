@@ -44,7 +44,7 @@ function profileToolCount(p: Profile): number {
     includeDeprecated: false,
     extraOperations: GATEWAY_OPERATIONS,
   });
-  return registry.size + 3 + (p.reviewsAi ? 3 : 0); // + meta tools (+ reviews-ai)
+  return registry.size + 3 + (p.reviewsAi ? 3 : 0) + (p.pricing ? 1 : 0); // + meta (+ reviews-ai, + pricing macros)
 }
 
 /** One compact picker row: `app-info(115) ~17k · names, bundle ids, …` */

@@ -18,6 +18,12 @@ import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
+import {
+  PRICING_TOOLS,
+  PRICING_TOOL_NAMES,
+  executePricingTool,
+  buildPricingPreview,
+} from './tools/pricing.js';
 import { SPEC_VERSION } from './generated/operations.js';
 import { GATEWAY_OPERATIONS, profileForDomain, registerCommand, type Profile } from './profiles.js';
 import {
@@ -91,6 +97,7 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
   }
 
   const reviewsAiWanted = profile ? Boolean(profile.reviewsAi) : true;
+  const pricingWanted = (profile ? Boolean(profile.pricing) : true) && !config.readOnly;
 
   const server = new Server(
     { name: profile ? `asc-${profile.name}` : 'app-store-connect-mcp', version: VERSION },
@@ -107,6 +114,9 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     for (const t of STOREKIT_TOOLS) {
       if (t.annotations?.readOnlyHint !== true) writeToolNames.add(t.name);
     }
+  }
+  if (pricingWanted) {
+    for (const t of PRICING_TOOLS) writeToolNames.add(t.name);
   }
 
   const confirmer: WriteConfirmer = {
@@ -134,6 +144,7 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
     const tools: McpToolDefinition[] = [
       ...META_TOOLS,
       ...(reviewsAiWanted && clientSupportsSampling() ? REVIEWS_AI_TOOLS : []),
+      ...(pricingWanted ? PRICING_TOOLS : []),
       ...registry.listTools(),
     ];
 
@@ -169,7 +180,10 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
 
       if (config.confirmWrites && !config.dryRun && writeToolNames.has(name)) {
         const op = registry.get(name);
-        const preview = op
+        const preview = PRICING_TOOL_NAMES.has(name)
+          ? // Macro parameters are already human language — no lookups needed.
+            { message: buildPricingPreview(args), strong: true }
+          : op
           ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
           : await buildWritePreview(
               name,
@@ -232,6 +246,8 @@ export function createServer(config: ServerConfig, profile?: Profile): Server {
               }
             : undefined,
         });
+      } else if (pricingWanted && PRICING_TOOL_NAMES.has(name)) {
+        result = await executePricingTool(name, args, { http, dryRun: config.dryRun });
       } else if (reviewsAiWanted && REVIEWS_AI_TOOL_NAMES.has(name)) {
         result = await executeReviewsAiTool(name, args, {
           server,
