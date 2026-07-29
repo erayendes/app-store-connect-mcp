@@ -139,8 +139,9 @@ async function main(): Promise<void> {
         .slice(0, 5)
         .findIndex((op) => [intent.expectedTool].flat().includes(op.name)) + 1;
 
+    const chain = intent.chain ?? [];
     const results: StepResult[] = [];
-    for (const step of intent.chain) {
+    for (const step of chain) {
       const r = await runStep(step, seeds, results);
       results.push(r);
       if (!r.ok) break; // the rest of the chain depends on this id
@@ -160,7 +161,7 @@ async function main(): Promise<void> {
       `  AXIS1 search  ${rank ? `rank ${rank}/5 for "${intent.searchQuery}"` : `\x1b[31mMISSED\x1b[0m — ${[intent.expectedTool].flat().join(' / ')} not in top 5 for "${intent.searchQuery}"`}`
     );
     console.log(
-      `  AXIS4 path    ${intent.chain.length} read${intent.chain.length === 1 ? '' : 's'} + 1 write` +
+      `  AXIS4 path    ${chain.length > 0 ? `${chain.length} read${chain.length === 1 ? '' : 's'} + 1 write` : dim('no chain')}` +
         (intent.macro ? ` ${dim(`(macro ${intent.macro}: 1 call)`)}` : '')
     );
     if (failed) {
@@ -180,7 +181,7 @@ async function main(): Promise<void> {
       }
     }
     rows.push(
-      `${rank ? `rank ${rank}` : 'MISSED'.padEnd(6)} · ${String(intent.chain.length).padStart(2)} reads · ` +
+      `${rank ? `rank ${rank}` : 'MISSED'.padEnd(6)} · ${String(chain.length).padStart(2)} reads · ` +
         `${kb(rawChars).padStart(9)} → ${kb(shapedChars).padStart(9)}  ${intent.intent}`
     );
     if (worst && worst.rawChars > 50_000) {
