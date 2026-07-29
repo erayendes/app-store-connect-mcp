@@ -49,6 +49,23 @@ A generated description like *"Update an app Store version phased release"* is a
 
 If you use an operation regularly and its generated description is vague, add an entry to `CURATED` in `scripts/describe.ts`. Small change, real improvement.
 
+```bash
+npm run ax:report     # which operations still carry Apple's summary, worst domains first
+```
+
+### Measuring agent experience
+
+Four issues — findability, path length, response size, confirmation clarity — all came out of one live attempt at one goal, and all four were invisible to a green test suite. They are now counted instead of stumbled upon:
+
+```bash
+npm run ax:report     # static: description debt, unhinted filters, unresolved reference types
+npm run ax:eval       # live: what each intent really costs in round trips and bytes
+```
+
+`tests/ax-audit.test.ts` pins today's numbers as ceilings, so debt can shrink but never grow — a spec bump that adds forty boilerplate endpoints fails CI instead of landing quietly. **When you improve an axis, lower its ceiling in that file**; that is the whole maintenance burden.
+
+`ax:eval` needs credentials and is read-only — it names each intent's write step, never calls it. Without credentials it skips. Set `ASC_EVAL_APP` to choose the app to measure.
+
 ### Adding a domain mapping
 
 New Apple resources land in `scripts/domains.ts`. The test suite asserts that no operation falls through to `misc`, so a new Apple spec with new resources fails CI until they're mapped — which is the intent.
@@ -107,6 +124,23 @@ Apple'ın OpenAPI spesifikasyonu özet veya açıklama içermez, sadece etiketle
 *"Update an app Store version phased release"* gibi üretilmiş bir açıklama doğrudur ama ne zaman ihtiyaç duyacağınız konusunda hiçbir şey söylemez. Düzenlenmiş versiyon şöyle der: *"Pause, resume or complete a phased release. Set phasedReleaseState to PAUSE, ACTIVE or COMPLETE."*
 
 Bir işlemi düzenli kullanıyorsanız ve üretilmiş açıklaması belirsizse, `scripts/describe.ts` içindeki `CURATED`'a bir kayıt ekleyin. Küçük bir değişiklik, gerçek bir iyileştirme.
+
+```bash
+npm run ax:report     # hangi işlemler hâlâ Apple'ın özetini taşıyor, en kötü domain'ler önce
+```
+
+### Ajan deneyimini ölçmek
+
+Dört sorun — bulunabilirlik, yol uzunluğu, yanıt boyutu, onay netliği — tek bir hedefe yönelik tek bir canlı denemeden çıktı ve dördü de yeşil bir test paketine görünmezdi. Artık rastlanmak yerine sayılıyorlar:
+
+```bash
+npm run ax:report     # statik: açıklama borcu, ipuçsuz filtreler, çözülemeyen referans tipleri
+npm run ax:eval       # canlı: her niyetin gerçekte kaç round trip ve kaç bayta mal olduğu
+```
+
+`tests/ax-audit.test.ts` bugünkü sayıları tavan olarak sabitler; borç azalabilir ama büyüyemez — kırk boilerplate endpoint ekleyen bir spec güncellemesi sessizce girmek yerine CI'ı kırar. **Bir ekseni iyileştirdiğinizde o dosyadaki tavanı düşürün**; bakım yükünün tamamı bu.
+
+`ax:eval` kimlik bilgisi ister ve salt okunurdur — her niyetin yazma adımını isimlendirir, asla çağırmaz. Kimlik bilgisi yoksa atlar. Ölçülecek uygulamayı seçmek için `ASC_EVAL_APP` kullanın.
 
 ### Domain eşlemesi ekleme
 
