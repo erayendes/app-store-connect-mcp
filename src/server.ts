@@ -66,7 +66,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const tokens = new TokenProvider(config.credentials);
   // ASC_BASE_URL redirects everything to a local fixture server for testing;
   // host-pinning then pins to that origin instead of Apple's.
-  const http = new AscHttpClient(tokens, { baseUrl: config.baseUrl });
+  const http = new AscHttpClient(tokens, { baseUrl: config.baseUrl, rateLimit: config.rateLimit });
 
   // In profile mode, "how do I reach that tool" answers name the sibling MCP
   // server; the --domains flag only makes sense on the monolithic server.

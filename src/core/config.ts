@@ -2,6 +2,7 @@ import { ConfigError } from './errors.js';
 import { readKeychainPassword } from './keychain.js';
 import { readSharedConfig } from './shared-config.js';
 import type { JwtCredentials } from './jwt.js';
+import type { RateLimitOptions } from './rate-limit.js';
 
 export interface ServerConfig {
   credentials: JwtCredentials;
@@ -38,6 +39,15 @@ export interface ServerConfig {
    * normally. For CI and agent rehearsals.
    */
   dryRun: boolean;
+  /**
+   * Lowers the proactive pacing budget below Apple's own ceiling.
+   *
+   * The limiter counts per process, and each process assumes it is the only
+   * client of the key. That holds for one editor; it does not hold for a team
+   * key driving several agents at once, where the processes together burn the
+   * hourly quota and block the humans sharing it.
+   */
+  rateLimit?: RateLimitOptions;
   /** Optional brand settings for the reviews-AI draft tools (ASC_REVIEWS_*). */
   reviewsBrand?: {
     voice?: string;
@@ -105,6 +115,15 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
 
   const bundleId = env.ASC_BUNDLE_ID ?? shared?.bundleId;
 
+  // A zero or a typo would silently stall every request, so only a positive
+  // number counts; anything else falls back to Apple's documented ceiling.
+  const positive = (raw: string | undefined) => {
+    const n = Number(raw);
+    return raw && Number.isFinite(n) && n > 0 ? n : undefined;
+  };
+  const requestsPerHour = positive(env.ASC_RATE_LIMIT_PER_HOUR);
+  const requestsPerMinute = positive(env.ASC_RATE_LIMIT_PER_MINUTE);
+
   return {
     credentials: {
       keyId: keyId!,
@@ -141,6 +160,8 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     baseUrl: env.ASC_BASE_URL || undefined,
     dryRun: flag('dry-run') || env.ASC_DRY_RUN === 'true' || env.ASC_DRY_RUN === '1',
+    rateLimit:
+      requestsPerHour || requestsPerMinute ? { requestsPerHour, requestsPerMinute } : undefined,
     reviewsBrand:
       env.ASC_REVIEWS_BRAND_VOICE || env.ASC_REVIEWS_BANNED_PHRASES || env.ASC_REVIEWS_SUPPORT_URL
         ? {
