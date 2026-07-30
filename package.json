@@ -46,6 +46,7 @@
     "spec:update": "tsx scripts/update-spec.ts",
     "ax:report": "tsx scripts/ax-report.ts",
     "ax:eval": "tsx scripts/ax-eval.ts",
+    "ax:contract": "tsx scripts/ax-contract.ts",
     "ax:agent": "tsx scripts/ax-agent.ts",
     "ax:writepath": "tsx scripts/ax-writepath.ts",
     "prepublishOnly": "npm run build && npm test"
