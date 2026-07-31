@@ -93,7 +93,16 @@ function collectSchemaTypes(schema: unknown, out: Set<string>): void {
   if (Array.isArray(schema.oneOf)) for (const b of schema.oneOf) collectSchemaTypes(b, out);
 }
 
-export function auditAx(operations: readonly Operation[] = OPERATIONS): AxDebt {
+/**
+ * Deprecated operations are excluded by default because the registry never
+ * loads them (`includeDeprecated` defaults to false), so no agent can reach
+ * them and their debt is unpayable and unfelt. Counting them inflated every
+ * axis — 59 of the boilerplate findings were on tools nobody can call — and an
+ * inflated denominator makes the ratchet ceilings meaningless.
+ */
+const LOADABLE = OPERATIONS.filter((op) => !op.deprecated);
+
+export function auditAx(operations: readonly Operation[] = LOADABLE): AxDebt {
   const writes = operations.filter(isWrite);
   const lists = operations.filter((op) => op.readOnly && op.name.endsWith('.list'));
 
