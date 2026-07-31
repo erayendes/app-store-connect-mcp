@@ -43,6 +43,24 @@ describe('AX evaluation intent corpus', () => {
     expect(missing, 'expected tools missing from generated operations').toEqual([]);
   });
 
+  /**
+   * "Exists in the spec" is not the same as "an agent can call it". The
+   * registry refuses deprecated operations unless --include-deprecated, and
+   * search no longer offers them — so an intent aimed at one measures a
+   * failure the product cannot fix. Three intents shipped this way
+   * (subscription_availabilities, game_center_achievements,
+   * game_center_leaderboards) and the existence check above waved them past.
+   */
+  it('never expects a deprecated tool — the registry would refuse to load it', () => {
+    const unreachable = INTENTS.flatMap(({ intent, expectedTool }) =>
+      (Array.isArray(expectedTool) ? expectedTool : [expectedTool])
+        .filter((tool) => operationsByName.get(tool)?.deprecated)
+        .map((tool) => `${intent}: ${tool}`)
+    );
+
+    expect(unreachable, 'expected tools that no profile can load').toEqual([]);
+  });
+
   it('only names installed macro tools', () => {
     const missing = INTENTS
       .filter((intent) => intent.macro)
