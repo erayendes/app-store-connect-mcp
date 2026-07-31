@@ -3,7 +3,7 @@
 Heimdall'ın "ajan bu işi yapabiliyor mu" sorusuna verdiği cevabı ölçme çalışmasının
 kaydı. Ne bulundu, hangisi düzeltildi, hangisi karar bekliyor.
 
-Son güncelleme: 2026-07-30.
+Son güncelleme: 2026-07-31.
 
 ---
 
@@ -16,6 +16,7 @@ orada ölçülür.
 |---|---|---|---|---|
 | Sözleşme | `npm run ax:contract` | 982 operasyon | **$0**, dakikalar | her araç kendi sözleşmesini tutuyor mu |
 | Sıralama | `npm test -- search-intents` | 265 sorgu | **$0**, saniyeler | doğru araç ilk 3'te mi |
+| Onay kapısı | `npm test -- gate` | 4 risk seviyesi + 4 değişmez | $0, saniyeler | yazma öncesi gerçekten soruyor mu |
 | Yük | `npm run ax:eval` | zinciri olan 11 niyet | ~$0, dakikalar | gerçek cevap kaç KB |
 | Ajan | `npm run ax:agent` | 50 niyet | **$$**, saatler | ajan hedefe varıyor mu |
 | Yazma yolu | `npm run ax:writepath` | 1 tur | $0 | gerçek yazma uçtan uca çalışıyor mu |
@@ -92,15 +93,34 @@ hata veriyor.
 sunucunun onay kapısını atlıyor ([server.ts:181](../src/server.ts:181)
 `!config.dryRun`).
 
-Ürünün freni ayrıca deterministik sınandı ve **çalışıyor**: onay açık, elicitation
-desteklemeyen istemci ile yıkıcı çağrı engellendi — *"Nothing was changed"*.
-Fail-closed.
+**Ürünün freni artık uçtan uca sınanıyor** — `tests/gate.test.ts`. Gerçek sunucu
+açılıyor, istemci elicitation yeteneğini bildiriyor, dört risk seviyesinde yazma
+çağrılıyor ve hepsi **iptal** ediliyor. İptal kararı istek kurulmadan alındığı için
+hiçbir çağrı Apple'a gitmiyor; test yapısı gereği güvenli.
 
-Gerçek risk: onay penceresi gösterilebilen istemcide kullanıcının hızlı geçmesi, ya
-da `--allow-unconfirmed-writes`.
+| araç | risk | kapı |
+|---|---|---|
+| `beta_groups.delete` | destructive | CONFIRM yazılmasını istedi |
+| `users.update` (Admin) | access | CONFIRM yazılmasını istedi |
+| `certificates.delete` | infrastructure | CONFIRM yazılmasını istedi |
+| `apps.update` | public | checkbox |
 
-**Karar gereken:** harness ürünün frenini hiç sınamıyor. Yıkıcı niyetlerde
-elicitation'ı taklit eden bir mod gerekiyor.
+Yanına dört bedava değişmez: `readOnlyHint` yalnızca GET'te true olabilir, her
+mutasyon operasyonu risk damgalı, elle yazılmış araçlar ne yaptıkları konusunda
+yalan söylemiyor, ve **89 DELETE'in hiçbiri checkbox'la geçmiyor**. Yanlış tek bir
+anotasyon aracı kapıdan sessizce çıkarırdı; artık çıkaramaz.
+
+**Yazarken düşülen tuzak, tekrarlanmasın diye:** testin ilk hâli dördünde de "kapı
+hiç ateşlenmedi" dedi ve bir an ürün hatası sanıldı. Değildi — istemci yeteneği
+`elicitation: { form: true }` gönderiyordu, oysa SDK şemasında `form` bir *nesne*.
+Doğrulama düşünce sunucu fail-closed davrandı, yani doğru davrandı. Ama dışarıdan
+*"kapı ateşlenmedi"* ile *"istemci desteklemiyor, engelledim"* aynı görünüyor.
+
+**Açık kalan:** ajanın kendi freni, ve o hâlâ zayıf. Ürünün kapısı iki durumda
+devrede değil — `--allow-unconfirmed-writes` açıkken, ve onay penceresi
+gösterilebilen istemcide kullanıcı hızlı geçtiğinde. İkisi de tasarım tercihi,
+hata değil; ama 5/8 rakamı güvenliğin kullanıcının dikkatine ne kadar yaslandığını
+gösteriyor.
 
 ### B. Ajan araçları bırakıp kimlik bilgisi arıyor — 5 oturum
 
