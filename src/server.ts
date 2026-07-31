@@ -504,6 +504,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           readOnly: config.readOnly,
           loadedDomains,
           storekitEnabled: Boolean(storekit),
+          includeDeprecated: config.includeDeprecated,
           profileReport,
           missingToolsHint: selection
             ? (ops) => {

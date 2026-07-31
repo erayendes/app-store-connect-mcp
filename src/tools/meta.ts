@@ -84,11 +84,22 @@ const CORPUS_TEXT = OPERATIONS.map(
   .join(' ')
   .toLowerCase();
 
-export function searchOperations(query: string): Array<(typeof OPERATIONS)[number]> {
+/**
+ * Deprecated operations are excluded unless the server was started with
+ * `--include-deprecated`, because the registry refuses to load them either.
+ * Returning them looks helpful and is not: the agent reads "deprecated" as
+ * "works but discouraged", calls the tool, and gets "no such tool". Measured
+ * on "leaderboard oluştur" — two of the top five were unreachable.
+ */
+export function searchOperations(
+  query: string,
+  includeDeprecated = false
+): Array<(typeof OPERATIONS)[number]> {
   const tokens = expandQueryTokens(query, CORPUS_TEXT);
   if (!tokens.length) return [];
 
-  const scored = OPERATIONS.map((op) => {
+  const pool = includeDeprecated ? OPERATIONS : OPERATIONS.filter((op) => !op.deprecated);
+  const scored = pool.map((op) => {
     const haystack = `${op.name} ${op.description} ${op.path}`.toLowerCase();
     const score = tokens.reduce((n, t) => n + (haystack.includes(t) ? 1 : 0), 0);
     return { op, score };
@@ -168,6 +179,8 @@ export async function executeMetaTool(
     profileReport?: () => Record<string, unknown>;
     /** Whether StoreKit (App Store Server API) tools are active on this server. */
     storekitEnabled?: boolean;
+    /** Mirrors --include-deprecated: search must offer only what can be loaded. */
+    includeDeprecated?: boolean;
   }
 ): Promise<unknown> {
   switch (name) {
@@ -212,7 +225,7 @@ export async function executeMetaTool(
       const limit = Number(args.limit ?? 25);
       if (!query) return { matches: [], count: 0 };
 
-      const apiHits = searchOperations(query);
+      const apiHits = searchOperations(query, ctx.includeDeprecated);
       const apiMatches = apiHits.map((op) => ({
         tool: op.name,
         domain: op.domain,
