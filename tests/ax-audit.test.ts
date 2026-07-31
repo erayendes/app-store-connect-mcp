@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { auditAx, BOILERPLATE_MAX_CHARS } from '../scripts/ax-audit.js';
 import { REF_RESOLVERS, FIELD_NOTES } from '../src/core/confirm.js';
+import { OPERATIONS } from '../src/generated/operations.js';
 import type { Operation } from '../src/core/types.js';
 
 /**
@@ -22,15 +23,15 @@ import type { Operation } from '../src/core/types.js';
  */
 const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
-  boilerplate: 787,
+  boilerplate: 728,
   /** AXIS2 — silent empty results: id-valued filters with no format hint. */
-  unhintedIdFilters: 84,
+  unhintedIdFilters: 77,
   /** AXIS3 — opaque confirmations: reference types a preview cannot humanise. */
-  unresolvedRefTypes: 187,
+  unresolvedRefTypes: 179,
   /** AXIS4 — path length: writes that need a lookup call first. */
-  writesNeedingLookup: 308,
+  writesNeedingLookup: 256,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
-  unfilterableLists: 105,
+  unfilterableLists: 97,
 };
 
 const debt = auditAx();
@@ -49,12 +50,21 @@ describe('AX debt ratchet', () => {
     }
   );
 
-  it('audits the whole operation set, not a subset', () => {
+  it('audits every loadable operation, not a subset', () => {
     // Guards against an import or filter silently emptying the audit — a
-    // ratchet over zero findings would pass forever.
-    expect(debt.totalOps).toBeGreaterThan(900);
-    expect(debt.totalWrites).toBeGreaterThan(400);
+    // ratchet over zero findings would pass forever. The set is every
+    // operation a profile can actually load: 982 minus the 123 Apple marked
+    // deprecated, which the registry refuses by default.
+    expect(debt.totalOps).toBeGreaterThan(800);
+    expect(debt.totalWrites).toBeGreaterThan(350);
     expect(debt.totalLists).toBeGreaterThan(200);
+  });
+
+  it('excludes deprecated operations — no agent can reach them', () => {
+    const names = new Set(debt.boilerplate.map((f) => f.name));
+    const deprecated = OPERATIONS.filter((op) => op.deprecated);
+    expect(deprecated.length).toBeGreaterThan(0);
+    expect(deprecated.filter((op) => names.has(op.name))).toEqual([]);
   });
 });
 
