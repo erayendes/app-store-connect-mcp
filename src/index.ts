@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadConfig } from './core/config.js';
@@ -145,9 +146,27 @@ async function main(): Promise<void> {
   );
 }
 
-// Only when run as the binary: importing this module (a test reading helpText)
-// must not start a server on stdio.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/**
+ * Only when run as the binary: importing this module (a test reading helpText)
+ * must not start a server on stdio.
+ *
+ * The realpath matters. `npm install -g` and `npx` both invoke the bin through
+ * a symlink, so argv[1] is `/opt/homebrew/bin/asc-mcp` while import.meta.url is
+ * the file it points at. Comparing them raw makes every installed copy exit 0
+ * without a word — no banner, no error, just a client reporting "failed to
+ * connect" and nothing to go on.
+ */
+function invokedAsBinary(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(entry)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (invokedAsBinary()) {
   main().catch((err) => {
     console.error('Fatal error:', err);
     process.exit(1);
