@@ -31,7 +31,10 @@ export interface Profile {
  */
 const DESCRIPTIONS: Record<string, string> = {
   access: 'Team and tester access: beta groups, testers, invitations, users, sandbox accounts.',
-  'access/testers': 'Beta groups, testers, invitations, sandbox accounts.',
+  'access/beta-groups':
+    'Beta groups: membership, which builds they get, recruitment criteria, public links.',
+  'access/beta-testers':
+    'Individual testers: create, invite, assign to groups and builds, sandbox accounts.',
   'access/users': 'Team members, their roles and app visibility, invitations.',
 
   accessibility: 'Accessibility declarations (Nutrition Labels) for an app.',
