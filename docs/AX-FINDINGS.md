@@ -3,7 +3,7 @@
 Heimdall'ın "ajan bu işi yapabiliyor mu" sorusuna verdiği cevabı ölçme çalışmasının
 kaydı. Ne bulundu, hangisi düzeltildi, hangisi karar bekliyor.
 
-Son güncelleme: 2026-07-31.
+Son güncelleme: 2026-08-01.
 
 ---
 
@@ -200,6 +200,81 @@ bulunuyor ama üçüncünün altında kalıyor — sıralama borcu, D ile aynı 
 Bir oturum gerçek satış raporunu indirip repoya yazdı (`reports/…tsv`, gerçek satış
 rakamları, takip edilmiyordu). `ax-runs/agent-artifacts/` altına taşındı. İleride
 ajan koşuları izole dizinde yapılmalı.
+
+---
+
+## Sonradan ölçülenler — hepsi çözüldü
+
+Bu iki bulgu 50 oturumluk kalibrasyondan sonra, profil yapısı çalışması sırasında
+ölçüldü. İkisi de kapandı; buraya kaydı kalsın diye yazılıyor.
+
+### I. Araç listesini oturum ortasında değiştirmek istemciye bağlı — ölçüldü, çözüldü
+
+`feat/profile-structure` dalında profiller alt profillere bölündü ve sunucu artık
+`asc__load` ile bir alt profili oturum ortasında yükleyebiliyor. MCP buna izin
+veriyor (`notifications/tools/list_changed`), ama **yenilenen listeyi modele ne
+zaman verdiğini istemciye bırakıyor.** Ölçüm buradan çıktı.
+
+Düzenek: yalnız yüklenmemiş bir alt profilde bulunan bir okuma iste — modelin önce
+yüklemesi, sonra kullanması gerekiyor. Aynı istem, `ASC_DRY_RUN=1`, üç istemci.
+
+| istemci | sonuç |
+|---|---|
+| **Claude Code** | ✓ `asc__load("app-price")` sonrası **aynı turda** `apps__app_price_schedule__get` çağırdı — tur başladığında var olmayan araç |
+| **Codex** | ✗ Yükledi, sonra kendi cümlesiyle: *"oturum araç listesi yeni fiyat takvimi araçlarını çağrılabilir hâle getirmedi... Yeni turda araç listesi yenilendiğinde tekrar deneyebilirim."* Cevapsız pes etti |
+| **Antigravity** | ölçüldü, aşağıya bak |
+
+Yani `asc__load` tek başına yetmiyor: istemcilerin yarısında akış ölüyor ve sunucu
+tarafından düzeltilemiyor.
+
+**Çözüm listeyi değiştirmeyi beklemeyi bırakmak oldu.** `asc__describe` + `asc__call`
+en baştan listede duruyor; profilin sahip olduğu her araç, alt profili yüklü olmasa
+bile tek çağrı uzakta. Hiçbir bildirimin zamanında ulaşması gerekmiyor.
+
+Tekrar ölçüm, aynı istem:
+
+| istemci | çağrı dizisi | sonuç |
+|---|---|---|
+| Claude Code | `apps__list` → `asc__search_tools` → `asc__call` | ✓ 4 adımda tam cevap (önce 8 adımdı) |
+| Codex | `apps__list` + `asc__search_tools` → `asc__describe` → `asc__call` ×5 | ✓ tek turda tam cevap |
+| Antigravity | `apps__list` → `asc__search_tools` → `asc__call` ×5, arada bir `asc__describe` | ✓ tek turda tam cevap |
+
+Antigravity'de `agy`'nin `--mcp-config` bayrağı olmadığı için sunucunun kendi
+stdin'i kaydedilerek sayıldı: 8 çağrının 6'sı `asc__call`, **`asc__load`'a hiç
+dokunulmadı.** Üç modelin de yüklemek yerine proxy'ye uzanması tesadüf değil —
+`load` iki adım ve bir görünürlük varsayımı taşıyor, `call` tek adım ve varsayımsız.
+
+İki ayrıntı ölçümle bulundu, düşünmeyle değil:
+
+1. **`asc__call` salt-okunur olmak zorunda.** İlk sürüm yazma da yapabildiği için
+   `readOnlyHint` taşımıyordu; Codex proxy üzerinden gelen **her okumayı** reddetti.
+   Okumayı otomatik onaylayıp yazmayı soran istemci, sınıflandıramadığını blokluyor.
+   Yazmalar kendi araç adlarında kaldı — yüzlerce aracın yerine geçen tek aracı
+   istemci ancak toptan onaylayabilir, o da onay değil.
+2. **Yazma kapısı açılışta hesaplanamaz.** Onay listesi kurulumda bir kez
+   hesaplanıyordu; sonradan yüklenen bir yazma aracı o listede olmadığı için
+   **onaysız** koşardı. Her çağrıda registry'ye soruluyor artık.
+
+Commit: `807031f`, `cf2855c`, `7911a05`, `e733593` (`feat/profile-structure`).
+
+### J. Profil yapısı: sekiz profil kendi kaynağına ulaşamıyordu — düzeltildi
+
+Aynı dalda, ayrı bir kök neden. Bir aracın profili URL'in ilk segmentinden
+türetiliyordu, dolayısıyla uygulamadan sarkan her ilişki (`/v1/apps/{id}/
+subscriptionGroups`) `app-info`'ya düşüyor, kaynağın kendisi başka profilde
+kalıyordu. `asc-monetization` bir uygulamanın abonelik gruplarını listeleyemiyordu —
+her abonelik akışının ilk çağrısı.
+
+Ölçümde izi vardı: fiyat niyetinin 5 koşusundan başarılı olan ikisi
+`apps__subscription_groups__list` çağırmış, başarısız olan biri onu atlayıp elinde
+id olmadan tıkanmıştı (bkz. D).
+
+Üyelik artık elle küratörlükle `spec/profiles.csv`'de tutuluyor ve koda üretiliyor.
+13 profil, 33 alt profil. Değişmezler teste bağlandı: her profil kendi kaynağına
+uygulamadan ulaşabiliyor, her yazmanın `{id}`'sini üreten okuma aynı dilimde,
+öksüz operasyon yok.
+
+`monetization:subscription-pricing` 24 araç — fiyat değiştirmek için 204 değil.
 
 ---
 
