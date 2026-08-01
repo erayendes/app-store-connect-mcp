@@ -33,8 +33,7 @@ const DESCRIPTIONS: Record<string, string> = {
   access: 'Team and tester access: beta groups, testers, invitations, users, sandbox accounts.',
   'access/beta-groups':
     'Beta groups: membership, which builds they get, recruitment criteria, public links.',
-  'access/beta-testers':
-    'Individual testers: create, invite, assign to groups and builds, sandbox accounts.',
+  'access/beta-testers': 'Individual testers: create, invite, assign to groups and builds.',
   'access/users': 'Team members, their roles and app visibility, invitations.',
 
   accessibility: 'Accessibility declarations (Nutrition Labels) for an app.',
@@ -94,7 +93,7 @@ const DESCRIPTIONS: Record<string, string> = {
   'monetization/subscriptions':
     'Subscriptions: groups, localizations, price points, offers, and the one-call price macro.',
   'monetization/iap':
-    'In-app purchases: localizations, availability, price schedules, offer codes, images.',
+    'In-app purchases: localizations, availability, price schedules, offer codes, images, sandbox test accounts.',
   'monetization/app-price': 'The app\'s own price schedule and price points (not in-app purchases).',
   'monetization/storekit':
     'App Store Server API: customer transactions, refunds, subscription status, renewal dates.',
@@ -258,7 +257,8 @@ export interface RemovedProfile {
 export const REMOVED_PROFILES: Record<string, RemovedProfile> = {
   'user-management': {
     replacements: [
-      { name: 'access', covers: 'beta groups, testers, invitations, team members, sandbox accounts' },
+      { name: 'access', covers: 'beta groups, testers, invitations, team members' },
+      { name: 'monetization', covers: 'sandbox test accounts (they belong with in-app purchases)' },
       { name: 'testflight', covers: 'beta app localizations, beta review details, crash feedback' },
       { name: 'app-clips', covers: 'App Clip beta invocations' },
       { name: 'agreements', covers: 'the beta license agreement' },
