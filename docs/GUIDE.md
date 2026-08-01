@@ -70,26 +70,23 @@ The key is stored in the **macOS Keychain** (or referenced by file path off macO
 
 ### 4. Register profiles
 
-One install backs sixteen small, purpose-built MCP servers. Pass a profile name and only that area's tools are served. The counts are what the setup picker shows (deprecated excluded, core included):
+One install backs thirteen small, purpose-built MCP servers. Pass a profile name and only that area's tools are served. The counts are what the setup picker shows (deprecated excluded, core included):
 
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
-| `app-info` | App identity, store metadata, categories, availability, age ratings | 41 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscriptions, iap, app-price, storekit, winback, promote |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
-| `access` | Beta groups, testers, invitations, team members | 64 | beta-groups, beta-testers, users |
-| `testflight` | Beta app localizations, beta review details, crash feedback | 49 | — |
+| `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
+| `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 54 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Default and advanced experiences, header images, beta invocations | 51 | — |
 | `xcode-cloud` | CI workflows, build runs, artifacts | 51 | — |
 | `provisioning` | Certificates, provisioning profiles, devices, bundle IDs | 49 | — |
 | `analytics` | Sales/finance reports, analytics, performance metrics | 23 | — |
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
-| `agreements` | End user license and beta license agreements | 20 | — |
 | `webhooks` | Webhook configuration and diagnostics | 17 | — |
-| `accessibility` | Accessibility declarations (Nutrition Labels) | 14 | — |
-| `android-to-ios` | Android-to-iOS app mapping details | 14 | — |
 
 Every profile also carries the core set (`apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`), so any of them can look up an app ID and point you to a tool it doesn't have.
 
@@ -394,26 +391,23 @@ Anahtar **macOS Keychain**'de saklanır (macOS dışında dosya yoluyla referans
 
 ### 4. Profilleri kaydedin
 
-Tek kurulum, on altı küçük, amaca özel MCP sunucusu sunar. Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir. Sayılar setup seçicinin gösterdiğidir (deprecated hariç, çekirdek dahil):
+Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir. Sayılar setup seçicinin gösterdiğidir (deprecated hariç, çekirdek dahil):
 
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
-| `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı | 41 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscriptions, iap, app-price, storekit, winback, promote |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
-| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-groups, beta-testers, users |
-| `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi | 49 | — |
+| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
+| `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 54 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 51 | — |
 | `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 51 | — |
 | `provisioning` | Sertifikalar, provisioning profilleri, cihazlar, bundle ID'ler | 49 | — |
 | `analytics` | Satış/finans raporları, analytics, performans metrikleri | 23 | — |
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
-| `agreements` | Son kullanıcı ve beta lisans sözleşmeleri | 20 | — |
 | `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
-| `accessibility` | Erişilebilirlik beyanları (Nutrition Labels) | 14 | — |
-| `android-to-ios` | Android'den iOS'a uygulama eşleme bilgileri | 14 | — |
 
 Her profil ayrıca çekirdek kümeyi taşır (`apps__list`, `apps__get`, dört paylaşımlı ilişki listesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`); böylece herhangi biri uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini gösterir.
 
