@@ -82,6 +82,31 @@ describe('profiles', () => {
     }
   });
 
+  it('grows the tool list on demand without restarting', () => {
+    const registry = new ToolRegistry({
+      operations: operationsFor(resolveSelection('monetization:subscriptions')),
+      readOnly: false,
+      includeDeprecated: false,
+    });
+    const before = registry.size;
+    expect(registry.get('win_back_offers__create')).toBeUndefined();
+
+    const winback = resolveProfile('monetization')!.subProfiles.find((s) => s.name === 'winback')!;
+    const added = registry.loadOperations(winback.operations);
+
+    expect(added).toContain('win_back_offers__create');
+    expect(registry.size).toBe(before + added.length);
+    expect(registry.get('win_back_offers__create')).toBeTruthy();
+    // Loading twice adds nothing and reports nothing.
+    expect(registry.loadOperations(winback.operations)).toEqual([]);
+  });
+
+  it('refuses to smuggle a write past --read-only when loading late', () => {
+    const registry = new ToolRegistry({ operations: [], readOnly: true, includeDeprecated: false });
+    const writes = OPERATIONS.filter((o) => !o.readOnly && !o.deprecated).slice(0, 5).map((o) => o.name);
+    expect(registry.loadOperations(writes)).toEqual([]);
+  });
+
   it('points at the sibling server when a tool lives elsewhere', async () => {
     const registry = new ToolRegistry({
       operations: operationsFor(resolveSelection('analytics')),
