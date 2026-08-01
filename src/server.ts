@@ -36,6 +36,7 @@ import {
   toolCountFor,
   TOKENS_PER_TOOL,
   type ProfileSelection,
+  type SubProfile,
 } from './profiles.js';
 import {
   stripApiNoise,
@@ -105,6 +106,13 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       ? config.domains
       : [...DEFAULT_DOMAINS];
 
+  // Which sub-profiles are live right now. Mutable because `asc__load` can add
+  // one mid-session; everything that reports or gates on the selection reads
+  // this rather than the startup argument.
+  const loadedSubs = new Set(selection?.subProfiles ?? []);
+  const unloadedSubs = (): SubProfile[] =>
+    selection ? selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s)) : [];
+
   /** What this server is, in the unit a user configures: profiles. */
   const profileReport = selection
     ? (): Record<string, unknown> => ({
@@ -114,15 +122,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           .map((s) => ({
             name: s.name,
             tools: s.operations.length + s.manualTools.length,
-            loaded: selection.subProfiles.includes(s),
+            loaded: loadedSubs.has(s),
             description: s.description,
           })),
         estimatedTokens: toolCountFor(selection) * TOKENS_PER_TOOL,
-        ...(selection.partial
+        ...(unloadedSubs().length
           ? {
               hint:
-                `Some sub-profiles are not loaded. Restart as \`${selection.profile.name}\` ` +
-                `to load all of them, or add names after a colon.`,
+                `Some sub-profiles are not loaded. Call asc__load to add one for this ` +
+                `session, or restart as \`${selection.profile.name}\` for all of them.`,
             }
           : {}),
       })
@@ -154,23 +162,24 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   const server = new Server(
     { name: selection ? `asc-${selection.profile.name}` : 'app-store-connect-mcp', version: VERSION },
-    { capabilities: { tools: {} } }
+    // listChanged: the tool list can grow mid-session via asc__load.
+    { capabilities: { tools: { listChanged: true } } }
   );
 
-  // Names of every mutating tool that can actually be called here, so the write
-  // guard knows what to confirm. Read-only tools (meta, reviews_ai) never appear.
-  const writeToolNames = new Set<string>();
-  for (const t of registry.listTools()) {
-    if (t.annotations?.readOnlyHint !== true) writeToolNames.add(t.name);
-  }
-  if (storekit && !config.readOnly) {
-    for (const t of STOREKIT_TOOLS) {
-      if (t.annotations?.readOnlyHint !== true) writeToolNames.add(t.name);
+  /**
+   * Whether a tool mutates, so the write guard knows what to confirm. Computed
+   * per call rather than once: `asc__load` can add write tools after startup,
+   * and a set captured at boot would wave them through unconfirmed.
+   */
+  const isWriteTool = (name: string): boolean => {
+    const op = registry.get(name);
+    if (op) return !op.readOnly;
+    if (PRICING_TOOL_NAMES.has(name)) return pricingWanted;
+    if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
+      return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
     }
-  }
-  if (pricingWanted) {
-    for (const t of PRICING_TOOLS) writeToolNames.add(t.name);
-  }
+    return false;
+  };
 
   const confirmer: WriteConfirmer = {
     getClientCapabilities: () => server.getClientCapabilities(),
@@ -193,9 +202,38 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   // there (and guarded again at call time for clients that call blind).
   const clientSupportsSampling = () => Boolean(server.getClientCapabilities()?.sampling);
 
+  /**
+   * On-demand loading, kept deliberately minimal while we find out whether
+   * clients hand a revised tool list to the model within the same turn. If they
+   * do, a profile can start small and grow; if they don't, the agent has to say
+   * "loaded, ask again", which is worse than starting wide.
+   */
+  const loadTool = (): McpToolDefinition | undefined => {
+    const available = unloadedSubs().filter((s) => s.operations.length);
+    if (!available.length) return undefined;
+    return {
+      name: 'asc__load',
+      description:
+        `Add one of this server's unloaded sub-profiles to the tool list for the rest of ` +
+        `this session, without restarting. Use it when the tool you need belongs to this ` +
+        `profile but is not loaded. Available: ` +
+        available.map((s) => `${s.name} (${s.operations.length} tools — ${s.description})`).join(' '),
+      inputSchema: {
+        type: 'object' as const,
+        properties: {
+          sub_profile: { type: 'string', description: 'Sub-profile to load.', enum: available.map((s) => s.name) },
+        },
+        required: ['sub_profile'],
+      },
+      annotations: { readOnlyHint: true },
+    };
+  };
+
   server.setRequestHandler(ListToolsRequestSchema, async () => {
+    const onDemand = loadTool();
     const tools: McpToolDefinition[] = [
       ...META_TOOLS,
+      ...(onDemand ? [onDemand] : []),
       ...(reviewsAiWanted && clientSupportsSampling() ? REVIEWS_AI_TOOLS : []),
       ...(pricingWanted ? PRICING_TOOLS : []),
       ...registry.listTools(),
@@ -219,7 +257,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       // Dry-run: registry writes return their would-send preview instead of
       // calling Apple, so confirmation would be noise. StoreKit tools bypass
       // the registry and WOULD hit Apple for real — block their writes hard.
-      if (config.dryRun && writeToolNames.has(name) && STOREKIT_TOOL_NAMES.has(name)) {
+      if (config.dryRun && isWriteTool(name) && STOREKIT_TOOL_NAMES.has(name)) {
         return {
           content: [
             {
@@ -231,7 +269,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         };
       }
 
-      if (config.confirmWrites && !config.dryRun && writeToolNames.has(name)) {
+      if (config.confirmWrites && !config.dryRun && isWriteTool(name)) {
         const op = registry.get(name);
         const preview = PRICING_TOOL_NAMES.has(name)
           ? // Macro parameters are already human language — no lookups needed.
@@ -274,7 +312,35 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
       let result: unknown;
 
-      if (META_TOOL_NAMES.has(name)) {
+      if (name === 'asc__load' && selection) {
+        const wanted = String(args.sub_profile ?? '');
+        const sub = unloadedSubs().find((s) => s.name === wanted);
+        if (!sub) {
+          const available = unloadedSubs().filter((s) => s.operations.length).map((s) => s.name);
+          throw new Error(
+            selection.profile.subProfiles.some((s) => s.name === wanted)
+              ? `"${wanted}" is already loaded.`
+              : `Unknown sub-profile "${wanted}" for "${selection.profile.name}". ` +
+                (available.length ? `Available to load: ${available.join(', ')}.` : 'Everything is loaded.')
+          );
+        }
+        const added = registry.loadOperations(sub.operations);
+        loadedSubs.add(sub);
+        // Tell the client the list grew. Whether it reaches the model before the
+        // next tool call is the whole question this spike exists to answer.
+        await server.sendToolListChanged();
+        result = {
+          loaded: sub.name,
+          description: sub.description,
+          toolsAdded: added.length,
+          // Named in the response too: a client that only refreshes its list
+          // between turns still lets the model act on this reply.
+          tools: added,
+          ...(sub.manualTools.length
+            ? { note: `${sub.manualTools.join(', ')} need a restart — they are not spec operations.` }
+            : {}),
+        };
+      } else if (META_TOOL_NAMES.has(name)) {
         result = await executeMetaTool(name, args, {
           registry,
           http,

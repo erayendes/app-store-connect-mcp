@@ -242,22 +242,44 @@ export class ToolRegistry {
       const wanted = explicit
         ? explicit.has(op.name) || extras.has(op.name)
         : wantsAll || selected.has(op.domain) || extras.has(op.name);
-      if (!wanted) continue;
-      if (op.deprecated && !options.includeDeprecated) continue;
-      if (options.readOnly && !op.readOnly) continue;
-      this.ops.set(op.name, op);
-
-      const toolName = toolNameFor(op);
-      const clash = this.byToolName.get(toolName);
-      if (clash && clash.name !== op.name) {
-        // Two distinct operations collapsed to the same 64-char name. Fail
-        // loudly at startup rather than silently shadowing one of them.
-        throw new Error(
-          `Tool name collision on "${toolName}": ${clash.name} vs ${op.name}`
-        );
-      }
-      this.byToolName.set(toolName, op);
+      if (wanted) this.add(op);
     }
+  }
+
+  /** Returns the public tool name if the operation was added, undefined if filtered out. */
+  private add(op: Operation): string | undefined {
+    if (op.deprecated && !this.options.includeDeprecated) return undefined;
+    if (this.options.readOnly && !op.readOnly) return undefined;
+    this.ops.set(op.name, op);
+
+    const toolName = toolNameFor(op);
+    const clash = this.byToolName.get(toolName);
+    if (clash && clash.name !== op.name) {
+      // Two distinct operations collapsed to the same 64-char name. Fail
+      // loudly at startup rather than silently shadowing one of them.
+      throw new Error(`Tool name collision on "${toolName}": ${clash.name} vs ${op.name}`);
+    }
+    this.byToolName.set(toolName, op);
+    return toolName;
+  }
+
+  /**
+   * Add operations after construction. MCP lets a server revise its tool list
+   * mid-session (`notifications/tools/list_changed`), which is the only way a
+   * profile could stay small and still reach the rest on demand. Returns the
+   * public names actually added — already-loaded and filtered-out ones are
+   * skipped, so the caller can report exactly what appeared.
+   */
+  loadOperations(names: string[]): string[] {
+    const wanted = new Set(names.filter((n) => !this.ops.has(n)));
+    if (!wanted.size) return [];
+    const added: string[] = [];
+    for (const op of OPERATIONS) {
+      if (!wanted.has(op.name)) continue;
+      const toolName = this.add(op);
+      if (toolName) added.push(toolName);
+    }
+    return added;
   }
 
   get size(): number {
