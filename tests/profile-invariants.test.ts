@@ -210,7 +210,7 @@ describe('counts — curation output, not something that drifts on its own', () 
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    expect(tools.length).toBe(877); // 886 CSV rows - 9 core rows (10 entry reads are deliberately in two slices)
+    expect(tools.length).toBe(876); // 885 CSV rows - 9 core rows (10 entry reads are deliberately in two slices)
     expect(new Set([...tools, ...CORE_OPERATIONS]).size).toBe(loadable.length + 13);
   });
 });
