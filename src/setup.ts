@@ -47,6 +47,15 @@ export interface Row {
 /** Tools a row serves, excluding the core set every server carries anyway. */
 const subProfileToolCount = (s: SubProfile): number => s.operations.length + s.manualTools.length;
 
+/**
+ * A profile serves the *union* of its sub-profiles, not their sum.
+ * Some tools sit in more than one sub-profile on purpose — the screenshot and
+ * preview tools belong to every page that can list a set — so adding the rows
+ * up counts them twice and the picker promises tools the server never loads.
+ */
+const profileToolCount = (p: Profile): number =>
+  new Set(p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])).size;
+
 export function buildRows(): Row[] {
   const rows: Row[] = [];
   const size = (n: number): string => `~${Math.max(1, Math.round((n * TOKENS_PER_TOOL) / 1000))}k`;
@@ -55,7 +64,7 @@ export function buildRows(): Row[] {
 
   for (const profile of PROFILES) {
     const subs = profile.subProfiles.filter((s) => s.name);
-    const total = profile.subProfiles.reduce((n, s) => n + subProfileToolCount(s), 0);
+    const total = profileToolCount(profile);
     const parent = rows.length;
     rows.push({
       index: parent,

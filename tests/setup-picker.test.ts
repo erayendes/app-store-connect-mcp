@@ -8,7 +8,13 @@
  */
 import { describe, it, expect } from 'vitest';
 import { buildRows, preselect, selectionToSpecs } from '../src/setup.js';
-import { PROFILES, resolveSelection } from '../src/profiles.js';
+import {
+  PROFILES,
+  resolveSelection,
+  operationsFor,
+  manualToolsFor,
+  CORE_OPERATIONS,
+} from '../src/profiles.js';
 
 const rows = buildRows();
 const rowFor = (profile: string, sub?: string) =>
@@ -31,6 +37,22 @@ describe('the picker rows', () => {
     for (const r of rows) {
       expect(r.item.label).toMatch(/\(\d+\)$/);
       expect(r.item.hint).toMatch(/^~\d+k · ./);
+    }
+  });
+
+  it('counts a profile as the union of its sub-profiles, not their sum', () => {
+    // A tool can belong to several sub-profiles on purpose — the screenshot and
+    // preview tools sit under every page that can list a set. Summing the rows
+    // counts those twice, and the number the user picks by stops matching the
+    // number of tools the server loads.
+    for (const p of PROFILES) {
+      const sel = resolveSelection(p.name);
+      // operationsFor folds the core operations in; manualToolsFor does not —
+      // the core manual tools are added by the server itself. So the row is the
+      // served set minus exactly CORE_OPERATIONS.
+      const served = operationsFor(sel).length - CORE_OPERATIONS.length + manualToolsFor(sel).length;
+      const shown = Number(rowFor(p.name).item.label.match(/\((\d+)\)$/)![1]);
+      expect(shown, `${p.name} row says ${shown}, the server loads ${served}`).toBe(served);
     }
   });
 });

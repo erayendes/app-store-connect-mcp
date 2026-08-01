@@ -204,13 +204,16 @@ describe('help text', () => {
 describe('counts — curation output, not something that drifts on its own', () => {
   it('matches the numbers the sheet was signed off with', () => {
     expect(PROFILES.length).toBe(13);
-    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(33);
+    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(32);
     expect(CORE_OPERATIONS.length).toBe(6);
     expect(CORE_MANUAL_TOOLS.length).toBe(3);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    expect(tools.length).toBe(876); // 885 CSV rows - 9 core rows (10 entry reads are deliberately in two slices)
+    // 921 CSV rows - 9 core rows. Not a count of distinct tools: the screenshot
+    // and preview tools sit under all three pages that can list a set, and ten
+    // entry reads are deliberately in two slices.
+    expect(tools.length).toBe(912);
     expect(new Set([...tools, ...CORE_OPERATIONS]).size).toBe(loadable.length + 13);
   });
 });
