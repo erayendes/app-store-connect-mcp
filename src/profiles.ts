@@ -50,7 +50,8 @@ const DESCRIPTIONS: Record<string, string> = {
     'Release pipeline: App Store versions, localizations, phased releases, review submissions, ' +
     'builds, export compliance, EU alternative distribution.',
   'distribution/version':
-    'App Store versions: localizations, search keywords, phased release, submit and release.',
+    'App Store versions: localizations, search keywords, screenshots and previews, ' +
+    'phased release, submit and release.',
   'distribution/dma-distribution':
     'Distribution outside the App Store under the EU Digital Markets Act: web distribution ' +
     'domains, alternative marketplace listings, signing keys, packages.',
@@ -83,10 +84,11 @@ const DESCRIPTIONS: Record<string, string> = {
   'marketing/customer-review':
     'Customer reviews, responses, summaries, and the AI triage and reply-draft tools.',
   'marketing/nominations': 'Nominations submitted to Apple for editorial featuring.',
-  'marketing/pp-custom': 'Custom product pages: versions, localizations, media, search keywords.',
-  'marketing/pp-experiment':
-    'Product page optimization: version experiments, treatments, their localizations.',
-  'marketing/pp-main': 'The main product page: screenshot sets and app preview sets.',
+  'marketing/custom-product-page':
+    'Custom product pages: versions, localizations, search keywords, screenshots and previews.',
+  'marketing/product-page-optimization':
+    'Product page optimization: version experiments, treatments, their localizations, ' +
+    'screenshots and previews.',
 
   monetization: 'Money: subscriptions, in-app purchases, offers, app pricing, StoreKit 2 transactions.',
   'monetization/subscription-catalog':

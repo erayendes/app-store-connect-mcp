@@ -75,9 +75,9 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 127 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
-| `marketing` | Screenshots, product pages, in-app events, customer reviews | 98 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
+| `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
 | `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 54 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
@@ -398,9 +398,9 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 127 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
-| `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 98 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
+| `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 54 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
