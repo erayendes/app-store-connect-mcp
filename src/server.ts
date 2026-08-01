@@ -6,7 +6,13 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
-import { ToolRegistry, DEFAULT_DOMAINS, type McpToolDefinition } from './core/registry.js';
+import {
+  ToolRegistry,
+  DEFAULT_DOMAINS,
+  toMcpTool,
+  toolNameFor,
+  type McpToolDefinition,
+} from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import {
   confirmWrite,
@@ -24,9 +30,10 @@ import {
   executePricingTool,
   buildPricingPreview,
 } from './tools/pricing.js';
-import { SPEC_VERSION } from './generated/operations.js';
+import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import {
+  CORE_OPERATIONS,
   manualToolsFor,
   operationsFor,
   profilesForOperation,
@@ -229,10 +236,102 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     };
   };
 
+  /**
+   * Every operation this profile owns, whether its sub-profile is loaded or
+   * not — the reachable set for the proxy below.
+   */
+  const profileOperations = (): string[] =>
+    selection
+      ? [...new Set([...CORE_OPERATIONS, ...selection.profile.subProfiles.flatMap((s) => s.operations)])]
+      : [];
+
+  /** Accepts either the dotted operation name or the public `a__b` tool name. */
+  const resolveProfileOperation = (raw: string): Operation | undefined => {
+    const wanted = String(raw).trim();
+    const reachable = new Set(profileOperations());
+    return OPERATIONS.find(
+      (op) => reachable.has(op.name) && (op.name === wanted || toolNameFor(op) === wanted)
+    );
+  };
+
+  /**
+   * The escape hatch that does not depend on the client.
+   *
+   * asc__load revises the tool list, and MCP lets a server do that — but the
+   * spec says nothing about when a client hands the revised list to the model.
+   * Measured: Claude Code does it inside the turn, Codex only between turns,
+   * where the model is left naming tools it cannot call and the work stalls.
+   *
+   * These two tools sidestep the question entirely. They are in the list from
+   * the start, so any operation this profile owns is one call away on any
+   * client, in the same turn, with no notification involved. asc__call routes
+   * through the identical guard as a native call — read-only mode, body
+   * validation, dry-run, risk level, typed confirmation — and loads the
+   * operation on the way, so it also becomes a native tool for whoever refreshes.
+   */
+  const PROXY_TOOLS: McpToolDefinition[] = selection
+    ? [
+        {
+          name: 'asc__describe',
+          description:
+            `Show the exact input schema of any tool this profile owns, including ones not ` +
+            `currently loaded. Use it before asc__call to build valid arguments. Find tool ` +
+            `names with asc__search_tools.`,
+          inputSchema: {
+            type: 'object' as const,
+            properties: { tool: { type: 'string', description: 'Tool or operation name.' } },
+            required: ['tool'],
+          },
+          annotations: { readOnlyHint: true },
+        },
+        {
+          name: 'asc__call',
+          description:
+            `Read through any tool this profile owns, even one that is not in your tool list — ` +
+            `its sub-profile does not have to be loaded and nothing needs a restart. Use this ` +
+            `whenever asc__search_tools names a tool you cannot see. Get its arguments from ` +
+            `asc__describe first. Read-only: to change something, load the sub-profile with ` +
+            `asc__load and call the tool itself, so the confirmation prompt reaches the user.`,
+          inputSchema: {
+            type: 'object' as const,
+            properties: {
+              tool: { type: 'string', description: 'Tool or operation name, e.g. "apps__app_price_schedule__get".' },
+              arguments: { type: 'object', description: "The tool's own arguments, as asc__describe reports them." },
+            },
+            required: ['tool'],
+          },
+          // Honest, and load-bearing: a client that auto-approves reads and
+          // prompts for writes will block anything it cannot classify. Codex
+          // refused every proxied read while this tool could also write.
+          annotations: { readOnlyHint: true },
+        },
+      ]
+    : [];
+
+  const textResult = (value: unknown) => ({
+    content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }],
+  });
+
+  /** Why a name the proxy was handed isn't callable here, and where it is. */
+  const unreachableMessage = (raw: string): string => {
+    const known = OPERATIONS.find((op) => op.name === raw || toolNameFor(op) === raw);
+    if (!known) {
+      return `Unknown tool "${raw}". Use asc__search_tools to find the right name.`;
+    }
+    const homes = profilesForOperation(known.name).filter((n) => n !== selection?.profile.name);
+    return (
+      `"${raw}" is not part of this profile. ` +
+      (homes.length
+        ? `It is served by the "asc-${homes[0]}" MCP server:\n  ${registerCommand(homes[0])}`
+        : `Run the server without a profile and with --domains=${known.domain} to reach it.`)
+    );
+  };
+
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     const onDemand = loadTool();
     const tools: McpToolDefinition[] = [
       ...META_TOOLS,
+      ...PROXY_TOOLS,
       ...(onDemand ? [onDemand] : []),
       ...(reviewsAiWanted && clientSupportsSampling() ? REVIEWS_AI_TOOLS : []),
       ...(pricingWanted ? PRICING_TOOLS : []),
@@ -250,10 +349,56 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name } = request.params;
-    const args = (request.params.arguments ?? {}) as Record<string, unknown>;
+    let name = request.params.name;
+    let args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
     try {
+      if (name === 'asc__describe' && selection) {
+        const op = resolveProfileOperation(String(args.tool ?? ''));
+        if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
+        const tool = toMcpTool(op, config.vendorNumber ? { 'filter[vendorNumber]': config.vendorNumber } : undefined);
+        return textResult({
+          tool: tool.name,
+          operation: op.name,
+          endpoint: `${op.method} ${op.path}`,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+          readOnly: op.readOnly,
+          ...(op.risk ? { risk: op.risk } : {}),
+          loaded: Boolean(registry.get(tool.name)),
+          callWith: `asc__call({ tool: "${tool.name}", arguments: { … } })`,
+        });
+      }
+
+      if (name === 'asc__call' && selection) {
+        const op = resolveProfileOperation(String(args.tool ?? ''));
+        if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
+        if (!op.readOnly) {
+          // The proxy is one tool standing in for hundreds, so a client can only
+          // approve it wholesale. Writes keep their own name, where the client's
+          // approval and Heimdall's typed confirmation both still mean something.
+          const sub = subProfileOwning(selection.profile, op.name);
+          throw new Error(
+            `"${op.name}" changes data, and asc__call is read-only.\n` +
+              (sub && !loadedSubs.has(sub)
+                ? `Load its sub-profile first — asc__load({ sub_profile: "${sub.name}" }) — then call ` +
+                  `${toolNameFor(op)} directly. If it still isn't in your tool list, your client ` +
+                  `refreshes between turns: say it is ready and ask the user to repeat the request.`
+                : `Call ${toolNameFor(op)} directly.`)
+          );
+        }
+        // Load it as well: the call works either way, but a client that does
+        // refresh gets the real tool with its own schema from here on.
+        registry.loadOperations([op.name]);
+        const sub = subProfileOwning(selection.profile, op.name);
+        if (sub && !loadedSubs.has(sub)) {
+          loadedSubs.add(sub);
+          await server.sendToolListChanged();
+        }
+        name = toolNameFor(op);
+        args = (args.arguments ?? {}) as Record<string, unknown>;
+      }
+
       // Dry-run: registry writes return their would-send preview instead of
       // calling Apple, so confirmation would be noise. StoreKit tools bypass
       // the registry and WOULD hit Apple for real — block their writes hard.
