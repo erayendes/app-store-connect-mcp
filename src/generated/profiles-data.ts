@@ -137,7 +137,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
       rootResources: ["app_store_version_localizations","app_store_version_phased_releases","app_store_version_promotions","app_store_version_release_requests","app_store_versions","apps"],
     },
     {
-      name: "alternative",
+      name: "dma-distribution",
       operations: ["alternative_distribution_domains.create","alternative_distribution_domains.delete","alternative_distribution_domains.get","alternative_distribution_domains.list","alternative_distribution_keys.create","alternative_distribution_keys.delete","alternative_distribution_keys.get","alternative_distribution_keys.list","alternative_distribution_package_deltas.get","alternative_distribution_package_variants.get","alternative_distribution_package_versions.deltas.list","alternative_distribution_package_versions.get","alternative_distribution_package_versions.variants.list","alternative_distribution_packages.create","alternative_distribution_packages.get","alternative_distribution_packages.versions.list","app_store_versions.alternative_distribution_package.get","apps.alternative_distribution_key.get","apps.marketplace_search_detail.get","marketplace_search_details.create","marketplace_search_details.delete","marketplace_search_details.update"],
       manualTools: [],
       rootResources: ["alternative_distribution_domains","alternative_distribution_keys","alternative_distribution_package_deltas","alternative_distribution_package_variants","alternative_distribution_package_versions","alternative_distribution_packages","app_store_versions","apps","marketplace_search_details"],

@@ -75,10 +75,10 @@ One install backs seventeen small, purpose-built MCP servers. Pass a profile nam
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings | 41 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds | 101 | version, alternative, builds, coverages, pre-release, review, submission |
-| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2 | 201 | subscriptions, iap, app-price, storekit, winback, promote |
+| `distribution` | Versions, localizations, phased release, review submission, builds | 101 | version, dma-distribution, builds, coverages, pre-release, review, submission |
+| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscriptions, iap, app-price, storekit, winback, promote |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
-| `access` | Beta groups, testers, invitations, team members, sandbox accounts | 67 | testers, users |
+| `access` | Beta groups, testers, invitations, team members | 64 | beta-groups, beta-testers, users |
 | `testflight` | Beta app localizations, beta review details, crash feedback | 49 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Default and advanced experiences, header images, beta invocations | 51 | — |
@@ -94,7 +94,7 @@ One install backs seventeen small, purpose-built MCP servers. Pass a profile nam
 
 Every profile also carries the core set (`apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`), so any of them can look up an app ID and point you to a tool it doesn't have.
 
-**Sub-profiles** narrow a large profile. `monetization` is 201 tools; if you only touch subscriptions, `monetization:subscriptions` is 108 and still carries the one-call price macro. The setup picker writes this for you — check a profile and its sub-profiles appear underneath, all on; uncheck what you don't need. Syntax, if you write the config by hand:
+**Sub-profiles** narrow a large profile. `monetization` is 204 tools; if you only touch subscriptions, `monetization:subscriptions` is 108 and still carries the one-call price macro. The setup picker writes this for you — check a profile, move the cursor onto it and its sub-profiles unfold underneath, all on; uncheck what you don't need. Syntax, if you write the config by hand:
 
 ```
 npx -y @erayendes/asc-mcp monetization                    everything
@@ -400,10 +400,10 @@ Tek kurulum, on yedi küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı | 41 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler | 101 | version, alternative, builds, coverages, pre-release, review, submission |
-| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2 | 201 | subscriptions, iap, app-price, storekit, winback, promote |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler | 101 | version, dma-distribution, builds, coverages, pre-release, review, submission |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscriptions, iap, app-price, storekit, winback, promote |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
-| `access` | Beta grupları, testçiler, davetler, ekip üyeleri, sandbox hesapları | 67 | testers, users |
+| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-groups, beta-testers, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi | 49 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 51 | — |
@@ -419,7 +419,7 @@ Tek kurulum, on yedi küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 
 Her profil ayrıca çekirdek kümeyi taşır (`apps__list`, `apps__get`, dört paylaşımlı ilişki listesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`); böylece herhangi biri uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini gösterir.
 
-**Alt profiller** büyük bir profili daraltır. `monetization` 201 araç; yalnız aboneliklere dokunuyorsanız `monetization:subscriptions` 108 araç ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi bunu sizin yerinize yazar — bir profili işaretleyin, alt profilleri altında hepsi işaretli olarak açılır; istemediğinizi kaldırın. Config'i elle yazacaksanız sözdizimi:
+**Alt profiller** büyük bir profili daraltır. `monetization` 204 araç; yalnız aboneliklere dokunuyorsanız `monetization:subscriptions` 108 araç ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi bunu sizin yerinize yazar — bir profili işaretleyin, imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır; istemediğinizi kaldırın. Config'i elle yazacaksanız sözdizimi:
 
 ```
 npx -y @erayendes/asc-mcp monetization                    tamamı
