@@ -30,28 +30,25 @@ export interface Profile {
  * fails if either is missing, so a new sub-profile cannot ship nameless.
  */
 const DESCRIPTIONS: Record<string, string> = {
-  access: 'Team and tester access: beta groups, testers, invitations, users, sandbox accounts.',
+  access: 'Team and tester access: beta groups, individual testers, invitations, team members.',
   'access/beta-groups':
     'Beta groups: membership, which builds they get, recruitment criteria, public links.',
   'access/beta-testers': 'Individual testers: create, invite, assign to groups and builds.',
   'access/users': 'Team members, their roles and app visibility, invitations.',
 
-  accessibility: 'Accessibility declarations (Nutrition Labels) for an app.',
-
-  agreements: 'Legal agreements attached to an app: end user license and beta license agreement.',
-
   analytics: 'Sales and finance reports, analytics report requests, performance metrics.',
-
-  'android-to-ios': 'Android-to-iOS app mapping details, for linking an Android app to its iOS counterpart.',
 
   'app-clips': 'App Clips: default and advanced experiences, header images, beta invocations.',
 
-  'app-info': 'App identity and store metadata: names, bundle IDs, categories, availability, age ratings.',
+  'app-info':
+    'App identity and store metadata: names, bundle IDs, categories, availability, age ratings, ' +
+    'accessibility labels, the end user license agreement, Android-to-iOS mapping.',
 
   'background-assets': 'Background Assets (iOS 26): asset packs downloaded outside the app binary.',
 
   distribution:
-    'Release pipeline: App Store versions, localizations, phased releases, review submissions, builds.',
+    'Release pipeline: App Store versions, localizations, phased releases, review submissions, ' +
+    'builds, export compliance, EU alternative distribution.',
   'distribution/version':
     'App Store versions: localizations, search keywords, phased release, submit and release.',
   'distribution/dma-distribution':
@@ -104,7 +101,9 @@ const DESCRIPTIONS: Record<string, string> = {
 
   provisioning: 'Code signing infrastructure: bundle IDs, certificates, devices, provisioning profiles.',
 
-  testflight: 'TestFlight build metadata: beta app localizations, review details, crash feedback.',
+  testflight:
+    'TestFlight build metadata: beta app localizations, review details, crash feedback, ' +
+    'the beta license agreement testers accept.',
 
   webhooks: 'Webhooks pushing App Store Connect events to your endpoint.',
 
@@ -261,12 +260,14 @@ export const REMOVED_PROFILES: Record<string, RemovedProfile> = {
     replacements: [
       { name: 'access', covers: 'beta groups, testers, invitations, team members' },
       { name: 'monetization', covers: 'sandbox test accounts (they belong with in-app purchases)' },
-      { name: 'testflight', covers: 'beta app localizations, beta review details, crash feedback' },
+      {
+        name: 'testflight',
+        covers: 'beta app localizations, beta review details, crash feedback, the beta license agreement',
+      },
       { name: 'app-clips', covers: 'App Clip beta invocations' },
-      { name: 'agreements', covers: 'the beta license agreement' },
     ],
     summary:
-      'It was split into access, testflight, app-clips and agreements — replace it in your ' +
+      'It was split into access, testflight, app-clips and monetization — replace it in your ' +
       'config with whichever ones you need.',
   },
 };

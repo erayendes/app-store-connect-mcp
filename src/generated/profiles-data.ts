@@ -51,28 +51,6 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     ],
   },
   {
-    name: "accessibility",
-    subProfiles: [
-    {
-      name: "",
-      operations: ["accessibility_declarations.create","accessibility_declarations.delete","accessibility_declarations.get","accessibility_declarations.update","apps.accessibility_declarations.list"],
-      manualTools: [],
-      rootResources: ["accessibility_declarations","apps"],
-    },
-    ],
-  },
-  {
-    name: "agreements",
-    subProfiles: [
-    {
-      name: "",
-      operations: ["apps.beta_license_agreement.get","apps.end_user_license_agreement.get","beta_license_agreements.app.get","beta_license_agreements.get","beta_license_agreements.list","beta_license_agreements.update","end_user_license_agreements.create","end_user_license_agreements.delete","end_user_license_agreements.get","end_user_license_agreements.territories.list","end_user_license_agreements.update"],
-      manualTools: [],
-      rootResources: ["apps","beta_license_agreements","end_user_license_agreements"],
-    },
-    ],
-  },
-  {
     name: "analytics",
     subProfiles: [
     {
@@ -80,17 +58,6 @@ export const PROFILE_DATA: GeneratedProfile[] = [
       operations: ["analytics_report_instances.get","analytics_report_instances.segments.list","analytics_report_requests.create","analytics_report_requests.delete","analytics_report_requests.get","analytics_report_requests.reports.list","analytics_report_segments.get","analytics_reports.get","analytics_reports.instances.list","apps.analytics_report_requests.list","apps.perf_power_metrics.list","diagnostic_signatures.logs.list","finance_reports.list","sales_reports.list"],
       manualTools: [],
       rootResources: ["analytics_report_instances","analytics_report_requests","analytics_report_segments","analytics_reports","apps","diagnostic_signatures","finance_reports","sales_reports"],
-    },
-    ],
-  },
-  {
-    name: "android-to-ios",
-    subProfiles: [
-    {
-      name: "",
-      operations: ["android_to_ios_app_mapping_details.create","android_to_ios_app_mapping_details.delete","android_to_ios_app_mapping_details.get","android_to_ios_app_mapping_details.update","apps.android_to_ios_app_mapping_details.list"],
-      manualTools: [],
-      rootResources: ["android_to_ios_app_mapping_details","apps"],
     },
     ],
   },
@@ -110,9 +77,9 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     subProfiles: [
     {
       name: "",
-      operations: ["age_rating_declarations.update","app_availabilities_v2.create","app_availabilities_v2.get","app_availabilities_v2.territory_availabilities.list","app_categories.get","app_categories.list","app_categories.parent.get","app_categories.subcategories.list","app_info_localizations.create","app_info_localizations.delete","app_info_localizations.get","app_info_localizations.update","app_infos.age_rating_declaration.get","app_infos.app_info_localizations.list","app_infos.get","app_infos.primary_category.get","app_infos.primary_subcategory_one.get","app_infos.primary_subcategory_two.get","app_infos.secondary_category.get","app_infos.secondary_subcategory_one.get","app_infos.secondary_subcategory_two.get","app_infos.territory_age_ratings.list","app_infos.update","app_tags.territories.list","app_tags.update","apps.app_availability_v2.get","apps.app_infos.list","apps.app_tags.list","apps.update","end_app_availability_pre_orders.create","territories.list","territory_availabilities.update"],
+      operations: ["accessibility_declarations.create","accessibility_declarations.delete","accessibility_declarations.get","accessibility_declarations.update","age_rating_declarations.update","android_to_ios_app_mapping_details.create","android_to_ios_app_mapping_details.delete","android_to_ios_app_mapping_details.get","android_to_ios_app_mapping_details.update","app_availabilities_v2.create","app_availabilities_v2.get","app_availabilities_v2.territory_availabilities.list","app_categories.get","app_categories.list","app_categories.parent.get","app_categories.subcategories.list","app_info_localizations.create","app_info_localizations.delete","app_info_localizations.get","app_info_localizations.update","app_infos.age_rating_declaration.get","app_infos.app_info_localizations.list","app_infos.get","app_infos.primary_category.get","app_infos.primary_subcategory_one.get","app_infos.primary_subcategory_two.get","app_infos.secondary_category.get","app_infos.secondary_subcategory_one.get","app_infos.secondary_subcategory_two.get","app_infos.territory_age_ratings.list","app_infos.update","app_tags.territories.list","app_tags.update","apps.accessibility_declarations.list","apps.android_to_ios_app_mapping_details.list","apps.app_availability_v2.get","apps.app_infos.list","apps.app_tags.list","apps.end_user_license_agreement.get","apps.update","end_app_availability_pre_orders.create","end_user_license_agreements.create","end_user_license_agreements.delete","end_user_license_agreements.get","end_user_license_agreements.territories.list","end_user_license_agreements.update","territories.list","territory_availabilities.update"],
       manualTools: [],
-      rootResources: ["age_rating_declarations","app_availabilities_v2","app_categories","app_info_localizations","app_infos","app_tags","apps","end_app_availability_pre_orders","territories","territory_availabilities"],
+      rootResources: ["accessibility_declarations","age_rating_declarations","android_to_ios_app_mapping_details","app_availabilities_v2","app_categories","app_info_localizations","app_infos","app_tags","apps","end_app_availability_pre_orders","end_user_license_agreements","territories","territory_availabilities"],
     },
     ],
   },
@@ -331,9 +298,9 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     subProfiles: [
     {
       name: "",
-      operations: ["apps.beta_app_localizations.list","apps.beta_app_review_detail.get","apps.beta_feedback_crash_submissions.list","apps.beta_feedback_screenshot_submissions.list","apps.beta_tester_usages.metrics","beta_app_localizations.app.get","beta_app_localizations.create","beta_app_localizations.delete","beta_app_localizations.get","beta_app_localizations.list","beta_app_localizations.update","beta_app_review_details.app.get","beta_app_review_details.get","beta_app_review_details.list","beta_app_review_details.update","beta_app_review_submissions.build.get","beta_app_review_submissions.create","beta_app_review_submissions.get","beta_app_review_submissions.list","beta_build_localizations.build.get","beta_build_localizations.create","beta_build_localizations.delete","beta_build_localizations.get","beta_build_localizations.list","beta_build_localizations.update","beta_crash_logs.get","beta_feedback_crash_submissions.crash_log.get","beta_feedback_crash_submissions.delete","beta_feedback_crash_submissions.get","beta_feedback_screenshot_submissions.delete","beta_feedback_screenshot_submissions.get","beta_groups.app.get","build_beta_details.build.get","build_beta_details.get","build_beta_details.list","build_beta_details.update","builds.beta_app_review_submission.get","builds.beta_build_localizations.list","builds.beta_build_usages.metrics","builds.build_beta_detail.get"],
+      operations: ["apps.beta_app_localizations.list","apps.beta_app_review_detail.get","apps.beta_feedback_crash_submissions.list","apps.beta_feedback_screenshot_submissions.list","apps.beta_license_agreement.get","apps.beta_tester_usages.metrics","beta_app_localizations.app.get","beta_app_localizations.create","beta_app_localizations.delete","beta_app_localizations.get","beta_app_localizations.list","beta_app_localizations.update","beta_app_review_details.app.get","beta_app_review_details.get","beta_app_review_details.list","beta_app_review_details.update","beta_app_review_submissions.build.get","beta_app_review_submissions.create","beta_app_review_submissions.get","beta_app_review_submissions.list","beta_build_localizations.build.get","beta_build_localizations.create","beta_build_localizations.delete","beta_build_localizations.get","beta_build_localizations.list","beta_build_localizations.update","beta_crash_logs.get","beta_feedback_crash_submissions.crash_log.get","beta_feedback_crash_submissions.delete","beta_feedback_crash_submissions.get","beta_feedback_screenshot_submissions.delete","beta_feedback_screenshot_submissions.get","beta_groups.app.get","beta_license_agreements.app.get","beta_license_agreements.get","beta_license_agreements.list","beta_license_agreements.update","build_beta_details.build.get","build_beta_details.get","build_beta_details.list","build_beta_details.update","builds.beta_app_review_submission.get","builds.beta_build_localizations.list","builds.beta_build_usages.metrics","builds.build_beta_detail.get"],
       manualTools: [],
-      rootResources: ["apps","beta_app_localizations","beta_app_review_details","beta_app_review_submissions","beta_build_localizations","beta_crash_logs","beta_feedback_crash_submissions","beta_feedback_screenshot_submissions","beta_groups","build_beta_details","builds"],
+      rootResources: ["apps","beta_app_localizations","beta_app_review_details","beta_app_review_submissions","beta_build_localizations","beta_crash_logs","beta_feedback_crash_submissions","beta_feedback_screenshot_submissions","beta_groups","beta_license_agreements","build_beta_details","builds"],
     },
     ],
   },
