@@ -197,20 +197,20 @@ describe('help text', () => {
   });
 
   it('shows the sub-profile syntax', () => {
-    expect(helpText()).toContain('monetization:subscriptions');
+    expect(helpText()).toContain('monetization:subscription-pricing');
   });
 });
 
 describe('counts — curation output, not something that drifts on its own', () => {
   it('matches the numbers the sheet was signed off with', () => {
     expect(PROFILES.length).toBe(13);
-    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(31);
+    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(33);
     expect(CORE_OPERATIONS.length).toBe(6);
     expect(CORE_MANUAL_TOOLS.length).toBe(3);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    expect(tools.length).toBe(867); // 876 CSV rows - 9 core rows
+    expect(tools.length).toBe(877); // 886 CSV rows - 9 core rows (10 entry reads are deliberately in two slices)
     expect(new Set([...tools, ...CORE_OPERATIONS]).size).toBe(loadable.length + 13);
   });
 });

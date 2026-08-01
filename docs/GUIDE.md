@@ -76,7 +76,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
 | `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscriptions, iap, app-price, storekit, winback, promote |
+| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
 | `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 54 | — |
@@ -90,11 +90,11 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 
 Every profile also carries the core set (`apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`), so any of them can look up an app ID and point you to a tool it doesn't have.
 
-**Sub-profiles** narrow a large profile. `monetization` is 204 tools; if you only touch subscriptions, `monetization:subscriptions` is 108 and still carries the one-call price macro. The setup picker writes this for you — check a profile, move the cursor onto it and its sub-profiles unfold underneath, all on; uncheck what you don't need. Syntax, if you write the config by hand:
+**Sub-profiles** narrow a large profile. `monetization` is 204 tools; if you only change prices, `monetization:subscription-pricing` is 24 and still carries the one-call price macro. The setup picker writes this for you — check a profile, move the cursor onto it and its sub-profiles unfold underneath, all on; uncheck what you don't need. Syntax, if you write the config by hand:
 
 ```
 npx -y @erayendes/asc-mcp monetization                    everything
-npx -y @erayendes/asc-mcp monetization:subscriptions,iap  those two plus core
+npx -y @erayendes/asc-mcp monetization:subscription-pricing  that slice plus core
 ```
 
 The server name stays `asc-monetization` either way. Ask it `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
@@ -397,7 +397,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
 | `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscriptions, iap, app-price, storekit, winback, promote |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 54 | — |
@@ -411,11 +411,11 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 
 Her profil ayrıca çekirdek kümeyi taşır (`apps__list`, `apps__get`, dört paylaşımlı ilişki listesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`); böylece herhangi biri uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini gösterir.
 
-**Alt profiller** büyük bir profili daraltır. `monetization` 204 araç; yalnız aboneliklere dokunuyorsanız `monetization:subscriptions` 108 araç ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi bunu sizin yerinize yazar — bir profili işaretleyin, imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır; istemediğinizi kaldırın. Config'i elle yazacaksanız sözdizimi:
+**Alt profiller** büyük bir profili daraltır. `monetization` 204 araç; yalnız fiyat değiştiriyorsanız `monetization:subscription-pricing` 24 araç ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi bunu sizin yerinize yazar — bir profili işaretleyin, imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır; istemediğinizi kaldırın. Config'i elle yazacaksanız sözdizimi:
 
 ```
 npx -y @erayendes/asc-mcp monetization                    tamamı
-npx -y @erayendes/asc-mcp monetization:subscriptions,iap  bu ikisi + çekirdek
+npx -y @erayendes/asc-mcp monetization:subscription-pricing  o dilim + çekirdek
 ```
 
 Sunucu adı her iki hâlde `asc-monetization`. İstediğiniz an `asc__status` sorun: hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini söyler.

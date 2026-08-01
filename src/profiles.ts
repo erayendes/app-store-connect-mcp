@@ -89,15 +89,23 @@ const DESCRIPTIONS: Record<string, string> = {
   'marketing/pp-main': 'The main product page: screenshot sets and app preview sets.',
 
   monetization: 'Money: subscriptions, in-app purchases, offers, app pricing, StoreKit 2 transactions.',
-  'monetization/subscriptions':
-    'Subscriptions: groups, localizations, price points, offers, and the one-call price macro.',
-  'monetization/iap':
-    'In-app purchases: localizations, availability, price schedules, offer codes, images, sandbox test accounts.',
-  'monetization/app-price': 'The app\'s own price schedule and price points (not in-app purchases).',
+  'monetization/subscription-catalog':
+    'The subscription products themselves: groups, plans, localizations, images, versions, ' +
+    'availability, submissions.',
+  'monetization/subscription-pricing':
+    'What a subscription costs: price points per territory, current prices, equalizations, ' +
+    'and the one-call price macro.',
+  'monetization/subscription-offers':
+    'Discounts on a subscription: introductory, promotional and win-back offers, offer codes.',
+  'monetization/iap-catalog':
+    'The in-app purchase products themselves: localizations, images, versions, availability, ' +
+    'hosted content, promoted placements, sandbox test accounts.',
+  'monetization/iap-pricing':
+    'What an in-app purchase costs: price schedules, price points per territory, equalizations.',
+  'monetization/iap-offers': 'Discounts on an in-app purchase: offer codes, custom and one-time-use.',
+  'monetization/app-price': "The app's own price schedule and price points (not in-app purchases).",
   'monetization/storekit':
     'App Store Server API: customer transactions, refunds, subscription status, renewal dates.',
-  'monetization/winback': 'Win-back offers for lapsed subscribers.',
-  'monetization/promote': 'Promoted purchases shown on the App Store product page.',
 
   provisioning: 'Code signing infrastructure: bundle IDs, certificates, devices, provisioning profiles.',
 

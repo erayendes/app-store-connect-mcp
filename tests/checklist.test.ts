@@ -52,7 +52,7 @@ describe('checklist reducer', () => {
  */
 const nested: ChecklistItem[] = [
   { label: 'monetization' },
-  { label: 'subscriptions', parent: 0 },
+  { label: 'subscription-catalog', parent: 0 },
   { label: 'iap', parent: 0 },
   { label: 'webhooks' },
   { label: 'only-child', parent: 3 },
@@ -136,7 +136,7 @@ describe('profile size hint inputs', () => {
 
   it('a sub-profile selection is smaller than the whole profile', () => {
     const whole = toolCountFor(resolveSelection('monetization'));
-    const part = toolCountFor(resolveSelection('monetization:subscriptions'));
+    const part = toolCountFor(resolveSelection('monetization:subscription-catalog'));
     expect(part).toBeLessThan(whole);
     expect(part).toBeGreaterThan(0);
   });
