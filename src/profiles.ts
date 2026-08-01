@@ -54,8 +54,9 @@ const DESCRIPTIONS: Record<string, string> = {
     'Release pipeline: App Store versions, localizations, phased releases, review submissions, builds.',
   'distribution/version':
     'App Store versions: localizations, search keywords, phased release, submit and release.',
-  'distribution/alternative':
-    'Alternative distribution (EU): domains, keys, packages, marketplace search details.',
+  'distribution/dma-distribution':
+    'Distribution outside the App Store under the EU Digital Markets Act: web distribution ' +
+    'domains, alternative marketplace listings, signing keys, packages.',
   'distribution/builds': 'Uploaded builds: upload sessions, bundles, file sizes, diagnostics.',
   'distribution/coverages': 'Routing app coverage files for apps that show maps.',
   'distribution/pre-release': 'Pre-release versions and the builds under them.',
