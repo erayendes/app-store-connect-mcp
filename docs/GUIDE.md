@@ -70,12 +70,12 @@ The key is stored in the **macOS Keychain** (or referenced by file path off macO
 
 ### 4. Register profiles
 
-One install backs seventeen small, purpose-built MCP servers. Pass a profile name and only that area's tools are served. The counts are what the setup picker shows (deprecated excluded, core included):
+One install backs sixteen small, purpose-built MCP servers. Pass a profile name and only that area's tools are served. The counts are what the setup picker shows (deprecated excluded, core included):
 
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings | 41 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds | 101 | version, dma-distribution, builds, coverages, pre-release, review, submission |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscriptions, iap, app-price, storekit, winback, promote |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
 | `access` | Beta groups, testers, invitations, team members | 64 | beta-groups, beta-testers, users |
@@ -87,7 +87,6 @@ One install backs seventeen small, purpose-built MCP servers. Pass a profile nam
 | `analytics` | Sales/finance reports, analytics, performance metrics | 23 | — |
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
 | `agreements` | End user license and beta license agreements | 20 | — |
-| `encryption` | Export compliance declarations and documents | 17 | — |
 | `webhooks` | Webhook configuration and diagnostics | 17 | — |
 | `accessibility` | Accessibility declarations (Nutrition Labels) | 14 | — |
 | `android-to-ios` | Android-to-iOS app mapping details | 14 | — |
@@ -395,12 +394,12 @@ Anahtar **macOS Keychain**'de saklanır (macOS dışında dosya yoluyla referans
 
 ### 4. Profilleri kaydedin
 
-Tek kurulum, on yedi küçük, amaca özel MCP sunucusu sunar. Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir. Sayılar setup seçicinin gösterdiğidir (deprecated hariç, çekirdek dahil):
+Tek kurulum, on altı küçük, amaca özel MCP sunucusu sunar. Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir. Sayılar setup seçicinin gösterdiğidir (deprecated hariç, çekirdek dahil):
 
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı | 41 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler | 101 | version, dma-distribution, builds, coverages, pre-release, review, submission |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu | 109 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscriptions, iap, app-price, storekit, winback, promote |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | pp-main, pp-custom, pp-experiment, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-groups, beta-testers, users |
@@ -412,7 +411,6 @@ Tek kurulum, on yedi küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `analytics` | Satış/finans raporları, analytics, performans metrikleri | 23 | — |
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
 | `agreements` | Son kullanıcı ve beta lisans sözleşmeleri | 20 | — |
-| `encryption` | İhracat uyumluluğu beyanları ve belgeleri | 17 | — |
 | `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
 | `accessibility` | Erişilebilirlik beyanları (Nutrition Labels) | 14 | — |
 | `android-to-ios` | Android'den iOS'a uygulama eşleme bilgileri | 14 | — |
