@@ -132,7 +132,7 @@ async function main(): Promise<void> {
   }
   console.log(`  app id        ${appId}`);
 
-  const asc = client('user-management', ['--no-confirm']);
+  const asc = client('access', ['--no-confirm']);
   await asc.start();
 
   let groupId: string | undefined;
