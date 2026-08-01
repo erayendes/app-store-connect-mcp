@@ -144,9 +144,15 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     },
     {
       name: "builds",
-      operations: ["apps.build_uploads.list","build_bundles.build_bundle_file_sizes.list","build_upload_files.create","build_upload_files.get","build_upload_files.update","build_uploads.build_upload_files.list","build_uploads.create","build_uploads.delete","build_uploads.get","builds.app.get","builds.app_encryption_declaration.set","builds.app_store_version.get","builds.diagnostic_signatures.list","builds.get","builds.icons.list","builds.list","builds.perf_power_metrics.list","builds.pre_release_version.get","builds.update"],
+      operations: ["apps.build_uploads.list","build_bundles.build_bundle_file_sizes.list","build_upload_files.create","build_upload_files.get","build_upload_files.update","build_uploads.build_upload_files.list","build_uploads.create","build_uploads.delete","build_uploads.get","builds.app.get","builds.app_store_version.get","builds.diagnostic_signatures.list","builds.get","builds.icons.list","builds.list","builds.perf_power_metrics.list","builds.pre_release_version.get","builds.update"],
       manualTools: [],
       rootResources: ["apps","build_bundles","build_upload_files","build_uploads","builds"],
+    },
+    {
+      name: "encryption",
+      operations: ["app_encryption_declaration_documents.create","app_encryption_declaration_documents.get","app_encryption_declaration_documents.update","app_encryption_declarations.app_encryption_declaration_document.get","app_encryption_declarations.create","app_encryption_declarations.get","app_encryption_declarations.list","builds.app_encryption_declaration.get","builds.app_encryption_declaration.set"],
+      manualTools: [],
+      rootResources: ["app_encryption_declaration_documents","app_encryption_declarations","builds"],
     },
     {
       name: "coverages",
@@ -171,17 +177,6 @@ export const PROFILE_DATA: GeneratedProfile[] = [
       operations: ["app_store_review_attachments.create","app_store_review_attachments.delete","app_store_review_attachments.get","app_store_review_attachments.update","app_store_review_details.app_store_review_attachments.list","app_store_review_details.create","app_store_review_details.get","app_store_review_details.update","apps.review_submissions.list"],
       manualTools: [],
       rootResources: ["app_store_review_attachments","app_store_review_details","apps"],
-    },
-    ],
-  },
-  {
-    name: "encryption",
-    subProfiles: [
-    {
-      name: "",
-      operations: ["app_encryption_declaration_documents.create","app_encryption_declaration_documents.get","app_encryption_declaration_documents.update","app_encryption_declarations.app_encryption_declaration_document.get","app_encryption_declarations.create","app_encryption_declarations.get","app_encryption_declarations.list","builds.app_encryption_declaration.get"],
-      manualTools: [],
-      rootResources: ["app_encryption_declaration_documents","app_encryption_declarations","builds"],
     },
     ],
   },

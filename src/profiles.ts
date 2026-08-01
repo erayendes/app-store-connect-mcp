@@ -58,13 +58,14 @@ const DESCRIPTIONS: Record<string, string> = {
     'Distribution outside the App Store under the EU Digital Markets Act: web distribution ' +
     'domains, alternative marketplace listings, signing keys, packages.',
   'distribution/builds': 'Uploaded builds: upload sessions, bundles, file sizes, diagnostics.',
+  'distribution/encryption':
+    'Export compliance: encryption declarations, their documents, and attaching one to a build.',
   'distribution/coverages': 'Routing app coverage files for apps that show maps.',
   'distribution/pre-release': 'Pre-release versions and the builds under them.',
   'distribution/review': 'Review submissions and the items inside them.',
   'distribution/submission':
     'App Review details and attachments: contact info, demo account, review notes.',
 
-  encryption: 'Export compliance: app encryption declarations and their documents.',
 
   'game-center': 'Game Center: achievements, leaderboards, activities, challenges, matchmaking.',
   'game-center/gc-achievement': 'Achievements: versions, localizations, images.',
