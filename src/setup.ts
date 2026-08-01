@@ -37,7 +37,7 @@ type Ask = (q: string, required?: boolean) => Promise<string>;
  * and only appear once the profile is checked, so the list opens at 17 rows
  * instead of 46 and still lets someone trim a 192-tool profile down.
  */
-interface Row {
+export interface Row {
   index: number;
   item: ChecklistItem;
   profile: Profile;
@@ -47,7 +47,7 @@ interface Row {
 /** Tools a row serves, excluding the core set every server carries anyway. */
 const subProfileToolCount = (s: SubProfile): number => s.operations.length + s.manualTools.length;
 
-function buildRows(): Row[] {
+export function buildRows(): Row[] {
   const rows: Row[] = [];
   const size = (n: number): string => `~${Math.max(1, Math.round((n * TOKENS_PER_TOOL) / 1000))}k`;
   // Drop the leading "Category: " heading; lowercase for a uniform look.
@@ -107,7 +107,7 @@ function listRegisteredProfiles(): Map<string, string> {
 }
 
 /** Rows to pre-check so the picker opens showing what is already registered. */
-function preselect(rows: Row[], registered: Map<string, string>): number[] {
+export function preselect(rows: Row[], registered: Map<string, string>): number[] {
   const picked: number[] = [];
   for (const row of rows) {
     const spec = registered.get(row.profile.name);

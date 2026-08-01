@@ -31,16 +31,16 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     name: "access",
     subProfiles: [
     {
-      name: "beta-testers",
-      operations: ["apps.beta_testers.remove","beta_tester_invitations.create","beta_testers.apps.list","beta_testers.apps.remove","beta_testers.beta_groups.add","beta_testers.beta_groups.list","beta_testers.beta_groups.remove","beta_testers.beta_tester_usages.metrics","beta_testers.builds.add","beta_testers.builds.list","beta_testers.builds.remove","beta_testers.create","beta_testers.delete","beta_testers.get","beta_testers.list","build_beta_notifications.create","builds.beta_groups.add","builds.beta_groups.remove","builds.individual_testers.add","builds.individual_testers.list","builds.individual_testers.remove"],
-      manualTools: [],
-      rootResources: ["apps","beta_tester_invitations","beta_testers","build_beta_notifications","builds"],
-    },
-    {
       name: "beta-groups",
       operations: ["beta_groups.beta_recruitment_criteria.get","beta_groups.beta_recruitment_criterion_compatible_build_check.get","beta_groups.beta_tester_usages.metrics","beta_groups.beta_testers.add","beta_groups.beta_testers.list","beta_groups.beta_testers.remove","beta_groups.builds.add","beta_groups.builds.list","beta_groups.builds.remove","beta_groups.create","beta_groups.delete","beta_groups.get","beta_groups.list","beta_groups.public_link_usages.metrics","beta_groups.update","beta_recruitment_criteria.create","beta_recruitment_criteria.delete","beta_recruitment_criteria.update","beta_recruitment_criterion_options.list"],
       manualTools: [],
       rootResources: ["beta_groups","beta_recruitment_criteria","beta_recruitment_criterion_options"],
+    },
+    {
+      name: "beta-testers",
+      operations: ["apps.beta_testers.remove","beta_tester_invitations.create","beta_testers.apps.list","beta_testers.apps.remove","beta_testers.beta_groups.add","beta_testers.beta_groups.list","beta_testers.beta_groups.remove","beta_testers.beta_tester_usages.metrics","beta_testers.builds.add","beta_testers.builds.list","beta_testers.builds.remove","beta_testers.create","beta_testers.delete","beta_testers.get","beta_testers.list","build_beta_notifications.create","builds.beta_groups.add","builds.beta_groups.remove","builds.individual_testers.add","builds.individual_testers.list","builds.individual_testers.remove"],
+      manualTools: [],
+      rootResources: ["apps","beta_tester_invitations","beta_testers","build_beta_notifications","builds"],
     },
     {
       name: "users",
@@ -98,10 +98,16 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     name: "distribution",
     subProfiles: [
     {
-      name: "version",
-      operations: ["app_store_version_localizations.app_preview_sets.list","app_store_version_localizations.app_screenshot_sets.list","app_store_version_localizations.create","app_store_version_localizations.delete","app_store_version_localizations.get","app_store_version_localizations.search_keywords.add","app_store_version_localizations.search_keywords.list","app_store_version_localizations.search_keywords.remove","app_store_version_localizations.update","app_store_version_phased_releases.create","app_store_version_phased_releases.delete","app_store_version_phased_releases.update","app_store_version_promotions.create","app_store_version_release_requests.create","app_store_versions.app_store_review_detail.get","app_store_versions.app_store_version_localizations.list","app_store_versions.app_store_version_phased_release.get","app_store_versions.build.get","app_store_versions.build.set","app_store_versions.create","app_store_versions.delete","app_store_versions.get","app_store_versions.routing_app_coverage.get","app_store_versions.update","apps.search_keywords.list"],
+      name: "builds",
+      operations: ["apps.build_uploads.list","build_bundles.build_bundle_file_sizes.list","build_upload_files.create","build_upload_files.get","build_upload_files.update","build_uploads.build_upload_files.list","build_uploads.create","build_uploads.delete","build_uploads.get","builds.app.get","builds.app_store_version.get","builds.diagnostic_signatures.list","builds.get","builds.icons.list","builds.list","builds.perf_power_metrics.list","builds.pre_release_version.get","builds.update"],
       manualTools: [],
-      rootResources: ["app_store_version_localizations","app_store_version_phased_releases","app_store_version_promotions","app_store_version_release_requests","app_store_versions","apps"],
+      rootResources: ["apps","build_bundles","build_upload_files","build_uploads","builds"],
+    },
+    {
+      name: "coverages",
+      operations: ["routing_app_coverages.create","routing_app_coverages.delete","routing_app_coverages.get","routing_app_coverages.update"],
+      manualTools: [],
+      rootResources: ["routing_app_coverages"],
     },
     {
       name: "dma-distribution",
@@ -110,22 +116,10 @@ export const PROFILE_DATA: GeneratedProfile[] = [
       rootResources: ["alternative_distribution_domains","alternative_distribution_keys","alternative_distribution_package_deltas","alternative_distribution_package_variants","alternative_distribution_package_versions","alternative_distribution_packages","app_store_versions","apps","marketplace_search_details"],
     },
     {
-      name: "builds",
-      operations: ["apps.build_uploads.list","build_bundles.build_bundle_file_sizes.list","build_upload_files.create","build_upload_files.get","build_upload_files.update","build_uploads.build_upload_files.list","build_uploads.create","build_uploads.delete","build_uploads.get","builds.app.get","builds.app_store_version.get","builds.diagnostic_signatures.list","builds.get","builds.icons.list","builds.list","builds.perf_power_metrics.list","builds.pre_release_version.get","builds.update"],
-      manualTools: [],
-      rootResources: ["apps","build_bundles","build_upload_files","build_uploads","builds"],
-    },
-    {
       name: "encryption",
       operations: ["app_encryption_declaration_documents.create","app_encryption_declaration_documents.get","app_encryption_declaration_documents.update","app_encryption_declarations.app_encryption_declaration_document.get","app_encryption_declarations.create","app_encryption_declarations.get","app_encryption_declarations.list","builds.app_encryption_declaration.get","builds.app_encryption_declaration.set"],
       manualTools: [],
       rootResources: ["app_encryption_declaration_documents","app_encryption_declarations","builds"],
-    },
-    {
-      name: "coverages",
-      operations: ["routing_app_coverages.create","routing_app_coverages.delete","routing_app_coverages.get","routing_app_coverages.update"],
-      manualTools: [],
-      rootResources: ["routing_app_coverages"],
     },
     {
       name: "pre-release",
@@ -144,6 +138,12 @@ export const PROFILE_DATA: GeneratedProfile[] = [
       operations: ["app_store_review_attachments.create","app_store_review_attachments.delete","app_store_review_attachments.get","app_store_review_attachments.update","app_store_review_details.app_store_review_attachments.list","app_store_review_details.create","app_store_review_details.get","app_store_review_details.update","apps.review_submissions.list"],
       manualTools: [],
       rootResources: ["app_store_review_attachments","app_store_review_details","apps"],
+    },
+    {
+      name: "version",
+      operations: ["app_store_version_localizations.app_preview_sets.list","app_store_version_localizations.app_screenshot_sets.list","app_store_version_localizations.create","app_store_version_localizations.delete","app_store_version_localizations.get","app_store_version_localizations.search_keywords.add","app_store_version_localizations.search_keywords.list","app_store_version_localizations.search_keywords.remove","app_store_version_localizations.update","app_store_version_phased_releases.create","app_store_version_phased_releases.delete","app_store_version_phased_releases.update","app_store_version_promotions.create","app_store_version_release_requests.create","app_store_versions.app_store_review_detail.get","app_store_versions.app_store_version_localizations.list","app_store_versions.app_store_version_phased_release.get","app_store_versions.build.get","app_store_versions.build.set","app_store_versions.create","app_store_versions.delete","app_store_versions.get","app_store_versions.routing_app_coverage.get","app_store_versions.update","apps.search_keywords.list"],
+      manualTools: [],
+      rootResources: ["app_store_version_localizations","app_store_version_phased_releases","app_store_version_promotions","app_store_version_release_requests","app_store_versions","apps"],
     },
     ],
   },
@@ -245,22 +245,16 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     name: "monetization",
     subProfiles: [
     {
-      name: "iap-catalog",
-      operations: ["apps.in_app_purchases_v2.list","apps.promoted_purchases.list","apps.promoted_purchases.replace","in_app_purchase_app_store_review_screenshots.create","in_app_purchase_app_store_review_screenshots.delete","in_app_purchase_app_store_review_screenshots.get","in_app_purchase_app_store_review_screenshots.update","in_app_purchase_availabilities.available_territories.list","in_app_purchase_availabilities.create","in_app_purchase_availabilities.get","in_app_purchase_contents.get","in_app_purchase_images.create","in_app_purchase_images.delete","in_app_purchase_images.get","in_app_purchase_images.update","in_app_purchase_images_v2.create","in_app_purchase_images_v2.delete","in_app_purchase_images_v2.get","in_app_purchase_images_v2.update","in_app_purchase_localizations.create","in_app_purchase_localizations.delete","in_app_purchase_localizations.get","in_app_purchase_localizations.update","in_app_purchase_localizations_v2.create","in_app_purchase_localizations_v2.delete","in_app_purchase_localizations_v2.get","in_app_purchase_localizations_v2.update","in_app_purchase_submissions.create","in_app_purchase_versions.create","in_app_purchase_versions.get","in_app_purchase_versions.image.get","in_app_purchase_versions.images.list","in_app_purchase_versions.localizations.list","in_app_purchases_v2.app_store_review_screenshot.get","in_app_purchases_v2.content.get","in_app_purchases_v2.create","in_app_purchases_v2.delete","in_app_purchases_v2.get","in_app_purchases_v2.images.list","in_app_purchases_v2.in_app_purchase_availability.get","in_app_purchases_v2.in_app_purchase_localizations.list","in_app_purchases_v2.promoted_purchase.get","in_app_purchases_v2.update","in_app_purchases_v2.versions.list","promoted_purchases.create","promoted_purchases.delete","promoted_purchases.get","promoted_purchases.update","sandbox_testers_clear_purchase_history_request_v2.create","sandbox_testers_v2.list","sandbox_testers_v2.update"],
-      manualTools: [],
-      rootResources: ["apps","in_app_purchase_app_store_review_screenshots","in_app_purchase_availabilities","in_app_purchase_contents","in_app_purchase_images","in_app_purchase_images_v2","in_app_purchase_localizations","in_app_purchase_localizations_v2","in_app_purchase_submissions","in_app_purchase_versions","in_app_purchases_v2","promoted_purchases","sandbox_testers_clear_purchase_history_request_v2","sandbox_testers_v2"],
-    },
-    {
       name: "app-price",
       operations: ["app_price_points_v3.equalizations.list","app_price_points_v3.get","app_price_schedules.automatic_prices.list","app_price_schedules.base_territory.get","app_price_schedules.create","app_price_schedules.get","app_price_schedules.manual_prices.list","apps.app_price_points.list","apps.app_price_schedule.get"],
       manualTools: [],
       rootResources: ["app_price_points_v3","app_price_schedules","apps"],
     },
     {
-      name: "subscription-pricing",
-      operations: ["apps.subscription_groups.list","subscription_groups.subscriptions.list","subscription_offer_codes.prices.list","subscription_price_points.adjusted_equalizations.list","subscription_price_points.equalizations.list","subscription_price_points.get","subscription_prices.create","subscription_prices.delete","subscription_promotional_offers.prices.list","subscriptions.get","subscriptions.price_points.list","subscriptions.prices.list","subscriptions.prices.remove","win_back_offers.prices.list"],
-      manualTools: ["pricing__set_subscription_price"],
-      rootResources: ["(makro)","apps","subscription_groups","subscription_offer_codes","subscription_price_points","subscription_prices","subscription_promotional_offers","subscriptions","win_back_offers"],
+      name: "iap-catalog",
+      operations: ["apps.in_app_purchases_v2.list","apps.promoted_purchases.list","apps.promoted_purchases.replace","in_app_purchase_app_store_review_screenshots.create","in_app_purchase_app_store_review_screenshots.delete","in_app_purchase_app_store_review_screenshots.get","in_app_purchase_app_store_review_screenshots.update","in_app_purchase_availabilities.available_territories.list","in_app_purchase_availabilities.create","in_app_purchase_availabilities.get","in_app_purchase_contents.get","in_app_purchase_images.create","in_app_purchase_images.delete","in_app_purchase_images.get","in_app_purchase_images.update","in_app_purchase_images_v2.create","in_app_purchase_images_v2.delete","in_app_purchase_images_v2.get","in_app_purchase_images_v2.update","in_app_purchase_localizations.create","in_app_purchase_localizations.delete","in_app_purchase_localizations.get","in_app_purchase_localizations.update","in_app_purchase_localizations_v2.create","in_app_purchase_localizations_v2.delete","in_app_purchase_localizations_v2.get","in_app_purchase_localizations_v2.update","in_app_purchase_submissions.create","in_app_purchase_versions.create","in_app_purchase_versions.get","in_app_purchase_versions.image.get","in_app_purchase_versions.images.list","in_app_purchase_versions.localizations.list","in_app_purchases_v2.app_store_review_screenshot.get","in_app_purchases_v2.content.get","in_app_purchases_v2.create","in_app_purchases_v2.delete","in_app_purchases_v2.get","in_app_purchases_v2.images.list","in_app_purchases_v2.in_app_purchase_availability.get","in_app_purchases_v2.in_app_purchase_localizations.list","in_app_purchases_v2.promoted_purchase.get","in_app_purchases_v2.update","in_app_purchases_v2.versions.list","promoted_purchases.create","promoted_purchases.delete","promoted_purchases.get","promoted_purchases.update","sandbox_testers_clear_purchase_history_request_v2.create","sandbox_testers_v2.list","sandbox_testers_v2.update"],
+      manualTools: [],
+      rootResources: ["apps","in_app_purchase_app_store_review_screenshots","in_app_purchase_availabilities","in_app_purchase_contents","in_app_purchase_images","in_app_purchase_images_v2","in_app_purchase_localizations","in_app_purchase_localizations_v2","in_app_purchase_submissions","in_app_purchase_versions","in_app_purchases_v2","promoted_purchases","sandbox_testers_clear_purchase_history_request_v2","sandbox_testers_v2"],
     },
     {
       name: "iap-offers",
@@ -291,6 +285,12 @@ export const PROFILE_DATA: GeneratedProfile[] = [
       operations: ["apps.subscription_groups.list","subscription_groups.subscriptions.list","subscription_introductory_offers.create","subscription_introductory_offers.delete","subscription_introductory_offers.update","subscription_offer_code_custom_codes.create","subscription_offer_code_custom_codes.get","subscription_offer_code_custom_codes.update","subscription_offer_code_one_time_use_codes.create","subscription_offer_code_one_time_use_codes.get","subscription_offer_code_one_time_use_codes.update","subscription_offer_code_one_time_use_codes.values.get","subscription_offer_codes.create","subscription_offer_codes.custom_codes.list","subscription_offer_codes.get","subscription_offer_codes.one_time_use_codes.list","subscription_offer_codes.update","subscription_promotional_offers.create","subscription_promotional_offers.delete","subscription_promotional_offers.get","subscription_promotional_offers.update","subscriptions.get","subscriptions.introductory_offers.list","subscriptions.introductory_offers.remove","subscriptions.offer_codes.list","subscriptions.promotional_offers.list","subscriptions.win_back_offers.list","win_back_offers.create","win_back_offers.delete","win_back_offers.get","win_back_offers.update"],
       manualTools: [],
       rootResources: ["apps","subscription_groups","subscription_introductory_offers","subscription_offer_code_custom_codes","subscription_offer_code_one_time_use_codes","subscription_offer_codes","subscription_promotional_offers","subscriptions","win_back_offers"],
+    },
+    {
+      name: "subscription-pricing",
+      operations: ["apps.subscription_groups.list","subscription_groups.subscriptions.list","subscription_offer_codes.prices.list","subscription_price_points.adjusted_equalizations.list","subscription_price_points.equalizations.list","subscription_price_points.get","subscription_prices.create","subscription_prices.delete","subscription_promotional_offers.prices.list","subscriptions.get","subscriptions.price_points.list","subscriptions.prices.list","subscriptions.prices.remove","win_back_offers.prices.list"],
+      manualTools: ["pricing__set_subscription_price"],
+      rootResources: ["(makro)","apps","subscription_groups","subscription_offer_codes","subscription_price_points","subscription_prices","subscription_promotional_offers","subscriptions","win_back_offers"],
     },
     ],
   },
