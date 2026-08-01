@@ -64,6 +64,21 @@ describe('checklist sub-rows', () => {
     expect(visibleIndices(nested, st(0, [0]))).toEqual([0, 1, 2, 3]);
   });
 
+  it('opens only the group under the cursor, however many parents are checked', () => {
+    // Eight registered profiles used to open the picker to 46 rows — every
+    // checked parent unfolded at once, which is the wall sub-rows exist to
+    // avoid. Only what the cursor is on unfolds.
+    const everything = st(0, [0, 1, 2, 3, 4]);
+    expect(visibleIndices(nested, everything)).toEqual([0, 1, 2, 3]); // 4 stays folded
+    expect(visibleIndices(nested, { ...everything, cursor: 3 })).toEqual([0, 3, 4]);
+  });
+
+  it('keeps the group open while the cursor is inside it', () => {
+    const s = st(1, [0, 1, 2]);
+    expect(visibleIndices(nested, s)).toContain(2);
+    expect(visibleIndices(nested, s)).toEqual([0, 1, 2, 3]);
+  });
+
   it('checking a parent turns every child on — doing nothing keeps today behaviour', () => {
     const opened = applyAction(st(0, []), 'toggle', nested);
     expect([...opened.selected].sort()).toEqual([0, 1, 2]);

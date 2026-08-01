@@ -50,13 +50,24 @@ export function keyToAction(key: Pick<Key, 'name' | 'ctrl'>): KeyAction {
   }
 }
 
-/** Rows currently on screen: a child shows only while its parent is checked. */
+/**
+ * Rows currently on screen: a child shows while its parent is checked *and* the
+ * cursor is in that group.
+ *
+ * Tying it to the checkbox alone looked right with one profile checked and fell
+ * apart with eight: someone who already registered eight profiles opened the
+ * picker to 46 rows, which is the wall the sub-rows existed to avoid. The cursor
+ * is the better signal — it says what the user is looking at right now, while
+ * the checkbox says what they want registered, and those are different
+ * questions.
+ */
 export function visibleIndices(items: ChecklistItem[], state: ChecklistState): number[] {
+  const focused = items[state.cursor]?.parent ?? state.cursor;
   return items
     .map((_, i) => i)
     .filter((i) => {
       const parent = items[i].parent;
-      return parent === undefined || state.selected.has(parent);
+      return parent === undefined || (state.selected.has(parent) && parent === focused);
     });
 }
 
