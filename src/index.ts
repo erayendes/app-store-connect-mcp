@@ -1,14 +1,16 @@
 #!/usr/bin/env node
+import { pathToFileURL } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadConfig } from './core/config.js';
 import { ConfigError } from './core/errors.js';
-import { createServer, VERSION } from './server.js';
+import { createServer, createRemovedProfileServer, VERSION } from './server.js';
 import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
-import { PROFILES, resolveProfile } from './profiles.js';
+import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor } from './profiles.js';
 
-function printHelp(): void {
-  console.log(`Heimdall — App Store Connect MCP (asc-mcp) v${VERSION}
+/** Exported so a test can prove the profile list here never drifts from the code. */
+export function helpText(): string {
+  return `Heimdall — App Store Connect MCP (asc-mcp) v${VERSION}
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
@@ -20,8 +22,16 @@ profile's tools are served (as "asc-<profile>"). Add one entry per profile to
 your client config and pick per project. No profile = the classic combined
 server.
 
+A profile can be narrowed to some of its sub-profiles with a colon:
+  asc-mcp monetization                    everything the profile carries
+  asc-mcp monetization:subscriptions,iap  only those two
+
 Profiles:
-${PROFILES.map((p) => `  ${p.name.padEnd(20)} ${p.description}`).join('\n')}
+${PROFILES.map((p) => {
+  const subs = p.subProfiles.filter((s) => s.name).map((s) => s.name);
+  const head = `  ${p.name.padEnd(18)} ${p.description}`;
+  return subs.length ? `${head}\n${' '.repeat(21)}sub-profiles: ${subs.join(', ')}` : head;
+}).join('\n')}
 
 Commands:
   setup                  Interactive one-time credential setup shared by every
@@ -57,14 +67,14 @@ Credentials (in resolution order):
      (StoreKit 2), ASC_ENVIRONMENT (Sandbox|Production).
   2. Shared config written by "npx -y @erayendes/asc-mcp setup" — recommended when
      running several profiles, so credentials live in exactly one place.
-`);
+`;
 }
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
   if (argv.includes('--help') || argv.includes('-h')) {
-    printHelp();
+    console.log(helpText());
     return;
   }
   if (argv.includes('--version') || argv.includes('-v')) {
@@ -86,15 +96,25 @@ async function main(): Promise<void> {
     return;
   }
 
-  let profile;
+  // A profile that no longer exists starts anyway, with a single tool that
+  // explains where its tools went — see createRemovedProfileServer.
+  const removedName = positional[0]?.split(':', 1)[0];
+  if (removedName && REMOVED_PROFILES[removedName]) {
+    const server = createRemovedProfileServer(removedName);
+    await server.connect(new StdioServerTransport());
+    console.error(
+      `asc-${removedName} v${VERSION}: this profile was removed. ` +
+        `${REMOVED_PROFILES[removedName].summary}`
+    );
+    return;
+  }
+
+  let selection;
   if (positional.length) {
-    profile = resolveProfile(positional[0]);
-    if (!profile) {
-      console.error(
-        `Unknown profile "${positional[0]}".\n` +
-          `Available: ${PROFILES.map((p) => p.name).join(', ')}\n` +
-          `Or run with no profile for the combined server.`
-      );
+    try {
+      selection = resolveSelection(positional[0]);
+    } catch (err) {
+      console.error((err as Error).message);
       process.exit(1);
     }
   }
@@ -110,18 +130,26 @@ async function main(): Promise<void> {
     throw err;
   }
 
-  const server = createServer(config, profile);
+  const server = createServer(config, selection);
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
   // stderr is safe: stdout carries the MCP protocol itself.
+  const scope = selection
+    ? `asc-${selection.profile.name}` +
+      (selection.partial ? `:${selection.subProfiles.map((s) => s.name).join(',')}` : '') +
+      ` (${toolCountFor(selection)} tools)`
+    : 'asc-mcp';
   console.error(
-    `${profile ? `asc-${profile.name}` : 'asc-mcp'} v${VERSION} ready ` +
-      `(spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
+    `${scope} v${VERSION} ready (spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
   );
 }
 
-main().catch((err) => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+// Only when run as the binary: importing this module (a test reading helpText)
+// must not start a server on stdio.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}

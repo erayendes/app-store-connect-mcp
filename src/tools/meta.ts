@@ -14,9 +14,9 @@ export const META_TOOLS: McpToolDefinition[] = [
   {
     name: 'asc__discover_domains',
     description:
-      'List every available tool domain, how many tools each contains, and which are ' +
-      'currently loaded. Use this when a capability you need is not in the tool list — ' +
-      'it tells you which domain to enable via the --domains flag.',
+      'List what this server can reach and what it cannot: in profile mode the profiles ' +
+      'and sub-profiles that exist, which are loaded here, and how many tools each holds; ' +
+      'otherwise the tool domains. Use this when a capability you need is not in the tool list.',
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true },
   },
@@ -149,14 +149,30 @@ export async function executeMetaTool(
     tokens: TokenProvider;
     readOnly: boolean;
     loadedDomains: string[];
-    /** In profile mode: how to reach domains this server doesn't carry. */
-    unloadedDomainsHint?: (domains: string[]) => string;
+    /** In profile mode: how to reach operations this server doesn't carry. */
+    missingToolsHint?: (ops: Array<(typeof OPERATIONS)[number]>) => string;
+    /**
+     * In profile mode: what this server is, in profile terms. Domains are the
+     * wrong unit there — one domain is split across as many as four profiles.
+     */
+    profileReport?: () => Record<string, unknown>;
     /** Whether StoreKit (App Store Server API) tools are active on this server. */
     storekitEnabled?: boolean;
   }
 ): Promise<unknown> {
   switch (name) {
     case 'asc__discover_domains': {
+      // Profile mode answers in profiles, not domains: registering a sibling
+      // server is the actual remedy, and a domain no longer names one server.
+      if (ctx.profileReport) {
+        return {
+          specVersion: SPEC_VERSION,
+          totalOperations: OPERATIONS.length,
+          loadedTools: ctx.registry.size,
+          ...ctx.profileReport(),
+        };
+      }
+
       const counts = OPERATIONS.reduce<Record<string, number>>((acc, op) => {
         acc[op.domain] = (acc[op.domain] ?? 0) + 1;
         return acc;
@@ -175,9 +191,8 @@ export async function executeMetaTool(
         })),
         hint:
           unloaded.size > 0
-            ? ctx.unloadedDomainsHint?.([...unloaded]) ??
-              `To load more, restart the server with --domains=${[...unloaded].slice(0, 3).join(',')} ` +
-                `(or --domains=all for every operation).`
+            ? `To load more, restart the server with --domains=${[...unloaded].slice(0, 3).join(',')} ` +
+              `(or --domains=all for every operation).`
             : 'All domains are loaded.',
       };
     }
@@ -187,7 +202,8 @@ export async function executeMetaTool(
       const limit = Number(args.limit ?? 25);
       if (!query) return { matches: [], count: 0 };
 
-      const apiMatches = searchOperations(query).map((op) => ({
+      const apiHits = searchOperations(query);
+      const apiMatches = apiHits.map((op) => ({
         tool: op.name,
         domain: op.domain,
         endpoint: `${op.method} ${op.path}`,
@@ -222,8 +238,11 @@ export async function executeMetaTool(
 
       const hints: string[] = [];
       if (unloadedApiDomains.length) {
+        const unloadedOps = apiHits.filter(
+          (op) => matches.some((m) => m.tool === op.name && !m.loaded)
+        );
         hints.push(
-          ctx.unloadedDomainsHint?.(unloadedApiDomains) ??
+          ctx.missingToolsHint?.(unloadedOps) ??
             `Restart the server with --domains=${unloadedApiDomains.join(',')} ` +
               `(added to any domains you already load) to expose them.`
         );
@@ -255,6 +274,9 @@ export async function executeMetaTool(
         loadedTools: ctx.registry.size,
         totalOperations: OPERATIONS.length,
         readOnly: ctx.readOnly,
+        // Nobody weighs a context budget during setup; they weigh it when a
+        // session starts filling up. That is the moment this answer is read.
+        ...(ctx.profileReport?.() ?? {}),
         token: ctx.tokens.status(),
         rateLimit: ctx.http.limiter.status(),
       };

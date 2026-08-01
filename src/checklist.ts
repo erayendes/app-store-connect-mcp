@@ -10,6 +10,12 @@ import { emitKeypressEvents, type Key } from 'node:readline';
 export interface ChecklistItem {
   label: string;
   hint?: string;
+  /**
+   * Index of the row this one belongs under. Children stay hidden until the
+   * parent is checked, so a list of 17 profiles doesn't open as 46 rows — the
+   * detail appears only where the user has already shown interest.
+   */
+  parent?: number;
 }
 
 export interface ChecklistState {
@@ -44,21 +50,59 @@ export function keyToAction(key: Pick<Key, 'name' | 'ctrl'>): KeyAction {
   }
 }
 
+/** Rows currently on screen: a child shows only while its parent is checked. */
+export function visibleIndices(items: ChecklistItem[], state: ChecklistState): number[] {
+  return items
+    .map((_, i) => i)
+    .filter((i) => {
+      const parent = items[i].parent;
+      return parent === undefined || state.selected.has(parent);
+    });
+}
+
+const childrenOf = (items: ChecklistItem[], parent: number): number[] =>
+  items.map((it, i) => (it.parent === parent ? i : -1)).filter((i) => i >= 0);
+
 /** Apply an action to the state. Returns the next state; caller checks confirm/cancel. */
-export function applyAction(state: ChecklistState, action: KeyAction, count: number): ChecklistState {
+export function applyAction(
+  state: ChecklistState,
+  action: KeyAction,
+  items: ChecklistItem[]
+): ChecklistState {
   const selected = new Set(state.selected);
+  const visible = visibleIndices(items, state);
+  const at = Math.max(0, visible.indexOf(state.cursor));
+
   switch (action) {
     case 'up':
-      return { ...state, cursor: (state.cursor - 1 + count) % count };
+      return { ...state, cursor: visible[(at - 1 + visible.length) % visible.length] };
     case 'down':
-      return { ...state, cursor: (state.cursor + 1) % count };
-    case 'toggle':
-      selected.has(state.cursor) ? selected.delete(state.cursor) : selected.add(state.cursor);
+      return { ...state, cursor: visible[(at + 1) % visible.length] };
+    case 'toggle': {
+      const i = state.cursor;
+      const children = childrenOf(items, i);
+      if (selected.has(i)) {
+        // Closing a parent takes its children with it, so a later reopen starts
+        // from the same all-checked default rather than a half-remembered one.
+        selected.delete(i);
+        for (const c of children) selected.delete(c);
+      } else {
+        selected.add(i);
+        for (const c of children) selected.add(c);
+      }
+      const parent = items[i].parent;
+      // A parent with no children left selects nothing — drop it too, rather
+      // than emitting a profile with an empty sub-profile list.
+      if (parent !== undefined && !childrenOf(items, parent).some((c) => selected.has(c))) {
+        selected.delete(parent);
+        return { ...state, cursor: parent, selected };
+      }
       return { ...state, selected };
+    }
     case 'all': {
       // If everything is already selected, clear; otherwise select all.
-      if (selected.size === count) return { ...state, selected: new Set() };
-      return { ...state, selected: new Set(Array.from({ length: count }, (_, i) => i)) };
+      if (selected.size === items.length) return { ...state, cursor: 0, selected: new Set() };
+      return { ...state, selected: new Set(items.map((_, i) => i)) };
     }
     default:
       return state;
@@ -71,13 +115,18 @@ export function applyAction(state: ChecklistState, action: KeyAction, count: num
  * wraps costs an extra row but never corrupts the display.
  */
 export function renderChecklist(items: ChecklistItem[], state: ChecklistState): string {
-  const labelWidth = Math.max(...items.map((i) => i.label.length));
-  return items
-    .map((item, i) => {
+  const INDENT = '    ';
+  const labelWidth = Math.max(
+    ...items.map((it) => it.label.length + (it.parent === undefined ? 0 : INDENT.length))
+  );
+  return visibleIndices(items, state)
+    .map((i) => {
+      const item = items[i];
       const pointer = i === state.cursor ? '›' : ' ';
       const box = state.selected.has(i) ? '◉' : '◯';
+      const label = (item.parent === undefined ? '' : INDENT) + item.label;
       const hint = item.hint ? `  ${item.hint}` : '';
-      return `${pointer} ${box} ${item.label.padEnd(labelWidth)}${hint}`;
+      return `${pointer} ${box} ${label.padEnd(labelWidth)}${hint}`;
     })
     .join('\n');
 }
@@ -153,7 +202,7 @@ export function runChecklist(
         resolve([...state.selected].sort((a, b) => a - b));
         return;
       }
-      const next = applyAction(state, action, items.length);
+      const next = applyAction(state, action, items);
       if (next !== state) {
         state = next;
         draw();
