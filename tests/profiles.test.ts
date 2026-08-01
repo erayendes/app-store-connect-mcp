@@ -17,7 +17,7 @@ import { readSharedConfig, writeSharedConfig } from '../src/core/shared-config.j
 
 describe('profiles', () => {
   it('resolves a known profile and rejects an unknown one', () => {
-    expect(resolveProfile('monetization')?.subProfiles.map((s) => s.name)).toContain('subscriptions');
+    expect(resolveProfile('monetization')?.subProfiles.map((s) => s.name)).toContain('subscription-catalog');
     expect(resolveProfile('nonsense')).toBeUndefined();
     expect(profilesForOperation('game_center_details.get')).toEqual(['game-center']);
   });
@@ -57,7 +57,7 @@ describe('profiles', () => {
 
   it('narrows a profile to some of its sub-profiles', () => {
     const whole = operationsFor(resolveSelection('monetization'));
-    const part = operationsFor(resolveSelection('monetization:subscriptions'));
+    const part = operationsFor(resolveSelection('monetization:subscription-catalog'));
     expect(part.length).toBeLessThan(whole.length);
     expect(part).toContain('apps.subscription_groups.list');
     expect(part).not.toContain('win_back_offers.create');
@@ -66,7 +66,7 @@ describe('profiles', () => {
   });
 
   it('names the available sub-profiles when one is misspelled', () => {
-    expect(() => resolveSelection('monetization:subscriptons')).toThrow(/subscriptions/);
+    expect(() => resolveSelection('monetization:subscriptons')).toThrow(/subscription-catalog/);
     expect(() => resolveSelection('webhooks:anything')).toThrow(/no sub-profiles/);
   });
 
@@ -84,14 +84,14 @@ describe('profiles', () => {
 
   it('grows the tool list on demand without restarting', () => {
     const registry = new ToolRegistry({
-      operations: operationsFor(resolveSelection('monetization:subscriptions')),
+      operations: operationsFor(resolveSelection('monetization:subscription-catalog')),
       readOnly: false,
       includeDeprecated: false,
     });
     const before = registry.size;
     expect(registry.get('win_back_offers__create')).toBeUndefined();
 
-    const winback = resolveProfile('monetization')!.subProfiles.find((s) => s.name === 'winback')!;
+    const winback = resolveProfile('monetization')!.subProfiles.find((s) => s.name === 'subscription-offers')!;
     const added = registry.loadOperations(winback.operations);
 
     expect(added).toContain('win_back_offers__create');

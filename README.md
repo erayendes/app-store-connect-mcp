@@ -62,7 +62,7 @@ In the other direction, **writes ask before they run.** Changing a price, submit
 
 ### Profiles
 
-One install backs thirteen small, purpose-built MCP servers — `app-info`, `distribution`, `monetization`, `game-center` and nine more. Register only the areas a project uses: the full 982-operation surface would cost well over 100k tokens of tool definitions, while one profile costs a fraction of that. A big profile narrows further — `monetization:subscriptions` is 108 tools instead of 204.
+One install backs thirteen small, purpose-built MCP servers — `app-info`, `distribution`, `monetization`, `game-center` and nine more. Register only the areas a project uses: the full 982-operation surface would cost well over 100k tokens of tool definitions, while one profile costs a fraction of that. A big profile narrows further — `monetization:subscription-pricing` is 24 tools instead of 204.
 
 See the [profile table](docs/GUIDE.md#4-register-profiles) for what each one serves, and [§7](docs/GUIDE.md#7-adding-and-removing-tools-later) for adding or dropping them later. You don't have to memorise anything — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches all 982 operations, including ones not currently loaded.
 
@@ -150,7 +150,7 @@ Diğer yönde ise **yazma işlemleri çalışmadan önce sorar.** Fiyat değişt
 
 ### Profiller
 
-Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar — `app-info`, `distribution`, `monetization`, `game-center` ve dokuz tane daha. Sadece projenizin kullandığı alanları kaydedin: tüm 982 işlemlik yüzey, araç tanımları için 100 bin token'ın epey üzerinde bir maliyet çıkarır; tek bir profil ise bunun küçük bir kısmı. Büyük bir profil daha da daralır — `monetization:subscriptions` 204 yerine 108 araç.
+Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar — `app-info`, `distribution`, `monetization`, `game-center` ve dokuz tane daha. Sadece projenizin kullandığı alanları kaydedin: tüm 982 işlemlik yüzey, araç tanımları için 100 bin token'ın epey üzerinde bir maliyet çıkarır; tek bir profil ise bunun küçük bir kısmı. Büyük bir profil daha da daralır — `monetization:subscription-pricing` 204 yerine 24 araç.
 
 Her birinin neyi kapsadığı için [profil tablosuna](docs/GUIDE.md#4-profilleri-kaydedin), sonradan ekleme/çıkarma için [§7](docs/GUIDE.md#7-sonradan-araç-ekleme-ve-çıkarma)'ye bakın. Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun, `asc__search_tools` tüm 982 işlemi, o an yüklü olmayanlar dahil, arar.
 

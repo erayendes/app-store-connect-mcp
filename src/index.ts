@@ -25,7 +25,7 @@ server.
 
 A profile can be narrowed to some of its sub-profiles with a colon:
   asc-mcp monetization                    everything the profile carries
-  asc-mcp monetization:subscriptions,iap  only those two
+  asc-mcp monetization:subscription-pricing,subscription-offers
 
 Profiles:
 ${PROFILES.map((p) => {

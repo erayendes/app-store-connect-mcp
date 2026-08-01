@@ -41,7 +41,7 @@ const textOf = (res: any): string => res.content?.[0]?.text ?? '';
 
 describe('the client-independent path', () => {
   it('offers the proxy from the first tool list, before anything is loaded', async () => {
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     const names = (await client.listTools()).tools.map((t) => t.name);
     expect(names).toContain('asc__describe');
     expect(names).toContain('asc__call');
@@ -50,7 +50,7 @@ describe('the client-independent path', () => {
   });
 
   it('describes a tool that is not loaded, by either name form', async () => {
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     for (const tool of ['apps__app_price_schedule__get', 'apps.app_price_schedule.get']) {
       const res: any = await client.callTool({ name: 'asc__describe', arguments: { tool } });
       const described = JSON.parse(textOf(res));
@@ -65,13 +65,13 @@ describe('the client-independent path', () => {
     // Codex refused every proxied read while this tool could also write: a
     // client that auto-approves reads and prompts for writes blocks whatever it
     // cannot classify. The annotation is load-bearing, not decoration.
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     const call = (await client.listTools()).tools.find((t) => t.name === 'asc__call')!;
     expect(call.annotations?.readOnlyHint).toBe(true);
   });
 
   it('refuses to write through the proxy, and says how to do it properly', async () => {
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     const res: any = await client.callTool({
       name: 'asc__call',
       arguments: { tool: 'win_back_offers__create', arguments: { body: {} } },
@@ -79,11 +79,11 @@ describe('the client-independent path', () => {
     expect(res.isError).toBe(true);
     expect(textOf(res)).toMatch(/read-only/);
     expect(textOf(res)).toMatch(/asc__load/);
-    expect(textOf(res)).toMatch(/winback/);
+    expect(textOf(res)).toMatch(/subscription-offers/);
   });
 
   it('names the sibling server for a tool this profile does not own', async () => {
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     const res: any = await client.callTool({
       name: 'asc__call',
       arguments: { tool: 'game_center_details__get' },
@@ -93,7 +93,7 @@ describe('the client-independent path', () => {
   });
 
   it('says so plainly when the name is not a tool at all', async () => {
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     const res: any = await client.callTool({
       name: 'asc__describe',
       arguments: { tool: 'apps__there_is_no_such_thing__list' },
@@ -103,7 +103,7 @@ describe('the client-independent path', () => {
   });
 
   it('promotes what it proxied, so a refreshing client gets the real tool', async () => {
-    const client = await connect('monetization:subscriptions');
+    const client = await connect('monetization:subscription-catalog');
     const res: any = await client.callTool({
       name: 'asc__call',
       // Deliberately missing the required id, so nothing reaches the network.
