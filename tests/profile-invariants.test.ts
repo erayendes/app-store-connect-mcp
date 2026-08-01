@@ -204,7 +204,7 @@ describe('help text', () => {
 describe('counts — curation output, not something that drifts on its own', () => {
   it('matches the numbers the sheet was signed off with', () => {
     expect(PROFILES.length).toBe(17);
-    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(29);
+    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(30);
     expect(CORE_OPERATIONS.length).toBe(6);
     expect(CORE_MANUAL_TOOLS.length).toBe(3);
     const tools = PROFILES.flatMap((p) =>
