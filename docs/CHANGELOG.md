@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [Unreleased] — profile structure
+
+**Breaking. Every profile changes.** Which tool belongs to which profile used to be derived from the URL: the first path segment picked the domain, the domain picked the profile. So every relationship hanging off an app — `/v1/apps/{id}/subscriptionGroups`, `.../customerReviews`, `.../appStoreVersions` — landed in `app-info`, while the resources themselves lived elsewhere. Eight of eleven profiles could not reach their own resources from an app: `asc-monetization` could not list an app's subscription groups at all.
+
+Membership is now hand-curated in `spec/profiles.csv` and generated into the code.
+
+- **17 profiles, up from 11.** New: `access`, `accessibility`, `agreements`, `android-to-ios`, `app-clips`, `encryption`, `testflight`. The ten existing names keep their names.
+- **`user-management` is gone**, split into `access` (beta groups, testers, invitations, team members, sandbox), `testflight` (beta localizations, review details, crash feedback), `app-clips` (App Clip beta invocations) and `agreements` (beta license agreement). No tool was lost. No alias — an alias merging four profiles would rebuild the bloated one. Configs naming it still **start**: the server comes up with a single tool that explains the split, so the answer reaches the conversation instead of a log file nobody reads.
+- **Every other profile changed size too.** `app-info` goes from 112 tools to 32 — the relationship listings moved to the profiles that own the resource. That is the fix, not a regression, but check your config: the tool you used from `asc-app-info` may now live next door.
+- **Sub-profiles.** A profile can be narrowed with a colon: `monetization:subscriptions,iap`. `monetization` is 201 tools; `monetization:subscriptions` is 108 and still carries the one-call price macro. The setup picker opens sub-profiles under a checked profile, all on, and writes the argument for you — check everything and the config stays exactly as it is today. `asc__status` reports which sub-profiles are loaded and roughly what they cost.
+- **"Tool not loaded" no longer misdiagnoses.** A profile carries a curated slice of several domains, so "the domain is loaded" said nothing about one tool — every missing tool in a partly-loaded domain was reported as *deprecated*, pointing at a flag that could not help. Deprecation is checked first now, and the remedy names the sub-profile or the sibling server that actually has the tool.
+- `asc__discover_domains` answers in profiles when running as one.
+
 ### [1.3.0] — 2026-07-28
 
 Safety and usability release: every write is now schema-checked locally, previewed before confirmation, and never silently resent.
@@ -82,6 +95,19 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [Yayınlanmadı] — profil yapısı
+
+**Kırıcı. Her profil değişiyor.** Bir aracın hangi profile ait olduğu URL'den türetiliyordu: yolun ilk segmenti domaini, domain profili seçiyordu. Dolayısıyla uygulamadan sarkan her ilişki — `/v1/apps/{id}/subscriptionGroups`, `.../customerReviews`, `.../appStoreVersions` — `app-info`'ya düşüyor, kaynağın kendisi başka yerde duruyordu. On bir profilin sekizi kendi kaynağına uygulamadan ulaşamıyordu: `asc-monetization` bir uygulamanın abonelik gruplarını listeleyemiyordu bile.
+
+Profil üyeliği artık `spec/profiles.csv` içinde elle küratörlükle tutuluyor ve koda üretiliyor.
+
+- **11 yerine 17 profil.** Yeni: `access`, `accessibility`, `agreements`, `android-to-ios`, `app-clips`, `encryption`, `testflight`. Mevcut on profilin adı değişmedi.
+- **`user-management` kaldırıldı**; dörde ayrıldı: `access` (beta grupları, testçiler, davetler, ekip üyeleri, sandbox), `testflight` (beta metinleri, inceleme bilgisi, kilitlenme geri bildirimi), `app-clips` (App Clip beta çağrıları), `agreements` (beta lisans sözleşmesi). Hiçbir araç kaybolmadı. Alias yok — dört profili birleştiren bir alias, düzeltilmeye çalışılan şişkin profili geri getirirdi. Eski adı yazan config'ler yine de **açılıyor**: sunucu, ayrılmayı anlatan tek bir araçla ayağa kalkar; böylece cevap kimsenin bakmadığı log satırı yerine konuşmaya ulaşır.
+- **Diğer profillerin boyutu da değişti.** `app-info` 112 araçtan 32'ye iniyor — ilişki listeleri, kaynağın sahibi olan profillere taşındı. Bu düzeltmenin kendisi, gerileme değil; ama config'inizi gözden geçirin: `asc-app-info`'dan kullandığınız araç artık yan kapıda olabilir.
+- **Alt profiller.** Bir profil iki nokta ile daraltılabiliyor: `monetization:subscriptions,iap`. `monetization` 201 araç; `monetization:subscriptions` 108 ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi, işaretlenen profilin alt profillerini hepsi işaretli açar ve argümanı sizin yerinize yazar — hepsini işaretli bırakırsanız config bugünküyle birebir aynı kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+- **"Araç yüklü değil" artık yanlış teşhis koymuyor.** Bir profil birkaç domainden küratörlü bir dilim taşıdığı için "domain yüklü" bilgisi tek bir araç hakkında hiçbir şey söylemiyordu — kısmen yüklü bir domaindeki her eksik araç *deprecated* diye raporlanıyor, kullanıcı işe yaramayan bir bayrağa yönlendiriliyordu. Artık önce deprecated kontrol ediliyor ve çare, aracın gerçekten bulunduğu alt profili ya da kardeş sunucuyu adıyla söylüyor.
+- `asc__discover_domains`, profil olarak çalışırken domain yerine profil diliyle cevap veriyor.
 
 ### [1.3.0] — 2026-07-28
 

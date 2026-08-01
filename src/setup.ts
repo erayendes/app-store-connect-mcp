@@ -16,59 +16,89 @@ import {
   sharedConfigPath,
   type SharedConfig,
 } from './core/shared-config.js';
-import { PROFILES, GATEWAY_OPERATIONS, type Profile } from './profiles.js';
-import { ToolRegistry } from './core/registry.js';
+import {
+  PROFILES,
+  TOKENS_PER_TOOL,
+  manualToolsFor,
+  registerCommand,
+  resolveSelection,
+  type Profile,
+  type SubProfile,
+} from './profiles.js';
 import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
-import { runChecklist } from './checklist.js';
+import { runChecklist, type ChecklistItem } from './checklist.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
 
 /**
- * Rough tokens a tool definition costs in context — for the size hint only.
- * Measured across profiles after request-body schemas were inlined (AI-188):
- * total definition JSON / tool count lands at ~210-240 depending on profile.
+ * One picker row. Profiles are top-level; their sub-profiles hang underneath
+ * and only appear once the profile is checked, so the list opens at 17 rows
+ * instead of 46 and still lets someone trim a 192-tool profile down.
  */
-const TOKENS_PER_TOOL = 225;
-
-/**
- * How many tools a profile actually serves: its domains plus the gateway
- * tools, the three meta tools, and (where the profile opts in) the review-AI
- * helpers. Computed from the spec so the numbers can't drift out of date.
- */
-function profileToolCount(p: Profile): number {
-  const registry = new ToolRegistry({
-    domains: p.domains,
-    readOnly: false,
-    includeDeprecated: false,
-    extraOperations: GATEWAY_OPERATIONS,
-  });
-  return registry.size + 3 + (p.reviewsAi ? 3 : 0) + (p.pricing ? 1 : 0); // + meta (+ reviews-ai, + pricing macros)
+interface Row {
+  index: number;
+  item: ChecklistItem;
+  profile: Profile;
+  subProfile?: SubProfile;
 }
 
-/** One compact picker row: `app-info(115) ~17k · names, bundle ids, …` */
-function profileRow(p: Profile): { label: string; hint: string } {
-  const n = profileToolCount(p);
-  const k = Math.round((n * TOKENS_PER_TOOL) / 1000);
+/** Tools a row serves, excluding the core set every server carries anyway. */
+const subProfileToolCount = (s: SubProfile): number => s.operations.length + s.manualTools.length;
+
+function buildRows(): Row[] {
+  const rows: Row[] = [];
+  const size = (n: number): string => `~${Math.max(1, Math.round((n * TOKENS_PER_TOOL) / 1000))}k`;
   // Drop the leading "Category: " heading; lowercase for a uniform look.
-  const detail = p.description.replace(/^[^:]*:\s*/, '').toLowerCase();
-  return { label: `${p.name}(${n})`, hint: `~${k}k · ${detail}` };
+  const detail = (text: string): string => text.replace(/^[^:]*:\s*/, '').toLowerCase();
+
+  for (const profile of PROFILES) {
+    const subs = profile.subProfiles.filter((s) => s.name);
+    const total = profile.subProfiles.reduce((n, s) => n + subProfileToolCount(s), 0);
+    const parent = rows.length;
+    rows.push({
+      index: parent,
+      profile,
+      item: {
+        label: `${profile.name}(${total})`,
+        hint: `${size(total)} · ${detail(profile.description)}`,
+      },
+    });
+    for (const subProfile of subs) {
+      const n = subProfileToolCount(subProfile);
+      rows.push({
+        index: rows.length,
+        profile,
+        subProfile,
+        item: {
+          label: `${subProfile.name}(${n})`,
+          hint: `${size(n)} · ${detail(subProfile.description)}`,
+          parent,
+        },
+      });
+    }
+  }
+  return rows;
 }
 
 /**
- * Names of the asc-* profiles currently registered with the Claude Code CLI, so
- * the picker can show them pre-checked. Empty set when `claude` is absent or the
- * command fails — setup then behaves as a first-time run.
+ * The profile arguments currently registered with the Claude Code CLI, keyed by
+ * profile name — `monetization` or `monetization:subscriptions,iap`. The full
+ * argument matters: without it, re-running setup would silently widen a config
+ * that had been narrowed. Empty when `claude` is absent or the command fails,
+ * so setup then behaves as a first-time run.
  */
-function listRegisteredProfileNames(): Set<string> {
+function listRegisteredProfiles(): Map<string, string> {
   const known = new Set(PROFILES.map((p) => p.name));
-  const found = new Set<string>();
+  const found = new Map<string, string>();
   try {
     const out = execFileSync('claude', ['mcp', 'list'], { encoding: 'utf8' });
     for (const line of out.split('\n')) {
       const m = line.match(/^asc-([a-z0-9-]+):/);
-      if (m && known.has(m[1])) found.add(m[1]);
+      if (!m || !known.has(m[1])) continue;
+      const spec = line.match(/@erayendes\/asc-mcp\s+(\S+)/);
+      found.set(m[1], spec?.[1] ?? m[1]);
     }
   } catch {
     // `claude` not on PATH, or the listing failed — treat as none registered.
@@ -76,35 +106,82 @@ function listRegisteredProfileNames(): Set<string> {
   return found;
 }
 
+/** Rows to pre-check so the picker opens showing what is already registered. */
+function preselect(rows: Row[], registered: Map<string, string>): number[] {
+  const picked: number[] = [];
+  for (const row of rows) {
+    const spec = registered.get(row.profile.name);
+    if (spec === undefined) continue;
+    if (!row.subProfile) {
+      picked.push(row.index);
+      continue;
+    }
+    const chosen = spec.split(':', 2)[1];
+    if (chosen === undefined || chosen.split(',').includes(row.subProfile.name)) picked.push(row.index);
+  }
+  return picked;
+}
+
 /**
- * Let the user pick which profiles to register. Already-registered profiles
- * come pre-checked so unchecking one removes it. A TTY gets the space-to-toggle
+ * Turn checked rows into CLI arguments. A profile with every sub-profile
+ * checked is written plainly — the common case then produces exactly the config
+ * it does today, with no colon and no diff noise.
+ */
+export function selectionToSpecs(rows: Row[], picked: number[]): string[] {
+  const chosen = new Set(picked);
+  const specs: string[] = [];
+  for (const row of rows) {
+    if (row.subProfile || !chosen.has(row.index)) continue;
+    const subs = rows.filter((r) => r.profile === row.profile && r.subProfile);
+    if (!subs.length) {
+      specs.push(row.profile.name);
+      continue;
+    }
+    const on = subs.filter((r) => chosen.has(r.index)).map((r) => r.subProfile!.name);
+    if (!on.length) continue; // a profile with nothing under it registers nothing
+    specs.push(on.length === subs.length ? row.profile.name : `${row.profile.name}:${on.join(',')}`);
+  }
+  return specs;
+}
+
+/**
+ * Let the user pick what to register. Already-registered profiles come
+ * pre-checked so unchecking one removes it. A TTY gets the space-to-toggle
  * checklist; a non-interactive run falls back to a typed answer so the wizard
  * still works when piped. Returns null when the picker was cancelled (Esc/^C);
  * an empty array is a deliberate "none" and is honoured (removes everything).
  */
 async function selectProfiles(
   ask: (q: string, required?: boolean) => Promise<string>,
+  rows: Row[],
   preselected: number[]
-): Promise<Profile[] | null> {
+): Promise<string[] | null> {
   const title =
     '\nWhich profiles do you want registered?\n' +
     'Already-registered ones are checked — uncheck to remove, check to add.\n' +
-    'Each profile is its own small MCP server whose tools load into every\n' +
-    'session, so keep only the areas you actually use — leaner is faster.';
+    'Checking a profile opens its sub-profiles, all on; uncheck the ones you\n' +
+    "don't need. Every tool loads into every session, so leaner is faster.";
 
   if (process.stdin.isTTY) {
-    const picked = await runChecklist(PROFILES.map(profileRow), { title, preselected });
+    const picked = await runChecklist(rows.map((r) => r.item), { title, preselected });
     if (picked === null) return null; // cancelled — leave registration untouched
-    return picked.map((i) => PROFILES[i]);
+    return selectionToSpecs(rows, picked);
   }
 
   const answer = (
     await ask('Profiles to register — comma-separated names, or "all" (default): ', false)
   ).trim();
-  if (!answer || answer.toLowerCase() === 'all') return PROFILES;
-  const wanted = new Set(answer.split(',').map((s) => s.trim().replace(/^asc-/, '')));
-  return PROFILES.filter((p) => wanted.has(p.name));
+  if (!answer || answer.toLowerCase() === 'all') return PROFILES.map((p) => p.name);
+  const wanted = answer.split(',').map((s) => s.trim().replace(/^asc-/, '')).filter(Boolean);
+  return wanted.filter((spec) => {
+    try {
+      resolveSelection(spec);
+      return true;
+    } catch (err) {
+      console.log(`  Skipping "${spec}": ${(err as Error).message.split('\n')[0]}`);
+      return false;
+    }
+  });
 }
 
 const KEYCHAIN_SERVICE = 'asc-mcp';
@@ -230,9 +307,9 @@ export async function runSetup(): Promise<void> {
       console.log(`Found saved credentials (Key ID ${existing.keyId}, Issuer ${existing.issuerId}).`);
       const reuse = (await ask('Reuse them and just pick profiles? [Y/n]: ', false)).trim();
       if (!/^n/i.test(reuse)) {
-        const registered = listRegisteredProfileNames();
-        const preselected = PROFILES.map((p, i) => (registered.has(p.name) ? i : -1)).filter((i) => i >= 0);
-        const chosen = await selectProfiles(ask, preselected);
+        const rows = buildRows();
+        const registered = listRegisteredProfiles();
+        const chosen = await selectProfiles(ask, rows, preselect(rows, registered));
         if (chosen === null) console.log('\nCancelled — registration left unchanged.');
         else await reconcileRegistration(chosen, registered, ask);
         return;
@@ -297,17 +374,17 @@ export async function runSetup(): Promise<void> {
       false
     );
 
-    const registered = listRegisteredProfileNames();
-    const preselected = PROFILES.map((p, i) => (registered.has(p.name) ? i : -1)).filter((i) => i >= 0);
-    const chosen = await selectProfiles(ask, preselected);
+    const rows = buildRows();
+    const registered = listRegisteredProfiles();
+    const chosen = await selectProfiles(ask, rows, preselect(rows, registered));
     const picked = chosen ?? []; // null = picker cancelled; keep saving creds regardless
 
-    // A bundle ID is per-app, not account-global, and only the monetization
-    // profile's StoreKit tools use it — so ask for it only when that profile
-    // was picked, not as a blanket setup question.
+    // A bundle ID is per-app, not account-global, and only the StoreKit tools
+    // use it — so ask for it only when a selection actually carries them, not
+    // as a blanket setup question.
     let bundleId: string | undefined;
     let environment: 'Production' | 'Sandbox' | undefined;
-    if (picked.some((p) => p.storekit)) {
+    if (picked.some((spec) => manualToolsFor(resolveSelection(spec)).some((t) => t.startsWith('storekit__')))) {
       bundleId =
         (await ask(
           '\nApp bundle ID for the monetization profile (StoreKit 2 transaction tools; ' +
@@ -367,13 +444,16 @@ export async function runSetup(): Promise<void> {
  * printing manual instructions when the Claude Code CLI is absent.
  */
 async function reconcileRegistration(
-  chosen: Profile[],
-  registered: Set<string>,
+  chosen: string[],
+  registered: Map<string, string>,
   ask: (q: string, required?: boolean) => Promise<string>
 ): Promise<void> {
-  const chosenNames = new Set(chosen.map((p) => p.name));
-  const toAdd = chosen.filter((p) => !registered.has(p.name));
-  const toRemove = [...registered].filter((n) => !chosenNames.has(n));
+  const nameOf = (spec: string): string => spec.split(':', 1)[0];
+  const chosenNames = new Set(chosen.map(nameOf));
+  // A profile whose sub-profile selection changed is re-registered: same server
+  // name, different argument. Comparing names alone would drop the change.
+  const toAdd = chosen.filter((spec) => registered.get(nameOf(spec)) !== spec);
+  const toRemove = [...registered.keys()].filter((n) => !chosenNames.has(n));
 
   if (!toAdd.length && !toRemove.length) {
     console.log('\nNo changes — the registered profiles already match your selection.');
@@ -394,7 +474,13 @@ async function reconcileRegistration(
   }
 
   console.log('\nPlanned changes:');
-  if (toAdd.length) console.log(`  + add:    ${toAdd.map((p) => `asc-${p.name}`).join(', ')}`);
+  if (toAdd.length) {
+    console.log(
+      `  + add:    ${toAdd
+        .map((spec) => (registered.has(nameOf(spec)) ? `asc-${spec} (was ${registered.get(nameOf(spec))})` : `asc-${spec}`))
+        .join(', ')}`
+    );
+  }
   if (toRemove.length) console.log(`  - remove: ${toRemove.map((n) => `asc-${n}`).join(', ')}`);
   const answer = (await ask('Apply these changes? [Y/n]: ', false)).trim();
   if (/^n/i.test(answer)) {
@@ -402,16 +488,21 @@ async function reconcileRegistration(
     return;
   }
 
-  for (const p of toAdd) {
+  for (const spec of toAdd) {
+    const name = nameOf(spec);
     try {
+      // Re-registering the same server name needs the old entry gone first.
+      if (registered.has(name)) {
+        execFileSync('claude', ['mcp', 'remove', `asc-${name}`], { stdio: 'ignore' });
+      }
       execFileSync(
         'claude',
-        ['mcp', 'add', '-s', 'user', `asc-${p.name}`, '--', 'npx', '-y', '@erayendes/asc-mcp', p.name],
+        ['mcp', 'add', '-s', 'user', `asc-${name}`, '--', 'npx', '-y', '@erayendes/asc-mcp', spec],
         { stdio: 'ignore' }
       );
-      console.log(`  ✓ added asc-${p.name}`);
+      console.log(`  ✓ added asc-${name}${spec === name ? '' : ` (${spec})`}`);
     } catch (err) {
-      console.log(`  ✗ add asc-${p.name}: ${(err as Error).message.split('\n')[0]}`);
+      console.log(`  ✗ add asc-${name}: ${(err as Error).message.split('\n')[0]}`);
     }
   }
   for (const n of toRemove) {
@@ -425,18 +516,16 @@ async function reconcileRegistration(
   console.log('\nDone. Restart Claude Code for the change to take effect.');
 }
 
-function printManualRegistration(chosen: Profile[]): void {
+function printManualRegistration(chosen: string[]): void {
   // npx form is portable — no absolute install path baked into the user's
   // config, works the same however the package was installed.
   const entries = chosen
     .map(
-      (p) =>
-        `    "asc-${p.name}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(p.name)}] }`
+      (spec) =>
+        `    "asc-${spec.split(':', 1)[0]}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(spec)}] }`
     )
     .join(',\n');
-  const cliLines = chosen
-    .map((p) => `  claude mcp add -s user asc-${p.name} -- npx -y @erayendes/asc-mcp ${p.name}`)
-    .join('\n');
+  const cliLines = chosen.map((spec) => `  ${registerCommand(spec)}`).join('\n');
 
   console.log(
     `\nRegister ${chosen.length} profile${chosen.length === 1 ? '' : 's'} one of these two ways:\n\n` +

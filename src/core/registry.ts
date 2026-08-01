@@ -9,6 +9,13 @@ import { AscApiError } from './errors.js';
 import { validateBody } from './validate.js';
 
 export interface RegistryOptions {
+  /**
+   * Load exactly these operations (dotted names) and nothing else. Wins over
+   * `domains`, which is why it exists: profiles carry a curated list, and
+   * passing `domains: []` to mean "none" silently loaded the seven defaults
+   * instead (an empty array has no length).
+   */
+  operations?: string[];
   /** Restrict to these domains. Undefined means the default working set. */
   domains?: string[];
   readOnly: boolean;
@@ -26,11 +33,11 @@ export interface RegistryOptions {
    */
   extraOperations?: string[];
   /**
-   * Overrides the "domain not loaded" remedy sentence. Profile mode points at
-   * the sibling MCP server (`use the asc-monetization server`) instead of the
-   * --domains flag, which is meaningless to a profile user.
+   * Overrides the "not loaded here" remedy sentence for one operation. Profile
+   * mode points at the sibling MCP server (`use the asc-monetization server`)
+   * instead of the --domains flag, which is meaningless to a profile user.
    */
-  unloadedDomainHint?: (domain: string) => string;
+  missingToolHint?: (op: Operation) => string | undefined;
   /** Mutating calls stop after validation and return what WOULD have been sent. */
   dryRun?: boolean;
 }
@@ -222,16 +229,20 @@ export class ToolRegistry {
   private readonly byToolName = new Map<string, Operation>();
 
   constructor(private readonly options: RegistryOptions) {
+    const explicit = options.operations ? new Set(options.operations) : undefined;
     const requested = options.domains?.length
       ? options.domains
       : [...DEFAULT_DOMAINS];
 
-    const wantsAll = requested.includes('all');
+    const wantsAll = !explicit && requested.includes('all');
     const selected = new Set(requested);
     const extras = new Set(options.extraOperations ?? []);
 
     for (const op of OPERATIONS) {
-      if (!wantsAll && !selected.has(op.domain) && !extras.has(op.name)) continue;
+      const wanted = explicit
+        ? explicit.has(op.name) || extras.has(op.name)
+        : wantsAll || selected.has(op.domain) || extras.has(op.name);
+      if (!wanted) continue;
       if (op.deprecated && !options.includeDeprecated) continue;
       if (options.readOnly && !op.readOnly) continue;
       this.ops.set(op.name, op);
@@ -263,7 +274,16 @@ export class ToolRegistry {
     return this.byToolName.get(name) ?? this.ops.get(decodeToolName(name));
   }
 
-  /** Domains that exist in the spec but are not currently loaded. */
+  /** Domains at least one loaded operation belongs to. */
+  loadedDomains(): string[] {
+    return [...new Set([...this.ops.values()].map((o) => o.domain))].sort();
+  }
+
+  /**
+   * Domains with no loaded operation at all. Only meaningful in domain mode: a
+   * profile loads a curated slice, so a domain can be "loaded" here while most
+   * of its tools are elsewhere.
+   */
   unloadedDomains(): string[] {
     const loaded = new Set([...this.ops.values()].map((o) => o.domain));
     return ALL_DOMAINS.filter((d) => !loaded.has(d));
@@ -288,16 +308,20 @@ export class ToolRegistry {
           0
         );
       }
-      if (this.unloadedDomains().includes(known.domain)) {
+      // Deprecation is checked before "not loaded here": a profile now carries a
+      // curated slice of several domains, so a domain being partly loaded says
+      // nothing about one tool. Asking the domain first made every missing tool
+      // look deprecated and sent users to a flag that could not help them.
+      if (known.deprecated && !this.options.includeDeprecated) {
         throw new AscApiError(
-          `Tool "${name}" exists in the "${known.domain}" domain, which is not loaded. ` +
-            `${this.options.unloadedDomainHint?.(known.domain) ??
-              `Restart the server with --domains=${known.domain} (alongside your current domains) to use it.`}`,
+          `Tool "${name}" is deprecated by Apple and hidden. Restart with --include-deprecated to use it.`,
           0
         );
       }
       throw new AscApiError(
-        `Tool "${name}" is deprecated by Apple and hidden. Restart with --include-deprecated to use it.`,
+        `Tool "${name}" is not loaded on this server. ` +
+          `${this.options.missingToolHint?.(known) ??
+            `Restart the server with --domains=${known.domain} (alongside your current domains) to use it.`}`,
         0
       );
     }

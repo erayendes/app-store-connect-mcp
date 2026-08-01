@@ -13,6 +13,7 @@ Heimdall is an MCP server for the App Store Connect API and the App Store Server
    - **Codex:** `codex mcp add asc-<profile> -- npx -y @erayendes/asc-mcp <profile>` (or a `[mcp_servers.asc-<profile>]` block in `~/.codex/config.toml`)
    - **Claude Desktop / Antigravity / other JSON clients:** add an `mcpServers` entry with `command: "npx"`, `args: ["-y", "@erayendes/asc-mcp", "<profile>"]`
    - If the user didn't name an area, register `analytics`, `marketing` and `app-info` as a sensible default, or ask which areas they use. Each profile is a small scoped server; see the profile table in [GUIDE.md](docs/GUIDE.md#4-register-profiles).
+   - A large profile can be narrowed to some of its sub-profiles with a colon: `npx -y @erayendes/asc-mcp monetization:subscriptions,iap`. The server name stays `asc-monetization`. Use it when the user wants a specific area of a big profile (`monetization`, `game-center`, `distribution`, `marketing`, `access`) rather than all of it.
 
 2. **Do not handle credentials yourself.** Connecting needs an App Store Connect API key. The `.p8` private key is a secret:
    - **Never** ask the user to paste the `.p8` contents into the chat, and never write the key into a config file yourself.

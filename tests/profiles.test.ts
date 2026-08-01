@@ -2,58 +2,80 @@ import { describe, it, expect } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { PROFILES, resolveProfile, profileForDomain, GATEWAY_OPERATIONS } from '../src/profiles.js';
-import { ToolRegistry, ALL_DOMAINS } from '../src/core/registry.js';
+import {
+  PROFILES,
+  CORE_OPERATIONS,
+  resolveProfile,
+  resolveSelection,
+  operationsFor,
+  profilesForOperation,
+} from '../src/profiles.js';
+import { ToolRegistry } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { loadConfig } from '../src/core/config.js';
 import { readSharedConfig, writeSharedConfig } from '../src/core/shared-config.js';
 
 describe('profiles', () => {
-  it('covers every domain exactly once across all profiles', () => {
-    const covered = PROFILES.flatMap((p) => p.domains);
-    expect(new Set(covered).size).toBe(covered.length); // no domain in two profiles
-    for (const d of ALL_DOMAINS) {
-      if (d === 'meta') continue; // meta tools ship with every server
-      expect(covered).toContain(d);
-    }
-  });
-
   it('resolves a known profile and rejects an unknown one', () => {
-    expect(resolveProfile('monetization')?.domains).toContain('subscriptions');
+    expect(resolveProfile('monetization')?.subProfiles.map((s) => s.name)).toContain('subscriptions');
     expect(resolveProfile('nonsense')).toBeUndefined();
-    expect(profileForDomain('game_center')?.name).toBe('game-center');
+    expect(profilesForOperation('game_center_details.get')).toEqual(['game-center']);
   });
 
   it('exposes the code-signing profile as "provisioning", not the old name', () => {
-    expect(resolveProfile('provisioning')?.domains).toEqual(['provisioning']);
-    expect(profileForDomain('provisioning')?.name).toBe('provisioning');
+    expect(resolveProfile('provisioning')).toBeTruthy();
+    expect(profilesForOperation('profiles.create')).toEqual(['provisioning']);
     expect(resolveProfile('account-management')).toBeUndefined(); // renamed, no alias
   });
 
-  it('loads only the profile domains plus gateway tools', () => {
-    const p = resolveProfile('analytics')!;
+  it('loads the profile tools plus the core set, and nothing else', () => {
     const registry = new ToolRegistry({
-      domains: p.domains,
+      operations: operationsFor(resolveSelection('analytics')),
       readOnly: false,
       includeDeprecated: false,
-      extraOperations: GATEWAY_OPERATIONS,
     });
     const names = new Set(registry.listTools().map((t) => t.name));
     expect(names.has('sales_reports__list')).toBe(true);
-    expect(names.has('apps__list')).toBe(true); // gateway
-    expect(names.has('apps__get')).toBe(true); // gateway
+    expect(names.has('apps__list')).toBe(true); // core
+    expect(names.has('apps__get')).toBe(true); // core
     expect(names.has('game_center_details__get')).toBe(false);
-    // gateway must not drag the whole apps domain in
+    // core must not drag the whole apps domain in
     expect(names.has('apps__app_infos__list')).toBe(false);
+  });
+
+  /**
+   * The reason this profile structure exists: `asc-monetization` could not list
+   * an app's subscription groups, because the entry point sat in app-info.
+   */
+  it('reaches an app\'s subscription groups from the monetization profile', () => {
+    const ops = operationsFor(resolveSelection('monetization'));
+    expect(ops).toContain('apps.subscription_groups.list');
+    expect(operationsFor(resolveSelection('marketing'))).toContain('apps.customer_reviews.list');
+    expect(operationsFor(resolveSelection('access'))).toContain('apps.beta_groups.list');
+    expect(operationsFor(resolveSelection('webhooks'))).toContain('apps.webhooks.list');
+  });
+
+  it('narrows a profile to some of its sub-profiles', () => {
+    const whole = operationsFor(resolveSelection('monetization'));
+    const part = operationsFor(resolveSelection('monetization:subscriptions'));
+    expect(part.length).toBeLessThan(whole.length);
+    expect(part).toContain('apps.subscription_groups.list');
+    expect(part).not.toContain('win_back_offers.create');
+    // core rides along whatever is selected
+    for (const op of CORE_OPERATIONS) expect(part).toContain(op);
+  });
+
+  it('names the available sub-profiles when one is misspelled', () => {
+    expect(() => resolveSelection('monetization:subscriptons')).toThrow(/subscriptions/);
+    expect(() => resolveSelection('webhooks:anything')).toThrow(/no sub-profiles/);
   });
 
   it('every profile stays well under the monolith size', () => {
     for (const p of PROFILES) {
       const registry = new ToolRegistry({
-        domains: p.domains,
+        operations: operationsFor(resolveSelection(p.name)),
         readOnly: false,
         includeDeprecated: false,
-        extraOperations: GATEWAY_OPERATIONS,
       });
       expect(registry.size).toBeGreaterThan(0);
       expect(registry.size).toBeLessThan(300);
@@ -61,14 +83,12 @@ describe('profiles', () => {
   });
 
   it('points at the sibling server when a tool lives elsewhere', async () => {
-    const p = resolveProfile('analytics')!;
     const registry = new ToolRegistry({
-      domains: p.domains,
+      operations: operationsFor(resolveSelection('analytics')),
       readOnly: false,
       includeDeprecated: false,
-      extraOperations: GATEWAY_OPERATIONS,
-      unloadedDomainHint: (domain) =>
-        `It is served by the "asc-${profileForDomain(domain)?.name}" MCP server.`,
+      missingToolHint: (op) =>
+        `It is served by the "asc-${profilesForOperation(op.name)[0]}" MCP server.`,
     });
     await expect(
       registry.execute('subscriptions__get', { id: 'x' }, {} as never)

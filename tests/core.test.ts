@@ -443,9 +443,10 @@ describe('configured parameter defaults', () => {
 describe('unloaded-domain guidance', () => {
   it('names the domain and flag when a real tool is not loaded', async () => {
     const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    const live = OPERATIONS.find((o) => o.domain === 'game_center' && !o.deprecated)!;
     await expect(
-      registry.execute('game_center_leaderboards__get', { id: 'x' }, {} as never)
-    ).rejects.toThrow(/"game_center" domain, which is not loaded.*--domains=game_center/s);
+      registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
+    ).rejects.toThrow(/is not loaded on this server.*--domains=game_center/s);
   });
 
   it('still reports a genuinely unknown tool as unknown', async () => {
@@ -466,10 +467,11 @@ describe('missing-tool diagnosis', () => {
     ).rejects.toThrow(/read-only mode/);
   });
 
-  it('blames the unloaded domain when the domain really is unloaded', async () => {
+  it('says the tool is not loaded here, and how to reach it', async () => {
+    const live = OPERATIONS.find((o) => o.domain === 'game_center' && !o.deprecated)!;
     await expect(
-      mk({ domains: ['apps'] }).execute('game_center_leaderboards__get', { id: 'x' }, {} as never)
-    ).rejects.toThrow(/"game_center" domain, which is not loaded/);
+      mk({ domains: ['apps'] }).execute(toolNameFor(live), { id: 'x' }, {} as never)
+    ).rejects.toThrow(/is not loaded on this server.*--domains=game_center/s);
   });
 
   it('flags a deprecated tool as deprecated', async () => {
@@ -477,6 +479,31 @@ describe('missing-tool diagnosis', () => {
     await expect(
       mk({ domains: ['all'] }).execute(toolNameFor(dep), {}, {} as never)
     ).rejects.toThrow(/deprecated/);
+  });
+
+  // A profile carries a curated slice of several domains, so "the domain is
+  // loaded" says nothing about one tool. Checking the domain first made every
+  // missing tool in a partly-loaded domain read as deprecated.
+  it('does not call a live tool deprecated just because its domain is partly loaded', async () => {
+    const live = OPERATIONS.find((o) => o.domain === 'game_center' && !o.deprecated)!;
+    const sibling = OPERATIONS.find(
+      (o) => o.domain === 'game_center' && !o.deprecated && o.name !== live.name
+    )!;
+    const registry = mk({ operations: [sibling.name] });
+    await expect(
+      registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
+    ).rejects.toThrow(/is not loaded on this server/);
+    await expect(
+      registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
+    ).rejects.not.toThrow(/deprecated/);
+  });
+
+  it('loads exactly the listed operations when `operations` is given', () => {
+    const empty = mk({ operations: [] });
+    expect(empty.size).toBe(0); // an empty list means none — not the seven defaults
+    const one = mk({ operations: ['apps.list'] });
+    expect(one.size).toBe(1);
+    expect(one.get('apps__list')).toBeTruthy();
   });
 });
 

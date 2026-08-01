@@ -37,7 +37,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "generate": "tsx scripts/generate.ts",
+    "generate": "tsx scripts/generate.ts && tsx scripts/generate-profiles.ts",
     "build": "npm run generate && tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
