@@ -326,16 +326,27 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         }
         const added = registry.loadOperations(sub.operations);
         loadedSubs.add(sub);
-        // Tell the client the list grew. Whether it reaches the model before the
-        // next tool call is the whole question this spike exists to answer.
         await server.sendToolListChanged();
+
+        // Measured in two clients: Claude Code hands the revised list to the
+        // model inside the same turn, Codex does not — it refreshes between
+        // turns and the model is left calling tools it cannot see. So the reply
+        // carries the tools itself. A client that refreshed already loses
+        // nothing; one that hasn't gets a usable answer instead of a dead end.
+        const SHOWN = 25;
         result = {
           loaded: sub.name,
           description: sub.description,
           toolsAdded: added.length,
-          // Named in the response too: a client that only refreshes its list
-          // between turns still lets the model act on this reply.
-          tools: added,
+          tools: added.slice(0, SHOWN).map((name) => ({
+            name,
+            description: registry.get(name)?.description ?? '',
+          })),
+          ...(added.length > SHOWN ? { andMore: added.length - SHOWN } : {}),
+          nextStep:
+            `These tools are live on this server now. If they are not yet in your tool list, ` +
+            `your client only refreshes it between turns — say the tools are ready and ask the ` +
+            `user to repeat the request, rather than calling a tool you cannot see.`,
           ...(sub.manualTools.length
             ? { note: `${sub.manualTools.join(', ')} need a restart — they are not spec operations.` }
             : {}),
