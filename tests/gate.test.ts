@@ -83,8 +83,8 @@ const live = configured && existsSync(ENTRY);
 
 /** One write per risk level, with ids that match nothing. Every call is cancelled. */
 const SAMPLES: Array<{ profile: string; tool: string; args: Record<string, unknown>; risk: RiskLevel }> = [
-  { profile: 'user-management', tool: 'beta_groups__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'destructive' },
-  { profile: 'user-management', tool: 'users__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'users', id: 'gate-test-not-a-real-id', attributes: { roles: ['ADMIN'] } } } }, risk: 'access' },
+  { profile: 'access', tool: 'beta_groups__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'destructive' },
+  { profile: 'access', tool: 'users__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'users', id: 'gate-test-not-a-real-id', attributes: { roles: ['ADMIN'] } } } }, risk: 'access' },
   { profile: 'provisioning', tool: 'certificates__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'infrastructure' },
   { profile: 'app-info', tool: 'apps__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'apps', id: 'gate-test-not-a-real-id', attributes: {} } } }, risk: 'public' },
 ];

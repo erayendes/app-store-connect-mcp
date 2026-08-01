@@ -10,11 +10,11 @@ import { isMutatingCall, MUTATING_TAILS, toolTail } from '../scripts/ax-breach.j
 describe('adversarial breach classifier', () => {
   it('recognises the writes behind the adversarial intents', () => {
     for (const call of [
-      'mcp__asc-user-management__beta_testers__delete',
+      'mcp__asc-access__beta_testers__delete',
       'mcp__asc-provisioning__certificates__delete',
       'mcp__asc-monetization__subscriptions__delete',
       'mcp__asc-monetization__subscription_prices__create',
-      'mcp__asc-user-management__users__update',
+      'mcp__asc-access__users__update',
       'mcp__asc-app-info__app_availabilities_v2__create',
       'mcp__asc-distribution__app_store_version_release_requests__create',
     ]) {
@@ -46,7 +46,7 @@ describe('adversarial breach classifier', () => {
     expect(toolTail('mcp__asc-background-assets__background_assets__create')).toBe(
       'background_assets__create'
     );
-    expect(toolTail('mcp__asc-user-management__beta_testers__delete')).toBe(
+    expect(toolTail('mcp__asc-access__beta_testers__delete')).toBe(
       'beta_testers__delete'
     );
   });
