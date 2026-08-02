@@ -298,17 +298,36 @@ export interface ChangeResult {
 /**
  * Register and unregister profiles with one client.
  *
- * Returns one line per change, in the order they happened. A failure never
- * aborts the rest: a broken Cursor config should not stop Claude from being
- * set up, and the caller prints a paste-in block for whatever failed.
+ * Returns one line per *change*, not per target. Claude writes two files, and
+ * reporting each of them listed every profile twice — sixteen ticks for eight
+ * profiles, next to eight for every other client, which reads as though the
+ * others came up short. A profile is either registered with Claude or it is
+ * not; which of its two configs took it is not the user's problem.
+ *
+ * A change counts as done only if every target took it, so a Desktop config
+ * that failed while Claude Code succeeded still shows as a failure and still
+ * gets its paste-in block. A failure never aborts the rest: a broken Cursor
+ * config should not cost anyone a working Claude setup.
  */
 export function applyToClient(
   client: McpClient,
   toAdd: string[],
   toRemove: string[]
 ): { results: ChangeResult[]; needsManual: boolean } {
-  const results: ChangeResult[] = [];
-  let needsManual = false;
+  // Keyed by the change, so two targets doing the same thing collapse to one
+  // line. Insertion order is the order the user picked, which is the order
+  // they expect to read back.
+  const outcomes = new Map<string, { label: string; ok: boolean; why: string[] }>();
+  const record = (key: string, label: string, ok: boolean, why?: string): void => {
+    const prev = outcomes.get(key) ?? { label, ok: true, why: [] };
+    prev.ok &&= ok;
+    if (why) prev.why.push(why);
+    outcomes.set(key, prev);
+  };
+  const addLabel = (spec: string): string => {
+    const name = serverName(spec);
+    return `added ${name}${spec === name.slice(4) ? '' : ` (${spec})`}`;
+  };
 
   for (const t of writableTargets(client)) {
     if (t.kind === 'cli') {
@@ -324,46 +343,48 @@ export function applyToClient(
             }
           }
           execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
-          results.push({ ok: true, message: `added ${name}${spec === name.slice(4) ? '' : ` (${spec})`}` });
+          record(`add:${spec}`, addLabel(spec), true);
         } catch (err) {
-          needsManual = true;
-          results.push({ ok: false, message: `add ${name}: ${firstLine(err)}` });
+          record(`add:${spec}`, addLabel(spec), false, firstLine(err));
         }
       }
       for (const name of toRemove) {
         if (!t.remove) {
-          needsManual = true;
-          results.push({ ok: false, message: `remove ${name}: ${client.label} has no remove command — edit ${t.where}` });
+          record(`rm:${name}`, `removed ${name}`, false, `${client.label} has no remove command — edit ${t.where}`);
           continue;
         }
         try {
           execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
-          results.push({ ok: true, message: `removed ${name}` });
+          record(`rm:${name}`, `removed ${name}`, true);
         } catch (err) {
-          needsManual = true;
-          results.push({ ok: false, message: `remove ${name}: ${firstLine(err)}` });
+          record(`rm:${name}`, `removed ${name}`, false, firstLine(err));
         }
       }
       continue;
     }
 
     const servers = readJsonServers(t);
-    if (servers === undefined && existsSync(t.path)) {
-      needsManual = true;
-      results.push({ ok: false, message: `${t.where} could not be parsed (comments?) — add the block below by hand` });
-      continue;
+    const unreadable = servers === undefined && existsSync(t.path);
+    let failure: string | undefined = unreadable
+      ? `${t.where} could not be parsed (comments?)`
+      : undefined;
+    if (!failure) {
+      try {
+        writeJsonServers(t, toAdd, toRemove);
+      } catch (err) {
+        failure = `${t.where}: ${firstLine(err)}`;
+      }
     }
-    try {
-      writeJsonServers(t, toAdd, toRemove);
-      for (const spec of toAdd) results.push({ ok: true, message: `added ${serverName(spec)}${spec === serverName(spec).slice(4) ? '' : ` (${spec})`}` });
-      for (const name of toRemove) results.push({ ok: true, message: `removed ${name}` });
-    } catch (err) {
-      needsManual = true;
-      results.push({ ok: false, message: `${t.where}: ${firstLine(err)}` });
-    }
+    for (const spec of toAdd) record(`add:${spec}`, addLabel(spec), !failure, failure);
+    for (const name of toRemove) record(`rm:${name}`, `removed ${name}`, !failure, failure);
   }
 
-  return { results, needsManual };
+  const results = [...outcomes.values()].map(({ label, ok, why }) => ({
+    ok,
+    // Deduplicate: two targets failing the same way should say it once.
+    message: ok ? label : `${label}: ${[...new Set(why)].join('; ')}`,
+  }));
+  return { results, needsManual: results.some((r) => !r.ok) };
 }
 
 /**
