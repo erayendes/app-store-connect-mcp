@@ -101,7 +101,14 @@ export const CLIENTS: McpClient[] = [
   },
   {
     id: 'codex',
-    label: 'Codex (ChatGPT)',
+    label: 'Codex',
+    // Not "Codex (ChatGPT)". This row covers the surfaces that read
+    // ~/.codex/config.toml — the CLI, the IDE extension, and the Codex side of
+    // the ChatGPT desktop app. ChatGPT's own connectors are a different thing
+    // entirely: they accept only remote HTTPS servers, so nothing launched
+    // through npx can appear there. Naming the row after ChatGPT would send
+    // people looking for Heimdall in a list it can never be in.
+    //
     // TOML, but `codex mcp add` writes it. Generating TOML by hand would risk
     // the comments and ordering in a config that also holds model settings.
     targets: [
