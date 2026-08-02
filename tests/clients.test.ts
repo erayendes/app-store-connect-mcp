@@ -107,6 +107,43 @@ describe('the registry itself', () => {
   });
 });
 
+describe('what it reports back', () => {
+  /** Two files, like Claude: one CLI that is not installed, two JSON configs. */
+  const twoTargets = (): McpClient => ({
+    id: 'pair',
+    label: 'Pair',
+    targets: [
+      { kind: 'json', path: join(dir, 'a.json'), where: 'a', key: 'mcpServers' },
+      { kind: 'json', path: join(dir, 'b.json'), where: 'b', key: 'mcpServers' },
+    ],
+  });
+
+  it('reports one line per profile, however many files it wrote', () => {
+    // Claude writes two configs. Reporting each listed every profile twice —
+    // sixteen ticks for eight profiles, next to eight for every other client,
+    // which reads as though the others came up short.
+    const { results } = applyToClient(twoTargets(), ['analytics', 'webhooks'], []);
+    expect(results.map((r) => r.message)).toEqual(['added asc-analytics', 'added asc-webhooks']);
+    // Both files really were written — the collapse is in the reporting only.
+    for (const f of ['a.json', 'b.json']) {
+      expect(Object.keys(JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers)).toEqual([
+        'asc-analytics',
+        'asc-webhooks',
+      ]);
+    }
+  });
+
+  it('calls a profile failed when any one of its files failed', () => {
+    // Claude Code succeeding while Claude Desktop did not is not a success:
+    // the profile is missing from a client the user believes carries it.
+    writeFileSync(join(dir, 'b.json'), '{ // comment\n}');
+    const { results, needsManual } = applyToClient(twoTargets(), ['analytics'], []);
+    expect(results).toHaveLength(1);
+    expect(results[0].ok).toBe(false);
+    expect(needsManual).toBe(true);
+  });
+});
+
 describe('writing a JSON client config', () => {
   it('creates the file when the client has never been configured', () => {
     const client = jsonClient();
