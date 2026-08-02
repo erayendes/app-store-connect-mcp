@@ -9,8 +9,8 @@
  *
  * The agent eval cannot cover this either — it runs every profile with
  * --dry-run, and dry-run skips confirmation outright (server.ts, `!config.dryRun`).
- * So the 5-of-8 destructive result in docs/AX-FINDINGS.md measures the model's
- * restraint, never the product's.
+ * So the agent eval's destructive-intent score measures the model's restraint,
+ * never the product's. This suite is the only thing that measures the gate.
  *
  * Two layers here:
  *

@@ -8,18 +8,39 @@ Heimdall is an MCP server for the App Store Connect API and the App Store Server
 
 ## If a user asks you to install it
 
-1. **Register the server in the user's MCP client.** The command is the same everywhere — only where it goes differs:
-   - **Claude Code:** `claude mcp add -s user asc-<profile> -- npx -y @erayendes/asc-mcp <profile>`
-   - **Codex:** `codex mcp add asc-<profile> -- npx -y @erayendes/asc-mcp <profile>` (or a `[mcp_servers.asc-<profile>]` block in `~/.codex/config.toml`)
-   - **Claude Desktop / Antigravity / other JSON clients:** add an `mcpServers` entry with `command: "npx"`, `args: ["-y", "@erayendes/asc-mcp", "<profile>"]`
-   - If the user didn't name an area, register `analytics`, `marketing` and `app-info` as a sensible default, or ask which areas they use. Each profile is a small scoped server; see the profile table in [GUIDE.md](docs/GUIDE.md#4-register-profiles).
-   - A large profile can be narrowed to some of its sub-profiles with a colon: `npx -y @erayendes/asc-mcp monetization:subscriptions,iap`. The server name stays `asc-monetization`. Use it when the user wants a specific area of a big profile (`monetization`, `game-center`, `distribution`, `marketing`, `access`) rather than all of it.
+The install is two steps and they are not both yours. **You register. The user hands over the key.**
 
-2. **Do not handle credentials yourself.** Connecting needs an App Store Connect API key. The `.p8` private key is a secret:
-   - **Never** ask the user to paste the `.p8` contents into the chat, and never write the key into a config file yourself.
-   - Instead, tell the user to run **`npx -y @erayendes/asc-mcp setup`** in their own terminal. The wizard collects the Key ID, Issuer ID and `.p8`, stores the key in the macOS Keychain (or references its path off macOS), and writes a shared config that every profile reads. Key ID and Issuer ID are identifiers, not secrets, but `setup` collects them too — so hand the whole step to the user.
+### 1. Agree on the profiles, then register them
 
-3. **After setup:** ask the user to restart their MCP client, then to say *"check the App Store Connect connection"* — that calls `asc__status`, which verifies the credentials with one lightweight request.
+Ask what the user works on. If they have not said, `analytics`, `marketing` and `app-info` are a sensible default. Each profile is a small scoped server; the table is in [GUIDE.md](docs/GUIDE.md#4-register-profiles).
+
+A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 24 tools where `monetization` is 204. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `asc-monetization`.
+
+**Say what you are about to do and wait for a yes**, then run:
+
+```
+npx -y @erayendes/asc-mcp register monetization:subscription-pricing analytics
+```
+
+This edits MCP client configs the user did not open — by default every client it finds, which is usually more than the one you are talking through. There is no confirmation prompt in the command, so the confirmation has to happen in the conversation. `--clients=codex,claude` limits it; `--clients` ids are `claude`, `codex`, `antigravity`, `vscode`, `cursor`, `windsurf`.
+
+`register` only adds. It will not remove a profile the user set up earlier, and re-running it with the same arguments changes nothing.
+
+### 2. Send the user to `setup` for the credentials
+
+```
+npx -y @erayendes/asc-mcp setup
+```
+
+**Never run this yourself, and never ask for the `.p8`.** It is an App Store Connect private key: do not ask the user to paste its contents into the chat, do not read it, do not write it into a config file. `setup` reads the file directly and puts the key in the macOS Keychain (or references its path off macOS).
+
+`setup` also needs a real terminal — it opens pickers. Run from an agent shell it exits at the first prompt without doing anything, which is easy to mistake for success.
+
+### 3. Restart and check
+
+Ask the user to restart their MCP client, then to say *"check the App Store Connect connection"* — that calls `asc__status`, which verifies the credentials with one lightweight request.
+
+If the user would rather do the whole thing themselves, `setup` alone covers both steps: it collects the credentials *and* registers with every client it finds.
 
 ## While helping the user
 
