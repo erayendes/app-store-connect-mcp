@@ -507,56 +507,62 @@ export async function runSetup(): Promise<void> {
   }
 }
 
+/** One client's share of a registration run. */
+interface ClientPlan {
+  client: McpClient;
+  toAdd: string[];
+  toRemove: string[];
+}
+
 /**
- * Register the chosen profiles with every chosen client.
+ * What each client would gain and lose.
  *
- * Each client is reconciled against what it already has: a profile whose
- * sub-profile selection changed is re-registered under the same server name,
- * and one unchecked since last time is removed. The plan is shown per client
- * and confirmed once, because this edits files the user did not open.
- *
- * A client that fails does not stop the others — its block is printed instead,
- * so a Cursor config full of comments cannot cost you a working Claude setup.
+ * A profile whose sub-profile selection changed counts as an add: same server
+ * name, different argument. Comparing names alone would miss a profile that
+ * stayed checked while its sub-profiles were trimmed.
  */
-async function reconcileRegistration(
+function planChanges(
   clients: McpClient[],
   chosen: string[],
   registeredPerClient: Map<string, Map<string, string>>,
-  ask: Ask
-): Promise<void> {
+  { prune }: { prune: boolean }
+): ClientPlan[] {
   const chosenNames = new Set(chosen.map(serverName));
-  const plan = clients.map((client) => {
-    const registered = registeredPerClient.get(client.id) ?? new Map<string, string>();
-    return {
-      client,
-      // Comparing names alone would miss a profile that stayed checked but had
-      // its sub-profiles trimmed — same server name, different argument.
-      toAdd: client.targets.length ? chosen.filter((spec) => registered.get(serverName(spec)) !== spec) : chosen,
-      toRemove: [...registered.keys()].filter((n) => !chosenNames.has(n)),
-    };
-  });
+  return clients
+    .map((client) => {
+      const registered = registeredPerClient.get(client.id) ?? new Map<string, string>();
+      return {
+        client,
+        toAdd: client.targets.length ? chosen.filter((spec) => registered.get(serverName(spec)) !== spec) : chosen,
+        // `register` never prunes: an agent adding one profile must not silently
+        // drop the six the user set up last week.
+        toRemove: prune ? [...registered.keys()].filter((n) => !chosenNames.has(n)) : [],
+      };
+    })
+    .filter((p) => p.toAdd.length || p.toRemove.length);
+}
 
-  const changing = plan.filter((p) => p.toAdd.length || p.toRemove.length);
-  if (!changing.length) {
-    console.log('\nNo changes — every chosen client already matches your selection.');
-    return;
-  }
-
+/** The plan, one line per client. */
+function printPlan(plan: ClientPlan[]): void {
   console.log('\nPlanned changes:\n');
-  for (const { client, toAdd, toRemove } of changing) {
+  for (const { client, toAdd, toRemove } of plan) {
     const bits: string[] = [];
     if (toAdd.length) bits.push(`+ ${toAdd.map((s) => `asc-${s}`).join(', ')}`);
     if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
-    console.log(`  ${client.label.padEnd(18)} ${bits.join('  ')}`);
+    console.log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
   }
-  const answer = (await ask('\nApply these changes? [Y/n]: ', false)).trim();
-  if (/^n/i.test(answer)) {
-    console.log('Left registration unchanged.');
-    return;
-  }
+}
 
+/**
+ * Carry out a plan, reporting per client.
+ *
+ * A client that fails does not stop the others — its block is printed instead,
+ * so a Cursor config full of comments cannot cost anyone a working Claude
+ * setup.
+ */
+function applyPlan(plan: ClientPlan[]): void {
   const restart: string[] = [];
-  for (const { client, toAdd, toRemove } of changing) {
+  for (const { client, toAdd, toRemove } of plan) {
     console.log(`\n${client.label}`);
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
@@ -572,10 +578,35 @@ async function reconcileRegistration(
     }
     if (results.some((r) => r.ok)) restart.push(client.label);
   }
-
   if (restart.length) {
     console.log(`\nDone. Restart ${list(restart)} for the change to take effect.`);
   }
+}
+
+/**
+ * Register the chosen profiles with every chosen client, after confirming.
+ *
+ * The plan is shown and confirmed once, because this edits files the user did
+ * not open.
+ */
+async function reconcileRegistration(
+  clients: McpClient[],
+  chosen: string[],
+  registeredPerClient: Map<string, Map<string, string>>,
+  ask: Ask
+): Promise<void> {
+  const plan = planChanges(clients, chosen, registeredPerClient, { prune: true });
+  if (!plan.length) {
+    console.log('\nNo changes — every chosen client already matches your selection.');
+    return;
+  }
+  printPlan(plan);
+  const answer = (await ask('\nApply these changes? [Y/n]: ', false)).trim();
+  if (/^n/i.test(answer)) {
+    console.log('Left registration unchanged.');
+    return;
+  }
+  applyPlan(plan);
 }
 
 const indent = (text: string): string =>
@@ -587,3 +618,65 @@ const indent = (text: string): string =>
 /** "Claude, Codex and Cursor" — a sentence, not an array dump. */
 const list = (names: string[]): string =>
   names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+
+/**
+ * Register profiles without a terminal, for an agent acting on the user's behalf.
+ *
+ * Same detection, same plan, same output as `setup` — only the selection comes
+ * from arguments instead of a picker, and no credential is ever asked for. An
+ * agent can run this; it must not run `setup`, which needs the user's `.p8`.
+ *
+ * Additive by design. `setup` reconciles — it removes what you unchecked —
+ * because you are looking at the list while you decide. An agent is not, so
+ * `register` only ever adds: asking for one profile must not drop the six
+ * someone set up last week.
+ */
+export function runRegister(specs: string[], clientIds?: string[]): void {
+  if (!specs.length) {
+    throw new Error(
+      'register needs at least one profile, e.g. "register monetization analytics".\n' +
+        `Available: ${PROFILES.map((p) => p.name).join(', ')}`
+    );
+  }
+  // Validate every spec before touching anything: a typo should cost nothing.
+  for (const spec of specs) resolveSelection(spec);
+
+  const known = [...CLIENTS, OTHER_CLIENT];
+  let clients: McpClient[];
+  if (clientIds?.length) {
+    const unknown = clientIds.filter((id) => !known.some((c) => c.id === id));
+    if (unknown.length) {
+      throw new Error(
+        `Unknown client${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')}.\n` +
+          `Available: ${known.map((c) => c.id).join(', ')}`
+      );
+    }
+    clients = known.filter((c) => clientIds.includes(c.id));
+  } else {
+    clients = CLIENTS.filter(isPresent);
+    if (!clients.length) {
+      throw new Error(
+        'No MCP client found on this machine.\n' +
+          `Name one explicitly with --clients=<id>, from: ${known.map((c) => c.id).join(', ')}`
+      );
+    }
+  }
+
+  const { perClient } = registeredAcross(clients);
+  const plan = planChanges(clients, specs, perClient, { prune: false });
+  if (!plan.length) {
+    console.log('No changes — every client already has these profiles.');
+    return;
+  }
+  applyPlan(plan);
+
+  // Registration and credentials are separate steps on purpose: this one has no
+  // secret in it, which is why an agent may run it. Say so, or the user is left
+  // with servers that start and cannot authenticate.
+  if (!readSharedConfig()) {
+    console.log(
+      '\nNo credentials stored yet. The servers are registered but cannot ' +
+        'authenticate until you run this yourself:\n  npx -y @erayendes/asc-mcp setup'
+    );
+  }
+}

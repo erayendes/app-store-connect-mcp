@@ -37,6 +37,12 @@ ${PROFILES.map((p) => {
 Commands:
   setup                  Interactive one-time credential setup shared by every
                          profile (writes ~/.config/asc-mcp, key to Keychain).
+                         Also registers profiles with the MCP clients it finds.
+  register <profile...>  Register profiles without a terminal — for an AI agent
+                         acting on your behalf. Asks for nothing, never touches
+                         credentials, and only adds (setup is what removes).
+                         --clients=<ids>  limit to some clients; default is
+                         every one found on this machine.
 
 Options:
   --domains=<list>       (no-profile mode) Comma-separated domains, or "all".
@@ -84,6 +90,23 @@ async function main(): Promise<void> {
   }
 
   const positional = argv.filter((a) => !a.startsWith('-'));
+
+  if (positional[0] === 'register') {
+    const { runRegister } = await import('./setup.js');
+    const clients = argv
+      .find((a) => a.startsWith('--clients='))
+      ?.slice('--clients='.length)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    try {
+      runRegister(positional.slice(1), clients);
+    } catch (err) {
+      console.error(`\n${(err as Error).message}\n`);
+      process.exit(1);
+    }
+    return;
+  }
 
   if (positional[0] === 'setup') {
     const { runSetup } = await import('./setup.js');
