@@ -2,7 +2,7 @@
 
 ## What changes, and why
 
-<!-- Tek cumlede: ne degisti, neden gerekti. -->
+<!-- Tek cümlede: ne değişti, neden gerekti. -->
 
 ## Related issue
 
