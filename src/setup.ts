@@ -20,7 +20,6 @@ import {
   PROFILES,
   TOKENS_PER_TOOL,
   manualToolsFor,
-  registerCommand,
   resolveSelection,
   type Profile,
   type SubProfile,
@@ -29,6 +28,17 @@ import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
 import { runChecklist, type ChecklistItem } from './checklist.js';
+import {
+  CLIENTS,
+  OTHER_CLIENT,
+  applyToClient,
+  clientHint,
+  isPresent,
+  listRegistered,
+  manualBlock,
+  serverName,
+  type McpClient,
+} from './clients.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
 
@@ -92,27 +102,73 @@ export function buildRows(): Row[] {
 }
 
 /**
- * The profile arguments currently registered with the Claude Code CLI, keyed by
- * profile name — `monetization` or `monetization:subscriptions,iap`. The full
- * argument matters: without it, re-running setup would silently widen a config
- * that had been narrowed. Empty when `claude` is absent or the command fails,
- * so setup then behaves as a first-time run.
+ * What each chosen client already has registered, plus a merged view.
+ *
+ * The merged map is only used to pre-check the profile picker, so a profile
+ * registered anywhere opens checked. Reconciliation uses the per-client maps —
+ * merging those would remove a profile from a client that still has it just
+ * because a sibling client does not.
+ *
+ * Values keep the full argument (`monetization:iap`): dropping the colon would
+ * silently widen a config the user had narrowed.
  */
-function listRegisteredProfiles(): Map<string, string> {
+function registeredAcross(clients: McpClient[]): {
+  perClient: Map<string, Map<string, string>>;
+  union: Map<string, string>;
+} {
   const known = new Set(PROFILES.map((p) => p.name));
-  const found = new Map<string, string>();
-  try {
-    const out = execFileSync('claude', ['mcp', 'list'], { encoding: 'utf8' });
-    for (const line of out.split('\n')) {
-      const m = line.match(/^asc-([a-z0-9-]+):/);
-      if (!m || !known.has(m[1])) continue;
-      const spec = line.match(/@erayendes\/asc-mcp\s+(\S+)/);
-      found.set(m[1], spec?.[1] ?? m[1]);
+  const perClient = new Map<string, Map<string, string>>();
+  const union = new Map<string, string>();
+  for (const client of clients) {
+    const found = listRegistered(client);
+    perClient.set(client.id, found);
+    for (const [name, spec] of found) {
+      const profile = name.replace(/^asc-/, '');
+      if (known.has(profile)) union.set(profile, spec);
     }
-  } catch {
-    // `claude` not on PATH, or the listing failed — treat as none registered.
   }
-  return found;
+  return { perClient, union };
+}
+
+/**
+ * Ask which clients to register with, pre-checking the ones on this machine.
+ *
+ * Clients that were not found stay listed but unchecked — someone installing
+ * Cursor tomorrow can check it today. "Other" is always last and always
+ * available, because no list of clients stays complete for long.
+ *
+ * Returns null when cancelled. An empty selection means "register nowhere",
+ * which is a legitimate answer after a credentials-only run.
+ */
+export async function selectClients(ask: Ask): Promise<McpClient[] | null> {
+  const all = [...CLIENTS, OTHER_CLIENT];
+  const items: ChecklistItem[] = all.map((c) => ({
+    label: c.label,
+    hint: c.id === 'other' ? 'prints a block to paste' : clientHint(c),
+  }));
+  const preselected = all.map((c, i) => (c.id !== 'other' && isPresent(c) ? i : -1)).filter((i) => i >= 0);
+  const title =
+    '\nWhich MCP clients should carry these profiles?\n' +
+    'The ones found on this machine are checked. None of them share a config,\n' +
+    'so a profile registered with one is invisible to the others.';
+
+  if (process.stdin.isTTY) {
+    const picked = await runChecklist(items, { title, preselected });
+    return picked === null ? null : picked.map((i) => all[i]);
+  }
+
+  const found = all.filter((c) => c.id !== 'other' && isPresent(c));
+  const answer = (
+    await ask(
+      `Clients to register — comma-separated, or Enter for the ones found (${
+        found.map((c) => c.id).join(', ') || 'none'
+      }): `,
+      false
+    )
+  ).trim();
+  if (!answer) return found;
+  const wanted = new Set(answer.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
+  return all.filter((c) => wanted.has(c.id) || wanted.has(c.label.toLowerCase()));
 }
 
 /** Rows to pre-check so the picker opens showing what is already registered. */
@@ -316,11 +372,16 @@ export async function runSetup(): Promise<void> {
       console.log(`Found saved credentials (Key ID ${existing.keyId}, Issuer ${existing.issuerId}).`);
       const reuse = (await ask('Reuse them and just pick profiles? [Y/n]: ', false)).trim();
       if (!/^n/i.test(reuse)) {
+        const clients = await selectClients(ask);
+        if (clients === null) {
+          console.log('\nCancelled — registration left unchanged.');
+          return;
+        }
         const rows = buildRows();
-        const registered = listRegisteredProfiles();
-        const chosen = await selectProfiles(ask, rows, preselect(rows, registered));
+        const { perClient, union } = registeredAcross(clients);
+        const chosen = await selectProfiles(ask, rows, preselect(rows, union));
         if (chosen === null) console.log('\nCancelled — registration left unchanged.');
-        else await reconcileRegistration(chosen, registered, ask);
+        else await reconcileRegistration(clients, chosen, perClient, ask);
         return;
       }
       console.log('\nEntering new credentials instead.');
@@ -383,9 +444,10 @@ export async function runSetup(): Promise<void> {
       false
     );
 
+    const clients = (await selectClients(ask)) ?? [];
     const rows = buildRows();
-    const registered = listRegisteredProfiles();
-    const chosen = await selectProfiles(ask, rows, preselect(rows, registered));
+    const { perClient, union } = registeredAcross(clients);
+    const chosen = await selectProfiles(ask, rows, preselect(rows, union));
     const picked = chosen ?? []; // null = picker cancelled; keep saving creds regardless
 
     // A bundle ID is per-app, not account-global, and only the StoreKit tools
@@ -435,7 +497,7 @@ export async function runSetup(): Promise<void> {
     if (chosen === null) {
       console.log('\nProfile selection skipped — credentials saved. Re-run setup to pick profiles.');
     } else {
-      await reconcileRegistration(chosen, registered, ask);
+      await reconcileRegistration(clients, chosen, perClient, ask);
     }
   } finally {
     rl.close();
@@ -446,102 +508,82 @@ export async function runSetup(): Promise<void> {
 }
 
 /**
- * Reconcile registered profiles with the picker's selection: `claude mcp add`
- * the newly checked ones and `claude mcp remove` the ones unchecked since they
- * were registered. Only touches profiles that actually change, and confirms the
- * plan first because removal edits the user's client config. Falls back to
- * printing manual instructions when the Claude Code CLI is absent.
+ * Register the chosen profiles with every chosen client.
+ *
+ * Each client is reconciled against what it already has: a profile whose
+ * sub-profile selection changed is re-registered under the same server name,
+ * and one unchecked since last time is removed. The plan is shown per client
+ * and confirmed once, because this edits files the user did not open.
+ *
+ * A client that fails does not stop the others — its block is printed instead,
+ * so a Cursor config full of comments cannot cost you a working Claude setup.
  */
 async function reconcileRegistration(
+  clients: McpClient[],
   chosen: string[],
-  registered: Map<string, string>,
-  ask: (q: string, required?: boolean) => Promise<string>
+  registeredPerClient: Map<string, Map<string, string>>,
+  ask: Ask
 ): Promise<void> {
-  const nameOf = (spec: string): string => spec.split(':', 1)[0];
-  const chosenNames = new Set(chosen.map(nameOf));
-  // A profile whose sub-profile selection changed is re-registered: same server
-  // name, different argument. Comparing names alone would drop the change.
-  const toAdd = chosen.filter((spec) => registered.get(nameOf(spec)) !== spec);
-  const toRemove = [...registered.keys()].filter((n) => !chosenNames.has(n));
+  const chosenNames = new Set(chosen.map(serverName));
+  const plan = clients.map((client) => {
+    const registered = registeredPerClient.get(client.id) ?? new Map<string, string>();
+    return {
+      client,
+      // Comparing names alone would miss a profile that stayed checked but had
+      // its sub-profiles trimmed — same server name, different argument.
+      toAdd: client.targets.length ? chosen.filter((spec) => registered.get(serverName(spec)) !== spec) : chosen,
+      toRemove: [...registered.keys()].filter((n) => !chosenNames.has(n)),
+    };
+  });
 
-  if (!toAdd.length && !toRemove.length) {
-    console.log('\nNo changes — the registered profiles already match your selection.');
+  const changing = plan.filter((p) => p.toAdd.length || p.toRemove.length);
+  if (!changing.length) {
+    console.log('\nNo changes — every chosen client already matches your selection.');
     return;
   }
 
-  let claudeAvailable = false;
-  try {
-    execFileSync('claude', ['--version'], { stdio: 'ignore' });
-    claudeAvailable = true;
-  } catch {
-    // `claude` not on PATH — the user uses a different client; print instead.
+  console.log('\nPlanned changes:\n');
+  for (const { client, toAdd, toRemove } of changing) {
+    const bits: string[] = [];
+    if (toAdd.length) bits.push(`+ ${toAdd.map((s) => `asc-${s}`).join(', ')}`);
+    if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
+    console.log(`  ${client.label.padEnd(18)} ${bits.join('  ')}`);
   }
-  if (!claudeAvailable) {
-    console.log('\nClaude Code CLI not found — register the profiles you want manually:');
-    printManualRegistration(chosen);
-    return;
-  }
-
-  console.log('\nPlanned changes:');
-  if (toAdd.length) {
-    console.log(
-      `  + add:    ${toAdd
-        .map((spec) => (registered.has(nameOf(spec)) ? `asc-${spec} (was ${registered.get(nameOf(spec))})` : `asc-${spec}`))
-        .join(', ')}`
-    );
-  }
-  if (toRemove.length) console.log(`  - remove: ${toRemove.map((n) => `asc-${n}`).join(', ')}`);
-  const answer = (await ask('Apply these changes? [Y/n]: ', false)).trim();
+  const answer = (await ask('\nApply these changes? [Y/n]: ', false)).trim();
   if (/^n/i.test(answer)) {
     console.log('Left registration unchanged.');
     return;
   }
 
-  for (const spec of toAdd) {
-    const name = nameOf(spec);
-    try {
-      // Re-registering the same server name needs the old entry gone first.
-      if (registered.has(name)) {
-        execFileSync('claude', ['mcp', 'remove', `asc-${name}`], { stdio: 'ignore' });
-      }
-      execFileSync(
-        'claude',
-        ['mcp', 'add', '-s', 'user', `asc-${name}`, '--', 'npx', '-y', '@erayendes/asc-mcp', spec],
-        { stdio: 'ignore' }
-      );
-      console.log(`  ✓ added asc-${name}${spec === name ? '' : ` (${spec})`}`);
-    } catch (err) {
-      console.log(`  ✗ add asc-${name}: ${(err as Error).message.split('\n')[0]}`);
+  const restart: string[] = [];
+  for (const { client, toAdd, toRemove } of changing) {
+    console.log(`\n${client.label}`);
+    if (!client.targets.length) {
+      // "Other" — nothing to write into, so the block is the whole answer.
+      console.log('  add this to your client config:\n');
+      console.log(indent(manualBlock(client, toAdd)));
+      continue;
     }
-  }
-  for (const n of toRemove) {
-    try {
-      execFileSync('claude', ['mcp', 'remove', `asc-${n}`], { stdio: 'ignore' });
-      console.log(`  ✓ removed asc-${n}`);
-    } catch (err) {
-      console.log(`  ✗ remove asc-${n}: ${(err as Error).message.split('\n')[0]}`);
+    const { results, needsManual } = applyToClient(client, toAdd, toRemove);
+    for (const r of results) console.log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
+    if (needsManual && toAdd.length) {
+      console.log('\n  add these by hand:\n');
+      console.log(indent(manualBlock(client, toAdd)));
     }
+    if (results.some((r) => r.ok)) restart.push(client.label);
   }
-  console.log('\nDone. Restart Claude Code for the change to take effect.');
+
+  if (restart.length) {
+    console.log(`\nDone. Restart ${list(restart)} for the change to take effect.`);
+  }
 }
 
-function printManualRegistration(chosen: string[]): void {
-  // npx form is portable — no absolute install path baked into the user's
-  // config, works the same however the package was installed.
-  const entries = chosen
-    .map(
-      (spec) =>
-        `    "asc-${spec.split(':', 1)[0]}": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", ${JSON.stringify(spec)}] }`
-    )
-    .join(',\n');
-  const cliLines = chosen.map((spec) => `  ${registerCommand(spec)}`).join('\n');
+const indent = (text: string): string =>
+  text
+    .split('\n')
+    .map((l) => `    ${l}`)
+    .join('\n');
 
-  console.log(
-    `\nRegister ${chosen.length} profile${chosen.length === 1 ? '' : 's'} one of these two ways:\n\n` +
-      'A) Run these in your terminal (Claude Code CLI):\n\n' +
-      cliLines +
-      '\n\nB) Or paste this into your MCP client config — no env block needed:\n\n' +
-      '{\n  "mcpServers": {\n' + entries + '\n  }\n}\n\n' +
-      'Then restart your client and ask it to check the App Store Connect connection.'
-  );
-}
+/** "Claude, Codex and Cursor" — a sentence, not an array dump. */
+const list = (names: string[]): string =>
+  names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
