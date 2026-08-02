@@ -28,10 +28,13 @@ Heimdall is an MCP server for the **App Store Connect API** and the **App Store 
 npx -y @erayendes/asc-mcp setup
 ```
 
-The setup wizard collects your API key once, stores it securely, and registers the profiles you choose. Full walkthrough in the [Guide](docs/GUIDE.md).
+The setup wizard collects your API key once, stores it securely, and registers the profiles you choose with **every MCP client on your machine** — Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so this is the step you would otherwise repeat once per client in a different format each time. Full walkthrough in the [Guide](docs/GUIDE.md).
 
 > [!NOTE]
-> **Installing this through an AI agent?** See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent registers the server, then you run `setup` yourself — your private key never goes through the chat.
+> **Installing this through an AI agent?** See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent runs `register` to add the profiles, then you run `setup` yourself for the key — your private key never goes through the chat.
+
+> [!NOTE]
+> ChatGPT's own connectors accept only remote HTTPS servers, so Heimdall cannot appear there. It runs on your machine over stdio — which is why your private key never leaves it. (Codex, including the Codex side of the ChatGPT desktop app, is supported.)
 
 ### Why it's different
 
@@ -116,10 +119,13 @@ Heimdall, **App Store Connect API** ve **App Store Server API (StoreKit 2)** iç
 npx -y @erayendes/asc-mcp setup
 ```
 
-Setup sihirbazı API anahtarınızı bir kez toplar, güvenle saklar ve seçtiğiniz profilleri kaydeder. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
+Setup sihirbazı API anahtarınızı bir kez toplar, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
 
 > [!NOTE]
-> **Bunu bir AI agent ile mi kuruyorsunuz?** Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent sunucuyu kaydeder, `setup`'ı siz çalıştırırsınız — özel anahtarınız sohbetten hiç geçmez.
+> **Bunu bir AI agent ile mi kuruyorsunuz?** Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent profilleri `register` ile ekler, anahtar için `setup`'ı siz çalıştırırsınız — özel anahtarınız sohbetten hiç geçmez.
+
+> [!NOTE]
+> ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ediyor, bu yüzden Heimdall orada görünemez. Sizin makinenizde stdio üzerinden çalışır — özel anahtarınızın makineden hiç çıkmamasının sebebi de bu. (Codex, ChatGPT masaüstünün Codex tarafı dahil, destekleniyor.)
 
 ### Neden farklı
 

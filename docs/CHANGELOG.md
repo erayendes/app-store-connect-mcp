@@ -6,20 +6,61 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
-### [Unreleased] — profile structure
+### [Unreleased]
 
-**Breaking. Every profile changes.** Which tool belongs to which profile used to be derived from the URL: the first path segment picked the domain, the domain picked the profile. So every relationship hanging off an app — `/v1/apps/{id}/subscriptionGroups`, `.../customerReviews`, `.../appStoreVersions` — landed in `app-info`, while the resources themselves lived elsewhere. Eight of eleven profiles could not reach their own resources from an app: `asc-monetization` could not list an app's subscription groups at all.
+#### Profiles are curated, not derived
 
-Membership is now hand-curated in `spec/profiles.csv` and generated into the code.
+**Breaking. Every profile changes.** Which tool belonged to which profile used to be read off the URL: the first path segment picked the domain, the domain picked the profile. So every relationship hanging off an app — `/v1/apps/{id}/subscriptionGroups`, `.../customerReviews`, `.../appStoreVersions` — landed in `app-info` while the resources themselves lived elsewhere. Eight of eleven profiles could not reach their own resources from an app. `asc-monetization` could not list an app's subscription groups at all.
 
-- **17 profiles, up from 11.** New: `access`, `accessibility`, `agreements`, `android-to-ios`, `app-clips`, `encryption`, `testflight`. The ten existing names keep their names.
-- **`user-management` is gone**, split into `access` (beta groups, testers, invitations, team members, sandbox), `testflight` (beta localizations, review details, crash feedback), `app-clips` (App Clip beta invocations) and `agreements` (beta license agreement). No tool was lost. No alias — an alias merging four profiles would rebuild the bloated one. Configs naming it still **start**: the server comes up with a single tool that explains the split, so the answer reaches the conversation instead of a log file nobody reads.
-- **Every other profile changed size too.** `app-info` goes from 112 tools to 32 — the relationship listings moved to the profiles that own the resource. That is the fix, not a regression, but check your config: the tool you used from `asc-app-info` may now live next door.
-- **Sub-profiles.** A profile can be narrowed with a colon: `monetization:subscriptions,iap`. `monetization` is 201 tools; `monetization:subscriptions` is 108 and still carries the one-call price macro. The setup picker opens sub-profiles under a checked profile, all on, and writes the argument for you — check everything and the config stays exactly as it is today. `asc__status` reports which sub-profiles are loaded and roughly what they cost.
-- **"Tool not loaded" no longer misdiagnoses.** A profile carries a curated slice of several domains, so "the domain is loaded" said nothing about one tool — every missing tool in a partly-loaded domain was reported as *deprecated*, pointing at a flag that could not help. Deprecation is checked first now, and the remedy names the sub-profile or the sibling server that actually has the tool.
-- `asc__discover_domains` answers in profiles when running as one.
-- **`asc__describe` + `asc__call` reach anything the profile owns, on any client.** MCP lets a server revise its tool list, but says nothing about when a client hands the revision to the model. Measured with the same prompt in three clients: Claude Code used a newly loaded tool inside the same turn; Codex loaded it, reported that "the session tool list never made the new tools callable", and gave up without an answer. These two tools are in the list from the start, so no notification has to arrive in time — Codex and Antigravity both finish the same task in one turn now, and all three reach for the proxy rather than the load. `asc__call` is read-only and says so in its annotation, which is what stops a client from blocking it; writes keep their own tool names, where the client's approval and Heimdall's typed confirmation both still apply.
-- **`asc__load` adds a sub-profile mid-session** for clients that do refresh, promoting proxied tools to real ones with their own schemas. `asc__call` does the same promotion on the way through. Hand-written families (StoreKit, reviews-AI, pricing macros) still need a restart, and the reply says so.
+Membership is hand-curated in `spec/profiles.csv` now and generated into the code, the same way tools are generated from Apple's spec.
+
+- **13 profiles, up from 11.** New: `access`, `app-clips`, `testflight`.
+- **`user-management` is gone**, split into `access` (beta groups, testers, invitations, team members), `testflight` (beta localizations, review details, crash feedback, the beta licence agreement), `app-clips` (App Clip beta invocations) and `monetization` (sandbox testers, which belong with in-app purchases). No tool was lost, and there is no alias — an alias merging four profiles would rebuild the bloated one. A config still naming it **starts**: the server comes up with a single tool that explains the split, so the answer reaches the conversation instead of a log nobody reads.
+- **Every other profile changed size.** `app-info` goes from 112 tools to 57; the relationship listings moved to whichever profile owns the resource. That is the fix rather than a regression, but check your config — the tool you reached for in `asc-app-info` may now live next door.
+- **Two invariants are enforced in CI.** Every profile must reach its own root resources from an app, and every write's `{id}` must have a read that produces it. The founding bug is a failing test now.
+
+#### Sub-profiles
+
+A profile narrows with a colon. `monetization` is 204 tools; `monetization:subscription-pricing` is 24 and still carries the one-call price macro. 32 sub-profiles across six profiles.
+
+The setup picker unfolds a checked profile's sub-profiles under the cursor, all on, and writes the argument for you — check everything and the config is exactly what it would have been. `asc__status` reports which are loaded and roughly what they cost.
+
+#### Screenshots and previews belong to every page that can list a set
+
+`distribution` could list a version's screenshot sets and could not upload a single screenshot: the tools that fill a set were in `marketing`, unreachable from the profile built for shipping a release. Screenshot and preview sets hang off three different parents — version localizations, custom product page localizations and experiment treatment localizations — so those 18 tools now sit under all three, and the sub-profile that used to hold them alone is gone. `distribution` goes from 109 tools to 127.
+
+`marketing`'s two remaining page sub-profiles take the names Apple uses: `custom-product-page` and `product-page-optimization`.
+
+#### Any tool in the profile, on any client
+
+**`asc__describe` + `asc__call`.** MCP lets a server revise its tool list, but says nothing about when a client hands that revision to the model. Measured with one prompt in three clients: Claude Code used a newly loaded tool inside the same turn; Codex loaded it, reported that "the session tool list never made the new tools callable", and gave up. These two tools are present from the start, so no notification has to arrive in time — Codex and Antigravity both finish the same task in one turn now, and all three reach for the proxy rather than the load. `asc__call` is read-only and says so in its annotation, which is what stops a client from blocking it; writes keep their own tool names, where the client's approval and Heimdall's typed confirmation both still apply.
+
+**`asc__load`** adds a sub-profile mid-session for clients that do refresh, promoting proxied tools to real ones with their own schemas. `asc__call` does the same promotion on the way through. Hand-written families (StoreKit, reviews-AI, pricing macros) still need a restart, and the reply says so.
+
+**"Tool not loaded" no longer misdiagnoses.** A profile carries a curated slice of several domains, so "the domain is loaded" said nothing about one tool — every missing tool in a partly-loaded domain was reported as *deprecated*, pointing at a flag that could not help. Deprecation is checked first now, and the remedy names the sub-profile or the sibling server that actually has the tool.
+
+#### Setup registers with every client, not just Claude Code
+
+`setup` knew one command, `claude mcp add`. On a machine with Codex and Cursor it finished by printing JSON for the user to translate — into TOML, for Codex, from a format Codex does not read.
+
+- **It asks which clients**, with everything found on the machine pre-checked: Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. Claude Code and Claude Desktop are one row and two files, because neither reads the other's config and expecting otherwise is the most common way to end up with a profile that is configured and invisible.
+- **The vendor's own command writes where one exists** (`claude`, `codex`, `code --add-mcp`). Plain JSON configs are edited directly and backed up first. One that cannot be parsed — a JSON file with comments — is left untouched and reported with a block to paste. A client failing never stops the others.
+- **`register` is the same work without a terminal**, for an AI agent installing on your behalf: `asc-mcp register monetization:subscription-pricing analytics`. It asks for nothing, never touches credentials, and only adds — `setup` is what removes, because removing is safe when you are looking at the list you are editing and an agent is not.
+
+ChatGPT's own connectors accept only remote HTTPS servers, so Heimdall cannot appear there; it runs on your machine over stdio, which is why the private key never leaves it. The Codex entry covers the CLI, the IDE extension and the Codex side of the ChatGPT desktop app, which share one config file.
+
+#### Fixed
+
+- **A misspelled filter changed which app you were editing.** `apps.list` with `filter[bundleId]` — Apple's own spelling, and the one shown in the parameter's description — did not fail. It dropped the argument, ran unfiltered, returned the account's first app and reported success. Everything downstream then pointed at the wrong app; on a live account a probe created a TestFlight group on one. Both spellings are accepted now, and an argument matching neither stops the call with the list of names that would have worked.
+- **The binary exited 0 with no output when invoked through a symlink.** Both `npm install -g` and `npx` go through one, so every installed copy was silently dead and the client just said "failed to connect".
+- **Tool search returned nothing for Turkish queries.**
+- **Tool search offered tools the server refuses to load.** It ranked all 982 operations while the registry drops deprecated ones by default, so 123 candidates could never be called by the client being offered them.
+- **The setup picker opened every checked profile's sub-rows at once** — 46 rows on a fresh run. Expansion follows the cursor now.
+- **The picker counted a profile as the sum of its sub-profiles**, not their union, so a tool in two sub-profiles was counted twice. `access` had been reporting 55 for as long as it has had three sub-profiles; it serves 52 plus core.
+
+#### Added for contributors
+
+An agent-experience harness: a 50-intent corpus with adversarial goals run n times rather than once, a contract check across all 982 operations for unstamped risk levels and `readOnly` disagreeing with the HTTP method, and a live write-path probe that creates and deletes a TestFlight group on a throwaway app — the only check that exercises token to POST to Apple's answer, since every other one runs `--dry-run`. `tests/gate.test.ts` proves the write gate fires end to end over stdio rather than merely classifying correctly.
 
 ### [1.3.0] — 2026-07-28
 
@@ -98,20 +139,61 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 
-### [Yayınlanmadı] — profil yapısı
+### [Yayınlanmadı]
 
-**Kırıcı. Her profil değişiyor.** Bir aracın hangi profile ait olduğu URL'den türetiliyordu: yolun ilk segmenti domaini, domain profili seçiyordu. Dolayısıyla uygulamadan sarkan her ilişki — `/v1/apps/{id}/subscriptionGroups`, `.../customerReviews`, `.../appStoreVersions` — `app-info`'ya düşüyor, kaynağın kendisi başka yerde duruyordu. On bir profilin sekizi kendi kaynağına uygulamadan ulaşamıyordu: `asc-monetization` bir uygulamanın abonelik gruplarını listeleyemiyordu bile.
+#### Profiller türetilmiyor, elle küratörlükten geçiyor
 
-Profil üyeliği artık `spec/profiles.csv` içinde elle küratörlükle tutuluyor ve koda üretiliyor.
+**Kırıcı. Her profil değişiyor.** Hangi aracın hangi profile ait olduğu URL'den okunuyordu: ilk yol parçası domain'i, domain profili seçiyordu. Bu yüzden bir uygulamaya bağlı her ilişki — `/v1/apps/{id}/subscriptionGroups`, `.../customerReviews`, `.../appStoreVersions` — `app-info`'ya düşüyor, kaynakların kendisi başka yerde duruyordu. On bir profilin sekizi kendi kaynaklarına bir uygulamadan ulaşamıyordu. `asc-monetization` bir uygulamanın abonelik gruplarını hiç listeleyemiyordu.
 
-- **11 yerine 17 profil.** Yeni: `access`, `accessibility`, `agreements`, `android-to-ios`, `app-clips`, `encryption`, `testflight`. Mevcut on profilin adı değişmedi.
-- **`user-management` kaldırıldı**; dörde ayrıldı: `access` (beta grupları, testçiler, davetler, ekip üyeleri, sandbox), `testflight` (beta metinleri, inceleme bilgisi, kilitlenme geri bildirimi), `app-clips` (App Clip beta çağrıları), `agreements` (beta lisans sözleşmesi). Hiçbir araç kaybolmadı. Alias yok — dört profili birleştiren bir alias, düzeltilmeye çalışılan şişkin profili geri getirirdi. Eski adı yazan config'ler yine de **açılıyor**: sunucu, ayrılmayı anlatan tek bir araçla ayağa kalkar; böylece cevap kimsenin bakmadığı log satırı yerine konuşmaya ulaşır.
-- **Diğer profillerin boyutu da değişti.** `app-info` 112 araçtan 32'ye iniyor — ilişki listeleri, kaynağın sahibi olan profillere taşındı. Bu düzeltmenin kendisi, gerileme değil; ama config'inizi gözden geçirin: `asc-app-info`'dan kullandığınız araç artık yan kapıda olabilir.
-- **Alt profiller.** Bir profil iki nokta ile daraltılabiliyor: `monetization:subscriptions,iap`. `monetization` 201 araç; `monetization:subscriptions` 108 ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi, işaretlenen profilin alt profillerini hepsi işaretli açar ve argümanı sizin yerinize yazar — hepsini işaretli bırakırsanız config bugünküyle birebir aynı kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
-- **"Araç yüklü değil" artık yanlış teşhis koymuyor.** Bir profil birkaç domainden küratörlü bir dilim taşıdığı için "domain yüklü" bilgisi tek bir araç hakkında hiçbir şey söylemiyordu — kısmen yüklü bir domaindeki her eksik araç *deprecated* diye raporlanıyor, kullanıcı işe yaramayan bir bayrağa yönlendiriliyordu. Artık önce deprecated kontrol ediliyor ve çare, aracın gerçekten bulunduğu alt profili ya da kardeş sunucuyu adıyla söylüyor.
-- `asc__discover_domains`, profil olarak çalışırken domain yerine profil diliyle cevap veriyor.
-- **`asc__describe` + `asc__call`, profilin sahip olduğu her şeye her istemcide ulaşıyor.** MCP bir sunucunun araç listesini güncellemesine izin veriyor ama güncellemenin modele *ne zaman* ulaşacağını söylemiyor. Aynı istem üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex aracı yükledi, "oturum araç listesi yeni araçları çağrılabilir hâle getirmedi" diye raporladı ve cevapsız pes etti. Bu iki araç en baştan listede olduğu için hiçbir bildirimin zamanında ulaşması gerekmiyor — Codex de Antigravity de aynı işi artık tek turda bitiriyor ve üçü de yükleme yerine proxy'ye uzanıyor. `asc__call` salt-okunur ve bunu annotation'ında söylüyor; istemcinin onu bloklamasını engelleyen şey tam olarak bu. Yazmalar kendi araç adlarında kalıyor — orada hem istemcinin onayı hem Heimdall'ın yazılı onayı işliyor.
-- **`asc__load` bir alt profili oturum ortasında ekliyor**, listeyi yenileyen istemciler için: proxy ile çağrılan araçları kendi şemalarıyla gerçek araçlara terfi ettiriyor. `asc__call` de geçerken aynı terfiyi yapıyor. Elle yazılmış aileler (StoreKit, reviews-AI, fiyat makroları) hâlâ yeniden başlatma istiyor; cevap bunu söylüyor.
+Üyelik artık `spec/profiles.csv` içinde elle küratörlükten geçiyor ve koda üretiliyor — araçların Apple'ın spec'inden üretilmesiyle aynı yöntem.
+
+- **11 yerine 13 profil.** Yeni: `access`, `app-clips`, `testflight`.
+- **`user-management` kaldırıldı**; dörde ayrıldı: `access` (beta grupları, testçiler, davetler, ekip üyeleri), `testflight` (beta metinleri, inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi), `app-clips` (App Clip beta çağrıları) ve `monetization` (sandbox testçileri — yerleri uygulama içi satın almaların yanı). Hiçbir araç kaybolmadı, alias da yok: dört profili birleştiren bir alias, düzeltilmeye çalışılan şişkin profili geri getirirdi. Eski adı yazan config yine de **açılır**: sunucu, ayrılmayı anlatan tek bir araçla ayağa kalkar; böylece cevap kimsenin bakmadığı bir log satırı yerine konuşmaya ulaşır.
+- **Diğer her profilin boyutu da değişti.** `app-info` 112 araçtan 57'ye iniyor; ilişki listelemeleri kaynağın sahibi olan profile taşındı. Bu bir gerileme değil, düzeltmenin kendisi — ama config'inizi kontrol edin: `asc-app-info`'dan kullandığınız araç artık yan komşuda olabilir.
+- **İki değişmez CI'da zorunlu.** Her profil kendi kök kaynaklarına bir uygulamadan ulaşabilmeli, ve her yazma işleminin `{id}`'sini üreten bir okuma bulunmalı. Kurucu hata artık kırmızı veren bir test.
+
+#### Alt profiller
+
+Bir profil iki nokta ile daralır. `monetization` 204 araç; `monetization:subscription-pricing` 24 ve tek çağrılık fiyat makrosunu yine taşıyor. Altı profil altında toplam 32 alt profil.
+
+Setup seçicisi, işaretlenen profilin alt profillerini imlecin altında açar, hepsi işaretli gelir ve argümanı sizin yerinize yazar — hepsini işaretli bırakırsanız config aynen olması gerektiği gibi kalır. `asc__status` hangilerinin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+
+#### Ekran görüntüleri ve önizlemeler, set listeleyebilen her sayfaya ait
+
+`distribution` bir sürümün ekran görüntüsü setlerini listeleyebiliyor ama tek bir görsel yükleyemiyordu: seti dolduran araçlar `marketing`'deydi, yani sürüm yayınlamak için kurulmuş profilden erişilemiyordu. Ekran görüntüsü ve önizleme setleri üç ayrı ebeveyne bağlı — sürüm yerelleştirmeleri, özel ürün sayfası yerelleştirmeleri ve deney varyantı yerelleştirmeleri — bu yüzden o 18 araç artık üçünün de altında, ve onları tek başına tutan alt profil kaldırıldı. `distribution` 109 araçtan 127'ye çıkıyor.
+
+`marketing`'in kalan iki sayfa alt profili Apple'ın kullandığı adları alıyor: `custom-product-page` ve `product-page-optimization`.
+
+#### Profildeki her araç, her istemcide
+
+**`asc__describe` + `asc__call`.** MCP, bir sunucunun araç listesini güncellemesine izin verir; ama istemcinin bu güncellemeyi modele ne zaman ileteceği hakkında hiçbir şey söylemez. Aynı istemle üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex yükledi, "oturum araç listesi yeni araçları çağrılabilir hâle getirmedi" diye bildirdi ve vazgeçti. Bu iki araç en baştan listede olduğu için hiçbir bildirimin zamanında ulaşması gerekmiyor — Codex ve Antigravity artık aynı işi tek turda bitiriyor, üçü de yükleme yerine proxy'ye uzanıyor. `asc__call` salt okunur ve bunu annotation'ında söylüyor; bir istemcinin onu engellemesini durduran şey de bu. Yazma işlemleri kendi araç adlarında kalıyor — orada hem istemcinin onayı hem Heimdall'ın yazılı onayı geçerli.
+
+**`asc__load`** yenileme yapan istemciler için oturum ortasında alt profil ekler, proxy'lenen araçları kendi şemalarıyla gerçek araçlara terfi ettirir. `asc__call` da geçerken aynı terfiyi yapar. Elle yazılmış aileler (StoreKit, reviews-AI, fiyat makroları) hâlâ yeniden başlatma ister; yanıt bunu söyler.
+
+**"Araç yüklü değil" artık yanlış teşhis koymuyor.** Bir profil birkaç domain'in seçilmiş dilimini taşır, dolayısıyla "domain yüklü" tek bir araç hakkında hiçbir şey söylemiyordu — kısmen yüklü bir domain'deki her eksik araç *kullanımdan kalkmış* diye raporlanıyor, işe yaramayacak bir bayrağı işaret ediyordu. Artık önce kullanımdan kalkma kontrol ediliyor ve çözüm, aracın gerçekten bulunduğu alt profili ya da kardeş sunucuyu adıyla söylüyor.
+
+#### Setup yalnızca Claude Code'a değil, her istemciye kaydediyor
+
+`setup` tek komut biliyordu: `claude mcp add`. Codex ve Cursor bulunan bir makinede iş, kullanıcının çevirmesi için JSON basarak bitiyordu — üstelik Codex için TOML'a, Codex'in okumadığı bir biçimden.
+
+- **Hangi istemciler diye soruyor**, makinede bulunanlar işaretli gelerek: Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. Claude Code ile Claude Desktop tek satır ve iki dosya; çünkü hiçbiri diğerinin config'ini okumaz ve tersini beklemek, bir profilin kurulu olup görünmemesinin en yaygın sebebidir.
+- **Üreticinin kendi komutu varsa yazma işini o yapıyor** (`claude`, `codex`, `code --add-mcp`). Düz JSON config'ler doğrudan düzenleniyor ve önce yedekleniyor. Ayrıştırılamayan bir dosya — içinde yorum olan bir JSON — hiç ellenmiyor, durum bildiriliyor ve yapıştırılacak blok basılıyor. Bir istemcinin başarısız olması diğerlerini durdurmuyor.
+- **`register` aynı işi terminal olmadan yapar**, kurulumu sizin adınıza yapan bir AI agent için: `asc-mcp register monetization:subscription-pricing analytics`. Hiçbir şey sormaz, kimlik bilgisine hiç dokunmaz ve yalnızca ekler — silme işi `setup`'ındır, çünkü silmek düzenlediğiniz listeye bakarken güvenlidir ve agent bakmıyordur.
+
+ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ettiği için Heimdall orada görünemez; sizin makinenizde stdio üzerinden çalışır, özel anahtarın makineden hiç çıkmamasının sebebi de budur. Codex satırı; CLI'yi, IDE eklentisini ve ChatGPT masaüstünün Codex tarafını kapsar — üçü aynı config dosyasını okur.
+
+#### Düzeltildi
+
+- **Yanlış yazılmış bir filtre hangi uygulamayı düzenlediğinizi değiştiriyordu.** `apps.list` çağrısı `filter[bundleId]` ile — Apple'ın kendi yazımı, üstelik parametrenin açıklamasında gösterilen biçim — hata vermiyordu. Argümanı düşürüyor, filtresiz çalışıyor, hesabın ilk uygulamasını döndürüyor ve başarı bildiriyordu. Sonrasındaki her şey yanlış uygulamayı işaret ediyordu; canlı bir hesapta bir sonda birine TestFlight grubu açtı. Artık iki yazım da kabul ediliyor, hiçbirine uymayan bir argüman ise çağrıyı durdurup çalışacak isimleri listeliyor.
+- **Binary, symlink üzerinden çağrıldığında hiçbir çıktı vermeden 0 ile çıkıyordu.** Hem `npm install -g` hem `npx` symlink kullanır; yani kurulu her kopya sessizce ölüydü ve istemci yalnızca "bağlanamadı" diyordu.
+- **Araç arama Türkçe sorgulara hiçbir şey döndürmüyordu.**
+- **Araç arama, sunucunun yüklemeyi reddettiği araçları öneriyordu.** 982 işlemin hepsini sıralıyordu, oysa kayıt defteri kullanımdan kalkmış olanları varsayılan olarak atıyor; yani 123 aday, önerildikleri istemci tarafından hiç çağrılamazdı.
+- **Setup seçicisi işaretli her profilin alt satırlarını aynı anda açıyordu** — sıfırdan bir koşuda 46 satır. Açılma artık imleci takip ediyor.
+- **Seçici bir profili alt profillerinin toplamı sayıyordu**, birleşimi değil; bu yüzden iki alt profilde bulunan bir araç iki kez sayılıyordu. `access`, üç alt profile sahip olduğundan beri 55 gösteriyordu; gerçekte 52 artı çekirdek sunuyor.
+
+#### Katkıcılar için eklendi
+
+Bir agent deneyimi koşum takımı: saldırgan hedefler içeren 50 istemlik bir külliyat (bir kez değil, n kez koşuluyor), 982 işlemin tamamında damgalanmamış risk seviyesi ve HTTP metoduyla çelişen `readOnly` arayan bir sözleşme kontrolü, ve tek kullanımlık bir uygulamada TestFlight grubu açıp silen canlı bir yazma-yolu sondası — token'dan POST'a, oradan Apple'ın cevabına giden yolu sınayan tek kontrol, çünkü diğerlerinin hepsi `--dry-run` ile koşuyor. `tests/gate.test.ts` yazma kapısının yalnızca doğru sınıflandırdığını değil, stdio üzerinden uçtan uca ateşlendiğini kanıtlıyor.
 
 ### [1.3.0] — 2026-07-28
 

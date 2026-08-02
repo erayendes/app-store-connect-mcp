@@ -101,7 +101,40 @@ The server name stays `asc-monetization` either way. Ask it `asc__status` at any
 
 **Pick per project.** MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (~90 tools); a game adds `asc-game-center`. (Claude Code also defers tool schemas until first use, keeping even several connected profiles cheap.)
 
-Heimdall speaks standard MCP over stdio, so it works with **any MCP client** — Claude Code, Claude Desktop, Codex, Antigravity, Cursor and others. The registration is always the same command, `npx -y @erayendes/asc-mcp <profile>`; only where you put it differs.
+**`setup` registers for you.** After the credentials it asks which clients should carry the profiles, with everything it found on this machine already checked, then writes to all of them. None of these clients share a config file, so this is the step that would otherwise be done once per client, by hand, in a different format each time.
+
+| Client | Where it goes | Written by |
+|:--|:--|:--|
+| Claude Code | `~/.claude.json` | `claude mcp add` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | edited here |
+| Codex | `~/.codex/config.toml` | `codex mcp add` |
+| Antigravity | `~/.gemini/config/mcp_config.json` | edited here |
+| Cursor | `~/.cursor/mcp.json` | edited here |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | edited here |
+| VS Code | user MCP config | `code --add-mcp` |
+
+Claude Code and Claude Desktop are one row in the picker and two files on disk — registering in one and expecting the other to follow is the most common way to end up with a profile that is configured and invisible. Codex is the reverse: the CLI, the IDE extension and the Codex side of the ChatGPT desktop app all read the same file, so one entry covers all three.
+
+Files edited here are backed up first. One that cannot be parsed — a JSON config with comments in it — is left alone and reported, with a block to paste.
+
+> [!NOTE]
+> **ChatGPT's own connectors are not on this list.** They accept only remote HTTPS servers; Heimdall runs on your machine over stdio, which is why your private key never leaves it. The Codex row above is a different surface that happens to share the brand.
+
+**Adding a profile later** — re-run `setup`. It skips to the pickers with everything already registered pre-checked, so unchecking removes and checking adds.
+
+**For an AI agent doing the install with you:** `register` does the same work without a terminal and without ever touching credentials.
+
+```bash
+npx -y @erayendes/asc-mcp register monetization:subscription-pricing analytics
+npx -y @erayendes/asc-mcp register analytics --clients=codex,claude
+```
+
+It only adds — `setup` is what removes — and it tells you to run `setup` yourself if no credentials are stored yet. See [AGENTS.md](../AGENTS.md).
+
+<details>
+<summary><b>Registering by hand</b> — if you would rather not run <code>setup</code>, or your client is not listed above</summary>
+
+The command is always `npx -y @erayendes/asc-mcp <profile>`; only where you put it differs.
 
 **Claude Code** (CLI):
 
@@ -136,7 +169,10 @@ args = ["-y", "@erayendes/asc-mcp", "analytics"]
 
 - **Claude Desktop:** `claude_desktop_config.json` — macOS `~/Library/Application Support/Claude/…`, Windows `%APPDATA%\Claude\…`.
 - **Antigravity:** the "…" menu → MCP Store → Manage MCP Servers → View raw config (`mcp_config.json`).
+- **VS Code:** the key is `servers`, not `mcpServers`.
 - **From source:** replace `command`/`args` with `node /absolute/path/to/app-store-connect-mcp/dist/index.js analytics`.
+
+</details>
 
 **The combined server.** Running without a profile serves the classic combined server, and the old env-based registration still works on any client:
 
@@ -312,22 +348,33 @@ Talk to your client in plain language:
 
 ### 10. Uninstall
 
-```bash
-# Remove registered profiles from Claude Code
-claude mcp remove asc-analytics
-claude mcp remove asc-monetization   # …repeat for each you added
+**Unregister first.** Re-run `setup`, uncheck everything in the profile picker, and it removes the profiles from every client you select — including the ones you may have forgotten registering. Checking what is left is worth a minute: `setup` writes to more places than most people remember.
 
-# Remove the shared credential config
+To do it by hand, each client needs its own pass. There is no single list to consult:
+
+```bash
+claude mcp remove asc-analytics       # …once per profile
+codex mcp remove asc-analytics
+```
+
+- **Claude Desktop:** delete the `asc-*` entries from `claude_desktop_config.json`.
+- **Antigravity / Cursor / Windsurf:** delete them from that client's JSON config — the paths are in the table in [§4](#4-register-profiles). A `.bak` next to it is from a `setup` run, safe to delete too.
+- **VS Code:** delete them from the user MCP config; the key there is `servers`.
+
+Then the rest:
+
+```bash
+# The shared credential config
 rm -rf ~/.config/asc-mcp
 
-# Remove the key from the macOS Keychain (if you used it)
+# The key in the macOS Keychain, if you used it
 security delete-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX
 
-# Uninstall the package (only if installed globally)
+# The package, only if you installed it globally
 npm uninstall -g @erayendes/asc-mcp
 ```
 
-For Claude Desktop, delete the `asc-*` entries from `claude_desktop_config.json`. Revoking the API key itself is done in App Store Connect.
+Revoking the API key itself is done in App Store Connect. Deleting the local copy does not revoke it.
 
 ## Türkçe
 
@@ -424,7 +471,40 @@ Sunucu adı her iki hâlde `asc-monetization`. İstediğiniz an `asc__status` so
 
 **Projeye göre seçin.** MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (~90 araç); oyun `asc-game-center` ekler. (Claude Code ayrıca araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.)
 
-Heimdall, stdio üzerinden standart MCP konuşur; bu yüzden **herhangi bir MCP istemcisiyle** çalışır — Claude Code, Claude Desktop, Codex, Antigravity, Cursor ve diğerleri. Kayıt her zaman aynı komuttur, `npx -y @erayendes/asc-mcp <profil>`; yalnızca nereye koyduğunuz değişir.
+**Kaydı `setup` sizin yerinize yapar.** Kimlik bilgisinden sonra profilleri hangi istemcilerin taşıyacağını sorar — bu makinede bulduklarının hepsi işaretli gelir — ve tümüne birden yazar. Bu istemcilerin hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde elle yapılırdı.
+
+| İstemci | Nereye | Nasıl yazılır |
+|:--|:--|:--|
+| Claude Code | `~/.claude.json` | `claude mcp add` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | buradan düzenlenir |
+| Codex | `~/.codex/config.toml` | `codex mcp add` |
+| Antigravity | `~/.gemini/config/mcp_config.json` | buradan düzenlenir |
+| Cursor | `~/.cursor/mcp.json` | buradan düzenlenir |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | buradan düzenlenir |
+| VS Code | kullanıcı MCP config'i | `code --add-mcp` |
+
+Claude Code ile Claude Desktop seçicide tek satır, diskte iki dosyadır — birine kaydedip diğerinin de gelmesini beklemek, bir profilin kurulu olup görünmemesinin en yaygın sebebidir. Codex'te durum tersidir: CLI, IDE eklentisi ve ChatGPT masaüstünün Codex tarafı aynı dosyayı okur, tek kayıt üçünü birden kapsar.
+
+Buradan düzenlenen dosyaların önce yedeği alınır. Ayrıştırılamayan bir dosya — içinde yorum olan bir JSON config — hiç ellenmez, durum bildirilir ve yapıştırılacak blok basılır.
+
+> [!NOTE]
+> **ChatGPT'nin kendi connector'ları bu listede değil.** Onlar yalnızca uzak HTTPS sunucusu kabul ediyor; Heimdall sizin makinenizde stdio üzerinden çalışıyor, özel anahtarınızın makineden hiç çıkmamasının sebebi de bu. Yukarıdaki Codex satırı aynı markayı taşıyan başka bir yüzey.
+
+**Sonradan profil eklemek** — `setup`'ı yeniden çalıştırın. Doğrudan seçicilere atlar ve kayıtlı olanları işaretli açar; işareti kaldırmak siler, işaretlemek ekler.
+
+**Kurulumu sizinle birlikte yapan bir AI agent için:** `register` aynı işi terminal olmadan ve kimlik bilgisine hiç dokunmadan yapar.
+
+```bash
+npx -y @erayendes/asc-mcp register monetization:subscription-pricing analytics
+npx -y @erayendes/asc-mcp register analytics --clients=codex,claude
+```
+
+Yalnızca ekler — silme işi `setup`'ındır — ve kimlik bilgisi henüz kayıtlı değilse `setup`'ı sizin çalıştırmanız gerektiğini söyler. Bkz. [AGENTS.md](../AGENTS.md).
+
+<details>
+<summary><b>Elle kayıt</b> — <code>setup</code> çalıştırmak istemiyorsanız ya da istemciniz yukarıdaki listede yoksa</summary>
+
+Komut her zaman `npx -y @erayendes/asc-mcp <profil>`; yalnızca nereye koyduğunuz değişir.
 
 **Claude Code** (CLI):
 
@@ -459,7 +539,10 @@ args = ["-y", "@erayendes/asc-mcp", "analytics"]
 
 - **Claude Desktop:** `claude_desktop_config.json` — macOS `~/Library/Application Support/Claude/…`, Windows `%APPDATA%\Claude\…`.
 - **Antigravity:** "…" menüsü → MCP Store → Manage MCP Servers → View raw config (`mcp_config.json`).
+- **VS Code:** anahtar `mcpServers` değil, `servers`.
 - **Kaynaktan:** `command`/`args` yerine `node /mutlak/yol/app-store-connect-mcp/dist/index.js analytics` kullanın.
+
+</details>
 
 **Birleşik sunucu.** Profil vermeden çalıştırmak klasik birleşik sunucuyu açar; eski env tabanlı kayıt da her istemcide çalışmaya devam eder:
 
@@ -636,19 +719,30 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 
 ### 10. Kaldırma
 
-```bash
-# Kayıtlı profilleri Claude Code'dan kaldır
-claude mcp remove asc-analytics
-claude mcp remove asc-monetization   # …eklediğiniz her biri için tekrarlayın
+**Önce kaydı silin.** `setup`'ı yeniden çalıştırın, profil seçicisinde her şeyin işaretini kaldırın; seçtiğiniz her istemciden profilleri siler — kaydettiğinizi unuttuklarınız dahil. Neyin kaldığına bakmaya değer: `setup` çoğu kişinin hatırladığından fazla yere yazıyor.
 
-# Ortak kimlik bilgisi yapılandırmasını sil
+Elle yapacaksanız her istemci ayrı bir tur ister. Bakılacak tek bir liste yok:
+
+```bash
+claude mcp remove asc-analytics       # …her profil için bir kez
+codex mcp remove asc-analytics
+```
+
+- **Claude Desktop:** `claude_desktop_config.json`'dan `asc-*` girdilerini silin.
+- **Antigravity / Cursor / Windsurf:** o istemcinin JSON config'inden silin — yollar [§4](#4-profilleri-kaydedin)'teki tabloda. Yanındaki `.bak` bir `setup` koşusundan kalmadır, onu da silebilirsiniz.
+- **VS Code:** kullanıcı MCP config'inden silin; oradaki anahtar `servers`.
+
+Sonra gerisi:
+
+```bash
+# Ortak kimlik bilgisi yapılandırması
 rm -rf ~/.config/asc-mcp
 
-# Anahtarı macOS Keychain'den kaldır (kullandıysanız)
+# Kullandıysanız, macOS Keychain'deki anahtar
 security delete-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX
 
-# Paketi kaldır (yalnızca global kurduysanız)
+# Paket, yalnızca global kurduysanız
 npm uninstall -g @erayendes/asc-mcp
 ```
 
-Claude Desktop için `claude_desktop_config.json`'dan `asc-*` girdilerini silin. API anahtarının kendisini iptal etmek App Store Connect üzerinden yapılır.
+API anahtarının kendisini iptal etmek App Store Connect üzerinden yapılır. Yerel kopyayı silmek onu iptal etmez.
