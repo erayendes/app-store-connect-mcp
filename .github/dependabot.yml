@@ -19,3 +19,21 @@ updates:
       interval: weekly
     commit-message:
       prefix: ci
+
+  # The package itself ships to npm, so its lockfile ages the same way pins do.
+  # Security updates cover the urgent half; this covers the routine half.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
