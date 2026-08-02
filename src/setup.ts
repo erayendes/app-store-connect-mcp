@@ -144,7 +144,7 @@ export async function selectClients(ask: Ask): Promise<McpClient[] | null> {
   const all = [...CLIENTS, OTHER_CLIENT];
   const items: ChecklistItem[] = all.map((c) => ({
     label: c.label,
-    hint: c.id === 'other' ? 'prints a block to paste' : clientHint(c),
+    hint: clientHint(c),
   }));
   const preselected = all.map((c, i) => (c.id !== 'other' && isPresent(c) ? i : -1)).filter((i) => i >= 0);
   const title =

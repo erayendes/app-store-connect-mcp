@@ -7,13 +7,14 @@
  * failure that matters is what ends up on disk.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   CLIENTS,
   OTHER_CLIENT,
   applyToClient,
+  isPresent,
   listRegistered,
   manualBlock,
   serverArgs,
@@ -58,6 +59,36 @@ describe('the registry itself', () => {
     expect(JSON.parse(manualBlock(vscode, ['monetization']))).toHaveProperty('servers');
     const cursor = CLIENTS.find((c) => c.id === 'cursor')!;
     expect(JSON.parse(manualBlock(cursor, ['monetization']))).toHaveProperty('mcpServers');
+  });
+
+  it('does not call a leftover config directory an installed client', () => {
+    // An uninstalled Cursor leaves ~/.cursor/ behind with rules in it. Testing
+    // the directory reported that as Cursor and offered to configure an app
+    // that was not on the machine.
+    const ghost: McpClient = {
+      id: 'ghost',
+      label: 'Ghost',
+      targets: [
+        { kind: 'json', path: join(dir, 'leftovers', 'mcp.json'), where: 'x', key: 'mcpServers', app: 'NoSuchApp' },
+      ],
+    };
+    mkdirSync(join(dir, 'leftovers'));
+    writeFileSync(join(dir, 'leftovers', 'rules'), 'left behind');
+    expect(isPresent(ghost)).toBe(false);
+  });
+
+  it('still writes a client the user checked but detection did not find', () => {
+    // The picker leaves undetected clients checkable on purpose — configuring
+    // Cursor today and installing it tomorrow is a reasonable thing to want.
+    const undetected: McpClient = {
+      id: 'later',
+      label: 'Later',
+      targets: [{ kind: 'json', path: join(dir, 'later', 'mcp.json'), where: 'x', key: 'mcpServers', app: 'NoSuchApp' }],
+    };
+    expect(isPresent(undetected)).toBe(false);
+    const { results } = applyToClient(undetected, ['webhooks'], []);
+    expect(results.every((r) => r.ok)).toBe(true);
+    expect(existsSync(join(dir, 'later', 'mcp.json'))).toBe(true);
   });
 
   it('names a server after the profile, never the sub-profile spec', () => {

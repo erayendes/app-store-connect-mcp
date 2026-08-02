@@ -48,7 +48,18 @@ export type Target =
       list?: string[];
       remove?: (name: string) => string[];
     }
-  | { kind: 'json'; path: string; where: string; key: string };
+  | {
+      kind: 'json';
+      path: string;
+      where: string;
+      key: string;
+      /**
+       * Application bundle that proves the client is installed even before it
+       * has written a config. Checked alongside the file, never instead of it:
+       * a config can outlive the app, and an app can predate its config.
+       */
+      app?: string;
+    };
 
 export interface McpClient {
   id: string;
@@ -66,7 +77,7 @@ export interface McpClient {
 export const CLIENTS: McpClient[] = [
   {
     id: 'claude',
-    label: 'Claude',
+    label: 'Claude (Code & Desktop)',
     // Claude Code and Claude Desktop read different files and neither sees the
     // other's. Registering in one and expecting the other to follow is the
     // single most common way to end up with "no MCP server configured".
@@ -84,6 +95,7 @@ export const CLIENTS: McpClient[] = [
         path: home('Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
         where: '~/Library/Application Support/Claude/claude_desktop_config.json',
         key: 'mcpServers',
+        app: 'Claude',
       },
     ],
   },
@@ -113,6 +125,7 @@ export const CLIENTS: McpClient[] = [
         path: home('.gemini', 'config', 'mcp_config.json'),
         where: '~/.gemini/config/mcp_config.json',
         key: 'mcpServers',
+        app: 'Antigravity',
       },
     ],
   },
@@ -138,7 +151,15 @@ export const CLIENTS: McpClient[] = [
   {
     id: 'cursor',
     label: 'Cursor',
-    targets: [{ kind: 'json', path: home('.cursor', 'mcp.json'), where: '~/.cursor/mcp.json', key: 'mcpServers' }],
+    targets: [
+      {
+        kind: 'json',
+        path: home('.cursor', 'mcp.json'),
+        where: '~/.cursor/mcp.json',
+        key: 'mcpServers',
+        app: 'Cursor',
+      },
+    ],
   },
   {
     id: 'windsurf',
@@ -149,6 +170,7 @@ export const CLIENTS: McpClient[] = [
         path: home('.codeium', 'windsurf', 'mcp_config.json'),
         where: '~/.codeium/windsurf/mcp_config.json',
         key: 'mcpServers',
+        app: 'Windsurf',
       },
     ],
   },
@@ -175,25 +197,49 @@ const hasBinary = (bin: string): boolean =>
     }
   });
 
+/** An app bundle, in either place macOS puts them. */
+const hasApp = (name: string): boolean =>
+  existsSync(`/Applications/${name}.app`) || existsSync(home('Applications', `${name}.app`));
+
 /**
- * A JSON target counts as present when its *directory* exists, not the file.
- * A freshly installed Cursor has `~/.cursor/` and no `mcp.json` until someone
- * adds a server — requiring the file would report Cursor missing on exactly
- * the machines where setup has the most to do.
+ * Is this client on the machine?
+ *
+ * A JSON client counts when its config exists *or* its application does.
+ * Neither alone is enough: a freshly installed Cursor has no `mcp.json` yet,
+ * and an uninstalled one leaves `~/.cursor/` behind with rules in it. Testing
+ * the containing directory — the obvious shortcut — reports that leftover as
+ * an installed Cursor and offers to configure an app that is not there.
  */
 const targetPresent = (t: Target): boolean =>
-  t.kind === 'cli' ? hasBinary(t.bin) : existsSync(t.path) || existsSync(dirname(t.path));
+  t.kind === 'cli' ? hasBinary(t.bin) : existsSync(t.path) || (t.app !== undefined && hasApp(t.app));
 
 /** Targets actually installed on this machine. A client with none is absent. */
 export const presentTargets = (client: McpClient): Target[] => client.targets.filter(targetPresent);
 export const isPresent = (client: McpClient): boolean => presentTargets(client).length > 0;
 
-/** Where a present client keeps its config, for the picker hint. */
-export function clientHint(client: McpClient): string {
-  const present = presentTargets(client);
-  if (!present.length) return 'not found';
-  return present.map((t) => t.where).join(' + ');
-}
+/**
+ * Targets to write when the user has chosen this client.
+ *
+ * Wider than `presentTargets` on purpose. The picker lets someone check a
+ * client it did not find — installing Cursor tomorrow and configuring it today
+ * is a reasonable thing to want — and a JSON config is created as easily as it
+ * is edited. A CLI target still needs its binary: there is nothing to run.
+ */
+const writableTargets = (client: McpClient): Target[] =>
+  client.targets.filter((t) => (t.kind === 'cli' ? hasBinary(t.bin) : true));
+
+/**
+ * Picker hint. Absence is worth saying; presence is already the checkbox, and
+ * the config path is noise at the moment someone is choosing a client — it
+ * matters later, in the line that reports what was written.
+ */
+export const clientHint = (client: McpClient): string | undefined => {
+  // A client with no targets is the catch-all row. It cannot be missing —
+  // there is nothing to look for — so "not found" would be a lie about it.
+  if (!client.targets.length) return 'prints a block to paste';
+  return isPresent(client) ? undefined : 'not found';
+};
+
 
 /**
  * Profiles this client already has registered, keyed by server name.
@@ -264,7 +310,7 @@ export function applyToClient(
   const results: ChangeResult[] = [];
   let needsManual = false;
 
-  for (const t of presentTargets(client)) {
+  for (const t of writableTargets(client)) {
     if (t.kind === 'cli') {
       for (const spec of toAdd) {
         const name = serverName(spec);
