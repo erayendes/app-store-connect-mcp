@@ -7,9 +7,10 @@ on:
   branch_protection_rule:
   schedule:
     - cron: '31 4 * * 1' # Mondays, 04:31 UTC
-  push:
-    branches: [main]
   workflow_dispatch:
+# No push trigger: the score measures repository practices, not the diff, so a
+# run per merge only refiles the same alerts. Weekly is enough; use
+# workflow_dispatch to score a change on demand.
 
 permissions: read-all
 
