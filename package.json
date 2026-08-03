@@ -29,7 +29,6 @@
   },
   "files": [
     "dist",
-    "spec/openapi.json",
     "README.md",
     "AGENTS.md",
     "docs/GUIDE.md",
