@@ -19,10 +19,27 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Node 24 for the npm it bundles, not for the runtime: trusted publishing
+      # (OIDC -> registry token exchange) needs npm >= 11.5, and Node 22 ships
+      # npm 10, which signs provenance but then PUTs without credentials while
+      # npm masks the rejection as a 404. Node 24 ships npm 11.17. The package
+      # itself still supports Node >= 20.19 — see engines in package.json.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+
+      # The 404 npm returns for a too-old client says nothing about the cause,
+      # so name it here instead of at the publish step.
+      - name: Fail early if npm cannot do trusted publishing
+        run: |
+          node -e 'const v = require("child_process").execSync("npm --version").toString().trim();
+          const [a, b] = v.split(".").map(Number);
+          if (a < 11 || (a === 11 && b < 5)) {
+            console.error(`npm ${v} is too old for trusted publishing (need >= 11.5). Raise node-version above.`);
+            process.exit(1);
+          }
+          console.log(`npm ${v} supports trusted publishing.`);'
 
       - run: npm ci
 
@@ -34,11 +51,6 @@ jobs:
 
       - run: npm run build
       - run: npm test
-
-      # Trusted publishing (OIDC -> registry token exchange) needs npm >= 11.5;
-      # Node 22 ships npm 10, which signs provenance but then PUTs without
-      # credentials and npm masks the rejection as a 404.
-      - run: npm install -g npm@latest
 
       # --provenance publishes a signed attestation linking the tarball to this
       # repository, commit and workflow run.
