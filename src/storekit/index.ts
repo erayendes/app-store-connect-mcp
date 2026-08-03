@@ -420,13 +420,19 @@ export class StoreKitService {
     // product ID lives inside each transaction's signed payload — so narrowing
     // to one product means reading that payload, and keeping only the groups
     // that still hold a transaction afterwards.
+    let undecodable = 0;
     const matching: SubscriptionGroupIdentifierItem[] = args.product_id
       ? groups
           .map((g) => ({
             ...g,
-            lastTransactions: (g.lastTransactions ?? []).filter(
-              (t) => jwsClaim(t.signedTransactionInfo, 'productId') === args.product_id
-            ),
+            lastTransactions: (g.lastTransactions ?? []).filter((t) => {
+              const productId = jwsClaim(t.signedTransactionInfo, 'productId');
+              // An unreadable payload is not a mismatch, it is an unknown. It
+              // still drops out — we will not grant on a guess — but saying so
+              // keeps "does not hold this product" apart from "could not tell".
+              if (productId === undefined) undecodable++;
+              return productId === args.product_id;
+            }),
           }))
           .filter((g) => g.lastTransactions.length > 0)
       : groups;
@@ -442,9 +448,14 @@ export class StoreKitService {
       activeCount: active.length,
       // Statuses are JWS-signed; the caller decodes them if they need detail.
       subscriptions: matching,
+      ...(undecodable > 0 ? { undecodableTransactions: undecodable } : {}),
       note:
         'Status 1 = Active, 4 = Grace period. Both are treated as entitled. ' +
-        'Signed payloads are returned verbatim for you to verify.',
+        'Signed payloads are returned verbatim for you to verify.' +
+        (undecodable > 0
+          ? ` ${undecodable} transaction(s) had an unreadable payload and were excluded, ` +
+            'so a negative result here means "could not confirm", not "does not hold".'
+          : ''),
     };
   }
 }

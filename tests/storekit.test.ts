@@ -67,7 +67,8 @@ const entitlement = (response: StatusResponse, args: Record<string, unknown>) =>
     checkEntitlement(client: never, args: Record<string, unknown>): Promise<{
       entitled: boolean;
       activeCount: number;
-      subscriptions: unknown[];
+      subscriptions: { subscriptionGroupIdentifier?: string }[];
+      undecodableTransactions?: number;
     }>;
   }).checkEntitlement(stubClient(response), args);
 
@@ -81,6 +82,8 @@ describe('check_entitlement', () => {
     expect(res.entitled).toBe(true);
     expect(res.activeCount).toBe(1);
     expect(res.subscriptions).toHaveLength(1);
+    // The one that survived must be the pro group, not merely "one of them".
+    expect(res.subscriptions[0].subscriptionGroupIdentifier).toBe('group-pro');
   });
 
   it('is not entitled to a product the customer does not hold', async () => {
@@ -141,6 +144,17 @@ describe('check_entitlement', () => {
     });
 
     expect(res.entitled).toBe(false);
+    // ...but says so, so the caller can tell this apart from a real "no".
+    expect(res.undecodableTransactions).toBe(2);
+  });
+
+  it('omits the undecodable count when every payload was readable', async () => {
+    const res = await entitlement(twoProducts, {
+      transaction_id: '1000000000000001',
+      product_id: 'com.example.pro.monthly',
+    });
+
+    expect(res.undecodableTransactions).toBeUndefined();
   });
 
   it('reports nothing when the customer has no subscriptions', async () => {
