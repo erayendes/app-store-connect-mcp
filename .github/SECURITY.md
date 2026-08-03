@@ -53,7 +53,7 @@ Running an agent against a production store listing deserves some care.
 
 ### Recommendations
 
-- Give the API key the narrowest role that does the job. `Admin` is rarely necessary; `App Manager` covers most release work. See the role/risk table in [GUIDE.md](../docs/GUIDE.md#1-create-an-app-store-connect-api-key).
+- Give the API key the narrowest role that does the job. `Admin` is rarely necessary; `App Manager` covers most release work. See the role/risk table in [GUIDE.md](../docs/GUIDE.md#create-an-app-store-connect-api-key).
 - Never commit `.p8`, `.pem` or `.env` files — the bundled `.gitignore` already excludes them.
 - Use `--read-only` when you only need to inspect, with the smallest useful profile or `--domains` set.
 - Review any tool call annotated `destructiveHint` before approving it.
@@ -115,7 +115,7 @@ Bir agent'ı canlı bir mağaza listesine karşı çalıştırmak biraz özen is
 
 ### Öneriler
 
-- API anahtarına işi gören en dar rolü verin. `Admin` nadiren gereklidir; `App Manager` çoğu release işini kapsar. Rol/risk tablosu için [GUIDE.md](../docs/GUIDE.md#1-app-store-connect-api-anahtarı-oluşturun)'ye bakın.
+- API anahtarına işi gören en dar rolü verin. `Admin` nadiren gereklidir; `App Manager` çoğu release işini kapsar. Rol/risk tablosu için [GUIDE.md](../docs/GUIDE.md#api-anahtarı-oluşturun)'ye bakın.
 - `.p8`, `.pem` veya `.env` dosyalarını asla commit'lemeyin — birlikte gelen `.gitignore` zaten bunları hariç tutuyor.
 - Sadece inceleme yapacaksanız, en küçük gerekli profil ya da `--domains` seti ile `--read-only` kullanın.
 - `destructiveHint` etiketli her araç çağrısını onaylamadan önce gözden geçirin.

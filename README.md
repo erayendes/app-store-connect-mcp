@@ -13,14 +13,17 @@
 
 ## English
 
-**Manage your entire App Store Connect account from your AI client.**
-One MCP for all of it: apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
+**Heimdall.** One tool for your entire App Store Connect account.
+
+An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 875 tools.**
+
+Apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
+
+### Ask and it answers. Tell it and it's done.
 
 > - *"Summarise this week's 1-star reviews and draft replies."*
 > - *"Which builds are stuck in review?"*
 > - *"Raise this subscription's price in every territory."*
-
-Heimdall is an MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**; every tool is generated from Apple's own OpenAPI specification — **982 operations across 17 domains**. Where other servers wrap a hand-picked slice of the API, Heimdall gives you all of it. And anything that changes your data asks you to confirm first.
 
 ### Quick start
 
@@ -28,51 +31,38 @@ Heimdall is an MCP server for the **App Store Connect API** and the **App Store 
 npx -y @erayendes/asc-mcp setup
 ```
 
-The setup wizard collects your API key once, stores it securely, and registers the profiles you choose with **every MCP client on your machine** — Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so this is the step you would otherwise repeat once per client in a different format each time. Full walkthrough in the [Guide](docs/GUIDE.md).
+The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so this is the step you would otherwise repeat once per client, in a different format each time. Full walkthrough in the [Guide](docs/GUIDE.md).
 
 > [!NOTE]
-> **Installing this through an AI agent?** See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent runs `register` to add the profiles, then you run `setup` yourself for the key — your private key never goes through the chat.
+> **Is an AI agent installing Heimdall for you?**
+> See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent adds the profiles with `register`, you run `setup` yourself for the key — your private key is for your eyes only, and the agent never sees it.
 
-> [!NOTE]
-> ChatGPT's own connectors accept only remote HTTPS servers, so Heimdall cannot appear there. It runs on your machine over stdio — which is why your private key never leaves it. (Codex, including the Codex side of the ChatGPT desktop app, is supported.)
+### What sets Heimdall apart
 
-### Why it's different
-
-Most App Store Connect MCP servers wrap a hand-picked subset of endpoints. That works until you need the one endpoint nobody wrapped. Heimdall takes the opposite approach:
+Most App Store Connect MCP servers offer a hand-picked slice of the API. That works right up until you need the one endpoint none of them covered. Heimdall does the opposite: it gives you all of the tools and lets you choose which ones you want — and change your mind whenever you like.
 
 | | |
-|:--|:--|
-| **Complete** | Generated from Apple's OpenAPI spec v4.4.1 — all 966 paths, **982 operations**. Not a curated subset. |
-| **Current** | `npm run spec:update && npm run generate` picks up Apple's changes as a reviewable diff. |
-| **Scoped** | 13 purpose-built profiles, narrowable to sub-profiles, plus a `--domains` flag. Load only what a project needs, so large tool sets don't overwhelm your client. |
-| **StoreKit 2** | Includes the App Store Server API (customer transactions, entitlements, refunds) — rare among ASC MCP servers. |
-| **AI-native** | Review triage, daily briefings and draft replies run on your client's own model through MCP Sampling — no extra API key. |
-| **Safe** | Confirm-before-write prompts, `--read-only` mode, destructive-action annotations, host-pinned requests, no telemetry. |
-| **Self-describing** | Ask the server what it can do — `asc__discover_domains` and `asc__search_tools` answer, and point you to a tool even when it isn't loaded. |
-| **Client-agnostic** | Standard MCP over stdio — works with Claude Code, Claude Desktop, Codex, Antigravity, Cursor and any other MCP client. |
-| **Private by default** | On macOS the `.p8` key lives in the Keychain, never in plain-text config. |
+| :--- | :--- |
+| **Complete** | Apple's OpenAPI spec v4.4.1, all 966 paths, 982 operations. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
+| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 24 tools instead of 204. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
+| **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
+| **No second API key** | Review triage, daily briefings and draft replies run on your own client's model through MCP Sampling. |
+| **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
+| **Private** | The `.p8` lives in the macOS Keychain, never in a plain-text config. |
 
-### AI on top of the API
+#### Profiles
 
-Three tools run on **your client's own model** via MCP Sampling — no second API key, nothing sent to a third party:
+Register only the profiles your project uses. What each one covers is in the [profile table](docs/GUIDE.md#register-profiles); adding and removing them later is [here](docs/GUIDE.md#adding-and-removing-later).
 
-- **`reviews_ai__triage`** — groups recent reviews by theme: bug, feature request, pricing complaint, praise, spam.
-- **`reviews_ai__daily_briefing`** — volume and rating trend, top complaints, standout praise, one suggested action.
-- **`reviews_ai__draft_response`** — drafts a reply to a single review.
+There is nothing to memorise — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches everything, including what isn't loaded, and tells you which profile it lives in.
 
-All three are read-only and post nothing. To publish a reply you review the draft yourself, then call `customer_review_responses__create`.
+#### Writes ask first
 
-In the other direction, **writes ask before they run.** Changing a price, submitting for review or deleting a resource prompts you to confirm first, so a misread instruction can't execute unchecked. Turn it off with `ASC_CONFIRM_WRITES=0`, or drop mutating tools entirely with `--read-only`. See [Security](.github/SECURITY.md).
+Changing a price, submitting for review or deleting something asks for confirmation before it runs, so a misread instruction cannot execute unchecked. `ASC_CONFIRM_WRITES=0` turns it off; `--read-only` drops mutating tools entirely. See [Security](.github/SECURITY.md).
 
-### Profiles
+#### Works alongside Fastlane
 
-One install backs thirteen small, purpose-built MCP servers — `app-info`, `distribution`, `monetization`, `game-center` and nine more. Register only the areas a project uses: the full 982-operation surface would cost well over 100k tokens of tool definitions, while one profile costs a fraction of that. A big profile narrows further — `monetization:subscription-pricing` is 24 tools instead of 204.
-
-See the [profile table](docs/GUIDE.md#4-register-profiles) for what each one serves, and [§7](docs/GUIDE.md#7-adding-and-removing-tools-later) for adding or dropping them later. You don't have to memorise anything — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches all 982 operations, including ones not currently loaded.
-
-### Works alongside Fastlane
-
-Heimdall isn't a Fastlane replacement — it's the interactive half. Keep [Fastlane](https://fastlane.tools/) for repeatable, scripted CI (code signing, build upload, metadata pushes). Reach for Heimdall when you want to *ask* — straight from your AI client, no lane to write. Fastlane for the pipeline, Heimdall for exploration and one-off changes.
+Heimdall is not a Fastlane alternative — it is the interactive half. Keep [Fastlane](https://fastlane.tools/) for repeatable, scripted CI work (code signing, build upload, metadata pushes). Fastlane for the pipeline, Heimdall for exploration and one-off changes.
 
 ### Documentation
 
@@ -88,30 +78,33 @@ Heimdall isn't a Fastlane replacement — it's the interactive half. Keep [Fastl
 
 Heimdall is free and open. If it saves you time, you can [become a member or buy me a coffee](https://buymeacoffee.com/erayendes) ☕.
 
+### About the name
+
+**Heimdall** is the guardian of Asgard in Norse mythology and one of Odin's sons. He keeps watch over **Bifröst**, the rainbow bridge linking Asgard to the nine realms. His gift for sensing events before they happen lets him guard Asgard against giants and other enemies, and warn the gods of danger on its way.
+
+**This project stands watch over your App Store Connect account; that's where it gets its name.** :)
+
 ### License
 
 MIT — see [LICENSE](LICENSE).
 
 Tool definitions in `src/generated/` are produced from Apple Inc.'s published App Store Connect OpenAPI specification (`spec/openapi.json`), redistributed here so the generator is reproducible without network access. App Store Connect, TestFlight, StoreKit, Xcode and Game Center are trademarks of Apple Inc. This project is not affiliated with, endorsed by, or sponsored by Apple Inc.
 
-### About the name
-
-**Heimdall** is the guardian of Asgard in Norse mythology and one of Odin's sons. He keeps watch over **Bifröst**, the rainbow bridge linking Asgard to the nine realms. His gift for sensing events before they happen lets him guard Asgard against giants and other enemies, and warn the gods of danger on its way.
-
-**That's where this project gets its name.** The npm package (`@erayendes/asc-mcp`) and the command (`asc-mcp`) keep theirs :)
-
 ---
 
 ## Türkçe
 
-**Tüm App Store Connect hesabınızı yapay zekâ istemcinizden yönetin.**
-Her şey için tek bir **MCP**: uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
+**Heimdall.** Tüm App Store Connect hesabınız için tek bir araç.
+
+**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 875 araç.**
+
+Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
+
+### Sorun yanıtlasın. İsteyin yapsın.
 
 > - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
 > - *"Hangi build'ler incelemede takıldı?"*
 > - *"Bu aboneliğin fiyatını her ülkede artır."*
-
-Heimdall, **App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusudur; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretilir — **17 domainde 982 işlem**. Diğer sunucular API'nin elle seçilmiş bir dilimini sararken, Heimdall size tamamını verir. Verinizi değiştiren her şey de önce size onaylatır.
 
 ### Hızlı başlangıç
 
@@ -119,51 +112,38 @@ Heimdall, **App Store Connect API** ve **App Store Server API (StoreKit 2)** iç
 npx -y @erayendes/asc-mcp setup
 ```
 
-Setup sihirbazı API anahtarınızı bir kez toplar, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
+Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
 
 > [!NOTE]
-> **Bunu bir AI agent ile mi kuruyorsunuz?** Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent profilleri `register` ile ekler, anahtar için `setup`'ı siz çalıştırırsınız — özel anahtarınız sohbetten hiç geçmez.
+> **Heimdall'ı bir AI agent mı kuracak?**
+> Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent profilleri `register` ile ekler, anahtar için `setup`'ı siz çalıştırırsınız — özel anahtarınız sadece sizin gözleriniz için, AI agent göremez.
 
-> [!NOTE]
-> ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ediyor, bu yüzden Heimdall orada görünemez. Sizin makinenizde stdio üzerinden çalışır — özel anahtarınızın makineden hiç çıkmamasının sebebi de bu. (Codex, ChatGPT masaüstünün Codex tarafı dahil, destekleniyor.)
+### Heimdall'ı diğerlerinden ayıran
 
-### Neden farklı
+Çoğu App Store Connect MCP sunucusu API'nin elle seçilmiş bir araç dilimini sunar. Hiçbirinin kapsamadığı o bir uç noktaya ihtiyaç duyana kadar bu işe yarar. Heimdall tam tersini yapar: araçların tamamını verir, istediklerinizi siz seçersiniz — ve istediğiniz zaman ekleyip çıkarırsınız.
 
-Çoğu App Store Connect MCP sunucusu, elle seçilmiş bir uç nokta alt kümesini sarmalar. Kimsenin sarmalamadığı o bir uç noktaya ihtiyaç duyana kadar bu işe yarar. Heimdall tam tersi bir yaklaşım izler:
+| | |
+| :--- | :--- |
+| **Eksiksiz** | Apple'ın OpenAPI spec v4.4.1'i, tüm 966 path, 982 işlem. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
+| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 204 yerine 24 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
+| **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
+| **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları MCP Sampling ile istemcinizin kendi modelinde çalışır. |
+| **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
+| **Gizli** | `.p8` macOS Keychain'de durur, düz metin config'de değil. |
 
-|                          |                                                                                                                                         |
-|:------------------------ |:--------------------------------------------------------------------------------------------------------------------------------------- |
-| **Eksiksiz**             | Apple'ın OpenAPI spec v4.4.1'inden üretildi — tüm 966 path, **982 işlem**. Elle seçilmiş bir alt küme değil.                            |
-| **Güncel**               | `npm run spec:update && npm run generate`, Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak yakalar.                      |
-| **Kapsamlı seçilebilir** | 11 amaca özel profil ve bir `--domains` bayrağı. Sadece projenizin ihtiyacı olanı yükleyin; büyük araç setleri istemcinizi boğmasın.    |
-| **StoreKit 2**           | App Store Server API'yi (müşteri işlemleri, hak, iadeler) içerir — ASC MCP sunucuları arasında nadir.                                   |
-| **AI-yerlisi**           | Yorum tasnifi, günlük brifing ve cevap taslakları, MCP Sampling ile istemcinizin kendi modelinde çalışır — ek API anahtarı yok.        |
-| **Güvenli**              | Yazmadan-önce onay istemleri, `--read-only` modu, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok.                  |
-| **Kendini anlatan**      | Sunucuya ne yapabildiğini sorun — `asc__discover_domains` ve `asc__search_tools` yanıtlar, araç yüklü olmasa bile size yolunu gösterir. |
-| **İstemciden bağımsız**  | stdio üzerinden standart MCP — Claude Code, Claude Desktop, Codex, Antigravity, Cursor ve diğer tüm MCP istemcileriyle çalışır. |
-| **Varsayılan gizli**     | macOS'ta `.p8` anahtarı Keychain'de durur, düz metin config'de değil.                                                                   |
+#### Profiller
 
-### API'nin üstünde AI
+Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığı [profil tablosunda](docs/GUIDE.md#profilleri-kaydedin), sonradan ekleme ve çıkarma [burada](docs/GUIDE.md#sonradan-ekleme-ve-çıkarma)'de.
 
-Üç araç, MCP Sampling ile **istemcinizin kendi modelinde** çalışır — ikinci bir API anahtarı yok, üçüncü tarafa hiçbir şey gitmez:
+Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun; `asc__search_tools` o an yüklü olmayanlar dahil hepsini arar ve hangi profilde olduğunu söyler.
 
-- **`reviews_ai__triage`** — son yorumları temaya göre gruplar: hata, özellik isteği, fiyat şikâyeti, övgü, spam.
-- **`reviews_ai__daily_briefing`** — hacim ve puan trendi, öne çıkan şikâyetler, dikkat çeken övgüler, bir önerilen aksiyon.
-- **`reviews_ai__draft_response`** — tek bir yoruma cevap taslağı hazırlar.
+#### Yazma işlemlerini önce sorar
 
-Üçü de salt okunur, hiçbir şey yayınlamaz. Bir yanıtı yayınlamak için taslağı kendiniz gözden geçirir, sonra `customer_review_responses__create`'i çağırırsınız.
+Fiyat değiştirme, incelemeye gönderme ya da bir şeyi silme çalışmadan önce onay ister; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. `ASC_CONFIRM_WRITES=0` kapatır, `--read-only` mutasyon araçlarını tamamen kaldırır. Bkz. [Güvenlik](.github/SECURITY.md).
 
-Diğer yönde ise **yazma işlemleri çalışmadan önce sorar.** Fiyat değiştirme, incelemeye gönderme ya da bir kaynağı silme önce size onaylatır; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. `ASC_CONFIRM_WRITES=0` ile kapatın, ya da `--read-only` ile mutasyon araçlarını tamamen kaldırın. Bkz. [Güvenlik](.github/SECURITY.md).
+#### Fastlane ile birlikte çalışır
 
-### Profiller
-
-Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar — `app-info`, `distribution`, `monetization`, `game-center` ve dokuz tane daha. Sadece projenizin kullandığı alanları kaydedin: tüm 982 işlemlik yüzey, araç tanımları için 100 bin token'ın epey üzerinde bir maliyet çıkarır; tek bir profil ise bunun küçük bir kısmı. Büyük bir profil daha da daralır — `monetization:subscription-pricing` 204 yerine 24 araç.
-
-Her birinin neyi kapsadığı için [profil tablosuna](docs/GUIDE.md#4-profilleri-kaydedin), sonradan ekleme/çıkarma için [§7](docs/GUIDE.md#7-sonradan-araç-ekleme-ve-çıkarma)'ye bakın. Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun, `asc__search_tools` tüm 982 işlemi, o an yüklü olmayanlar dahil, arar.
-
-### Fastlane ile birlikte çalışır
-
-Heimdall bir Fastlane alternatifi değil — interaktif yarısı. Tekrarlanabilir, scriptli CI işleri (kod imzalama, build yükleme, metadata gönderimi) için [Fastlane](https://fastlane.tools/)'i kullanmaya devam edin. Heimdall'a *sormak* istediğinizde uzanın — doğrudan AI istemcinizden, lane yazmadan. Pipeline için Fastlane, keşif ve tek seferlik değişiklikler için Heimdall.
+Heimdall bir Fastlane alternatifi değil, interaktif yarısıdır. Tekrarlanabilir, scriptli CI işleri (kod imzalama, build yükleme, metadata gönderimi) için [Fastlane](https://fastlane.tools/)'i kullanmaya devam edin. Pipeline için Fastlane, keşif ve tek seferlik değişiklikler için Heimdall.
 
 ### Dokümantasyon
 
@@ -179,14 +159,14 @@ Heimdall bir Fastlane alternatifi değil — interaktif yarısı. Tekrarlanabili
 
 Heimdall ücretsiz ve açık. Zamanınızı kurtardıysa [üye olabilir ya da kahve ısmarlayabilirsiniz](https://buymeacoffee.com/erayendes) ☕.
 
+### İsim hakkında
+
+**Heimdall**, İskandinav mitolojisinde Asgard'ın koruyucusu ve tanrı Odin'in oğullarından biridir. Asgard ile dokuz diyarı birbirine bağlayan gökkuşağı köprüsü **Bifröst'ün bekçisidir**. Olayları önceden hissetme yeteneği sayesinde Asgard'ı devlerin ve düşmanların olası saldırılarına karşı korur, yaklaşan tehlikeleri diğer tanrılara haber verir.
+
+**Bu proje de sizin App Store Connect hesabınızın başında nöbet tutmak için var; adını oradan alıyor.** :)
+
 ### Lisans
 
 MIT — bkz. [LICENSE](LICENSE).
 
 `src/generated/` içindeki araç tanımları, Apple Inc.'in yayımladığı App Store Connect OpenAPI spesifikasyonundan (`spec/openapi.json`) üretilir; jeneratör ağ erişimi olmadan da yeniden üretilebilsin diye spesifikasyon burada yeniden dağıtılmaktadır. App Store Connect, TestFlight, StoreKit, Xcode ve Game Center, Apple Inc.'in ticari markalarıdır. Bu proje Apple Inc. ile bağlantılı değildir, Apple tarafından onaylanmamış veya desteklenmemektedir.
-
-### İsim hakkında
-
-**Heimdall**, İskandinav mitolojisinde Asgard'ın koruyucusu ve tanrı Odin'in oğullarından biridir. Asgard ile dokuz diyarı birbirine bağlayan gökkuşağı köprüsü **Bifröst'ün bekçisidir**. Olayları önceden hissetme yeteneği sayesinde Asgard'ı devlerin ve düşmanların olası saldırılarına karşı korur, yaklaşan tehlikeleri diğer tanrılara haber verir.
-
-**Bu proje de adını oradan alıyor.** npm paketi (`@erayendes/asc-mcp`) ve komut (`asc-mcp`) ise adlarını korur :)
