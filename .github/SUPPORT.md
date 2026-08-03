@@ -19,10 +19,10 @@
 | **`403 Forbidden`** | The key's role lacks permission for that operation. | Sales reports need Finance; user management needs Admin. App *creation* is restricted on some accounts — create the app in the web UI once, then manage it here. |
 | **`409 Conflict` on a version update** | App Store Connect only allows edits in certain version states. | A version in review or already released is locked. |
 | **Too many tools / context exhausted** | You're running the combined server or `--domains=all`. | Register a single profile, or narrow `--domains`. `asc__search_tools` still finds anything you need. |
-| **A tool I need isn't listed** | It's on another profile. | Ask the agent to search: `asc__search_tools` names the sibling server and prints the exact `claude mcp add` command. See [GUIDE.md §7](../docs/GUIDE.md#7-adding-and-removing-tools-later). |
+| **A tool I need isn't listed** | It's on another profile. | Ask the agent to search: `asc__search_tools` names the sibling server and prints the exact `claude mcp add` command. See [GUIDE.md](../docs/GUIDE.md#adding-and-removing-later). |
 | **Sales report returns base64** | Apple sends these as gzipped TSV. | The server returns `{ contentType, base64 }` rather than mangling it — decode and gunzip to read. |
 | **`429 Too Many Requests`** | Requests are paced against Apple's 3,600/hour limit and retried with backoff. | Persistent 429s mean something else is sharing your key. |
-| **StoreKit tools missing** | The App Store Server API needs a bundle ID. | Configure it via `setup` or `ASC_BUNDLE_ID` on the `monetization` profile or combined server. See [GUIDE.md §8](../docs/GUIDE.md#8-storekit-2--customer-transactions). |
+| **StoreKit tools missing** | The App Store Server API needs a bundle ID. | Configure it via `setup` or `ASC_BUNDLE_ID` on the `monetization` profile or combined server. See [GUIDE.md](../docs/GUIDE.md#storekit-2--customer-transactions). |
 
 ### Supporting the project
 
@@ -45,10 +45,10 @@ Heimdall is free and open. If it helps you, a [coffee](https://buymeacoffee.com/
 | **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli izne sahip değil. | Satış raporları Finance, kullanıcı yönetimi Admin ister. Uygulama *oluşturma* bazı hesaplarda kısıtlıdır — uygulamayı bir kez web arayüzünde oluşturun, sonra buradan yönetin. |
 | **Sürüm güncellemesinde `409 Conflict`** | App Store Connect düzenlemelere yalnızca belirli sürüm durumlarında izin verir. | İncelemede olan veya yayınlanmış bir sürüm kilitlidir. |
 | **Çok fazla araç / context tükendi** | Birleşik sunucuyu ya da `--domains=all` çalıştırıyorsunuz. | Tek bir profil kaydedin ya da `--domains`'i daraltın. `asc__search_tools` yine de ihtiyacınız olanı bulur. |
-| **İhtiyacım olan araç listede yok** | Başka bir profilde. | Agent'a arattırın: `asc__search_tools` kardeş sunucuyu adlandırır ve tam `claude mcp add` komutunu basar. Bkz. [GUIDE.md §7](../docs/GUIDE.md#7-sonradan-araç-ekleme-ve-çıkarma). |
+| **İhtiyacım olan araç listede yok** | Başka bir profilde. | Agent'a arattırın: `asc__search_tools` kardeş sunucuyu adlandırır ve tam `claude mcp add` komutunu basar. Bkz. [GUIDE.md](../docs/GUIDE.md#sonradan-ekleme-ve-çıkarma). |
 | **Satış raporu base64 döndürüyor** | Apple bunları gzip'li TSV olarak gönderir. | Sunucu bozmadan `{ contentType, base64 }` döndürür — okumak için decode edip gunzip yapın. |
 | **`429 Too Many Requests`** | İstekler Apple'ın saatte 3.600 limitine göre hızlandırılır ve backoff ile tekrar denenir. | Israrlı 429'lar, anahtarınızı başka bir şeyin de kullandığı anlamına gelir. |
-| **StoreKit araçları eksik** | App Store Server API bir bundle ID ister. | `setup` ya da `ASC_BUNDLE_ID` ile `monetization` profilinde veya birleşik sunucuda yapılandırın. Bkz. [GUIDE.md §8](../docs/GUIDE.md#8-storekit-2--müşteri-işlemleri). |
+| **StoreKit araçları eksik** | App Store Server API bir bundle ID ister. | `setup` ya da `ASC_BUNDLE_ID` ile `monetization` profilinde veya birleşik sunucuda yapılandırın. Bkz. [GUIDE.md](../docs/GUIDE.md#storekit-2--müşteri-işlemleri). |
 
 ### Projeye destek
 

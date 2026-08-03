@@ -23,8 +23,11 @@ npm test
 | `src/storekit/` | App Store Server API tools |
 | `src/tools/` | Introspection tools and Reviews AI |
 | `src/setup.ts` | Interactive setup wizard |
-| `src/profiles.ts` | Profile definitions |
+| `src/profiles.ts` | Profile descriptions and selection parsing |
+| `src/clients.ts` | Which MCP clients setup can register with, and where each keeps its config |
+| `spec/profiles.csv` | **Which tool belongs to which profile** — hand-curated, the source of truth |
 | `scripts/generate.ts` | The generator |
+| `scripts/generate-profiles.ts` | Compiles `spec/profiles.csv` into `src/generated/profiles-data.ts` |
 | `scripts/domains.ts` | Resource → domain mapping |
 | `scripts/describe.ts` | Description synthesis and curated overrides |
 
@@ -70,6 +73,8 @@ npm run ax:eval       # live: what each intent really costs in round trips and b
 
 New Apple resources land in `scripts/domains.ts`. The test suite asserts that no operation falls through to `misc`, so a new Apple spec with new resources fails CI until they're mapped — which is the intent.
 
+**Changing which profile a tool belongs to** means editing `spec/profiles.csv` and running `npm run generate`. The generator errors rather than skips on an unknown operation, a deprecated one, or a duplicate row, and `tests/profile-invariants.test.ts` then checks the result: every profile must reach its own root resources from an app, and every write's `{id}` must have a read that produces it. Both were real bugs before they were tests.
+
 ### Pull requests
 
 - One concern per PR.
@@ -99,8 +104,11 @@ npm test
 | `src/storekit/` | App Store Server API araçları |
 | `src/tools/` | İçgözlem araçları ve Reviews AI |
 | `src/setup.ts` | İnteraktif setup sihirbazı |
-| `src/profiles.ts` | Profil tanımları |
+| `src/profiles.ts` | Profil açıklamaları ve seçim ayrıştırma |
+| `src/clients.ts` | Setup'ın kayıt yapabildiği MCP istemcileri ve her birinin config yeri |
+| `spec/profiles.csv` | **Hangi aracın hangi profile ait olduğu** — elle küratörlükten geçmiş, tek doğru kaynak |
 | `scripts/generate.ts` | Üretici (generator) |
+| `scripts/generate-profiles.ts` | `spec/profiles.csv`'yi `src/generated/profiles-data.ts`'e derler |
 | `scripts/domains.ts` | Kaynak → domain eşlemesi |
 | `scripts/describe.ts` | Açıklama sentezi ve elle düzenlenmiş override'lar |
 
@@ -145,6 +153,8 @@ npm run ax:eval       # canlı: her niyetin gerçekte kaç round trip ve kaç ba
 ### Domain eşlemesi ekleme
 
 Yeni Apple kaynakları `scripts/domains.ts`'e eklenir. Test paketi, hiçbir işlemin `misc`'e düşmediğini doğrular; bu yüzden yeni kaynaklar içeren yeni bir Apple spec'i, eşlenene kadar CI'da başarısız olur — amaç da budur.
+
+**Bir aracın hangi profile ait olduğunu değiştirmek**, `spec/profiles.csv`'yi düzenleyip `npm run generate` çalıştırmak demektir. Üretici; bilinmeyen bir işlemde, kullanımdan kalkmış birinde ya da yinelenen satırda atlamaz, hata verir. Sonucu `tests/profile-invariants.test.ts` denetler: her profil kendi kök kaynaklarına bir uygulamadan ulaşabilmeli ve her yazma işleminin `{id}`'sini üreten bir okuma bulunmalı. İkisi de test olmadan önce gerçek birer hataydı.
 
 ### Pull request'ler
 

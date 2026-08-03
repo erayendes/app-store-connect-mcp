@@ -8,9 +8,9 @@ Sıfırdan çalışan bir kuruluma — kurun, yapılandırın ve App Store Conne
 
 ## English
 
-Heimdall runs anywhere Node.js **20.19+** runs — macOS, Linux and Windows. Only one feature is macOS-only: storing the `.p8` key in the **macOS Keychain**. On Linux and Windows you supply the key as a file path or inline PEM instead ([§6](#6-configure)); everything else is identical.
+Heimdall runs anywhere Node.js **20.19+** runs — macOS, Linux and Windows. Only one feature is macOS-only: storing the `.p8` key in the **macOS Keychain**. On Linux and Windows you supply the key as a file path or inline PEM instead ([Configuration](#configuration)); everything else is identical.
 
-### 1. Create an App Store Connect API key
+### Create an App Store Connect API key
 
 Go to [Users and Access → Integrations → Keys](https://appstoreconnect.apple.com/access/integrations/api), generate a key, and download the `.p8` file. Note the **Key ID** and **Issuer ID** from the same page.
 
@@ -31,7 +31,7 @@ The role you give the key decides which permissions an agent gets — and what i
 
 Most day-to-day release work needs only **App Manager**; add **Developer** for CI build uploads, or **Finance**/**Sales** only if you actually run `analytics` tools. For how to cap the risk regardless of role, see [SECURITY.md](../.github/SECURITY.md) — `--read-only` mode removes all mutation risk.
 
-### 2. Install
+### Install
 
 ```bash
 npm install -g @erayendes/asc-mcp
@@ -46,7 +46,7 @@ npm install
 npm run build
 ```
 
-### 3. Store credentials once — the setup wizard
+### Store credentials once — the setup wizard
 
 ```bash
 npx -y @erayendes/asc-mcp setup
@@ -59,16 +59,19 @@ The wizard does more than collect fields:
 3. **Validate as you type.** Key ID and Issuer ID formats are checked; the `.p8` path accepts a drag-and-drop from Finder (quotes, escaped spaces and `~` are handled) and re-prompts until it points at a real key file.
 4. **Verify against Apple** before saving — one lightweight request confirms the credentials work. If Apple is unreachable it offers to save anyway; if Apple rejects them, you re-enter.
 5. **Vendor number** (optional) — needed only for sales/finance reports.
-6. **Profile picker** — an interactive checklist (space to toggle). Each row shows the profile's tool count and rough token cost; already-registered profiles are pre-checked.
-7. **Bundle ID — only if you pick a StoreKit profile** (`monetization`). It then asks the StoreKit environment. If you don't pick monetization, you're never asked.
-8. **Register automatically.** With the `claude` CLI present, setup runs `claude mcp add`/`remove` for you after showing the plan. Otherwise it prints both the CLI commands and a ready-to-paste `mcpServers` JSON block.
+6. **Client picker** — which MCP clients should carry the profiles, with everything found on this machine already checked. Clients it did not find stay listed and can be checked anyway.
+7. **Profile picker** — each row shows the profile's tool count and rough token cost; already-registered profiles are pre-checked.
+8. **Bundle ID — only if you pick a StoreKit profile** (`monetization`). It then asks the StoreKit environment. If you don't pick monetization, you're never asked.
+9. **Register everywhere you chose**, after showing the plan and asking once. Where a client ships its own command it is used (`claude`, `codex`, `code --add-mcp`); plain JSON configs are edited directly, backed up first. Anything that could not be written is reported with a block to paste — one client failing never stops the others.
 
-The key is stored in the **macOS Keychain** (or referenced by file path off macOS), and everything non-secret goes to `~/.config/asc-mcp/config.json`. Every profile reads this shared config, so server entries need **no env block** — and rotating the key later means re-running `setup` once, not editing every entry.
+When it finishes, restart your client and say *"check the App Store Connect connection"* — that calls `asc__status`, which validates your credentials with one lightweight request.
 
 > [!TIP]
-> Environment variables still work and always win over the shared config ([§6](#6-configure)) — handy for CI or a second account.
+> The key is stored in the **macOS Keychain** (or referenced by file path off macOS), and everything non-secret goes to `~/.config/asc-mcp/config.json`. Every profile reads this shared config, so server entries need **no env block** — and rotating the key later means re-running `setup` once, not editing every entry.
+>
+> Environment variables still work and always win over the shared config ([Configuration](#configuration)) — handy for CI or a second account.
 
-### 4. Register profiles
+### Register profiles
 
 One install backs thirteen small, purpose-built MCP servers. Pass a profile name and only that area's tools are served. The counts are what the setup picker shows (deprecated excluded, core included):
 
@@ -88,20 +91,28 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
 | `webhooks` | Webhook configuration and diagnostics | 17 | — |
 
-Every profile also carries the core set (`apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`), so any of them can look up an app ID and point you to a tool it doesn't have.
+Every profile also carries the **core set** — `apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`. So whichever profile you install can look up an app ID and point you to a tool it doesn't have.
 
-**Sub-profiles** narrow a large profile. `monetization` is 204 tools; if you only change prices, `monetization:subscription-pricing` is 24 and still carries the one-call price macro. The setup picker writes this for you — check a profile, move the cursor onto it and its sub-profiles unfold underneath, all on; uncheck what you don't need. Syntax, if you write the config by hand:
+#### Pick per project
+
+MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (122 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
+
+#### Sub-profiles
+
+These narrow a large profile. Check a profile in the setup picker; move the cursor onto it and its sub-profiles unfold underneath, all on — uncheck what you don't need.
+
+`monetization` is 204 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 24. The server is called `asc-monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
+
+Writing the config by hand, the syntax is:
 
 ```
-npx -y @erayendes/asc-mcp monetization                    everything
+npx -y @erayendes/asc-mcp monetization                       everything
 npx -y @erayendes/asc-mcp monetization:subscription-pricing  that slice plus core
 ```
 
-The server name stays `asc-monetization` either way. Ask it `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
+#### Where it registers
 
-**Pick per project.** MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (~90 tools); a game adds `asc-game-center`. (Claude Code also defers tool schemas until first use, keeping even several connected profiles cheap.)
-
-**`setup` registers for you.** After the credentials it asks which clients should carry the profiles, with everything it found on this machine already checked, then writes to all of them. None of these clients share a config file, so this is the step that would otherwise be done once per client, by hand, in a different format each time.
+`setup` registers the profiles with every MCP client it finds. None of these clients share a config file, so this is the step that would otherwise be done once per client, by hand, in a different format each time.
 
 | Client | Where it goes | Written by |
 |:--|:--|:--|
@@ -120,103 +131,62 @@ Files edited here are backed up first. One that cannot be parsed — a JSON conf
 > [!NOTE]
 > **ChatGPT's own connectors are not on this list.** They accept only remote HTTPS servers; Heimdall runs on your machine over stdio, which is why your private key never leaves it. The Codex row above is a different surface that happens to share the brand.
 
-**Adding a profile later** — re-run `setup`. It skips to the pickers with everything already registered pre-checked, so unchecking removes and checking adds.
-
-**For an AI agent doing the install with you:** `register` does the same work without a terminal and without ever touching credentials.
-
-```bash
-npx -y @erayendes/asc-mcp register monetization:subscription-pricing analytics
-npx -y @erayendes/asc-mcp register analytics --clients=codex,claude
-```
-
-It only adds — `setup` is what removes — and it tells you to run `setup` yourself if no credentials are stored yet. See [AGENTS.md](../AGENTS.md).
-
 <details>
-<summary><b>Registering by hand</b> — if you would rather not run <code>setup</code>, or your client is not listed above</summary>
+<summary><b>Registering by hand</b> — if you would rather not run <code>setup</code>, or your client is not listed</summary>
 
 The command is always `npx -y @erayendes/asc-mcp <profile>`; only where you put it differs.
 
-**Claude Code** (CLI):
-
 ```bash
 claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics
-claude mcp add -s user asc-monetization -- npx -y @erayendes/asc-mcp monetization
+codex  mcp add asc-analytics -- npx -y @erayendes/asc-mcp analytics
 ```
 
-**Codex** — `codex mcp add`, or add the block to `~/.codex/config.toml`:
-
-```bash
-codex mcp add asc-analytics -- npx -y @erayendes/asc-mcp analytics
-```
-
-```toml
-# ~/.codex/config.toml
-[mcp_servers.asc-analytics]
-command = "npx"
-args = ["-y", "@erayendes/asc-mcp", "analytics"]
-```
-
-**Claude Desktop, Antigravity, and other JSON clients** — add the same `mcpServers` block (no env after `setup`):
+For JSON clients (no env block needed after `setup`):
 
 ```json
 {
   "mcpServers": {
-    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] },
-    "asc-marketing": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "marketing"] }
+    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] }
   }
 }
 ```
 
-- **Claude Desktop:** `claude_desktop_config.json` — macOS `~/Library/Application Support/Claude/…`, Windows `%APPDATA%\Claude\…`.
-- **Antigravity:** the "…" menu → MCP Store → Manage MCP Servers → View raw config (`mcp_config.json`).
+- **Antigravity:** the "…" menu → MCP Store → Manage MCP Servers → View raw config.
 - **VS Code:** the key is `servers`, not `mcpServers`.
 - **From source:** replace `command`/`args` with `node /absolute/path/to/app-store-connect-mcp/dist/index.js analytics`.
+- **The combined server:** run without a profile; the old env-based registration still works on any client.
 
 </details>
 
-**The combined server.** Running without a profile serves the classic combined server, and the old env-based registration still works on any client:
+#### Adding and removing later
 
-```bash
-claude mcp add -s user app-store-connect \
-  -e ASC_KEY_ID=YOUR_KEY_ID \
-  -e ASC_ISSUER_ID=YOUR_ISSUER_ID \
-  -e ASC_PRIVATE_KEY_PATH=/absolute/path/to/AuthKey_XXXXXXXXXX.p8 \
-  -- npx -y @erayendes/asc-mcp
-```
+> [!TIP]
+> **You don't have to set everything up front.** Start with a couple of profiles and add more when a project needs them.
 
-**Domains reference.** Profiles are curated bundles; underneath, tools are organised into 17 API domains plus `meta` and `storekit`. You rarely need this table — the combined server's default working set (●) covers everyday release work, and `--domains` widens it — but here it is in full. Counts include deprecated operations.
+- **Re-run setup** — `npx -y @erayendes/asc-mcp setup`. It reuses your credentials and shows the pickers again, with clients and profiles pre-checked as they stand. Check or uncheck; it registers and de-registers across every client you selected.
+- **Let an agent do it:** `npx -y @erayendes/asc-mcp register game-center` adds without a terminal and without touching credentials. `--clients=codex,claude` narrows it. It only ever adds — `setup` is what removes.
+- **By hand, per client:** the "Registering by hand" block above.
 
-| Domain | Tools | Default | Covers |
-|:--|--:|:-:|:--|
-| `meta` | 3 | ● | Server introspection and tool discovery |
-| `apps` | 116 | ● | Apps, metadata, localizations, availability |
-| `versions` | 102 | ● | Version lifecycle, submission, phased release, A/B tests |
-| `builds` | 39 | ● | Builds, bundles, icons, pre-release versions |
-| `testflight` | 72 | ● | Beta groups, testers, feedback, crash submissions |
-| `reviews` | 5 | ● | Customer reviews and developer responses |
-| `analytics` | 12 | ● | Sales, finance, analytics reports, performance metrics |
-| `subscriptions` | 105 | | Subscriptions, groups, offers, win-back, offer codes |
-| `iap` | 68 | | In-app purchases, pricing, offer codes, promotions |
-| `marketing` | 60 | | Screenshots, previews, custom pages, in-app events |
-| `xcode_cloud` | 41 | | Products, workflows, build runs, artifacts, SCM |
-| `provisioning` | 40 | | Bundle IDs, certificates, devices, profiles |
-| `game_center` | 273 | | Achievements, leaderboards, matchmaking, challenges |
-| `users` | 15 | | Team members, invitations, roles |
-| `background_assets` | 13 | | Background assets and asset packs |
-| `webhooks` | 11 | | Webhook configuration and delivery diagnostics |
-| `pricing` | 7 | | App price schedules and price points |
-| `sandbox` | 3 | | Sandbox testers |
-| `storekit` | 9 | ○ | App Store Server API — enabled by `ASC_BUNDLE_ID` |
+#### Reaching a tool without restarting
 
-**Tool naming**
+A profile you narrowed still knows about the rest of itself:
 
-Tool names mirror the resource hierarchy, with the action last (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Every tool carries its `METHOD /path` in the description, so you can cross-reference [Apple's API documentation](https://developer.apple.com/documentation/appstoreconnectapi) directly.
+- **`asc__describe`** returns the full schema of any tool the profile owns, loaded or not.
+- **`asc__call`** runs a read for you through that schema. It is read-only and says so in its annotation, which is what keeps clients from blocking it — writes keep their own tool names, where your client's approval and Heimdall's own confirmation both still apply.
+- **`asc__load`** adds a whole sub-profile mid-session, promoting proxied tools to real ones with their own schemas. Hand-written families (StoreKit, reviews-AI, pricing macros) still need a restart, and the reply says so.
 
-### 5. Verify
+The proxy exists because MCP lets a server revise its tool list but says nothing about *when* a client hands that revision to the model. Measured with one prompt in three clients: Claude Code used a newly loaded tool in the same turn; Codex loaded it, reported that the session tool list never made it callable, and gave up. `asc__describe` and `asc__call` are in the list from the start, so nothing has to arrive in time.
 
-Ask your client: *"Check the App Store Connect connection."* It calls `asc__status`, which validates your credentials with a single lightweight request.
+**And if the tool is in another profile entirely?** `asc__search_tools` searches all 982 operations plus StoreKit, names the sibling server that owns anything not loaded, and prints the command to add it. Install lean and let the server tell you what you are missing.
 
-### 6. Configure
+### StoreKit 2 — customer transactions
+
+The App Store Server API answers questions about individual customers rather than your listing: purchase history, entitlement, refunds, subscription status. It's enabled when a **bundle ID** is configured (via `setup` or `ASC_BUNDLE_ID`) and served by the `monetization` profile or the combined server.
+
+- **Environment.** Each StoreKit tool accepts an optional `environment` argument (`Production` or `Sandbox`). A transaction ID exists in exactly one environment, so you can query either within a session — the default comes from your setup choice, and you override per call.
+- **Read-only mode** hides and blocks the two mutating StoreKit tools (`request_test_notification`, `extend_renewal_date`); the seven read tools stay available.
+
+### Configuration
 
 **Environment**
 
@@ -275,6 +245,8 @@ Ask your client: *"Check the App Store Connect connection."* It calls `asc__stat
 > [!TIP]
 > **Confirm before writes (on by default).** Before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)). So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Clients that can't show the prompt (no elicitation support) **block writes by default** — opt in with `--allow-unconfirmed-writes` (or `ASC_ALLOW_UNCONFIRMED_WRITES=1`) to rely on the client's own per-call approval instead. Turn the guard off with `ASC_CONFIRM_WRITES=0` (or `--no-confirm`), or go further with `--read-only` to remove every mutating tool entirely.
 
+**Tool naming.** Tool names mirror the resource hierarchy, with the action last (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Every tool carries its `METHOD /path` in the description, so you can cross-reference [Apple's API documentation](https://developer.apple.com/documentation/appstoreconnectapi) directly.
+
 #### Multiple accounts
 
 Heimdall keeps one shared credential set, but you can still work with several
@@ -300,32 +272,9 @@ The two servers appear side by side in your client (name them by account), and
 nothing is ever mixed: env-provided credentials never fall back to the shared
 file for missing pieces.
 
-### 7. Adding and removing tools later
-
-> [!TIP]
-> **You don't have to set everything up front.** Start with a couple of profiles and add more when a project needs them.
-
-- **Re-run setup** — `npx -y @erayendes/asc-mcp setup`. It reuses your saved credentials and shows the profile picker again. Check or uncheck; it registers and de-registers for you.
-- **Add one directly:** `claude mcp add -s user asc-game-center -- npx -y @erayendes/asc-mcp game-center`
-- **Remove one:** `claude mcp remove asc-game-center`
-- **On the combined server**, widen or narrow with `--domains`.
-
-> [!NOTE]
-> The `claude mcp` commands shown here are Claude Code's. On any other client, add or remove the same entry in its config — the command and args (`npx -y @erayendes/asc-mcp <profile>`) are identical everywhere (see [§4](#4-register-profiles)).
-
-**What happens if a tool isn't loaded?** A missing capability is a signpost, not a dead end. Ask for something a profile doesn't carry, and the agent can call `asc__search_tools` — it searches all 982 operations (plus StoreKit) and, for anything not loaded, names the sibling server that owns it and prints the exact `claude mcp add` command. `asc__discover_domains` does the same at the domain level. Install lean, and let the server tell you what to add when you hit the wall.
-
-### 8. StoreKit 2 — customer transactions
-
-The App Store Server API answers questions about individual customers rather than your listing: purchase history, entitlement, refunds, subscription status. It's enabled when a **bundle ID** is configured (via `setup` or `ASC_BUNDLE_ID`) and served by the `monetization` profile or the combined server.
-
-- **Environment.** Each StoreKit tool accepts an optional `environment` argument (`Production` or `Sandbox`). A transaction ID exists in exactly one environment, so you can query either within a session — the default comes from your setup choice, and you override per call.
-- **Read-only mode** hides and blocks the two mutating StoreKit tools (`request_test_notification`, `extend_renewal_date`); the seven read tools stay available.
-
-### 9. Examples
+### Examples
 
 Talk to your client in plain language:
-
 > **Release management** — "List my apps, then show the current version state for Acme and what's blocking release." · "Submit version 3.2 for review, then start a phased release once it's approved."
 
 > **TestFlight** — "Create a beta group called Insiders and add the latest build." · "Show TestFlight crash submissions from the last week, grouped by device model."
@@ -346,7 +295,7 @@ Talk to your client in plain language:
 > **Agent:** *(calls `asc__search_tools`)* Yes — `app_events__*` live on `asc-marketing`, which isn't loaded. Add it with:
 > `claude mcp add -s user asc-marketing -- npx -y @erayendes/asc-mcp marketing`
 
-### 10. Uninstall
+### Uninstall
 
 **Unregister first.** Re-run `setup`, uncheck everything in the profile picker, and it removes the profiles from every client you select — including the ones you may have forgotten registering. Checking what is left is worth a minute: `setup` writes to more places than most people remember.
 
@@ -358,7 +307,7 @@ codex mcp remove asc-analytics
 ```
 
 - **Claude Desktop:** delete the `asc-*` entries from `claude_desktop_config.json`.
-- **Antigravity / Cursor / Windsurf:** delete them from that client's JSON config — the paths are in the table in [§4](#4-register-profiles). A `.bak` next to it is from a `setup` run, safe to delete too.
+- **Antigravity / Cursor / Windsurf:** delete them from that client's JSON config — the paths are in the [Where it registers](#where-it-registers) table. A `.bak` next to it is from a `setup` run, safe to delete too.
 - **VS Code:** delete them from the user MCP config; the key there is `servers`.
 
 Then the rest:
@@ -374,13 +323,16 @@ security delete-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX
 npm uninstall -g @erayendes/asc-mcp
 ```
 
-Revoking the API key itself is done in App Store Connect. Deleting the local copy does not revoke it.
+> [!WARNING]
+> Revoking the API key itself is done in App Store Connect. Deleting the local copy does not revoke it.
+
+---
 
 ## Türkçe
 
-Heimdall, Node.js **20.19+**'in çalıştığı her yerde çalışır — macOS, Linux ve Windows. Yalnızca bir özellik macOS'a özgüdür: `.p8` anahtarını **macOS Keychain**'de saklamak. Linux ve Windows'ta anahtarı dosya yolu ya da inline PEM olarak verirsiniz ([§6](#6-yapılandır)); gerisi birebir aynıdır.
+Heimdall, Node.js **20.19+**'in çalıştığı her yerde çalışır — macOS, Linux ve Windows. Yalnızca bir özellik macOS'a özgüdür: `.p8` anahtarını **macOS Keychain**'de saklamak. Linux ve Windows'ta anahtarı dosya yolu ya da inline PEM olarak verirsiniz ([Yapılandırma](#yapılandırma)); gerisi birebir aynıdır.
 
-### 1. App Store Connect API anahtarı oluşturun
+### API anahtarı oluşturun
 
 [Users and Access → Integrations → Keys](https://appstoreconnect.apple.com/access/integrations/api) sayfasına gidin, bir anahtar oluşturun ve `.p8` dosyasını indirin. Aynı sayfadan **Key ID** ve **Issuer ID** değerlerini not alın.
 
@@ -399,9 +351,10 @@ Anahtara verdiğiniz rol, bir agent'ın hangi yetkileri aldığını — ve bir 
 | **Finance** | Finans ve ödeme raporlarını okur (`analytics`; ayrıca `ASC_VENDOR_NUMBER` gerekir). | **Düşük.** Sales ile aynı, ağırlıklı okuma yapan `analytics` domaini. |
 | **Customer Support** | Müşteri yorumlarını okur ve yanıtlar (`reviews`, `reviews_ai__*` dahil). | **Düşük-orta.** Bir işlem kamuya açık yanıt gönderir — geri alınabilir, ama bir hatayı fark etmeden önce müşterilere görünür. |
 
-Günlük release işlerinin çoğu yalnızca **App Manager** ister; CI build yüklemeleri için **Developer** ekleyin, sadece gerçekten `analytics` araçlarını kullanacaksanız **Finance**/**Sales** ekleyin. Role bakılmaksızın riski nasıl sınırlayacağınız için [SECURITY.md](../.github/SECURITY.md)'ye bakın — `--read-only` modu tüm mutasyon riskini kaldırır.
+> [!NOTE]
+> Günlük release işlerinin çoğu yalnızca **App Manager** ister; CI build yüklemeleri için **Developer** ekleyin, sadece gerçekten `analytics` araçlarını kullanacaksanız **Finance**/**Sales** ekleyin. Role bakılmaksızın riski nasıl sınırlayacağınız için [SECURITY.md](../.github/SECURITY.md)'ye bakın — `--read-only` modu tüm mutasyon riskini kaldırır.
 
-### 2. Kurun
+### Kurun
 
 ```bash
 npm install -g @erayendes/asc-mcp
@@ -416,7 +369,7 @@ npm install
 npm run build
 ```
 
-### 3. Kimlik bilgisini bir kez kaydedin — setup sihirbazı
+### Kimlik bilgisini bir kez kaydedin — setup sihirbazı
 
 ```bash
 npx -y @erayendes/asc-mcp setup
@@ -429,16 +382,19 @@ Sihirbaz sadece alan toplamaz:
 3. **Yazarken doğrular.** Key ID ve Issuer ID formatları kontrol edilir; `.p8` yolu Finder'dan sürükle-bırakı kabul eder (tırnaklar, kaçış karakterli boşluklar ve `~` işlenir) ve gerçek bir anahtar dosyasına işaret edene kadar tekrar sorulur.
 4. **Kaydetmeden önce Apple'a doğrular** — tek hafif bir istek kimlik bilgilerinin çalıştığını teyit eder. Apple'a ulaşılamıyorsa yine de kaydetmeyi önerir; Apple reddederse yeniden girersiniz.
 5. **Vendor number** (opsiyonel) — sadece satış/finans raporları için gerekir.
-6. **Profil seçici** — interaktif bir checklist (seçmek için boşluk). Her satır profilin araç sayısını ve kabaca token maliyetini gösterir; zaten kayıtlı profiller önceden işaretlidir.
-7. **Bundle ID — yalnızca bir StoreKit profili seçerseniz** (`monetization`). Ardından StoreKit ortamını sorar. Monetization seçmezseniz hiç sorulmaz.
-8. **Otomatik kaydeder.** `claude` CLI varsa, setup planı gösterdikten sonra sizin için `claude mcp add`/`remove` çalıştırır. Yoksa hem CLI komutlarını hem de kopyala-yapıştır bir `mcpServers` JSON bloğu basar.
+6. **İstemci seçici** — profilleri hangi MCP istemcilerinin taşıyacağı; bu makinede bulunanlar işaretli gelir. Bulunamayanlar listede kalır ve yine de işaretlenebilir.
+7. **Profil seçici** — her satır profilin araç sayısını ve kabaca token maliyetini gösterir; zaten kayıtlı profiller önceden işaretlidir.
+8. **Bundle ID — yalnızca bir StoreKit profili seçerseniz** (`monetization`). Ardından StoreKit ortamını sorar. Monetization seçmezseniz hiç sorulmaz.
+9. **Seçtiğiniz her yere kaydeder**, planı gösterip bir kez sorduktan sonra. Bir istemcinin kendi komutu varsa o kullanılır (`claude`, `codex`, `code --add-mcp`); düz JSON config'ler doğrudan düzenlenir, önce yedeklenir. Yazılamayan bir şey olursa yapıştırılacak blokla birlikte bildirilir — bir istemcinin başarısız olması diğerlerini durdurmaz.
 
-Anahtar **macOS Keychain**'de saklanır (macOS dışında dosya yoluyla referanslanır); gizli olmayan her şey `~/.config/asc-mcp/config.json`'a yazılır. Her profil bu ortak yapılandırmayı okur; sunucu girdilerinde **env bloğu gerekmez** — ve anahtar değişince tek yerden `setup` yeniden çalıştırılır, her girdi elle düzenlenmez.
+Bittiğinde istemcinizi yeniden başlatın ve *"App Store Connect bağlantısını kontrol et"* deyin — bu `asc__status`'u çağırır, tek hafif bir istekle kimlik bilgilerinizi doğrular.
 
 > [!TIP]
-> Env değişkenleri çalışmaya devam eder ve her zaman ortak yapılandırmayı ezer ([§6](#6-yapılandır)) — CI veya ikinci hesap için kullanışlı.
+> Anahtar **macOS Keychain**'de saklanır (macOS dışında dosya yoluyla referanslanır); gizli olmayan her şey `~/.config/asc-mcp/config.json`'a yazılır. Her profil bu ortak yapılandırmayı okur; sunucu girdilerinde **env bloğu gerekmez** — ve anahtar değişince tek yerden `setup` yeniden çalıştırılır, her girdi elle düzenlenmez.
+>
+> Env değişkenleri çalışmaya devam eder ve her zaman ortak yapılandırmayı ezer ([Yapılandırma](#yapılandırma)) — CI veya ikinci hesap için kullanışlı.
 
-### 4. Profilleri kaydedin
+### Profilleri kaydedin
 
 Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir. Sayılar setup seçicinin gösterdiğidir (deprecated hariç, çekirdek dahil):
 
@@ -458,20 +414,28 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
 | `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
 
-Her profil ayrıca çekirdek kümeyi taşır (`apps__list`, `apps__get`, dört paylaşımlı ilişki listesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`); böylece herhangi biri uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini gösterir.
+Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, dört ortak ilişki listelemesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`. Yani hangi profili kurarsanız kurun, bir uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini size gösterebilir.
 
-**Alt profiller** büyük bir profili daraltır. `monetization` 204 araç; yalnız fiyat değiştiriyorsanız `monetization:subscription-pricing` 24 araç ve tek çağrılık fiyat makrosunu yine taşıyor. Setup seçicisi bunu sizin yerinize yazar — bir profili işaretleyin, imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır; istemediğinizi kaldırın. Config'i elle yazacaksanız sözdizimi:
+#### Projeye göre seçin
+
+MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (122 araç); oyun `asc-game-center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
+
+#### Alt profiller
+
+Büyük bir profili daraltır. Setup seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır, istemediğinizi kaldırın.
+
+Örneğin `monetization` 204 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 24 araç. Sunucunun adı iki durumda da `asc-monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+
+Config'i elle yazacaksanız sözdizimi:
 
 ```
-npx -y @erayendes/asc-mcp monetization                    tamamı
+npx -y @erayendes/asc-mcp monetization                       tamamı
 npx -y @erayendes/asc-mcp monetization:subscription-pricing  o dilim + çekirdek
 ```
 
-Sunucu adı her iki hâlde `asc-monetization`. İstediğiniz an `asc__status` sorun: hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini söyler.
+#### Nereye kaydedilir
 
-**Projeye göre seçin.** MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (~90 araç); oyun `asc-game-center` ekler. (Claude Code ayrıca araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.)
-
-**Kaydı `setup` sizin yerinize yapar.** Kimlik bilgisinden sonra profilleri hangi istemcilerin taşıyacağını sorar — bu makinede bulduklarının hepsi işaretli gelir — ve tümüne birden yazar. Bu istemcilerin hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde elle yapılırdı.
+`setup` profilleri, bulduğu her MCP istemcisine kaydeder. Bu istemcilerin hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde elle yapılırdı.
 
 | İstemci | Nereye | Nasıl yazılır |
 |:--|:--|:--|
@@ -490,103 +454,62 @@ Buradan düzenlenen dosyaların önce yedeği alınır. Ayrıştırılamayan bir
 > [!NOTE]
 > **ChatGPT'nin kendi connector'ları bu listede değil.** Onlar yalnızca uzak HTTPS sunucusu kabul ediyor; Heimdall sizin makinenizde stdio üzerinden çalışıyor, özel anahtarınızın makineden hiç çıkmamasının sebebi de bu. Yukarıdaki Codex satırı aynı markayı taşıyan başka bir yüzey.
 
-**Sonradan profil eklemek** — `setup`'ı yeniden çalıştırın. Doğrudan seçicilere atlar ve kayıtlı olanları işaretli açar; işareti kaldırmak siler, işaretlemek ekler.
-
-**Kurulumu sizinle birlikte yapan bir AI agent için:** `register` aynı işi terminal olmadan ve kimlik bilgisine hiç dokunmadan yapar.
-
-```bash
-npx -y @erayendes/asc-mcp register monetization:subscription-pricing analytics
-npx -y @erayendes/asc-mcp register analytics --clients=codex,claude
-```
-
-Yalnızca ekler — silme işi `setup`'ındır — ve kimlik bilgisi henüz kayıtlı değilse `setup`'ı sizin çalıştırmanız gerektiğini söyler. Bkz. [AGENTS.md](../AGENTS.md).
-
 <details>
-<summary><b>Elle kayıt</b> — <code>setup</code> çalıştırmak istemiyorsanız ya da istemciniz yukarıdaki listede yoksa</summary>
+<summary><b>Elle kayıt</b> — <code>setup</code> çalıştırmak istemiyorsanız ya da istemciniz listede yoksa</summary>
 
 Komut her zaman `npx -y @erayendes/asc-mcp <profil>`; yalnızca nereye koyduğunuz değişir.
 
-**Claude Code** (CLI):
-
 ```bash
 claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics
-claude mcp add -s user asc-monetization -- npx -y @erayendes/asc-mcp monetization
+codex  mcp add asc-analytics -- npx -y @erayendes/asc-mcp analytics
 ```
 
-**Codex** — `codex mcp add`, ya da bloğu `~/.codex/config.toml`'a ekleyin:
-
-```bash
-codex mcp add asc-analytics -- npx -y @erayendes/asc-mcp analytics
-```
-
-```toml
-# ~/.codex/config.toml
-[mcp_servers.asc-analytics]
-command = "npx"
-args = ["-y", "@erayendes/asc-mcp", "analytics"]
-```
-
-**Claude Desktop, Antigravity ve diğer JSON istemcileri** — aynı `mcpServers` bloğunu ekleyin (`setup` sonrası env gerekmez):
+JSON istemcileri için (setup sonrası env bloğu gerekmez):
 
 ```json
 {
   "mcpServers": {
-    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] },
-    "asc-marketing": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "marketing"] }
+    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] }
   }
 }
 ```
 
-- **Claude Desktop:** `claude_desktop_config.json` — macOS `~/Library/Application Support/Claude/…`, Windows `%APPDATA%\Claude\…`.
-- **Antigravity:** "…" menüsü → MCP Store → Manage MCP Servers → View raw config (`mcp_config.json`).
+- **Antigravity:** "…" menüsü → MCP Store → Manage MCP Servers → View raw config.
 - **VS Code:** anahtar `mcpServers` değil, `servers`.
-- **Kaynaktan:** `command`/`args` yerine `node /mutlak/yol/app-store-connect-mcp/dist/index.js analytics` kullanın.
+- **Kaynaktan:** `command`/`args` yerine `node /mutlak/yol/app-store-connect-mcp/dist/index.js analytics`.
+- **Birleşik sunucu:** profil vermeden çalıştırın; eski env tabanlı kayıt her istemcide çalışmaya devam eder.
 
 </details>
 
-**Birleşik sunucu.** Profil vermeden çalıştırmak klasik birleşik sunucuyu açar; eski env tabanlı kayıt da her istemcide çalışmaya devam eder:
+#### Sonradan ekleme ve çıkarma
 
-```bash
-claude mcp add -s user app-store-connect \
-  -e ASC_KEY_ID=YOUR_KEY_ID \
-  -e ASC_ISSUER_ID=YOUR_ISSUER_ID \
-  -e ASC_PRIVATE_KEY_PATH=/mutlak/yol/AuthKey_XXXXXXXXXX.p8 \
-  -- npx -y @erayendes/asc-mcp
-```
+> [!TIP]
+> **Her şeyi baştan kurmanız gerekmez.** Birkaç profille başlayın, proje ihtiyaç duydukça ekleyin.
 
-**Domain referansı.** Profiller birer curated pakettir; altta ise araçlar 17 API domaini artı `meta` ve `storekit` içinde toplanır. Bu tabloya nadiren ihtiyacınız olur — birleşik sunucunun varsayılan çalışma seti (●) günlük release işlerini kapsar ve `--domains` onu genişletir — ama işte tamamı. Sayılar kullanımdan kaldırılmış işlemleri de içerir.
+- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`. Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir; istemciler ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her istemcide ekler ve siler.
+- **Bir agent yapsın:** `npx -y @erayendes/asc-mcp register game-center` terminal olmadan ve kimlik bilgisine dokunmadan ekler. `--clients=codex,claude` ile daraltılır. Yalnızca ekler — silme işi `setup`'ındır.
+- **Elle, istemci başına:** yukarıdaki "Elle kayıt" bloğu.
 
-| Domain | Araç | Varsayılan | Kapsam |
-|:--|--:|:-:|:--|
-| `meta` | 3 | ● | Sunucu içgözlemi ve araç keşfi |
-| `apps` | 116 | ● | Uygulamalar, metadata, yerelleştirmeler, kullanılabilirlik |
-| `versions` | 102 | ● | Sürüm yaşam döngüsü, gönderim, kademeli yayın, A/B testler |
-| `builds` | 39 | ● | Build'ler, bundle'lar, ikonlar, ön-sürüm build'leri |
-| `testflight` | 72 | ● | Beta grupları, testçiler, geri bildirim, crash gönderimleri |
-| `reviews` | 5 | ● | Müşteri yorumları ve geliştirici yanıtları |
-| `analytics` | 12 | ● | Satış, finans, analitik raporlar, performans metrikleri |
-| `subscriptions` | 105 | | Abonelikler, gruplar, teklifler, win-back, kod teklifleri |
-| `iap` | 68 | | Uygulama içi satın almalar, fiyatlandırma, kod teklifleri, promosyonlar |
-| `marketing` | 60 | | Ekran görüntüleri, önizlemeler, özel sayfalar, uygulama içi etkinlikler |
-| `xcode_cloud` | 41 | | Ürünler, iş akışları, build çalıştırmaları, çıktılar, SCM |
-| `provisioning` | 40 | | Bundle ID'ler, sertifikalar, cihazlar, profiller |
-| `game_center` | 273 | | Başarımlar, liderlik tabloları, eşleştirme, meydan okumalar |
-| `users` | 15 | | Ekip üyeleri, davetler, roller |
-| `background_assets` | 13 | | Arka plan varlıkları ve varlık paketleri |
-| `webhooks` | 11 | | Webhook yapılandırması ve iletim teşhisi |
-| `pricing` | 7 | | Uygulama fiyat planları ve fiyat noktaları |
-| `sandbox` | 3 | | Sandbox test kullanıcıları |
-| `storekit` | 9 | ○ | App Store Server API — `ASC_BUNDLE_ID` ile etkinleşir |
+#### Bir aracı yeniden başlatmadan kullanmak
 
-**Araç isimlendirme**
+Daralttığınız bir profil geri kalanını yine de bilir:
 
-Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Her araç açıklamasında `METHOD /path` bilgisini taşır; böylece doğrudan [Apple'ın API dokümantasyonuyla](https://developer.apple.com/documentation/appstoreconnectapi) çapraz kontrol yapabilirsiniz.
+- **`asc__describe`** profilin sahip olduğu herhangi bir aracın tam şemasını döndürür — yüklü olsun olmasın.
+- **`asc__call`** o şema üzerinden sizin için bir okuma çalıştırır. Salt okunurdur ve bunu annotation'ında söyler; istemcilerin onu engellememesinin sebebi budur. Yazma işlemleri kendi araç adlarında kalır — orada hem istemcinizin onayı hem Heimdall'ın kendi onayı geçerlidir.
+- **`asc__load`** oturum ortasında bütün bir alt profil ekler, proxy'lenen araçları kendi şemalarıyla gerçek araçlara terfi ettirir. Elle yazılmış aileler (StoreKit, reviews-AI, fiyat makroları) hâlâ yeniden başlatma ister; yanıt bunu söyler.
 
-### 5. Doğrulayın
+Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine izin verir ama istemcinin bunu modele **ne zaman** ileteceği hakkında hiçbir şey söylemez. Aynı istemle üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex yükledi, oturum araç listesinin onu çağrılabilir yapmadığını bildirdi ve vazgeçti. `asc__describe` ve `asc__call` en baştan listede olduğu için hiçbir şeyin zamanında ulaşması gerekmiyor.
 
-İstemcinize sorun: *"App Store Connect bağlantısını kontrol et."* Bu, kimlik bilgilerini tek bir hafif istekle doğrulayan `asc__status`'ı çağırır.
+**Peki araç bambaşka bir profildeyse?** `asc__search_tools` tüm 982 işlemi artı StoreKit'i arar, yüklü olmayan her şey için sahibi olan kardeş sunucuyu adlandırır ve ekleme komutunu basar. Yalın kurun, sunucu size neyin eksik olduğunu söylesin.
 
-### 6. Yapılandırın
+### StoreKit 2 — müşteri işlemleri
+
+App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında soruları yanıtlar: satın alma geçmişi, hak, iadeler, abonelik durumu. Bir **bundle ID** yapılandırıldığında (`setup` ya da `ASC_BUNDLE_ID` ile) etkinleşir ve `monetization` profili ya da birleşik sunucu tarafından sunulur.
+
+- **Ortam.** Her StoreKit aracı opsiyonel bir `environment` argümanı kabul eder (`Production` veya `Sandbox`). Bir transaction ID tam olarak tek bir ortamda bulunur, bu yüzden bir oturum içinde ikisini de sorgulayabilirsiniz — varsayılan setup tercihinizden gelir, gerektiğinde çağrı başına geçersiz kılarsınız.
+- **Read-only modu**, mutasyon yapan iki StoreKit aracını (`request_test_notification`, `extend_renewal_date`) gizler ve engeller; yedi okuma aracı erişilebilir kalır.
+
+### Yapılandırma
 
 **Ortam değişkenleri**
 
@@ -645,13 +568,13 @@ Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__li
 > [!TIP]
 > **Yazmadan önce onay (varsayılan açık).** Değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. İstemi gösteremeyen client'larda (elicitation desteği yok) yazmalar **varsayılan olarak engellenir** — client'ın kendi çağrı-başı onayına güvenmek için `--allow-unconfirmed-writes` (veya `ASC_ALLOW_UNCONFIRMED_WRITES=1`) ile opt-in yapın. Guard'ı `ASC_CONFIRM_WRITES=0` (veya `--no-confirm`) ile kapatın; ya da tüm mutasyon araçlarını tamamen kaldırmak için `--read-only` kullanın.
 
+**Araç isimlendirme.** Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Her araç açıklamasında `METHOD /path` bilgisini taşır; böylece doğrudan [Apple'ın API dokümantasyonuyla](https://developer.apple.com/documentation/appstoreconnectapi) çapraz kontrol yapabilirsiniz.
+
 #### Birden çok hesap
 
-Heimdall tek bir ortak kimlik seti tutar; yine de birden çok App Store Connect
-hesabıyla bugün çalışabilirsiniz — ek özellik gerekmez:
+Heimdall tek bir ortak kimlik seti tutar; yine de birden çok App Store Connect hesabıyla bugün çalışabilirsiniz — ek özellik gerekmez:
 
-- **Sunucu-başına environment.** Environment değişkenleri ortak yapılandırmayı
-  tamamen ezer; ikinci bir MCP sunucu girdisine kendi kimliğini verin:
+- **Sunucu-başına environment.** Environment değişkenleri ortak yapılandırmayı tamamen ezer; ikinci bir MCP sunucu girdisine kendi kimliğini verin:
 
   ```json
   "asc-musteriB": {
@@ -660,52 +583,20 @@ hesabıyla bugün çalışabilirsiniz — ek özellik gerekmez:
   }
   ```
 
-- **Ayrı yapılandırma dizinleri.** `ASC_CONFIG_DIR`, bir sunucuyu (ve setup
-  sihirbazını) farklı bir ortak yapılandırmaya yönlendirir:
-  `ASC_CONFIG_DIR=~/.config/asc-musteriB npx -y @erayendes/asc-mcp setup`
-  komutunu bir kez çalıştırın, sonra aynı `ASC_CONFIG_DIR`'ı o sunucunun `env`
-  bloğuna koyun. Her dizin kendi anahtar referansını, vendor numarasını ve
-  bundle ID'sini tutar.
+- **Ayrı yapılandırma dizinleri.** `ASC_CONFIG_DIR`, bir sunucuyu (ve setup sihirbazını) farklı bir ortak yapılandırmaya yönlendirir:
+  `ASC_CONFIG_DIR=~/.config/asc-musteriB npx -y @erayendes/asc-mcp setup` komutunu bir kez çalıştırın, sonra aynı `ASC_CONFIG_DIR`'ı o sunucunun `env` bloğuna koyun. Her dizin kendi anahtar referansını, vendor numarasını ve bundle ID'sini tutar.
 
-İki sunucu istemcinizde yan yana görünür (hesaba göre adlandırın) ve hiçbir şey
-karışmaz: env ile verilen kimlik, eksik parçalar için ortak dosyaya asla geri
-düşmez.
+İki sunucu istemcinizde yan yana görünür (hesaba göre adlandırın) ve hiçbir şey karışmaz: env ile verilen kimlik, eksik parçalar için ortak dosyaya asla geri düşmez.
 
-### 7. Sonradan araç ekleme ve çıkarma
-
-> [!TIP]
-> **Her şeyi baştan kurmanız gerekmez.** Birkaç profille başlayın, proje ihtiyaç duydukça ekleyin.
-
-- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`. Kayıtlı kimlik bilgilerinizi yeniden kullanır ve profil seçicisini tekrar gösterir. İşaretleyin/kaldırın; kaydı sizin için ekler ve siler.
-- **Tek birini ekleyin:** `claude mcp add -s user asc-game-center -- npx -y @erayendes/asc-mcp game-center`
-- **Tek birini kaldırın:** `claude mcp remove asc-game-center`
-- **Birleşik sunucuda** `--domains` ile genişletin ya da daraltın.
-
-> [!NOTE]
-> Buradaki `claude mcp` komutları Claude Code'a aittir. Başka herhangi bir istemcide aynı girdiyi kendi config'ine ekleyin ya da kaldırın — komut ve argümanlar (`npx -y @erayendes/asc-mcp <profil>`) her yerde aynıdır (bkz. [§4](#4-profilleri-kaydedin)).
-
-**Bir araç yüklü değilse ne olur?** Eksik bir yetenek çıkmaz sokak değil, bir tabeladır. Bir profilin taşımadığı bir şey isteyin, agent `asc__search_tools`'u çağırabilir — tüm 982 işlemi (artı StoreKit) arar ve yüklü olmayan her şey için sahibi olan kardeş sunucuyu adlandırıp tam `claude mcp add` komutunu basar. `asc__discover_domains` aynısını domain seviyesinde yapar. Yalın kurun, duvara tosladığınızda sunucu ne ekleyeceğinizi söylesin.
-
-### 8. StoreKit 2 — müşteri işlemleri
-
-App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında soruları yanıtlar: satın alma geçmişi, hak, iadeler, abonelik durumu. Bir **bundle ID** yapılandırıldığında (`setup` ya da `ASC_BUNDLE_ID` ile) etkinleşir ve `monetization` profili ya da birleşik sunucu tarafından sunulur.
-
-- **Ortam.** Her StoreKit aracı opsiyonel bir `environment` argümanı kabul eder (`Production` veya `Sandbox`). Bir transaction ID tam olarak tek bir ortamda bulunur, bu yüzden bir oturum içinde ikisini de sorgulayabilirsiniz — varsayılan setup tercihinizden gelir, gerektiğinde çağrı başına geçersiz kılarsınız.
-- **Read-only modu**, mutasyon yapan iki StoreKit aracını (`request_test_notification`, `extend_renewal_date`) gizler ve engeller; yedi okuma aracı erişilebilir kalır.
-
-### 9. Örnekler
+### Örnekler
 
 İstemcinizle sade bir dille konuşun:
 
-> **Release yönetimi** — "Uygulamalarımı listele, sonra Acme için mevcut sürüm durumunu ve release'i neyin engellediğini göster." · "3.2 sürümünü incelemeye gönder, onaylandıktan sonra kademeli yayına başla."
-
-> **TestFlight** — "Insiders adında bir beta grubu oluştur ve son build'i ekle." · "Son bir haftadaki TestFlight crash gönderimlerini cihaz modeline göre grupla göster."
-
-> **Yorumlar** — "Son 30 gündeki, henüz yanıtlanmamış 1 yıldızlı yorumları bul ve yanıt taslakları hazırla."
-
-> **Monetizasyon** *(`monetization` gerekir)* — "Abonelik gruplarımı ve her katmanın Türkiye, Almanya ve ABD'deki fiyatını göster."
-
-> **Müşteri desteği** *(`ASC_BUNDLE_ID` gerekir)* — "Bu müşteri iki kez ücretlendirildiğini söylüyor — işlem ID'si 2000000891234567. Geçmişi ne gösteriyor, şu anda hak sahibi mi?"
+- **Release yönetimi** — "Uygulamalarımı listele, sonra Acme için mevcut sürüm durumunu ve release'i neyin engellediğini göster." · "3.2 sürümünü incelemeye gönder, onaylandıktan sonra kademeli yayına başla."
+- **TestFlight** — "Insiders adında bir beta grubu oluştur ve son build'i ekle." · "Son bir haftadaki TestFlight crash gönderimlerini cihaz modeline göre grupla göster."
+- **Yorumlar** — "Son 30 gündeki, henüz yanıtlanmamış 1 yıldızlı yorumları bul ve yanıt taslakları hazırla."
+- **Monetizasyon** *(`monetization` gerekir)* — "Abonelik gruplarımı ve her katmanın Türkiye, Almanya ve ABD'deki fiyatını göster."
+- **Müşteri desteği** *(`ASC_BUNDLE_ID` gerekir)* — "Bu müşteri iki kez ücretlendirildiğini söylüyor — işlem ID'si 2000000891234567. Geçmişi ne gösteriyor, şu anda hak sahibi mi?"
 
 **Örnek bir oturum** — ilk çalıştırma nasıl hissettirir:
 
@@ -717,7 +608,7 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 > **Agent:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `asc-marketing`'te. Şununla ekle:
 > `claude mcp add -s user asc-marketing -- npx -y @erayendes/asc-mcp marketing`
 
-### 10. Kaldırma
+### Kaldırma
 
 **Önce kaydı silin.** `setup`'ı yeniden çalıştırın, profil seçicisinde her şeyin işaretini kaldırın; seçtiğiniz her istemciden profilleri siler — kaydettiğinizi unuttuklarınız dahil. Neyin kaldığına bakmaya değer: `setup` çoğu kişinin hatırladığından fazla yere yazıyor.
 
@@ -729,7 +620,7 @@ codex mcp remove asc-analytics
 ```
 
 - **Claude Desktop:** `claude_desktop_config.json`'dan `asc-*` girdilerini silin.
-- **Antigravity / Cursor / Windsurf:** o istemcinin JSON config'inden silin — yollar [§4](#4-profilleri-kaydedin)'teki tabloda. Yanındaki `.bak` bir `setup` koşusundan kalmadır, onu da silebilirsiniz.
+- **Antigravity / Cursor / Windsurf:** o istemcinin JSON config'inden silin — yollar [Nereye kaydedilir](#nereye-kaydedilir) tablosunda. Yanındaki `.bak` bir `setup` koşusundan kalmadır, onu da silebilirsiniz.
 - **VS Code:** kullanıcı MCP config'inden silin; oradaki anahtar `servers`.
 
 Sonra gerisi:
@@ -745,4 +636,5 @@ security delete-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX
 npm uninstall -g @erayendes/asc-mcp
 ```
 
-API anahtarının kendisini iptal etmek App Store Connect üzerinden yapılır. Yerel kopyayı silmek onu iptal etmez.
+> [!WARNING]
+> API anahtarının kendisini iptal etmek App Store Connect üzerinden yapılır. Yerel kopyayı silmek onu iptal etmez.
