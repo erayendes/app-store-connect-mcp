@@ -9,11 +9,43 @@
 import {
   AppStoreServerAPIClient,
   Environment,
+  ExtendReasonCode,
+  GetTransactionHistoryVersion,
+  Status,
+  type ExtendRenewalDateRequest,
+  type HistoryResponse,
+  type LastTransactionsItem,
+  type NotificationHistoryRequest,
+  type NotificationTypeV2,
+  type Order,
+  type ProductType,
+  type RefundHistoryResponse,
+  type StatusResponse,
+  type SubscriptionGroupIdentifierItem,
   type TransactionHistoryRequest,
 } from '@apple/app-store-server-library';
 import { readFileSync } from 'node:fs';
 import type { McpToolDefinition } from '../core/registry.js';
 import type { ServerConfig } from '../core/config.js';
+
+/**
+ * Reads one claim out of a JWS payload without verifying the signature.
+ *
+ * Apple signs these and we received them over TLS from an endpoint we
+ * authenticated to, so the claim is only as trustworthy as that channel —
+ * which is enough to filter our own response. Nothing here grants access;
+ * callers who need a verified payload should run it through the library's
+ * SignedDataVerifier.
+ */
+function jwsClaim(jws: string | undefined, claim: string): unknown {
+  const payload = jws?.split('.')[1];
+  if (payload === undefined) return undefined;
+  try {
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))[claim];
+  } catch {
+    return undefined;
+  }
+}
 
 export const STOREKIT_TOOLS: McpToolDefinition[] = [
   {
@@ -266,22 +298,20 @@ export class StoreKitService {
         return { signedTransactionInfo: res.signedTransactionInfo };
       }
 
-      case 'storekit__get_subscription_statuses': {
-        const res = await client.getAllSubscriptionStatuses(
+      case 'storekit__get_subscription_statuses':
+        return client.getAllSubscriptionStatuses(
           args.transaction_id,
-          args.status
+          args.status as Status[] | undefined
         );
-        return res;
-      }
 
       case 'storekit__check_entitlement':
         return this.checkEntitlement(client, args);
 
       case 'storekit__get_refund_history': {
-        const items: unknown[] = [];
+        const items: string[] = [];
         let revision: string | null = null;
         for (let page = 0; page < 10; page++) {
-          const res: any = await client.getRefundHistory(
+          const res: RefundHistoryResponse = await client.getRefundHistory(
             args.transaction_id,
             revision
           );
@@ -301,13 +331,16 @@ export class StoreKitService {
       }
 
       case 'storekit__get_notification_history': {
-        const res = await client.getNotificationHistory(null, {
+        // notificationType is a string enum in the library; the inputSchema
+        // leaves it a free string, so this is the one place we take the
+        // caller's word for it.
+        const request: NotificationHistoryRequest = {
           startDate: args.start_date,
           endDate: args.end_date,
-          notificationType: args.notification_type,
+          notificationType: args.notification_type as NotificationTypeV2 | undefined,
           onlyFailures: args.only_failures,
-        } as any);
-        return res;
+        };
+        return client.getNotificationHistory(null, request);
       }
 
       case 'storekit__request_test_notification':
@@ -318,13 +351,15 @@ export class StoreKitService {
         if (!Number.isInteger(days) || days < 1 || days > 90) {
           throw new Error('extend_by_days must be an integer between 1 and 90.');
         }
+        const request: ExtendRenewalDateRequest = {
+          extendByDays: days,
+          extendReasonCode: (args.reason ??
+            ExtendReasonCode.CUSTOMER_SATISFACTION) as ExtendReasonCode,
+          requestIdentifier: args.request_identifier,
+        };
         return client.extendSubscriptionRenewalDate(
           args.original_transaction_id,
-          {
-            extendByDays: days,
-            extendReasonCode: args.reason ?? 1,
-            requestIdentifier: args.request_identifier,
-          } as any
+          request
         );
       }
 
@@ -337,23 +372,27 @@ export class StoreKitService {
     client: AppStoreServerAPIClient,
     args: Record<string, any>
   ): Promise<unknown> {
+    // sort and product_type are constrained to the library's enum values by
+    // this tool's inputSchema, so the casts narrow rather than widen.
     const request: TransactionHistoryRequest = {
-      sort: args.sort,
+      sort: args.sort as Order | undefined,
       productIds: args.product_id ? [args.product_id] : undefined,
-      productTypes: args.product_type ? [args.product_type] : undefined,
+      productTypes: args.product_type
+        ? [args.product_type as ProductType]
+        : undefined,
       revoked: args.revoked,
-    } as TransactionHistoryRequest;
+    };
 
     const maxPages = Math.max(1, Math.min(Number(args.max_pages ?? 5), 50));
     const transactions: string[] = [];
     let revision: string | null = null;
 
     for (let page = 0; page < maxPages; page++) {
-      const res: any = await client.getTransactionHistory(
+      const res: HistoryResponse = await client.getTransactionHistory(
         args.transaction_id,
         revision,
         request,
-        'v2' as any
+        GetTransactionHistoryVersion.V2
       );
       if (Array.isArray(res?.signedTransactions)) {
         transactions.push(...res.signedTransactions);
@@ -370,22 +409,32 @@ export class StoreKitService {
     client: AppStoreServerAPIClient,
     args: Record<string, any>
   ): Promise<unknown> {
-    const res: any = await client.getAllSubscriptionStatuses(
+    const res: StatusResponse = await client.getAllSubscriptionStatuses(
       args.transaction_id,
-      [1, 4] // Active and GracePeriod both grant access.
+      [Status.ACTIVE, Status.BILLING_GRACE_PERIOD] // Both grant access.
     );
 
-    const groups: any[] = res?.data ?? [];
-    const matching = args.product_id
-      ? groups.filter((g) =>
-          (g.lastTransactions ?? []).some(
-            (t: any) => t.originalTransactionId && g.subscriptionGroupIdentifier
-          )
-        )
+    const groups: SubscriptionGroupIdentifierItem[] = res.data ?? [];
+
+    // A group is named by its subscription group, not by product, and the
+    // product ID lives inside each transaction's signed payload — so narrowing
+    // to one product means reading that payload, and keeping only the groups
+    // that still hold a transaction afterwards.
+    const matching: SubscriptionGroupIdentifierItem[] = args.product_id
+      ? groups
+          .map((g) => ({
+            ...g,
+            lastTransactions: (g.lastTransactions ?? []).filter(
+              (t) => jwsClaim(t.signedTransactionInfo, 'productId') === args.product_id
+            ),
+          }))
+          .filter((g) => g.lastTransactions.length > 0)
       : groups;
 
-    const active = matching.flatMap((g) =>
-      (g.lastTransactions ?? []).filter((t: any) => t.status === 1 || t.status === 4)
+    const active: LastTransactionsItem[] = matching.flatMap((g) =>
+      (g.lastTransactions ?? []).filter(
+        (t) => t.status === Status.ACTIVE || t.status === Status.BILLING_GRACE_PERIOD
+      )
     );
 
     return {
