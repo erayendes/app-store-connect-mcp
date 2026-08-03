@@ -82,7 +82,7 @@
     "node": ">=20.19.0"
   },
   "dependencies": {
-    "@apple/app-store-server-library": "^1.6.0",
+    "@apple/app-store-server-library": "^3.1.0",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
