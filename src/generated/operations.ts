@@ -47,7 +47,26 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[accessibilityDeclarations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type accessibilityDeclarations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "deviceFamily",
+          "state",
+          "supportsAudioDescriptions",
+          "supportsCaptions",
+          "supportsDarkInterface",
+          "supportsDifferentiateWithoutColorAlone",
+          "supportsLargerText",
+          "supportsReducedMotion",
+          "supportsSufficientContrast",
+          "supportsVoiceControl",
+          "supportsVoiceover"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -77,7 +96,20 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[actors]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type actors Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "actorType",
+          "userFirstName",
+          "userLastName",
+          "userEmail",
+          "apiKeyId"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -95,6 +127,18 @@ export const OPERATIONS: Operation[] = [
         "type": "array",
         "description": "filter by id(s)",
         "required": true
+      },
+      {
+        "name": "fields[actors]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type actors Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "actorType",
+          "userFirstName",
+          "userLastName",
+          "userEmail",
+          "apiKeyId"
+        ]
       },
       {
         "name": "limit",
@@ -160,7 +204,18 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[alternativeDistributionDomains]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionDomains Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "domain",
+          "referenceName",
+          "createdDate"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -173,6 +228,16 @@ export const OPERATIONS: Operation[] = [
     "deprecated": false,
     "pathParams": [],
     "queryParams": [
+      {
+        "name": "fields[alternativeDistributionDomains]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionDomains Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "domain",
+          "referenceName",
+          "createdDate"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -221,7 +286,16 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[alternativeDistributionKeys]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionKeys Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "publicKey"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -238,6 +312,14 @@ export const OPERATIONS: Operation[] = [
         "name": "exists[app]",
         "type": "boolean",
         "description": "filter by existence or non-existence of related 'app'"
+      },
+      {
+        "name": "fields[alternativeDistributionKeys]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionKeys Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "publicKey"
+        ]
       },
       {
         "name": "limit",
@@ -258,7 +340,19 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[alternativeDistributionPackageDeltas]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionPackageDeltas Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "url",
+          "urlExpirationDate",
+          "alternativeDistributionKeyBlob",
+          "fileChecksum"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -272,7 +366,19 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[alternativeDistributionPackageVariants]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionPackageVariants Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "url",
+          "urlExpirationDate",
+          "alternativeDistributionKeyBlob",
+          "fileChecksum"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -308,9 +414,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[alternativeDistributionPackageVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionPackageVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "url",
+          "urlExpirationDate",
+          "version",
+          "fileChecksum",
+          "state",
+          "variants",
+          "deltas",
+          "alternativeDistributionPackage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "variants",
           "deltas",
@@ -367,9 +488,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[alternativeDistributionPackages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type alternativeDistributionPackages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "sourceFileChecksum",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "versions"
         ]
@@ -406,7 +536,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "variants",
           "deltas",
@@ -427,7 +557,18 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[analyticsReportInstances]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type analyticsReportInstances Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "granularity",
+          "processingDate",
+          "segments"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -492,9 +633,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[analyticsReportRequests]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type analyticsReportRequests Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "accessType",
+          "stoppedDueToInactivity",
+          "reports"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "reports"
         ]
@@ -550,7 +701,18 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[analyticsReportSegments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type analyticsReportSegments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "checksum",
+          "sizeInBytes",
+          "url"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -564,7 +726,18 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[analyticsReports]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type analyticsReports Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "category",
+          "instances"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -642,7 +815,17 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[androidToIosAppMappingDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type androidToIosAppMappingDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "packageName",
+          "appSigningKeyPublicCertificateSha256Fingerprints"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -688,9 +871,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appAvailabilities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAvailabilities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "availableInNewTerritories",
+          "territoryAvailabilities"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territoryAvailabilities"
         ]
@@ -711,6 +903,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[territoryAvailabilities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type territoryAvailabilities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "available",
+          "releaseDate",
+          "preOrderEnabled",
+          "preOrderPublishDate",
+          "contentStatuses",
+          "territory"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -718,7 +923,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -739,9 +944,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appCategories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCategories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platforms",
+          "subcategories",
+          "parent"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -777,6 +992,16 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by existence or non-existence of related 'parent'"
       },
       {
+        "name": "fields[appCategories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCategories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platforms",
+          "subcategories",
+          "parent"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -784,7 +1009,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -852,7 +1077,21 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[appClipAdvancedExperienceImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipAdvancedExperienceImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -898,9 +1137,28 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appClipAdvancedExperiences]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipAdvancedExperiences Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "link",
+          "version",
+          "status",
+          "action",
+          "isPoweredBy",
+          "place",
+          "placeStatus",
+          "businessCategory",
+          "defaultLanguage",
+          "appClip",
+          "headerImage",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClip",
           "headerImage",
@@ -953,9 +1211,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appClipAppStoreReviewDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipAppStoreReviewDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "invocationUrls",
+          "appClipDefaultExperience"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClipDefaultExperience"
         ]
@@ -994,7 +1261,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClipDefaultExperienceLocalization"
         ]
@@ -1044,9 +1311,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appClipDefaultExperienceLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipDefaultExperienceLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "subtitle",
+          "appClipDefaultExperience",
+          "appClipHeaderImage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClipDefaultExperience",
           "appClipHeaderImage"
@@ -1086,7 +1364,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClipDefaultExperience"
         ]
@@ -1112,6 +1390,17 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'locale'"
       },
       {
+        "name": "fields[appClipDefaultExperienceLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipDefaultExperienceLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "subtitle",
+          "appClipDefaultExperience",
+          "appClipHeaderImage"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1119,7 +1408,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClipDefaultExperience",
           "appClipHeaderImage"
@@ -1170,9 +1459,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appClipDefaultExperiences]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipDefaultExperiences Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "action",
+          "appClip",
+          "releaseWithAppStoreVersion",
+          "appClipDefaultExperienceLocalizations",
+          "appClipAppStoreReviewDetail"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClip",
           "releaseWithAppStoreVersion",
@@ -1198,7 +1499,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersionLocalizations",
@@ -1291,9 +1592,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appClipHeaderImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipHeaderImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appClipDefaultExperienceLocalization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClipDefaultExperienceLocalization"
         ]
@@ -1360,6 +1675,25 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[appClipAdvancedExperiences]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipAdvancedExperiences Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "link",
+          "version",
+          "status",
+          "action",
+          "isPoweredBy",
+          "place",
+          "placeStatus",
+          "businessCategory",
+          "defaultLanguage",
+          "appClip",
+          "headerImage",
+          "localizations"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1367,7 +1701,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClip",
           "headerImage",
@@ -1395,6 +1729,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by existence or non-existence of related 'releaseWithAppStoreVersion'"
       },
       {
+        "name": "fields[appClipDefaultExperiences]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClipDefaultExperiences Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "action",
+          "appClip",
+          "releaseWithAppStoreVersion",
+          "appClipDefaultExperienceLocalizations",
+          "appClipAppStoreReviewDetail"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1402,7 +1748,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClip",
           "releaseWithAppStoreVersion",
@@ -1426,9 +1772,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appClips]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClips Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "bundleId",
+          "app",
+          "appClipDefaultExperiences",
+          "appClipAdvancedExperiences"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appClipDefaultExperiences"
@@ -1483,6 +1840,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
       },
       {
+        "name": "fields[appPreviewSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "previewType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appPreviews"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1490,7 +1859,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -1564,6 +1933,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
       },
       {
+        "name": "fields[appScreenshotSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "screenshotDisplayType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appScreenshots"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1571,7 +1952,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -1624,9 +2005,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appCustomProductPageLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCustomProductPageLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "promotionalText",
+          "appCustomProductPageVersion",
+          "appScreenshotSets",
+          "appPreviewSets",
+          "searchKeywords"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appCustomProductPageVersion",
           "appScreenshotSets",
@@ -1733,6 +2127,19 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'locale'"
       },
       {
+        "name": "fields[appCustomProductPageLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCustomProductPageLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "promotionalText",
+          "appCustomProductPageVersion",
+          "appScreenshotSets",
+          "appPreviewSets",
+          "searchKeywords"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1740,7 +2147,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appCustomProductPageVersion",
           "appScreenshotSets",
@@ -1778,9 +2185,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appCustomProductPageVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCustomProductPageVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "deepLink",
+          "appCustomProductPage",
+          "appCustomProductPageLocalizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appCustomProductPage",
           "appCustomProductPageLocalizations"
@@ -1833,6 +2252,18 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[appCustomProductPageVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCustomProductPageVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "deepLink",
+          "appCustomProductPage",
+          "appCustomProductPageLocalizations"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -1840,7 +2271,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appCustomProductPage",
           "appCustomProductPageLocalizations"
@@ -1891,9 +2322,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appCustomProductPages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCustomProductPages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "url",
+          "visible",
+          "app",
+          "appCustomProductPageVersions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appCustomProductPageVersions"
@@ -1943,7 +2386,22 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[appEncryptionDeclarationDocuments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEncryptionDeclarationDocuments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "assetToken",
+          "downloadUrl",
+          "sourceFileChecksum",
+          "uploadOperations",
+          "assetDeliveryState"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -2033,9 +2491,33 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEncryptionDeclarations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEncryptionDeclarations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "appDescription",
+          "createdDate",
+          "usesEncryption",
+          "exempt",
+          "containsProprietaryCryptography",
+          "containsThirdPartyCryptography",
+          "availableOnFrenchStore",
+          "platform",
+          "uploadedDate",
+          "documentUrl",
+          "documentName",
+          "documentType",
+          "appEncryptionDeclarationState",
+          "codeValue",
+          "app",
+          "builds",
+          "appEncryptionDeclarationDocument"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "builds",
@@ -2077,6 +2559,30 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'builds'"
       },
       {
+        "name": "fields[appEncryptionDeclarations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEncryptionDeclarations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "appDescription",
+          "createdDate",
+          "usesEncryption",
+          "exempt",
+          "containsProprietaryCryptography",
+          "containsThirdPartyCryptography",
+          "availableOnFrenchStore",
+          "platform",
+          "uploadedDate",
+          "documentUrl",
+          "documentName",
+          "documentType",
+          "appEncryptionDeclarationState",
+          "codeValue",
+          "app",
+          "builds",
+          "appEncryptionDeclarationDocument"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -2084,7 +2590,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "builds",
@@ -2107,6 +2613,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEventScreenshots]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEventScreenshots Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "assetToken",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appEventAssetType",
+          "appEventLocalization"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -2114,7 +2635,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEventLocalization"
         ]
@@ -2135,6 +2656,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEventVideoClips]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEventVideoClips Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "previewFrameTimeCode",
+          "videoUrl",
+          "previewFrameImage",
+          "previewImage",
+          "uploadOperations",
+          "assetDeliveryState",
+          "videoDeliveryState",
+          "appEventAssetType",
+          "appEventLocalization"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -2142,7 +2681,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEventLocalization"
         ]
@@ -2192,9 +2731,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEventLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEventLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "shortDescription",
+          "longDescription",
+          "appEvent",
+          "appEventScreenshots",
+          "appEventVideoClips"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEvent",
           "appEventScreenshots",
@@ -2262,9 +2815,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEventScreenshots]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEventScreenshots Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "assetToken",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appEventAssetType",
+          "appEventLocalization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEventLocalization"
         ]
@@ -2330,9 +2898,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEventVideoClips]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEventVideoClips Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "previewFrameTimeCode",
+          "videoUrl",
+          "previewFrameImage",
+          "previewImage",
+          "uploadOperations",
+          "assetDeliveryState",
+          "videoDeliveryState",
+          "appEventAssetType",
+          "appEventLocalization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEventLocalization"
         ]
@@ -2398,9 +2984,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appEvents]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEvents Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "badge",
+          "eventState",
+          "deepLink",
+          "purchaseRequirement",
+          "primaryLocale",
+          "priority",
+          "purpose",
+          "territorySchedules",
+          "archivedTerritorySchedules",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localizations"
         ]
@@ -2428,7 +3032,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEvent",
           "appEventScreenshots",
@@ -2496,9 +3100,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appInfoLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appInfoLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "subtitle",
+          "privacyPolicyUrl",
+          "privacyChoicesUrl",
+          "privacyPolicyText",
+          "appInfo"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appInfo"
         ]
@@ -2554,6 +3172,20 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'locale'"
       },
       {
+        "name": "fields[appInfoLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appInfoLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "subtitle",
+          "privacyPolicyUrl",
+          "privacyChoicesUrl",
+          "privacyPolicyText",
+          "appInfo"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -2561,7 +3193,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appInfo"
         ]
@@ -2582,9 +3214,35 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appInfos]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appInfos Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "appStoreState",
+          "state",
+          "appStoreAgeRating",
+          "australiaAgeRating",
+          "brazilAgeRating",
+          "brazilAgeRatingV2",
+          "franceAgeRating",
+          "koreaAgeRating",
+          "kidsAgeBand",
+          "app",
+          "ageRatingDeclaration",
+          "appInfoLocalizations",
+          "primaryCategory",
+          "primarySubcategoryOne",
+          "primarySubcategoryTwo",
+          "secondaryCategory",
+          "secondarySubcategoryOne",
+          "secondarySubcategoryTwo",
+          "territoryAgeRatings"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "ageRatingDeclaration",
@@ -2615,7 +3273,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -2639,7 +3297,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -2663,7 +3321,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -2687,7 +3345,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -2711,7 +3369,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -2735,7 +3393,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subcategories",
           "parent"
@@ -2757,6 +3415,15 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[territoryAgeRatings]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type territoryAgeRatings Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "appStoreAgeRating",
+          "territory"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -2764,7 +3431,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -2801,6 +3468,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appPreviews]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPreviews Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "previewFrameTimeCode",
+          "mimeType",
+          "videoUrl",
+          "previewFrameImage",
+          "previewImage",
+          "uploadOperations",
+          "assetDeliveryState",
+          "videoDeliveryState",
+          "appPreviewSet"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -2808,7 +3494,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appPreviewSet"
         ]
@@ -2874,9 +3560,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appPreviewSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "previewType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appPreviews"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -2929,9 +3627,28 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appPreviews]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPreviews Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "previewFrameTimeCode",
+          "mimeType",
+          "videoUrl",
+          "previewFrameImage",
+          "previewImage",
+          "uploadOperations",
+          "assetDeliveryState",
+          "videoDeliveryState",
+          "appPreviewSet"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appPreviewSet"
         ]
@@ -2970,7 +3687,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -2980,7 +3697,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "territory"
@@ -3002,9 +3719,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appPricePoints]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPricePoints Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "customerPrice",
+          "proceeds",
+          "app",
+          "equalizations",
+          "territory"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "territory"
@@ -3038,7 +3767,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -3048,7 +3777,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appPricePoint",
           "territory"
@@ -3098,9 +3827,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appPriceSchedules]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPriceSchedules Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "app",
+          "baseTerritory",
+          "manualPrices",
+          "automaticPrices"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "baseTerritory",
@@ -3136,7 +3876,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -3146,7 +3886,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appPricePoint",
           "territory"
@@ -3168,6 +3908,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appScreenshots]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appScreenshots Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "imageAsset",
+          "assetToken",
+          "assetType",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appScreenshotSet"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3175,7 +3931,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appScreenshotSet"
         ]
@@ -3241,9 +3997,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appScreenshotSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "screenshotDisplayType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appScreenshots"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -3296,9 +4064,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appScreenshots]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appScreenshots Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "imageAsset",
+          "assetToken",
+          "assetType",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appScreenshotSet"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appScreenshotSet"
         ]
@@ -3364,9 +4148,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreReviewAttachments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreReviewAttachments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appStoreReviewDetail"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreReviewDetail"
         ]
@@ -3403,6 +4200,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreReviewAttachments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreReviewAttachments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appStoreReviewDetail"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3410,7 +4220,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreReviewDetail"
         ]
@@ -3445,9 +4255,26 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreReviewDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreReviewDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "contactFirstName",
+          "contactLastName",
+          "contactPhone",
+          "contactEmail",
+          "demoAccountName",
+          "demoAccountPassword",
+          "demoAccountRequired",
+          "notes",
+          "appStoreVersion",
+          "appStoreReviewAttachments"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appStoreReviewAttachments"
@@ -3518,6 +4345,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'appCustomProductPageLocalization'"
       },
       {
+        "name": "fields[appPreviewSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "previewType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appPreviews"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3525,7 +4364,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -3599,6 +4438,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'appCustomProductPageLocalization'"
       },
       {
+        "name": "fields[appScreenshotSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "screenshotDisplayType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appScreenshots"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3606,7 +4457,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -3659,9 +4510,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionExperimentTreatmentLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "appStoreVersionExperimentTreatment",
+          "appScreenshotSets",
+          "appPreviewSets"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionExperimentTreatment",
           "appScreenshotSets",
@@ -3689,6 +4551,17 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'locale'"
       },
       {
+        "name": "fields[appStoreVersionExperimentTreatmentLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperimentTreatmentLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "appStoreVersionExperimentTreatment",
+          "appScreenshotSets",
+          "appPreviewSets"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3696,7 +4569,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionExperimentTreatment",
           "appScreenshotSets",
@@ -3748,9 +4621,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionExperimentTreatments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperimentTreatments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "appIcon",
+          "appIconName",
+          "promotedDate",
+          "appStoreVersionExperiment",
+          "appStoreVersionExperimentV2",
+          "appStoreVersionExperimentTreatmentLocalizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionExperiment",
           "appStoreVersionExperimentV2",
@@ -3789,6 +4676,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionExperimentTreatments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperimentTreatments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "appIcon",
+          "appIconName",
+          "promotedDate",
+          "appStoreVersionExperiment",
+          "appStoreVersionExperimentV2",
+          "appStoreVersionExperimentTreatmentLocalizations"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3796,7 +4697,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionExperiment",
           "appStoreVersionExperimentV2",
@@ -3848,9 +4749,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionExperiments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperiments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "trafficProportion",
+          "state",
+          "reviewRequired",
+          "startDate",
+          "endDate",
+          "app",
+          "latestControlVersion",
+          "controlVersions",
+          "appStoreVersionExperimentTreatments"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "latestControlVersion",
@@ -3890,6 +4809,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionExperimentTreatments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperimentTreatments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "appIcon",
+          "appIconName",
+          "promotedDate",
+          "appStoreVersionExperiment",
+          "appStoreVersionExperimentV2",
+          "appStoreVersionExperimentTreatmentLocalizations"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -3897,7 +4830,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionExperiment",
           "appStoreVersionExperimentV2",
@@ -3949,9 +4882,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionExperiments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperiments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "trafficProportion",
+          "state",
+          "reviewRequired",
+          "startDate",
+          "endDate",
+          "appStoreVersion",
+          "appStoreVersionExperimentTreatments"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appStoreVersionExperimentTreatments"
@@ -4022,6 +4970,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
       },
       {
+        "name": "fields[appPreviewSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "previewType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appPreviews"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4029,7 +4989,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -4103,6 +5063,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
       },
       {
+        "name": "fields[appScreenshotSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "screenshotDisplayType",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "appScreenshots"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4110,7 +5082,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
@@ -4163,9 +5135,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersionLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "description",
+          "locale",
+          "keywords",
+          "marketingUrl",
+          "promotionalText",
+          "supportUrl",
+          "whatsNew",
+          "appStoreVersion",
+          "appScreenshotSets",
+          "appPreviewSets",
+          "searchKeywords"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appScreenshotSets",
@@ -4357,7 +5347,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "versions"
         ]
@@ -4380,7 +5370,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appClip",
           "releaseWithAppStoreVersion",
@@ -4422,7 +5412,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appStoreReviewAttachments"
@@ -4467,7 +5457,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "latestControlVersion",
@@ -4507,6 +5497,21 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[appStoreVersionExperiments]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionExperiments Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "trafficProportion",
+          "state",
+          "reviewRequired",
+          "startDate",
+          "endDate",
+          "appStoreVersion",
+          "appStoreVersionExperimentTreatments"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4514,7 +5519,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appStoreVersionExperimentTreatments"
@@ -4541,6 +5546,24 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'locale'"
       },
       {
+        "name": "fields[appStoreVersionLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "description",
+          "locale",
+          "keywords",
+          "marketingUrl",
+          "promotionalText",
+          "supportUrl",
+          "whatsNew",
+          "appStoreVersion",
+          "appScreenshotSets",
+          "appPreviewSets",
+          "searchKeywords"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4548,7 +5571,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appScreenshotSets",
@@ -4588,7 +5611,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion"
         ]
@@ -4655,7 +5678,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by attribute 'territory'",
+        "description": "filter by attribute 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list.",
         "enum": [
           "ABW",
           "AFG",
@@ -4707,7 +5730,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[reviewTerritory]",
         "type": "array",
-        "description": "filter by id(s) of related 'reviewTerritory'"
+        "description": "filter by id(s) of related 'reviewTerritory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "exists[publishedResponse]",
@@ -4726,6 +5749,21 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[customerReviews]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type customerReviews Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "rating",
+          "title",
+          "body",
+          "reviewerNickname",
+          "createdDate",
+          "territory",
+          "response",
+          "reviewTerritory"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4733,7 +5771,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "response",
           "reviewTerritory"
@@ -4772,7 +5810,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "compatibilityVersions",
           "appStoreVersion"
@@ -4794,9 +5832,40 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appStoreVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platform",
+          "versionString",
+          "appStoreState",
+          "appVersionState",
+          "copyright",
+          "reviewType",
+          "releaseType",
+          "earliestReleaseDate",
+          "usesIdfa",
+          "downloadable",
+          "createdDate",
+          "app",
+          "appStoreVersionLocalizations",
+          "build",
+          "appStoreVersionPhasedRelease",
+          "gameCenterAppVersion",
+          "routingAppCoverage",
+          "appStoreReviewDetail",
+          "appStoreVersionSubmission",
+          "appClipDefaultExperience",
+          "appStoreVersionExperiments",
+          "appStoreVersionExperimentsV2",
+          "customerReviews",
+          "alternativeDistributionPackage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersionLocalizations",
@@ -4830,7 +5899,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion"
         ]
@@ -4866,6 +5935,14 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[territories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type territories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "currency"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -4926,6 +6003,24 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[accessibilityDeclarations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type accessibilityDeclarations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "deviceFamily",
+          "state",
+          "supportsAudioDescriptions",
+          "supportsCaptions",
+          "supportsDarkInterface",
+          "supportsDifferentiateWithoutColorAlone",
+          "supportsLargerText",
+          "supportsReducedMotion",
+          "supportsSufficientContrast",
+          "supportsVoiceControl",
+          "supportsVoiceover"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4969,6 +6064,16 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[analyticsReportRequests]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type analyticsReportRequests Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "accessType",
+          "stoppedDueToInactivity",
+          "reports"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -4976,7 +6081,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "reports"
         ]
@@ -4996,6 +6101,15 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[androidToIosAppMappingDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type androidToIosAppMappingDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "packageName",
+          "appSigningKeyPublicCertificateSha256Fingerprints"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -5019,7 +6133,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territoryAvailabilities"
         ]
@@ -5045,6 +6159,17 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'bundleId'"
       },
       {
+        "name": "fields[appClips]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appClips Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "bundleId",
+          "app",
+          "appClipDefaultExperiences",
+          "appClipAdvancedExperiences"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5052,7 +6177,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appClipDefaultExperiences"
@@ -5079,6 +6204,18 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'visible'"
       },
       {
+        "name": "fields[appCustomProductPages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appCustomProductPages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "url",
+          "visible",
+          "app",
+          "appCustomProductPageVersions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5086,7 +6223,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appCustomProductPageVersions"
@@ -5124,6 +6261,30 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'builds'"
       },
       {
+        "name": "fields[appEncryptionDeclarations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEncryptionDeclarations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "appDescription",
+          "createdDate",
+          "usesEncryption",
+          "exempt",
+          "containsProprietaryCryptography",
+          "containsThirdPartyCryptography",
+          "availableOnFrenchStore",
+          "platform",
+          "uploadedDate",
+          "documentUrl",
+          "documentName",
+          "documentType",
+          "appEncryptionDeclarationState",
+          "codeValue",
+          "app",
+          "builds",
+          "appEncryptionDeclarationDocument"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5131,7 +6292,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "builds",
@@ -5176,6 +6337,24 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[appEvents]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appEvents Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "badge",
+          "eventState",
+          "deepLink",
+          "purchaseRequirement",
+          "primaryLocale",
+          "priority",
+          "purpose",
+          "territorySchedules",
+          "archivedTerritorySchedules",
+          "localizations"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5183,7 +6362,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localizations"
         ]
@@ -5204,6 +6383,32 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[appInfos]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appInfos Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "appStoreState",
+          "state",
+          "appStoreAgeRating",
+          "australiaAgeRating",
+          "brazilAgeRating",
+          "brazilAgeRatingV2",
+          "franceAgeRating",
+          "koreaAgeRating",
+          "kidsAgeBand",
+          "app",
+          "ageRatingDeclaration",
+          "appInfoLocalizations",
+          "primaryCategory",
+          "primarySubcategoryOne",
+          "primarySubcategoryTwo",
+          "secondaryCategory",
+          "secondarySubcategoryOne",
+          "secondarySubcategoryTwo",
+          "territoryAgeRatings"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5211,7 +6416,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "ageRatingDeclaration",
@@ -5242,7 +6447,19 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+      },
+      {
+        "name": "fields[appPricePoints]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appPricePoints Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "customerPrice",
+          "proceeds",
+          "app",
+          "equalizations",
+          "territory"
+        ]
       },
       {
         "name": "limit",
@@ -5252,7 +6469,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "territory"
@@ -5276,7 +6493,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "baseTerritory",
@@ -5323,7 +6540,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "latestControlVersion",
@@ -5417,6 +6634,37 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[appStoreVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appStoreVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platform",
+          "versionString",
+          "appStoreState",
+          "appVersionState",
+          "copyright",
+          "reviewType",
+          "releaseType",
+          "earliestReleaseDate",
+          "usesIdfa",
+          "downloadable",
+          "createdDate",
+          "app",
+          "appStoreVersionLocalizations",
+          "build",
+          "appStoreVersionPhasedRelease",
+          "gameCenterAppVersion",
+          "routingAppCoverage",
+          "appStoreReviewDetail",
+          "appStoreVersionSubmission",
+          "appClipDefaultExperience",
+          "appStoreVersionExperiments",
+          "appStoreVersionExperimentsV2",
+          "customerReviews",
+          "alternativeDistributionPackage"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5424,7 +6672,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersionLocalizations",
@@ -5470,6 +6718,16 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[appTags]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appTags Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "visibleInAppStore",
+          "territories"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5477,7 +6735,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territories"
         ]
@@ -5535,6 +6793,22 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[backgroundAssets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "archived",
+          "assetPackIdentifier",
+          "createdDate",
+          "usedBytes",
+          "app",
+          "versions",
+          "appStoreVersion",
+          "internalBetaVersion",
+          "externalBetaVersion"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5542,7 +6816,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersion",
@@ -5565,6 +6839,20 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[betaAppLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "feedbackEmail",
+          "marketingUrl",
+          "privacyPolicyUrl",
+          "tvOsPrivacyPolicy",
+          "description",
+          "locale",
+          "app"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -5656,6 +6944,36 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[betaFeedbackCrashSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaFeedbackCrashSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "createdDate",
+          "comment",
+          "email",
+          "deviceModel",
+          "osVersion",
+          "locale",
+          "timeZone",
+          "architecture",
+          "connectionType",
+          "pairedAppleWatch",
+          "appUptimeInMilliseconds",
+          "diskBytesAvailable",
+          "diskBytesTotal",
+          "batteryPercentage",
+          "screenWidthInPoints",
+          "screenHeightInPoints",
+          "appPlatform",
+          "devicePlatform",
+          "deviceFamily",
+          "buildBundleId",
+          "crashLog",
+          "build",
+          "tester"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5663,7 +6981,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build",
           "tester"
@@ -5741,6 +7059,36 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[betaFeedbackScreenshotSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaFeedbackScreenshotSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "createdDate",
+          "comment",
+          "email",
+          "deviceModel",
+          "osVersion",
+          "locale",
+          "timeZone",
+          "architecture",
+          "connectionType",
+          "pairedAppleWatch",
+          "appUptimeInMilliseconds",
+          "diskBytesAvailable",
+          "diskBytesTotal",
+          "batteryPercentage",
+          "screenWidthInPoints",
+          "screenHeightInPoints",
+          "appPlatform",
+          "devicePlatform",
+          "deviceFamily",
+          "buildBundleId",
+          "screenshots",
+          "build",
+          "tester"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5748,7 +7096,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build",
           "tester"
@@ -5769,6 +7117,30 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[betaGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "createdDate",
+          "isInternalGroup",
+          "hasAccessToAllBuilds",
+          "publicLinkEnabled",
+          "publicLinkId",
+          "publicLinkLimitEnabled",
+          "publicLinkLimit",
+          "publicLink",
+          "feedbackEnabled",
+          "iosBuildsAvailableForAppleSiliconMac",
+          "iosBuildsAvailableForAppleVision",
+          "app",
+          "builds",
+          "betaTesters",
+          "betaRecruitmentCriteria",
+          "betaRecruitmentCriterionCompatibleBuildCheck"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -5901,6 +7273,24 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[buildUploads]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildUploads Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "cfBundleShortVersionString",
+          "cfBundleVersion",
+          "createdDate",
+          "state",
+          "platform",
+          "uploadedDate",
+          "build",
+          "assetFile",
+          "assetDescriptionFile",
+          "assetSpiFile",
+          "buildUploadFiles"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5908,7 +7298,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build",
           "assetFile",
@@ -5932,6 +7322,39 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -5954,7 +7377,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "bundleId",
@@ -5991,7 +7414,19 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+      },
+      {
+        "name": "fields[customerReviewSummarizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type customerReviewSummarizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "createdDate",
+          "locale",
+          "platform",
+          "text",
+          "territory"
+        ]
       },
       {
         "name": "limit",
@@ -6001,7 +7436,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -6024,7 +7459,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by attribute 'territory'",
+        "description": "filter by attribute 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list.",
         "enum": [
           "ABW",
           "AFG",
@@ -6076,7 +7511,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[reviewTerritory]",
         "type": "array",
-        "description": "filter by id(s) of related 'reviewTerritory'"
+        "description": "filter by id(s) of related 'reviewTerritory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "exists[publishedResponse]",
@@ -6095,6 +7530,21 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[customerReviews]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type customerReviews Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "rating",
+          "title",
+          "body",
+          "reviewerNickname",
+          "createdDate",
+          "territory",
+          "response",
+          "reviewTerritory"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6102,7 +7552,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "response",
           "reviewTerritory"
@@ -6140,7 +7590,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "gameCenterAppVersions",
@@ -6211,6 +7661,18 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[gameCenterEnabledVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterEnabledVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platform",
+          "versionString",
+          "iconAsset",
+          "compatibleVersions",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6218,7 +7680,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "compatibleVersions",
           "app"
@@ -6240,9 +7702,56 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[apps]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type apps Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "accessibilityUrl",
+          "name",
+          "bundleId",
+          "sku",
+          "primaryLocale",
+          "isOrEverWasMadeForKids",
+          "subscriptionStatusUrl",
+          "subscriptionStatusUrlVersion",
+          "subscriptionStatusUrlForSandbox",
+          "subscriptionStatusUrlVersionForSandbox",
+          "contentRightsDeclaration",
+          "streamlinedPurchasingEnabled",
+          "accessibilityDeclarations",
+          "appEncryptionDeclarations",
+          "appStoreIcon",
+          "ciProduct",
+          "betaTesters",
+          "betaGroups",
+          "appStoreVersions",
+          "appTags",
+          "preReleaseVersions",
+          "betaAppLocalizations",
+          "builds",
+          "betaLicenseAgreement",
+          "betaAppReviewDetail",
+          "appInfos",
+          "appClips",
+          "appPricePoints",
+          "endUserLicenseAgreement",
+          "appPriceSchedule",
+          "appAvailabilityV2",
+          "inAppPurchases",
+          "subscriptionGroups",
+          "gameCenterEnabledVersions",
+          "perfPowerMetrics",
+          "appCustomProductPages",
+          "inAppPurchasesV2",
+          "promotedPurchases",
+          "appEvents",
+          "reviewSubmissions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEncryptionDeclarations",
           "appStoreIcon",
@@ -6344,7 +7853,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseLocalizations",
           "content",
@@ -6403,6 +7912,18 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[inAppPurchases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "productId",
+          "inAppPurchaseType",
+          "state",
+          "apps"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6410,7 +7931,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "apps"
         ]
@@ -6557,6 +8078,53 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[apps]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type apps Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "accessibilityUrl",
+          "name",
+          "bundleId",
+          "sku",
+          "primaryLocale",
+          "isOrEverWasMadeForKids",
+          "subscriptionStatusUrl",
+          "subscriptionStatusUrlVersion",
+          "subscriptionStatusUrlForSandbox",
+          "subscriptionStatusUrlVersionForSandbox",
+          "contentRightsDeclaration",
+          "streamlinedPurchasingEnabled",
+          "accessibilityDeclarations",
+          "appEncryptionDeclarations",
+          "appStoreIcon",
+          "ciProduct",
+          "betaTesters",
+          "betaGroups",
+          "appStoreVersions",
+          "appTags",
+          "preReleaseVersions",
+          "betaAppLocalizations",
+          "builds",
+          "betaLicenseAgreement",
+          "betaAppReviewDetail",
+          "appInfos",
+          "appClips",
+          "appPricePoints",
+          "endUserLicenseAgreement",
+          "appPriceSchedule",
+          "appAvailabilityV2",
+          "inAppPurchases",
+          "subscriptionGroups",
+          "gameCenterEnabledVersions",
+          "perfPowerMetrics",
+          "appCustomProductPages",
+          "inAppPurchasesV2",
+          "promotedPurchases",
+          "appEvents",
+          "reviewSubmissions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6564,7 +8132,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEncryptionDeclarations",
           "appStoreIcon",
@@ -6666,6 +8234,17 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[preReleaseVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type preReleaseVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "platform",
+          "builds",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6686,6 +8265,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[promotedPurchases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type promotedPurchases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "visibleForAllUsers",
+          "enabled",
+          "state",
+          "inAppPurchaseV2",
+          "subscription"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6693,7 +8284,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2",
           "subscription"
@@ -6756,6 +8347,21 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[reviewSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type reviewSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platform",
+          "submittedDate",
+          "state",
+          "app",
+          "items",
+          "appStoreVersionForReview",
+          "submittedByActor",
+          "lastUpdatedByActor"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6763,7 +8369,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "items",
@@ -6863,6 +8469,17 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[subscriptionGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "subscriptions",
+          "subscriptionGroupLocalizations",
+          "versions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6870,7 +8487,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptions",
           "subscriptionGroupLocalizations",
@@ -6909,6 +8526,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[webhooks]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type webhooks Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "enabled",
+          "eventTypes",
+          "name",
+          "url",
+          "app",
+          "deliveries"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -6916,7 +8546,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -6949,7 +8579,23 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[backgroundAssetUploadFiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssetUploadFiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "assetDeliveryState",
+          "assetToken",
+          "assetType",
+          "fileName",
+          "fileSize",
+          "sourceFileChecksum",
+          "sourceFileChecksums",
+          "uploadOperations"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -6981,9 +8627,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[backgroundAssetVersionAppStoreReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssetVersionAppStoreReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "state",
+          "backgroundAssetVersion"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "backgroundAssetVersion"
         ]
@@ -7004,9 +8659,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[backgroundAssetVersionExternalBetaReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssetVersionExternalBetaReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "state",
+          "backgroundAssetVersion"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "backgroundAssetVersion"
         ]
@@ -7027,9 +8691,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[backgroundAssetVersionInternalBetaReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssetVersionInternalBetaReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "state",
+          "backgroundAssetVersion"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "backgroundAssetVersion"
         ]
@@ -7049,6 +8722,21 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[backgroundAssetUploadFiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssetUploadFiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "assetDeliveryState",
+          "assetToken",
+          "assetType",
+          "fileName",
+          "fileSize",
+          "sourceFileChecksum",
+          "sourceFileChecksums",
+          "uploadOperations"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -7084,9 +8772,29 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[backgroundAssetVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssetVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "createdDate",
+          "platforms",
+          "state",
+          "stateDetails",
+          "version",
+          "locale",
+          "backgroundAsset",
+          "internalBetaRelease",
+          "externalBetaRelease",
+          "appStoreRelease",
+          "assetFile",
+          "manifestFile",
+          "backgroundAssetUploadFiles"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "backgroundAsset",
           "internalBetaRelease",
@@ -7126,9 +8834,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[backgroundAssets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type backgroundAssets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "archived",
+          "assetPackIdentifier",
+          "createdDate",
+          "usedBytes",
+          "app",
+          "versions",
+          "appStoreVersion",
+          "internalBetaVersion",
+          "externalBetaVersion"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersion",
@@ -7255,7 +8979,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "backgroundAsset",
           "internalBetaRelease",
@@ -7355,9 +9079,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaAppClipInvocations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppClipInvocations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "url",
+          "betaAppClipInvocationLocalizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "betaAppClipInvocationLocalizations"
         ]
@@ -7437,9 +9170,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaAppLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "feedbackEmail",
+          "marketingUrl",
+          "privacyPolicyUrl",
+          "tvOsPrivacyPolicy",
+          "description",
+          "locale",
+          "app"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -7468,6 +9215,20 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'app'"
       },
       {
+        "name": "fields[betaAppLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "feedbackEmail",
+          "marketingUrl",
+          "privacyPolicyUrl",
+          "tvOsPrivacyPolicy",
+          "description",
+          "locale",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -7475,7 +9236,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -7526,9 +9287,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaAppReviewDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppReviewDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "contactFirstName",
+          "contactLastName",
+          "contactPhone",
+          "contactEmail",
+          "demoAccountName",
+          "demoAccountPassword",
+          "demoAccountRequired",
+          "notes",
+          "app"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -7553,6 +9330,22 @@ export const OPERATIONS: Operation[] = [
         "required": true
       },
       {
+        "name": "fields[betaAppReviewDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppReviewDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "contactFirstName",
+          "contactLastName",
+          "contactPhone",
+          "contactEmail",
+          "demoAccountName",
+          "demoAccountPassword",
+          "demoAccountRequired",
+          "notes",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -7560,7 +9353,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -7625,9 +9418,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaAppReviewSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppReviewSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "betaReviewState",
+          "submittedDate",
+          "build"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -7663,6 +9466,16 @@ export const OPERATIONS: Operation[] = [
         "required": true
       },
       {
+        "name": "fields[betaAppReviewSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppReviewSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "betaReviewState",
+          "submittedDate",
+          "build"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -7670,7 +9483,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -7734,9 +9547,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaBuildLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaBuildLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "whatsNew",
+          "locale",
+          "build"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -7765,6 +9588,16 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'build'"
       },
       {
+        "name": "fields[betaBuildLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaBuildLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "whatsNew",
+          "locale",
+          "build"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -7772,7 +9605,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -7807,7 +9640,16 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[betaCrashLogs]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaCrashLogs Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "logText"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -7852,9 +9694,39 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaFeedbackCrashSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaFeedbackCrashSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "createdDate",
+          "comment",
+          "email",
+          "deviceModel",
+          "osVersion",
+          "locale",
+          "timeZone",
+          "architecture",
+          "connectionType",
+          "pairedAppleWatch",
+          "appUptimeInMilliseconds",
+          "diskBytesAvailable",
+          "diskBytesTotal",
+          "batteryPercentage",
+          "screenWidthInPoints",
+          "screenHeightInPoints",
+          "appPlatform",
+          "devicePlatform",
+          "deviceFamily",
+          "buildBundleId",
+          "crashLog",
+          "build",
+          "tester"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build",
           "tester"
@@ -7891,9 +9763,39 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaFeedbackScreenshotSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaFeedbackScreenshotSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "createdDate",
+          "comment",
+          "email",
+          "deviceModel",
+          "osVersion",
+          "locale",
+          "timeZone",
+          "architecture",
+          "connectionType",
+          "pairedAppleWatch",
+          "appUptimeInMilliseconds",
+          "diskBytesAvailable",
+          "diskBytesTotal",
+          "batteryPercentage",
+          "screenWidthInPoints",
+          "screenHeightInPoints",
+          "appPlatform",
+          "devicePlatform",
+          "deviceFamily",
+          "buildBundleId",
+          "screenshots",
+          "build",
+          "tester"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build",
           "tester"
@@ -7927,7 +9829,17 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[betaRecruitmentCriteria]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaRecruitmentCriteria Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "lastModifiedDate",
+          "deviceFamilyOsVersionFilters"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -8017,6 +9929,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaTesters]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaTesters Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "firstName",
+          "lastName",
+          "email",
+          "inviteType",
+          "state",
+          "appDevices",
+          "apps",
+          "betaGroups",
+          "builds"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8068,6 +9996,39 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -8134,9 +10095,33 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "createdDate",
+          "isInternalGroup",
+          "hasAccessToAllBuilds",
+          "publicLinkEnabled",
+          "publicLinkId",
+          "publicLinkLimitEnabled",
+          "publicLinkLimit",
+          "publicLink",
+          "feedbackEnabled",
+          "iosBuildsAvailableForAppleSiliconMac",
+          "iosBuildsAvailableForAppleVision",
+          "app",
+          "builds",
+          "betaTesters",
+          "betaRecruitmentCriteria",
+          "betaRecruitmentCriterionCompatibleBuildCheck"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "builds",
@@ -8213,6 +10198,30 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[betaGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "createdDate",
+          "isInternalGroup",
+          "hasAccessToAllBuilds",
+          "publicLinkEnabled",
+          "publicLinkId",
+          "publicLinkLimitEnabled",
+          "publicLinkLimit",
+          "publicLink",
+          "feedbackEnabled",
+          "iosBuildsAvailableForAppleSiliconMac",
+          "iosBuildsAvailableForAppleVision",
+          "app",
+          "builds",
+          "betaTesters",
+          "betaRecruitmentCriteria",
+          "betaRecruitmentCriterionCompatibleBuildCheck"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8220,7 +10229,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "builds",
@@ -8294,9 +10303,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaLicenseAgreements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaLicenseAgreements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "agreementText",
+          "app"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -8320,6 +10338,15 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'app'"
       },
       {
+        "name": "fields[betaLicenseAgreements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaLicenseAgreements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "agreementText",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8327,7 +10354,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -8407,6 +10434,14 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[betaRecruitmentCriterionOptions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaRecruitmentCriterionOptions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "deviceFamilyOsVersions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8440,6 +10475,53 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[apps]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type apps Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "accessibilityUrl",
+          "name",
+          "bundleId",
+          "sku",
+          "primaryLocale",
+          "isOrEverWasMadeForKids",
+          "subscriptionStatusUrl",
+          "subscriptionStatusUrlVersion",
+          "subscriptionStatusUrlForSandbox",
+          "subscriptionStatusUrlVersionForSandbox",
+          "contentRightsDeclaration",
+          "streamlinedPurchasingEnabled",
+          "accessibilityDeclarations",
+          "appEncryptionDeclarations",
+          "appStoreIcon",
+          "ciProduct",
+          "betaTesters",
+          "betaGroups",
+          "appStoreVersions",
+          "appTags",
+          "preReleaseVersions",
+          "betaAppLocalizations",
+          "builds",
+          "betaLicenseAgreement",
+          "betaAppReviewDetail",
+          "appInfos",
+          "appClips",
+          "appPricePoints",
+          "endUserLicenseAgreement",
+          "appPriceSchedule",
+          "appAvailabilityV2",
+          "inAppPurchases",
+          "subscriptionGroups",
+          "gameCenterEnabledVersions",
+          "perfPowerMetrics",
+          "appCustomProductPages",
+          "inAppPurchasesV2",
+          "promotedPurchases",
+          "appEvents",
+          "reviewSubmissions"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -8492,6 +10574,30 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[betaGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "createdDate",
+          "isInternalGroup",
+          "hasAccessToAllBuilds",
+          "publicLinkEnabled",
+          "publicLinkId",
+          "publicLinkLimitEnabled",
+          "publicLinkLimit",
+          "publicLink",
+          "feedbackEnabled",
+          "iosBuildsAvailableForAppleSiliconMac",
+          "iosBuildsAvailableForAppleVision",
+          "app",
+          "builds",
+          "betaTesters",
+          "betaRecruitmentCriteria",
+          "betaRecruitmentCriterionCompatibleBuildCheck"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -8582,6 +10688,39 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8647,9 +10786,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaTesters]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaTesters Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "firstName",
+          "lastName",
+          "email",
+          "inviteType",
+          "state",
+          "appDevices",
+          "apps",
+          "betaGroups",
+          "builds"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "apps",
           "betaGroups",
@@ -8731,6 +10886,22 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[betaTesters]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaTesters Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "firstName",
+          "lastName",
+          "email",
+          "inviteType",
+          "state",
+          "appDevices",
+          "apps",
+          "betaGroups",
+          "builds"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8738,7 +10909,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "apps",
           "betaGroups",
@@ -8763,7 +10934,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "preReleaseVersion",
           "individualTesters",
@@ -8795,9 +10966,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[buildBetaDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildBetaDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "autoNotifyEnabled",
+          "internalBuildState",
+          "externalBuildState",
+          "build"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -8826,6 +11008,17 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[buildBetaDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildBetaDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "autoNotifyEnabled",
+          "internalBuildState",
+          "externalBuildState",
+          "build"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8833,7 +11026,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -8912,6 +11105,15 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[betaAppClipInvocations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaAppClipInvocations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "url",
+          "betaAppClipInvocationLocalizations"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -8919,7 +11121,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "betaAppClipInvocationLocalizations"
         ]
@@ -8939,6 +11141,17 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[buildBundleFileSizes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildBundleFileSizes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "deviceModel",
+          "osVersion",
+          "downloadBytes",
+          "installBytes"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -8972,7 +11185,23 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[buildUploadFiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildUploadFiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "assetDeliveryState",
+          "assetToken",
+          "assetType",
+          "fileName",
+          "fileSize",
+          "sourceFileChecksums",
+          "uploadOperations",
+          "uti"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -9003,6 +11232,21 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[buildUploadFiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildUploadFiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "assetDeliveryState",
+          "assetToken",
+          "assetType",
+          "fileName",
+          "fileSize",
+          "sourceFileChecksums",
+          "uploadOperations",
+          "uti"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -9053,9 +11297,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[buildUploads]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type buildUploads Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "cfBundleShortVersionString",
+          "cfBundleVersion",
+          "createdDate",
+          "state",
+          "platform",
+          "uploadedDate",
+          "build",
+          "assetFile",
+          "assetDescriptionFile",
+          "assetSpiFile",
+          "buildUploadFiles"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build",
           "assetFile",
@@ -9111,7 +11373,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersionLocalizations",
@@ -9170,6 +11432,16 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[betaBuildLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type betaBuildLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "whatsNew",
+          "locale",
+          "build"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -9245,7 +11517,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "build"
         ]
@@ -9276,6 +11548,18 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[diagnosticSignatures]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type diagnosticSignatures Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "diagnosticType",
+          "signature",
+          "weight",
+          "insight",
+          "logs"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -9296,9 +11580,42 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "preReleaseVersion",
           "individualTesters",
@@ -9505,6 +11822,39 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -9512,7 +11862,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "preReleaseVersion",
           "individualTesters",
@@ -9676,6 +12026,15 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[bundleIdCapabilities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type bundleIdCapabilities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "capabilityType",
+          "settings"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -9725,9 +12084,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[bundleIds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type bundleIds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "identifier",
+          "seedId",
+          "profiles",
+          "bundleIdCapabilities",
+          "app"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "profiles",
           "bundleIdCapabilities",
@@ -9795,6 +12168,20 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[bundleIds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type bundleIds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "identifier",
+          "seedId",
+          "profiles",
+          "bundleIdCapabilities",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -9802,7 +12189,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "profiles",
           "bundleIdCapabilities",
@@ -9824,6 +12211,24 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[profiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type profiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "profileType",
+          "profileState",
+          "profileContent",
+          "uuid",
+          "createdDate",
+          "expirationDate",
+          "bundleId",
+          "devices",
+          "certificates"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -9890,9 +12295,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[certificates]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type certificates Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "certificateType",
+          "displayName",
+          "serialNumber",
+          "platform",
+          "expirationDate",
+          "certificateContent",
+          "activated",
+          "passTypeId"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "passTypeId"
         ]
@@ -9966,6 +12387,22 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[certificates]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type certificates Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "certificateType",
+          "displayName",
+          "serialNumber",
+          "platform",
+          "expirationDate",
+          "certificateContent",
+          "activated",
+          "passTypeId"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -9973,7 +12410,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "passTypeId"
         ]
@@ -9996,7 +12433,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "certificates"
         ]
@@ -10031,7 +12468,19 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[ciArtifacts]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciArtifacts Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileType",
+          "fileName",
+          "fileSize",
+          "downloadUrl"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -10069,7 +12518,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "builds",
           "workflow",
@@ -10095,9 +12544,28 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[ciBuildActions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciBuildActions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "actionType",
+          "startedDate",
+          "finishedDate",
+          "issueCounts",
+          "executionProgress",
+          "completionStatus",
+          "isRequiredToPass",
+          "buildRun",
+          "artifacts",
+          "issues",
+          "testResults"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "buildRun"
         ]
@@ -10165,7 +12633,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "buildRun"
         ]
@@ -10291,6 +12759,39 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -10298,7 +12799,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "preReleaseVersion",
           "individualTesters",
@@ -10344,9 +12845,35 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[ciBuildRuns]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciBuildRuns Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "number",
+          "createdDate",
+          "startedDate",
+          "finishedDate",
+          "sourceCommit",
+          "destinationCommit",
+          "isPullRequestBuild",
+          "issueCounts",
+          "executionProgress",
+          "completionStatus",
+          "startReason",
+          "cancelReason",
+          "builds",
+          "workflow",
+          "product",
+          "sourceBranchOrTag",
+          "destinationBranch",
+          "actions",
+          "pullRequest"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "builds",
           "workflow",
@@ -10370,7 +12897,19 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[ciIssues]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciIssues Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "issueType",
+          "message",
+          "fileSource",
+          "category"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -10386,9 +12925,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[ciMacOsVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciMacOsVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "name",
+          "xcodeVersions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "xcodeVersions"
         ]
@@ -10407,6 +12956,16 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[ciMacOsVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciMacOsVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "name",
+          "xcodeVersions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -10414,7 +12973,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "xcodeVersions"
         ]
@@ -10442,7 +13001,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "macOsVersions"
         ]
@@ -10475,7 +13034,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "scmProvider",
           "defaultBranch"
@@ -10499,7 +13058,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appEncryptionDeclarations",
           "appStoreIcon",
@@ -10565,7 +13124,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "builds",
           "workflow",
@@ -10606,9 +13165,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[ciProducts]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciProducts Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "createdDate",
+          "productType",
+          "app",
+          "bundleId",
+          "workflows",
+          "primaryRepositories",
+          "additionalRepositories",
+          "buildRuns"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "bundleId",
@@ -10643,6 +13218,22 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'app'"
       },
       {
+        "name": "fields[ciProducts]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciProducts Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "createdDate",
+          "productType",
+          "app",
+          "bundleId",
+          "workflows",
+          "primaryRepositories",
+          "additionalRepositories",
+          "buildRuns"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -10650,7 +13241,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "bundleId",
@@ -10685,7 +13276,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "scmProvider",
           "defaultBranch"
@@ -10714,7 +13305,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "product",
           "repository",
@@ -10736,7 +13327,21 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[ciTestResults]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciTestResults Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "className",
+          "name",
+          "status",
+          "fileSource",
+          "message",
+          "destinationTestResults"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -10773,7 +13378,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "builds",
           "workflow",
@@ -10828,9 +13433,36 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[ciWorkflows]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciWorkflows Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "description",
+          "branchStartCondition",
+          "tagStartCondition",
+          "pullRequestStartCondition",
+          "scheduledStartCondition",
+          "manualBranchStartCondition",
+          "manualTagStartCondition",
+          "manualPullRequestStartCondition",
+          "actions",
+          "isEnabled",
+          "isLockedForEditing",
+          "clean",
+          "containerFilePath",
+          "lastModifiedDate",
+          "product",
+          "repository",
+          "xcodeVersion",
+          "macOsVersion",
+          "buildRuns"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "product",
           "repository",
@@ -10856,7 +13488,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "scmProvider",
           "defaultBranch"
@@ -10894,9 +13526,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[ciXcodeVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciXcodeVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "name",
+          "testDestinations",
+          "macOsVersions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "macOsVersions"
         ]
@@ -10915,6 +13558,17 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[ciXcodeVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type ciXcodeVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "name",
+          "testDestinations",
+          "macOsVersions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -10922,7 +13576,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "macOsVersions"
         ]
@@ -10950,7 +13604,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "xcodeVersions"
         ]
@@ -11000,9 +13654,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[customerReviewResponses]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type customerReviewResponses Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "responseBody",
+          "lastModifiedDate",
+          "state",
+          "review"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "review"
         ]
@@ -11023,9 +13688,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[customerReviews]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type customerReviews Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "rating",
+          "title",
+          "body",
+          "reviewerNickname",
+          "createdDate",
+          "territory",
+          "response",
+          "reviewTerritory"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "response",
           "reviewTerritory"
@@ -11049,7 +13729,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "review"
         ]
@@ -11082,7 +13762,22 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[devices]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type devices Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "udid",
+          "deviceClass",
+          "status",
+          "model",
+          "addedDate"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -11144,6 +13839,20 @@ export const OPERATIONS: Operation[] = [
           "-status",
           "id",
           "-id"
+        ]
+      },
+      {
+        "name": "fields[devices]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type devices Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "udid",
+          "deviceClass",
+          "status",
+          "model",
+          "addedDate"
         ]
       },
       {
@@ -11246,9 +13955,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[endUserLicenseAgreements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type endUserLicenseAgreements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "agreementText",
+          "app",
+          "territories"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "territories"
@@ -11269,6 +13988,14 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[territories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type territories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "currency"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -11377,9 +14104,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievementImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievementImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "localization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localization"
         ]
@@ -11445,9 +14185,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievementImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievementImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "gameCenterAchievementLocalization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterAchievementLocalization"
         ]
@@ -11513,9 +14266,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievementLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievementLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "beforeEarnedDescription",
+          "afterEarnedDescription",
+          "version",
+          "image"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -11539,7 +14305,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localization"
         ]
@@ -11607,7 +14373,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterAchievementLocalization"
         ]
@@ -11630,7 +14396,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -11656,9 +14422,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievementLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievementLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "beforeEarnedDescription",
+          "afterEarnedDescription",
+          "gameCenterAchievement",
+          "gameCenterAchievementImage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterAchievement",
           "gameCenterAchievementImage"
@@ -11725,9 +14504,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievementReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievementReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "live",
+          "gameCenterDetail",
+          "gameCenterAchievement"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterAchievement"
@@ -11763,9 +14552,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievementVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievementVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "achievement",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "achievement",
           "localizations"
@@ -11794,7 +14594,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -11861,9 +14661,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "points",
+          "showBeforeEarned",
+          "repeatable",
+          "archived",
+          "activityProperties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "activity",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -11910,7 +14728,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "achievement",
           "localizations"
@@ -11977,9 +14795,29 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAchievements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "points",
+          "showBeforeEarned",
+          "repeatable",
+          "archived",
+          "activityProperties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupAchievement",
+          "localizations",
+          "releases",
+          "activity"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -12007,7 +14845,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -12056,7 +14894,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterAchievement",
           "gameCenterAchievementImage"
@@ -12095,7 +14933,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterAchievement"
@@ -12226,9 +15064,31 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterActivities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "playStyle",
+          "minimumPlayersCount",
+          "maximumPlayersCount",
+          "supportsPartyCode",
+          "archived",
+          "properties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "achievements",
+          "achievementsV2",
+          "leaderboards",
+          "leaderboardsV2",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -12342,7 +15202,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "activity",
           "localizations",
@@ -12393,7 +15253,20 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[gameCenterActivityImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivityImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -12454,9 +15327,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterActivityLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivityLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "description",
+          "version",
+          "image"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -12537,9 +15422,17 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterActivityVersionReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivityVersionReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -12588,9 +15481,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterActivityVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivityVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "fallbackUrl",
+          "activity",
+          "localizations",
+          "defaultImage",
+          "releases"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "activity",
           "localizations",
@@ -12621,7 +15528,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -12661,7 +15568,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "appStoreVersionLocalizations",
@@ -12721,7 +15628,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "compatibilityVersions",
           "appStoreVersion"
@@ -12773,9 +15680,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterAppVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAppVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "enabled",
+          "compatibilityVersions",
+          "appStoreVersion"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "compatibilityVersions",
           "appStoreVersion"
@@ -12840,7 +15757,20 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[gameCenterChallengeImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallengeImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -12901,9 +15831,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterChallengeLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallengeLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "description",
+          "version",
+          "image"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -12984,9 +15926,17 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterChallengeVersionReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallengeVersionReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -13035,9 +15985,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterChallengeVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallengeVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "challenge",
+          "localizations",
+          "releases",
+          "defaultImage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "challenge",
           "localizations",
@@ -13068,7 +16031,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -13119,9 +16082,26 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterChallenges]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallenges Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "archived",
+          "challengeType",
+          "repeatable",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "versions",
+          "leaderboard",
+          "leaderboardV2"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13201,7 +16181,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "challenge",
           "localizations",
@@ -13242,7 +16222,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterAchievement"
@@ -13271,7 +16251,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -13299,7 +16279,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -13436,7 +16416,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13491,6 +16471,26 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterAchievements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "points",
+          "showBeforeEarned",
+          "repeatable",
+          "archived",
+          "activityProperties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupAchievement",
+          "localizations",
+          "releases",
+          "activity"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -13498,7 +16498,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13540,6 +16540,28 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterActivities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "playStyle",
+          "minimumPlayersCount",
+          "maximumPlayersCount",
+          "supportsPartyCode",
+          "archived",
+          "properties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "achievements",
+          "achievementsV2",
+          "leaderboards",
+          "leaderboardsV2",
+          "versions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -13547,7 +16569,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13579,6 +16601,16 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'enabled'"
       },
       {
+        "name": "fields[gameCenterAppVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAppVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "enabled",
+          "compatibilityVersions",
+          "appStoreVersion"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -13586,7 +16618,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "compatibilityVersions",
           "appStoreVersion"
@@ -13623,6 +16655,23 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterChallenges]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallenges Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "archived",
+          "challengeType",
+          "repeatable",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "versions",
+          "leaderboard",
+          "leaderboardV2"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -13630,7 +16679,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13657,7 +16706,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetails",
           "gameCenterLeaderboards",
@@ -13703,7 +16752,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13753,6 +16802,21 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterLeaderboardSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboardSet",
+          "localizations",
+          "gameCenterLeaderboards",
+          "releases"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -13760,7 +16824,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13824,7 +16888,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13881,6 +16945,34 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterLeaderboards]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "defaultFormatter",
+          "referenceName",
+          "vendorIdentifier",
+          "submissionType",
+          "scoreSortType",
+          "scoreRangeStart",
+          "scoreRangeEnd",
+          "recurrenceStartDate",
+          "recurrenceDuration",
+          "recurrenceRule",
+          "archived",
+          "activityProperties",
+          "visibility",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboard",
+          "gameCenterLeaderboardSets",
+          "localizations",
+          "releases",
+          "activity",
+          "challenge"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -13888,7 +16980,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -13932,9 +17024,39 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "arcadeEnabled",
+          "challengeEnabled",
+          "app",
+          "gameCenterAppVersions",
+          "gameCenterGroup",
+          "gameCenterLeaderboards",
+          "gameCenterLeaderboardsV2",
+          "gameCenterLeaderboardSets",
+          "gameCenterLeaderboardSetsV2",
+          "gameCenterAchievements",
+          "gameCenterAchievementsV2",
+          "gameCenterActivities",
+          "gameCenterChallenges",
+          "defaultLeaderboard",
+          "defaultLeaderboardV2",
+          "defaultGroupLeaderboard",
+          "defaultGroupLeaderboardV2",
+          "achievementReleases",
+          "activityReleases",
+          "challengeReleases",
+          "leaderboardReleases",
+          "leaderboardSetReleases",
+          "challengesMinimumPlatformVersions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "gameCenterAppVersions",
@@ -13992,7 +17114,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterLeaderboard"
@@ -14031,7 +17153,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterLeaderboardSet"
@@ -14191,7 +17313,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "compatibleVersions",
           "app"
@@ -14296,7 +17418,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14351,6 +17473,26 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterAchievements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "points",
+          "showBeforeEarned",
+          "repeatable",
+          "archived",
+          "activityProperties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupAchievement",
+          "localizations",
+          "releases",
+          "activity"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14358,7 +17500,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14400,6 +17542,28 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterActivities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterActivities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "playStyle",
+          "minimumPlayersCount",
+          "maximumPlayersCount",
+          "supportsPartyCode",
+          "archived",
+          "properties",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "achievements",
+          "achievementsV2",
+          "leaderboards",
+          "leaderboardsV2",
+          "versions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14407,7 +17571,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14449,6 +17613,23 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterChallenges]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterChallenges Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "archived",
+          "challengeType",
+          "repeatable",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "versions",
+          "leaderboard",
+          "leaderboardV2"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14456,7 +17637,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14486,6 +17667,36 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'gameCenterAppVersions.enabled'"
       },
       {
+        "name": "fields[gameCenterDetails]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterDetails Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "arcadeEnabled",
+          "challengeEnabled",
+          "app",
+          "gameCenterAppVersions",
+          "gameCenterGroup",
+          "gameCenterLeaderboards",
+          "gameCenterLeaderboardsV2",
+          "gameCenterLeaderboardSets",
+          "gameCenterLeaderboardSetsV2",
+          "gameCenterAchievements",
+          "gameCenterAchievementsV2",
+          "gameCenterActivities",
+          "gameCenterChallenges",
+          "defaultLeaderboard",
+          "defaultLeaderboardV2",
+          "defaultGroupLeaderboard",
+          "defaultGroupLeaderboardV2",
+          "achievementReleases",
+          "activityReleases",
+          "challengeReleases",
+          "leaderboardReleases",
+          "leaderboardSetReleases",
+          "challengesMinimumPlatformVersions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14493,7 +17704,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "gameCenterAppVersions",
@@ -14551,7 +17762,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14601,6 +17812,21 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterLeaderboardSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboardSet",
+          "localizations",
+          "gameCenterLeaderboards",
+          "releases"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14608,7 +17834,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14672,7 +17898,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14729,6 +17955,34 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterLeaderboards]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "defaultFormatter",
+          "referenceName",
+          "vendorIdentifier",
+          "submissionType",
+          "scoreSortType",
+          "scoreRangeStart",
+          "scoreRangeEnd",
+          "recurrenceStartDate",
+          "recurrenceDuration",
+          "recurrenceRule",
+          "archived",
+          "activityProperties",
+          "visibility",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboard",
+          "gameCenterLeaderboardSets",
+          "localizations",
+          "releases",
+          "activity",
+          "challenge"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14736,7 +17990,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -14780,9 +18034,26 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "gameCenterDetails",
+          "gameCenterLeaderboards",
+          "gameCenterLeaderboardsV2",
+          "gameCenterLeaderboardSets",
+          "gameCenterLeaderboardSetsV2",
+          "gameCenterAchievements",
+          "gameCenterAchievementsV2",
+          "gameCenterActivities",
+          "gameCenterChallenges"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetails",
           "gameCenterLeaderboards",
@@ -14814,6 +18085,23 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s) of related 'gameCenterDetails'"
       },
       {
+        "name": "fields[gameCenterGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "gameCenterDetails",
+          "gameCenterLeaderboards",
+          "gameCenterLeaderboardsV2",
+          "gameCenterLeaderboardSets",
+          "gameCenterLeaderboardSetsV2",
+          "gameCenterAchievements",
+          "gameCenterAchievementsV2",
+          "gameCenterActivities",
+          "gameCenterChallenges"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -14821,7 +18109,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetails",
           "gameCenterLeaderboards",
@@ -14909,9 +18197,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "localization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localization"
         ]
@@ -14977,9 +18278,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "gameCenterLeaderboardLocalization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardLocalization"
         ]
@@ -15045,9 +18359,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "formatterOverride",
+          "formatterSuffix",
+          "formatterSuffixSingular",
+          "description",
+          "version",
+          "image"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -15071,7 +18400,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localization"
         ]
@@ -15139,7 +18468,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardLocalization"
         ]
@@ -15160,9 +18489,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "formatterOverride",
+          "formatterSuffix",
+          "formatterSuffixSingular",
+          "description",
+          "gameCenterLeaderboard",
+          "gameCenterLeaderboardImage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboard",
           "gameCenterLeaderboardImage"
@@ -15229,9 +18573,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "live",
+          "gameCenterDetail",
+          "gameCenterLeaderboard"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterLeaderboard"
@@ -15282,9 +18636,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSetImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "localization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localization"
         ]
@@ -15350,9 +18717,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSetImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState",
+          "gameCenterLeaderboardSetLocalization"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardSetLocalization"
         ]
@@ -15418,9 +18798,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSetLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "version",
+          "image"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -15444,7 +18835,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "localization"
         ]
@@ -15512,7 +18903,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardSetLocalization"
         ]
@@ -15533,9 +18924,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSetLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "name",
+          "gameCenterLeaderboardSet",
+          "gameCenterLeaderboardSetImage"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardSet",
           "gameCenterLeaderboardSetImage"
@@ -15604,7 +19006,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -15632,7 +19034,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -15670,6 +19072,17 @@ export const OPERATIONS: Operation[] = [
         "required": true
       },
       {
+        "name": "fields[gameCenterLeaderboardSetMemberLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetMemberLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "gameCenterLeaderboardSet",
+          "gameCenterLeaderboard"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -15677,7 +19090,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardSet",
           "gameCenterLeaderboard"
@@ -15744,9 +19157,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSetReleases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetReleases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "live",
+          "gameCenterDetail",
+          "gameCenterLeaderboardSet"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterLeaderboardSet"
@@ -15782,9 +19205,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSetVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "leaderboardSet",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "leaderboardSet",
           "localizations"
@@ -15813,7 +19247,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -15895,6 +19329,32 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterLeaderboards]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "defaultFormatter",
+          "referenceName",
+          "vendorIdentifier",
+          "submissionType",
+          "scoreSortType",
+          "scoreRangeStart",
+          "scoreRangeEnd",
+          "recurrenceStartDate",
+          "recurrenceDuration",
+          "recurrenceRule",
+          "archived",
+          "activityProperties",
+          "visibility",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "gameCenterLeaderboardSets",
+          "activity",
+          "challenge",
+          "versions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -15902,7 +19362,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -15960,9 +19420,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "gameCenterLeaderboards",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16009,7 +19482,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "leaderboardSet",
           "localizations"
@@ -16091,6 +19564,34 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[gameCenterLeaderboards]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "defaultFormatter",
+          "referenceName",
+          "vendorIdentifier",
+          "submissionType",
+          "scoreSortType",
+          "scoreRangeStart",
+          "scoreRangeEnd",
+          "recurrenceStartDate",
+          "recurrenceDuration",
+          "recurrenceRule",
+          "archived",
+          "activityProperties",
+          "visibility",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboard",
+          "gameCenterLeaderboardSets",
+          "localizations",
+          "releases",
+          "activity",
+          "challenge"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -16098,7 +19599,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16158,9 +19659,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "vendorIdentifier",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboardSet",
+          "localizations",
+          "gameCenterLeaderboards",
+          "releases"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16188,7 +19704,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16237,7 +19753,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboardSet",
           "gameCenterLeaderboardSetImage"
@@ -16276,7 +19792,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterLeaderboardSet"
@@ -16328,9 +19844,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboardVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboardVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "leaderboard",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "leaderboard",
           "localizations"
@@ -16359,7 +19886,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version",
           "image"
@@ -16442,9 +19969,35 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboards]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "defaultFormatter",
+          "referenceName",
+          "vendorIdentifier",
+          "submissionType",
+          "scoreSortType",
+          "scoreRangeStart",
+          "scoreRangeEnd",
+          "recurrenceStartDate",
+          "recurrenceDuration",
+          "recurrenceRule",
+          "archived",
+          "activityProperties",
+          "visibility",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "gameCenterLeaderboardSets",
+          "activity",
+          "challenge",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16493,7 +20046,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "leaderboard",
           "localizations"
@@ -16576,9 +20129,37 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterLeaderboards]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "defaultFormatter",
+          "referenceName",
+          "vendorIdentifier",
+          "submissionType",
+          "scoreSortType",
+          "scoreRangeStart",
+          "scoreRangeEnd",
+          "recurrenceStartDate",
+          "recurrenceDuration",
+          "recurrenceRule",
+          "archived",
+          "activityProperties",
+          "visibility",
+          "gameCenterDetail",
+          "gameCenterGroup",
+          "groupLeaderboard",
+          "gameCenterLeaderboardSets",
+          "localizations",
+          "releases",
+          "activity",
+          "challenge"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16608,7 +20189,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterGroup",
@@ -16659,7 +20240,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterLeaderboard",
           "gameCenterLeaderboardImage"
@@ -16698,7 +20279,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "gameCenterDetail",
           "gameCenterLeaderboard"
@@ -16881,9 +20462,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterMatchmakingQueues]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterMatchmakingQueues Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "classicMatchmakingBundleIds",
+          "ruleSet",
+          "experimentRuleSet"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "ruleSet",
           "experimentRuleSet"
@@ -16903,6 +20495,17 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[gameCenterMatchmakingQueues]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterMatchmakingQueues Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "classicMatchmakingBundleIds",
+          "ruleSet",
+          "experimentRuleSet"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -16910,7 +20513,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "ruleSet",
           "experimentRuleSet"
@@ -17153,9 +20756,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[gameCenterMatchmakingRuleSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterMatchmakingRuleSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "ruleLanguageVersion",
+          "minPlayers",
+          "maxPlayers",
+          "teams",
+          "rules",
+          "matchmakingQueues"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "teams",
           "rules",
@@ -17176,6 +20793,20 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[gameCenterMatchmakingRuleSets]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterMatchmakingRuleSets Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "ruleLanguageVersion",
+          "minPlayers",
+          "maxPlayers",
+          "teams",
+          "rules",
+          "matchmakingQueues"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -17183,7 +20814,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "teams",
           "rules",
@@ -17213,7 +20844,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "ruleSet",
           "experimentRuleSet"
@@ -17595,9 +21226,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseAppStoreReviewScreenshots]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseAppStoreReviewScreenshots Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "imageAsset",
+          "assetToken",
+          "assetType",
+          "uploadOperations",
+          "assetDeliveryState",
+          "inAppPurchaseV2"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2"
         ]
@@ -17668,9 +21315,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseAvailabilities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseAvailabilities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "availableInNewTerritories",
+          "availableTerritories"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "availableTerritories"
         ]
@@ -17691,9 +21347,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseContents]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseContents Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileName",
+          "fileSize",
+          "url",
+          "lastModifiedDate",
+          "inAppPurchaseV2"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2"
         ]
@@ -17741,7 +21409,21 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[inAppPurchaseImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "assetToken",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -17802,9 +21484,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "assetToken",
+          "imageAsset",
+          "uploadOperations",
+          "state",
+          "inAppPurchase"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchase"
         ]
@@ -17870,9 +21567,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "description",
+          "version"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -17938,9 +21646,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "description",
+          "state",
+          "inAppPurchaseV2"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2"
         ]
@@ -17991,9 +21711,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseOfferCodeCustomCodes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseOfferCodeCustomCodes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "customCode",
+          "numberOfCodes",
+          "createdDate",
+          "expirationDate",
+          "active",
+          "createdByActor",
+          "deactivatedByActor"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "createdByActor",
           "deactivatedByActor"
@@ -18045,9 +21779,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseOfferCodeOneTimeUseCodes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseOfferCodeOneTimeUseCodes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "numberOfCodes",
+          "createdDate",
+          "expirationDate",
+          "active",
+          "environment",
+          "values",
+          "createdByActor",
+          "deactivatedByActor"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "createdByActor",
           "deactivatedByActor"
@@ -18121,7 +21870,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "createdByActor",
           "deactivatedByActor"
@@ -18143,9 +21892,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseOfferCodes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseOfferCodes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "customerEligibilities",
+          "productionCodeCount",
+          "sandboxCodeCount",
+          "active",
+          "oneTimeUseCodes",
+          "customCodes",
+          "prices"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "oneTimeUseCodes",
           "customCodes",
@@ -18175,7 +21939,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "createdByActor",
           "deactivatedByActor"
@@ -18199,7 +21963,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -18209,7 +21973,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory",
           "pricePoint"
@@ -18249,7 +22013,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "filter[inAppPurchaseV2]",
@@ -18264,7 +22028,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -18287,7 +22051,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -18297,7 +22061,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchasePricePoint",
           "territory"
@@ -18347,9 +22111,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchasePriceSchedules]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchasePriceSchedules Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "baseTerritory",
+          "manualPrices",
+          "automaticPrices"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "baseTerritory",
           "manualPrices",
@@ -18374,7 +22148,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -18384,7 +22158,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchasePricePoint",
           "territory"
@@ -18434,9 +22208,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "inAppPurchase",
+          "image",
+          "images",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchase",
           "image",
@@ -18501,7 +22288,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -18524,7 +22311,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2"
         ]
@@ -18547,7 +22334,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2"
         ]
@@ -18597,9 +22384,33 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "productId",
+          "inAppPurchaseType",
+          "state",
+          "reviewNote",
+          "familySharable",
+          "contentHosting",
+          "inAppPurchaseLocalizations",
+          "pricePoints",
+          "content",
+          "appStoreReviewScreenshot",
+          "promotedPurchase",
+          "iapPriceSchedule",
+          "inAppPurchaseAvailability",
+          "images",
+          "offerCodes",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseLocalizations",
           "pricePoints",
@@ -18631,7 +22442,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "baseTerritory",
           "manualPrices",
@@ -18661,7 +22472,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchase"
         ]
@@ -18684,7 +22495,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "availableTerritories"
         ]
@@ -18705,6 +22516,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchaseLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchaseLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "description",
+          "state",
+          "inAppPurchaseV2"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -18712,7 +22535,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2"
         ]
@@ -18735,7 +22558,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by territory"
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -18745,7 +22568,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "oneTimeUseCodes",
           "customCodes",
@@ -18770,7 +22593,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -18780,7 +22603,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -18803,7 +22626,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2",
           "subscription"
@@ -18864,7 +22687,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchase",
           "image",
@@ -18888,9 +22711,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[inAppPurchases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type inAppPurchases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "productId",
+          "inAppPurchaseType",
+          "state",
+          "apps"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "apps"
         ]
@@ -18983,6 +22818,14 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[marketplaceWebhooks]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type marketplaceWebhooks Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "endpointUrl"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19074,6 +22917,22 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[certificates]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type certificates Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "certificateType",
+          "displayName",
+          "serialNumber",
+          "platform",
+          "expirationDate",
+          "certificateContent",
+          "activated",
+          "passTypeId"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19081,7 +22940,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "passTypeId"
         ]
@@ -19131,9 +22990,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[merchantIds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type merchantIds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "identifier",
+          "certificates"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "certificates"
         ]
@@ -19173,6 +23042,16 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[merchantIds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type merchantIds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "identifier",
+          "certificates"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19180,7 +23059,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "certificates"
         ]
@@ -19246,9 +23125,38 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[nominations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type nominations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "type",
+          "description",
+          "createdDate",
+          "lastModifiedDate",
+          "submittedDate",
+          "state",
+          "publishStartDate",
+          "publishEndDate",
+          "deviceFamilies",
+          "locales",
+          "supplementalMaterialsUris",
+          "hasInAppEvents",
+          "launchInSelectMarketsFirst",
+          "notes",
+          "preOrderEnabled",
+          "relatedApps",
+          "createdByActor",
+          "lastModifiedByActor",
+          "submittedByActor",
+          "inAppEvents",
+          "supportedTerritories"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "relatedApps",
           "createdByActor",
@@ -19320,6 +23228,35 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[nominations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type nominations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "type",
+          "description",
+          "createdDate",
+          "lastModifiedDate",
+          "submittedDate",
+          "state",
+          "publishStartDate",
+          "publishEndDate",
+          "deviceFamilies",
+          "locales",
+          "supplementalMaterialsUris",
+          "hasInAppEvents",
+          "launchInSelectMarketsFirst",
+          "notes",
+          "preOrderEnabled",
+          "relatedApps",
+          "createdByActor",
+          "lastModifiedByActor",
+          "submittedByActor",
+          "inAppEvents",
+          "supportedTerritories"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19327,7 +23264,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "relatedApps",
           "createdByActor",
@@ -19424,6 +23361,22 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[certificates]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type certificates Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "certificateType",
+          "displayName",
+          "serialNumber",
+          "platform",
+          "expirationDate",
+          "certificateContent",
+          "activated",
+          "passTypeId"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19431,7 +23384,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "passTypeId"
         ]
@@ -19481,9 +23434,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[passTypeIds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type passTypeIds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "identifier",
+          "certificates"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "certificates"
         ]
@@ -19530,6 +23493,16 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[passTypeIds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type passTypeIds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "identifier",
+          "certificates"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19537,7 +23510,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "certificates"
         ]
@@ -19588,6 +23561,39 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[builds]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type builds Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "uploadedDate",
+          "expirationDate",
+          "expired",
+          "minOsVersion",
+          "lsMinimumSystemVersion",
+          "computedMinMacOsVersion",
+          "computedMinVisionOsVersion",
+          "iconAssetToken",
+          "processingState",
+          "buildAudienceType",
+          "usesNonExemptEncryption",
+          "preReleaseVersion",
+          "individualTesters",
+          "betaGroups",
+          "betaBuildLocalizations",
+          "appEncryptionDeclaration",
+          "betaAppReviewSubmission",
+          "app",
+          "buildBetaDetail",
+          "appStoreVersion",
+          "icons",
+          "buildBundles",
+          "buildUpload",
+          "perfPowerMetrics",
+          "diagnosticSignatures"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19608,9 +23614,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[preReleaseVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type preReleaseVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "platform",
+          "builds",
+          "app"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "builds",
           "app"
@@ -19695,6 +23712,17 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[preReleaseVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type preReleaseVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "platform",
+          "builds",
+          "app"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19702,7 +23730,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "builds",
           "app"
@@ -19737,6 +23765,22 @@ export const OPERATIONS: Operation[] = [
       "id"
     ],
     "queryParams": [
+      {
+        "name": "fields[certificates]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type certificates Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "certificateType",
+          "displayName",
+          "serialNumber",
+          "platform",
+          "expirationDate",
+          "certificateContent",
+          "activated",
+          "passTypeId"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -19787,6 +23831,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[devices]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type devices Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "udid",
+          "deviceClass",
+          "status",
+          "model",
+          "addedDate"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19807,9 +23865,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[profiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type profiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "profileType",
+          "profileState",
+          "profileContent",
+          "uuid",
+          "createdDate",
+          "expirationDate",
+          "bundleId",
+          "devices",
+          "certificates"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "bundleId",
           "devices",
@@ -19885,6 +23961,24 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[profiles]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type profiles Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "platform",
+          "profileType",
+          "profileState",
+          "profileContent",
+          "uuid",
+          "createdDate",
+          "expirationDate",
+          "bundleId",
+          "devices",
+          "certificates"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -19892,7 +23986,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "bundleId",
           "devices",
@@ -19944,9 +24038,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[promotedPurchases]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type promotedPurchases Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "visibleForAllUsers",
+          "enabled",
+          "state",
+          "inAppPurchaseV2",
+          "subscription"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2",
           "subscription"
@@ -20043,9 +24149,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[reviewSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type reviewSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platform",
+          "submittedDate",
+          "state",
+          "app",
+          "items",
+          "appStoreVersionForReview",
+          "submittedByActor",
+          "lastUpdatedByActor"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "items",
@@ -20077,7 +24198,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion",
           "appCustomProductPageVersion",
@@ -20140,6 +24261,21 @@ export const OPERATIONS: Operation[] = [
         "required": true
       },
       {
+        "name": "fields[reviewSubmissions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type reviewSubmissions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "platform",
+          "submittedDate",
+          "state",
+          "app",
+          "items",
+          "appStoreVersionForReview",
+          "submittedByActor",
+          "lastUpdatedByActor"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -20147,7 +24283,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app",
           "items",
@@ -20217,9 +24353,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[routingAppCoverages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type routingAppCoverages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "uploadOperations",
+          "assetDeliveryState",
+          "appStoreVersion"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "appStoreVersion"
         ]
@@ -20341,6 +24490,20 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [],
     "queryParams": [
       {
+        "name": "fields[sandboxTesters]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type sandboxTesters Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "firstName",
+          "lastName",
+          "acAccountName",
+          "territory",
+          "applePayCompatible",
+          "interruptPurchases",
+          "subscriptionRenewalRate"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -20377,9 +24540,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[scmGitReferences]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type scmGitReferences Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "canonicalName",
+          "isDeleted",
+          "kind",
+          "repository"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "repository"
         ]
@@ -20398,7 +24573,18 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[scmProviders]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type scmProviders Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "scmProviderType",
+          "url",
+          "repositories"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -20411,6 +24597,16 @@ export const OPERATIONS: Operation[] = [
     "deprecated": false,
     "pathParams": [],
     "queryParams": [
+      {
+        "name": "fields[scmProviders]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type scmProviders Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "scmProviderType",
+          "url",
+          "repositories"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -20444,7 +24640,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "scmProvider",
           "defaultBranch"
@@ -20466,9 +24662,28 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[scmPullRequests]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type scmPullRequests Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "title",
+          "number",
+          "webUrl",
+          "sourceRepositoryOwner",
+          "sourceRepositoryName",
+          "sourceBranchName",
+          "destinationRepositoryOwner",
+          "destinationRepositoryName",
+          "destinationBranchName",
+          "isClosed",
+          "isCrossRepository",
+          "repository"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "repository"
         ]
@@ -20489,9 +24704,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[scmRepositories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type scmRepositories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "lastAccessedDate",
+          "httpCloneUrl",
+          "sshCloneUrl",
+          "ownerName",
+          "repositoryName",
+          "scmProvider",
+          "defaultBranch",
+          "gitReferences",
+          "pullRequests"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "scmProvider",
           "defaultBranch"
@@ -20520,7 +24751,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "repository"
         ]
@@ -20544,6 +24775,22 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by id(s)"
       },
       {
+        "name": "fields[scmRepositories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type scmRepositories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "lastAccessedDate",
+          "httpCloneUrl",
+          "sshCloneUrl",
+          "ownerName",
+          "repositoryName",
+          "scmProvider",
+          "defaultBranch",
+          "gitReferences",
+          "pullRequests"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -20551,7 +24798,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "scmProvider",
           "defaultBranch"
@@ -20580,7 +24827,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "repository"
         ]
@@ -20630,9 +24877,25 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionAppStoreReviewScreenshots]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionAppStoreReviewScreenshots Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "imageAsset",
+          "assetToken",
+          "assetType",
+          "uploadOperations",
+          "assetDeliveryState",
+          "subscription"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription"
         ]
@@ -20703,9 +24966,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionAvailabilities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionAvailabilities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "availableInNewTerritories",
+          "availableTerritories"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "availableTerritories"
         ]
@@ -20724,7 +24996,19 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[subscriptionGracePeriods]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGracePeriods Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "optIn",
+          "sandboxOptIn",
+          "duration",
+          "renewalType"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -20785,9 +25069,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionGroupLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGroupLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "customAppName",
+          "locale",
+          "version"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -20853,9 +25148,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionGroupLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGroupLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "customAppName",
+          "locale",
+          "state",
+          "subscriptionGroup"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptionGroup"
         ]
@@ -20920,9 +25227,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionGroupVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGroupVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "subscriptionGroup",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptionGroup",
           "localizations"
@@ -20951,7 +25269,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -21001,9 +25319,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionGroups]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGroups Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "subscriptions",
+          "subscriptionGroupLocalizations",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptions",
           "subscriptionGroupLocalizations",
@@ -21026,6 +25355,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionGroupLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionGroupLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "customAppName",
+          "locale",
+          "state",
+          "subscriptionGroup"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -21033,7 +25374,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptionGroup"
         ]
@@ -21090,6 +25431,34 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[subscriptions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "productId",
+          "familySharable",
+          "state",
+          "subscriptionPeriod",
+          "reviewNote",
+          "groupLevel",
+          "subscriptionLocalizations",
+          "appStoreReviewScreenshot",
+          "group",
+          "introductoryOffers",
+          "promotionalOffers",
+          "offerCodes",
+          "prices",
+          "pricePoints",
+          "promotedPurchase",
+          "subscriptionAvailability",
+          "winBackOffers",
+          "images",
+          "planAvailabilities",
+          "versions"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -21097,7 +25466,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptionLocalizations",
           "appStoreReviewScreenshot",
@@ -21169,7 +25538,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptionGroup",
           "localizations"
@@ -21218,7 +25587,21 @@ export const OPERATIONS: Operation[] = [
     "pathParams": [
       "id"
     ],
-    "queryParams": [],
+    "queryParams": [
+      {
+        "name": "fields[subscriptionImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "assetToken",
+          "imageAsset",
+          "uploadOperations",
+          "assetDeliveryState"
+        ]
+      }
+    ],
     "hasBody": false
   },
   {
@@ -21279,9 +25662,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "fileSize",
+          "fileName",
+          "sourceFileChecksum",
+          "assetToken",
+          "imageAsset",
+          "uploadOperations",
+          "state",
+          "subscription"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription"
         ]
@@ -21392,9 +25790,20 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "description",
+          "version"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -21460,9 +25869,21 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "description",
+          "state",
+          "subscription"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription"
         ]
@@ -21513,9 +25934,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionOfferCodeCustomCodes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionOfferCodeCustomCodes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "customCode",
+          "numberOfCodes",
+          "createdDate",
+          "expirationDate",
+          "active",
+          "offerCode"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "offerCode"
         ]
@@ -21566,9 +26000,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionOfferCodeOneTimeUseCodes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionOfferCodeOneTimeUseCodes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "numberOfCodes",
+          "createdDate",
+          "expirationDate",
+          "active",
+          "environment",
+          "offerCode",
+          "values"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "offerCode"
         ]
@@ -21641,7 +26089,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "offerCode"
         ]
@@ -21662,9 +26110,32 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionOfferCodes]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionOfferCodes Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "customerEligibilities",
+          "offerEligibility",
+          "duration",
+          "offerMode",
+          "numberOfPeriods",
+          "totalNumberOfCodes",
+          "productionCodeCount",
+          "sandboxCodeCount",
+          "active",
+          "autoRenewEnabled",
+          "targetSubscriptionPlanType",
+          "subscription",
+          "oneTimeUseCodes",
+          "customCodes",
+          "prices"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "oneTimeUseCodes",
@@ -21695,7 +26166,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "offerCode"
         ]
@@ -21718,7 +26189,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -21728,7 +26199,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory",
           "subscriptionPricePoint"
@@ -21816,9 +26287,19 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionPlanAvailabilities]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionPlanAvailabilities Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "availableInNewTerritories",
+          "planType",
+          "availableTerritories"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "availableTerritories"
         ]
@@ -21857,7 +26338,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "filter[subscription]",
@@ -21882,7 +26363,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -21905,7 +26386,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "filter[subscription]",
@@ -21930,7 +26411,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -21951,9 +26432,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionPricePoints]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionPricePoints Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "customerPrice",
+          "proceeds",
+          "proceedsYear2",
+          "territory",
+          "equalizations",
+          "adjustedEqualizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -22032,9 +26526,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionPromotionalOffers]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionPromotionalOffers Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "duration",
+          "name",
+          "numberOfPeriods",
+          "offerCode",
+          "offerMode",
+          "targetSubscriptionPlanType",
+          "subscription",
+          "prices"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "prices"
@@ -22058,7 +26567,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -22068,7 +26577,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory",
           "subscriptionPricePoint"
@@ -22134,9 +26643,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "version",
+          "state",
+          "subscription",
+          "image",
+          "images",
+          "localizations"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "image",
@@ -22201,7 +26723,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "version"
         ]
@@ -22224,7 +26746,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription"
         ]
@@ -22274,9 +26796,37 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "productId",
+          "familySharable",
+          "state",
+          "subscriptionPeriod",
+          "reviewNote",
+          "groupLevel",
+          "subscriptionLocalizations",
+          "appStoreReviewScreenshot",
+          "group",
+          "introductoryOffers",
+          "promotionalOffers",
+          "offerCodes",
+          "prices",
+          "pricePoints",
+          "promotedPurchase",
+          "subscriptionAvailability",
+          "winBackOffers",
+          "images",
+          "planAvailabilities",
+          "versions"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscriptionLocalizations",
           "appStoreReviewScreenshot",
@@ -22316,7 +26866,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription"
         ]
@@ -22339,7 +26889,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -22349,7 +26899,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "territory",
@@ -22390,7 +26940,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by territory"
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -22400,7 +26950,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "oneTimeUseCodes",
@@ -22431,7 +26981,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "availableTerritories"
         ]
@@ -22454,7 +27004,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "filter[upfrontPricePointId]",
@@ -22474,7 +27024,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
         ]
@@ -22511,7 +27061,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -22521,7 +27071,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory",
           "subscriptionPricePoint"
@@ -22561,7 +27111,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "inAppPurchaseV2",
           "subscription"
@@ -22585,7 +27135,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by territory"
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -22595,7 +27145,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "prices"
@@ -22619,7 +27169,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "availableTerritories"
         ]
@@ -22640,6 +27190,18 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[subscriptionLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "locale",
+          "description",
+          "state",
+          "subscription"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -22647,7 +27209,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription"
         ]
@@ -22707,7 +27269,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "subscription",
           "image",
@@ -22731,6 +27293,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[winBackOffers]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type winBackOffers Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "offerId",
+          "duration",
+          "offerMode",
+          "periodCount",
+          "customerEligibilityPaidSubscriptionDurationInMonths",
+          "customerEligibilityTimeSinceLastSubscribedInMonths",
+          "customerEligibilityWaitBetweenOffersInMonths",
+          "startDate",
+          "endDate",
+          "priority",
+          "promotionIntent",
+          "targetSubscriptionPlanType",
+          "prices"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -22738,7 +27321,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "prices"
         ]
@@ -22756,6 +27339,14 @@ export const OPERATIONS: Operation[] = [
     "deprecated": false,
     "pathParams": [],
     "queryParams": [
+      {
+        "name": "fields[territories]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type territories Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "currency"
+        ]
+      },
       {
         "name": "limit",
         "type": "number",
@@ -22822,9 +27413,24 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[userInvitations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type userInvitations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "email",
+          "firstName",
+          "lastName",
+          "expirationDate",
+          "roles",
+          "allAppsVisible",
+          "provisioningAllowed",
+          "visibleApps"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "visibleApps"
         ]
@@ -22884,6 +27490,21 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[userInvitations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type userInvitations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "email",
+          "firstName",
+          "lastName",
+          "expirationDate",
+          "roles",
+          "allAppsVisible",
+          "provisioningAllowed",
+          "visibleApps"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -22891,7 +27512,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "visibleApps"
         ]
@@ -22947,9 +27568,23 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[users]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type users Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "username",
+          "firstName",
+          "lastName",
+          "roles",
+          "allAppsVisible",
+          "provisioningAllowed",
+          "visibleApps"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "visibleApps"
         ]
@@ -23009,6 +27644,20 @@ export const OPERATIONS: Operation[] = [
         ]
       },
       {
+        "name": "fields[users]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type users Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "username",
+          "firstName",
+          "lastName",
+          "roles",
+          "allAppsVisible",
+          "provisioningAllowed",
+          "visibleApps"
+        ]
+      },
+      {
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
@@ -23016,7 +27665,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "visibleApps"
         ]
@@ -23205,7 +27854,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "event"
         ]
@@ -23226,9 +27875,22 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[webhooks]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type webhooks Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "enabled",
+          "eventTypes",
+          "name",
+          "url",
+          "app",
+          "deliveries"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "app"
         ]
@@ -23294,9 +27956,30 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [
       {
+        "name": "fields[winBackOffers]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type winBackOffers Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "offerId",
+          "duration",
+          "offerMode",
+          "periodCount",
+          "customerEligibilityPaidSubscriptionDurationInMonths",
+          "customerEligibilityTimeSinceLastSubscribedInMonths",
+          "customerEligibilityWaitBetweenOffersInMonths",
+          "startDate",
+          "endDate",
+          "priority",
+          "promotionIntent",
+          "targetSubscriptionPlanType",
+          "prices"
+        ]
+      },
+      {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "prices"
         ]
@@ -23319,7 +28002,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory'"
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
       },
       {
         "name": "limit",
@@ -23329,7 +28012,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory",
           "subscriptionPricePoint"
