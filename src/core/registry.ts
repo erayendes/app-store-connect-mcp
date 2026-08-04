@@ -7,6 +7,12 @@ import { OPERATIONS } from '../generated/operations.js';
 import { BODY_SCHEMAS } from '../generated/body-schemas.js';
 import { AscApiError } from './errors.js';
 import { validateBody } from './validate.js';
+import {
+  augmentReportTableTool,
+  isReportTableOperation,
+  maybeParseReportTable,
+  REPORT_TABLE_EXTRA_PARAMS,
+} from './report-parsing.js';
 
 export interface RegistryOptions {
   /**
@@ -217,7 +223,7 @@ export function toMcpTool(
     };
   }
 
-  return {
+  const tool: McpToolDefinition = {
     name: toolNameFor(op),
     description: describeOperation(op),
     inputSchema: {
@@ -231,6 +237,11 @@ export function toMcpTool(
       idempotentHint: op.method === 'GET' || op.method === 'PATCH' || op.method === 'DELETE',
     },
   };
+
+  // Runtime-only augmentation for sales_reports.list / finance_reports.list —
+  // see ./report-parsing.ts for why this happens here instead of in the
+  // generator. A no-op for every other operation.
+  return augmentReportTableTool(tool, op.name);
 }
 
 export class ToolRegistry {
@@ -368,7 +379,8 @@ export class ToolRegistry {
     // Pagination shortcut: follow the cursor Apple gave us verbatim.
     const nextUrl = args.next_url;
     if (typeof nextUrl === 'string' && nextUrl) {
-      return http.request(op.method, nextUrl, { accept: op.accept });
+      const paginated = await http.request(op.method, nextUrl, { accept: op.accept });
+      return maybeParseReportTable(op.name, args, paginated);
     }
 
     let path = op.path;
@@ -391,6 +403,9 @@ export class ToolRegistry {
       'body',
       ...op.pathParams,
       ...op.queryParams.flatMap((q) => [q.name, encodeParamName(q.name)]),
+      // parse/max_rows are runtime-only additions (see ./report-parsing.ts),
+      // not part of the generated operation's own query params.
+      ...(isReportTableOperation(op.name) ? REPORT_TABLE_EXTRA_PARAMS : []),
     ]);
     const unknown = Object.keys(args).filter((k) => !knownArgs.has(k));
     if (unknown.length) {
@@ -461,10 +476,11 @@ export class ToolRegistry {
       };
     }
 
-    return http.request(op.method, path, {
+    const result = await http.request(op.method, path, {
       query: Object.keys(query).length ? query : undefined,
       body: op.hasBody ? args.body : undefined,
       accept: op.accept,
     });
+    return maybeParseReportTable(op.name, args, result);
   }
 }
