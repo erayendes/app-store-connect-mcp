@@ -217,10 +217,13 @@ export function manualToolsFor(selection: ProfileSelection): string[] {
 
 /**
  * Rough tokens a tool definition costs in context — for size hints only.
- * Measured across profiles after request-body schemas were inlined (AI-188):
- * total definition JSON / tool count lands at ~210-240 depending on profile.
+ * Measured by `npm run generate`'s token report over the full generated
+ * corpus: 209,221 definition tokens / 982 tools = 213 avg. Re-measure and
+ * update this after any change to `toMcpTool` or the generator (last done in
+ * Task 7, which shortened the repeated `next_url` and `id` path-param
+ * descriptions and moved this from 225 to 213 — see task-7-report.md).
  */
-export const TOKENS_PER_TOOL = 225;
+export const TOKENS_PER_TOOL = 213;
 
 /** How many tools a selection serves, meta tools included. */
 export function toolCountFor(selection: ProfileSelection): number {
