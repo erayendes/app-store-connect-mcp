@@ -22,7 +22,7 @@ Heimdall has **no backend and no telemetry**. There is nothing to opt out of.
 
 - No analytics, no crash reporting, no "phone home" — not on install, not at runtime.
 - Your key, your app data and your reports never reach the maintainer or any third party. The only host the server talks to is Apple's (`api.appstoreconnect.apple.com`), and that connection is pinned.
-- The **Reviews AI** tools use **MCP Sampling** — they ask *your* client's model to draft or summarise. No separate AI provider, no extra key, and your review text stays inside the client you already trust.
+- The **Reviews AI** tools fetch review data and return it to *your* client's own model, with an instruction for it to draft or summarise. No separate AI provider, no extra key, and your review text stays inside the client you already trust.
 
 ### How your credentials are handled
 
@@ -84,7 +84,7 @@ Heimdall'ın **backend'i ve telemetrisi yok**. Kapatılacak bir şey de yok.
 
 - Analitik yok, crash raporlama yok, "eve telefon" yok — ne kurulumda ne çalışma anında.
 - Anahtarınız, uygulama veriniz ve raporlarınız asla maintainer'a ya da üçüncü bir tarafa ulaşmaz. Sunucunun konuştuğu tek host Apple'ınkidir (`api.appstoreconnect.apple.com`) ve o bağlantı sabitlenmiştir.
-- **Reviews AI** araçları **MCP Sampling** kullanır — taslak ya da özet için *sizin* istemcinizin modelini çağırır. Ayrı bir AI sağlayıcı yok, ekstra anahtar yok ve yorum metniniz zaten güvendiğiniz istemcinin içinde kalır.
+- **Reviews AI** araçları yorum verisini çeker ve taslak ya da özet için bir talimatla birlikte *sizin* istemcinizin kendi modeline döndürür. Ayrı bir AI sağlayıcı yok, ekstra anahtar yok ve yorum metniniz zaten güvendiğiniz istemcinin içinde kalır.
 
 ### Bu sunucu kimlik bilgilerini nasıl yönetir
 
