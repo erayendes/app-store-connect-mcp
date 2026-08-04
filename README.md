@@ -46,7 +46,7 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 | **Complete** | Apple's OpenAPI spec v4.4.1, all 966 paths, 982 operations. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
 | **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 24 tools instead of 204. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
 | **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
-| **No second API key** | Review triage, daily briefings and draft replies run on your own client's model through MCP Sampling. |
+| **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
 | **Private** | The `.p8` lives in the macOS Keychain, never in a plain-text config. |
 
@@ -127,7 +127,7 @@ Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiği
 | **Eksiksiz** | Apple'ın OpenAPI spec v4.4.1'i, tüm 966 path, 982 işlem. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
 | **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 204 yerine 24 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
 | **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
-| **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları MCP Sampling ile istemcinizin kendi modelinde çalışır. |
+| **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
 | **Gizli** | `.p8` macOS Keychain'de durur, düz metin config'de değil. |
 

@@ -31,6 +31,10 @@ The setup picker unfolds a checked profile's sub-profiles under the cursor, all 
 
 **`asc__load`** adds a sub-profile mid-session for clients that do refresh. Hand-written families (StoreKit, reviews-AI, pricing macros) still need a restart, and the reply says so.
 
+#### Reviews-AI no longer needs MCP Sampling
+
+The MCP 2026-07-28 revision deprecates Sampling (SEP-2577), and `draft_response`, `triage` and `daily_briefing` used to depend on it: they called `server.createMessage`, and on any client that never declared the sampling capability they never even appeared in `tools/list` — dead on the clients that need onboarding help the most. They now fetch the same reviews from Apple as before, but return the raw data as `structuredContent` plus a written instruction, in `content`, telling the HOST model — the one already talking to you — what to produce: a reply draft, a theme triage, a daily briefing. No `server.createMessage`, no capability check, so the three tools show up in every client's tool list now, including ones that never supported sampling. The value proposition hasn't moved: still no second API key, your own model still writes the text. Per the MCP spec, the structured data is also serialized into a JSON text block alongside the instruction, so a client that doesn't forward `structuredContent` into the model's context still has the data available; each tool now declares an `outputSchema` describing that shape.
+
 #### Setup registers with every client, not just Claude Code
 
 `setup` knew one command, `claude mcp add`. On a machine with Codex and Cursor it finished by printing JSON for the user to translate into TOML — a format Codex does not read.
@@ -171,6 +175,10 @@ Setup seçicisi, işaretlenen profilin alt profillerini imlecin altında açar, 
 **`asc__describe` + `asc__call`** en baştan mevcut; böylece hiçbir şey, istemcinin oturum ortasında değişen araç listesini fark etmesine bağlı kalmıyor. Üç istemcide tek istemle ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex "oturum araç listesi yeni araçları çağrılabilir yapmadı" deyip vazgeçti. Codex ve Antigravity artık aynı işi tek turda bitiriyor. `asc__call` salt okunur ve bunu açıklamasında bildiriyor — istemcinin onu engellemesini durduran şey bu. Yazmalar kendi araç adlarını koruyor; orada hem istemcinin onayı hem Heimdall'ın tipli teyidi geçerli.
 
 **`asc__load`**, listeyi tazeleyen istemciler için oturum ortasında alt profil ekler. Elle yazılmış aileler (StoreKit, reviews-AI, fiyat makroları) hâlâ yeniden başlatma ister ve cevap bunu söyler.
+
+#### Reviews-AI artık MCP Sampling gerektirmiyor
+
+MCP 2026-07-28 revizyonu Sampling'i kullanımdan kaldırıyor (SEP-2577); `draft_response`, `triage` ve `daily_briefing` da ona bağımlıydı: `server.createMessage` çağırıyorlardı ve sampling yeteneğini hiç bildirmeyen bir client'ta `tools/list`'te hiç görünmüyorlardı — üstelik en çok yönlendirmeye ihtiyacı olan client'larda ölü duruyorlardı. Artık aynı yorumları Apple'dan öncekiyle aynı şekilde çekiyor, ham veriyi `structuredContent` olarak, yazılı bir talimatı da `content` içinde döndürüyorlar — talimat, sizinle zaten konuşan HOST modele ne üreteceğini söylüyor: bir cevap taslağı, tema bazlı tasnif, günlük brifing. `server.createMessage` yok, yetenek kontrolü yok; bu yüzden üç araç da artık sampling desteklemeyenler dahil her client'ın araç listesinde görünüyor. Değer önerisi yerinde duruyor: hâlâ ikinci bir API anahtarı yok, metni yine kendi modeliniz yazıyor. MCP spesifikasyonuna uyarak, yapılandırılmış veri talimatın yanında bir JSON metin bloğu olarak da seri hale getiriliyor; böylece `structuredContent`'i modelin bağlamına iletmeyen bir client bile veriye erişebiliyor. Her araç artık bu şekli tanımlayan bir `outputSchema` bildiriyor.
 
 #### Setup yalnızca Claude Code'a değil, her istemciye kaydediyor
 
