@@ -57,6 +57,14 @@ Four earlier issues came out of a single live test: the tool was hard to find, t
 - **`filter[territory]` states its own format** — ISO-3166 alpha-3, on all 25 parameters across 23 operations, from one rule in the generator. Two letters is not an error at Apple: it returns 200 and an empty list, which reads as "this country has no data" and produced a confident "no US price configured" for a subscription selling at $4.99.
 - **The server introduces itself.** Three facts the API will not state are sent once, at connection. Advice is deliberately absent — two behavioural lines were tried and measured, and at three samples per condition no effect was visible against a spread of 374k to 1341k tokens inside a single condition.
 
+#### Sales and finance reports return readable rows on request
+
+`sales_reports.list` and `finance_reports.list` hand back Apple's response as a gzipped TSV; the HTTP layer already reduces that to an opaque `{ contentType, base64 }` blob, unreadable to a model without an out-of-band decode step. Both tools now accept `parse` (boolean, default `false` — output stays byte-for-byte unchanged) and `max_rows` (default 200, hard cap 1000). With `parse: true` the response comes back as `{ headers, rows, totalRows, truncated }` instead of the blob. A payload that fails to gunzip — Apple sent something that isn't actually gzip-compressed — falls back to the original blob plus a `parseError` note rather than throwing, so no data is lost either way.
+
+#### Tool definitions are smaller
+
+Two runtime-synthesized description strings got shorter. The redundant "Resource identifier." on every `id` path parameter (783 tools) is gone entirely — `type: "string"` plus `required` already says as much; the `next_url` parameter's description (240 `.list` tools) is shorter, keeping the field name a model needs to copy and dropping a non-critical clause. Across the full 982-tool definition corpus that's **-5.17%** — 220,638 → 209,221 tokens, average per tool 225 → 213 — and setup's profile size estimates now reflect it. (The bigger-looking idea, deduplicating repeated shapes via JSON Schema `$defs`, measured well — up to 31% — but doesn't ship: MCP hands each tool its own self-contained schema resource, so nothing placed in `$defs` is actually shared across tools. The measurement tooling and four tripwire tests that found this stay, so the question reopens on its own if that ever changes.)
+
 #### Fixed
 
 - **A misspelled filter changed which app you were editing.** `apps.list` with `filter[bundleId]` — Apple's own spelling — dropped the argument, ran unfiltered and returned the account's first app, reporting success. Both spellings are accepted now, and an argument matching neither stops the call.
@@ -201,6 +209,14 @@ Daha önceki dört sorun tek bir canlı testten çıkmıştı: araç zor bulunuy
 - **İki okuma makrosu.** `pricing__get_subscription_price` bir aboneliğin bugün bir ülkede ne kadara satıldığını döndürüyor — `/prices`'ın tek başına taşımadığı fiyat dahil — ve planlanmış gelecek fiyatları yürürlüktekinden ayırıyor. `listing__get_screenshots` "hangi görseller yayında" sorusunu 53 çağrı ve 264 KB yerine 4 çağrı ve yaklaşık 1 KB ile cevaplıyor, kalan dillerin görsel *eksiği* değil *mirası* olduğunu söylüyor. Fiyatı Türkçe, Almanca, Bengalce ve Japonca soran dört canlı ajan oturumu 3 çağrı ve 5–8 turdan 1 çağrı ve 3–4 tura indi.
 - **`filter[territory]` kendi biçimini söylüyor** — ISO-3166 alpha-3, 23 operasyondaki 25 parametrenin tamamında, üreticideki tek bir kuraldan. İki harf Apple için hata değil: 200 ve boş liste dönüyor, bu da "bu ülkede veri yok" gibi okunuyor ve 4,99 dolara satılan bir abonelik için emin bir şekilde "US fiyatı yapılandırılmamış" cevabını üretti.
 - **Sunucu kendini tanıtıyor.** API'nin söylemediği üç bilgi, bağlantı anında bir kez gönderiliyor. Nasihat bilinçli olarak yok — iki davranış maddesi denendi ve ölçüldü; koşul başına üç örnekte, tek bir koşulun içindeki 374 bin–1,34 milyon token'lık yayılıma karşı hiçbir etki görünmedi.
+
+#### Satış ve finans raporları artık istek üzerine okunabilir satırlar döndürüyor
+
+`sales_reports.list` ve `finance_reports.list`, Apple'ın cevabını gzip'li bir TSV olarak veriyor; HTTP katmanı bunu zaten opak bir `{ contentType, base64 }` blob'una indirgiyor — model için, harici bir çözme adımı olmadan okunamayan bir şey. İki araç da artık `parse` (boolean, varsayılan `false` — çıktı byte-for-byte aynı kalıyor) ve `max_rows` (varsayılan 200, sert tavan 1000) parametrelerini kabul ediyor. `parse: true` ile cevap, blob yerine `{ headers, rows, totalRows, truncated }` olarak dönüyor. Gunzip edilemeyen bir yük — Apple'ın gönderdiği şey aslında gzip'li değilse — hata fırlatmak yerine orijinal blob'a bir `parseError` notu ekleyerek geri dönüyor; iki durumda da veri kaybolmuyor.
+
+#### Araç tanımları küçüldü
+
+Çalışma zamanında üretilen iki açıklama metni kısaldı. Her `id` path parametresindeki gereksiz "Resource identifier." (783 araçta tekrarlanıyordu) tamamen kaldırıldı — `type: "string"` ve `required` zaten bunu söylüyor; `next_url` parametresinin açıklaması (240 `.list` aracında tekrarlanıyordu) kısaltıldı, modelin kopyalaması gereken alan adı kalırken kritik olmayan bir cümle çıkarıldı. 982 araçlık tam külliyatta bu **%5,17'lik bir düşüş** demek — 220.638 → 209.221 token, araç başına ortalama 225 → 213 — ve setup'ın profil boyutu tahminleri artık bunu yansıtıyor. (Daha büyük görünen fikir, tekrarlanan şekilleri JSON Schema `$defs` ile tekilleştirmek, ölçümde iyi çıktı — %31'e kadar — ama sevk edilmiyor: MCP her araca kendi kendine yeten bir şema kaynağı veriyor, yani `$defs` içine konan hiçbir şey araçlar arasında gerçekten paylaşılmıyor. Bunu ortaya çıkaran ölçüm araçları ve dört tripwire testi kalıyor; böylece durum değişirse soru kendiliğinden yeniden açılır.)
 
 #### Düzeltildi
 
