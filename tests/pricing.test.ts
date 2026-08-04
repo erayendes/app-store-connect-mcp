@@ -33,6 +33,23 @@ function fakeHttp() {
     if (path.startsWith('/v1/apps/6636549188')) {
       return { data: { id: '6636549188', attributes: { name: 'Ask Quran: AI Islam Companion' } } };
     }
+    // The price lives on the included price point, never on the row itself —
+    // the shape that makes an include-less read look like "no price set".
+    if (path.startsWith('/v1/subscriptions/6639599999/prices')) {
+      return {
+        data: [
+          { id: 'sp-1', attributes: { startDate: null }, relationships: { subscriptionPricePoint: { data: { id: 'pp-499' } } } },
+          { id: 'sp-2', attributes: { startDate: '2099-01-01' }, relationships: { subscriptionPricePoint: { data: { id: 'pp-599' } } } },
+        ],
+        included: [
+          { type: 'subscriptionPricePoints', id: 'pp-499', attributes: { customerPrice: '4.99', proceeds: '4.24' } },
+          { type: 'subscriptionPricePoints', id: 'pp-599', attributes: { customerPrice: '5.99', proceeds: '5.09' } },
+        ],
+      };
+    }
+    if (path.startsWith('/v1/subscriptions/6639600093/prices')) {
+      return { data: [], included: [] };
+    }
     if (path.startsWith('/v1/subscriptions/6639599999/pricePoints')) {
       return {
         data: [
@@ -126,6 +143,58 @@ describe('pricing__set_subscription_price', () => {
     expect(result.resolved.price).toBe('99.99 (TUR)');
     expect(result.wouldSend.body.data.relationships.subscriptionPricePoint.data.id).toBe('pp-99');
     expect(c.http.post).not.toHaveBeenCalled();
+  });
+});
+
+describe('pricing__get_subscription_price', () => {
+  const get = (args: Record<string, unknown>, c = ctx()) =>
+    executePricingTool('pricing__get_subscription_price', args, c);
+
+  it('answers with the price in effect, from one call', async () => {
+    const c = ctx();
+    const result: any = await get({ app: '6636549188', subscription: 'askquran.base.1week', territory: 'USA' }, c);
+
+    expect(result.prices[0]).toMatchObject({
+      subscription: 'askquran.base.1week',
+      customerPrice: '4.99',
+      proceeds: '4.24',
+    });
+    // A future-dated row is a scheduled change, not today's price. Reporting it
+    // as current would tell someone their app costs 5.99 when it costs 4.99.
+    expect(result.prices[0].scheduledChanges).toHaveLength(1);
+    expect(result.prices[0].scheduledChanges[0].customerPrice).toBe('5.99');
+  });
+
+  it('reads the price point, which is the only place the price exists', async () => {
+    const c = ctx();
+    await get({ app: '6636549188', subscription: 'askquran.base.1week', territory: 'USA' }, c);
+    const pricesCall = c.http.get.mock.calls.find(([p]: [string]) => p.endsWith('/prices'));
+    expect(pricesCall?.[1]).toMatchObject({
+      'filter[territory]': 'USA',
+      include: 'subscriptionPricePoint',
+    });
+  });
+
+  it('covers every subscription when none is named', async () => {
+    const result: any = await get({ app: '6636549188', territory: 'USA' });
+    expect(result.prices.map((p: any) => p.subscription)).toEqual([
+      'askquran.base.1week',
+      'askquran.base.1month',
+    ]);
+    // No price in this territory is said out loud rather than returned as null.
+    expect(result.prices[1].note).toMatch(/No price in effect/);
+  });
+
+  // Apple accepts "US" and answers 200 with an empty list, so the wrong code
+  // reads as "this territory has no price". Stopping it here is the difference
+  // between an error and a confident wrong answer.
+  it('refuses a two-letter territory code instead of returning nothing', async () => {
+    await expect(get({ app: '6636549188', territory: 'US' })).rejects.toThrow(/three letters/i);
+  });
+
+  it('is marked read-only, so it never asks for a write confirmation', () => {
+    const tool = PRICING_TOOLS.find((t) => t.name === 'pricing__get_subscription_price');
+    expect(tool?.annotations?.readOnlyHint).toBe(true);
   });
 });
 

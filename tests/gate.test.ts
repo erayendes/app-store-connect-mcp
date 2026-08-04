@@ -33,6 +33,42 @@ import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
 import { STRONG_CONFIRM_LEVELS, type RiskLevel } from '../src/core/risk.js';
 import { loadConfig } from '../src/core/config.js';
+import { SERVER_INSTRUCTIONS } from '../src/server.js';
+
+/**
+ * The session-level rules. Pinned by meaning rather than by wording, so the
+ * text can be improved without a test edit while a rule cannot quietly
+ * disappear.
+ */
+describe('server instructions (offline)', () => {
+  it.each([
+    ['the alpha-3 territory format', /alpha-3/],
+    ['that a two-letter code is not rejected', /Two letters[\s\S]{0,40}not rejected/],
+    ['that list endpoints return stubs, not values', /stubs, not values/i],
+    ['that a macro answers in one call', /pricing__\*[\s\S]{0,40}one call/],
+  ])('states %s', (_what, pattern) => {
+    expect(SERVER_INSTRUCTIONS).toMatch(pattern);
+  });
+
+  /**
+   * Advice does not belong here — it was measured and it did not land, while a
+   * 264 KB response made agents shell out under every instruction set. These
+   * are the two lines that were removed; the test exists so they do not drift
+   * back in one plausible sentence at a time.
+   */
+  it.each([
+    ['telling the model where not to look', /local disk|do not search/i],
+    ['telling the model how to feel about an empty result', /empty result/i],
+  ])('carries no advice about %s', (_what, pattern) => {
+    expect(SERVER_INSTRUCTIONS).not.toMatch(pattern);
+  });
+
+  // Sent to every client on every connection, forever. Cheap to add a line to,
+  // which is exactly why it needs a ceiling.
+  it('stays short enough to be worth its place in the context', () => {
+    expect(SERVER_INSTRUCTIONS.length).toBeLessThan(700);
+  });
+});
 
 describe('write-gate annotations (offline)', () => {
   it('marks a tool read-only only when its operation is a GET', () => {
@@ -144,11 +180,15 @@ function client(profile: string) {
   return {
     elicitations,
     async start() {
-      await request('initialize', {
+      const hello = await request('initialize', {
         protocolVersion: '2024-11-05',
         capabilities: { elicitation: { form: {} } },
         clientInfo: { name: 'gate-test', version: '0' },
       });
+      // The rules only work if the client is actually handed them. Asserting on
+      // the constant would prove nothing — this is the one place the wiring is
+      // visible, in the same handshake every real client performs.
+      expect(hello.result?.instructions, 'server sent no instructions').toBe(SERVER_INSTRUCTIONS);
       send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     },
     async call(name: string, args: Record<string, unknown>) {

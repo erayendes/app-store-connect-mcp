@@ -6,8 +6,9 @@ import type { McpToolDefinition } from '../core/registry.js';
 import { ALL_DOMAINS, ToolRegistry } from '../core/registry.js';
 import { DOMAIN_DESCRIPTIONS } from '../generated/domain-info.js';
 import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
-import { expandQueryTokens } from '../core/query-language.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
+import { PRICING_TOOLS } from './pricing.js';
+import { SCREENSHOT_TOOLS } from './screenshots.js';
 import type { AscHttpClient } from '../core/http.js';
 import type { TokenProvider } from '../core/jwt.js';
 
@@ -26,13 +27,16 @@ export const META_TOOLS: McpToolDefinition[] = [
     description:
       'Search all App Store Connect operations by keyword, including domains that are ' +
       'not currently loaded. Returns matching tool names, their domain, and the ' +
-      'underlying endpoint.',
+      'underlying endpoint. Search in English: tool names and descriptions are ' +
+      'generated from Apple’s English spec, so translate the goal before searching.',
     inputSchema: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'Keyword to match against tool names, descriptions and paths.',
+          description:
+            'English keywords to match against tool names, descriptions and paths. ' +
+            'A query in another language matches nothing.',
         },
         limit: { type: 'number', description: 'Maximum results (default 25).' },
       },
@@ -65,9 +69,25 @@ export const META_TOOLS: McpToolDefinition[] = [
   },
 ];
 
+/** Punctuation-aware split; a typed question arrives with "?" and "'" attached. */
+const WORDS = /[\s,.:;!?"'’()[\]]+/;
+
+/**
+ * `'İ'.toLowerCase()` is `i` followed by U+0307 COMBINING DOT ABOVE, not `i` —
+ * Unicode keeps the marks apart because `i` already carries a dot. A word typed
+ * on a Turkish keyboard therefore stops matching the catalogue's lowercase
+ * text. Dropping the mark is safe: the catalogue is Apple's English spec and
+ * contains no combining marks at all.
+ */
+const COMBINING_DOT_ABOVE = /̇/g;
+
+const tokenize = (query: string): string[] => [
+  ...new Set(query.toLowerCase().replace(COMBINING_DOT_ABOVE, '').split(WORDS).filter(Boolean)),
+];
+
 /**
  * Keyword search over every operation (loaded or not). Extracted from the
- * asc__search_tools handler so intent coverage is unit-testable — the 20-intent
+ * asc__search_tools handler so intent coverage is unit-testable — the intent
  * regression suite in tests/search-intents.test.ts runs against this.
  *
  * Multi-word queries are matched token by token and ranked by how many tokens
@@ -75,27 +95,27 @@ export const META_TOOLS: McpToolDefinition[] = [
  * like "change subscription price territory", because no description contains
  * that exact phrase. Single-word queries behave as before.
  *
- * Words the catalogue has never seen get translated first — see
- * `expandQueryTokens`. Everything else is left exactly as typed.
- */
-const CORPUS_TEXT = OPERATIONS.map(
-  (op) => `${op.name} ${op.description} ${op.path}`
-)
-  .join(' ')
-  .toLowerCase();
-
-/**
+ * Matching is literal, and the catalogue is English, so a query in another
+ * language finds nothing. That is deliberate. It was briefly not: a hand-written
+ * Turkish-to-English word list sat here and translated a hundred or so nouns
+ * before matching. It worked, and it was the wrong place to solve the problem —
+ * every further language meant another hundred hand-typed rows that go stale
+ * whenever Apple adds resources, and the caller is a language model that already
+ * speaks all of them. The tool description now asks for English and an empty
+ * result says so; translation belongs to the client, which is better at it than
+ * any table we would maintain.
+ *
  * Deprecated operations are excluded unless the server was started with
  * `--include-deprecated`, because the registry refuses to load them either.
  * Returning them looks helpful and is not: the agent reads "deprecated" as
  * "works but discouraged", calls the tool, and gets "no such tool". Measured
- * on "leaderboard oluştur" — two of the top five were unreachable.
+ * on "create leaderboard" — two of the top five were unreachable.
  */
 export function searchOperations(
   query: string,
   includeDeprecated = false
 ): Array<(typeof OPERATIONS)[number]> {
-  const tokens = expandQueryTokens(query, CORPUS_TEXT);
+  const tokens = tokenize(query);
   if (!tokens.length) return [];
 
   const pool = includeDeprecated ? OPERATIONS : OPERATIONS.filter((op) => !op.deprecated);
@@ -108,6 +128,29 @@ export function searchOperations(
   return scored
     .sort((a, b) => b.score - a.score || a.op.name.localeCompare(b.op.name))
     .map((s) => s.op);
+}
+
+/**
+ * The same token rule `searchOperations` uses, for the tool lists that are not
+ * generated from the spec. They used to be matched with a whole-phrase
+ * `includes`, which meant a real question never found them: "change
+ * subscription price" is not a substring of any description.
+ */
+function matchByToken<T extends { name: string; description: string }>(
+  query: string,
+  tools: readonly T[]
+): T[] {
+  const tokens = tokenize(query);
+  if (!tokens.length) return [];
+  const need = Math.ceil(tokens.length / 2);
+  return tools
+    .map((t) => {
+      const haystack = `${t.name} ${t.description}`.toLowerCase();
+      return { t, score: tokens.reduce((n, k) => n + (haystack.includes(k) ? 1 : 0), 0) };
+    })
+    .filter((s) => s.score >= need)
+    .sort((a, b) => b.score - a.score)
+    .map((s) => s.t);
 }
 
 /** Days ahead that counts as "expiring soon" for certificates and profiles. */
@@ -179,6 +222,8 @@ export async function executeMetaTool(
     profileReport?: () => Record<string, unknown>;
     /** Whether StoreKit (App Store Server API) tools are active on this server. */
     storekitEnabled?: boolean;
+    /** Which macros this server offers — read-only servers hide the writes. */
+    macroOffered?: (name: string) => boolean;
     /** Mirrors --include-deprecated: search must offer only what can be loaded. */
     includeDeprecated?: boolean;
   }
@@ -235,23 +280,54 @@ export async function executeMetaTool(
         deprecated: op.deprecated,
       }));
 
-      // StoreKit tools live outside the OpenAPI spec (App Store Server API), so
-      // they'd be invisible to search without this. They belong to the
-      // monetization profile and need ASC_BUNDLE_ID.
-      const storekitMatches = STOREKIT_TOOLS.filter(
-        (t) =>
-          t.name.toLowerCase().includes(query) ||
-          t.description.toLowerCase().includes(query)
-      ).map((t) => ({
-        tool: t.name,
-        domain: 'storekit',
-        endpoint: 'App Store Server API',
-        description: t.description,
-        loaded: Boolean(ctx.storekitEnabled),
-        deprecated: false,
-      }));
+      // Neither StoreKit nor the macros come from the OpenAPI spec, so both are
+      // invisible to a search over OPERATIONS. The macros are the costly half:
+      // a model searching "change subscription price" found only the five-call
+      // chain, never the one-call tool written to replace it.
+      const extras = (
+        tools: Array<{ name: string; description: string }>,
+        domain: string,
+        endpoint: string,
+        loaded: (name: string) => boolean
+      ) =>
+        matchByToken(query, tools).map((t) => ({
+          tool: t.name,
+          domain,
+          endpoint,
+          description: t.description,
+          loaded: loaded(t.name),
+          deprecated: false,
+        }));
 
-      const matches = [...apiMatches, ...storekitMatches].slice(0, Math.max(1, Math.min(limit, 100)));
+      // Ahead of the generated tools, not after them. There are twelve of these
+      // against 982, so appending buried them below the slice — which is how a
+      // macro written to replace a five-call chain lost to the five calls. A
+      // macro that matches the query is the answer to it.
+      const matches = [
+        ...extras([...PRICING_TOOLS, ...SCREENSHOT_TOOLS], 'macro', 'Heimdall macro', (name) =>
+          Boolean(ctx.macroOffered?.(name))
+        ),
+        ...extras(STOREKIT_TOOLS, 'storekit', 'App Store Server API', () =>
+          Boolean(ctx.storekitEnabled)
+        ),
+        ...apiMatches,
+      ].slice(0, Math.max(1, Math.min(limit, 100)));
+
+      // An empty list reads as "no such capability", and the agent acts on it —
+      // AI-201 ended with a model concluding App Store Connect could not set a
+      // price and reaching for a competitor's server instead. Say why nothing
+      // matched, because the two likely reasons have opposite remedies.
+      if (!matches.length) {
+        return {
+          matches: [],
+          count: 0,
+          hint:
+            `Nothing matched "${query}". This is a literal keyword search over Apple's ` +
+            `English spec: a query in any other language matches nothing, so translate it ` +
+            `and search again. If it was already English, search the resource rather than ` +
+            `the sentence — "subscription price", "beta group", "screenshot".`,
+        };
+      }
 
       // A match the caller cannot invoke is a dead end unless we say how to
       // reach it — the tool only appears after the server restarts.

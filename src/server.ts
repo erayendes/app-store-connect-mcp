@@ -30,6 +30,7 @@ import {
   executePricingTool,
   buildPricingPreview,
 } from './tools/pricing.js';
+import { SCREENSHOT_TOOLS, executeScreenshotTool } from './tools/screenshots.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import {
@@ -61,6 +62,41 @@ function maxResponseChars(): number {
 // Read from package.json at runtime so the banner can't drift from the published
 // version. Not a JSON import: package.json sits outside tsconfig's rootDir.
 export const VERSION: string = createRequire(import.meta.url)('../package.json').version;
+
+/**
+ * Sent once, at initialize, and carried for the whole session — MCP's own slot
+ * for things the client should know before it calls anything. The client does
+ * pass them on: asked to quote any instructions it had been given, a live
+ * session reproduced this text verbatim, and a build with the field blanked
+ * answered "NONE RECEIVED".
+ *
+ * Every line states a fact about the API. None gives advice about how to
+ * behave, and that distinction was expensive to learn. Two advice lines shipped
+ * here first — do not search the local disk, take an empty result as the answer
+ * — and an A/B against a build without them could not measure any effect: three
+ * samples per condition, and the spread within one condition (374k to 1341k
+ * tokens on the same task) swamped every difference between conditions. What
+ * the runs did show was the agent shelling out to `jq` in all nine of them,
+ * under every instruction set, because one response in that task is 264 KB. No
+ * sentence fixes a response that does not fit; only a smaller response does.
+ *
+ * So the bar is: a line belongs here if the model would get it wrong from the
+ * schemas alone, and if knowing it changes the call rather than the attitude.
+ * Anything a parameter description can carry belongs there instead — those are
+ * generated, so `filter[territory]` states its own format on every one of the
+ * 23 operations that take it, and this line is the backstop for clients that
+ * drop instructions entirely.
+ */
+export const SERVER_INSTRUCTIONS = [
+  'App Store Connect, through Heimdall. Three things the API will not tell you:',
+  '',
+  '1. Territories are ISO-3166 alpha-3: USA, TUR, DEU — never US, TR, DE. Two letters',
+  '   is not rejected; it returns 200 and an empty list that reads as "no data here".',
+  '2. List endpoints return relationship stubs, not values: /prices carries no price',
+  '   until the price point is included.',
+  '3. pricing__* answers a pricing question in one call, in place of the',
+  '   app → group → subscription → price chain. Prefer it over walking the chain.',
+].join('\n');
 
 export function createServer(config: ServerConfig, selection?: ProfileSelection): Server {
   const tokens = new TokenProvider(config.credentials);
@@ -165,12 +201,28 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   }
 
   const reviewsAiWanted = wantsFamily('reviews_ai__');
-  const pricingWanted = wantsFamily('pricing__') && !config.readOnly;
+
+  /**
+   * Macros: one call in place of a chain the raw tools would make the model
+   * walk. Each family opts in through the profile like any other, and a
+   * read-only server still offers the read ones — refusing to answer "what does
+   * this cost" on a server built to answer questions would be the wrong kind of
+   * safe.
+   */
+  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS].filter(
+    (t) =>
+      wantsFamily(`${t.name.split('__')[0]}__`) &&
+      (!config.readOnly || t.annotations?.readOnlyHint === true)
+  );
+  const macroOffered = (name: string): boolean => macroTools.some((t) => t.name === name);
 
   const server = new Server(
     { name: selection ? `asc-${selection.profile.name}` : 'app-store-connect-mcp', version: VERSION },
-    // listChanged: the tool list can grow mid-session via asc__load.
-    { capabilities: { tools: { listChanged: true } } }
+    {
+      // listChanged: the tool list can grow mid-session via asc__load.
+      capabilities: { tools: { listChanged: true } },
+      instructions: SERVER_INSTRUCTIONS,
+    }
   );
 
   /**
@@ -181,7 +233,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    if (PRICING_TOOL_NAMES.has(name)) return pricingWanted;
+    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS].find((t) => t.name === name);
+    if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
     }
@@ -334,7 +387,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       ...PROXY_TOOLS,
       ...(onDemand ? [onDemand] : []),
       ...(reviewsAiWanted && clientSupportsSampling() ? REVIEWS_AI_TOOLS : []),
-      ...(pricingWanted ? PRICING_TOOLS : []),
+      ...macroTools,
       ...registry.listTools(),
     ];
 
@@ -504,6 +557,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           readOnly: config.readOnly,
           loadedDomains,
           storekitEnabled: Boolean(storekit),
+          macroOffered,
           includeDeprecated: config.includeDeprecated,
           profileReport,
           missingToolsHint: selection
@@ -539,8 +593,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               }
             : undefined,
         });
-      } else if (pricingWanted && PRICING_TOOL_NAMES.has(name)) {
-        result = await executePricingTool(name, args, { http, dryRun: config.dryRun });
+      } else if (macroOffered(name)) {
+        result = PRICING_TOOL_NAMES.has(name)
+          ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
+          : await executeScreenshotTool(name, args, { http });
       } else if (reviewsAiWanted && REVIEWS_AI_TOOL_NAMES.has(name)) {
         result = await executeReviewsAiTool(name, args, {
           server,
