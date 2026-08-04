@@ -311,8 +311,13 @@ function relationshipTwinPath(path: string, method: string, opId: string): strin
  * The generated modules are imported here, after they have been written, so a
  * first-ever run on a clean checkout does not fail on a missing module and the
  * numbers always describe the tools this run just produced.
+ *
+ * Every build pays for the per-tool measurement, which is cheap. The
+ * per-domain table and the shared-block ceiling are opt-in: the ceiling costs
+ * ~1.2s to compute and reports a number that is provably unreachable, so it is
+ * diagnostics, not a build step.
  */
-async function tokenReport(): Promise<string> {
+async function tokenReport(verbose: boolean): Promise<string> {
   const { OPERATIONS } = await import('../src/generated/operations.js');
   const { toMcpTool } = await import('../src/core/registry.js');
 
@@ -324,9 +329,7 @@ async function tokenReport(): Promise<string> {
     byDomain.set(op.domain, list);
   }
 
-  const lines: string[] = [
-    '',
-    'Tool-definition tokens (JSON.stringify(schema).length / 4):',
+  const table: string[] = [
     '',
     `  ${'domain'.padEnd(20)}${'tools'.padStart(6)}${'inline'.padStart(9)}` +
       `${'$defs'.padStart(9)}${'saved'.padStart(8)}${'pct'.padStart(7)}${'hit'.padStart(5)}`,
@@ -349,15 +352,14 @@ async function tokenReport(): Promise<string> {
       if (sizes.defCount) hit++;
       definitionTotal += estimateTokens(definition);
     }
-    const ceiling = sharedDefsCeiling(entries.map((e) => e.inputSchema));
 
     inlineTotal += inline;
     defsTotal += withDefs;
     hitTotal += hit;
-    ceilingTotal += ceiling;
+    if (verbose) ceilingTotal += sharedDefsCeiling(entries.map((e) => e.inputSchema));
 
     const pct = inline ? ((inline - withDefs) / inline) * 100 : 0;
-    lines.push(
+    table.push(
       `  ${domain.padEnd(20)}${String(entries.length).padStart(6)}${String(inline).padStart(9)}` +
         `${String(withDefs).padStart(9)}${String(inline - withDefs).padStart(8)}` +
         `${`${pct.toFixed(1)}%`.padStart(7)}${String(hit).padStart(5)}`
@@ -366,21 +368,35 @@ async function tokenReport(): Promise<string> {
 
   const saved = inlineTotal - defsTotal;
   const toolCount = OPERATIONS.length;
+
+  const lines: string[] = ['', 'Tool-definition tokens (JSON.stringify(schema).length / 4):'];
+  if (verbose) lines.push(...table);
   lines.push(
     '',
     `  inputSchema, inlined:        ${inlineTotal} tok`,
     `  inputSchema, with $defs:     ${defsTotal} tok ` +
       `(-${saved}, ${((saved / inlineTotal) * 100).toFixed(2)}%, ${hitTotal}/${toolCount} tools affected)`,
     `  full tool definitions:       ${definitionTotal} tok ` +
-      `(avg ${Math.round(definitionTotal / toolCount)}/tool — the TOKENS_PER_TOOL input)`,
-    '',
-    `  ceiling if one $defs block could be shared across a served tool list:`,
-    `    -${ceilingTotal} tok (${((ceilingTotal / inlineTotal) * 100).toFixed(1)}%) — NOT achievable.`,
-    `    MCP gives every tool its own schema resource (ListToolsResult is just`,
-    `    { tools: Tool[] }, and SEP-2106 tells clients not to dereference`,
-    `    external $ref URIs), so "#/$defs/..." only ever resolves inside the one`,
-    `    tool that carries it. Cross-tool sharing is not expressible on the wire.`
+      `(avg ${Math.round(definitionTotal / toolCount)}/tool — the TOKENS_PER_TOOL input)`
   );
+
+  if (verbose) {
+    lines.push(
+      '',
+      `  ceiling if one $defs block could be shared across a served tool list:`,
+      `    -${ceilingTotal} tok (${((ceilingTotal / inlineTotal) * 100).toFixed(1)}%) — NOT achievable.`,
+      `    ListToolsResult is { tools: Tool[] } and each inputSchema is its own`,
+      `    JSON Schema resource, so "#/$defs/..." only ever resolves inside the`,
+      `    tool carrying it. Hosting the block behind a URL is no escape either:`,
+      `    SEP-2106 says clients MUST NOT auto-dereference network URIs.`
+    );
+  } else {
+    lines.push(
+      '',
+      `  Per-domain table and the (unreachable) shared-$defs ceiling:`,
+      `    TOKEN_REPORT=verbose npm run generate`
+    );
+  }
 
   return lines.join('\n');
 }
@@ -571,8 +587,13 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {${descMatch ? descMa
 main();
 
 // Token accounting runs against the files main() just wrote, so it is a
-// separate pass rather than part of the generation itself.
-tokenReport().then(
+// separate pass rather than part of the generation itself. `npm run generate`
+// swallows extra argv (it chains two scripts), so the env var is the form that
+// actually reaches here.
+const verbose =
+  process.argv.includes('--verbose') || process.env.TOKEN_REPORT === 'verbose';
+
+tokenReport(verbose).then(
   (report) => console.log(report),
   (err) => {
     console.error(`\nToken report failed: ${(err as Error).message}`);

@@ -5,10 +5,16 @@
  * MCP (SEP-2106, revision 2026-07-28) lets an `inputSchema` be any JSON Schema
  * 2020-12 document, so `$defs` + `$ref` are legal inside one. What it does NOT
  * have is a document-level place to put schemas shared BETWEEN tools:
- * `ListToolsResult` is `{ tools: Tool[] }` and each `Tool.inputSchema` is its
- * own schema resource, with the spec telling implementations not to
- * dereference external `$ref` URIs. So `#/$defs/...` can only ever resolve
- * inside the tool that carries it, and a shared block is not expressible.
+ * `ListToolsResult` is `{ tools: Tool[] }`, and each `Tool.inputSchema` is its
+ * own JSON Schema *resource*.
+ *
+ * Resource scoping is the actual blocker. A `#/$defs/...` pointer is resolved
+ * against the schema resource it appears in, so it can only ever name
+ * something inside the one tool carrying it — no amount of server-side
+ * bookkeeping changes that. Hosting a shared block behind a URL is not an
+ * escape either: SEP-2106 says implementations MUST NOT auto-dereference
+ * network URIs (opt-in fetching MAY be offered, off by default), so a served
+ * tool cannot depend on it resolving. A shared block is not expressible.
  *
  * That is the whole ballgame for token cost: a shape can only be factored out
  * when ONE tool repeats it, because every served tool must carry its own copy
