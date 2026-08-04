@@ -160,13 +160,13 @@ export function toMcpTool(
   const required: string[] = [];
 
   for (const param of op.pathParams) {
-    properties[param] = {
-      type: 'string',
-      description:
-        param === 'id'
-          ? 'Resource identifier.'
-          : `Path parameter "${param}".`,
-    };
+    properties[param] =
+      param === 'id'
+        ? // "Resource identifier." repeated this description on 783 tools for
+          // no information a required string param named `id` doesn't already
+          // carry — pure token cost. See task-7-report.md.
+          { type: 'string' }
+        : { type: 'string', description: `Path parameter "${param}".` };
     required.push(param);
   }
 
@@ -213,13 +213,13 @@ export function toMcpTool(
     if (op.method === 'POST' || op.method === 'PATCH') required.push('body');
   }
 
-  // Pagination cursor for collection endpoints.
+  // Pagination cursor for collection endpoints. Kept short deliberately: this
+  // one description was repeated verbatim on all 240 `.list` tools — see
+  // task-7-report.md for the measured cost.
   if (op.method === 'GET' && op.name.endsWith('.list')) {
     properties.next_url = {
       type: 'string',
-      description:
-        'Absolute `links.next` URL from a previous response, to fetch the next page. ' +
-        'When set, all other parameters are ignored.',
+      description: 'Absolute links.next URL from a previous response.',
     };
   }
 
