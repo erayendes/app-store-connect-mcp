@@ -44,6 +44,21 @@ export const REVIEWS_AI_TOOLS: McpToolDefinition[] = [
       },
       required: ['review_id'],
     },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        review: {
+          type: 'object',
+          description: 'Raw review fields from Apple: id, rating, title, body, territory, createdDate, and any others Apple returns.',
+        },
+        characterLimit: {
+          type: 'number',
+          description: "Apple's hard limit, in characters, for a developer response.",
+        },
+        note: { type: 'string' },
+      },
+      required: ['review', 'characterLimit'],
+    },
     annotations: { readOnlyHint: true },
   },
   {
@@ -66,6 +81,24 @@ export const REVIEWS_AI_TOOLS: McpToolDefinition[] = [
       },
       required: ['app_id'],
     },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        appId: { type: 'string' },
+        fetchedCount: { type: 'number' },
+        moreReviewsExist: { type: 'boolean' },
+        analyzedCount: { type: 'number' },
+        truncated: { type: 'boolean' },
+        coverage: { type: 'string' },
+        stats: { type: 'object', description: 'count, averageRating, distribution — computed in code.' },
+        reviews: {
+          type: 'array',
+          items: { type: 'object' },
+          description: 'Packed reviews: id, rating, title, body, territory, date.',
+        },
+      },
+      required: ['appId', 'fetchedCount', 'analyzedCount'],
+    },
     annotations: { readOnlyHint: true },
   },
   {
@@ -81,6 +114,26 @@ export const REVIEWS_AI_TOOLS: McpToolDefinition[] = [
         days: { type: 'number', description: 'Lookback window in days (default 1, max 30).' },
       },
       required: ['app_id'],
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        appId: { type: 'string' },
+        days: { type: 'number' },
+        fetchedCount: { type: 'number' },
+        analyzedCount: { type: 'number' },
+        truncated: { type: 'boolean' },
+        coverage: { type: 'string' },
+        stats: { type: 'object', description: 'count, averageRating, distribution for the current window.' },
+        previousStats: { type: 'object', description: 'Same shape as stats, for the equal-length previous window.' },
+        trend: { type: 'object', description: 'volume and averageRating, each { current, previous } — computed in code.' },
+        reviews: {
+          type: 'array',
+          items: { type: 'object' },
+          description: 'Packed reviews in the current window: id, rating, title, body, territory, date.',
+        },
+      },
+      required: ['appId', 'days', 'fetchedCount', 'analyzedCount', 'stats', 'previousStats', 'trend'],
     },
     annotations: { readOnlyHint: true },
   },
@@ -235,10 +288,23 @@ const INSTRUCTIONS = {
     `No reviews in the last ${days} day(s). Nothing to summarize.`,
 } as const;
 
-function textResult(structuredContent: Record<string, unknown>, text: string): CallToolResult {
+/**
+ * Builds the tool result: `structuredContent` for clients that read it, plus
+ * a matching TextContent block for clients that don't — per the MCP spec,
+ * "tools returning structured content should also serialize and return it
+ * within a TextContent block" (2025-11-25, server/tools). Without this, a
+ * host that doesn't forward `structuredContent` into the model's context
+ * would hand the instruction "the review is in structuredContent.review"
+ * with nothing actually attached, and Apple's response character limit
+ * (`characterLimit`) would never reach the model either.
+ */
+function textResult(structuredContent: Record<string, unknown>, instruction: string): CallToolResult {
   return {
     structuredContent,
-    content: [{ type: 'text', text }],
+    content: [
+      { type: 'text', text: instruction },
+      { type: 'text', text: '```json\n' + JSON.stringify(structuredContent, null, 2) + '\n```' },
+    ],
   };
 }
 

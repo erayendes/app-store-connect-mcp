@@ -70,6 +70,16 @@ export interface McpToolDefinition {
     properties: Record<string, unknown>;
     required?: string[];
   };
+  /**
+   * Shape of `structuredContent` for tools that return it (e.g. the
+   * reviews-ai tools). Optional pass-through: unset for every tool that
+   * still returns plain JSON text, as before.
+   */
+  outputSchema?: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
   annotations?: {
     readOnlyHint?: boolean;
     destructiveHint?: boolean;
