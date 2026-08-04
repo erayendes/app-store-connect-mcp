@@ -4,8 +4,19 @@ import {
   packageReviews,
   computeStats,
   RESPONSE_CHAR_LIMIT,
+  REVIEWS_AI_TOOLS,
   type ReviewsAiContext,
 } from '../src/tools/reviews-ai.js';
+
+describe('REVIEWS_AI_TOOLS (structured output declared)', () => {
+  it('declares an outputSchema for every tool, describing its structuredContent shape', () => {
+    for (const tool of REVIEWS_AI_TOOLS) {
+      expect(tool.outputSchema, `${tool.name} should declare outputSchema`).toBeDefined();
+      expect(tool.outputSchema?.type).toBe('object');
+      expect(Object.keys(tool.outputSchema?.properties ?? {}).length).toBeGreaterThan(0);
+    }
+  });
+});
 
 function review(id: string, rating: number, body: string, createdDate?: string) {
   return {
@@ -44,9 +55,16 @@ function makeCtx(overrides: {
   return { http, brand: overrides.brand } as unknown as ReviewsAiContext & { http: any };
 }
 
-/** Every tool result is content (instruction text) + structuredContent (raw data). */
+/**
+ * Every tool result is `content: [instruction, serialized structuredContent]`
+ * plus `structuredContent` (raw data) alongside it. `textOf` is the
+ * instruction block; `allTextOf` is everything a text-only client sees.
+ */
 function textOf(result: any): string {
   return result.content[0].text;
+}
+function allTextOf(result: any): string {
+  return result.content.map((c: any) => c.text).join('\n');
 }
 
 describe('packageReviews (injection-safe packaging)', () => {
@@ -102,6 +120,29 @@ describe('reviews_ai__draft_response', () => {
     expect(ctx.http.post).not.toHaveBeenCalled();
   });
 
+  it('also serializes structuredContent into a TextContent block, so Apple\'s character limit reaches the model even if the host drops structuredContent', async () => {
+    const get = vi.fn().mockResolvedValue({ data: review('r1', 2, 'App crashes on launch') });
+    const ctx = makeCtx({ get });
+
+    const result: any = await executeReviewsAiTool(
+      'reviews_ai__draft_response',
+      { review_id: 'r1' },
+      ctx
+    );
+
+    // Backward-compat per MCP spec: structured content should also be
+    // serialized into a TextContent block, not only structuredContent.
+    expect(result.content).toHaveLength(2);
+    const dataBlock = result.content[1].text as string;
+    // The literal number reaches the model in plain text, not just as a
+    // reference ("structuredContent.characterLimit") that depends on the
+    // host forwarding structuredContent.
+    expect(dataBlock).toContain(String(RESPONSE_CHAR_LIMIT));
+    const parsed = JSON.parse(dataBlock.replace(/^```json\n/, '').replace(/\n```$/, ''));
+    expect(parsed).toEqual(result.structuredContent);
+    expect(parsed.review.body).toBe('App crashes on launch');
+  });
+
   it('instructs the host model to reply in the same language, respect the char limit, and carry brand rules', async () => {
     const get = vi
       .fn()
@@ -128,9 +169,12 @@ describe('reviews_ai__draft_response', () => {
     expect(text).toContain('sincere, no corporate speak');
     expect(text).toContain('sorry for the inconvenience');
     expect(text).toContain('https://example.com/support');
-    // The review rides as structured data, not embedded in the instruction text.
+    // The review rides as structured data, not embedded in the instruction
+    // block itself — but it does reach the model, via the serialized data
+    // block right alongside the instruction (a text-only client still sees it).
     expect(text).not.toContain('Kötü');
     expect(result.structuredContent.review.body).toContain('Kötü');
+    expect(allTextOf(result)).toContain('Kötü');
   });
 
   it('rejects a missing review_id', async () => {
@@ -162,6 +206,9 @@ describe('reviews_ai__triage', () => {
     expect(result.structuredContent.stats.averageRating).toBe(3);
     expect(result.structuredContent.reviews).toHaveLength(2);
     expect(textOf(result)).toMatch(/Bug reports/);
+    // The stats also reach a text-only client via the serialized data block.
+    expect(result.content).toHaveLength(2);
+    expect(allTextOf(result)).toContain('"averageRating": 3');
   });
 
   it('reports fetched vs analyzed honestly when the budget clips input', async () => {
@@ -224,6 +271,9 @@ describe('reviews_ai__daily_briefing (trend computed in code)', () => {
     expect(sc.trend.averageRating.previous).toBe(1);
     // The model is told the numbers are already computed, not asked to invent them.
     expect(textOf(result)).toContain('do NOT recompute');
+    // ...and the trend itself reaches a text-only client via the data block.
+    expect(result.content).toHaveLength(2);
+    expect(allTextOf(result)).toContain('"volume"');
   });
 
   it('returns a "nothing to summarize" instruction when the window is empty', async () => {
