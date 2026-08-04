@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { hoistDefs, expandDefs, measureSchema, estimateTokens } from '../scripts/schema-defs.js';
+import { ListToolsResultSchema, ToolSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  hoistDefs,
+  expandDefs,
+  measureSchema,
+  estimateTokens,
+  sharedDefsCeiling,
+} from '../scripts/schema-defs.js';
 import { toMcpTool } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 
@@ -90,24 +97,107 @@ describe('$defs hoisting', () => {
   });
 });
 
-describe('$defs token budget', () => {
-  /**
-   * Decision tripwire, in the style of tests/ax-audit.ts's ratchets.
-   *
-   * `$defs` was investigated as a way to stop repeating shared shapes across
-   * the 982 generated tools. It is not served, because MCP gives every tool
-   * its own schema resource: a `#/$defs/...` pointer only resolves inside the
-   * tool carrying it, so each served tool must embed its own copy and nothing
-   * is shared. What survives is the duplication INSIDE one tool's schema,
-   * measured at ~1.8% of inputSchema tokens and concentrated in a handful of
-   * Xcode Cloud and app-info bodies — too little to justify a second serving
-   * mode.
-   *
-   * If a future Apple spec pushes that past 10%, this fails and the decision
-   * is worth re-reading rather than inheriting. `npm run generate` prints the
-   * current figure per domain.
-   */
-  it('stays too small to be worth a second serving mode', () => {
+/**
+ * Decision tripwires, in the style of tests/ax-audit.test.ts's ratchets.
+ *
+ * `$defs` was investigated as a way to stop repeating shared shapes across the
+ * 982 generated tools, and is NOT served. Two independent facts hold that
+ * decision up, so each gets its own tripwire — the first is the load-bearing
+ * one, and it is a fact about MCP, not about Apple's spec:
+ *
+ *   1. MCP cannot express a shared block. Every tool's inputSchema is its own
+ *      JSON Schema resource, so `#/$defs/...` resolves only inside the tool
+ *      carrying it. This is what makes the 31% ceiling unreachable.
+ *   2. What survives — duplication inside a SINGLE tool's schema — is ~1.8%,
+ *      too little to justify a second serving mode.
+ *
+ * Fact 1 is the one that could change without anything in this repo changing,
+ * and it is the change that would make the whole idea worth revisiting.
+ */
+describe('$defs decision tripwires', () => {
+  it('MCP still has no document-level schema container', () => {
+    // If a future SDK adds a shared-defs slot to the tools/list result, the
+    // 31% ceiling stops being hypothetical and this decision must be re-read.
+    // Any new key here needs checking for that; it is not automatically benign.
+    const result = ListToolsResultSchema as unknown as { shape: Record<string, unknown> };
+    expect(Object.keys(result.shape).sort()).toEqual(['_meta', 'nextCursor', 'tools']);
+
+    // `tools` is a flat array of self-contained Tool objects — not a keyed
+    // container that could grow a sibling `$defs`.
+    const tools = result.shape.tools as any;
+    expect(tools.constructor.name).toBe('ZodArray');
+    const tool = ToolSchema as unknown as { shape: Record<string, unknown> };
+    expect(Object.keys(tool.shape).sort()).toEqual([
+      '_meta',
+      'annotations',
+      'description',
+      'execution',
+      'icons',
+      'inputSchema',
+      'name',
+      'outputSchema',
+      'title',
+    ]);
+    expect(Object.keys((tools.element as any).shape).sort()).toEqual(
+      Object.keys(tool.shape).sort()
+    );
+  });
+
+  it('gives a stray top-level $defs no meaning, and every ref to it dangles', () => {
+    // The trap, made explicit. The SDK's result schema is LOOSE, so a $defs
+    // sibling does ride along on the wire — which is why "it transmits fine"
+    // is not evidence that it works. It is outside the Result contract (see
+    // the shape pin above) and, decisively, outside every inputSchema's JSON
+    // Schema resource. A tool pointing at it is pointing at nothing.
+    const parsed = ListToolsResultSchema.parse({
+      $defs: { shared: { type: 'string' } },
+      tools: [
+        {
+          name: 'a',
+          inputSchema: {
+            type: 'object',
+            properties: { a: { $ref: '#/$defs/shared' } },
+          },
+        },
+      ],
+    });
+
+    expect(parsed).toHaveProperty('$defs'); // carried...
+    expect(Object.keys((ListToolsResultSchema as any).shape)).not.toContain('$defs'); // ...but unmeant
+
+    // Resolved within the tool's own resource — the only scope a client uses —
+    // the reference has nothing to point at.
+    const inputSchema = (parsed.tools as any[])[0].inputSchema;
+    expect(() => expandDefs(inputSchema, {})).toThrow(/Dangling/);
+  });
+
+  it('pins the unreachable shared-$defs ceiling', () => {
+    // ~31.1% today. Drift in EITHER direction means the shape of Apple's spec
+    // changed enough that the trade-off deserves a fresh look — a collapse
+    // would mean there is nothing left to want, a jump means the prize grew.
+    const byDomain = new Map<string, unknown[]>();
+    for (const op of OPERATIONS) {
+      const list = byDomain.get(op.domain) ?? [];
+      list.push(toMcpTool(op).inputSchema);
+      byDomain.set(op.domain, list);
+    }
+    let inline = 0;
+    let ceiling = 0;
+    for (const [, schemas] of byDomain) {
+      inline += schemas.reduce<number>((sum, s) => sum + estimateTokens(s), 0);
+      ceiling += sharedDefsCeiling(schemas);
+    }
+    const pct = (ceiling / inline) * 100;
+    expect(pct, `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens (was 31.1%)`)
+      .toBeGreaterThan(26);
+    expect(pct, `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens (was 31.1%)`)
+      .toBeLessThan(36);
+  });
+
+  it('pins the achievable self-contained saving', () => {
+    // 1.76% today. The hard ceiling for ANY exact-dedup algorithm over this
+    // spec is 3.12% — a 10% threshold could never fire, which is why the bound
+    // is set where the number can actually reach it.
     let inline = 0;
     let withDefs = 0;
     for (const op of OPERATIONS) {
@@ -116,8 +206,10 @@ describe('$defs token budget', () => {
       withDefs += sizes.defsTokens;
     }
     const pct = ((inline - withDefs) / inline) * 100;
-    expect(pct, `self-contained $defs would now save ${pct.toFixed(2)}% of schema tokens`)
-      .toBeLessThan(10);
+    const message =
+      `self-contained $defs would now save ${pct.toFixed(2)}% of schema tokens (was 1.76%)`;
+    expect(pct, message).toBeGreaterThan(1.2);
+    expect(pct, message).toBeLessThan(3);
   });
 
   it('estimates tokens the way the rest of the repo does', () => {
