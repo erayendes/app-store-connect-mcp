@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { domainFor } from './domains.js';
 import { describe } from './describe.js';
 import { riskFor } from '../src/core/risk.js';
+import { estimateTokens, measureSchema, sharedDefsCeiling } from './schema-defs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -298,6 +299,92 @@ function relationshipTwinPath(path: string, method: string, opId: string): strin
   return path.replace('/relationships/', '/');
 }
 
+/**
+ * What the generated tools actually cost a model, and what `$defs` could do
+ * about it.
+ *
+ * Printed rather than written to `src/generated/`: the numbers are produced by
+ * the real serving path (`toMcpTool`), so they move when the SERVER changes,
+ * not only when the spec does. Committing them would make the drift check
+ * ("regenerate and diff src/generated/") fail on unrelated server edits.
+ *
+ * The generated modules are imported here, after they have been written, so a
+ * first-ever run on a clean checkout does not fail on a missing module and the
+ * numbers always describe the tools this run just produced.
+ */
+async function tokenReport(): Promise<string> {
+  const { OPERATIONS } = await import('../src/generated/operations.js');
+  const { toMcpTool } = await import('../src/core/registry.js');
+
+  const byDomain = new Map<string, Array<{ definition: unknown; inputSchema: unknown }>>();
+  for (const op of OPERATIONS) {
+    const definition = toMcpTool(op);
+    const list = byDomain.get(op.domain) ?? [];
+    list.push({ definition, inputSchema: definition.inputSchema });
+    byDomain.set(op.domain, list);
+  }
+
+  const lines: string[] = [
+    '',
+    'Tool-definition tokens (JSON.stringify(schema).length / 4):',
+    '',
+    `  ${'domain'.padEnd(20)}${'tools'.padStart(6)}${'inline'.padStart(9)}` +
+      `${'$defs'.padStart(9)}${'saved'.padStart(8)}${'pct'.padStart(7)}${'hit'.padStart(5)}`,
+  ];
+
+  let inlineTotal = 0;
+  let defsTotal = 0;
+  let hitTotal = 0;
+  let definitionTotal = 0;
+  let ceilingTotal = 0;
+
+  for (const [domain, entries] of [...byDomain.entries()].sort()) {
+    let inline = 0;
+    let withDefs = 0;
+    let hit = 0;
+    for (const { definition, inputSchema } of entries) {
+      const sizes = measureSchema(inputSchema);
+      inline += sizes.inlineTokens;
+      withDefs += sizes.defsTokens;
+      if (sizes.defCount) hit++;
+      definitionTotal += estimateTokens(definition);
+    }
+    const ceiling = sharedDefsCeiling(entries.map((e) => e.inputSchema));
+
+    inlineTotal += inline;
+    defsTotal += withDefs;
+    hitTotal += hit;
+    ceilingTotal += ceiling;
+
+    const pct = inline ? ((inline - withDefs) / inline) * 100 : 0;
+    lines.push(
+      `  ${domain.padEnd(20)}${String(entries.length).padStart(6)}${String(inline).padStart(9)}` +
+        `${String(withDefs).padStart(9)}${String(inline - withDefs).padStart(8)}` +
+        `${`${pct.toFixed(1)}%`.padStart(7)}${String(hit).padStart(5)}`
+    );
+  }
+
+  const saved = inlineTotal - defsTotal;
+  const toolCount = OPERATIONS.length;
+  lines.push(
+    '',
+    `  inputSchema, inlined:        ${inlineTotal} tok`,
+    `  inputSchema, with $defs:     ${defsTotal} tok ` +
+      `(-${saved}, ${((saved / inlineTotal) * 100).toFixed(2)}%, ${hitTotal}/${toolCount} tools affected)`,
+    `  full tool definitions:       ${definitionTotal} tok ` +
+      `(avg ${Math.round(definitionTotal / toolCount)}/tool — the TOKENS_PER_TOOL input)`,
+    '',
+    `  ceiling if one $defs block could be shared across a served tool list:`,
+    `    -${ceilingTotal} tok (${((ceilingTotal / inlineTotal) * 100).toFixed(1)}%) — NOT achievable.`,
+    `    MCP gives every tool its own schema resource (ListToolsResult is just`,
+    `    { tools: Tool[] }, and SEP-2106 tells clients not to dereference`,
+    `    external $ref URIs), so "#/$defs/..." only ever resolves inside the one`,
+    `    tool that carries it. Cross-tool sharing is not expressible on the wire.`
+  );
+
+  return lines.join('\n');
+}
+
 function main(): void {
   const specPath = resolve(ROOT, 'spec/openapi.json');
   const spec = JSON.parse(readFileSync(specPath, 'utf8'));
@@ -482,3 +569,13 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {${descMatch ? descMa
 }
 
 main();
+
+// Token accounting runs against the files main() just wrote, so it is a
+// separate pass rather than part of the generation itself.
+tokenReport().then(
+  (report) => console.log(report),
+  (err) => {
+    console.error(`\nToken report failed: ${(err as Error).message}`);
+    process.exitCode = 1;
+  }
+);
