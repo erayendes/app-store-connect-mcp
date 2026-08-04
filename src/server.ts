@@ -257,11 +257,6 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     );
   };
 
-  // Reviews-AI tools generate text via MCP Sampling — useless on a client
-  // that never declared the capability, so they are hidden from the list
-  // there (and guarded again at call time for clients that call blind).
-  const clientSupportsSampling = () => Boolean(server.getClientCapabilities()?.sampling);
-
   /**
    * On-demand loading, kept deliberately minimal while we find out whether
    * clients hand a revised tool list to the model within the same turn. If they
@@ -386,7 +381,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       ...META_TOOLS,
       ...PROXY_TOOLS,
       ...(onDemand ? [onDemand] : []),
-      ...(reviewsAiWanted && clientSupportsSampling() ? REVIEWS_AI_TOOLS : []),
+      ...(reviewsAiWanted ? REVIEWS_AI_TOOLS : []),
       ...macroTools,
       ...registry.listTools(),
     ];
@@ -598,12 +593,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http });
       } else if (reviewsAiWanted && REVIEWS_AI_TOOL_NAMES.has(name)) {
-        result = await executeReviewsAiTool(name, args, {
-          server,
-          http,
-          samplingSupported: clientSupportsSampling,
-          brand: config.reviewsBrand,
-        });
+        // Shaped as structuredContent (raw data) + content (instruction for
+        // the host model), not the generic JSON-dump result below — return
+        // it as-is rather than falling through to the shared finalizer.
+        return await executeReviewsAiTool(name, args, { http, brand: config.reviewsBrand });
       } else if (STOREKIT_TOOL_NAMES.has(name)) {
         if (!storekit) {
           throw new Error(
