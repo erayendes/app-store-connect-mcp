@@ -129,14 +129,71 @@ function enumValues(schema: any): string[] | undefined {
  * benefit, so we keep the ones that change *which* records come back and drop
  * the ones that only change which columns come back.
  */
-function isUsefulQueryParam(name: string): boolean {
-  if (name.startsWith('fields[')) return false;
+function isUsefulQueryParam(name: string, primaryType?: string): boolean {
+  // Sparse fieldsets, but only for the resource the endpoint is *about*.
+  //
+  // Every `fields[...]` used to be dropped, on the reasoning that it changes
+  // which columns come back rather than which records, and that a single
+  // operation can carry a hundred of them — one per type it can include. The
+  // first half of that is true and the second half is why the rule existed;
+  // together they traded a smaller tool schema for a larger response on every
+  // single call, which is the wrong way round. Measured on one live endpoint:
+  // 50 localizations are 264 KB as we ship them and 16 KB with
+  // `fields[appStoreVersionLocalizations]=locale`. Same rows, 17× smaller.
+  //
+  // Keeping only the primary type is what makes this affordable: one extra
+  // parameter per operation instead of a hundred. The rest stay dropped — a
+  // model narrowing an *included* type is a rarer need than a model drowning
+  // in the main one.
+  if (name.startsWith('fields[')) return primaryType !== undefined && name === `fields[${primaryType}]`;
   if (name === 'include') return true;
   if (name.startsWith('filter[')) return true;
   if (name === 'limit' || name === 'sort' || name === 'cursor') return true;
   if (name.startsWith('limit[')) return false;
   if (name.startsWith('exists[')) return true;
   return true;
+}
+
+/**
+ * Facts Apple's spec leaves out, added to the parameter description at
+ * generation time so every operation carrying the parameter says the same
+ * thing.
+ *
+ * A territory is the measured case. Apple documents `filter[territory]` as
+ * "filter by id(s) of related 'territory'" and nothing more, while the ids it
+ * wants are ISO-3166 alpha-3 — even though Apple's own base64 price-point ids
+ * decode to two-letter codes, so the wrong form is the one a model sees in the
+ * data. Sending `US` is not an error: the API answers 200 with an empty list,
+ * which reads as "this country has no price". A live session reported "no US
+ * price configured" for a subscription priced at $4.99.
+ *
+ * Adding a fact belongs here rather than in a lookup table: it costs one entry
+ * for all 25 territory parameters across 23 operations, and it stops the
+ * mistake instead of correcting it afterwards.
+ */
+const PARAM_NOTES: Array<[RegExp, string]> = [
+  // Repeated on 304 operations, so every word is paid for 304 times. The enum
+  // below it already lists what is allowed; this only has to say why to bother.
+  [/^fields\[/, 'Return only these attributes. A full row set can exceed 200 KB.'],
+  // The N+1 that a spec cannot warn about. Asking which of 50 localizations
+  // carry screenshots is 50 follow-up calls without this and one call with it,
+  // and the same shape recurs wherever a list is walked to reach its children.
+  [
+    /^include$/,
+    'Pull related records in the same call. Without it, checking a relationship ' +
+      'costs one extra call per row returned.',
+  ],
+  [
+    /^filter\[(review)?[Tt]erritory\]$/,
+    'Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: ' +
+      '"US" is accepted and silently returns an empty list.',
+  ],
+];
+
+function annotateParam(name: string, description: string): string {
+  const note = PARAM_NOTES.find(([pattern]) => pattern.test(name))?.[1];
+  if (!note) return description;
+  return description ? `${description} ${note}` : note;
 }
 
 
@@ -219,6 +276,22 @@ function simplifyBodySchema(
  * A relationship endpoint is dropped only when its twin really exists in the
  * spec — an orphan (none today, but Apple's spec changes) is kept.
  */
+/**
+ * The resource an endpoint is about, as Apple names it in `fields[...]`.
+ *
+ * It is the last path segment that names something: `/v1/apps` is about apps,
+ * `/v1/apps/{id}` still is, and `/v1/appStoreVersions/{id}/appStoreVersion-
+ * Localizations` is about the localizations. `/relationships/` segments are
+ * skipped for the same reason the twin endpoints are dropped — they describe
+ * the link, not the record.
+ */
+function primaryResourceType(path: string): string | undefined {
+  const segments = path
+    .split('/')
+    .filter((s) => s && s !== 'relationships' && !s.startsWith('{') && !/^v\d+$/.test(s));
+  return segments.pop();
+}
+
 function relationshipTwinPath(path: string, method: string, opId: string): string | null {
   if (method !== 'get') return null;
   if (!/_(getToManyRelationship|getToOneRelationship)$/.test(opId)) return null;
@@ -255,14 +328,18 @@ function main(): void {
         .filter((p) => p.in === 'path')
         .map((p) => p.name);
 
+      const primaryType = primaryResourceType(path);
       const queryParams = allParams
         // A required parameter is never "not useful" — dropping one makes the
         // endpoint permanently uncallable.
-        .filter((p) => p.in === 'query' && (p.required || isUsefulQueryParam(p.name)))
+        .filter((p) => p.in === 'query' && (p.required || isUsefulQueryParam(p.name, primaryType)))
         .map((p) => ({
           name: p.name,
           type: schemaType(p.schema),
-          description: (p.description ?? '').replace(/\s+/g, ' ').slice(0, 200),
+          description: annotateParam(
+            p.name,
+            (p.description ?? '').replace(/\s+/g, ' ').slice(0, 200)
+          ),
           enum: enumValues(p.schema)?.slice(0, 40),
           ...(p.required ? { required: true } : {}),
         }));

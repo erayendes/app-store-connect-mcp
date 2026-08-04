@@ -60,6 +60,38 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
     },
     annotations: { readOnlyHint: false, idempotentHint: false },
   },
+  {
+    name: 'pricing__get_subscription_price',
+    description:
+      'What a subscription costs customers today in one territory (country), in a single ' +
+      'step. Give the app (name, bundle ID or Apple ID) and the territory (e.g. USA, TUR); ' +
+      'the subscription is optional — omit it to get every subscription in the app, which ' +
+      'is how you answer "what does the weekly one cost" without knowing its product ID. ' +
+      'Use this instead of chaining apps__list / subscription_groups / prices calls. It ' +
+      'also returns the price that is actually in effect: subscriptions__prices__list ' +
+      'returns price-less stubs unless the caller knows to include the price point.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: {
+          type: 'string',
+          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
+        },
+        territory: {
+          type: 'string',
+          description: 'Territory (country) code, e.g. USA, TUR, DEU. Three letters, ISO-3166 alpha-3.',
+        },
+        subscription: {
+          type: 'string',
+          description:
+            'Optional. Product ID or reference name. Omit to return every subscription ' +
+            'in the app.',
+        },
+      },
+      required: ['app', 'territory'],
+    },
+    annotations: { readOnlyHint: true, idempotentHint: true },
+  },
 ];
 
 export const PRICING_TOOL_NAMES = new Set(PRICING_TOOLS.map((t) => t.name));
@@ -102,35 +134,47 @@ async function resolveApp(http: AscHttpClient, app: string): Promise<{ id: strin
   );
 }
 
-async function resolveSubscription(
-  http: AscHttpClient,
-  appId: string,
-  subscription: string
-): Promise<{ id: string; name: string; productId: string }> {
+interface Subscription {
+  id: string;
+  name: string;
+  productId: string;
+}
+
+/** Every subscription in the app, in one call — groups carry them as includes. */
+async function listSubscriptions(http: AscHttpClient, appId: string): Promise<Subscription[]> {
   const groups: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/subscriptionGroups`, {
     include: 'subscriptions',
     limit: 50,
   });
-  const subs = (groups?.included ?? []).filter((i: any) => i.type === 'subscriptions');
+  return (groups?.included ?? [])
+    .filter((i: any) => i.type === 'subscriptions')
+    .map((s: any) => ({
+      id: String(s.id),
+      name: String(s.attributes?.name ?? ''),
+      productId: String(s.attributes?.productId ?? ''),
+    }));
+}
+
+async function resolveSubscription(
+  http: AscHttpClient,
+  appId: string,
+  subscription: string
+): Promise<Subscription> {
+  const subs = await listSubscriptions(http, appId);
   const wanted = subscription.trim().toLowerCase();
   const match =
-    subs.find((s: any) => String(s.attributes?.productId ?? '').toLowerCase() === wanted) ??
-    subs.find((s: any) => String(s.attributes?.name ?? '').toLowerCase() === wanted) ??
-    subs.find((s: any) => String(s.attributes?.name ?? '').toLowerCase().includes(wanted));
+    subs.find((s) => s.productId.toLowerCase() === wanted) ??
+    subs.find((s) => s.name.toLowerCase() === wanted) ??
+    subs.find((s) => s.name.toLowerCase().includes(wanted)) ??
+    subs.find((s) => s.productId.toLowerCase().includes(wanted));
   if (!match) {
-    const available = subs
-      .map((s: any) => `${s.attributes?.productId} ("${s.attributes?.name}")`)
-      .join(', ');
+    const available = subs.map((s) => `${s.productId} ("${s.name}")`).join(', ');
     throw new AscApiError(
       `No subscription matching "${subscription}" in this app. Available: ${available || 'none'}.`,
       0
     );
   }
-  return {
-    id: match.id,
-    name: match.attributes?.name ?? subscription,
-    productId: match.attributes?.productId ?? '',
-  };
+  return match;
 }
 
 async function resolvePricePoint(
@@ -188,11 +232,97 @@ export function buildPricingPreview(args: Record<string, unknown>): string {
   ].join('\n');
 }
 
+/**
+ * Current price of one subscription in one territory.
+ *
+ * `/prices` on its own answers with stubs: relationship links and nothing a
+ * person could read. The price lives on the related price point, so the include
+ * is not an optimisation — without it the response contains no price at all,
+ * which is how a model ends up reporting "no price configured" for a territory
+ * that has one. Apple also returns scheduled future prices here, so a row is
+ * only in effect if its start date has passed.
+ */
+async function readPrice(
+  http: AscHttpClient,
+  sub: Subscription,
+  territory: string,
+  today: string
+): Promise<Record<string, unknown>> {
+  const res: any = await http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/prices`, {
+    'filter[territory]': territory,
+    include: 'subscriptionPricePoint',
+    limit: 200,
+  });
+
+  const points = new Map<string, any>(
+    (res?.included ?? [])
+      .filter((i: any) => i.type === 'subscriptionPricePoints')
+      .map((p: any) => [String(p.id), p.attributes])
+  );
+
+  const rows = (res?.data ?? []).map((row: any) => {
+    const startDate = row.attributes?.startDate ?? null;
+    const point = points.get(String(row.relationships?.subscriptionPricePoint?.data?.id ?? ''));
+    return {
+      customerPrice: point?.customerPrice ?? null,
+      proceeds: point?.proceeds ?? null,
+      startDate,
+      scheduled: Boolean(startDate) && startDate > today,
+    };
+  });
+
+  const current = rows.find((r: any) => !r.scheduled);
+  return {
+    subscription: sub.productId || sub.name,
+    name: sub.name,
+    ...(current
+      ? { customerPrice: current.customerPrice, proceeds: current.proceeds }
+      : { customerPrice: null, note: `No price in effect in ${territory}.` }),
+    ...(rows.some((r: any) => r.scheduled)
+      ? { scheduledChanges: rows.filter((r: any) => r.scheduled) }
+      : {}),
+  };
+}
+
 export async function executePricingTool(
   name: string,
   args: Record<string, unknown>,
   ctx: PricingContext
 ): Promise<unknown> {
+  if (name === 'pricing__get_subscription_price') {
+    for (const field of ['app', 'territory'] as const) {
+      if (!args[field] || typeof args[field] !== 'string') {
+        throw new AscApiError(`"${field}" is required.`, 0);
+      }
+    }
+    // Two letters is not an error at Apple — it is 200 and an empty list, which
+    // reads as "this country has no price". Stopping it here is the difference
+    // between an error and a confident wrong answer.
+    const territory = String(args.territory).trim().toUpperCase();
+    if (territory.length !== 3) {
+      throw new AscApiError(
+        `"${args.territory}" is not a territory code. Apple wants three letters ` +
+          `(ISO-3166 alpha-3): USA, TUR, DEU — not US, TR, DE. A two-letter code is ` +
+          `accepted by the API and silently returns nothing.`,
+        0
+      );
+    }
+
+    const app = await resolveApp(ctx.http, String(args.app));
+    const subs = args.subscription
+      ? [await resolveSubscription(ctx.http, app.id, String(args.subscription))]
+      : await listSubscriptions(ctx.http, app.id);
+    if (!subs.length) {
+      return { app: `${app.name} (${app.id})`, territory, prices: [], note: 'This app has no subscriptions.' };
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const prices = [];
+    for (const sub of subs) prices.push(await readPrice(ctx.http, sub, territory, today));
+
+    return { app: `${app.name} (${app.id})`, territory, prices };
+  }
+
   if (name !== 'pricing__set_subscription_price') {
     throw new Error(`Unknown pricing tool: ${name}`);
   }

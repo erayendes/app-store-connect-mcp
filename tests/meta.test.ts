@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { summarizeExpirations } from '../src/tools/meta.js';
+import {
+  META_TOOLS,
+  executeMetaTool,
+  searchOperations,
+  summarizeExpirations,
+} from '../src/tools/meta.js';
 
 const DAY = 86_400_000;
 
@@ -15,6 +20,100 @@ function profile(id: string, name: string, inDays: number, now: number) {
     attributes: { name, expirationDate: new Date(now + inDays * DAY).toISOString() },
   };
 }
+
+/**
+ * Search matches English literally, and nothing else. A hand-written Turkish
+ * word list used to sit in front of it; it was removed because every further
+ * language meant another hundred hand-typed rows, and the caller — a language
+ * model — translates better than the table ever did.
+ *
+ * That only holds while the client is told to translate. These two tests are
+ * the pair: search speaks one language, and it says so when it finds nothing.
+ * Delete either half and the other becomes a trap.
+ */
+describe('asc__search_tools speaks English and says so', () => {
+  it.each([
+    ['de', 'Abonnementpreis ändern'],
+    ['es', 'cambiar el precio de suscripcion'],
+    ['tr', 'abonelik fiyatını güncelle'],
+    ['bg', 'промяна на цената на абонамента'],
+    ['ja', 'サブスクリプションの価格を変更'],
+  ])('finds nothing for %s, because the catalogue is English', (_lang, query) => {
+    expect(searchOperations(query)).toEqual([]);
+  });
+
+  it('finds the same goal asked in English', () => {
+    expect(searchOperations('change subscription price').length).toBeGreaterThan(0);
+  });
+
+  it('tells the caller to search in English', () => {
+    const search = META_TOOLS.find((t) => t.name === 'asc__search_tools');
+    expect(search?.description).toMatch(/English/);
+  });
+
+  // A capital İ lowercases to i + U+0307, which matches no English word. It
+  // arrives whenever someone types an English query on a Turkish keyboard.
+  it('reads a capital İ as an i', () => {
+    expect(searchOperations('İOS build').length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The macros are the answer to the queries that made them necessary, so search
+ * has to return them. It did not: they come from neither the OpenAPI spec nor
+ * the StoreKit list, so `asc__search_tools` never saw them — a model asking how
+ * to change a price found the five-call chain and nothing else. Appending them
+ * was not enough either; eleven entries after 982 fall past any sane limit.
+ */
+describe('asc__search_tools finds the macros', () => {
+  const ctx = (): any => ({
+    registry: { get: () => undefined, size: 0, unloadedDomains: () => [] },
+    http: { limiter: { status: () => ({}) } },
+    tokens: { status: () => ({}) },
+    readOnly: false,
+    loadedDomains: [],
+    macroOffered: () => true,
+  });
+  const search = async (query: string, limit = 3) =>
+    ((await executeMetaTool('asc__search_tools', { query, limit }, ctx())) as any).matches.map(
+      (m: any) => m.tool
+    );
+
+  it('ranks the one-call tool above the chain it replaces', async () => {
+    expect(await search('change subscription price')).toContain('pricing__set_subscription_price');
+  });
+
+  it('finds the read macro from a plain question', async () => {
+    expect(await search('what does the subscription cost in each country')).toContain(
+      'pricing__get_subscription_price'
+    );
+  });
+
+  // Multi-word queries used to miss every non-spec tool: matching was a
+  // whole-phrase includes, and no description contains a whole question.
+  it('matches a StoreKit tool word by word', async () => {
+    expect(await search('check whether a customer owns this subscription', 5)).toContain(
+      'storekit__check_entitlement'
+    );
+  });
+
+  it('leaves unrelated queries to the generated tools', async () => {
+    expect(await search('create certificate')).toEqual([
+      'certificates.create',
+      'profiles.create',
+      'accessibility_declarations.create',
+    ]);
+  });
+
+  it('reports a macro the server does not offer as unloaded', async () => {
+    const res: any = await executeMetaTool(
+      'asc__search_tools',
+      { query: 'change subscription price', limit: 3 },
+      { ...ctx(), macroOffered: () => false }
+    );
+    expect(res.matches.find((m: any) => m.domain === 'macro').loaded).toBe(false);
+  });
+});
 
 describe('summarizeExpirations (asc__status check_expirations)', () => {
   const now = Date.parse('2026-07-28T00:00:00Z');

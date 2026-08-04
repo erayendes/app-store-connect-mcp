@@ -72,6 +72,21 @@ describe('capResponseSize', () => {
     expect(JSON.stringify(out, null, 2).length).toBeLessThanOrEqual(25_000); // ~cap
   });
 
+  /**
+   * Truncation is the one moment the caller is provably paying attention to the
+   * response's size, so it is where the cheapest remedy has to be named. Rows
+   * are rarely the problem — 50 localizations are 264 KB whole and 16 KB with a
+   * single attribute named — and every other suggestion here answers a narrower
+   * question than the one that was asked.
+   */
+  it('offers fields_* first, as the only remedy that keeps every row', () => {
+    const big = { data: Array.from({ length: 500 }, (_, i) => pricePoint(`id-${i}`)) };
+    const note: string = (capResponseSize(big, 20_000) as any).truncation.note;
+    expect(note).toContain('fields_');
+    expect(note).toContain('all 500');
+    expect(note.indexOf('fields_')).toBeLessThan(note.indexOf('filter_'));
+  });
+
   it('leaves small responses alone', () => {
     const small = { data: [pricePoint('a')] };
     expect(capResponseSize(small, 100_000)).toBe(small);

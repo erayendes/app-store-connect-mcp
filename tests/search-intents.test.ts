@@ -16,19 +16,35 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  *
  * Measured on the 50-intent corpus, 265 query phrasings:
  *
- *   passing in top-3   105   ← FLOOR
- *   ranked too low      90   the tool is found, below third
- *   no results at all   70   nothing matched, in any language
+ *   passing in top-3    83   ← FLOOR
+ *   ranked too low      72   the tool is found, below third
+ *   no results at all  110   nothing matched — almost all of them Turkish
  *
- * It has moved twice, and both moves were the point:
+ * It has moved three times, and every move was the point:
  *   92 → 81   lane B stopped queries from naming their own target, so the
  *             ranking had to be earned rather than spelled out
- *   81 → 105  query-language expansion gave non-English phrasings something to
- *             match; 44 queries that returned literally nothing now resolve
+ *   81 → 105  a hand-written Turkish word list was translating queries before
+ *             matching; 44 that returned literally nothing began to resolve
+ *   105 → 83  that word list was removed
  *
- * Ceiling today is 195 (265 minus the 70 that still find nothing).
+ * The last move is a deliberate loss and worth stating plainly. The list worked.
+ * It was also the wrong place for the job: another hundred hand-typed rows per
+ * language, going stale every time Apple adds resources, to do something the
+ * caller — a language model — already does better. `asc__search_tools` now asks
+ * for English in its description and says so when it finds nothing, and the
+ * client translates before it searches.
+ *
+ * Which makes most of this corpus measure a path that no longer exists. Those
+ * 110 zero-result phrasings are Turkish sentences handed straight to the server,
+ * and after this change nothing is supposed to hand it Turkish. They are kept
+ * because they still rank the English phrasings honestly and because deleting
+ * the evidence of a tradeoff is how a tradeoff turns into a mistake — but read
+ * the zero-result number as "queries that skipped the client's translation",
+ * not as debt anyone should pay off here.
+ *
+ * Ceiling today is 155 (265 minus the 110 that find nothing).
  */
-const FLOOR = 105;
+const FLOOR = 83;
 
 interface IntentQueryCase {
   intent: string;
@@ -60,11 +76,17 @@ const PASSING = EVALUATION.filter((e) => e.pass);
 const FAILING = EVALUATION.filter((e) => !e.pass);
 
 /**
- * Pinned list of known failing queries (184 total debt items).
- * Explicit debt tracking: 114 zero-result language indexing gaps + 70 search ranking misses.
+ * Pinned list of known failing queries: 110 that find nothing, 72 that rank
+ * below third. A failure not on this list breaks CI, so the cost of a change
+ * has to be written down before it can land.
+ *
+ * The final block is the 23 queries the removed Turkish word list used to
+ * carry. They are listed apart rather than merged in, because they are not the
+ * same kind of debt as the rest: nothing here needs fixing in the search code,
+ * the client translates now.
  */
 const KNOWN_FAILING_QUERIES: string[] = [
-  // --- 70 zero-result queries: still no match even after alias expansion ---
+  // --- zero-result queries: the catalogue is English and these are not ---
   "Türkiye’de haftalık aboneliği 99,99 TL yap",
   "Türk kullanıcılar için zam yapmam lazım",
   "Hangi pazarda ne kadar ücret aldığımızı karşılaştırmam lazım",
@@ -101,7 +123,6 @@ const KNOWN_FAILING_QUERIES: string[] = [
   "Sorun çıkarsa herkesi etkilemeden durdurabilelim",
   "Yeni versiyon aç",
   "Onaydan sonra manuel yayın iste",
-  "Son build’i TestFlight grubuna gönder",
   "organize external testers",
   "Yeni bir TestFlight grubu oluştur",
   "change StoreKit test account details",
@@ -226,6 +247,31 @@ const KNOWN_FAILING_QUERIES: string[] = [
   "release app store version immediately",
   "Versiyonu şimdi yayınla",
   "Release the version immediately",
+
+  // --- 23 queries the Turkish word list used to carry, measured on removal ---
+  "IAP fiyatını değiştir",
+  "Mağaza sayfasına Almanca dilini ekle",
+  "Yaş beyanını değiştir",
+  "Kademeli yayını başlat",
+  "Bu sürüm için build seç",
+  "Sürümü elle yayınlama talebi oluştur",
+  "Beta grubuna build ekle",
+  "Yeni TestFlight testçisi ekle",
+  "Test kullanıcısının sandbox bilgilerini değiştir",
+  "Kullanıcı yetkisini güncelle",
+  "Mağaza sayfasına ekran görüntüsü yükle",
+  "Özel ürün sayfası oluştur",
+  "Satış raporunu indir",
+  "Finans raporunu indir",
+  "Ödeme ve gelir raporunu getir",
+  "Analiz raporu isteği oluştur",
+  "İmzalama sertifikası oluştur",
+  "Yeni test cihazını provisioning’e ekle",
+  "Provisioning profili oluştur",
+  "Xcode Cloud iş akışı oluştur",
+  "Yeni CI workflow ekle",
+  "Mevcut aboneler de yeni fiyatı ödesin",
+  "Dağıtım sertifikasını sil",
 ];
 
 describe('search intent coverage ratchet (asc__search_tools top-3)', () => {

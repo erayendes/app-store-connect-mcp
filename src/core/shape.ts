@@ -89,10 +89,18 @@ export function capResponseSize(payload: unknown, maxChars: number): unknown {
       ...payload,
       data: kept,
       truncation: {
+        // fields_* comes first because it is the only suggestion that returns
+        // every row. A response is usually oversized across its columns rather
+        // than its rows — 50 localizations are 264 KB whole and 16 KB with one
+        // attribute named — so filtering or paginating here answers a narrower
+        // question than the one that was asked, and dropping rows to fit is
+        // what sends a caller to the shell to reassemble them.
         note:
           `Response truncated: showing ${kept.length} of ${total} items ` +
-          `(full response was ~${Math.round(size / 1024)} KB). Narrow the query with ` +
-          `filter_* parameters, lower limit, or continue from links.next via next_url.`,
+          `(full response was ~${Math.round(size / 1024)} KB). To get all ${total} ` +
+          `with less per item, set fields_* to just the attributes you need. ` +
+          `Otherwise narrow with filter_*, lower limit, or continue from links.next ` +
+          `via next_url.`,
         shown: kept.length,
         total,
       },
