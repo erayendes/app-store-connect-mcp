@@ -9,6 +9,7 @@ import {
 } from '../scripts/schema-defs.js';
 import { toMcpTool } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
+import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
 
 const schemaFor = (name: string): unknown =>
   toMcpTool(OPERATIONS.find((o) => o.name === name)!).inputSchema;
@@ -237,5 +238,37 @@ describe('$defs decision tripwires', () => {
 
   it('estimates tokens the way the rest of the repo does', () => {
     expect(estimateTokens({ a: 1 })).toBe(Math.round(JSON.stringify({ a: 1 }).length / 4));
+  });
+});
+
+// validateBody (src/core/validate.ts) has no handling for $ref, $defs, or allOf:
+// a schema node carrying only those keys produces zero errors, so a bad write
+// body would silently pass validation. BODY_SCHEMAS must stay self-contained.
+const FORBIDDEN = ['$ref', '$defs', 'allOf'];
+
+function findForbidden(node: unknown, path: string, hits: string[]): void {
+  if (node === null || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    node.forEach((item, i) => findForbidden(item, `${path}[${i}]`, hits));
+    return;
+  }
+  for (const [key, value] of Object.entries(node)) {
+    if (FORBIDDEN.includes(key)) hits.push(`${path}.${key}`);
+    findForbidden(value, `${path}.${key}`, hits);
+  }
+}
+
+describe('BODY_SCHEMAS stay self-contained', () => {
+  it('contains no $ref, $defs, or allOf at any depth', () => {
+    const hits: string[] = [];
+    for (const [name, schema] of Object.entries(BODY_SCHEMAS)) {
+      findForbidden(schema, name, hits);
+    }
+    expect(hits, [
+      'validateBody in src/core/validate.ts cannot validate through $ref/$defs/allOf:',
+      'such nodes produce zero errors and bad write bodies silently pass.',
+      'Teach validate.ts these keywords (or inline them in scripts/generate.ts) before emitting them.',
+      `Found at: ${hits.join(', ')}`,
+    ].join(' ')).toEqual([]);
   });
 });
