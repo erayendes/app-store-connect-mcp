@@ -107,18 +107,29 @@ describe('$defs hoisting', () => {
  *
  *   1. MCP cannot express a shared block. Every tool's inputSchema is its own
  *      JSON Schema resource, so `#/$defs/...` resolves only inside the tool
- *      carrying it. This is what makes the 31% ceiling unreachable.
- *   2. What survives — duplication inside a SINGLE tool's schema — is ~1.8%,
+ *      carrying it. This is what makes the ~26.6% ceiling unreachable.
+ *   2. What survives — duplication inside a SINGLE tool's schema — is ~1.9%,
  *      too little to justify a second serving mode.
  *
  * Fact 1 is the one that could change without anything in this repo changing,
  * and it is the change that would make the whole idea worth revisiting.
+ *
+ * BASELINES BELOW ARE DATED. They were last calibrated on 2026-08-04, after
+ * 5a7cccd shortened the `id` and `next_url` descriptions. That commit moved
+ * both percentages without touching a single shape: it cut ~11.6k tokens of
+ * repeated prose, so the denominator fell from 156,986 to 145,400 tokens. The
+ * self-contained saving is still the same 2,756 absolute tokens it always was,
+ * but it now reads 1.90% instead of 1.76%, and the shared ceiling fell from
+ * 31.1% to 26.64%. Recalibrate these baselines whenever the corpus moves —
+ * a stale one turns a 0.3pp nudge into what looks like a 5pp collapse and
+ * sends the investigation somewhere it should not go.
  */
 describe('$defs decision tripwires', () => {
   it('MCP still has no document-level schema container', () => {
     // If a future SDK adds a shared-defs slot to the tools/list result, the
-    // 31% ceiling stops being hypothetical and this decision must be re-read.
-    // Any new key here needs checking for that; it is not automatically benign.
+    // ~26.6% ceiling stops being hypothetical and this decision must be
+    // re-read. Any new key here needs checking for that; it is not
+    // automatically benign.
     const result = ListToolsResultSchema as unknown as { shape: Record<string, unknown> };
     expect(Object.keys(result.shape).sort()).toEqual(['_meta', 'nextCursor', 'tools']);
 
@@ -172,9 +183,15 @@ describe('$defs decision tripwires', () => {
   });
 
   it('pins the unreachable shared-$defs ceiling', () => {
-    // ~31.1% today. Drift in EITHER direction means the shape of Apple's spec
-    // changed enough that the trade-off deserves a fresh look — a collapse
-    // would mean there is nothing left to want, a jump means the prize grew.
+    // Baseline at last calibration (2026-08-04, post 5a7cccd): 26.64%.
+    // Drift in EITHER direction means the corpus changed enough that the
+    // trade-off deserves a fresh look — a collapse would mean there is nothing
+    // left to want, a jump means the prize grew.
+    //
+    // Note the floor sits only ~0.6pp below the current value: another pass of
+    // description shortening shrinks the denominator again and could trip this
+    // without the duplication itself having changed. If that is why it fired,
+    // recalibrate the baseline rather than reopening the decision.
     const byDomain = new Map<string, unknown[]>();
     for (const op of OPERATIONS) {
       const list = byDomain.get(op.domain) ?? [];
@@ -188,16 +205,21 @@ describe('$defs decision tripwires', () => {
       ceiling += sharedDefsCeiling(schemas);
     }
     const pct = (ceiling / inline) * 100;
-    expect(pct, `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens (was 31.1%)`)
-      .toBeGreaterThan(26);
-    expect(pct, `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens (was 31.1%)`)
-      .toBeLessThan(36);
+    const message =
+      `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens ` +
+      `(baseline at last calibration, post 5a7cccd: 26.64%)`;
+    expect(pct, message).toBeGreaterThan(26);
+    expect(pct, message).toBeLessThan(36);
   });
 
   it('pins the achievable self-contained saving', () => {
-    // 1.76% today. The hard ceiling for ANY exact-dedup algorithm over this
-    // spec is 3.12% — a 10% threshold could never fire, which is why the bound
-    // is set where the number can actually reach it.
+    // Baseline at last calibration (2026-08-04, post 5a7cccd): 1.90%.
+    //
+    // The band's top is set where the number can actually reach it, which the
+    // original 10% threshold was not. Measured on this corpus on 2026-08-04,
+    // greedy intra-tool exact dedup with every overhead forced to zero — no
+    // $ref cost, no $defs bookkeeping, physically unattainable but it bounds
+    // the whole family — tops out at 6.46%. So 3% is reachable and 10% is not.
     let inline = 0;
     let withDefs = 0;
     for (const op of OPERATIONS) {
@@ -207,7 +229,8 @@ describe('$defs decision tripwires', () => {
     }
     const pct = ((inline - withDefs) / inline) * 100;
     const message =
-      `self-contained $defs would now save ${pct.toFixed(2)}% of schema tokens (was 1.76%)`;
+      `self-contained $defs would now save ${pct.toFixed(2)}% of schema tokens ` +
+      `(baseline at last calibration, post 5a7cccd: 1.90%)`;
     expect(pct, message).toBeGreaterThan(1.2);
     expect(pct, message).toBeLessThan(3);
   });
