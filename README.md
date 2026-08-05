@@ -25,6 +25,9 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 > - *"Which builds are stuck in review?"*
 > - *"Raise this subscription's price in every territory."*
 
+> [!IMPORTANT]
+> **2.0.0 is a breaking release.** Which tool belongs to which profile is hand-curated now, so every profile's contents changed and `user-management` was split into four. Nothing was lost, but the tool you reach for may have moved next door. Upgrading from 1.x: check the profile names in your config against the [changelog](docs/CHANGELOG.md).
+
 ### Quick start
 
 ```bash
@@ -113,6 +116,9 @@ Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikl
 > - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
 > - *"Hangi build'ler incelemede takıldı?"*
 > - *"Bu aboneliğin fiyatını her ülkede artır."*
+
+> [!IMPORTANT]
+> **2.0.0 kırıcı bir sürümdür.** Hangi aracın hangi profile ait olduğu artık elle belirleniyor; bu yüzden her profilin içeriği değişti ve `user-management` dörde bölündü. Hiçbir araç kaybolmadı, ama aradığınız araç yan komşuya taşınmış olabilir. 1.x'ten yükseltiyorsanız config'inizdeki profil adlarını [değişiklik günlüğüyle](docs/CHANGELOG.md) karşılaştırın.
 
 ### Hızlı başlangıç
 
