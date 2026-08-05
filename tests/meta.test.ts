@@ -164,4 +164,21 @@ describe('short tokens do not match mid-word', () => {
       expect(searchOperations(q).length, q).toBeGreaterThan(0);
     }
   });
+
+  it('survives a short token that is a regex metacharacter', () => {
+    // A token under three characters is compiled into a RegExp, so anything the
+    // query tokenizer does not strip reaches the constructor. It splits on
+    // whitespace and , . : ; ! ? " ' ’ ( ) [ ] — everything else survives, and
+    // an unescaped `*` or `{` there is a thrown SyntaxError on a user's search,
+    // not a ranking mistake. Cheap to assert, expensive to find in production.
+    const hostile = [
+      '*', '+', '?', '^', '$', '{', '}', '|', '\\', '/', '-', '<', '>', '&', '#', '=', '~', '@',
+      'a*', '*b', '{}', '|-', '$^', '(?', 'a\\', '--', '**', '??', '\\\\', '[]',
+    ];
+    for (const token of hostile) {
+      expect(() => searchOperations(token), JSON.stringify(token)).not.toThrow();
+      // Also alongside real words, where the token has to survive scoring too.
+      expect(() => searchOperations(`price ${token} app`), JSON.stringify(token)).not.toThrow();
+    }
+  });
 });
