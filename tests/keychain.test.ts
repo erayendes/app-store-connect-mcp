@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { readKeychainPassword } from '../src/core/keychain.js';
+import { readKeychainPassword, writeKeychainPassword } from '../src/core/keychain.js';
 import { ConfigError } from '../src/core/errors.js';
 
 const realPlatform = process.platform;
@@ -82,5 +82,48 @@ describe('readKeychainPassword', () => {
       /only supported on macOS/
     );
     expect(exec).not.toHaveBeenCalled();
+  });
+});
+
+describe('writeKeychainPassword', () => {
+  const PEM = '-----BEGIN PRIVATE KEY-----\nMIGTAgEA...\n-----END PRIVATE KEY-----';
+
+  it('never lets the private key reach the error message', () => {
+    setPlatform('darwin');
+    // Node builds a failed child process's message by echoing the whole argv,
+    // so the real failure carries the key verbatim. Reproduce that shape.
+    const exec = vi.fn().mockImplementation(() => {
+      throw new Error(
+        `Command failed: security add-generic-password -U -s asc-mcp -a k -w ${PEM}\n` +
+          'SecKeychainItemCreateFromContent: User interaction is not allowed.'
+      );
+    });
+
+    expect(() => writeKeychainPassword('asc-mcp', 'k', PEM, exec)).toThrow(ConfigError);
+
+    let message = '';
+    try {
+      writeKeychainPassword('asc-mcp', 'k', PEM, exec);
+    } catch (err) {
+      message = (err as Error).message;
+    }
+
+    expect(message).not.toContain(PEM);
+    expect(message).not.toContain('MIGTAgEA');
+    expect(message).toContain('<private key redacted>');
+    // The diagnostic that makes the failure actionable must survive.
+    expect(message).toContain('User interaction is not allowed');
+  });
+
+  it('passes the secret to the security CLI as an argument array', () => {
+    setPlatform('darwin');
+    const exec = vi.fn();
+    writeKeychainPassword('asc-mcp', 'AuthKey_ABC', PEM, exec);
+
+    expect(exec).toHaveBeenCalledWith(
+      'security',
+      ['add-generic-password', '-U', '-s', 'asc-mcp', '-a', 'AuthKey_ABC', '-w', PEM],
+      { encoding: 'utf8' }
+    );
   });
 });
