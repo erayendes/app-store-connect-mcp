@@ -9,27 +9,22 @@ All notable changes to this project are documented here. The format is based on 
 ### [2.0.0] — 2026-08-05
 
 #### Profiles are curated, not derived
-
-**Breaking — every profile changed.** Which tool belonged to which profile was read off the URL, so every relationship hanging off an app landed in `app-info` and eight of eleven profiles could not reach their own resources from an app. Membership is hand-curated in `spec/profiles.csv` now and generated into the code.
-
-- **13 profiles, up from 11.** New: `access`, `app-clips`, `testflight`.
+**Breaking change — every profile changed.** Which tool belonged to which profile was read off the URL, so every relationship hanging off an app landed in `app-info` and eight of eleven profiles could not reach their own resources from an app. Membership is hand-curated in `spec/profiles.csv` now and generated into the code.
+- **13 profiles**, up from 11. New: `access`, `app-clips`, `testflight`.
 - **`user-management` is gone**, split into four. A config still naming it starts anyway, with a single tool explaining the split.
-- **Every profile changed size** — `app-info` goes from 112 tools to 57. **Check your config**; the tool you reached for may now live next door.
+- **Every profile changed size** — `app-info` goes from 112 tools to 57. **Check your config**; the tool you reached for may be in another profile now.
 
 #### Sub-profiles
-
-A profile narrows with a colon: `monetization` is 204 tools, or take `monetization:subscription-pricing` at 24. 32 sub-profiles across five profiles.
-
+32 sub-profiles across five profiles. A profile narrows with a colon: take `monetization` at 204 tools, or `monetization:subscription-pricing` at 24.
 Some tools belong to more than one, so reaching a single tool no longer means loading a whole profile. The setup picker unfolds a checked profile's sub-profiles under the cursor, all on, and writes the argument for you; `asc__status` reports which are loaded and roughly what they cost.
 
 #### Any tool in the profile, on any client
+`asc__describe` + `asc__call` are present from the start, so nothing depends on a client refreshing its tool list mid-session.
+`asc__call` is read-only; writes keep their own names and their confirmation gate.
+`asc__load` adds a sub-profile mid-session for clients that do refresh.
 
-`asc__describe` + `asc__call` are present from the start, so nothing depends on a client refreshing its tool list mid-session — Codex and Antigravity both finish that task in one turn now. `asc__call` is read-only; writes keep their own names and their confirmation gate. `asc__load` adds a sub-profile mid-session for clients that do refresh.
-
-#### Setup registers with every client, not just Claude Code
-
+#### Setup registers with every client you have installed
 `setup` knew one command, `claude mcp add`, and left the rest to the user on a machine with Codex and Cursor.
-
 - **It detects the clients on the machine and asks which to install into:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
 - **The vendor's own command writes where one exists** (`claude`, `codex`, `code --add-mcp`); plain JSON configs are backed up and edited. One that cannot be parsed is left untouched and reported with a block to paste. A client failing never stops the others.
 - **`register` is the same work without a terminal**, for an agent installing on your behalf: `asc-mcp register monetization:subscription-pricing analytics`. It only adds; removing is `setup`'s job.
@@ -38,19 +33,12 @@ Some tools belong to more than one, so reaching a single tool no longer means lo
 > ChatGPT's own connectors accept only remote HTTPS servers, so Heimdall cannot appear there; it runs on your machine over stdio, which is why the private key never leaves it. The Codex entry covers the CLI, the IDE extension and the Codex side of the ChatGPT desktop app — the three share one config file.
 
 #### Fixed
-
 - **A misspelled filter changed which app you were editing.** `filter[bundleId]` was dropped silently, ran unfiltered and returned the account's first app. Both spellings are accepted now.
-- **The binary exited 0 with no output when invoked through a symlink.** Both `npm install -g` and `npx` go through one, so every installed copy was dead.
-- **Tool search returned nothing for queries in any language but English, and never said why.** 110 of 265 phrasings came back empty; an empty result now explains itself.
-- **Tool search offered tools the server refuses to load** — 123 deprecated candidates are filtered out now.
-- **The setup picker opened every checked profile's sub-rows at once** (46 rows); expansion follows the cursor now.
-- **The picker counted a profile as the sum of its sub-profiles**, not their union. `marketing` reported 108; it serves 90 plus core.
-- **`check_entitlement` answered about the wrong product**, then could not say when it did not know. The product ID lives inside the signed payload; an unreadable one is reported as `undecodableTransactions` now.
-- **A failed keychain write printed the private key.** Node echoes a child process's whole argv into its error message, and the `.p8` rides in argv as `security -w`. A locked keychain put the key into whatever read setup's stderr — a terminal, a CI log, an agent transcript. It is redacted out of the message now.
-- **Every install pulled 3.3 MB it had no way to use.** Apple's OpenAPI spec shipped in the package, but only the generator reads it and the generator does not ship. 6.7 MB → 3.6 MB.
+- **The binary exited 0 with no output when invoked through a symlink.**
+- **Tool search returned nothing for queries in any language but English, and never said why.** It returns results in every language now, and an empty result explains itself.
+- **Tool search offered tools the server refuses to load.**
 
 #### Added for contributors
-
 An agent-experience harness: a 50-intent corpus with adversarial goals run n times rather than once, a contract check across all 982 operations for unstamped risk levels and `readOnly` disagreeing with the HTTP method, and a live write-path probe that creates and deletes a TestFlight group on a throwaway app — the only check that exercises token to POST to Apple's answer, since every other one runs `--dry-run`. `tests/gate.test.ts` proves the write gate fires end to end over stdio rather than merely classifying correctly.
 
 ### [1.3.0] — 2026-07-28
@@ -133,48 +121,36 @@ Safety and usability release: every write is now schema-checked locally, preview
 ### [2.0.0] — 2026-08-05
 
 #### Profiller elle küratörlükten geçiyor
-
-**Kırıcı değişiklik — her profil değişti.** Bir aracın hangi profile ait olduğu URL'den okunuyordu; bu yüzden bir uygulamaya bağlı her ilişki `app-info`'ya düşüyor, on bir profilin sekizi kendi kaynaklarına bir uygulamadan erişemiyordu. Üyelik artık `spec/profiles.csv` içinde elle belirlenip koda üretiliyor.
-
+**Kritik değişiklik — her profil değişti.** Bir aracın hangi profile ait olduğu URL'den okunuyordu; bu yüzden bir uygulamaya bağlı her ilişki `app-info`'ya düşüyor, on bir profilin sekizi kendi kaynaklarına bir uygulamadan erişemiyordu. Üyelik artık `spec/profiles.csv` içinde elle belirlenip koda üretiliyor.
 - **13 profil**, önceden 11. Yeni: `access`, `app-clips`, `testflight`.
 - **`user-management` kaldırıldı**, dörde bölündü. Config'inizde hâlâ varsa sunucu yine açılıyor ve bölünmeyi anlatan tek bir araçla geliyor.
-- **Her profilin boyutu değişti** — `app-info` 112 araçtan 57'ye indi. **Config'inizi kontrol edin**, aradığınız araç yan komşuda olabilir.
+- **Her profilin boyutu değişti** — `app-info` 112 araçtan 57'ye indi. **Config'inizi kontrol edin**, aradığınız araç diğer profilde olabilir.
 
 #### Alt profiller
-
-Profil iki nokta üst üste ile daralıyor: `monetization` 204 araç, ya da 24 araçlık `monetization:subscription-pricing`'i seçersiniz. Beş profil altında 32 alt profil.
-
+Beş profil altında 32 alt profil. Profil iki nokta üst üste ile daralıyor: 204 araçlık `monetization` ya da 24 araçlık `monetization:subscription-pricing`'i seçersiniz.
 Bazı araçlar birden fazlasına bağlı, yani tek bir araç için koca bir profil yüklemek gerekmiyor. Setup seçicisi işaretlenen profilin alt profillerini imlecin altında açar, hepsi işaretli gelir ve argümanı sizin yerinize yazar; `asc__status` hangilerinin yüklü olduğunu ve yaklaşık maliyetini raporlar.
 
 #### Profildeki her araç, her istemcide
+`asc__describe` + `asc__call` en baştan mevcut, böylece hiçbir şey istemcinin oturum ortasında araç listesini tazelemesine bağlı kalmıyor.
+`asc__call` salt okunur; yazmalar kendi adlarını ve onay kapısını koruyor.
+`asc__load`, tazeleyen istemciler için oturum ortasında alt profil ekler.
 
-`asc__describe` + `asc__call` en baştan mevcut, böylece hiçbir şey istemcinin oturum ortasında araç listesini tazelemesine bağlı kalmıyor — Codex ve Antigravity artık aynı işi tek turda bitiriyor. `asc__call` salt okunur; yazmalar kendi adlarını ve onay kapısını koruyor. `asc__load`, tazeleyen istemciler için oturum ortasında alt profil ekler.
-
-#### Setup yalnızca Claude Code'a değil, her istemciye kaydediyor
-
-`setup` tek komut biliyordu: `claude mcp add`; Codex ve Cursor bulunan bir makinede işi kullanıcıya bırakıyordu.
-
-- **Makinede bulunan istemcileri tespit edip hangilerine kurmak istediğinizi soruyor:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
+#### Setup kurulu her istemciye kaydediyor
+`setup` tek komut biliyordu: `claude mcp add`; Codex ve Cursor bulunan bir cihazda işi kullanıcıya bırakıyordu.
+- **Cihazda bulunan istemcileri tespit edip hangilerine kurmak istediğinizi soruyor:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
 - **Üreticinin kendi komutu varsa onu kullanıyor** (`claude`, `codex`, `code --add-mcp`); düz JSON config'leri yedekleyip düzenliyor. Ayrıştırılamayan bir dosyaya hiç dokunmuyor, yapıştırılacak blok basıyor. Bir istemcinin başarısız olması diğerlerini durdurmuyor.
 - **`register` aynı işi terminal olmadan yapar**, kurulumu sizin adınıza üstlenen bir agent için: `asc-mcp register monetization:subscription-pricing analytics`. Yalnızca ekler; silme işi `setup`'ındır.
 
 > [!NOTE]
-> ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ettiği için Heimdall orada görünemez; sizin makinenizde stdio üzerinden çalışır, özel anahtarın makineden hiç çıkmamasının sebebi de budur. Codex satırı CLI'yi, IDE eklentisini ve ChatGPT masaüstünün Codex tarafını kapsar — üçü aynı config dosyasını okur.
+> ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ettiği için Heimdall orada görünemez; sizin cihazınızda stdio üzerinden çalışır, özel anahtarın cihazdan hiç çıkmamasının sebebi de budur. Codex satırı CLI'yi, IDE eklentisini ve ChatGPT masaüstünün Codex tarafını kapsar — üçü aynı config dosyasını okur.
 
 #### Düzeltildi
-
 - **Yanlış yazılmış bir filtre hangi uygulamayı düzenlediğinizi değiştiriyordu.** `filter[bundleId]` sessizce düşüyor, filtresiz çalışıp hesabın ilk uygulamasını döndürüyordu. Artık iki yazım da kabul ediliyor.
-- **Binary, symlink üzerinden çağrıldığında sessizce 0 ile çıkıyordu.** `npm install -g` ve `npx` symlink kullanır; yani kurulu her kopya ölüydü.
-- **Araç arama İngilizce dışındaki sorgulara boş dönüyordu, sebebini de söylemiyordu.** 265 ifadenin 110'u boş dönüyordu; artık sonuç boşsa nedenini açıklıyor.
-- **Araç arama, sunucunun yüklemeyi reddettiği araçları öneriyordu** — kullanımdan kalkmış 123 aday artık eleniyor.
-- **Setup seçicisi işaretli her profilin alt satırlarını aynı anda açıyordu** (46 satır); açılma artık imleci takip ediyor.
-- **Seçici bir profili alt profillerinin toplamı sayıyordu**, birleşimi değil. `marketing` 108 gösteriyordu; gerçekte 90 artı çekirdek sunuyor.
-- **`check_entitlement` yanlış ürün hakkında cevap veriyordu**, sonra da bilmediğini söyleyemiyordu. Ürün kimliği imzalı yükün içinde yaşar; okunamayan yük artık `undecodableTransactions` ile bildiriliyor.
-- **Başarısız bir keychain yazması özel anahtarı ekrana basıyordu.** Node, alt sürecin tüm argv'sini hata mesajına yazar ve `.p8`, `security -w` argümanı olarak orada bulunur. Kilitli bir keychain, anahtarı setup'ın stderr'ini okuyan her yere düşürüyordu — terminal, CI logu, agent transkripti. Artık mesajdan çıkarılıyor.
-- **Her kurulum, kullanamayacağı 3,3 MB'ı indiriyordu.** Apple'ın OpenAPI spesifikasyonu pakete giriyordu, oysa onu yalnızca pakete girmeyen kod üreteci okur. 6,7 MB → 3,6 MB.
+- **Binary, symlink üzerinden çağrıldığında sessizce 0 ile çıkıyordu.**
+- **Araç arama İngilizce dışındaki sorgulara boş dönüyordu, sebebini de söylemiyordu.** Artık tüm dillerde sonuç dönüyor, boşsa nedenini açıklıyor.
+- **Araç arama, sunucunun yüklemeyi reddettiği araçları öneriyordu.**
 
 #### Katkıcılar için eklendi
-
 Bir agent deneyimi koşum takımı: saldırgan hedefler içeren 50 istemlik bir külliyat (bir kez değil, n kez koşuluyor), 982 işlemin tamamında damgalanmamış risk seviyesi ve HTTP metoduyla çelişen `readOnly` arayan bir sözleşme kontrolü, ve tek kullanımlık bir uygulamada TestFlight grubu açıp silen canlı bir yazma-yolu sondası — token'dan POST'a, oradan Apple'ın cevabına giden yolu sınayan tek kontrol, çünkü diğerlerinin hepsi `--dry-run` ile koşuyor. `tests/gate.test.ts` yazma kapısının yalnızca doğru sınıflandırdığını değil, stdio üzerinden uçtan uca ateşlendiğini kanıtlıyor.
 
 ### [1.3.0] — 2026-07-28
