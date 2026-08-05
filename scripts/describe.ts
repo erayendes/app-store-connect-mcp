@@ -113,6 +113,45 @@ export const CURATED: Record<string, string> = {
     'Update an App Store version, including its release type and earliest release date.',
   'review_submissions.create':
     'Submit an App Store version for Apple review. The version must already have a build attached.',
+
+  // Apple's spec summary for these is the tool name in a sentence — "List
+  // builds." against `builds.list` tells a model nothing it could not read off
+  // the name, so the whole description is dead weight in the context window.
+  // What earns its place is what comes back, what narrows it, and which
+  // neighbouring tool it is not.
+  'builds.list':
+    'List uploaded builds across all apps, newest first with sort=-uploadedDate. Filter by app, version or processing state. For one app\'s builds use apps__builds__list instead.',
+  'pre_release_versions.list':
+    'List the version numbers builds were uploaded under (e.g. 2.4), across all apps. These are TestFlight train numbers, not App Store versions — for what customers see, use app_store_versions.',
+  'review_submissions.list':
+    'List App Store review submissions and their state, so you can tell whether something is waiting on Apple or on you. Filter by app or state; the items inside a submission come from review_submissions__items__list.',
+  'app_encryption_declarations.list':
+    'List export-compliance declarations, which a build needs before it can ship in most territories. Filter by app or build to find whether one already covers the build you are releasing.',
+  // Search matches tokens of three or more characters as substrings, so a
+  // sentence written to tell a reader what this is *not* can hand it queries
+  // meant for something else. The first draft ended "unrelated to normal App
+  // Store releases" and that clause alone — `out` inside "outside", `release`
+  // inside "releases" — put this tool top of "Roll out the release gradually".
+  // Disambiguate with words the neighbours do not use.
+  'alternative_distribution_domains.list':
+    'List the domains verified for EU alternative distribution, where an app reaches users through a marketplace rather than the App Store.',
+  'alternative_distribution_keys.list':
+    'List the public keys registered for EU alternative distribution, used to sign apps delivered outside the App Store. Use exists[app] to check whether an app has one at all.',
+  'build_beta_details.list':
+    'List the TestFlight state of builds: whether external testing is available and how the build was distributed. This is the beta side of a build — build attributes themselves come from builds__list.',
+  // Same trap: "App Store" plus "page" plus "added" made this the top hit for
+  // "Add a screenshot to the App Store page", which belongs to app_screenshots.
+  // The version is implied by the tool name, so naming it again only competes.
+  'app_store_version_experiments_v2.create':
+    'Start an A/B test on a version’s product page: up to three treatments against the live one, split by traffic share. Treatments and their assets are attached separately.',
+  // "Stopping" would cost an unrelated query its answer: search matches tokens
+  // of three or more characters as substrings, so `ping` in "stopping" put this
+  // tool at the top of "Ping the webhook endpoint" and pushed webhook_pings out
+  // of the top three. Halt, not stop.
+  'app_store_version_experiments_v2.update':
+    'Change a product page experiment — begin or halt it, or adjust its traffic split. Halting it keeps the results readable; deleting does not.',
+  'app_store_version_experiments_v2.delete':
+    'Delete a product page experiment and its results. Halt it with an update instead if you still want the numbers.',
   'app_store_version_submissions.delete':
     'Cancel a pending App Store review submission.',
   'app_store_version_phased_releases.create':

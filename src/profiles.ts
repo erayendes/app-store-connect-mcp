@@ -218,13 +218,16 @@ export function manualToolsFor(selection: ProfileSelection): string[] {
 /**
  * Rough tokens a tool definition costs in context — for size hints only.
  * Measured by `npm run generate`'s token report over the full generated
- * corpus: 249,248 definition tokens / 982 tools = 254 avg. Re-measure and
- * update this after any change to `toMcpTool` or the generator (last done in
- * Task 7, which shortened the repeated `next_url` and `id` path-param
- * descriptions moved it 225 to 213; the sparse-fieldset params (fields[...])
- * landing from feat/agent-experience-payload moved it back up to 254).
+ * corpus: 258,877 definition tokens / 982 tools = 264 avg. Re-measure and
+ * update this after any change to `toMcpTool` or the generator. It has moved
+ * four times and every move was paid for: shortening the repeated `next_url`
+ * and `id` descriptions took it 225 to 213, the sparse-fieldset params
+ * (fields[...]) took it back to 254, and giving `id` a description again
+ * (AI-217) to 264 — because on a delete or a relationship read `id` is the
+ * only parameter, and an undescribed one is a tool that documents nothing
+ * about its input.
  */
-export const TOKENS_PER_TOOL = 254;
+export const TOKENS_PER_TOOL = 264;
 
 /** How many tools a selection serves, meta tools included. */
 export function toolCountFor(selection: ProfileSelection): number {
