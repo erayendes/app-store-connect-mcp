@@ -162,10 +162,15 @@ export function toMcpTool(
   for (const param of op.pathParams) {
     properties[param] =
       param === 'id'
-        ? // "Resource identifier." repeated this description on 783 tools for
-          // no information a required string param named `id` doesn't already
-          // carry — pure token cost. See task-7-report.md.
-          { type: 'string' }
+        ? // "Resource identifier." was dropped for costing 783 tools a token
+          // each to restate the parameter's own name. Leaving it empty went
+          // too far: on a delete or a relationship read, `id` is the only
+          // parameter, so an undescribed one is a tool that documents nothing
+          // about its input. This says where the value comes from, which the
+          // name does not. See task-7-report.md and AI-217.
+          // Every word here is paid 678 times, so it says the one thing the
+          // parameter name cannot: where the value comes from.
+          { type: 'string', description: 'ID from the matching list call.' }
         : { type: 'string', description: `Path parameter "${param}".` };
     required.push(param);
   }

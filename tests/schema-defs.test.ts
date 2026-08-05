@@ -120,7 +120,8 @@ describe('$defs hoisting', () => {
  * both percentages without touching a single shape: it cut ~11.6k tokens of
  * repeated prose, so the denominator fell from 156,986 to 145,400 tokens. The
  * self-contained saving is still the same 2,756 absolute tokens it always was,
- * and the fields[...] params from the agent-experience merge moved them again.
+ * and every corpus change since has moved them again — the fields[...] params,
+ * then the `id` description AI-217 put back.
  * Recalibrate these baselines whenever the corpus moves —
  * a stale one turns a 0.3pp nudge into what looks like a 5pp collapse and
  * sends the investigation somewhere it should not go.
@@ -184,7 +185,7 @@ describe('$defs decision tripwires', () => {
   });
 
   it('pins the unreachable shared-$defs ceiling', () => {
-    // Baseline at last calibration (2026-08-05, post fields[...] merge): 28.3%.
+    // Baseline at last calibration (2026-08-05, post AI-217): 31.2%.
     // Drift in EITHER direction means the corpus changed enough that the
     // trade-off deserves a fresh look — a collapse would mean there is nothing
     // left to want, a jump means the prize grew.
@@ -208,13 +209,13 @@ describe('$defs decision tripwires', () => {
     const pct = (ceiling / inline) * 100;
     const message =
       `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens ` +
-      `(baseline at last calibration, post fields[...] merge: 28.3%)`;
+      `(baseline at last calibration, post AI-217: 31.2%)`;
     expect(pct, message).toBeGreaterThan(26);
     expect(pct, message).toBeLessThan(36);
   });
 
   it('pins the achievable self-contained saving', () => {
-    // Baseline at last calibration (2026-08-05, post fields[...] merge): 1.49%.
+    // Baseline at last calibration (2026-08-05, post AI-217): 1.42%.
     //
     // The band's top is set where the number can actually reach it, which the
     // original 10% threshold was not. Measured on this corpus on 2026-08-04,
@@ -231,7 +232,7 @@ describe('$defs decision tripwires', () => {
     const pct = ((inline - withDefs) / inline) * 100;
     const message =
       `self-contained $defs would now save ${pct.toFixed(2)}% of schema tokens ` +
-      `(baseline at last calibration, post fields[...] merge: 1.49%)`;
+      `(baseline at last calibration, post AI-217: 1.42%)`;
     expect(pct, message).toBeGreaterThan(1.2);
     expect(pct, message).toBeLessThan(3);
   });
