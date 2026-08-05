@@ -86,6 +86,30 @@ const tokenize = (query: string): string[] => [
 ];
 
 /**
+ * A token this short is a fragment of something longer far more often than it
+ * is a word: `de` is inside `delete`, `le` inside `role`, `l` inside almost
+ * everything. Scoring those as hits let French stopwords outscore real terms —
+ * "le de l" ranked 390 operations, none of them about anything.
+ *
+ * Short tokens are not dropped, because some are the whole query a user means:
+ * `ci` is Xcode Cloud. They just have to appear as a word of their own.
+ */
+const SHORT_TOKEN = 3;
+
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Build the test for one token once, rather than per operation — a search
+ * walks every operation in the catalogue, and compiling the same pattern 982
+ * times is the kind of waste that only shows up under a profiler.
+ */
+function tokenTest(token: string): (haystack: string) => boolean {
+  if (token.length >= SHORT_TOKEN) return (haystack) => haystack.includes(token);
+  const word = new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(token)}(?:[^a-z0-9]|$)`);
+  return (haystack) => word.test(haystack);
+}
+
+/**
  * Keyword search over every operation (loaded or not). Extracted from the
  * asc__search_tools handler so intent coverage is unit-testable — the intent
  * regression suite in tests/search-intents.test.ts runs against this.
@@ -118,10 +142,11 @@ export function searchOperations(
   const tokens = tokenize(query);
   if (!tokens.length) return [];
 
+  const tests = tokens.map(tokenTest);
   const pool = includeDeprecated ? OPERATIONS : OPERATIONS.filter((op) => !op.deprecated);
   const scored = pool.map((op) => {
     const haystack = `${op.name} ${op.description} ${op.path}`.toLowerCase();
-    const score = tokens.reduce((n, t) => n + (haystack.includes(t) ? 1 : 0), 0);
+    const score = tests.reduce((n, hit) => n + (hit(haystack) ? 1 : 0), 0);
     return { op, score };
   }).filter((s) => s.score > 0 && s.score >= Math.ceil(tokens.length / 2));
 
@@ -142,11 +167,12 @@ function matchByToken<T extends { name: string; description: string }>(
 ): T[] {
   const tokens = tokenize(query);
   if (!tokens.length) return [];
+  const tests = tokens.map(tokenTest);
   const need = Math.ceil(tokens.length / 2);
   return tools
     .map((t) => {
       const haystack = `${t.name} ${t.description}`.toLowerCase();
-      return { t, score: tokens.reduce((n, k) => n + (haystack.includes(k) ? 1 : 0), 0) };
+      return { t, score: tests.reduce((n, hit) => n + (hit(haystack) ? 1 : 0), 0) };
     })
     .filter((s) => s.score >= need)
     .sort((a, b) => b.score - a.score)

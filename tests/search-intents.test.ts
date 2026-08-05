@@ -35,14 +35,19 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  * client translates before it searches.
  *
  * Which makes most of this corpus measure a path that no longer exists. Those
- * 110 zero-result phrasings are Turkish sentences handed straight to the server,
+ * 118 zero-result phrasings are Turkish sentences handed straight to the server,
  * and after this change nothing is supposed to hand it Turkish. They are kept
  * because they still rank the English phrasings honestly and because deleting
  * the evidence of a tradeoff is how a tradeoff turns into a mistake — but read
  * the zero-result number as "queries that skipped the client's translation",
  * not as debt anyone should pay off here.
  *
- * Ceiling today is 155 (265 minus the 110 that find nothing).
+ * The zero-result count went 110 → 118 when short tokens stopped matching mid-
+ * word. Those eight were never finding anything either; they were returning a
+ * ranked list of operations that shared two letters with a Turkish suffix.
+ * Passing stayed at 83, which is the number that matters.
+ *
+ * Ceiling today is 147 (265 minus the 118 that find nothing).
  */
 const FLOOR = 83;
 
@@ -76,11 +81,11 @@ const PASSING = EVALUATION.filter((e) => e.pass);
 const FAILING = EVALUATION.filter((e) => !e.pass);
 
 /**
- * Pinned list of known failing queries: 110 that find nothing, 72 that rank
+ * Pinned list of known failing queries: 118 that find nothing, 64 that rank
  * below third. A failure not on this list breaks CI, so the cost of a change
  * has to be written down before it can land.
  *
- * The final block is the 23 queries the removed Turkish word list used to
+ * The final block is the 25 queries the removed Turkish word list used to
  * carry. They are listed apart rather than merged in, because they are not the
  * same kind of debt as the rest: nothing here needs fixing in the search code,
  * the client translates now.
@@ -272,6 +277,15 @@ const KNOWN_FAILING_QUERIES: string[] = [
   "Yeni CI workflow ekle",
   "Mevcut aboneler de yeni fiyatı ödesin",
   "Dağıtım sertifikasını sil",
+  // These two used to pass, on nothing. A Turkish suffix after an apostrophe
+  // splits off a one- or two-letter token — "build'i" gives "i", "Workflow'un"
+  // gives "un" — and a fragment that short is inside so many English words that
+  // it scored a hit against almost every operation. Take that padding away and
+  // "Son build'i TestFlight grubuna gönder" matches `build` and `testflight`
+  // and nothing else: two hits against a threshold of three. Same debt as the
+  // rest of this block, it was just wearing a passing grade.
+  "Son build’i TestFlight grubuna gönder",
+  "Workflow’un buildlerini listele",
 ];
 
 describe('search intent coverage ratchet (asc__search_tools top-3)', () => {

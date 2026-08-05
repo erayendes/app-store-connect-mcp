@@ -140,3 +140,28 @@ describe('summarizeExpirations (asc__status check_expirations)', () => {
     expect(out.certificates.expiringSoon).toHaveLength(1);
   });
 });
+
+describe('short tokens do not match mid-word', () => {
+  it('scores nothing for a query that is only stopwords', () => {
+    // Every one of these is inside an English word in the catalogue — "de" in
+    // "delete", "le" in "role", "l" in almost everything — so as substrings
+    // they used to rank hundreds of operations that share no meaning at all.
+    for (const noise of ['le de l', 'la el de', 'de le']) {
+      expect(searchOperations(noise), noise).toEqual([]);
+    }
+  });
+
+  it('still finds a short token that is a word of its own', () => {
+    // `ci` is Xcode Cloud, and someone typing it means it. The rule is
+    // "must be its own word", not "must be long".
+    const hits = searchOperations('ci');
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.some((op) => op.name.startsWith('ci_'))).toBe(true);
+  });
+
+  it('leaves ordinary queries alone', () => {
+    for (const q of ['change subscription price', 'add beta tester', 'create app store version']) {
+      expect(searchOperations(q).length, q).toBeGreaterThan(0);
+    }
+  });
+});
