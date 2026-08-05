@@ -60,6 +60,14 @@ There is nothing to memorise — ask *"is there a tool for in-app events?"* and 
 
 Changing a price, submitting for review or deleting something asks for confirmation before it runs, so a misread instruction cannot execute unchecked. `ASC_CONFIRM_WRITES=0` turns it off; `--read-only` drops mutating tools entirely. See [Security](.github/SECURITY.md).
 
+#### Local by design, not by default
+
+MCP guidance recommends remote HTTP servers: one URL, no install, updates you control. Heimdall runs locally over stdio instead, and that is a deliberate trade.
+
+A remote Heimdall would have to hold your `.p8` — the private key that signs every App Store Connect request, with whatever role you granted it. Hosting it means asking every user to hand their App Store account's signing key to a third party, and making that server a target worth attacking. Running locally, the key never leaves your machine: Heimdall reads it from the Keychain, signs a short-lived token, and talks to Apple directly. Nothing sits in between.
+
+The cost is real and worth naming: you need Node installed, and you update by version rather than by us pushing one. That is the price of the key staying yours.
+
 #### Works alongside Fastlane
 
 Heimdall is not a Fastlane alternative — it is the interactive half. Keep [Fastlane](https://fastlane.tools/) for repeatable, scripted CI work (code signing, build upload, metadata pushes). Fastlane for the pipeline, Heimdall for exploration and one-off changes.
@@ -140,6 +148,14 @@ Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir ar
 #### Yazma işlemlerini önce sorar
 
 Fiyat değiştirme, incelemeye gönderme ya da bir şeyi silme çalışmadan önce onay ister; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. `ASC_CONFIRM_WRITES=0` kapatır, `--read-only` mutasyon araçlarını tamamen kaldırır. Bkz. [Güvenlik](.github/SECURITY.md).
+
+#### Yerelde çalışması tercih, eksiklik değil
+
+MCP rehberleri uzak HTTP sunucularını önerir: tek URL, kurulum yok, güncellemeyi siz yönetirsiniz. Heimdall bunun yerine yerelde stdio üzerinden çalışır ve bu bilinçli bir tercihtir.
+
+Uzak bir Heimdall, `.p8` dosyanızı tutmak zorunda kalırdı — her App Store Connect isteğini imzalayan, verdiğiniz role sahip özel anahtar. Onu barındırmak, her kullanıcıdan App Store hesabının imza anahtarını üçüncü bir tarafa teslim etmesini istemek ve o sunucuyu saldırmaya değer bir hedef hâline getirmek demektir. Yerelde çalışınca anahtar makinenizden hiç çıkmaz: Heimdall onu Keychain'den okur, kısa ömürlü bir token imzalar ve doğrudan Apple ile konuşur. Arada hiçbir şey durmaz.
+
+Bedeli gerçek ve söylenmeye değer: Node kurulu olmalı ve güncelleme biz gönderdiğimiz için değil, siz sürüm seçtiğiniz için gelir. Anahtarın sizde kalmasının bedeli bu.
 
 #### Fastlane ile birlikte çalışır
 
