@@ -88,6 +88,12 @@ export function readKeychainPassword(
  * The secret does ride in argv, which is briefly visible in the local process
  * list; `security` offers no stdin path for non-interactive adds, and this is
  * the same exposure as the documented manual command.
+ *
+ * That transient exposure is accepted. What is not: Node builds a failed
+ * child process's `message` by echoing the whole argv, so a locked keychain
+ * would have printed the key itself into a terminal, a CI log or an agent
+ * transcript — permanent, unlike the process list. The secret is redacted out
+ * of the message before it travels any further.
  */
 export function writeKeychainPassword(
   service: string,
@@ -105,7 +111,8 @@ export function writeKeychainPassword(
       { encoding: 'utf8' }
     );
   } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
+    const raw = err instanceof Error ? err.message : String(err);
+    const detail = raw.split(secret).join('<private key redacted>');
     throw new ConfigError(
       `Could not write the private key to the macOS Keychain ` +
         `(service "${service}", account "${account}"): ${detail}`
