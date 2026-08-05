@@ -47,7 +47,7 @@ Some tools belong to more than one, so reaching a single tool no longer means lo
 - **The picker counted a profile as the sum of its sub-profiles**, not their union. `marketing` reported 108; it serves 90 plus core.
 - **`check_entitlement` answered about the wrong product**, then could not say when it did not know. The product ID lives inside the signed payload; an unreadable one is reported as `undecodableTransactions` now.
 - **A failed keychain write printed the private key.** Node echoes a child process's whole argv into its error message, and the `.p8` rides in argv as `security -w`. A locked keychain put the key into whatever read setup's stderr — a terminal, a CI log, an agent transcript. It is redacted out of the message now.
-- **Every install pulled 3.3 MB it had no way to use.** Apple's OpenAPI spec shipped in the package, but only the generator reads it and the generator does not ship. 6.7 MB → 3.3 MB.
+- **Every install pulled 3.3 MB it had no way to use.** Apple's OpenAPI spec shipped in the package, but only the generator reads it and the generator does not ship. 6.7 MB → 3.6 MB.
 
 #### Added for contributors
 
@@ -171,7 +171,7 @@ Bazı araçlar birden fazlasına bağlı, yani tek bir araç için koca bir prof
 - **Seçici bir profili alt profillerinin toplamı sayıyordu**, birleşimi değil. `marketing` 108 gösteriyordu; gerçekte 90 artı çekirdek sunuyor.
 - **`check_entitlement` yanlış ürün hakkında cevap veriyordu**, sonra da bilmediğini söyleyemiyordu. Ürün kimliği imzalı yükün içinde yaşar; okunamayan yük artık `undecodableTransactions` ile bildiriliyor.
 - **Başarısız bir keychain yazması özel anahtarı ekrana basıyordu.** Node, alt sürecin tüm argv'sini hata mesajına yazar ve `.p8`, `security -w` argümanı olarak orada bulunur. Kilitli bir keychain, anahtarı setup'ın stderr'ini okuyan her yere düşürüyordu — terminal, CI logu, agent transkripti. Artık mesajdan çıkarılıyor.
-- **Her kurulum, kullanamayacağı 3,3 MB'ı indiriyordu.** Apple'ın OpenAPI spesifikasyonu pakete giriyordu, oysa onu yalnızca pakete girmeyen kod üreteci okur. 6,7 MB → 3,3 MB.
+- **Her kurulum, kullanamayacağı 3,3 MB'ı indiriyordu.** Apple'ın OpenAPI spesifikasyonu pakete giriyordu, oysa onu yalnızca pakete girmeyen kod üreteci okur. 6,7 MB → 3,6 MB.
 
 #### Katkıcılar için eklendi
 
