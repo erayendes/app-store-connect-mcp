@@ -90,6 +90,46 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
       },
       required: ['app', 'territory'],
     },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'Resolved app, as "Name (id)".' },
+        territory: { type: 'string' },
+        prices: {
+          type: 'array',
+          description: 'One row per subscription. Empty when the app has none.',
+          items: {
+            type: 'object',
+            properties: {
+              subscription: { type: 'string', description: 'Product ID, or the reference name when there is none.' },
+              name: { type: 'string' },
+              customerPrice: {
+                type: ['string', 'null'],
+                description: 'What the customer pays today. Null when no price is in effect here.',
+              },
+              proceeds: { type: 'string', description: 'What Apple pays out, after its cut.' },
+              note: { type: 'string', description: 'Present instead of proceeds when there is no price in effect.' },
+              scheduledChanges: {
+                type: 'array',
+                description: 'Future-dated prices Apple has accepted but not applied yet.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    customerPrice: { type: ['string', 'null'] },
+                    proceeds: { type: ['string', 'null'] },
+                    startDate: { type: ['string', 'null'] },
+                    scheduled: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+            required: ['subscription', 'name'],
+          },
+        },
+        note: { type: 'string', description: 'Present when the app has no subscriptions at all.' },
+      },
+      required: ['app', 'territory', 'prices'],
+    },
     annotations: { readOnlyHint: true, idempotentHint: true },
   },
 ];

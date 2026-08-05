@@ -216,6 +216,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   );
   const macroOffered = (name: string): boolean => macroTools.some((t) => t.name === name);
 
+  /** The macros that declare an outputSchema, so their result can be sent structured. */
+  const READ_MACRO_NAMES = new Set(
+    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+  );
+
   const server = new Server(
     { name: selection ? `asc-${selection.profile.name}` : 'app-store-connect-mcp', version: VERSION },
     {
@@ -504,6 +509,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       }
 
       let result: unknown;
+      let structured = false;
 
       if (name === 'asc__load' && selection) {
         const wanted = String(args.sub_profile ?? '');
@@ -592,6 +598,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         result = PRICING_TOOL_NAMES.has(name)
           ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http });
+        // Macro results are hand-built and small, so the read ones can also go
+        // back as structuredContent against their declared outputSchema. Apple
+        // payloads cannot: they are reshaped on the way out (stripApiNoise,
+        // capResponseSize), so a schema taken from the spec would describe a
+        // response the tool never sends.
+        structured = READ_MACRO_NAMES.has(name);
       } else if (reviewsAiWanted && REVIEWS_AI_TOOL_NAMES.has(name)) {
         // Shaped as structuredContent (raw data) + content (instruction for
         // the host model), not the generic JSON-dump result below — return
@@ -639,6 +651,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             ),
           },
         ],
+        // The text block stays either way: a client that ignores structured
+        // output must still see the whole answer.
+        ...(structured && result !== null && typeof result === 'object' && !Array.isArray(result)
+          ? { structuredContent: result as Record<string, unknown> }
+          : {}),
       };
     } catch (err) {
       return {

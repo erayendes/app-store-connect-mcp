@@ -50,6 +50,54 @@ export const SCREENSHOT_TOOLS: McpToolDefinition[] = [
       },
       required: ['app'],
     },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'Resolved app, as "Name (id)".' },
+        version: { type: 'string' },
+        state: { type: 'string', description: 'App Store state of that version, e.g. READY_FOR_SALE.' },
+        locales: {
+          type: 'array',
+          description: 'Only locales carrying screenshots of their own; the rest inherit.',
+          items: {
+            type: 'object',
+            properties: {
+              locale: { type: 'string' },
+              sets: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    displayType: { type: 'string', description: 'Device size, e.g. APP_IPHONE_67.' },
+                    count: { type: 'number' },
+                    screenshots: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          fileName: { type: ['string', 'null'] },
+                          width: { type: ['number', 'null'] },
+                          height: { type: ['number', 'null'] },
+                          state: { type: ['string', 'null'], description: 'Asset delivery state.' },
+                        },
+                      },
+                    },
+                  },
+                  required: ['displayType', 'count'],
+                },
+              },
+            },
+            required: ['locale', 'sets'],
+          },
+        },
+        localesWithOwnScreenshots: {
+          type: 'string',
+          description: 'Reads as "1 of 50; the rest inherit from the primary locale".',
+        },
+        note: { type: 'string', description: 'Present when no locale carries its own screenshots.' },
+      },
+      required: ['app', 'locales', 'localesWithOwnScreenshots'],
+    },
     annotations: { readOnlyHint: true, idempotentHint: true },
   },
 ];
