@@ -17,8 +17,8 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  * Measured on the 50-intent corpus, 265 query phrasings:
  *
  *   passing in top-3    83   ← FLOOR
- *   ranked too low      72   the tool is found, below third
- *   no results at all  110   nothing matched — almost all of them Turkish
+ *   ranked too low      64   the tool is found, below third
+ *   no results at all  118   nothing matched — almost all of them Turkish
  *
  * It has moved three times, and every move was the point:
  *   92 → 81   lane B stopped queries from naming their own target, so the
@@ -400,9 +400,9 @@ describe('historical regression freeze cases', () => {
  *
  *   53   expected tool ranks first — uncontested
  *   30   expected tool is in the top 3, another tool leads — contested
- *  182   expected tool is not in the top 3 at all (110 find nothing, 72 rank low)
+ *  182   expected tool is not in the top 3 at all (118 find nothing, 64 rank low)
  *
- * 51 + 32 = 83, the FLOOR. Same corpus, split by who won rather than by pass
+ * 53 + 30 = 83, the FLOOR. Same corpus, split by who won rather than by pass
  * and fail.
  *
  * Read a diff here as a routing change, not a score change: a new pair means a
@@ -434,16 +434,18 @@ describe('contested intents', () => {
     'app_store_version_localizations.create > app_store_versions.create',
     'app_store_versions.build.get > app_store_versions.build.set',
     'app_store_versions.create > review_submissions.create',
+    // "reply to customer review" ties now that `to` has to be its own word
+    // rather than the one inside `customer`, and a tie breaks alphabetically.
+    // The response tool is still in the top 3; it just stopped leading.
+    'app_store_versions.customer_reviews.list > customer_review_responses.create',
     'apps.analytics_report_requests.list > analytics_report_requests.create',
     'apps.android_to_ios_app_mapping_details.list > webhook_pings.create',
     'apps.background_assets.list > background_assets.create',
     'apps.subscription_grace_period.get > subscription_grace_periods.update',
     'background_asset_upload_files.create > background_assets.create',
-    'beta_build_localizations.update > beta_groups.builds.add',
     'beta_testers.create > beta_groups.create',
     'bundle_ids.create > profiles.create',
     'ci_build_runs.builds.list > ci_workflows.build_runs.list',
-    'ci_build_runs.create > ci_workflows.build_runs.list',
     'ci_build_runs.create > ci_workflows.create',
     'sandbox_testers_clear_purchase_history_request_v2.create > sandbox_testers_v2.update',
     'subscription_offer_code_custom_codes.create > subscription_offer_codes.create',
@@ -477,6 +479,6 @@ describe('contested intents', () => {
     const { count } = contestedPairs();
     const uncontested = PASSING.length - count;
     expect(uncontested + count).toBe(PASSING.length);
-    expect(uncontested).toBe(51);
+    expect(uncontested).toBe(53);
   });
 });
