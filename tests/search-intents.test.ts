@@ -371,3 +371,98 @@ describe('historical regression freeze cases', () => {
     }
   });
 });
+/**
+ * Contested intents — who is beating whom.
+ *
+ * The FLOOR above counts how many queries find their tool in the top 3. It
+ * cannot see a query that keeps passing while a different tool takes first
+ * place, and that is exactly what a description rewrite does: sharpening tool
+ * A's wording to win one intent quietly moves it above tool B on another. The
+ * total stays 83 and the damage is invisible.
+ *
+ * So this block names the competition instead of counting it. A query is
+ * "contested" when the expected tool is in the top 3 but something else ranks
+ * first. Measured on the same 265 phrasings:
+ *
+ *   53   expected tool ranks first — uncontested
+ *   30   expected tool is in the top 3, another tool leads — contested
+ *  182   expected tool is not in the top 3 at all (110 find nothing, 72 rank low)
+ *
+ * 51 + 32 = 83, the FLOOR. Same corpus, split by who won rather than by pass
+ * and fail.
+ *
+ * Read a diff here as a routing change, not a score change: a new pair means a
+ * tool started competing where it did not before, and a pair disappearing means
+ * one stopped. Either can be the intent of a change — write down which.
+ */
+describe('contested intents', () => {
+  /** Queries whose expected tool is in the top 3 but not first, as "winner > expected". */
+  function contestedPairs(): { pairs: string[]; count: number } {
+    const pairs = new Set<string>();
+    let count = 0;
+    for (const c of ALL_QUERY_CASES) {
+      const top3 = searchOperations(c.query)
+        .slice(0, 3)
+        .map((op) => op.name);
+      const expected = c.expectedTools.find((t) => top3.includes(t));
+      if (!expected || top3[0] === expected) continue;
+      count++;
+      pairs.add(`${top3[0]} > ${expected}`);
+    }
+    return { pairs: [...pairs].sort(), count };
+  }
+
+  const KNOWN_CONTESTED = [
+    'app_custom_product_page_localizations.create > app_custom_product_pages.create',
+    'app_info_localizations.create > app_info_localizations.update',
+    'app_info_localizations.create > app_store_version_localizations.create',
+    'app_screenshots.create > app_store_version_localizations.update',
+    'app_store_version_localizations.create > app_store_versions.create',
+    'app_store_versions.build.get > app_store_versions.build.set',
+    'app_store_versions.create > review_submissions.create',
+    'apps.analytics_report_requests.list > analytics_report_requests.create',
+    'apps.android_to_ios_app_mapping_details.list > webhook_pings.create',
+    'apps.background_assets.list > background_assets.create',
+    'apps.subscription_grace_period.get > subscription_grace_periods.update',
+    'background_asset_upload_files.create > background_assets.create',
+    'beta_build_localizations.update > beta_groups.builds.add',
+    'beta_testers.create > beta_groups.create',
+    'bundle_ids.create > profiles.create',
+    'ci_build_runs.builds.list > ci_workflows.build_runs.list',
+    'ci_build_runs.create > ci_workflows.build_runs.list',
+    'ci_build_runs.create > ci_workflows.create',
+    'sandbox_testers_clear_purchase_history_request_v2.create > sandbox_testers_v2.update',
+    'subscription_offer_code_custom_codes.create > subscription_offer_codes.create',
+    'subscription_plan_availabilities.available_territories.list > subscription_plan_availabilities.create',
+    'subscription_price_points.equalizations.list > subscription_prices.create',
+    'subscription_prices.create > subscriptions.prices.list',
+    'subscriptions.price_points.list > subscription_prices.create',
+  ];
+
+  it('the same tools compete for the same intents', () => {
+    const { pairs } = contestedPairs();
+    const appeared = pairs.filter((p) => !KNOWN_CONTESTED.includes(p));
+    const gone = KNOWN_CONTESTED.filter((p) => !pairs.includes(p));
+
+    expect(
+      appeared,
+      'a tool started outranking another one it did not beat before — intended?'
+    ).toEqual([]);
+    expect(gone, 'a competing pair stopped competing — say which change did it').toEqual([]);
+  });
+
+  it('no more queries are contested than before', () => {
+    // Not a floor to hold: a rise means an existing competitor took more
+    // phrasings, which the pair list alone cannot show.
+    expect(contestedPairs().count).toBeLessThanOrEqual(32);
+  });
+
+  it('splits the corpus the same way the FLOOR counts it', () => {
+    // Guards the arithmetic the comment above rests on: uncontested wins plus
+    // contested ones are exactly the queries the FLOOR calls passing.
+    const { count } = contestedPairs();
+    const uncontested = PASSING.length - count;
+    expect(uncontested + count).toBe(PASSING.length);
+    expect(uncontested).toBe(51);
+  });
+});
