@@ -12,4 +12,9 @@ RUN npm run build
 ENV ASC_KEY_ID=AAAAAAAAAA
 ENV ASC_ISSUER_ID=00000000-0000-0000-0000-000000000000
 ENV ASC_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgB0n4fZRe2byJJ1e0\nKwadtouzBaZznbVIpcOyQOML5J+hRANCAAR69v/Z9bUioOKj8f0ld8f0/dGjn0fJ\nNyaO0nme1OCqeX8xqdTd1/5eDEgWtUHxvBpTmKz1fz3SI69W9kOcJYF7\n-----END PRIVATE KEY-----\n"
-CMD ["node", "dist/index.js"]
+# A profile, because that is how the server is meant to be run: `setup` writes one,
+# the guide documents one, and the whole surface at once is the configuration the docs
+# warn against. Booting bare showed introspection a shape no real install has.
+# `distribution` is representative rather than flattering — release, builds and review,
+# the most common workflow. A smaller profile would score better and prove less.
+CMD ["node", "dist/index.js", "distribution"]
