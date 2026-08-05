@@ -6,77 +6,48 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
-### [Unreleased]
+### [2.0.0] — 2026-08-05
 
 #### Profiles are curated, not derived
 
-**Breaking — every profile changed.** Which tool belonged to which profile used to be read off the URL, so every relationship hanging off an app (`/v1/apps/{id}/subscriptionGroups` and the like) landed in `app-info` while the resources themselves lived elsewhere. Eight of eleven profiles could not reach their own resources from an app. Membership is hand-curated in `spec/profiles.csv` now and generated into the code.
+**Breaking — every profile changed.** Which tool belonged to which profile was read off the URL, so every relationship hanging off an app landed in `app-info` and eight of eleven profiles could not reach their own resources from an app. Membership is hand-curated in `spec/profiles.csv` now and generated into the code.
 
 - **13 profiles, up from 11.** New: `access`, `app-clips`, `testflight`.
-- **`user-management` is gone**, split into `access`, `testflight`, `app-clips` and `monetization`. No tool was lost, and there is no alias — one would rebuild the bloated profile. A config still naming it **starts**: the server comes up with a single tool explaining the split, so the answer reaches the conversation instead of a log nobody reads.
-- **Every profile changed size.** `app-info` goes from 112 tools to 57. **Check your config** — the tool you reached for in `asc-app-info` may now live next door.
-- **Two invariants are enforced in CI:** every profile must reach its own root resources from an app, and every write's `{id}` must have a read that produces it.
+- **`user-management` is gone**, split into four. A config still naming it starts anyway, with a single tool explaining the split.
+- **Every profile changed size** — `app-info` goes from 112 tools to 57. **Check your config**; the tool you reached for may now live next door.
 
 #### Sub-profiles
 
-A profile narrows with a colon: `monetization` is 204 tools, or take `monetization:subscription-pricing` at 24 and still get the one-call price macro. 32 sub-profiles across six profiles.
+A profile narrows with a colon: `monetization` is 204 tools, or take `monetization:subscription-pricing` at 24. 32 sub-profiles across five profiles.
 
-Some tools belong to more than one, so reaching a single tool no longer means loading a whole profile. Screenshot and preview sets hang off three different parents, and those 18 tools now sit under all three — which is what lets `distribution` upload a screenshot instead of only listing sets (109 tools to 127).
-
-The setup picker unfolds a checked profile's sub-profiles under the cursor, all on, and writes the argument for you. `asc__status` reports which are loaded and roughly what they cost.
+Some tools belong to more than one, so reaching a single tool no longer means loading a whole profile. The setup picker unfolds a checked profile's sub-profiles under the cursor, all on, and writes the argument for you; `asc__status` reports which are loaded and roughly what they cost.
 
 #### Any tool in the profile, on any client
 
-**`asc__describe` + `asc__call`** are present from the start, so nothing depends on a client noticing a revised tool list mid-session. Measured with one prompt in three clients: Claude Code used a newly loaded tool in the same turn; Codex reported that "the session tool list never made the new tools callable" and gave up. Codex and Antigravity both finish that task in one turn now. `asc__call` is read-only and says so in its annotation, which is what stops a client from blocking it; writes keep their own tool names, where the client's approval and Heimdall's typed confirmation both still apply.
-
-**`asc__load`** adds a sub-profile mid-session for clients that do refresh. Hand-written families (StoreKit, reviews-AI, pricing macros) still need a restart, and the reply says so.
-
-#### Reviews-AI no longer needs MCP Sampling
-
-The MCP 2026-07-28 revision deprecates Sampling (SEP-2577), and `draft_response`, `triage` and `daily_briefing` used to depend on it: they called `server.createMessage`, and on any client that never declared the sampling capability they never even appeared in `tools/list` — dead on the clients that need onboarding help the most. They now fetch the same reviews from Apple as before, but return the raw data as `structuredContent` plus a written instruction, in `content`, telling the HOST model — the one already talking to you — what to produce: a reply draft, a theme triage, a daily briefing. No `server.createMessage`, no capability check, so the three tools show up in every client's tool list now, including ones that never supported sampling. The value proposition hasn't moved: still no second API key, your own model still writes the text. Per the MCP spec, the structured data is also serialized into a JSON text block alongside the instruction, so a client that doesn't forward `structuredContent` into the model's context still has the data available; each tool now declares an `outputSchema` describing that shape.
+`asc__describe` + `asc__call` are present from the start, so nothing depends on a client refreshing its tool list mid-session — Codex and Antigravity both finish that task in one turn now. `asc__call` is read-only; writes keep their own names and their confirmation gate. `asc__load` adds a sub-profile mid-session for clients that do refresh.
 
 #### Setup registers with every client, not just Claude Code
 
-`setup` knew one command, `claude mcp add`. On a machine with Codex and Cursor it finished by printing JSON for the user to translate into TOML — a format Codex does not read.
+`setup` knew one command, `claude mcp add`, and left the rest to the user on a machine with Codex and Cursor.
 
-- **It asks which clients**, with everything found on the machine pre-checked: Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. Claude Code and Claude Desktop are one row and two files, because neither reads the other's config.
-- **The vendor's own command writes where one exists** (`claude`, `codex`, `code --add-mcp`). Plain JSON configs are edited directly and backed up first; one that cannot be parsed is left untouched and reported with a block to paste. A client failing never stops the others.
-- **`register` is the same work without a terminal**, for an AI agent installing on your behalf: `asc-mcp register monetization:subscription-pricing analytics`. It asks for nothing, never touches credentials, and only adds — `setup` is what removes, because removing is safe when you are looking at the list you are editing and an agent is not.
+- **It detects the clients on the machine and asks which to install into:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
+- **The vendor's own command writes where one exists** (`claude`, `codex`, `code --add-mcp`); plain JSON configs are backed up and edited. One that cannot be parsed is left untouched and reported with a block to paste. A client failing never stops the others.
+- **`register` is the same work without a terminal**, for an agent installing on your behalf: `asc-mcp register monetization:subscription-pricing analytics`. It only adds; removing is `setup`'s job.
 
 > [!NOTE]
 > ChatGPT's own connectors accept only remote HTTPS servers, so Heimdall cannot appear there; it runs on your machine over stdio, which is why the private key never leaves it. The Codex entry covers the CLI, the IDE extension and the Codex side of the ChatGPT desktop app — the three share one config file.
 
-#### Fewer calls, smaller answers
-
-Four earlier issues came out of a single live test: the tool was hard to find, the path was long, the response was too big, the confirmation said nothing. Measuring the same class across the rest of the API found what they share — an agent goes wrong where the API declined to state a fact, or where the answer does not fit in what it can read. Neither is fixed by telling the model to try harder.
-
-- **Sparse fieldsets are back.** Every `fields[...]` was dropped as "changes which columns, not which records" — true, and backwards: it kept the tool schema small and paid for it on every response instead. Fifty app store version localizations are 264 KB as they shipped and **15.8 KB** with one attribute named; `apps.list` drops from 109 KB to 2.7 KB. Only each operation's own primary type is exposed, so this is one parameter on 304 operations rather than the hundreds that motivated dropping them: `tools/list` grows about 10% against 248 KB saved on the first narrowed call.
-- **Truncation names the remedy that keeps every row.** A capped response now suggests `fields_*` before `filter_*`, `limit` and `next_url`, because the others answer a narrower question than the one that was asked.
-- **`include` says what it prevents.** Without it, checking a relationship costs one call per row returned. Asking which of fifty localizations carry screenshots was 53 calls; it is one now.
-- **Two read macros.** `pricing__get_subscription_price` reports what a subscription costs today in a territory — including the price that `/prices` on its own does not carry — and separates scheduled future prices from the one in effect. `listing__get_screenshots` answers "what artwork is up" in 4 calls and about 1 KB against 53 calls and 264 KB, and says the remaining locales inherit rather than lack. Four live agent sessions asking the price in Turkish, German, Bengali and Japanese went from 3 calls and 5–8 turns to 1 call and 3–4.
-- **`filter[territory]` states its own format** — ISO-3166 alpha-3, on all 25 parameters across 23 operations, from one rule in the generator. Two letters is not an error at Apple: it returns 200 and an empty list, which reads as "this country has no data" and produced a confident "no US price configured" for a subscription selling at $4.99.
-- **The server introduces itself.** Three facts the API will not state are sent once, at connection. Advice is deliberately absent — two behavioural lines were tried and measured, and at three samples per condition no effect was visible against a spread of 374k to 1341k tokens inside a single condition.
-
-#### Sales and finance reports return readable rows on request
-
-`sales_reports.list` and `finance_reports.list` hand back Apple's response as a gzipped TSV; the HTTP layer already reduces that to an opaque `{ contentType, base64 }` blob, unreadable to a model without an out-of-band decode step. Both tools now accept `parse` (boolean, default `false` — output stays byte-for-byte unchanged) and `max_rows` (default 200, hard cap 1000). With `parse: true` the response comes back as `{ headers, rows, totalRows, truncated }` instead of the blob. A payload that fails to gunzip — Apple sent something that isn't actually gzip-compressed — falls back to the original blob plus a `parseError` note rather than throwing, so no data is lost either way.
-
-#### Tool definitions are smaller
-
-Two runtime-synthesized description strings got shorter. The redundant "Resource identifier." on every `id` path parameter (783 tools) is gone entirely — `type: "string"` plus `required` already says as much; the `next_url` parameter's description (240 `.list` tools) is shorter, keeping the field name a model needs to copy and dropping a non-critical clause. Across the full 982-tool definition corpus that's **-5.17%** — 220,638 → 209,221 tokens, average per tool 225 → 213 — and setup's profile size estimates now reflect it. (The bigger-looking idea, deduplicating repeated shapes via JSON Schema `$defs`, measured well — about 27% — but doesn't ship: MCP hands each tool its own self-contained schema resource, so nothing placed in `$defs` is actually shared across tools. The measurement tooling and four tripwire tests that found this stay, so the question reopens on its own if that ever changes.)
-
 #### Fixed
 
-- **A misspelled filter changed which app you were editing.** `apps.list` with `filter[bundleId]` — Apple's own spelling — dropped the argument, ran unfiltered and returned the account's first app, reporting success. Both spellings are accepted now, and an argument matching neither stops the call.
-- **The binary exited 0 with no output when invoked through a symlink.** Both `npm install -g` and `npx` go through one, so every installed copy was silently dead.
-- **Tool search returned nothing for a query in any language but English, and never said why.** 110 of 265 phrasings come back empty: matching is literal over Apple's English spec, and an empty list reads as "no such capability". `asc__search_tools` now asks for English in its description, and a result with no matches explains that and suggests what to try — so the client translates and searches again rather than concluding the capability does not exist.
-- **Tool search offered tools the server refuses to load.** 123 deprecated candidates could never be called by the client being offered them; they are filtered out now.
-- **Tool search never offered the macros at all.** They come from neither Apple's spec nor the StoreKit list, so a model asking how to change a price found the five-call chain and never the one-call tool written to replace it. Tools outside the spec were also matched by whole-phrase containment, so no question phrased as a sentence ever reached them.
-- **A capital `İ` matched nothing.** Unicode lowercases it to `i` followed by a combining dot, not to `i`, so `İndirim kodu aç` returned no results where `indirim kodu aç` returned 28.
-- **The setup picker opened every checked profile's sub-rows at once** — 46 rows on a fresh run. Expansion follows the cursor now.
-- **The picker counted a profile as the sum of its sub-profiles**, not their union, so a tool in two was counted twice. `access` reported 55; it serves 52 plus core.
-- **`check_entitlement` answered about the wrong product.** A product ID lives inside each transaction's signed payload, so a filter that never opened it narrowed nothing. An undecodable payload is reported as `undecodableTransactions` now too, so "could not tell" stops arriving disguised as "no".
-- **Every install pulled 3.3 MB it had no way to use.** Apple's OpenAPI spec shipped in the package, but only the code generator reads it and the generator does not ship. Unpacked size drops from 6.7 MB to 3.3 MB.
+- **A misspelled filter changed which app you were editing.** `filter[bundleId]` was dropped silently, ran unfiltered and returned the account's first app. Both spellings are accepted now.
+- **The binary exited 0 with no output when invoked through a symlink.** Both `npm install -g` and `npx` go through one, so every installed copy was dead.
+- **Tool search returned nothing for queries in any language but English, and never said why.** 110 of 265 phrasings came back empty; an empty result now explains itself.
+- **Tool search offered tools the server refuses to load** — 123 deprecated candidates are filtered out now.
+- **The setup picker opened every checked profile's sub-rows at once** (46 rows); expansion follows the cursor now.
+- **The picker counted a profile as the sum of its sub-profiles**, not their union. `marketing` reported 108; it serves 90 plus core.
+- **`check_entitlement` answered about the wrong product**, then could not say when it did not know. The product ID lives inside the signed payload; an unreadable one is reported as `undecodableTransactions` now.
+- **A failed keychain write printed the private key.** Node echoes a child process's whole argv into its error message, and the `.p8` rides in argv as `security -w`. A locked keychain put the key into whatever read setup's stderr — a terminal, a CI log, an agent transcript. It is redacted out of the message now.
+- **Every install pulled 3.3 MB it had no way to use.** Apple's OpenAPI spec shipped in the package, but only the generator reads it and the generator does not ship. 6.7 MB → 3.3 MB.
 
 #### Added for contributors
 
@@ -159,77 +130,48 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 
-### [Yayınlanmadı]
+### [2.0.0] — 2026-08-05
 
-#### Profiller türetilmiyor, elle küratörlükten geçiyor
+#### Profiller elle küratörlükten geçiyor
 
-**Kırıcı değişiklik — her profil değişti.** Bir aracın hangi profile ait olduğu eskiden URL'den okunuyordu; bu yüzden bir uygulamaya bağlı her ilişki (`/v1/apps/{id}/subscriptionGroups` gibi) `app-info`'ya düşerken kaynakların kendisi başka yerde duruyordu. On bir profilin sekizi kendi kaynaklarına bir uygulamadan erişemiyordu. Üyelik artık `spec/profiles.csv` içinde elle belirleniyor ve koda üretiliyor.
+**Kırıcı değişiklik — her profil değişti.** Bir aracın hangi profile ait olduğu URL'den okunuyordu; bu yüzden bir uygulamaya bağlı her ilişki `app-info`'ya düşüyor, on bir profilin sekizi kendi kaynaklarına bir uygulamadan erişemiyordu. Üyelik artık `spec/profiles.csv` içinde elle belirlenip koda üretiliyor.
 
 - **13 profil**, önceden 11. Yeni: `access`, `app-clips`, `testflight`.
-- **`user-management` kaldırıldı**; `access`, `testflight`, `app-clips` ve `monetization`'a bölündü. Hiçbir araç kaybolmadı, takma ad da yok — takma ad şişkin profili geri kurardı. Config'inde hâlâ bu isim yazıyorsa sunucu **açılıyor**: bölünmeyi anlatan tek bir araçla geliyor, böylece cevap kimsenin okumadığı loga değil sohbete ulaşıyor.
-- **Her profilin boyutu değişti.** `app-info` 112 araçtan 57'ye indi. **Config'inizi kontrol edin** — `asc-app-info`'da aradığınız araç artık yan komşuda olabilir.
-- **İki kural CI'da zorunlu:** her profil kendi kök kaynaklarına bir uygulamadan erişebilmeli ve her yazmanın `{id}`'si onu üreten bir okumaya sahip olmalı.
+- **`user-management` kaldırıldı**, dörde bölündü. Config'inizde hâlâ varsa sunucu yine açılıyor ve bölünmeyi anlatan tek bir araçla geliyor.
+- **Her profilin boyutu değişti** — `app-info` 112 araçtan 57'ye indi. **Config'inizi kontrol edin**, aradığınız araç yan komşuda olabilir.
 
 #### Alt profiller
 
-Profil iki nokta üst üste ile daralıyor: `monetization` 204 araç, ya da 24 araçlık `monetization:subscription-pricing`'i seçersiniz — tek çağrılık fiyat makrosu yine içinde. Altı profil altında 32 alt profil.
+Profil iki nokta üst üste ile daralıyor: `monetization` 204 araç, ya da 24 araçlık `monetization:subscription-pricing`'i seçersiniz. Beş profil altında 32 alt profil.
 
-Bazı araçlar birden fazlasına bağlı, yani tek bir araca ulaşmak için koca bir profil yüklemek gerekmiyor. Ekran görüntüsü ve önizleme setleri üç ayrı ebeveyne bağlanır ve o 18 araç artık üçünün de altında — `distribution`'ın seti yalnızca listelemek yerine ekran görüntüsü yükleyebilmesini sağlayan da bu (109 araçtan 127'ye).
-
-Setup seçicisi, işaretlenen profilin alt profillerini imlecin altında açar, hepsi işaretli gelir ve argümanı sizin yerinize yazar. `asc__status` hangilerinin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+Bazı araçlar birden fazlasına bağlı, yani tek bir araç için koca bir profil yüklemek gerekmiyor. Setup seçicisi işaretlenen profilin alt profillerini imlecin altında açar, hepsi işaretli gelir ve argümanı sizin yerinize yazar; `asc__status` hangilerinin yüklü olduğunu ve yaklaşık maliyetini raporlar.
 
 #### Profildeki her araç, her istemcide
 
-**`asc__describe` + `asc__call`** en baştan mevcut; böylece hiçbir şey, istemcinin oturum ortasında değişen araç listesini fark etmesine bağlı kalmıyor. Üç istemcide tek istemle ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex "oturum araç listesi yeni araçları çağrılabilir yapmadı" deyip vazgeçti. Codex ve Antigravity artık aynı işi tek turda bitiriyor. `asc__call` salt okunur ve bunu açıklamasında bildiriyor — istemcinin onu engellemesini durduran şey bu. Yazmalar kendi araç adlarını koruyor; orada hem istemcinin onayı hem Heimdall'ın tipli teyidi geçerli.
-
-**`asc__load`**, listeyi tazeleyen istemciler için oturum ortasında alt profil ekler. Elle yazılmış aileler (StoreKit, reviews-AI, fiyat makroları) hâlâ yeniden başlatma ister ve cevap bunu söyler.
-
-#### Reviews-AI artık MCP Sampling gerektirmiyor
-
-MCP 2026-07-28 revizyonu Sampling'i kullanımdan kaldırıyor (SEP-2577); `draft_response`, `triage` ve `daily_briefing` da ona bağımlıydı: `server.createMessage` çağırıyorlardı ve sampling yeteneğini hiç bildirmeyen bir client'ta `tools/list`'te hiç görünmüyorlardı — üstelik en çok yönlendirmeye ihtiyacı olan client'larda ölü duruyorlardı. Artık aynı yorumları Apple'dan öncekiyle aynı şekilde çekiyor, ham veriyi `structuredContent` olarak, yazılı bir talimatı da `content` içinde döndürüyorlar — talimat, sizinle zaten konuşan HOST modele ne üreteceğini söylüyor: bir cevap taslağı, tema bazlı tasnif, günlük brifing. `server.createMessage` yok, yetenek kontrolü yok; bu yüzden üç araç da artık sampling desteklemeyenler dahil her client'ın araç listesinde görünüyor. Değer önerisi yerinde duruyor: hâlâ ikinci bir API anahtarı yok, metni yine kendi modeliniz yazıyor. MCP spesifikasyonuna uyarak, yapılandırılmış veri talimatın yanında bir JSON metin bloğu olarak da seri hale getiriliyor; böylece `structuredContent`'i modelin bağlamına iletmeyen bir client bile veriye erişebiliyor. Her araç artık bu şekli tanımlayan bir `outputSchema` bildiriyor.
+`asc__describe` + `asc__call` en baştan mevcut, böylece hiçbir şey istemcinin oturum ortasında araç listesini tazelemesine bağlı kalmıyor — Codex ve Antigravity artık aynı işi tek turda bitiriyor. `asc__call` salt okunur; yazmalar kendi adlarını ve onay kapısını koruyor. `asc__load`, tazeleyen istemciler için oturum ortasında alt profil ekler.
 
 #### Setup yalnızca Claude Code'a değil, her istemciye kaydediyor
 
-`setup` tek komut biliyordu: `claude mcp add`. Codex ve Cursor bulunan bir makinede iş, kullanıcının TOML'a çevirmesi için JSON basmakla bitiyordu — üstelik Codex'in okumadığı bir formattan.
+`setup` tek komut biliyordu: `claude mcp add`; Codex ve Cursor bulunan bir makinede işi kullanıcıya bırakıyordu.
 
-- **Hangi istemciler diye soruyor**, makinede bulunanlar önceden işaretli: Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code. Claude Code ile Claude Desktop tek satır, iki dosyadır; çünkü hiçbiri diğerinin config'ini okumaz.
-- **Üreticinin kendi komutu varsa yazma işini o yapıyor** (`claude`, `codex`, `code --add-mcp`). Düz JSON config'ler doğrudan düzenleniyor ve önce yedekleniyor; ayrıştırılamayan bir dosya hiç ellenmiyor, yapıştırılacak blokla bildiriliyor. Bir istemcinin başarısız olması diğerlerini durdurmuyor.
-- **`register` aynı işi terminal olmadan yapar**, kurulumu sizin adınıza üstlenen bir AI agent için: `asc-mcp register monetization:subscription-pricing analytics`. Hiçbir şey sormaz, kimlik bilgisine dokunmaz ve yalnızca ekler — silme işi `setup`'ındır, çünkü silmek düzenlediğiniz listeye bakarken güvenlidir, agent bakmaz.
+- **Makinede bulunan istemcileri tespit edip hangilerine kurmak istediğinizi soruyor:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
+- **Üreticinin kendi komutu varsa onu kullanıyor** (`claude`, `codex`, `code --add-mcp`); düz JSON config'leri yedekleyip düzenliyor. Ayrıştırılamayan bir dosyaya hiç dokunmuyor, yapıştırılacak blok basıyor. Bir istemcinin başarısız olması diğerlerini durdurmuyor.
+- **`register` aynı işi terminal olmadan yapar**, kurulumu sizin adınıza üstlenen bir agent için: `asc-mcp register monetization:subscription-pricing analytics`. Yalnızca ekler; silme işi `setup`'ındır.
 
 > [!NOTE]
 > ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ettiği için Heimdall orada görünemez; sizin makinenizde stdio üzerinden çalışır, özel anahtarın makineden hiç çıkmamasının sebebi de budur. Codex satırı CLI'yi, IDE eklentisini ve ChatGPT masaüstünün Codex tarafını kapsar — üçü aynı config dosyasını okur.
 
-#### Daha az çağrı, daha küçük yanıt
-
-Daha önceki dört sorun tek bir canlı testten çıkmıştı: araç zor bulunuyordu, yol uzundu, yanıt çok büyüktü, onay ekranı hiçbir şey söylemiyordu. Aynı sınıfı API'nin geri kalanında ölçmek ortak yanlarını gösterdi — ajan, API bir bilgiyi söylemediğinde ya da yanıt okuyabileceğinden büyük olduğunda yanılıyor. İkisi de modele "daha dikkatli ol" demekle düzelmiyor.
-
-- **Sparse fieldset'ler geri geldi.** Her `fields[...]` parametresi "hangi kayıtların değil, hangi sütunların döneceğini değiştiriyor" diye atılıyordu — doğru, ama ters: araç şemasını küçük tutup bedelini her yanıtta ödüyordu. Elli app store version lokalizasyonu bugüne kadar 264 KB'tı, tek bir alan istendiğinde **15,8 KB**; `apps.list` 109 KB'tan 2,7 KB'a iniyor. Yalnızca her operasyonun kendi ana tipi açılıyor, yani atılmalarına sebep olan yüzlerce parametre yerine 304 operasyonda birer tane: `tools/list` yaklaşık %10 büyüyor, ilk daraltılmış çağrıda 248 KB kazanılıyor.
-- **Kırpma, tek satır bile kaybettirmeyen çareyi söylüyor.** Sınıra takılan yanıt artık `fields_*`'ı `filter_*`, `limit` ve `next_url`'den önce öneriyor; diğerleri sorulandan daha dar bir soruyu cevaplıyor.
-- **`include` neyi önlediğini söylüyor.** O olmadan bir ilişkiyi kontrol etmek, dönen satır başına bir çağrı demek. Elli lokalizasyonun hangisinde ekran görüntüsü olduğunu sormak 53 çağrıydı; artık bir.
-- **İki okuma makrosu.** `pricing__get_subscription_price` bir aboneliğin bugün bir ülkede ne kadara satıldığını döndürüyor — `/prices`'ın tek başına taşımadığı fiyat dahil — ve planlanmış gelecek fiyatları yürürlüktekinden ayırıyor. `listing__get_screenshots` "hangi görseller yayında" sorusunu 53 çağrı ve 264 KB yerine 4 çağrı ve yaklaşık 1 KB ile cevaplıyor, kalan dillerin görsel *eksiği* değil *mirası* olduğunu söylüyor. Fiyatı Türkçe, Almanca, Bengalce ve Japonca soran dört canlı ajan oturumu 3 çağrı ve 5–8 turdan 1 çağrı ve 3–4 tura indi.
-- **`filter[territory]` kendi biçimini söylüyor** — ISO-3166 alpha-3, 23 operasyondaki 25 parametrenin tamamında, üreticideki tek bir kuraldan. İki harf Apple için hata değil: 200 ve boş liste dönüyor, bu da "bu ülkede veri yok" gibi okunuyor ve 4,99 dolara satılan bir abonelik için emin bir şekilde "US fiyatı yapılandırılmamış" cevabını üretti.
-- **Sunucu kendini tanıtıyor.** API'nin söylemediği üç bilgi, bağlantı anında bir kez gönderiliyor. Nasihat bilinçli olarak yok — iki davranış maddesi denendi ve ölçüldü; koşul başına üç örnekte, tek bir koşulun içindeki 374 bin–1,34 milyon token'lık yayılıma karşı hiçbir etki görünmedi.
-
-#### Satış ve finans raporları artık istek üzerine okunabilir satırlar döndürüyor
-
-`sales_reports.list` ve `finance_reports.list`, Apple'ın cevabını gzip'li bir TSV olarak veriyor; HTTP katmanı bunu zaten opak bir `{ contentType, base64 }` blob'una indirgiyor — model için, harici bir çözme adımı olmadan okunamayan bir şey. İki araç da artık `parse` (boolean, varsayılan `false` — çıktı byte-for-byte aynı kalıyor) ve `max_rows` (varsayılan 200, sert tavan 1000) parametrelerini kabul ediyor. `parse: true` ile cevap, blob yerine `{ headers, rows, totalRows, truncated }` olarak dönüyor. Gunzip edilemeyen bir yük — Apple'ın gönderdiği şey aslında gzip'li değilse — hata fırlatmak yerine orijinal blob'a bir `parseError` notu ekleyerek geri dönüyor; iki durumda da veri kaybolmuyor.
-
-#### Araç tanımları küçüldü
-
-Çalışma zamanında üretilen iki açıklama metni kısaldı. Her `id` path parametresindeki gereksiz "Resource identifier." (783 araçta tekrarlanıyordu) tamamen kaldırıldı — `type: "string"` ve `required` zaten bunu söylüyor; `next_url` parametresinin açıklaması (240 `.list` aracında tekrarlanıyordu) kısaltıldı, modelin kopyalaması gereken alan adı kalırken kritik olmayan bir cümle çıkarıldı. 982 araçlık tam külliyatta bu **%5,17'lik bir düşüş** demek — 220.638 → 209.221 token, araç başına ortalama 225 → 213 — ve setup'ın profil boyutu tahminleri artık bunu yansıtıyor. (Daha büyük görünen fikir, tekrarlanan şekilleri JSON Schema `$defs` ile tekilleştirmek, ölçümde iyi çıktı — yaklaşık %27 — ama sevk edilmiyor: MCP her araca kendi kendine yeten bir şema kaynağı veriyor, yani `$defs` içine konan hiçbir şey araçlar arasında gerçekten paylaşılmıyor. Bunu ortaya çıkaran ölçüm araçları ve dört tripwire testi kalıyor; böylece durum değişirse soru kendiliğinden yeniden açılır.)
-
 #### Düzeltildi
 
-- **Yanlış yazılmış bir filtre hangi uygulamayı düzenlediğinizi değiştiriyordu.** `apps.list` çağrısı `filter[bundleId]` ile — Apple'ın kendi yazımı — argümanı düşürüyor, filtresiz çalışıyor, hesabın ilk uygulamasını döndürüyor ve başarı bildiriyordu. Artık iki yazım da kabul ediliyor; hiçbirine uymayan argüman çağrıyı durduruyor.
-- **Binary, symlink üzerinden çağrıldığında hiçbir çıktı vermeden 0 ile çıkıyordu.** Hem `npm install -g` hem `npx` symlink kullanır; yani kurulu her kopya sessizce ölüydü.
-- **Araç arama İngilizce dışındaki sorgulara hiçbir şey döndürmüyordu, üstelik sebebini hiç söylemiyordu.** 265 ifadenin 110'u boş dönüyor: eşleştirme Apple'ın İngilizce spec'i üzerinde birebir yapılıyor ve boş liste "böyle bir yetenek yok" gibi okunuyor. `asc__search_tools` artık açıklamasında İngilizce sorgu istiyor, eşleşme çıkmayan sonuç da bunu söyleyip ne denenmesi gerektiğini öneriyor — istemci çevirip tekrar arıyor, yeteneğin olmadığı sonucuna varmıyor.
-- **Araç arama, sunucunun yüklemeyi reddettiği araçları öneriyordu.** Kullanımdan kalkmış 123 aday, önerildikleri istemci tarafından hiç çağrılamazdı; artık eleniyorlar.
-- **Araç arama makroları hiç göstermiyordu.** Ne Apple'ın spec'inden ne StoreKit listesinden geldikleri için, fiyat değiştirmeyi soran bir model beş çağrılık zinciri buluyor, onun yerine yazılmış tek çağrılık aracı hiç görmüyordu. Spec dışındaki araçlar ayrıca tüm cümlenin geçmesine göre eşleştiriliyordu; yani cümleyle sorulan hiçbir soru onlara ulaşmıyordu.
-- **Büyük `İ` hiçbir şeyle eşleşmiyordu.** Unicode onu `i`'ye değil, `i` artı birleşen bir noktaya küçültüyor; bu yüzden `İndirim kodu aç` sıfır sonuç dönerken `indirim kodu aç` 28 sonuç dönüyordu.
-- **Setup seçicisi işaretli her profilin alt satırlarını aynı anda açıyordu** — sıfırdan bir koşuda 46 satır. Açılma artık imleci takip ediyor.
-- **Seçici bir profili alt profillerinin toplamı sayıyordu**, birleşimi değil; iki alt profilde bulunan araç iki kez sayılıyordu. `access` 55 gösteriyordu; gerçekte 52 artı çekirdek sunuyor.
-- **`check_entitlement` yanlış ürün hakkında cevap veriyordu.** Ürün kimliği her işlemin imzalı yükünün içinde yaşar; o yükü hiç açmayan bir filtre hiçbir şeyi daraltmıyordu. Çözülemeyen yük de artık `undecodableTransactions` ile bildiriliyor, böylece "bilemedim" cevabı "hayır" kılığında gelmiyor.
-- **Her kurulum, kullanamayacağı 3,3 MB'ı indiriyordu.** Apple'ın OpenAPI spesifikasyonu pakete giriyordu, oysa onu yalnızca kod üreteci okur ve üreteç pakete girmez. Açılmış boyut 6,7 MB'dan 3,3 MB'a iniyor.
+- **Yanlış yazılmış bir filtre hangi uygulamayı düzenlediğinizi değiştiriyordu.** `filter[bundleId]` sessizce düşüyor, filtresiz çalışıp hesabın ilk uygulamasını döndürüyordu. Artık iki yazım da kabul ediliyor.
+- **Binary, symlink üzerinden çağrıldığında sessizce 0 ile çıkıyordu.** `npm install -g` ve `npx` symlink kullanır; yani kurulu her kopya ölüydü.
+- **Araç arama İngilizce dışındaki sorgulara boş dönüyordu, sebebini de söylemiyordu.** 265 ifadenin 110'u boş dönüyordu; artık sonuç boşsa nedenini açıklıyor.
+- **Araç arama, sunucunun yüklemeyi reddettiği araçları öneriyordu** — kullanımdan kalkmış 123 aday artık eleniyor.
+- **Setup seçicisi işaretli her profilin alt satırlarını aynı anda açıyordu** (46 satır); açılma artık imleci takip ediyor.
+- **Seçici bir profili alt profillerinin toplamı sayıyordu**, birleşimi değil. `marketing` 108 gösteriyordu; gerçekte 90 artı çekirdek sunuyor.
+- **`check_entitlement` yanlış ürün hakkında cevap veriyordu**, sonra da bilmediğini söyleyemiyordu. Ürün kimliği imzalı yükün içinde yaşar; okunamayan yük artık `undecodableTransactions` ile bildiriliyor.
+- **Başarısız bir keychain yazması özel anahtarı ekrana basıyordu.** Node, alt sürecin tüm argv'sini hata mesajına yazar ve `.p8`, `security -w` argümanı olarak orada bulunur. Kilitli bir keychain, anahtarı setup'ın stderr'ini okuyan her yere düşürüyordu — terminal, CI logu, agent transkripti. Artık mesajdan çıkarılıyor.
+- **Her kurulum, kullanamayacağı 3,3 MB'ı indiriyordu.** Apple'ın OpenAPI spesifikasyonu pakete giriyordu, oysa onu yalnızca pakete girmeyen kod üreteci okur. 6,7 MB → 3,3 MB.
 
 #### Katkıcılar için eklendi
 
