@@ -120,8 +120,8 @@ describe('$defs hoisting', () => {
  * both percentages without touching a single shape: it cut ~11.6k tokens of
  * repeated prose, so the denominator fell from 156,986 to 145,400 tokens. The
  * self-contained saving is still the same 2,756 absolute tokens it always was,
- * but it now reads 1.90% instead of 1.76%, and the shared ceiling fell from
- * 31.1% to 26.64%. Recalibrate these baselines whenever the corpus moves —
+ * and the fields[...] params from the agent-experience merge moved them again.
+ * Recalibrate these baselines whenever the corpus moves —
  * a stale one turns a 0.3pp nudge into what looks like a 5pp collapse and
  * sends the investigation somewhere it should not go.
  */
@@ -184,7 +184,7 @@ describe('$defs decision tripwires', () => {
   });
 
   it('pins the unreachable shared-$defs ceiling', () => {
-    // Baseline at last calibration (2026-08-04, post 5a7cccd): 26.64%.
+    // Baseline at last calibration (2026-08-05, post fields[...] merge): 28.3%.
     // Drift in EITHER direction means the corpus changed enough that the
     // trade-off deserves a fresh look — a collapse would mean there is nothing
     // left to want, a jump means the prize grew.
@@ -208,13 +208,13 @@ describe('$defs decision tripwires', () => {
     const pct = (ceiling / inline) * 100;
     const message =
       `shared-$defs ceiling is now ${pct.toFixed(2)}% of schema tokens ` +
-      `(baseline at last calibration, post 5a7cccd: 26.64%)`;
+      `(baseline at last calibration, post fields[...] merge: 28.3%)`;
     expect(pct, message).toBeGreaterThan(26);
     expect(pct, message).toBeLessThan(36);
   });
 
   it('pins the achievable self-contained saving', () => {
-    // Baseline at last calibration (2026-08-04, post 5a7cccd): 1.90%.
+    // Baseline at last calibration (2026-08-05, post fields[...] merge): 1.49%.
     //
     // The band's top is set where the number can actually reach it, which the
     // original 10% threshold was not. Measured on this corpus on 2026-08-04,
@@ -231,7 +231,7 @@ describe('$defs decision tripwires', () => {
     const pct = ((inline - withDefs) / inline) * 100;
     const message =
       `self-contained $defs would now save ${pct.toFixed(2)}% of schema tokens ` +
-      `(baseline at last calibration, post 5a7cccd: 1.90%)`;
+      `(baseline at last calibration, post fields[...] merge: 1.49%)`;
     expect(pct, message).toBeGreaterThan(1.2);
     expect(pct, message).toBeLessThan(3);
   });
