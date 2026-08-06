@@ -4,10 +4,10 @@
 deneyimi tarafı — AI-204'ten AI-211'e kadar — sayılarını buradan alıyor, o yüzden
 rapor depoya alındı.
 
-Ham `.jsonl` oturum kayıtları **depoda değil**: gerçek bir App Store Connect
-hesabının yanıtlarını taşıyorlar. Rapor onlardan üretildi ve tek başına okunabilir.
-Yeniden üretmek isteyen `npm run ax:agent` koşar; bu koşu 19,64M token ve $11,64
-tuttu.
+Ham `.jsonl` oturum kayıtları [ax-runs/](ax-runs/) altında arşivlendi — gerçek bir
+App Store Connect hesabının yanıtlarını taşıdıkları için ne içerdikleri oradaki
+README'de tek tek yazılı. Yeniden üretmek isteyen `npm run ax:agent` koşar; bu koşu
+19,64M token ve $11,64 tuttu.
 
 - Dal: `feat/ax-regression-harness`
 - Model: `claude-haiku-4-5-20251001`

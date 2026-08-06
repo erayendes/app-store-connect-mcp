@@ -1,0 +1,19 @@
+Provider	Provider Country	SKU	Developer	Title	Version	Product Type Identifier	Units	Developer Proceeds	Begin Date	End Date	Customer Currency	Country Code	Currency of Proceeds	Apple Identifier	Customer Price	Promo Code	Parent Identifier	Subscription	Period	Category	CMB	Device	Supported Platforms	Proceeds Reason	Preserved Pricing	Client	Order Type
+APPLE	US	com.milowda.postmateai	Eray Endes	AI Caption Generator: Postmate	2.1.8	1	1	0.00	07/20/2026	07/26/2026	INR	IN	 	6502901728	0.00	 	 	 	 	Photo & Video		iPhone	iOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	1	0.00	07/20/2026	07/26/2026	EUR	NL	 	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	com.milowda.chefai	Eray Endes	NOMIA: AI Chef & Recipe Keeper	1.0.1	1	1	0.00	07/20/2026	07/26/2026	EUR	ES	 	6740999155	0.00	 	 	 	 	Food & Drink		iPhone	iOS
+APPLE	US	com.milowda.postmateai	Eray Endes	AI Caption Generator: Postmate	2.1.8	3	1	0.00	07/20/2026	07/26/2026	INR	IN	INR	6502901728	0.00	 	 	 	 	Photo & Video		iPhone	iOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	1	0.00	07/20/2026	07/26/2026	USD	US	 	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	1	0.00	07/20/2026	07/26/2026	USD	GH	 	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	postmate.base.6month	 	postmate base 6 month	2.1.8	IAY	1	212.49	07/20/2026	07/26/2026	CAD	CA	CAD	6737308803	249.99	 	com.milowda.postmateai	Renewal	6 Months	Photo & Video		iPhone	iOS	Rate After One Year
+APPLE	US	askquran.base.1week	 	ask quran base 1week	1.5.1	IAY	1	0.00	07/20/2026	07/26/2026	TRY	TR	TRY	6639599999	0.00	FREE	com.milowda.askquranai	New	 	Reference		iPhone	iOS and tvOS	 	 	 	Free Trial Intro Offer
+APPLE	US	com.milowda.chefai	Eray Endes	NOMIA: AI Chef & Recipe Keeper	1.0.1	1	1	0.00	07/20/2026	07/26/2026	USD	BJ	 	6740999155	0.00	 	 	 	 	Food & Drink		iPhone	iOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	3	1	0.00	07/20/2026	07/26/2026	TRY	TR	TRY	6636549188	0.00	 	 	 	 	Reference		iPad	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	7	1	0.00	07/20/2026	07/26/2026	TRY	TR	TRY	6636549188	0.00	 	 	 	 	Reference		iPad	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	1	0.00	07/20/2026	07/26/2026	AUD	AU	 	6636549188	0.00	 	 	 	 	Reference		Desktop	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	3	2	0.00	07/20/2026	07/26/2026	TRY	TR	TRY	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	1	0.00	07/20/2026	07/26/2026	EUR	FR	 	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	1	0.00	07/20/2026	07/26/2026	SAR	SA	 	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.5.1	1	5	0.00	07/20/2026	07/26/2026	TRY	TR	 	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS
+APPLE	US	askquran.base.1week	 	ask quran base 1week	1.5.1	IAY	1	0.00	07/20/2026	07/26/2026	SAR	SA	SAR	6639599999	0.00	FREE	com.milowda.askquranai	New	 	Reference		iPhone	iOS and tvOS	 	 	 	Free Trial Intro Offer
+APPLE	US	com.milowda.askquranai	Eray Endes	Ask Quran: AI Islam Companion	1.6	7	2	0.00	07/20/2026	07/26/2026	USD	US	USD	6636549188	0.00	 	 	 	 	Reference		iPhone	iOS and tvOS

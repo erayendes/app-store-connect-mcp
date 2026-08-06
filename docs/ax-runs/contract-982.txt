@@ -1,0 +1,63 @@
+
+> @erayendes/asc-mcp@1.3.0 ax:contract
+> tsx scripts/ax-contract.ts
+
+
+[1mContract check[0m — 982 operations
+[2mNo model, no tokens. Writes are dry-run and never reach Apple.[0m
+
+[2m  writes 0/466[0m[2m  writes 50/466[0m[2m  writes 100/466[0m[2m  writes 150/466[0m[2m  writes 200/466[0m[2m  writes 250/466[0m[2m  writes 300/466[0m[2m  writes 350/466[0m[2m  writes 400/466[0m[2m  writes 450/466[0m                            [2m  harvested ids for 18 resource types[0m
+[2m  reads 0/516[0m[2m  reads 25/516[0m[2m  reads 50/516[0m[2m  reads 75/516[0m[2m  reads 100/516[0m[2m  reads 125/516[0m[2m  reads 150/516[0m[2m  reads 175/516[0m[2m  reads 200/516[0m[2m  reads 225/516[0m[2m  reads 250/516[0m[2m  reads 275/516[0m[2m  reads 300/516[0m[2m  reads 325/516[0m[2m  reads 350/516[0m[2m  reads 375/516[0m[2m  reads 400/516[0m[2m  reads 425/516[0m[2m  reads 450/516[0m[2m  reads 475/516[0m[2m  reads 500/516[0m                            [1m
+By domain[0m
+  apps               [32m88 ok[0m  [31m4 fail[0m   [2m24 unreached[0m
+  builds             [32m28 ok[0m  [31m3 fail[0m   [2m8 unreached[0m
+  analytics          [32m4 ok[0m   [31m2 fail[0m   [2m6 unreached[0m
+  testflight         [32m52 ok[0m  [31m1 fail[0m   [2m19 unreached[0m
+  versions           [32m72 ok[0m  [2m0 fail[0m    [2m30 unreached[0m
+  marketing          [32m40 ok[0m  [2m0 fail[0m    [2m20 unreached[0m
+  pricing            [32m3 ok[0m   [2m0 fail[0m    [2m4 unreached[0m
+  background_assets  [32m5 ok[0m   [2m0 fail[0m    [2m8 unreached[0m
+  provisioning       [32m25 ok[0m  [2m0 fail[0m    [2m15 unreached[0m
+  xcode_cloud        [32m10 ok[0m  [2m0 fail[0m    [2m31 unreached[0m
+  reviews            [32m4 ok[0m   [2m0 fail[0m    [2m1 unreached[0m
+  game_center        [32m159 ok[0m [2m0 fail[0m    [2m114 unreached[0m
+  iap                [32m32 ok[0m  [2m0 fail[0m    [2m36 unreached[0m
+  webhooks           [32m9 ok[0m   [2m0 fail[0m    [2m2 unreached[0m
+  sandbox            [32m3 ok[0m   [2m0 fail[0m    [2m0 unreached[0m
+  subscriptions      [32m59 ok[0m  [2m0 fail[0m    [2m46 unreached[0m
+  users              [32m10 ok[0m  [2m0 fail[0m    [2m5 unreached[0m
+[1m
+10 failing operations[0m
+  [31mapps.beta_tester_usages.metrics[0m [2m[GET /v1/apps/{id}/metrics/betaTesterUsages][0m
+      apps__beta_tester_usages__metrics failed: A parameter has an invalid value: The parameter 'limit' can only be used together with 'groupBy' or 'filter' parameter
+  [31mapps.marketplace_search_detail.get[0m [2m[GET /v1/apps/{id}/marketplaceSearchDetail][0m
+      apps__marketplace_search_detail__get failed: An unexpected error occurred.: An unexpected error occurred on the server side. If this issue continues, contact us
+  [31mapps.perf_power_metrics.list[0m [2m[GET /v1/apps/{id}/perfPowerMetrics][0m
+      apps__perf_power_metrics__list failed: Not Acceptable: The provided Accept header is not supported for this request HTTP status: 406 Apple request ID: 7VJD6OMZG
+  [31mapps.search_keywords.list[0m [2m[GET /v1/apps/{id}/searchKeywords][0m
+      apps__search_keywords__list failed: A parameter has an invalid value: Filter 'locale' is required for this operation. | A parameter has an invalid value: Filter
+  [31mbeta_groups.beta_tester_usages.metrics[0m [2m[GET /v1/betaGroups/{id}/metrics/betaTesterUsages][0m
+      beta_groups__beta_tester_usages__metrics failed: A parameter has an invalid value: The parameter 'limit' can only be used together with 'groupBy' or 'filter' pa
+  [31mbuild_beta_details.list[0m [2m[GET /v1/buildBetaDetails][0m
+      build_beta_details__list failed: A parameter has an invalid value: build relationship filter or id filter is required when fetching buildBetaDetails HTTP status
+  [31mbuilds.beta_build_usages.metrics[0m [2m[GET /v1/builds/{id}/metrics/betaBuildUsages][0m
+      builds__beta_build_usages__metrics failed: A parameter has an invalid value: The parameter 'limit' can only be used together with 'groupBy' or 'filter' paramete
+  [31mbuilds.perf_power_metrics.list[0m [2m[GET /v1/builds/{id}/perfPowerMetrics][0m
+      builds__perf_power_metrics__list failed: Not Acceptable: The provided Accept header is not supported for this request HTTP status: 406 Apple request ID: XICKRSL
+  [31mfinance_reports.list[0m [2m[GET /v1/financeReports][0m
+      finance_reports__list failed: A parameter has an invalid value: Invalid vendor number specified. Try again. HTTP status: 400 Apple request ID: 7SZBIXZT6ROHYA2GV
+  [31msales_reports.list[0m [2m[GET /v1/salesReports][0m
+      sales_reports__list failed: A parameter has an invalid value: Invalid vendor number specified. Try again. HTTP status: 400 Apple request ID: 6NOXEGELPLTZ4DPLXQA
+[1m
+3 reads over 50 KB shaped[0m
+     88 KB  profiles.list
+     86 KB  app_store_versions.app_store_version_localizations.list
+     82 KB  ci_xcode_versions.list
+[1m
+Summary[0m
+  ok               603/982
+  write failures   0
+  read failures    10 known
+  unreached        369[2m  (no id on this account, or Apple refused)[0m
+  cost             $0.00
+
