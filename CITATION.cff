@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Heimdall"
-abstract: "An MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2), with 982 tools generated from Apple's official OpenAPI spec, AI-powered review triage, and confirm-before-write safety."
+abstract: "An MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2), with 868 tools generated from Apple's official OpenAPI spec, 13 curated profiles that keep each session small, and confirm-before-write safety."
 type: software
 authors:
   - family-names: "Endes"
