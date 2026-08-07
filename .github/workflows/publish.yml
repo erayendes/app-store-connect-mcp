@@ -45,6 +45,10 @@ jobs:
       # reads, so it is the one that silently rots — it sat at 1.2.0 through
       # two releases. npm would not have noticed: it reads package.json. Fail
       # here instead, before anything is published anywhere.
+      # The description cap is checked here too. The registry enforces it, but
+      # only at publish time and only with a 422 — by then npm has the release
+      # and the registry does not, which is the split this workflow exists to
+      # prevent. A 101-character description cost exactly that once.
       - name: Fail if the three versions disagree
         env:
           TAG: ${{ github.ref_name }}
@@ -58,6 +62,10 @@ jobs:
           if (values.length > 1) {
             console.error("Version mismatch:");
             for (const [where, v] of Object.entries(seen)) console.error(`  ${where}: ${v}`);
+            process.exit(1);
+          }
+          if (srv.description.length > 100) {
+            console.error(`server.json description is ${srv.description.length} characters; the registry rejects anything over 100.`);
             process.exit(1);
           }
           console.log(`All versions agree on ${values[0]}.`);'
