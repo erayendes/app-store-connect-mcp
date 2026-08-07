@@ -41,6 +41,27 @@ jobs:
           }
           console.log(`npm ${v} supports trusted publishing.`);'
 
+      # server.json is the only version this repo carries that nothing else
+      # reads, so it is the one that silently rots — it sat at 1.2.0 through
+      # two releases. npm would not have noticed: it reads package.json. Fail
+      # here instead, before anything is published anywhere.
+      - name: Fail if the three versions disagree
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          node -e 'const pkg = require("./package.json").version;
+          const srv = require("./server.json");
+          const tag = process.env.TAG.startsWith("v") ? process.env.TAG.slice(1) : null;
+          const seen = { "package.json": pkg, "server.json": srv.version, "server.json packages[0]": srv.packages[0].version };
+          if (tag) seen["git tag"] = tag;
+          const values = [...new Set(Object.values(seen))];
+          if (values.length > 1) {
+            console.error("Version mismatch:");
+            for (const [where, v] of Object.entries(seen)) console.error(`  ${where}: ${v}`);
+            process.exit(1);
+          }
+          console.log(`All versions agree on ${values[0]}.`);'
+
       - run: npm ci
 
       # Rebuild from the spec and fail if the committed output drifted, so a
@@ -55,6 +76,27 @@ jobs:
       # --provenance publishes a signed attestation linking the tarball to this
       # repository, commit and workflow run.
       - run: npm publish --provenance
+
+      # The MCP Registry is a separate publication from npm, and until now it
+      # had no step at all: 1.1.2 and 1.2.0 were pushed by hand and 1.3.0 and
+      # 2.0.0 were never pushed, so the registry advertised 1.2.0 while npm
+      # served 2.0.0. It reads server.json, which the check above has already
+      # matched against package.json and the tag.
+      #
+      # Deliberately not pinned. The publisher and the registry negotiate an
+      # OIDC audience, and an old binary fails with "invalid audience" — the
+      # documented fix is to fetch latest, so pinning buys a reproducible
+      # build at the price of a release that cannot publish.
+      - name: Install mcp-publisher
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      # Same id-token: write this job already mints for npm, different
+      # audience. No secret, nothing to rotate.
+      - name: Publish to the MCP Registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
 
   # Separate job so the npm publish above keeps a read-only token: only this
   # step needs contents:write, and it never touches the OIDC path.
