@@ -45,11 +45,18 @@ jobs:
       # reads, so it is the one that silently rots — it sat at 1.2.0 through
       # two releases. npm would not have noticed: it reads package.json. Fail
       # here instead, before anything is published anywhere.
-      # The description cap is checked here too. The registry enforces it, but
-      # only at publish time and only with a 422 — by then npm has the release
-      # and the registry does not, which is the split this workflow exists to
+      # Everything a release gets wrong quietly, checked before any of it is
+      # published. The description cap is enforced by the registry, but only
+      # at publish time and only with a 422 — by then npm has the release and
+      # the registry does not, which is the split this workflow exists to
       # prevent. A 101-character description cost exactly that once.
-      - name: Fail if the three versions disagree
+      #
+      # The changelog heading is the worst of the three because nothing else
+      # notices: the release job pulls its notes with awk, and an unmatched
+      # heading yields an empty file, falls through to --generate-notes, and
+      # publishes raw commit titles in place of the bilingual changelog. The
+      # release succeeds. Only a human reading the release page finds out.
+      - name: Pre-flight the release metadata
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -68,7 +75,12 @@ jobs:
             console.error(`server.json description is ${srv.description.length} characters; the registry rejects anything over 100.`);
             process.exit(1);
           }
-          console.log(`All versions agree on ${values[0]}.`);'
+          const heading = new RegExp("^### \\[" + values[0].replace(/\./g, "\\.") + "\\]", "m");
+          if (!heading.test(require("fs").readFileSync("docs/CHANGELOG.md", "utf8"))) {
+            console.error(`docs/CHANGELOG.md has no "### [${values[0]}]" heading, so the release notes would silently fall back to raw commit titles.`);
+            process.exit(1);
+          }
+          console.log(`All versions agree on ${values[0]}, and the changelog has a heading for it.`);'
 
       - run: npm ci
 
