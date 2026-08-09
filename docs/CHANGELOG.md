@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [2.0.1] — 2026-08-09
+
+#### Write confirmation is opt-in
+**Behaviour change.** The confirm-before-write gate is **off by default** now; turn it on with `--confirm` / `ASC_CONFIRM_WRITES=1`.
+
+The gate that always exists is the client's own per-call tool approval. This one is second, and it only works where the client renders an elicitation form — a client that declares the capability but cannot show the form answers `decline`, which the protocol reports identically to a user refusing. So on those clients the guard blocked working writes with "the write was not confirmed", pointing the user at their own client's permissions instead of at the setting that caused it. Whether the form renders is a per-client fact, so the choice belongs to whoever configures the server.
+
+Nothing is lost when it is off: the impact preview still prints under `--dry-run`, and `--read-only` still removes every mutating tool.
+- **`--allow-unconfirmed-writes` / `ASC_ALLOW_UNCONFIRMED_WRITES` removed.** It only ever applied to clients that declared no elicitation support, and asking for confirmation and for unconfirmed writes at once was self-cancelling.
+- **`--no-confirm` is now a no-op** — it lands on the new default, so existing configs keep working unchanged.
+- **The decline message says what actually happened**: if no prompt appeared on screen, the client answered for you.
+
 ### [2.0.0] — 2026-08-05
 
 #### Profiles are curated, not derived
@@ -117,6 +129,18 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [2.0.1] — 2026-08-09
+
+#### Yazma onayı artık opt-in
+**Davranış değişikliği.** Yazma-öncesi onay kapısı artık **varsayılan kapalı**; `--confirm` / `ASC_CONFIRM_WRITES=1` ile açılıyor.
+
+Her zaman var olan kapı, client'ın kendi çağrı-başı araç onayı. Bu ikinci kapı ve yalnızca client elicitation formunu gösterebiliyorsa çalışıyor — yeteneği bildirip formu gösteremeyen bir client `decline` dönüyor, protokol de bunu kullanıcının reddetmesiyle birebir aynı raporluyor. Yani o client'larda guard, çalışması gereken yazmaları "the write was not confirmed" diyerek engelliyor ve kullanıcıyı asıl sebebin yerine kendi client izinlerine bakmaya yönlendiriyordu. Formun gösterilip gösterilemediği client'a özgü bir gerçek, dolayısıyla karar sunucuyu yapılandıranın.
+
+Kapalıyken kaybedilen bir şey yok: etki önizlemesi `--dry-run` altında basılmaya devam ediyor, `--read-only` hâlâ tüm mutasyon araçlarını kaldırıyor.
+- **`--allow-unconfirmed-writes` / `ASC_ALLOW_UNCONFIRMED_WRITES` kaldırıldı.** Yalnızca elicitation bildirmeyen client'lar için geçerliydi; hem onay istemek hem onaysız yazmaya izin vermek kendi kendini götüren bir kombinasyondu.
+- **`--no-confirm` artık no-op** — yeni varsayılanla aynı yere düşüyor, mevcut config'ler olduğu gibi çalışmaya devam ediyor.
+- **Ret mesajı ne olduğunu söylüyor**: ekranda istem çıkmadıysa cevabı client sizin yerinize vermiştir.
 
 ### [2.0.0] — 2026-08-05
 

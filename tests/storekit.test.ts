@@ -21,7 +21,6 @@ const config = {
   storekit: { bundleId: 'com.example.app', environment: 'Sandbox' },
   readOnly: false,
   confirmWrites: false,
-  allowUnconfirmedWrites: false,
   includeDeprecated: false,
 } as ServerConfig;
 

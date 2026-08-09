@@ -41,10 +41,11 @@ jobs:
           }
           console.log(`npm ${v} supports trusted publishing.`);'
 
-      # server.json is the only version this repo carries that nothing else
-      # reads, so it is the one that silently rots — it sat at 1.2.0 through
-      # two releases. npm would not have noticed: it reads package.json. Fail
-      # here instead, before anything is published anywhere.
+      # server.json and package-lock.json are the versions this repo carries
+      # that nothing else reads, so they are the ones that silently rot —
+      # server.json sat at 1.2.0 through two releases, and the lockfile sat at
+      # 1.3.0 through more. npm would not have noticed either: it reads
+      # package.json. Fail here instead, before anything is published anywhere.
       # Everything a release gets wrong quietly, checked before any of it is
       # published. The description cap is enforced by the registry, but only
       # at publish time and only with a 422 — by then npm has the release and
@@ -62,8 +63,9 @@ jobs:
         run: |
           node -e 'const pkg = require("./package.json").version;
           const srv = require("./server.json");
+          const lock = require("./package-lock.json");
           const tag = process.env.TAG.startsWith("v") ? process.env.TAG.slice(1) : null;
-          const seen = { "package.json": pkg, "server.json": srv.version, "server.json packages[0]": srv.packages[0].version };
+          const seen = { "package.json": pkg, "server.json": srv.version, "server.json packages[0]": srv.packages[0].version, "package-lock.json": lock.version, "package-lock.json packages[\"\"]": lock.packages[""].version };
           if (tag) seen["git tag"] = tag;
           const values = [...new Set(Object.values(seen))];
           if (values.length > 1) {

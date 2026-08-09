@@ -251,16 +251,6 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     elicitInput: (params) =>
       server.elicitInput(params as Parameters<typeof server.elicitInput>[0]),
   };
-  let warnedNoElicitation = false;
-  const warnNoElicitation = () => {
-    if (warnedNoElicitation) return;
-    warnedNoElicitation = true;
-    console.error(
-      "Heimdall: this client doesn't support elicitation, and unconfirmed " +
-        'writes were explicitly allowed (--allow-unconfirmed-writes) — writes ' +
-        "rely on the client's own tool approval only."
-    );
-  };
 
   /**
    * On-demand loading, kept deliberately minimal while we find out whether
@@ -485,22 +475,20 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               },
               args
             );
-        const decision = await confirmWrite(
-          confirmer,
-          name,
-          warnNoElicitation,
-          config.allowUnconfirmedWrites,
-          preview
-        );
+        const decision = await confirmWrite(confirmer, name, preview);
         if (!decision.allowed) {
           const text =
             decision.reason === 'no-elicitation'
-              ? `"${name}" was blocked: write confirmation is on, but this client cannot ` +
-                `show a confirmation prompt (no elicitation support). Nothing was changed. ` +
-                `To allow writes on this client anyway, restart the server with ` +
-                `--allow-unconfirmed-writes (or ASC_ALLOW_UNCONFIRMED_WRITES=1) — writes ` +
-                `will then rely on the client's own tool approval. Or use --read-only.`
-              : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). Nothing was changed.`;
+              ? `"${name}" was blocked: write confirmation is on (--confirm), but this ` +
+                `client cannot show a confirmation prompt (no elicitation support). ` +
+                `Nothing was changed. Drop --confirm (or ASC_CONFIRM_WRITES=1) to rely on ` +
+                `the client's own tool approval instead, or use --read-only.`
+              : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +
+                `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
+                `this client declared elicitation support but cannot actually show the ` +
+                `form, and answered for you — the protocol reports that identically to a ` +
+                `real refusal. In that case drop --confirm (or ASC_CONFIRM_WRITES=1) and ` +
+                `let the client's own tool approval be the gate.`;
           return {
             content: [{ type: 'text' as const, text }],
             isError: true,
