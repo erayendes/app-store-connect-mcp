@@ -138,7 +138,9 @@ interface Elicitation { message: string; schema: any }
  * test passed a bug in itself off as a product defect.
  */
 function client(profile: string) {
-  const child: ChildProcessWithoutNullStreams = spawn(process.execPath, [ENTRY, profile], {
+  // The gate is opt-in, so the test has to ask for it — without --confirm the
+  // sample writes would go straight to Apple.
+  const child: ChildProcessWithoutNullStreams = spawn(process.execPath, [ENTRY, profile, '--confirm'], {
     stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
   });

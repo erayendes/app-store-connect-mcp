@@ -48,14 +48,12 @@ Options:
   --domains=<list>       (no-profile mode) Comma-separated domains, or "all".
                          Default: ${DEFAULT_DOMAINS.join(',')}
   --read-only            Expose only tools that cannot modify anything.
-  --no-confirm           Don't ask the user to confirm before a mutating tool
-                         runs. Confirmation (via MCP elicitation) is on by
-                         default; ASC_CONFIRM_WRITES=0 does the same.
-  --allow-unconfirmed-writes
-                         On clients without elicitation support, writes are
-                         blocked by default (fail-closed). This lets them run
-                         anyway, relying on the client's own tool approval.
-                         ASC_ALLOW_UNCONFIRMED_WRITES=1 does the same.
+  --confirm              Ask the user to confirm (via MCP elicitation) before
+                         a mutating tool runs, showing what it would change.
+                         Off by default: your client already approves each tool
+                         call, and a client that cannot render the form answers
+                         "declined" for you. Turn this on once you have seen
+                         the prompt appear. ASC_CONFIRM_WRITES=1 does the same.
   --include-deprecated   Also load operations Apple has marked deprecated.
   --dry-run              Writes never reach Apple: each mutating call returns
                          what WOULD have been sent (method, path, body, risk)

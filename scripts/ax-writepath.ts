@@ -114,7 +114,7 @@ async function main(): Promise<void> {
   );
 
   // Resolving the app id is a read, so it can run against the same server.
-  const info = client('app-info', ['--no-confirm']);
+  const info = client('app-info', []);
   await info.start();
   const apps = await info.call('apps__list', { filter_bundleId: APP, limit: 1 });
   info.stop();
@@ -132,7 +132,7 @@ async function main(): Promise<void> {
   }
   console.log(`  app id        ${appId}`);
 
-  const asc = client('access', ['--no-confirm']);
+  const asc = client('access', []);
   await asc.start();
 
   let groupId: string | undefined;

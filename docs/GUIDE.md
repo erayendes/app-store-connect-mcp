@@ -172,7 +172,7 @@ For JSON clients (no env block needed after `setup`):
 A profile you narrowed still knows about the rest of itself:
 
 - **`asc__describe`** returns the full schema of any tool the profile owns, loaded or not.
-- **`asc__call`** runs a read for you through that schema. It is read-only and says so in its annotation, which is what keeps clients from blocking it — writes keep their own tool names, where your client's approval and Heimdall's own confirmation both still apply.
+- **`asc__call`** runs a read for you through that schema. It is read-only and says so in its annotation, which is what keeps clients from blocking it — writes keep their own tool names, where your client's approval still applies — and Heimdall's own confirmation too, if you turned it on.
 - **`asc__load`** adds a whole sub-profile mid-session, promoting proxied tools to real ones with their own schemas. Hand-written families (StoreKit, reviews-AI, pricing macros) still need a restart, and the reply says so.
 
 The proxy exists because MCP lets a server revise its tool list but says nothing about *when* a client hands that revision to the model. Measured with one prompt in three clients: Claude Code used a newly loaded tool in the same turn; Codex loaded it, reported that the session tool list never made it callable, and gave up. `asc__describe` and `asc__call` are in the list from the start, so nothing has to arrive in time.
@@ -203,8 +203,7 @@ The App Store Server API answers questions about individual customers rather tha
 | `ASC_ENVIRONMENT` | no | `Sandbox` (default) or `Production`, for StoreKit 2 |
 | `ASC_DOMAINS` | no | Comma-separated domains to load, or `all` (env form of `--domains`) |
 | `ASC_READ_ONLY` | no | `true` to expose only non-mutating tools |
-| `ASC_CONFIRM_WRITES` | no | `0` / `false` to skip the confirm-before-write prompt (on by default) |
-| `ASC_ALLOW_UNCONFIRMED_WRITES` | no | `1` / `true` to allow writes on clients that can't show a confirmation prompt (blocked by default) |
+| `ASC_CONFIRM_WRITES` | no | `1` / `true` to ask for confirmation before every write (off by default) |
 | `ASC_DRY_RUN` | no | `1` / `true`: writes never reach Apple — each mutating call returns what would have been sent (method, path, body, risk) after validation. Reads run normally |
 | `ASC_MAX_RESPONSE_CHARS` | no | Response size ceiling in characters (default 100000). Oversized lists are cut to the items that fit, with an explicit truncation note |
 | `ASC_KEEP_RAW_RESPONSES` | no | `1` to pass Apple's payloads through untouched — by default per-resource `links` and links-only `relationships` URL noise is stripped (~85% smaller listings) |
@@ -237,13 +236,14 @@ The App Store Server API answers questions about individual customers rather tha
 |:--|:--|
 | `--domains=<list>` | Comma-separated domains to load, or `all` (combined server only) |
 | `--read-only` | Expose only tools that cannot modify anything |
-| `--no-confirm` | Skip the confirm-before-write prompt (on by default) |
-| `--allow-unconfirmed-writes` | Allow writes on clients that can't show a confirmation prompt (blocked by default) |
+| `--confirm` | Ask for confirmation before every write (off by default) |
 | `--dry-run` | Writes never reach Apple; each mutating call returns what would have been sent, with its risk level |
 | `--include-deprecated` | Also load the 123 operations Apple has deprecated |
 
 > [!TIP]
-> **Confirm before writes (on by default).** Before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)). So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Clients that can't show the prompt (no elicitation support) **block writes by default** — opt in with `--allow-unconfirmed-writes` (or `ASC_ALLOW_UNCONFIRMED_WRITES=1`) to rely on the client's own per-call approval instead. Turn the guard off with `ASC_CONFIRM_WRITES=0` (or `--no-confirm`), or go further with `--read-only` to remove every mutating tool entirely.
+> **Confirm before writes (`--confirm`, off by default).** Turn it on and before any mutating tool runs — changing a price, submitting for review, deleting a resource — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)), showing what would change. So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it.
+>
+> It ships off because your client already asks before it runs any tool, and this guard needs something your client may not have: the ability to render an elicitation form. One that declares the capability but can't show the form answers `decline`, which the protocol reports exactly like you clicking no — so a write that should have worked comes back as "you refused". Run one write with `--confirm` and watch for the prompt; if it appears, keep it on. If it doesn't, leave it off and let your client's own tool approval be the gate. Either way `--dry-run` still prints the full impact preview without touching Apple, and `--read-only` removes every mutating tool regardless of what any client does.
 
 **Tool naming.** Tool names mirror the resource hierarchy, with the action last (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Every tool carries its `METHOD /path` in the description, so you can cross-reference [Apple's API documentation](https://developer.apple.com/documentation/appstoreconnectapi) directly.
 
@@ -495,7 +495,7 @@ JSON istemcileri için (setup sonrası env bloğu gerekmez):
 Daralttığınız bir profil geri kalanını yine de bilir:
 
 - **`asc__describe`** profilin sahip olduğu herhangi bir aracın tam şemasını döndürür — yüklü olsun olmasın.
-- **`asc__call`** o şema üzerinden sizin için bir okuma çalıştırır. Salt okunurdur ve bunu annotation'ında söyler; istemcilerin onu engellememesinin sebebi budur. Yazma işlemleri kendi araç adlarında kalır — orada hem istemcinizin onayı hem Heimdall'ın kendi onayı geçerlidir.
+- **`asc__call`** o şema üzerinden sizin için bir okuma çalıştırır. Salt okunurdur ve bunu annotation'ında söyler; istemcilerin onu engellememesinin sebebi budur. Yazma işlemleri kendi araç adlarında kalır — orada istemcinizin onayı, açtıysanız Heimdall'ın kendi onayı da geçerlidir.
 - **`asc__load`** oturum ortasında bütün bir alt profil ekler, proxy'lenen araçları kendi şemalarıyla gerçek araçlara terfi ettirir. Elle yazılmış aileler (StoreKit, reviews-AI, fiyat makroları) hâlâ yeniden başlatma ister; yanıt bunu söyler.
 
 Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine izin verir ama istemcinin bunu modele **ne zaman** ileteceği hakkında hiçbir şey söylemez. Aynı istemle üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex yükledi, oturum araç listesinin onu çağrılabilir yapmadığını bildirdi ve vazgeçti. `asc__describe` ve `asc__call` en baştan listede olduğu için hiçbir şeyin zamanında ulaşması gerekmiyor.
@@ -526,8 +526,7 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 | `ASC_ENVIRONMENT` | hayır | StoreKit 2 için `Sandbox` (varsayılan) veya `Production` |
 | `ASC_DOMAINS` | hayır | Yüklenecek domainler, virgülle ayrılmış ya da `all` |
 | `ASC_READ_ONLY` | hayır | Yalnızca değiştirmeyen araçları göstermek için `true` |
-| `ASC_CONFIRM_WRITES` | hayır | Yazma-öncesi onay istemini atlamak için `0` / `false` (varsayılan açık) |
-| `ASC_ALLOW_UNCONFIRMED_WRITES` | hayır | Onay istemi gösteremeyen client'larda yazmaya izin vermek için `1` / `true` (varsayılan engelli) |
+| `ASC_CONFIRM_WRITES` | hayır | Her yazmadan önce onay istemek için `1` / `true` (varsayılan kapalı) |
 | `ASC_DRY_RUN` | hayır | `1` / `true`: yazmalar Apple'a hiç gitmez — her mutasyon çağrısı, doğrulamadan sonra gönderilecek olanı (metod, path, body, risk) döndürür. Okumalar normal çalışır |
 | `ASC_MAX_RESPONSE_CHARS` | hayır | Cevap boyutu tavanı, karakter (varsayılan 100000). Büyük listeler sığan öğelere kırpılır, açık kesme notuyla |
 | `ASC_KEEP_RAW_RESPONSES` | hayır | Apple cevaplarını olduğu gibi geçirmek için `1` — varsayılan olarak kaynak-başı `links` ve links-only `relationships` URL gürültüsü atılır (listeler ~%85 küçülür) |
@@ -560,13 +559,14 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 |:--|:--|
 | `--domains=<liste>` | Yüklenecek domainler, virgülle ayrılmış ya da `all` (sadece birleşik sunucu) |
 | `--read-only` | Yalnızca hiçbir şeyi değiştiremeyen araçları göster |
-| `--no-confirm` | Yazma-öncesi onay istemini atla (varsayılan açık) |
-| `--allow-unconfirmed-writes` | Onay istemi gösteremeyen client'larda yazmaya izin ver (varsayılan engelli) |
+| `--confirm` | Her yazmadan önce onay iste (varsayılan kapalı) |
 | `--dry-run` | Yazmalar Apple'a gitmez; her mutasyon çağrısı gönderilecek olanı risk seviyesiyle döndürür |
 | `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükle |
 
 > [!TIP]
-> **Yazmadan önce onay (varsayılan açık).** Değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. İstemi gösteremeyen client'larda (elicitation desteği yok) yazmalar **varsayılan olarak engellenir** — client'ın kendi çağrı-başı onayına güvenmek için `--allow-unconfirmed-writes` (veya `ASC_ALLOW_UNCONFIRMED_WRITES=1`) ile opt-in yapın. Guard'ı `ASC_CONFIRM_WRITES=0` (veya `--no-confirm`) ile kapatın; ya da tüm mutasyon araçlarını tamamen kaldırmak için `--read-only` kullanın.
+> **Yazmadan önce onay (`--confirm`, varsayılan kapalı).** Açtığınızda, değişiklik yapan bir araç çalışmadan önce — fiyat değiştirme, incelemeye gönderme, kaynak silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister ve neyin değişeceğini gösterir. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez.
+>
+> Kapalı geliyor, çünkü client'ınız zaten her aracı çalıştırmadan önce soruyor; bu guard ise client'ınızda olmayabilecek bir şeye ihtiyaç duyuyor: elicitation formunu gerçekten ekrana getirebilmek. Yeteneği bildirip formu gösteremeyen bir client `decline` döner ve protokol bunu sizin "hayır" demenizle birebir aynı şekilde raporlar — yani çalışması gereken bir yazma "reddettiniz" diye geri gelir. `--confirm` ile bir yazma deneyin ve isteme bakın: çıkıyorsa açık bırakın, çıkmıyorsa kapatın ve kapı olarak client'ın kendi araç onayını kullanın. Her hâlükârda `--dry-run` Apple'a dokunmadan tam etki önizlemesini basar, `--read-only` ise hangi client olursa olsun tüm mutasyon araçlarını kaldırır.
 
 **Araç isimlendirme.** Araç isimleri kaynak hiyerarşisini yansıtır, eylem en sonda gelir (`apps__list` → `GET /v1/apps`, `app_store_versions__create` → `POST /v1/appStoreVersions`). Her araç açıklamasında `METHOD /path` bilgisini taşır; böylece doğrudan [Apple'ın API dokümantasyonuyla](https://developer.apple.com/documentation/appstoreconnectapi) çapraz kontrol yapabilirsiniz.
 

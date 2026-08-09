@@ -2,21 +2,26 @@
  * Write confirmation guard.
  *
  * Mutating tools (anything not marked readOnlyHint) can change real App Store
- * Connect data — prices, submissions, deletions. Before running one, we ask the
- * user to confirm via MCP elicitation, so a vague or misread instruction ("set
- * the price to 0.99") can't execute unchecked. The prompt carries an impact
- * preview (operation, target, changed fields, risk level, reversibility), and
+ * Connect data — prices, submissions, deletions. With --confirm, we ask the
+ * user before running one, so a vague or misread instruction ("set the price to
+ * 0.99") can't execute unchecked. The prompt carries an impact preview
+ * (operation, target, changed fields, risk level, reversibility), and
  * high-stakes levels (revenue/destructive/infrastructure/access) require the
- * user to TYPE the confirmation instead of ticking a box. The guard is on by
- * default and turned off with ASC_CONFIRM_WRITES=0 / --no-confirm.
+ * user to TYPE the confirmation instead of ticking a box.
  *
- * Elicitation only works on clients that declared the capability. On clients
- * that didn't, we can't pop a prompt — and silently proceeding would mean the
- * guard the user thinks is on is actually off. So the default is fail-closed:
- * the write is blocked with an error naming the escape hatch. Passing
- * `allowUnconfirmed` (--allow-unconfirmed-writes / ASC_ALLOW_UNCONFIRMED_WRITES=1)
- * restores the old behaviour: proceed and rely on the client's own per-call
- * approval, warning once on stderr.
+ * Opt-in, not default. The gate is the client's job — every MCP client asks
+ * before it runs a tool — and this guard can only run where the client renders
+ * an elicitation form. On the ones that don't, it fired anyway and turned a
+ * working write into "the user declined", which is the one thing the protocol
+ * gives us no way to tell apart from a real refusal: a client that can't show
+ * the form answers `decline` exactly like a user who clicked no. So the choice
+ * is per-client and belongs to whoever configures it. What stays ours either
+ * way is the preview — only this server knows that a flag spelled
+ * `preserveCurrentPrice: false` moves existing subscribers to a new price.
+ *
+ * Turned on with --confirm / ASC_CONFIRM_WRITES=1. A client that never declared
+ * elicitation can't be asked at all, so there the guard fails closed rather
+ * than pretending to be on.
  */
 import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, type RiskLevel } from './risk.js';
 
@@ -273,24 +278,17 @@ export async function buildWritePreview(
 }
 
 /**
- * Decides whether a write may proceed. Pure but for the injected confirmer and
- * the one-time warn callback, so tests drive it with fakes.
+ * Decides whether a write may proceed. Only reached when confirmation is on.
+ * Pure but for the injected confirmer, so tests drive it with a fake.
  */
 export async function confirmWrite(
   confirmer: WriteConfirmer,
   toolName: string,
-  warnNoElicitation: () => void,
-  allowUnconfirmed = false,
   preview?: WritePreview
 ): Promise<ConfirmDecision> {
   if (!confirmer.getClientCapabilities()?.elicitation?.form) {
-    // No way to ask the user. Fail closed unless they explicitly opted into
-    // unconfirmed writes — a guard that silently stops guarding is worse than
-    // an error that says why.
-    if (allowUnconfirmed) {
-      warnNoElicitation();
-      return { allowed: true };
-    }
+    // No way to ask. The user asked for a guard, so say it can't run here
+    // rather than proceeding under a guard that silently stopped guarding.
     return { allowed: false, reason: 'no-elicitation' };
   }
 

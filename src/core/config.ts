@@ -18,14 +18,11 @@ export interface ServerConfig {
   domains?: string[];
   /** Blocks every mutating tool. */
   readOnly: boolean;
-  /** Ask the user to confirm (via MCP elicitation) before any mutating tool runs. */
-  confirmWrites: boolean;
   /**
-   * On clients without elicitation support, writes are blocked by default
-   * (fail-closed). This opt-in lets them through, relying on the client's own
-   * per-call tool approval instead.
+   * Ask the user to confirm (via MCP elicitation) before any mutating tool
+   * runs. Opt-in — see the note at the assignment for why.
    */
-  allowUnconfirmedWrites: boolean;
+  confirmWrites: boolean;
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
   /**
@@ -146,16 +143,15 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       : undefined,
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),
     readOnly: flag('read-only') || env.ASC_READ_ONLY === 'true',
-    // On by default; disabled only when explicitly turned off.
-    confirmWrites: !(
-      flag('no-confirm') ||
-      env.ASC_CONFIRM_WRITES === 'false' ||
-      env.ASC_CONFIRM_WRITES === '0'
-    ),
-    allowUnconfirmedWrites:
-      flag('allow-unconfirmed-writes') ||
-      env.ASC_ALLOW_UNCONFIRMED_WRITES === 'true' ||
-      env.ASC_ALLOW_UNCONFIRMED_WRITES === '1',
+    // Off by default. Every MCP client already gates a tool call behind its own
+    // approval, and this guard only works where the client renders an
+    // elicitation form — on the ones that don't, it turned working writes into
+    // an error that reads like the user said no. Turn it on with --confirm once
+    // you have seen your client actually show the prompt.
+    // ponytail: `--no-confirm` from older configs is now a no-op that lands on
+    // this same default, so nobody's config breaks.
+    confirmWrites:
+      flag('confirm') || env.ASC_CONFIRM_WRITES === 'true' || env.ASC_CONFIRM_WRITES === '1',
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     baseUrl: env.ASC_BASE_URL || undefined,

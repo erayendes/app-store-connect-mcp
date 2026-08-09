@@ -203,7 +203,7 @@ describe('confirmWrite with typed confirmation', () => {
 
   it('allows when the user types CONFIRM (any case, padded)', async () => {
     const { c, elicit } = confirmer({ action: 'accept', content: { confirmation: '  confirm ' } });
-    const decision = await confirmWrite(c, 'x', vi.fn(), false, strongPreview);
+    const decision = await confirmWrite(c, 'x', strongPreview);
     expect(decision.allowed).toBe(true);
     // The strong flow asked for a typed string, not a checkbox.
     const schema = (elicit.mock.calls[0][0] as any).requestedSchema;
@@ -212,7 +212,7 @@ describe('confirmWrite with typed confirmation', () => {
 
   it('blocks when the user types anything else', async () => {
     const { c } = confirmer({ action: 'accept', content: { confirmation: 'yes' } });
-    const decision = await confirmWrite(c, 'x', vi.fn(), false, strongPreview);
+    const decision = await confirmWrite(c, 'x', strongPreview);
     expect(decision).toEqual({ allowed: false, reason: 'not confirmed' });
   });
 
