@@ -29,6 +29,7 @@
   },
   "files": [
     "dist",
+    "skills",
     "README.md",
     "AGENTS.md",
     "docs/GUIDE.md",
