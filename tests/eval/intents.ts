@@ -78,7 +78,10 @@ export const INTENTS: EvalIntent[] = [
   { intent: 'Reply to a customer review', searchQuery: 'reply to customer review', expectedTool: 'customer_review_responses.create', core: true, chain: [{ op: 'apps.customer_reviews.list', path: '/v1/apps/{id}/customerReviews', idFrom: 'app', params: { limit: 20 } }], phrasings: ['Müşteri yorumuna cevap ver', 'Bu App Store değerlendirmesine yanıt yaz', 'Reply to a customer review', 'Post a developer response to this review'] },
 
   // analytics (3)
-  // Zincir kaldırıldı: sales_reports.list canlı değerlendirmede sunucu Accept başlığı nedeniyle 406 dönüyor.
+  // Zincirsiz: rapor uçları bir üst kaynaktan id türetmiyor, ASC_VENDOR_NUMBER
+  // istiyor — bu yüzden ax-contract'ta KNOWN_BROKEN_READS içindeler. (Eski
+  // gerekçe olan 406, operasyonlara `accept: application/a-gzip` basıldığında
+  // düzeldi; bkz. scripts/generate.ts ve tests/core.test.ts.)
   { intent: 'Download the sales report', searchQuery: 'download sales report', expectedTool: 'sales_reports.list', phrasings: ['Satış raporunu indir', 'Günlük satış verisini getir', 'Download the sales report', 'Get the daily sales report'] },
   { intent: 'Download the financial report', searchQuery: 'download finance report', expectedTool: 'finance_reports.list', phrasings: ['Finans raporunu indir', 'Ödeme ve gelir raporunu getir', 'Download the finance report', 'Get this month’s financial report'] },
   { intent: 'Request an analytics report', searchQuery: 'ask for product usage metrics', expectedTool: 'analytics_report_requests.create', phrasings: ['Analiz raporu isteği oluştur', 'Analytics raporu talep et', 'Create an analytics report request', 'Request an App Analytics report'] },
