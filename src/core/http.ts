@@ -249,6 +249,63 @@ export class AscHttpClient {
   }
 
   /**
+   * GETs a pre-signed asset URL Apple handed back in a response body — an
+   * analytics report segment, for instance, where the rows live at the URL and
+   * not in the JSON.
+   *
+   * Same reasoning as `uploadAssetPart`: no bearer token, because the URL
+   * already carries its own signature and is not on the API host, and a host
+   * check because the URL is API-supplied data rather than something the user
+   * typed.
+   */
+  async downloadAsset(rawUrl: string, maxBytes = 64 * 1024 * 1024): Promise<Buffer> {
+    let url: URL;
+    try {
+      url = new URL(rawUrl);
+    } catch {
+      throw new AscApiError(`Malformed asset URL: ${rawUrl}`, 0);
+    }
+    const appleHost = url.protocol === 'https:' && /(^|\.)apple\.com$/.test(url.hostname);
+    const fixtureHost = url.protocol === this.allowedProtocol && url.host === this.allowedHost;
+    if (!appleHost && !fixtureHost) {
+      throw new AscApiError(
+        `Refusing to download from "${url.host}": an asset URL must be an https Apple host ` +
+          `(or the configured ASC_BASE_URL).`,
+        0
+      );
+    }
+
+    await this.limiter.acquire();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw await toApiError(res);
+      const buf = Buffer.from(await res.arrayBuffer());
+      // A cap, not a stream: these are report segments, and one that does not
+      // fit in memory is a sign the caller wanted a narrower query.
+      if (buf.length > maxBytes) {
+        throw new AscApiError(
+          `Asset is ${buf.length} bytes, over the ${maxBytes}-byte limit. Narrow the request.`,
+          0
+        );
+      }
+      return buf;
+    } catch (err) {
+      if (err instanceof AscApiError) throw err;
+      const isAbort = (err as Error)?.name === 'AbortError';
+      throw new AscApiError(
+        isAbort
+          ? `Download timed out after ${this.timeoutMs}ms`
+          : `Download network error: ${(err as Error).message}`,
+        0
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
    * Follows `links.next` until the collection is exhausted or `maxPages` is
    * hit. The result says whether it stopped early (`hasMore` + `nextUrl`), so
    * callers can't mistake a page-capped fetch for the complete collection.

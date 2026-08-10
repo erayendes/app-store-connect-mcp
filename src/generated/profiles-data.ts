@@ -56,8 +56,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "",
       operations: ["analytics_report_instances.get","analytics_report_instances.segments.list","analytics_report_requests.create","analytics_report_requests.delete","analytics_report_requests.get","analytics_report_requests.reports.list","analytics_report_segments.get","analytics_reports.get","analytics_reports.instances.list","apps.analytics_report_requests.list","apps.perf_power_metrics.list","diagnostic_signatures.logs.list","finance_reports.list","sales_reports.list"],
-      manualTools: [],
-      rootResources: ["analytics_report_instances","analytics_report_requests","analytics_report_segments","analytics_reports","apps","diagnostic_signatures","finance_reports","sales_reports"],
+      manualTools: ["analytics__get_report"],
+      rootResources: ["(makro)","analytics_report_instances","analytics_report_requests","analytics_report_segments","analytics_reports","apps","diagnostic_signatures","finance_reports","sales_reports"],
     },
     ],
   },

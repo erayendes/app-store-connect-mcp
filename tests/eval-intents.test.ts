@@ -4,6 +4,7 @@ import { OPERATIONS } from '../src/generated/operations.js';
 import { PRICING_TOOL_NAMES } from '../src/tools/pricing.js';
 import { REVIEWS_AI_TOOL_NAMES } from '../src/tools/reviews-ai.js';
 import { SCREENSHOT_TOOL_NAMES } from '../src/tools/screenshots.js';
+import { ANALYTICS_TOOL_NAMES } from '../src/tools/analytics.js';
 import { INTENTS } from './eval/intents.js';
 
 const operationNames = new Set(OPERATIONS.map((operation) => operation.name));
@@ -12,6 +13,7 @@ const macroNames = new Set([
   ...PRICING_TOOL_NAMES,
   ...REVIEWS_AI_TOOL_NAMES,
   ...SCREENSHOT_TOOL_NAMES,
+  ...ANALYTICS_TOOL_NAMES,
 ]);
 const SHARED_NORMAL_ADVERSARIAL_TOOLS = [
   'app_store_version_release_requests.create',
