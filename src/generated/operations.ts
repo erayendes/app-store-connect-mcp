@@ -5647,7 +5647,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AppStoreVersionBuildLinkageRequest",
-    "risk": "low"
+    "risk": "release"
   },
   {
     "name": "app_store_versions.create",

@@ -7,6 +7,7 @@ import { OPERATIONS } from '../generated/operations.js';
 import { BODY_SCHEMAS } from '../generated/body-schemas.js';
 import { AscApiError } from './errors.js';
 import { validateBody } from './validate.js';
+import type { RiskLevel } from './risk.js';
 import {
   augmentReportTableTool,
   isReportTableOperation,
@@ -146,10 +147,48 @@ export function encodeParamName(name: string): string {
   return name.replace(/[^a-zA-Z0-9_.-]+/g, '_').replace(/_+$/, '');
 }
 
+/**
+ * Levels whose consequence the method cannot carry.
+ *
+ * `risk` is stamped on every mutating operation, but until now it reached the
+ * model in only three places: dry-run output, `asc__describe`, and the
+ * `--confirm` prompt — and `--confirm` has been off by default since 2.0.1. The
+ * one signal that always shipped, `destructiveHint`, meant exactly
+ * `method === 'DELETE'`. So in a plain `tools/list`, 100 non-DELETE writes at
+ * revenue, release, infrastructure or access were indistinguishable from
+ * `beta_groups.create`: `app_price_schedules.create`,
+ * `app_store_version_release_requests.create`, `apps.promoted_purchases.replace`
+ * all read as "not read-only", full stop.
+ *
+ * `destructive` is deliberately absent. It is the one level a model can already
+ * infer — the method is in the description, the annotation says so, and
+ * `REVERSIBILITY.destructive` only restates it. The other four say something
+ * the schema cannot: that the call moves money, ships a release, changes who
+ * has access, or can break signing.
+ */
+const ANNOUNCED_RISKS: ReadonlySet<RiskLevel> = new Set<RiskLevel>([
+  'revenue',
+  'release',
+  'infrastructure',
+  'access',
+]);
+
 function describeOperation(op: Operation): string {
   // The endpoint is appended so the model can reason about REST semantics
   // (and so a human reading the tool list can cross-reference Apple's docs).
-  return `${op.description} [${op.method} ${op.path}]`;
+  const base = `${op.description} [${op.method} ${op.path}]`;
+  // The level name only. `REVERSIBILITY[level]` is the obvious thing to append
+  // and it is the wrong thing: 89 of monetization's 191 tools are `revenue`, so
+  // the sentence would ship verbatim 89 times in one tool list — 1970 tokens to
+  // say one thing, the same mistake as the identical summary that once rode on
+  // all 240 `.list` tools. The elaboration belongs where it is read once, at
+  // the moment of decision, and confirm.ts already prints it there.
+  //
+  // Appended here rather than in the generator so `op.description` stays
+  // Apple's text — AXIS1 measures that.
+  return op.risk && ANNOUNCED_RISKS.has(op.risk)
+    ? `${base} ${op.risk.toUpperCase()}-level write.`
+    : base;
 }
 
 export function toMcpTool(
@@ -238,7 +277,12 @@ export function toMcpTool(
     },
     annotations: {
       readOnlyHint: op.readOnly,
-      destructiveHint: op.method === 'DELETE',
+      // MCP reads this as "may perform destructive updates", not "is a DELETE".
+      // Moving existing subscribers to a new price and handing someone Admin
+      // are destructive updates that happen to be a POST and a PATCH; a client
+      // that gates on this hint was previously waving them through.
+      destructiveHint:
+        op.method === 'DELETE' || Boolean(op.risk && ANNOUNCED_RISKS.has(op.risk)),
       idempotentHint: op.method === 'GET' || op.method === 'PATCH' || op.method === 'DELETE',
     },
   };

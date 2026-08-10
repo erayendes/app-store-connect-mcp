@@ -83,7 +83,7 @@ export const RULES: RiskRule[] = [
   // --- release pipeline -------------------------------------------------
   {
     pattern:
-      /^review_submission|^app_store_version_release_request|^app_store_version_promotion|phased_release|^app_store_versions\.(create|update)|^build_uploads?\.|^beta_app_review_submission/,
+      /^review_submission|^app_store_version_release_request|^app_store_version_promotion|phased_release|^app_store_versions\.(create|update|build\.set)|^build_uploads?\.|^beta_app_review_submission/,
     level: 'release',
     why: 'moves a version toward or through release',
   },

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { buildWritePreview, confirmWrite, type WriteConfirmer } from '../src/core/confirm.js';
-import { ToolRegistry } from '../src/core/registry.js';
+import { ToolRegistry, toMcpTool } from '../src/core/registry.js';
 import { AscHttpClient } from '../src/core/http.js';
 import { TokenProvider } from '../src/core/jwt.js';
 import { generateKeyPairSync } from 'node:crypto';
@@ -24,11 +24,47 @@ describe('risk manifest', () => {
     expect(riskFor('apps.update', 'PATCH')).toBe('public');
     expect(riskFor('beta_groups.beta_testers.add', 'POST')).toBe('low');
     expect(riskFor('review_submissions.create', 'POST')).toBe('release');
+    // Swapping the binary under a version is a release step, not a config edit;
+    // the rule used to list only create|update and let `.set` fall through to low.
+    expect(riskFor('app_store_versions.build.set', 'PATCH')).toBe('release');
     expect(riskFor('certificates.create', 'POST')).toBe('infrastructure');
     expect(riskFor('users.update', 'PATCH')).toBe('access');
     // DELETE outranks everything except revenue.
     expect(riskFor('beta_groups.delete', 'DELETE')).toBe('destructive');
     expect(riskFor('subscriptions.delete', 'DELETE')).toBe('revenue');
+  });
+
+  it('announces the four unreadable levels in the tool list itself', () => {
+    const byName = (n: string) => OPERATIONS.find((o) => o.name === n)!;
+
+    // A POST that moves money looked exactly like beta_groups__create before:
+    // same annotations, no mention of the consequence anywhere in tools/list.
+    const price = toMcpTool(byName('subscription_prices.create'));
+    expect(price.description).toContain('REVENUE-level write');
+    expect(price.annotations?.destructiveHint).toBe(true);
+    // The level name, not the reversibility sentence: that one is identical
+    // across 89 of monetization's tools and is printed once, by confirm.ts.
+    expect(price.description).not.toContain('price history is kept');
+
+    const release = toMcpTool(byName('app_store_version_release_requests.create'));
+    expect(release.description).toContain('RELEASE-level write');
+    expect(release.annotations?.destructiveHint).toBe(true);
+
+    // `destructive` is left out on purpose — the method already says it twice.
+    const del = toMcpTool(byName('beta_groups.delete'));
+    expect(del.description).not.toContain('-level write');
+    expect(del.annotations?.destructiveHint).toBe(true);
+
+    // Low-stakes writes stay unannotated and additive.
+    const group = toMcpTool(byName('beta_groups.create'));
+    expect(group.description).not.toContain('-level write');
+    expect(group.annotations?.destructiveHint).toBe(false);
+
+    // Reads are untouched.
+    const list = toMcpTool(byName('apps.list'));
+    expect(list.description).not.toContain('-level write');
+    expect(list.annotations?.readOnlyHint).toBe(true);
+    expect(list.annotations?.destructiveHint).toBe(false);
   });
 
   it('stamps every mutating operation and never a read (generated invariant)', () => {
