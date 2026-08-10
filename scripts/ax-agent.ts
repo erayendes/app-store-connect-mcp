@@ -92,7 +92,25 @@ const REPEAT = Math.max(1, Number(arg('repeat') ?? process.env.ASC_AGENT_REPEAT 
  * carries the skill and nothing else.
  */
 const skillPath = arg('skill');
-const SKILL_ARM = skillPath ? skillPath.replace(/\/+$/, '').split('/').pop()! : 'none';
+
+/**
+ * The arm's label on every record. Taken from the plugin manifest rather than
+ * the path, because the path is usually `.` — and an arm called "." tells a
+ * later `--merge` nothing about what was being tested.
+ */
+function skillArmName(path: string): string {
+  try {
+    const manifest = JSON.parse(readFileSync(join(path, '.claude-plugin', 'plugin.json'), 'utf8'));
+    if (typeof manifest.name === 'string' && manifest.name) return manifest.name;
+  } catch {
+    // No manifest, or an unreadable one: fall back to the directory name. The
+    // run is still labelled, and the SDK will complain about the plugin itself
+    // if it is genuinely broken.
+  }
+  const base = path.replace(/\/+$/, '').split('/').pop();
+  return base && base !== '.' ? base : 'skill';
+}
+const SKILL_ARM = skillPath ? skillArmName(skillPath) : 'none';
 
 /**
  * Registers, for each intent, a profile that does NOT own its target tool.
