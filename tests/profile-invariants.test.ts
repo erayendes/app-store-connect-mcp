@@ -210,10 +210,13 @@ describe('counts — curation output, not something that drifts on its own', () 
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 921 CSV rows - 9 core rows. Not a count of distinct tools: the screenshot
+    // 924 CSV rows - 9 core rows. Not a count of distinct tools: the screenshot
     // and preview tools sit under all three pages that can list a set, and ten
     // entry reads are deliberately in two slices.
-    expect(tools.length).toBe(912);
-    expect(new Set([...tools, ...CORE_OPERATIONS]).size).toBe(loadable.length + 13);
+    expect(tools.length).toBe(915);
+    // The offset is the hand-written tools in the sheet, which are not spec
+    // operations: 9 storekit, 3 reviews_ai, 2 listing, 2 pricing. It grew by 3
+    // when the listing pair and the missing pricing read joined the sheet.
+    expect(new Set([...tools, ...CORE_OPERATIONS]).size).toBe(loadable.length + 16);
   });
 });

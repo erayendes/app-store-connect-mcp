@@ -142,8 +142,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "version",
       operations: ["app_preview_sets.app_previews.list","app_preview_sets.app_previews.replace","app_preview_sets.create","app_preview_sets.delete","app_preview_sets.get","app_previews.create","app_previews.delete","app_previews.get","app_previews.update","app_screenshot_sets.app_screenshots.list","app_screenshot_sets.app_screenshots.replace","app_screenshot_sets.create","app_screenshot_sets.delete","app_screenshot_sets.get","app_screenshots.create","app_screenshots.delete","app_screenshots.get","app_screenshots.update","app_store_version_localizations.app_preview_sets.list","app_store_version_localizations.app_screenshot_sets.list","app_store_version_localizations.create","app_store_version_localizations.delete","app_store_version_localizations.get","app_store_version_localizations.search_keywords.add","app_store_version_localizations.search_keywords.list","app_store_version_localizations.search_keywords.remove","app_store_version_localizations.update","app_store_version_phased_releases.create","app_store_version_phased_releases.delete","app_store_version_phased_releases.update","app_store_version_promotions.create","app_store_version_release_requests.create","app_store_versions.app_store_review_detail.get","app_store_versions.app_store_version_localizations.list","app_store_versions.app_store_version_phased_release.get","app_store_versions.build.get","app_store_versions.build.set","app_store_versions.create","app_store_versions.delete","app_store_versions.get","app_store_versions.routing_app_coverage.get","app_store_versions.update","apps.search_keywords.list"],
-      manualTools: [],
-      rootResources: ["app_preview_sets","app_previews","app_screenshot_sets","app_screenshots","app_store_version_localizations","app_store_version_phased_releases","app_store_version_promotions","app_store_version_release_requests","app_store_versions","apps"],
+      manualTools: ["listing__get_screenshots","listing__upload_screenshot"],
+      rootResources: ["(makro)","app_preview_sets","app_previews","app_screenshot_sets","app_screenshots","app_store_version_localizations","app_store_version_phased_releases","app_store_version_promotions","app_store_version_release_requests","app_store_versions","apps"],
     },
     ],
   },
@@ -283,7 +283,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "subscription-pricing",
       operations: ["apps.subscription_groups.list","subscription_groups.subscriptions.list","subscription_offer_codes.prices.list","subscription_price_points.adjusted_equalizations.list","subscription_price_points.equalizations.list","subscription_price_points.get","subscription_prices.create","subscription_prices.delete","subscription_promotional_offers.prices.list","subscriptions.get","subscriptions.price_points.list","subscriptions.prices.list","subscriptions.prices.remove","win_back_offers.prices.list"],
-      manualTools: ["pricing__set_subscription_price"],
+      manualTools: ["pricing__get_subscription_price","pricing__set_subscription_price"],
       rootResources: ["(makro)","apps","subscription_groups","subscription_offer_codes","subscription_price_points","subscription_prices","subscription_promotional_offers","subscriptions","win_back_offers"],
     },
     ],

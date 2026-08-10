@@ -163,6 +163,9 @@ export async function resolveBodyRefs(
   return labels;
 }
 
+const isScalar = (v: unknown): boolean =>
+  typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean';
+
 /**
  * Flattens a JSON:API body into human-readable "field = value" lines:
  * attributes become dotted paths, relationships become "→ type/id" arrows.
@@ -269,6 +272,18 @@ export async function buildWritePreview(
     }
     const territories = countTerritories(body);
     if (territories) lines.push(`Territories in request: ${territories}`);
+  } else {
+    // A macro has no JSON:API body — its arguments *are* the human-readable
+    // facts (app name, locale, device size, file path). Without this the prompt
+    // asks someone to approve a bare operation line.
+    const flat = Object.entries(args)
+      .filter(([k, v]) => k !== 'body' && !op.path.includes(`{${k}}`) && isScalar(v))
+      .map(([k, v]) => `${k}: ${String(v)}`);
+    if (flat.length) {
+      lines.push('Changes:');
+      for (const c of flat.slice(0, MAX_CHANGE_LINES)) lines.push(`  ${c}`);
+      if (flat.length > MAX_CHANGE_LINES) lines.push('  …');
+    }
   }
 
   lines.push(`Risk:       ${risk} — ${REVERSIBILITY[risk]}`);

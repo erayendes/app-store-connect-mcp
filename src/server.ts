@@ -464,6 +464,16 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             { message: buildPricingPreview(args), strong: true }
           : op
           ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
+          : macroOffered(name)
+          ? // Other write macros: no spec operation behind them, but their
+            // arguments are already the human-readable facts, so the generic
+            // preview renders them without any lookups.
+            await buildWritePreview(
+              name,
+              { method: 'POST', path: `${name} (macro)`, risk: 'public' },
+              args,
+              config.credentials.keyId
+            )
           : await buildWritePreview(
               name,
               // StoreKit tools live outside the spec; renewal-date extension is
@@ -585,7 +595,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       } else if (macroOffered(name)) {
         result = PRICING_TOOL_NAMES.has(name)
           ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
-          : await executeScreenshotTool(name, args, { http });
+          : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
         // payloads cannot: they are reshaped on the way out (stripApiNoise,
