@@ -438,7 +438,15 @@ describe('contested intents', () => {
     // rather than the one inside `customer`, and a tie breaks alphabetically.
     // The response tool is still in the top 3; it just stopped leading.
     'app_store_versions.customer_reviews.list > customer_review_responses.create',
-    'apps.analytics_report_requests.list > analytics_report_requests.create',
+    // Curating analytics_report_segments.get ("the rows are gzipped TSV at that
+    // URL — this response carries the link, not the data") put it above
+    // sales_reports.list on the sales-report queries. Accepted: both really are
+    // "get report data", and sales_reports.list still ranks in the top 3.
+    'analytics_report_segments.get > sales_reports.list',
+    // `apps.analytics_report_requests.list > analytics_report_requests.create`
+    // was here and is gone: the curated description for the create tool put it
+    // first on "Request an analytics report", which is the tool that intent
+    // wants. The listing tool no longer leads.
     'apps.android_to_ios_app_mapping_details.list > webhook_pings.create',
     'apps.background_assets.list > background_assets.create',
     'apps.subscription_grace_period.get > subscription_grace_periods.update',

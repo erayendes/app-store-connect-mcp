@@ -111,8 +111,31 @@ export const CURATED: Record<string, string> = {
     'Create a new App Store version. Do this before attaching a build and submitting for review.',
   'app_store_versions.update':
     'Update an App Store version, including its release type and earliest release date.',
+  // Apple's names hide a three-step dance, and the old description here got it
+  // wrong in the direction that costs a release: `create` takes an app, not a
+  // version, and makes an EMPTY container. The version arrives as a separate
+  // item, and nothing reaches Apple until `submitted` is patched true. An agent
+  // that stops after the POST reports a release it did not ship — so each of
+  // the three says what it is not, and names the next call by tool name.
   'review_submissions.create':
-    'Submit an App Store version for Apple review. The version must already have a build attached.',
+    'Submit an App Store version for Apple review — step 1 of 3, and this call alone does not send anything. It opens an empty submission for an app; put the version in it with review_submission_items__create, then set submitted on it.',
+  // The full list of item types Apple accepts belongs in the body schema, not
+  // here: spelling out "custom product page version" made this tool the top hit
+  // for "Create a custom product page", which is app_custom_product_pages.
+  'review_submission_items.create':
+    'Put one thing into an open review submission — a version, an event, or another releasable item. One per call, so repeat it for each thing Apple should look at.',
+  'review_submissions.update':
+    'Hand an open submission to Apple by setting submitted to true, or take it back with canceled. This is the step that starts the queue; opening the submission and filling it does not.',
+  'review_submissions.items.list':
+    'List what is inside a review submission and the state of each item, so you can check what Apple will actually look at before handing it over.',
+  'review_submission_items.delete':
+    'Take one item back out of a submission that has not been handed to Apple yet.',
+  // `app_store_versions.build.set` is deliberately NOT curated. Apple's "Set the
+  // build linked to an App Store version." is short and dense with exactly the
+  // words someone asking for it uses; a longer, more helpful sentence diluted
+  // that and dropped the tool out of the top three for "select build for app
+  // store version". The thing worth saying about it — that it is a release
+  // step, not a config edit — is now carried by its risk level instead.
 
   // Apple's spec summary for these is the tool name in a sentence — "List
   // builds." against `builds.list` tells a model nothing it could not read off
@@ -171,6 +194,16 @@ export const CURATED: Record<string, string> = {
     'Invite a new TestFlight tester by email and add them to one or more beta groups.',
   'builds.update':
     'Update a build — most commonly to set usesNonExemptEncryption compliance so it can be distributed.',
+  // Analytics is a five-hop chain, and only its two ends carry a fact the
+  // schema does not: the request is not instant, and the last call returns a
+  // link rather than rows. The three middle hops were curated too, and the
+  // word "report" in each of them pushed sales_reports.list out of the top
+  // three for "Get the daily sales report". Two entries, not five — the
+  // middle hops are findable by name and were only competing.
+  'analytics_report_requests.create':
+    'Ask Apple to start producing analytics for an app. ONE_TIME_SNAPSHOT covers the past 365 days; ONGOING keeps going as new data arrives. Nothing is downloadable straight away — a fresh request has no instances for a day or more.',
+  'analytics_report_segments.get':
+    'Read one segment: a short-lived signed URL plus its checksum and byte size. The rows are gzipped TSV at that URL — this response carries the link, not the data.',
   'bundle_ids.create':
     'Register a new bundle identifier before creating provisioning profiles for it.',
   'devices.create':

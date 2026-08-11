@@ -78,8 +78,8 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 127 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 204 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 129 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
 | `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 54 | — |
@@ -87,7 +87,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | `app-clips` | Default and advanced experiences, header images, beta invocations | 51 | — |
 | `xcode-cloud` | CI workflows, build runs, artifacts | 51 | — |
 | `provisioning` | Certificates, provisioning profiles, devices, bundle IDs | 49 | — |
-| `analytics` | Sales/finance reports, analytics, performance metrics | 23 | — |
+| `analytics` | Sales/finance reports, analytics, performance metrics | 24 | — |
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
 | `webhooks` | Webhook configuration and diagnostics | 17 | — |
 
@@ -272,6 +272,24 @@ The two servers appear side by side in your client (name them by account), and
 nothing is ever mixed: env-provided credentials never fall back to the shared
 file for missing pieces.
 
+### One call instead of a chain
+
+A handful of hand-written tools collapse a multi-step flow into one call. The raw tools stay exactly as they are — these sit on top, and each is turned on by the sub-profile that owns it.
+
+| Instead of | Call | Needs |
+|:--|:--|:--|
+| app → group → subscription → price points | `pricing__get_subscription_price` — one country or, with the territory omitted, all ~175 grouped by price | `monetization:subscription-pricing` |
+| the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
+| setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
+| version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
+| reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
+| request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
+| fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+
+Two of them do something the raw tools cannot do at all rather than merely faster: `listing__upload_screenshot` performs Apple's reserve → upload → commit sequence (the raw tool only reserves a slot and moves no bytes), and `analytics__get_report` downloads the report, where the raw chain ends holding a link.
+
+`pricing__equalize_price` is a REVENUE-level write covering about 175 countries. Run it under `--dry-run` first: it returns the full derived table before anything is sent.
+
 ### Examples
 
 Talk to your client in plain language:
@@ -401,8 +419,8 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 127 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 204 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 129 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 54 | — |
@@ -410,7 +428,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 51 | — |
 | `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 51 | — |
 | `provisioning` | Sertifikalar, provisioning profilleri, cihazlar, bundle ID'ler | 49 | — |
-| `analytics` | Satış/finans raporları, analytics, performans metrikleri | 23 | — |
+| `analytics` | Satış/finans raporları, analytics, performans metrikleri | 24 | — |
 | `background-assets` | Background Assets (iOS 26) | 23 | — |
 | `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
 
@@ -587,6 +605,24 @@ Heimdall tek bir ortak kimlik seti tutar; yine de birden çok App Store Connect 
   `ASC_CONFIG_DIR=~/.config/asc-musteriB npx -y @erayendes/asc-mcp setup` komutunu bir kez çalıştırın, sonra aynı `ASC_CONFIG_DIR`'ı o sunucunun `env` bloğuna koyun. Her dizin kendi anahtar referansını, vendor numarasını ve bundle ID'sini tutar.
 
 İki sunucu istemcinizde yan yana görünür (hesaba göre adlandırın) ve hiçbir şey karışmaz: env ile verilen kimlik, eksik parçalar için ortak dosyaya asla geri düşmez.
+
+### Zincir yerine tek çağrı
+
+Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiriyor. Ham araçlar aynen duruyor — bunlar üstte oturuyor ve her biri sahibi olan alt profille açılıyor.
+
+| Şunun yerine | Bunu çağır | Gereken |
+|:--|:--|:--|
+| app → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da territory verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
+| aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
+| ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
+| sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
+| ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
+| istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
+| yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+
+Bunlardan ikisi ham araçların daha hızlı yaptığı bir şeyi değil, hiç yapamadığı bir şeyi yapıyor: `listing__upload_screenshot` Apple'ın rezerve et → yükle → onayla dizisini yürütüyor (ham araç yalnızca yer ayırıyor, tek bayt taşımıyor) ve `analytics__get_report` raporu indiriyor — ham zincir elinde bir bağlantıyla bitiyor.
+
+`pricing__equalize_price` yaklaşık 175 ülkeyi kapsayan REVENUE seviyesinde bir yazma. Önce `--dry-run` ile çalıştırın: hiçbir şey gönderilmeden türetilmiş tablonun tamamını döndürür.
 
 ### Örnekler
 

@@ -11,10 +11,11 @@
 import { describe, expect, it } from 'vitest';
 import { PRICING_TOOLS, executePricingTool, type PricingContext } from '../src/tools/pricing.js';
 import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
+import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
-const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS];
+const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS];
 const byName = (name: string) => macros.find((t) => t.name === name);
 
 /** Every property a schema declares, at any depth, as dotted paths. */

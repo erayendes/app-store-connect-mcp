@@ -28,6 +28,7 @@ import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
 import { runChecklist, type ChecklistItem } from './checklist.js';
+import { installSkill, removeSkill } from './skill.js';
 import {
   CLIENTS,
   OTHER_CLIENT,
@@ -572,6 +573,15 @@ function applyPlan(plan: ClientPlan[]): void {
     }
     const { results, needsManual } = applyToClient(client, toAdd, toRemove);
     for (const r of results) console.log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
+    // The skill follows the servers: installed once anything is registered,
+    // removed when the last one goes. Only for clients that read SKILL.md.
+    const stillRegistered = listRegistered(client).size > 0;
+    const skill = results.some((r) => r.ok)
+      ? stillRegistered
+        ? installSkill(client.id)
+        : removeSkill(client.id)
+      : undefined;
+    if (skill) console.log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
     if (needsManual && toAdd.length) {
       console.log('\n  add these by hand:\n');
       console.log(indent(manualBlock(client, toAdd)));

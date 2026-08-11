@@ -179,6 +179,133 @@ export class AscHttpClient {
   }
 
   /**
+   * PUTs one slice of an asset to an upload URL Apple handed back in an
+   * `uploadOperations` array.
+   *
+   * Deliberately not `request()`. Every other call here carries the bearer
+   * token; these must not. The upload URLs are pre-signed and arrive with their
+   * own `requestHeaders`, so attaching our credential would hand it to a
+   * different host than the one it was minted for.
+   *
+   * That is also why the host is checked. `uploadOperations` is API-supplied
+   * data, not a user's input, and the body is a file off the user's disk — an
+   * unchecked URL there is a request to POST local files wherever the response
+   * says. Pagination already refuses to leave `allowedHost` for the same class
+   * of reason; uploads legitimately go to Apple's asset hosts rather than the
+   * API host, so the rule widens to Apple rather than disappearing. The base
+   * host stays allowed so ASC_BASE_URL can point tests at a fixture server.
+   */
+  async uploadAssetPart(
+    op: { method: string; url: string; requestHeaders?: Array<{ name?: string; value?: string }> },
+    body: Uint8Array
+  ): Promise<void> {
+    let url: URL;
+    try {
+      url = new URL(op.url);
+    } catch {
+      throw new AscApiError(`Malformed upload URL: ${op.url}`, 0);
+    }
+    const appleHost = url.protocol === 'https:' && /(^|\.)apple\.com$/.test(url.hostname);
+    const fixtureHost = url.protocol === this.allowedProtocol && url.host === this.allowedHost;
+    if (!appleHost && !fixtureHost) {
+      throw new AscApiError(
+        `Refusing to upload to "${url.host}": an upload URL must be an https Apple host ` +
+          `(or the configured ASC_BASE_URL). This one came back from the API — treat it ` +
+          `as a sign the response was not what it claimed.`,
+        0
+      );
+    }
+
+    const headers: Record<string, string> = {};
+    for (const h of op.requestHeaders ?? []) {
+      if (h?.name && h.value !== undefined) headers[h.name] = String(h.value);
+    }
+
+    await this.limiter.acquire();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method: op.method || 'PUT',
+        headers,
+        body,
+        signal: controller.signal,
+      });
+      // No retry. A half-uploaded asset is fixed by re-reserving the whole
+      // thing, not by resending one slice into an unknown server-side state.
+      if (!res.ok) throw await toApiError(res);
+    } catch (err) {
+      if (err instanceof AscApiError) throw err;
+      const isAbort = (err as Error)?.name === 'AbortError';
+      throw new AscApiError(
+        isAbort
+          ? `Upload timed out after ${this.timeoutMs}ms`
+          : `Upload network error: ${(err as Error).message}`,
+        0
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * GETs a pre-signed asset URL Apple handed back in a response body — an
+   * analytics report segment, for instance, where the rows live at the URL and
+   * not in the JSON.
+   *
+   * Same reasoning as `uploadAssetPart`: no bearer token, because the URL
+   * already carries its own signature and is not on the API host, and a host
+   * check because the URL is API-supplied data rather than something the user
+   * typed.
+   */
+  async downloadAsset(rawUrl: string, maxBytes = 64 * 1024 * 1024): Promise<Buffer> {
+    let url: URL;
+    try {
+      url = new URL(rawUrl);
+    } catch {
+      throw new AscApiError(`Malformed asset URL: ${rawUrl}`, 0);
+    }
+    const appleHost = url.protocol === 'https:' && /(^|\.)apple\.com$/.test(url.hostname);
+    const fixtureHost = url.protocol === this.allowedProtocol && url.host === this.allowedHost;
+    if (!appleHost && !fixtureHost) {
+      throw new AscApiError(
+        `Refusing to download from "${url.host}": an asset URL must be an https Apple host ` +
+          `(or the configured ASC_BASE_URL).`,
+        0
+      );
+    }
+
+    await this.limiter.acquire();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw await toApiError(res);
+      const buf = Buffer.from(await res.arrayBuffer());
+      // A cap, not a stream: these are report segments, and one that does not
+      // fit in memory is a sign the caller wanted a narrower query.
+      if (buf.length > maxBytes) {
+        throw new AscApiError(
+          `Asset is ${buf.length} bytes, over the ${maxBytes}-byte limit. Narrow the request.`,
+          0
+        );
+      }
+      return buf;
+    } catch (err) {
+      if (err instanceof AscApiError) throw err;
+      const isAbort = (err as Error)?.name === 'AbortError';
+      throw new AscApiError(
+        isAbort
+          ? `Download timed out after ${this.timeoutMs}ms`
+          : `Download network error: ${(err as Error).message}`,
+        0
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
    * Follows `links.next` until the collection is exhausted or `maxPages` is
    * hit. The result says whether it stopped early (`hasMore` + `nextUrl`), so
    * callers can't mistake a page-capped fetch for the complete collection.

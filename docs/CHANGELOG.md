@@ -6,6 +6,62 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [2.1.0] — 2026-08-10
+
+#### Risky writes look risky in the tool list
+Every mutating operation already carried a hand-reviewed risk level, but it only reached the model through `--dry-run`, `asc__describe` and the `--confirm` prompt — and that prompt has been off by default since 2.0.1. The one signal that always shipped, `destructiveHint`, meant exactly "this is a DELETE". So **100 non-DELETE writes that move money, ship a release, change who has access or break code signing were indistinguishable from `beta_groups__create`** in a plain tool list: `app_price_schedules__create`, `app_store_version_release_requests__create`, `apps__promoted_purchases__replace` among them.
+- The level now appears in the description of the ~120 operations where the HTTP method cannot show it, as `REVENUE-level write.` and so on. It costs 443 tokens across a typical eight-server setup — 0.35% of the tool definitions.
+- **`destructiveHint` now means what MCP says it means**, "may perform destructive updates", not "is a DELETE". **Clients that gate on this hint will ask for approval on more tools than before.**
+- `app_store_versions__build__set` was classified `low` because the release rule matched only `create|update`. Swapping the binary under a version is a release step.
+
+#### Documentation
+The README advertised **868 tools** and "nine hand-written tools". Both were already wrong before this release — the count of hand-written tools left out the `reviews_ai__*` and `storekit__*` families entirely. It is 859 reachable operations plus 24 hand-written tools, 883 in total.
+
+Three profile counts in the guide moved with this release: `analytics` 23 → 24, `distribution` 127 → 129, `monetization` 204 → 206.
+
+`AGENTS.md` described `destructiveHint` as meaning deletes, which stopped being true in this release, and now points at the `heimdall` skill as the copy of itself that reaches users who install through `npx` and have no checkout. The guide gained a table of the macros, which had never been documented outside the changelog.
+
+#### `pricing__equalize_price` — one anchor price, every country derived by Apple
+For an app, an in-app purchase or a subscription. Give the anchor territory and the price; Apple's own currency and tax maths decides every other market. The number is never copied across currencies, because it cannot be — anchored at 3.99 TRY, Apple returns 0.99 USD for Afghanistan and 2.99 AED for the UAE.
+
+The three product types do not share a write model, and the macro does not pretend otherwise:
+
+| Product | Writes | Who equalizes |
+| -- | -- | -- |
+| App price | 1 (`appPriceSchedules`) | Apple, from `baseTerritory` |
+| In-app purchase | 1 (`inAppPurchasePriceSchedules`) | Apple, from `baseTerritory` |
+| Subscription | ~175, one per country | us, from the equalizations endpoint |
+
+`subscriptionPrices` has no base territory, so that path reads Apple's equalizations and then writes each country separately. It writes the anchor **first**, so a failure part-way leaves the country you actually named already set; it stops at the first error rather than spreading an unknown state, and the result names exactly which countries landed, which one failed, and how many are untouched. Re-running is safe — setting a price that is already set changes nothing.
+
+`preserve_current_price` is required for subscriptions, as on the single-territory macro, and the confirmation prompt spells out that "existing subscribers WILL be moved" now means worldwide. Apps and in-app purchases have no subscribers and do not ask.
+
+Run it under `--dry-run` first: the subscription path returns the full derived table before anything is sent.
+
+#### `pricing__get_subscription_price` answers "in every country", not just one
+`territory` was required, so the macro could only ever answer about one country. Asked "what does this subscription cost in each country?", a live eval session called the macro, found it did not answer the question, walked the raw chain instead, and spent 1.02M tokens and $3 writing the result to a CSV alongside a hand-written country-name dictionary in Python.
+
+Omit `territory` now and the answer covers every country Apple sells in, grouped by price so it stays readable: measured live, 175 territories collapse to 45 distinct prices — 91 countries share one of them — and the whole thing is about 1.3k tokens. The currency comes back with each group, which is the other half of an answer that "19.99" alone does not give. So is the country name: Apple returns one nowhere — not on a price row, not on `/v1/territories`, which carries the code and the currency and nothing else — which is why that eval session hand-typed a 175-entry dictionary, and then did it again on a later run. Each group now carries `countryNames` alongside `territories`, in the same order.
+
+Single-country calls are unchanged, except that the response names the country too.
+
+#### Upload a screenshot, read a report — two things the raw tools could not do
+Both were chains that ended somewhere the API does not go.
+- **`listing__upload_screenshot`** performs Apple's reserve → upload → commit sequence with the MD5 checksum. The raw `app_screenshots__create` only reserves a slot and moves no bytes, so the chain could not be finished from the tools at all.
+- **`analytics__get_report`** walks request → report → instance → segment, downloads the gzipped TSV behind Apple's signed link and returns rows. The raw chain ends holding a URL. It will not start a report request: that is an ongoing commitment on the account, not a side effect of a question.
+
+#### Fixed
+- **`listing__get_screenshots` shipped in 2.0.0 unreachable.** Its family was missing from the profile generator's known list, so no row for it could exist in the curation sheet and no profile-mode server offered it. Both listing macros now live under `distribution:version`. `pricing__get_subscription_price` was missing a row too — it worked, but the per-sub-profile tool counts were short by one.
+- **`review_submissions__create` was described as submitting a version for review.** It takes an *app*, not a version, and opens an empty submission; the version goes in as a separate item and nothing reaches Apple until `submitted` is set. An agent that stopped after the first call reported a release it had not shipped. The three steps now each say what they are not.
+- Curated descriptions for the review-submission chain and both ends of the analytics chain; AXIS1 findability debt 718 → 712.
+
+#### For contributors
+- **`npm run ax:agent` did not run at all** — it read a field the `Profile` type does not have and threw on import.
+- `--skill=<dir>` and `--wrong-profile` for A/B-ing a skill document, with per-session `reachedForCredentials` / `calledAppleDirectly` booleans and a `By skill` table printed as deltas against the control arm. `SHELL_KINDS` was undercounting: `security find-generic-password` and a bare `curl` at Apple were only recorded when piped through a filter word.
+
+#### Added
+- **A `heimdall` skill, installed by `register`** for the clients that read `SKILL.md` (Claude Code, Codex). It carries what has no other channel before the server exists: that the API key is minted inside the process per request and cannot be found in a shell or replaced by `curl`, which in recorded sessions was the single most common way a run went wrong. Roughly 200 tokens sit in context; the body loads only when the skill triggers.
+
 ### [2.0.1] — 2026-08-09
 
 #### Write confirmation is opt-in
@@ -129,6 +185,62 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [2.1.0] — 2026-08-10
+
+#### Riskli yazmalar araç listesinde riskli görünüyor
+Her mutasyon operasyonu zaten elle gözden geçirilmiş bir risk seviyesi taşıyordu, ama bu modele yalnızca `--dry-run`, `asc__describe` ve `--confirm` istemi üzerinden ulaşıyordu — o istem de 2.0.1'den beri varsayılan kapalı. Her zaman gönderilen tek sinyal olan `destructiveHint` ise tam olarak "bu bir DELETE" demekti. Yani **para hareket ettiren, sürüm yayınlayan, erişim değiştiren ya da imzalamayı bozan, DELETE olmayan 100 yazma işlemi** düz bir araç listesinde `beta_groups__create`'ten ayırt edilemiyordu: `app_price_schedules__create`, `app_store_version_release_requests__create`, `apps__promoted_purchases__replace` bunlardan birkaçı.
+- Seviye artık HTTP metodunun gösteremediği ~120 operasyonun açıklamasında, `REVENUE-level write.` biçiminde görünüyor. Tipik sekiz sunuculuk bir kurulumda 443 token — araç tanımlarının %0,35'i.
+- **`destructiveHint` artık MCP'nin söylediği anlama geliyor**: "yıkıcı güncelleme yapabilir", "DELETE'tir" değil. **Bu ipucuna göre onay isteyen istemciler eskisinden daha fazla araçta soracak.**
+- `app_store_versions__build__set`, release kuralı yalnızca `create|update` ile eşleştiği için `low` sayılıyordu. Bir sürümün altındaki binary'yi değiştirmek bir yayın adımıdır.
+
+#### Dokümantasyon
+README **868 araç** ve "elle yazılmış dokuz araç" diyordu. İkisi de bu sürümden önce zaten yanlıştı — elle yazılmış araç sayısı `reviews_ai__*` ve `storekit__*` ailelerini hiç saymıyordu. Doğrusu: erişilebilir 859 işlem artı elle yazılmış 24 araç, toplam 883.
+
+Bu sürümle birlikte kılavuzdaki üç profil sayısı değişti: `analytics` 23 → 24, `distribution` 127 → 129, `monetization` 204 → 206.
+
+`AGENTS.md`, `destructiveHint`'i silme işlemleri olarak tarif ediyordu; bu sürümde doğru olmaktan çıktı. Artık `npx` ile kuran ve checkout'u olmayan kullanıcılara ulaşan kopyası olarak `heimdall` skill'ine işaret ediyor. Kılavuza, changelog dışında hiç belgelenmemiş olan makroların tablosu eklendi.
+
+#### `pricing__equalize_price` — tek çapa fiyat, her ülkeyi Apple türetiyor
+Uygulama, uygulama içi satın alma veya abonelik için. Çapa ülkeyi ve fiyatı verirsiniz; her pazarın karşılığını Apple'ın kendi kur ve vergi matematiği belirler. Sayı asla para birimleri arasında kopyalanmaz, çünkü kopyalanamaz — 3,99 TRY çapasında Apple Afganistan için 0,99 USD, BAE için 2,99 AED döndürüyor.
+
+Üç ürün tipinin yazma modeli aynı değil ve makro bunu gizlemiyor:
+
+| Ürün | Yazma | Equalization'ı yapan |
+| -- | -- | -- |
+| Uygulama fiyatı | 1 (`appPriceSchedules`) | Apple, `baseTerritory`'den |
+| Uygulama içi satın alma | 1 (`inAppPurchasePriceSchedules`) | Apple, `baseTerritory`'den |
+| Abonelik | ~175, ülke başına bir tane | biz, equalizations ucundan |
+
+`subscriptionPrices` bir temel ülke kavramı taşımıyor; bu yüzden o yol Apple'ın equalization'larını okuyup her ülkeyi ayrı yazıyor. Çapayı **önce** yazıyor, böylece yarıda kalan bir hata kullanıcının asıl belirttiği ülkeyi ayarlanmış bırakıyor; ilk hatada duruyor, bilinmeyen bir durumu ülkelere yaymıyor, ve sonuç hangi ülkelerin yazıldığını, hangisinde durulduğunu ve kaçının dokunulmadan kaldığını tam olarak söylüyor. Yeniden çalıştırmak güvenli — zaten ayarlı bir fiyatı yazmak hiçbir şeyi değiştirmiyor.
+
+Abonelikler için `preserve_current_price` zorunlu, tek-ülke makrosundaki gibi; onay ekranı da "mevcut aboneler taşınacak" ifadesinin artık dünya çapında olduğunu açıkça yazıyor. Uygulama ve IAP'ların abonesi yok, sormuyorlar.
+
+Önce `--dry-run` ile çalıştırın: abonelik yolu hiçbir şey gönderilmeden önce türetilmiş tablonun tamamını döndürüyor.
+
+#### `pricing__get_subscription_price` artık "her ülkede" sorusunu da cevaplıyor
+`territory` zorunluydu, yani makro yalnızca tek bir ülkeyi cevaplayabiliyordu. "Bu abonelik her ülkede ne kadar?" diye sorulan canlı bir değerlendirme oturumu makroyu çağırdı, sorunun cevabını bulamadı, ham zinciri yürüdü ve sonucu bir CSV'ye yazıp yanına Python'da elle ülke adı sözlüğü üreterek 1,02M token ve 3 dolar harcadı.
+
+Artık `territory`'yi atlarsanız cevap Apple'ın sattığı tüm ülkeleri kapsıyor ve okunabilir kalsın diye fiyata göre gruplanıyor: canlı ölçümde 175 ülke 45 ayrı fiyata iniyor — 91 ülke bunlardan birini paylaşıyor — ve tamamı yaklaşık 1,3k token. Her grupla birlikte para birimi de dönüyor; "19.99" tek başına eksik bir cevap. Ülke adı da öyle: Apple hiçbir yerde ülke adı döndürmüyor — ne fiyat satırında, ne de yalnızca kod ve para birimi taşıyan `/v1/territories`'te — o değerlendirme oturumunun 175 satırlık sözlüğü elle yazmasının, sonraki bir koşuda da tekrar yazmasının sebebi bu. Her grup artık `territories` ile aynı sırada bir `countryNames` taşıyor.
+
+Tek ülke soran çağrılar değişmedi; yalnızca cevap ülkenin adını da veriyor.
+
+#### Ekran görüntüsü yükleme ve rapor okuma — ham araçların yapamadığı iki şey
+İkisi de API'nin gitmediği bir yerde biten zincirlerdi.
+- **`listing__upload_screenshot`**, Apple'ın rezerve et → yükle → onayla dizisini MD5 sağlamasıyla birlikte yürütüyor. Ham `app_screenshots__create` yalnızca bir yer ayırıyor ve tek bayt taşımıyor; zincir araçlarla hiç tamamlanamıyordu.
+- **`analytics__get_report`**, istek → rapor → örnek → segment zincirini yürüyüp Apple'ın imzalı bağlantısındaki gzip TSV'yi indiriyor ve satır döndürüyor. Ham zincir elinde bir URL ile bitiyor. Yeni bir rapor isteği başlatmıyor: bu, hesap üzerinde süregelen bir taahhüt, bir sorunun yan etkisi değil.
+
+#### Düzeltildi
+- **`listing__get_screenshots` 2.0.0'da erişilemez olarak yayınlanmış.** Ailesi profil üreticisinin bilinen listesinde yoktu, dolayısıyla küratörlük sayfasında ona satır açılamıyordu ve hiçbir profil-modu sunucusu onu sunmuyordu. İki listing makrosu da artık `distribution:version` altında. `pricing__get_subscription_price` da sayfada yokmuş — çalışıyordu, ama alt profil araç sayıları birer eksik gösteriyordu.
+- **`review_submissions__create`, bir sürümü incelemeye gönderiyor diye anlatılıyordu.** Sürüm değil *uygulama* alıyor ve boş bir gönderim açıyor; sürüm ayrı bir kalem olarak ekleniyor ve `submitted` işaretlenene kadar Apple'a hiçbir şey ulaşmıyor. İlk çağrıdan sonra duran bir ajan, yapmadığı bir yayını yapılmış olarak raporluyordu. Üç adım artık ayrı ayrı ne *olmadıklarını* söylüyor.
+- İnceleme gönderim zinciri ve analiz zincirinin iki ucu için küratörlü açıklamalar; AXIS1 bulunabilirlik borcu 718 → 712.
+
+#### Katkıcılar için
+- **`npm run ax:agent` hiç çalışmıyordu** — `Profile` tipinde olmayan bir alanı okuyor ve import sırasında patlıyordu.
+- Bir skill belgesini A/B testine sokmak için `--skill=<dizin>` ve `--wrong-profile`; oturum başına `reachedForCredentials` / `calledAppleDirectly` boolean'ları ve kontrol koluna göre fark olarak basılan bir `By skill` tablosu. `SHELL_KINDS` eksik sayıyordu: `security find-generic-password` ve Apple'a atılan düz bir `curl`, ancak bir filtre kelimesine borulandığında kaydediliyordu.
+
+#### Eklendi
+- **`register` tarafından kurulan bir `heimdall` skill'i**, `SKILL.md` okuyan istemciler için (Claude Code, Codex). Sunucu var olmadan önce başka hiçbir kanalı olmayan şeyi taşıyor: API anahtarının istek başına süreç içinde üretildiğini, kabukta bulunamayacağını ve `curl` ile yerine konamayacağını — ki kayıtlı oturumlarda bir koşunun en sık bu yüzden raydan çıktığı görülmüştü. Bağlamda yaklaşık 200 token duruyor; gövde yalnızca skill tetiklendiğinde yükleniyor.
 
 ### [2.0.1] — 2026-08-09
 

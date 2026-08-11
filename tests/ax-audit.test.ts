@@ -23,7 +23,7 @@ import type { Operation } from '../src/core/types.js';
  */
 const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
-  boilerplate: 728,
+  boilerplate: 712,
   /** AXIS2 — silent empty results: id-valued filters with no format hint. */
   unhintedIdFilters: 77,
   /** AXIS3 — opaque confirmations: reference types a preview cannot humanise. */

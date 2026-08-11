@@ -132,6 +132,16 @@ export function maybeParseReportTable(
   }
 }
 
+/**
+ * Same decode, for a report that arrived as bytes rather than as a tool
+ * result — an analytics segment downloaded from a signed URL. Exported so the
+ * analytics macro caps and shapes its rows identically to the sales and
+ * finance reports, instead of inventing a second row format.
+ */
+export function parseGzippedTsv(gzipped: Buffer, maxRows?: number): ParsedReportTable {
+  return parseTsv(gunzipSync(gzipped).toString('utf-8'), clampMaxRows(maxRows));
+}
+
 function clampMaxRows(raw: unknown): number {
   const n = typeof raw === 'number' && Number.isFinite(raw) ? Math.floor(raw) : DEFAULT_MAX_ROWS;
   if (n <= 0) return DEFAULT_MAX_ROWS;

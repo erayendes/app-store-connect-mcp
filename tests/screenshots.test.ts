@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   SCREENSHOT_TOOLS,
   executeScreenshotTool,
@@ -116,5 +118,166 @@ describe('listing__get_screenshots', () => {
   it('is marked read-only, so it never asks for a write confirmation', () => {
     const tool = SCREENSHOT_TOOLS.find((t) => t.name === 'listing__get_screenshots');
     expect(tool?.annotations?.readOnlyHint).toBe(true);
+  });
+});
+
+/**
+ * The upload half. What matters is not that a call was made but that the three
+ * phases happened in order and carried the right numbers: a reserve that
+ * declares the true byte length, one PUT per slice cut at Apple's offsets, and
+ * a commit whose checksum is the MD5 of the whole file. Any of those wrong
+ * leaves an asset Apple silently refuses to deliver.
+ */
+function fakeUploadHttp(operations?: unknown) {
+  const puts: Array<{ url: string; length: number; first: number }> = [];
+  const http = {
+    get: vi.fn(async (path: string) => {
+      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
+      // Order matters and the paths nest: the sets path ends in
+      // /appScreenshotSets but *contains* /appStoreVersionLocalizations, which
+      // in turn contains /appStoreVersions. Longest suffix first.
+      if (path.endsWith('/appScreenshotSets'))
+        return { data: [{ id: 'set-67', attributes: { screenshotDisplayType: 'APP_IPHONE_67' } }] };
+      if (path.includes('/appStoreVersionLocalizations'))
+        return { data: [{ id: 'loc-en', attributes: { locale: 'en-US' } }] };
+      if (path.includes('/appStoreVersions'))
+        return { data: [{ id: 'v-1', attributes: { versionString: '1.6.1' } }] };
+      return { data: [] };
+    }),
+    post: vi.fn(async (path: string, body: any) => {
+      if (path === '/v1/appScreenshots') {
+        return {
+          data: {
+            id: 'shot-1',
+            attributes: {
+              uploadOperations:
+                operations ?? [
+                  { method: 'PUT', url: 'https://upload.apple.com/a', offset: 0, length: 4 },
+                  { method: 'PUT', url: 'https://upload.apple.com/b', offset: 4, length: 3 },
+                ],
+            },
+          },
+          _sent: body,
+        };
+      }
+      return { data: { id: 'set-new', attributes: {} } };
+    }),
+    patch: vi.fn(async () => ({
+      data: { attributes: { assetDeliveryState: { state: 'COMPLETE' } } },
+    })),
+    uploadAssetPart: vi.fn(async (op: any, part: Uint8Array) => {
+      puts.push({ url: op.url, length: part.length, first: part[0] });
+    }),
+  };
+  return { http, puts };
+}
+
+describe('listing__upload_screenshot', () => {
+  const args = {
+    app: 'Ask Quran',
+    locale: 'en-US',
+    display_type: 'APP_IPHONE_67',
+    // tmpdir(), not a literal: `/private/tmp` is macOS's real path behind the
+    // /tmp symlink and does not exist on Linux, so these three passed on the
+    // author's machine and failed every CI runner.
+    file_path: join(tmpdir(), 'heimdall-upload-test.png'),
+  };
+
+  it('reserves, uploads every slice at Apple’s offsets, then commits the MD5', async () => {
+    const { writeFile, rm } = await import('node:fs/promises');
+    const { createHash } = await import('node:crypto');
+    const bytes = Buffer.from('abcdefg');
+    await writeFile(args.file_path, bytes);
+    try {
+      const { http, puts } = fakeUploadHttp();
+      const result: any = await executeScreenshotTool(
+        'listing__upload_screenshot',
+        args,
+        { http } as unknown as ScreenshotContext
+      );
+
+      // Reserve declares the real size — Apple cuts the slices from this.
+      const reserve = http.post.mock.calls.find((c: any[]) => c[0] === '/v1/appScreenshots')!;
+      expect(reserve[1].data.attributes.fileSize).toBe(7);
+      expect(reserve[1].data.attributes.fileName).toBe('heimdall-upload-test.png');
+      expect(reserve[1].data.relationships.appScreenshotSet.data.id).toBe('set-67');
+
+      // One PUT per operation, sliced at the offsets Apple gave, not guessed.
+      expect(puts).toEqual([
+        { url: 'https://upload.apple.com/a', length: 4, first: 'a'.charCodeAt(0) },
+        { url: 'https://upload.apple.com/b', length: 3, first: 'e'.charCodeAt(0) },
+      ]);
+
+      // Commit carries the checksum of the WHOLE file, not of the last slice.
+      const commit = http.patch.mock.calls[0];
+      expect(commit[0]).toBe('/v1/appScreenshots/shot-1');
+      expect(commit[1].data.attributes.uploaded).toBe(true);
+      expect(commit[1].data.attributes.sourceFileChecksum).toBe(
+        createHash('md5').update(bytes).digest('hex')
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.parts).toBe(2);
+      expect(result.deliveryState).toBe('COMPLETE');
+    } finally {
+      await rm(args.file_path, { force: true });
+    }
+  });
+
+  it('refuses a missing file before reserving anything', async () => {
+    const { http } = fakeUploadHttp();
+    await expect(
+      executeScreenshotTool(
+        'listing__upload_screenshot',
+        { ...args, file_path: join(tmpdir(), 'heimdall-does-not-exist.png') },
+        { http } as unknown as ScreenshotContext
+      )
+    ).rejects.toThrow(/Cannot read/);
+    // The point of reading first: no reserved-but-empty screenshot row.
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
+  it('says the reserved row is empty when Apple returns nowhere to upload', async () => {
+    const { writeFile, rm } = await import('node:fs/promises');
+    await writeFile(args.file_path, Buffer.from('abc'));
+    try {
+      const { http } = fakeUploadHttp([]);
+      await expect(
+        executeScreenshotTool('listing__upload_screenshot', args, { http } as unknown as ScreenshotContext)
+      ).rejects.toThrow(/holds no image/);
+      expect(http.patch).not.toHaveBeenCalled();
+    } finally {
+      await rm(args.file_path, { force: true });
+    }
+  });
+
+  it('rejects a device size Apple does not have', async () => {
+    const { http } = fakeUploadHttp();
+    await expect(
+      executeScreenshotTool(
+        'listing__upload_screenshot',
+        { ...args, display_type: 'APP_IPHONE_99' },
+        { http } as unknown as ScreenshotContext
+      )
+    ).rejects.toThrow(/not a device size/);
+  });
+
+  it('dry-run resolves the target and sends nothing', async () => {
+    const { writeFile, rm } = await import('node:fs/promises');
+    await writeFile(args.file_path, Buffer.from('abc'));
+    try {
+      const { http, puts } = fakeUploadHttp();
+      const result: any = await executeScreenshotTool('listing__upload_screenshot', args, {
+        http,
+        dryRun: true,
+      } as unknown as ScreenshotContext);
+      expect(result.dryRun).toBe(true);
+      expect(result.wouldSend.path).toBe('/v1/appScreenshots');
+      expect(http.post).not.toHaveBeenCalled();
+      expect(http.patch).not.toHaveBeenCalled();
+      expect(puts).toEqual([]);
+    } finally {
+      await rm(args.file_path, { force: true });
+    }
   });
 });

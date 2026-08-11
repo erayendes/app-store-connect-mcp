@@ -1,0 +1,9 @@
+{
+  "name": "heimdall",
+  "version": "2.1.0",
+  "description": "The heimdall skill, packaged so `ax:agent --skill=.` can load it as an A/B arm without opening settingSources.",
+  "author": {
+    "name": "Eray Endes"
+  },
+  "homepage": "https://github.com/erayendes/asc-mcp"
+}

@@ -31,6 +31,7 @@ import {
   buildPricingPreview,
 } from './tools/pricing.js';
 import { SCREENSHOT_TOOLS, executeScreenshotTool } from './tools/screenshots.js';
+import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import {
@@ -209,7 +210,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * this cost" on a server built to answer questions would be the wrong kind of
    * safe.
    */
-  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS].filter(
+  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS].filter(
     (t) =>
       wantsFamily(`${t.name.split('__')[0]}__`) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
@@ -218,7 +219,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /** The macros that declare an outputSchema, so their result can be sent structured. */
   const READ_MACRO_NAMES = new Set(
-    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
   );
 
   const server = new Server(
@@ -238,7 +239,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS].find((t) => t.name === name);
+    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS].find((t) => t.name === name);
     if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
@@ -461,9 +462,19 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         const op = registry.get(name);
         const preview = PRICING_TOOL_NAMES.has(name)
           ? // Macro parameters are already human language — no lookups needed.
-            { message: buildPricingPreview(args), strong: true }
+            { message: buildPricingPreview(args, name), strong: true }
           : op
           ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
+          : macroOffered(name)
+          ? // Other write macros: no spec operation behind them, but their
+            // arguments are already the human-readable facts, so the generic
+            // preview renders them without any lookups.
+            await buildWritePreview(
+              name,
+              { method: 'POST', path: `${name} (macro)`, risk: 'public' },
+              args,
+              config.credentials.keyId
+            )
           : await buildWritePreview(
               name,
               // StoreKit tools live outside the spec; renewal-date extension is
@@ -585,7 +596,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       } else if (macroOffered(name)) {
         result = PRICING_TOOL_NAMES.has(name)
           ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
-          : await executeScreenshotTool(name, args, { http });
+          : ANALYTICS_TOOL_NAMES.has(name)
+          ? await executeAnalyticsTool(name, args, { http })
+          : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
         // payloads cannot: they are reshaped on the way out (stripApiNoise,

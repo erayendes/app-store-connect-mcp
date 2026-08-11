@@ -596,7 +596,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "analytics",
     "method": "POST",
     "path": "/v1/analyticsReportRequests",
-    "description": "Create an analytics report request.",
+    "description": "Ask Apple to start producing analytics for an app. ONE_TIME_SNAPSHOT covers the past 365 days; ONGOING keeps going as new data arrives. Nothing is downloadable straight away — a fresh request has no instances for a day or more.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -695,7 +695,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "analytics",
     "method": "GET",
     "path": "/v1/analyticsReportSegments/{id}",
-    "description": "Read one analytics report segment by ID.",
+    "description": "Read one segment: a short-lived signed URL plus its checksum and byte size. The rows are gzipped TSV at that URL — this response carries the link, not the data.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -5647,7 +5647,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AppStoreVersionBuildLinkageRequest",
-    "risk": "low"
+    "risk": "release"
   },
   {
     "name": "app_store_versions.create",
@@ -24082,7 +24082,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "POST",
     "path": "/v1/reviewSubmissionItems",
-    "description": "Create a review submission item.",
+    "description": "Put one thing into an open review submission — a version, an event, or another releasable item. One per call, so repeat it for each thing Apple should look at.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -24096,7 +24096,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "DELETE",
     "path": "/v1/reviewSubmissionItems/{id}",
-    "description": "Delete a review submission item.",
+    "description": "Take one item back out of a submission that has not been handed to Apple yet.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [
@@ -24127,7 +24127,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "POST",
     "path": "/v1/reviewSubmissions",
-    "description": "Submit an App Store version for Apple review. The version must already have a build attached.",
+    "description": "Submit an App Store version for Apple review — step 1 of 3, and this call alone does not send anything. It opens an empty submission for an app; put the version in it with review_submission_items__create, then set submitted on it.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -24183,7 +24183,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "GET",
     "path": "/v1/reviewSubmissions/{id}/items",
-    "description": "List the items belonging to a review submission.",
+    "description": "List what is inside a review submission and the state of each item, so you can check what Apple will actually look at before handing it over.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -24300,7 +24300,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "PATCH",
     "path": "/v1/reviewSubmissions/{id}",
-    "description": "Update a review submission.",
+    "description": "Hand an open submission to Apple by setting submitted to true, or take it back with canceled. This is the step that starts the queue; opening the submission and filling it does not.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [

@@ -1,3 +1,5 @@
+import type { RiskLevel } from './risk.js';
+
 /** Shape of a generated operation, emitted by scripts/generate.ts. */
 export interface Operation {
   /** Dotted tool name, e.g. `apps.builds.list`. */
@@ -22,9 +24,11 @@ export interface Operation {
   bodyRef?: string;
   /**
    * Risk classification for mutating operations (absent on reads). Assigned by
-   * the generator from the hand-reviewed manifest in src/core/risk.ts.
+   * the generator from the hand-reviewed manifest in src/core/risk.ts, whose
+   * union this borrows so a stray level fails the build instead of silently
+   * falling through every `risk === '...'` comparison.
    */
-  risk?: string;
+  risk?: RiskLevel;
   /**
    * Accept header the endpoint requires, when it is not JSON. Sales and finance
    * reports only serve `application/a-gzip` and answer 406 to anything else.

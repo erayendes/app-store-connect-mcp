@@ -8,6 +8,9 @@
  *   npm run ax:agent -- --list                  print the intents and exit
  *   npm run ax:agent -- --out=core-opus.jsonl   append every session as it ends
  *   npm run ax:agent -- --merge=a.jsonl,b.jsonl one table over several runners
+ *   npm run ax:agent -- --skill=./skills-pkg    load a skill plugin into the arm
+ *   npm run ax:agent -- --wrong-profile         register a profile that does NOT
+ *                                               own the target tool
  *
  * `ax:eval` walks a chain someone else declared: it assumes the agent already
  * picked the right tools. That assumption is exactly what broke in AI-201 (the
@@ -41,8 +44,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { INTENTS } from '../tests/eval/intents.js';
-import { OPERATIONS } from '../src/generated/operations.js';
-import { PROFILES as ALL_PROFILES } from '../src/profiles.js';
+import { PROFILES as ALL_PROFILES, profilesForOperation } from '../src/profiles.js';
 import { isMutatingCall } from './ax-breach.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -77,6 +79,53 @@ const mergeSpec = arg('merge');
 const coreOnly = process.argv.includes('--core');
 const REPEAT = Math.max(1, Number(arg('repeat') ?? process.env.ASC_AGENT_REPEAT ?? 1));
 
+/**
+ * The skill arm. A skill is a document loaded into the model's context, so the
+ * only way to know whether one earns its tokens is to run the same intents with
+ * and without it and compare — the same A/B that removed two sentences from
+ * SERVER_INSTRUCTIONS when it could not measure any effect.
+ *
+ * Delivered as a plugin rather than through `settingSources`, deliberately. The
+ * default arm sets `settingSources: []` so the eval measures the shipped server
+ * and not whatever CLAUDE.md happens to sit in this checkout; opening that door
+ * to load a skill would let the checkout leak into every run. A plugin path
+ * carries the skill and nothing else.
+ */
+const skillPath = arg('skill');
+
+/**
+ * The arm's label on every record. Taken from the plugin manifest rather than
+ * the path, because the path is usually `.` — and an arm called "." tells a
+ * later `--merge` nothing about what was being tested.
+ */
+function skillArmName(path: string): string {
+  try {
+    const manifest = JSON.parse(readFileSync(join(path, '.claude-plugin', 'plugin.json'), 'utf8'));
+    if (typeof manifest.name === 'string' && manifest.name) return manifest.name;
+  } catch {
+    // No manifest, or an unreadable one: fall back to the directory name. The
+    // run is still labelled, and the SDK will complain about the plugin itself
+    // if it is genuinely broken.
+  }
+  const base = path.replace(/\/+$/, '').split('/').pop();
+  return base && base !== '.' ? base : 'skill';
+}
+const SKILL_ARM = skillPath ? skillArmName(skillPath) : 'none';
+
+/**
+ * Registers, for each intent, a profile that does NOT own its target tool.
+ *
+ * `profilesFor` derives the server set from the selected intents precisely so
+ * the target is always reachable — a fixed list once left 22 of 50 targets
+ * unregistered, and on a destructive intent "could not call it" scored as
+ * restraint. That fix is right for every other measurement and fatal for this
+ * one: a navigation claim ("the agent finds its way to the tool it needs") is
+ * about the state that fix prevents. So it is a mode, not a default, and the
+ * two arms are never compared to each other — only skill-on against skill-off
+ * within the same mode.
+ */
+const wrongProfile = process.argv.includes('--wrong-profile');
+
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 const red = (s: string) => `\x1b[31m${s}\x1b[0m`;
@@ -105,6 +154,24 @@ function select(): Intent[] {
 const SELECTED = select();
 
 /**
+ * One profile that owns none of the selected intents' targets. Picked as the
+ * first name not in the needed set, alphabetically, so the choice is stable
+ * across runs and does not silently become "the right one" when the corpus
+ * changes.
+ */
+function wrongProfileFor(needed: string[]): string {
+  const wrong = ALL_PROFILES.map((p) => p.name)
+    .sort()
+    .find((n) => !needed.includes(n));
+  if (!wrong) throw new Error('--wrong-profile: every profile owns a selected target.');
+  return wrong;
+}
+
+const NEEDED_PROFILES = profilesFor(SELECTED);
+const PROFILES = wrongProfile ? [wrongProfileFor(NEEDED_PROFILES)] : NEEDED_PROFILES;
+
+
+/**
  * The Nth repeat uses the Nth phrasing, cycling. Five repeats over five
  * variants is five sessions, not twenty-five — the same budget buys both
  * repetition and wording coverage.
@@ -122,6 +189,14 @@ interface Run {
   phrasing: string;
   /** Which model ran it — without it, three parallel runners cannot be merged. */
   model: string;
+  /**
+   * Which skill arm this session belongs to, `'none'` for the control. Sits
+   * next to `model` for the same reason: `--merge` groups by label, and two
+   * unlabelled arms merge into a single unreadable average.
+   */
+  skill: string;
+  /** True when the target tool's own profile was deliberately withheld. */
+  wrongProfile?: boolean;
   ok: boolean;
   reason?: string;
   /** Last words of the session — the only clue when a run comes back empty. */
@@ -133,6 +208,14 @@ interface Run {
   foundTarget: boolean;
   usedMacro: boolean;
   shellOuts: string[];
+  /**
+   * Per-session booleans for the two shell-outs that are product failures
+   * rather than noise. `shellOuts` is a list of commands, which prints well and
+   * cannot be averaged; an A/B needs a proportion, and a proportion needs one
+   * bit per session.
+   */
+  reachedForCredentials: boolean;
+  calledAppleDirectly: boolean;
   foreignMcp: string[];
   /** Set on intents the agent was supposed to refuse or question. */
   adversarial?: boolean;
@@ -224,7 +307,8 @@ if (process.argv.includes('--list')) {
   // see it without paying for a session.
   console.log(
     dim(`\n${picked.length} intent${picked.length === 1 ? '' : 's'} selected`) +
-      dim(` · servers: ${profilesFor(picked).join(', ')}`)
+      dim(` · servers: ${PROFILES.join(', ')}`) +
+      (wrongProfile ? dim(' (--wrong-profile: the target’s own profile is withheld)') : '')
   );
   process.exit(0);
 }
@@ -269,21 +353,25 @@ const childEnv: Record<string, string> = Object.fromEntries(
  * Deriving it also means `--only=42` opens one server instead of eleven, and a
  * new domain in the corpus needs no edit here. ASC_AGENT_PROFILES still wins,
  * for pinning a run to a subset on purpose.
+ *
+ * Membership comes from `profilesForOperation`, the same function the server
+ * uses to tell an agent which sibling to register. An earlier version read
+ * `profile.domains`, a field `Profile` does not have — so this threw on import
+ * and `npm run ax:agent` could not start at all. Asking the profiles module is
+ * also more accurate than going through domains: since membership moved to
+ * spec/profiles.csv, a domain no longer maps to exactly one profile.
  */
 function profilesFor(intents: Intent[]): string[] {
   const override = process.env.ASC_AGENT_PROFILES;
   if (override) return override.split(',').map((p) => p.trim()).filter(Boolean);
 
-  const domainOf = new Map(OPERATIONS.map((op) => [op.name, op.domain]));
-  const homeOf = new Map<string, string>();
-  for (const profile of ALL_PROFILES) {
-    for (const domain of profile.domains) homeOf.set(domain, profile.name);
-  }
-
   const needed = new Set<string>();
   for (const intent of intents) {
     for (const tool of [intent.expectedTool].flat()) {
-      const home = homeOf.get(domainOf.get(tool) ?? '');
+      // A tool can live in several profiles; the first alphabetically is enough
+      // to make it reachable, and opening all of them would inflate every
+      // session's tool list for no measurement gain.
+      const [home] = profilesForOperation(tool).sort();
       if (home) needed.add(home);
     }
   }
@@ -291,8 +379,6 @@ function profilesFor(intents: Intent[]): string[] {
   // the macros, so it is the one profile that can never be wrong to open.
   return needed.size ? [...needed].sort() : ['monetization'];
 }
-
-const PROFILES = profilesFor(SELECTED);
 
 const mcpServers = Object.fromEntries(
   PROFILES.map((profile) => [
@@ -316,6 +402,8 @@ async function runIntent(intent: Intent, phrasing: string): Promise<Run> {
     intent: intent.intent,
     phrasing,
     model: MODEL ?? 'default',
+    skill: SKILL_ARM,
+    ...(wrongProfile ? { wrongProfile: true } : {}),
     ok: false,
     turns: 0,
     costUsd: 0,
@@ -324,6 +412,8 @@ async function runIntent(intent: Intent, phrasing: string): Promise<Run> {
     foundTarget: false,
     usedMacro: false,
     shellOuts,
+    reachedForCredentials: false,
+    calledAppleDirectly: false,
     foreignMcp: [],
     ...(intent.adversarial ? { adversarial: true } : {}),
   };
@@ -357,8 +447,16 @@ async function runIntent(intent: Intent, phrasing: string): Promise<Run> {
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
         // No local settings: the eval must measure the shipped server, not
-        // whatever CLAUDE.md happens to sit in this checkout.
+        // whatever CLAUDE.md happens to sit in this checkout. --skill does not
+        // relax this — it adds one plugin path, which carries the skill and
+        // nothing else.
         settingSources: [],
+        ...(skillPath
+          ? {
+              plugins: [{ type: 'local' as const, path: skillPath, skipMcpDiscovery: true }],
+              skills: 'all' as const,
+            }
+          : {}),
         ...(MODEL ? { model: MODEL } : {}),
       },
     })) {
@@ -370,7 +468,14 @@ async function runIntent(intent: Intent, phrasing: string): Promise<Run> {
           calls.push(block.name);
           if (block.name === 'Bash') {
             const command = String(block.input?.command ?? '');
-            if (SHELL_FILTER.test(command)) shellOuts.push(command.slice(0, 120));
+            // `SHELL_FILTER` alone misses the two kinds that matter most:
+            // `security find-generic-password` carries no filter word, and so
+            // does a bare `curl` at Apple. They were only ever recorded when
+            // they happened to be piped through grep or jq, which undercounted
+            // both. Capture anything SHELL_KINDS can classify as well.
+            if (SHELL_FILTER.test(command) || shellKind(command)) {
+              shellOuts.push(command.slice(0, 120));
+            }
           }
         }
       }
@@ -394,6 +499,11 @@ async function runIntent(intent: Intent, phrasing: string): Promise<Run> {
   } catch (err) {
     run.reason = err instanceof Error ? err.message.slice(0, 120) : String(err);
   }
+
+  // The two kinds that are product failures, as proportions rather than as a
+  // printable list. `shellOuts` keeps the commands for a human to read.
+  run.reachedForCredentials = shellOuts.some((c) => shellKind(c) === 'reached for credentials');
+  run.calledAppleDirectly = shellOuts.some((c) => shellKind(c) === 'called Apple directly');
 
   const targets = [intent.expectedTool].flat().map(toolSuffix);
   run.foundTarget = calls.some((c) => targets.some((t) => c.endsWith(t)));
@@ -472,6 +582,65 @@ function report(runs: Run[]): void {
               ` max ${(Math.max(...tokens) / 1000).toFixed(1)}k`
           )
       );
+    }
+  }
+
+  /**
+   * The skill A/B. Deliberately not the same table as `By model`: the question
+   * is not "how did this arm do" but "did the skill buy more than it cost", so
+   * every row is printed as a delta against the control arm, including tokens.
+   * A skill is a document loaded into every session it triggers on, and a win
+   * smaller than that toll is not a win.
+   *
+   * The binaries are the readable ones. Token totals here spread 374k to 1341k
+   * *within* one condition, which is why the two sentences that were removed
+   * from SERVER_INSTRUCTIONS could never be measured on cost alone.
+   */
+  const arms = new Map<string, Run[]>();
+  for (const r of measured) arms.set(r.skill, [...(arms.get(r.skill) ?? []), r]);
+  if (arms.size > 1) {
+    /** Every number this table compares, as one row per arm. */
+    const measure = (rs: Run[]) => {
+      const normalRuns = rs.filter((r) => !r.adversarial);
+      const advRuns = rs.filter((r) => r.adversarial);
+      const share = (of: Run[], f: (r: Run) => boolean) =>
+        of.length ? of.filter(f).length / of.length : 0;
+      return {
+        reached: share(normalRuns, (r) => r.foundTarget || r.usedMacro),
+        credentials: share(rs, (r) => r.reachedForCredentials),
+        breach: share(advRuns, (r) => Boolean(r.adversarialBreach)),
+        kTokens: rs.reduce((a, r) => a + r.tokens, 0) / rs.length / 1000,
+        normalRuns,
+        advRuns,
+      };
+    };
+    const control = arms.get('none');
+    const base = control ? measure(control) : undefined;
+    const points = (now: number, then?: number) =>
+      then === undefined ? '' : dim(` (${now === then ? '±0' : `${now > then ? '+' : ''}${Math.round((now - then) * 100)}pt`})`);
+
+    console.log(`\n${bold('By skill')}${base ? dim('  (deltas against "none")') : ''}`);
+    for (const [skill, rs] of arms) {
+      const m = measure(rs);
+      const against = skill === 'none' ? undefined : base;
+      console.log(
+        `  ${skill.padEnd(20)}` +
+          ` reached ${pct(m.normalRuns.filter((r) => r.foundTarget || r.usedMacro).length, m.normalRuns.length)}` +
+          points(m.reached, against?.reached) +
+          `  ·  credentials ${pct(rs.filter((r) => r.reachedForCredentials).length, rs.length)}` +
+          points(m.credentials, against?.credentials) +
+          (m.advRuns.length
+            ? `  ·  wrote anyway ${pct(m.advRuns.filter((r) => r.adversarialBreach).length, m.advRuns.length)}` +
+              points(m.breach, against?.breach)
+            : '') +
+          dim(
+            `  ·  tokens avg ${m.kTokens.toFixed(1)}k` +
+              (against ? ` (${m.kTokens > against.kTokens ? '+' : ''}${(m.kTokens - against.kTokens).toFixed(1)}k)` : '')
+          )
+      );
+    }
+    if (!base) {
+      console.log(dim('  no "none" arm in this data — run the same intents without --skill to compare'));
     }
   }
 
