@@ -462,7 +462,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         const op = registry.get(name);
         const preview = PRICING_TOOL_NAMES.has(name)
           ? // Macro parameters are already human language — no lookups needed.
-            { message: buildPricingPreview(args), strong: true }
+            { message: buildPricingPreview(args, name), strong: true }
           : op
           ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
           : macroOffered(name)

@@ -283,7 +283,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "subscription-pricing",
       operations: ["apps.subscription_groups.list","subscription_groups.subscriptions.list","subscription_offer_codes.prices.list","subscription_price_points.adjusted_equalizations.list","subscription_price_points.equalizations.list","subscription_price_points.get","subscription_prices.create","subscription_prices.delete","subscription_promotional_offers.prices.list","subscriptions.get","subscriptions.price_points.list","subscriptions.prices.list","subscriptions.prices.remove","win_back_offers.prices.list"],
-      manualTools: ["pricing__get_subscription_price","pricing__set_subscription_price"],
+      manualTools: ["pricing__equalize_price","pricing__get_subscription_price","pricing__set_subscription_price"],
       rootResources: ["(makro)","apps","subscription_groups","subscription_offer_codes","subscription_price_points","subscription_prices","subscription_promotional_offers","subscriptions","win_back_offers"],
     },
     ],

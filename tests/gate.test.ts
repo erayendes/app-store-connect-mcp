@@ -29,6 +29,8 @@ import { dirname, join } from 'node:path';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 import { PRICING_TOOLS } from '../src/tools/pricing.js';
+import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
+import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
 import { STRONG_CONFIRM_LEVELS, type RiskLevel } from '../src/core/risk.js';
@@ -88,8 +90,20 @@ describe('write-gate annotations (offline)', () => {
       'storekit__extend_renewal_date',
       'storekit__request_test_notification',
       'pricing__set_subscription_price',
+      'pricing__equalize_price',
+      'listing__upload_screenshot',
     ]);
-    const wrong = [...STOREKIT_TOOLS, ...PRICING_TOOLS, ...REVIEWS_AI_TOOLS, ...META_TOOLS]
+    // The listing and analytics families were outside this check until the
+    // upload macro made one of them a write — an unchecked family is exactly
+    // where a mislabelled write hides.
+    const wrong = [
+      ...STOREKIT_TOOLS,
+      ...PRICING_TOOLS,
+      ...REVIEWS_AI_TOOLS,
+      ...META_TOOLS,
+      ...SCREENSHOT_TOOLS,
+      ...ANALYTICS_TOOLS,
+    ]
       .filter((t) => shouldWrite.has(t.name) === (t.annotations?.readOnlyHint === true))
       .map((t) => t.name);
     expect(wrong, 'hand-written tools whose readOnlyHint contradicts what they do').toEqual([]);

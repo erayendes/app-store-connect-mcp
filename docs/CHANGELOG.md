@@ -14,6 +14,23 @@ Every mutating operation already carried a hand-reviewed risk level, but it only
 - **`destructiveHint` now means what MCP says it means**, "may perform destructive updates", not "is a DELETE". **Clients that gate on this hint will ask for approval on more tools than before.**
 - `app_store_versions__build__set` was classified `low` because the release rule matched only `create|update`. Swapping the binary under a version is a release step.
 
+#### `pricing__equalize_price` — one anchor price, every country derived by Apple
+For an app, an in-app purchase or a subscription. Give the anchor territory and the price; Apple's own currency and tax maths decides every other market. The number is never copied across currencies, because it cannot be — anchored at 3.99 TRY, Apple returns 0.99 USD for Afghanistan and 2.99 AED for the UAE.
+
+The three product types do not share a write model, and the macro does not pretend otherwise:
+
+| Product | Writes | Who equalizes |
+| -- | -- | -- |
+| App price | 1 (`appPriceSchedules`) | Apple, from `baseTerritory` |
+| In-app purchase | 1 (`inAppPurchasePriceSchedules`) | Apple, from `baseTerritory` |
+| Subscription | ~175, one per country | us, from the equalizations endpoint |
+
+`subscriptionPrices` has no base territory, so that path reads Apple's equalizations and then writes each country separately. It writes the anchor **first**, so a failure part-way leaves the country you actually named already set; it stops at the first error rather than spreading an unknown state, and the result names exactly which countries landed, which one failed, and how many are untouched. Re-running is safe — setting a price that is already set changes nothing.
+
+`preserve_current_price` is required for subscriptions, as on the single-territory macro, and the confirmation prompt spells out that "existing subscribers WILL be moved" now means worldwide. Apps and in-app purchases have no subscribers and do not ask.
+
+Run it under `--dry-run` first: the subscription path returns the full derived table before anything is sent.
+
 #### `pricing__get_subscription_price` answers "in every country", not just one
 `territory` was required, so the macro could only ever answer about one country. Asked "what does this subscription cost in each country?", a live eval session called the macro, found it did not answer the question, walked the raw chain instead, and spent 1.02M tokens and $3 writing the result to a CSV alongside a hand-written country-name dictionary in Python.
 
@@ -169,6 +186,23 @@ Her mutasyon operasyonu zaten elle gözden geçirilmiş bir risk seviyesi taşı
 - Seviye artık HTTP metodunun gösteremediği ~120 operasyonun açıklamasında, `REVENUE-level write.` biçiminde görünüyor. Tipik sekiz sunuculuk bir kurulumda 443 token — araç tanımlarının %0,35'i.
 - **`destructiveHint` artık MCP'nin söylediği anlama geliyor**: "yıkıcı güncelleme yapabilir", "DELETE'tir" değil. **Bu ipucuna göre onay isteyen istemciler eskisinden daha fazla araçta soracak.**
 - `app_store_versions__build__set`, release kuralı yalnızca `create|update` ile eşleştiği için `low` sayılıyordu. Bir sürümün altındaki binary'yi değiştirmek bir yayın adımıdır.
+
+#### `pricing__equalize_price` — tek çapa fiyat, her ülkeyi Apple türetiyor
+Uygulama, uygulama içi satın alma veya abonelik için. Çapa ülkeyi ve fiyatı verirsiniz; her pazarın karşılığını Apple'ın kendi kur ve vergi matematiği belirler. Sayı asla para birimleri arasında kopyalanmaz, çünkü kopyalanamaz — 3,99 TRY çapasında Apple Afganistan için 0,99 USD, BAE için 2,99 AED döndürüyor.
+
+Üç ürün tipinin yazma modeli aynı değil ve makro bunu gizlemiyor:
+
+| Ürün | Yazma | Equalization'ı yapan |
+| -- | -- | -- |
+| Uygulama fiyatı | 1 (`appPriceSchedules`) | Apple, `baseTerritory`'den |
+| Uygulama içi satın alma | 1 (`inAppPurchasePriceSchedules`) | Apple, `baseTerritory`'den |
+| Abonelik | ~175, ülke başına bir tane | biz, equalizations ucundan |
+
+`subscriptionPrices` bir temel ülke kavramı taşımıyor; bu yüzden o yol Apple'ın equalization'larını okuyup her ülkeyi ayrı yazıyor. Çapayı **önce** yazıyor, böylece yarıda kalan bir hata kullanıcının asıl belirttiği ülkeyi ayarlanmış bırakıyor; ilk hatada duruyor, bilinmeyen bir durumu ülkelere yaymıyor, ve sonuç hangi ülkelerin yazıldığını, hangisinde durulduğunu ve kaçının dokunulmadan kaldığını tam olarak söylüyor. Yeniden çalıştırmak güvenli — zaten ayarlı bir fiyatı yazmak hiçbir şeyi değiştirmiyor.
+
+Abonelikler için `preserve_current_price` zorunlu, tek-ülke makrosundaki gibi; onay ekranı da "mevcut aboneler taşınacak" ifadesinin artık dünya çapında olduğunu açıkça yazıyor. Uygulama ve IAP'ların abonesi yok, sormuyorlar.
+
+Önce `--dry-run` ile çalıştırın: abonelik yolu hiçbir şey gönderilmeden önce türetilmiş tablonun tamamını döndürüyor.
 
 #### `pricing__get_subscription_price` artık "her ülkede" sorusunu da cevaplıyor
 `territory` zorunluydu, yani makro yalnızca tek bir ülkeyi cevaplayabiliyordu. "Bu abonelik her ülkede ne kadar?" diye sorulan canlı bir değerlendirme oturumu makroyu çağırdı, sorunun cevabını bulamadı, ham zinciri yürüdü ve sonucu bir CSV'ye yazıp yanına Python'da elle ülke adı sözlüğü üreterek 1,02M token ve 3 dolar harcadı.

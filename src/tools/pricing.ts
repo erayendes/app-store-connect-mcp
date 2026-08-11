@@ -61,6 +61,63 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
     annotations: { readOnlyHint: false, idempotentHint: false },
   },
   {
+    name: 'pricing__equalize_price',
+    description:
+      'Set one anchor price and let Apple derive the equivalent price in every other ' +
+      'country, for an app, an in-app purchase or a subscription. Give the app, which kind ' +
+      'of product, the anchor territory (e.g. TUR) and the price (e.g. "99.99"). Apple\'s ' +
+      'own currency and tax maths decides each market — a price is NOT copied across ' +
+      'currencies, because 4.99 USD is not 4.99 EUR. REVENUE-level write covering about 175 ' +
+      'countries; run it under --dry-run first to see the full derived table.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: {
+          type: 'string',
+          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
+        },
+        product_type: {
+          type: 'string',
+          description:
+            'What is being priced. "app" is the app\'s own purchase price, not anything ' +
+            'inside it.',
+          enum: ['app', 'subscription', 'in_app_purchase'],
+        },
+        product: {
+          type: 'string',
+          description:
+            'Product ID or reference name of the subscription or in-app purchase. Not used ' +
+            'when product_type is "app".',
+        },
+        territory: {
+          type: 'string',
+          description:
+            'The anchor country whose price you are setting, three letters (ISO-3166 ' +
+            'alpha-3): TUR, USA, DEU. Every other country is derived from it.',
+        },
+        price: {
+          type: 'string',
+          description:
+            'Customer price in the anchor territory\'s currency, e.g. "99.99". Must match an ' +
+            'Apple price point exactly; the nearest available are suggested if it does not.',
+        },
+        preserve_current_price: {
+          type: 'boolean',
+          description:
+            'Subscriptions only, and REQUIRED for them: true = existing subscribers keep ' +
+            'their current price; false = they WILL be moved to the new one, in every ' +
+            'country. Ask the user if unsure.',
+        },
+        start_date: {
+          type: 'string',
+          description: 'Optional start date (YYYY-MM-DD). Omit to apply as soon as possible.',
+        },
+      },
+      required: ['app', 'product_type', 'territory', 'price'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
+  {
     name: 'pricing__get_subscription_price',
     description:
       'What a subscription costs customers today — in one country, or in every country at ' +
@@ -289,8 +346,38 @@ async function resolvePricePoint(
  * Human-language preview for the confirmation prompt — the parameters already
  * carry the meaning, no reference resolution needed.
  */
-export function buildPricingPreview(args: Record<string, unknown>): string {
+export function buildPricingPreview(args: Record<string, unknown>, toolName?: string): string {
   const preserve = args.preserve_current_price === true;
+
+  if (toolName === 'pricing__equalize_price') {
+    const kind = String(args.product_type ?? '?');
+    const isSub = kind === 'subscription';
+    return [
+      `Heimdall is about to set a price in EVERY COUNTRY — a REVENUE-level write.`,
+      '',
+      `App:          ${String(args.app ?? '?')}`,
+      `Product:      ${kind}${args.product ? ` — ${String(args.product)}` : ''}`,
+      `Anchor:       ${normalizePrice(String(args.price ?? '?'))} in ${String(args.territory ?? '?').toUpperCase()}`,
+      // The number is not what travels, and someone approving this has to know
+      // that before they read "99.99" and picture 99.99 everywhere.
+      `Other markets: derived by Apple from the anchor — each country gets its own`,
+      `              currency and tier, NOT the same number.`,
+      ...(args.start_date ? [`Starts:       ${String(args.start_date)}`] : []),
+      isSub
+        ? `Scope:        about 175 countries, one write each.`
+        : `Scope:        about 175 countries in a single schedule.`,
+      ...(isSub
+        ? [
+            preserve
+              ? `Subscribers:  existing subscribers keep their current price.`
+              : `Subscribers:  ⚠ existing subscribers WILL be moved to the new price, worldwide.`,
+          ]
+        : []),
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n');
+  }
+
   return [
     `Heimdall is about to change a subscription price — a REVENUE-level write.`,
     '',
@@ -498,6 +585,8 @@ export async function executePricingTool(
     return { app: `${app.name} (${app.id})`, territory: scope, prices };
   }
 
+  if (name === 'pricing__equalize_price') return equalizePrice(args, ctx);
+
   if (name !== 'pricing__set_subscription_price') {
     throw new Error(`Unknown pricing tool: ${name}`);
   }
@@ -563,5 +652,329 @@ export async function executePricingTool(
     note:
       'Price change submitted. Apple applies it per its own schedule; check ' +
       'subscriptions__prices__list to see current and scheduled prices.',
+  };
+}
+
+/**
+ * Equalization — one anchor price, every other country derived by Apple.
+ *
+ * The three product types do not share a write model, and flattening that
+ * difference would be lying about the blast radius:
+ *
+ *   app, in-app purchase   ONE POST. `appPriceSchedules` and
+ *                          `inAppPurchasePriceSchedules` take a `baseTerritory`,
+ *                          and Apple derives every other territory itself.
+ *   subscription           `subscriptionPrices` has no base territory. Each
+ *                          country is its own POST, so this path reads the
+ *                          equalizations endpoint and then writes ~175 times.
+ *
+ * What is never done is arithmetic on the number. Apple's equalizations endpoint
+ * answers with a real price point per territory — 3.99 TRY anchors to 0.99 USD
+ * in Afghanistan and 2.99 AED in the UAE — and copying "3.99" across currencies
+ * would invent prices that do not exist as tiers.
+ */
+
+interface PricePoint {
+  id: string;
+  customerPrice: string;
+}
+
+/** Shared shape for "find the tier matching this price in this territory". */
+async function findPricePoint(
+  http: AscHttpClient,
+  path: string,
+  territory: string,
+  price: string,
+  what: string
+): Promise<PricePoint> {
+  const target = Number(normalizePrice(price));
+  const { items } = await http.collect<any>(
+    path,
+    { 'filter[territory]': territory, limit: 200 },
+    10
+  );
+  const points = items.map((p: any) => ({
+    id: String(p.id),
+    customerPrice: String(p.attributes?.customerPrice ?? ''),
+    value: Number(p.attributes?.customerPrice),
+  }));
+  const exact = points.find((p) => p.value === target);
+  if (exact) return exact;
+
+  const sorted = points.filter((p) => Number.isFinite(p.value)).sort((a, b) => a.value - b.value);
+  const below = [...sorted].reverse().find((p) => p.value < target);
+  const above = sorted.find((p) => p.value > target);
+  const nearest = [below?.customerPrice, above?.customerPrice].filter(Boolean).join(', ');
+  throw new AscApiError(
+    `${normalizePrice(price)} is not an available Apple price point for ${what} in ` +
+      `${territory}${nearest ? `; nearest available: ${nearest}` : ''}. Apple only allows ` +
+      `prices from its fixed tiers.`,
+    0
+  );
+}
+
+/** The in-app purchase matching a product ID or reference name. */
+async function resolveIap(
+  http: AscHttpClient,
+  appId: string,
+  wanted: string
+): Promise<{ id: string; name: string; productId: string }> {
+  const { items } = await http.collect<any>(
+    `/v1/apps/${encodeURIComponent(appId)}/inAppPurchasesV2`,
+    { limit: 200 },
+    5
+  );
+  const iaps = items.map((i: any) => ({
+    id: String(i.id),
+    name: String(i.attributes?.name ?? ''),
+    productId: String(i.attributes?.productId ?? ''),
+  }));
+  const needle = wanted.trim().toLowerCase();
+  const match =
+    iaps.find((i) => i.productId.toLowerCase() === needle) ??
+    iaps.find((i) => i.name.toLowerCase() === needle) ??
+    iaps.find((i) => i.productId.toLowerCase().includes(needle)) ??
+    iaps.find((i) => i.name.toLowerCase().includes(needle));
+  if (!match) {
+    throw new AscApiError(
+      `No in-app purchase matching "${wanted}" in this app. Available: ` +
+        `${iaps.map((i) => `${i.productId} ("${i.name}")`).join(', ') || 'none'}.`,
+      0
+    );
+  }
+  return match;
+}
+
+/**
+ * A schedule write covers every territory in one request, so the "included"
+ * price is the anchor and `baseTerritory` tells Apple what to derive from.
+ * Apple's own model: territories absent from `manualPrices` follow the base.
+ */
+function scheduleBody(
+  kind: 'app' | 'iap',
+  productId: string,
+  territory: string,
+  pricePointId: string,
+  startDate?: string
+): unknown {
+  const isApp = kind === 'app';
+  const priceType = isApp ? 'appPrices' : 'inAppPurchasePrices';
+  const pointType = isApp ? 'appPricePoints' : 'inAppPurchasePricePoints';
+  const owner = isApp ? 'app' : 'inAppPurchase';
+  const ownerType = isApp ? 'apps' : 'inAppPurchases';
+  // A client-supplied placeholder id, which is how JSON:API links a resource
+  // being created in the same request. Apple replaces it.
+  const ref = '${price-anchor}';
+
+  return {
+    data: {
+      type: isApp ? 'appPriceSchedules' : 'inAppPurchasePriceSchedules',
+      relationships: {
+        [owner]: { data: { type: ownerType, id: productId } },
+        baseTerritory: { data: { type: 'territories', id: territory } },
+        manualPrices: { data: [{ type: priceType, id: ref }] },
+      },
+    },
+    included: [
+      {
+        type: priceType,
+        id: ref,
+        attributes: { startDate: startDate ?? null, endDate: null },
+        relationships: {
+          ...(isApp ? {} : { inAppPurchaseV2: { data: { type: ownerType, id: productId } } }),
+          [isApp ? 'appPricePoint' : 'inAppPurchasePricePoint']: {
+            data: { type: pointType, id: pricePointId },
+          },
+        },
+      },
+    ],
+  };
+}
+
+async function equalizePrice(
+  args: Record<string, unknown>,
+  ctx: PricingContext
+): Promise<unknown> {
+  for (const field of ['app', 'product_type', 'territory', 'price'] as const) {
+    if (!args[field] || typeof args[field] !== 'string') {
+      throw new AscApiError(`"${field}" is required.`, 0);
+    }
+  }
+  const kind = String(args.product_type);
+  if (!['app', 'subscription', 'in_app_purchase'].includes(kind)) {
+    throw new AscApiError(
+      `"${kind}" is not a product type. One of: app, subscription, in_app_purchase.`,
+      0
+    );
+  }
+  if (kind !== 'app' && (!args.product || typeof args.product !== 'string')) {
+    throw new AscApiError(`"product" is required when product_type is "${kind}".`, 0);
+  }
+  const territory = String(args.territory).trim().toUpperCase();
+  if (territory.length !== 3) {
+    throw new AscApiError(
+      `"${args.territory}" is not a territory code. Apple wants three letters (ISO-3166 ` +
+        `alpha-3): USA, TUR, DEU — not US, TR, DE.`,
+      0
+    );
+  }
+  // Subscriptions are the only type with existing subscribers to move, and the
+  // decision is theirs to surface — same rule as the single-territory macro,
+  // except here it lands in every country at once.
+  if (kind === 'subscription' && typeof args.preserve_current_price !== 'boolean') {
+    throw new AscApiError(
+      '"preserve_current_price" is required for subscriptions: true keeps existing ' +
+        'subscribers on their current price, false moves them to the new one in every ' +
+        'country. Ask the user which they want.',
+      0
+    );
+  }
+
+  const app = await resolveApp(ctx.http, String(args.app));
+  const startDate = args.start_date ? String(args.start_date) : undefined;
+  const price = normalizePrice(String(args.price));
+
+  if (kind === 'app' || kind === 'in_app_purchase') {
+    const isApp = kind === 'app';
+    const product = isApp
+      ? { id: app.id, name: app.name, productId: app.name }
+      : await resolveIap(ctx.http, app.id, String(args.product));
+    const point = await findPricePoint(
+      ctx.http,
+      isApp
+        ? `/v1/apps/${encodeURIComponent(app.id)}/appPricePoints`
+        : `/v2/inAppPurchases/${encodeURIComponent(product.id)}/pricePoints`,
+      territory,
+      price,
+      isApp ? 'this app' : `"${product.productId}"`
+    );
+    const body = scheduleBody(isApp ? 'app' : 'iap', product.id, territory, point.id, startDate);
+    const resolved = {
+      app: `${app.name} (${app.id})`,
+      productType: kind,
+      product: isApp ? app.name : `${product.name} (${product.productId})`,
+      anchor: `${point.customerPrice} (${territory})`,
+      writes: 1,
+      note:
+        'One schedule covers every territory: Apple derives the rest from the base ' +
+        'territory, so no per-country price is sent.',
+    };
+    if (ctx.dryRun) {
+      return {
+        dryRun: true,
+        note: 'Dry-run mode: fully resolved, nothing sent to Apple.',
+        resolved,
+        wouldSend: {
+          method: 'POST',
+          path: isApp ? '/v1/appPriceSchedules' : '/v1/inAppPurchasePriceSchedules',
+          body,
+        },
+        risk: 'revenue',
+      };
+    }
+    await ctx.http.post(isApp ? '/v1/appPriceSchedules' : '/v1/inAppPurchasePriceSchedules', body);
+    return { ok: true, changed: resolved };
+  }
+
+  // --- subscriptions: no base territory, so one write per country -----------
+  const sub = await resolveSubscription(ctx.http, app.id, String(args.product));
+  const anchor = await findPricePoint(
+    ctx.http,
+    `/v1/subscriptions/${encodeURIComponent(sub.id)}/pricePoints`,
+    territory,
+    price,
+    `"${sub.productId}"`
+  );
+
+  const { items } = await ctx.http.collect<any>(
+    `/v1/subscriptionPricePoints/${encodeURIComponent(anchor.id)}/equalizations`,
+    { include: 'territory', limit: 200 },
+    5
+  );
+  const derived = items
+    .map((p: any) => ({
+      pointId: String(p.id),
+      territory: String(p.relationships?.territory?.data?.id ?? ''),
+      customerPrice: String(p.attributes?.customerPrice ?? ''),
+    }))
+    .filter((p: { territory: string }) => p.territory && p.territory !== territory);
+
+  // The anchor goes first, deliberately. If a later write fails, the country
+  // the user actually named is already set rather than left behind.
+  const plan = [
+    { pointId: anchor.id, territory, customerPrice: anchor.customerPrice },
+    ...derived,
+  ];
+
+  const resolved = {
+    app: `${app.name} (${app.id})`,
+    productType: kind,
+    product: `${sub.name} (${sub.productId})`,
+    anchor: `${anchor.customerPrice} (${territory})`,
+    preserveCurrentPrice: args.preserve_current_price,
+    ...(startDate ? { startDate } : {}),
+    countries: plan.length,
+    writes: plan.length,
+  };
+
+  const bodyFor = (row: { pointId: string }) => ({
+    data: {
+      type: 'subscriptionPrices',
+      attributes: {
+        preserveCurrentPrice: args.preserve_current_price,
+        ...(startDate ? { startDate } : {}),
+      },
+      relationships: {
+        subscription: { data: { type: 'subscriptions', id: sub.id } },
+        subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: row.pointId } },
+      },
+    },
+  });
+
+  if (ctx.dryRun) {
+    return {
+      dryRun: true,
+      note:
+        `Dry-run mode: fully resolved, nothing sent to Apple. This would be ` +
+        `${plan.length} separate writes — subscriptions have no base territory.`,
+      resolved,
+      derivedPrices: plan.map((p) => `${p.territory}: ${p.customerPrice}`),
+      wouldSend: { method: 'POST', path: '/v1/subscriptionPrices', body: bodyFor(plan[0]) },
+      risk: 'revenue',
+    };
+  }
+
+  // Sequential, and it stops at the first failure. Carrying on would spread an
+  // unknown state across the remaining countries; stopping leaves a partial one
+  // that the result below names exactly, so it can be resumed or reverted.
+  const written: string[] = [];
+  for (const row of plan) {
+    try {
+      await ctx.http.post('/v1/subscriptionPrices', bodyFor(row));
+      written.push(row.territory);
+    } catch (err) {
+      return {
+        ok: false,
+        partial: true,
+        changed: { ...resolved, writes: written.length },
+        written,
+        failedAt: row.territory,
+        remaining: plan.length - written.length,
+        error: (err as Error).message,
+        note:
+          `Stopped at ${row.territory}. The ${written.length} listed above are set; the ` +
+          `remaining ${plan.length - written.length} are unchanged. Fix the cause and run ` +
+          `again — writing a price that is already set is harmless.`,
+      };
+    }
+  }
+
+  return {
+    ok: true,
+    changed: resolved,
+    written: written.length,
+    note:
+      'Apple applies each change on its own schedule; check with ' +
+      'pricing__get_subscription_price (omit the territory) to see them worldwide.',
   };
 }
