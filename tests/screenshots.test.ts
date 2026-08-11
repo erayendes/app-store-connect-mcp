@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   SCREENSHOT_TOOLS,
   executeScreenshotTool,
@@ -175,7 +177,10 @@ describe('listing__upload_screenshot', () => {
     app: 'Ask Quran',
     locale: 'en-US',
     display_type: 'APP_IPHONE_67',
-    file_path: '/private/tmp/heimdall-upload-test.png',
+    // tmpdir(), not a literal: `/private/tmp` is macOS's real path behind the
+    // /tmp symlink and does not exist on Linux, so these three passed on the
+    // author's machine and failed every CI runner.
+    file_path: join(tmpdir(), 'heimdall-upload-test.png'),
   };
 
   it('reserves, uploads every slice at Apple’s offsets, then commits the MD5', async () => {
@@ -224,7 +229,7 @@ describe('listing__upload_screenshot', () => {
     await expect(
       executeScreenshotTool(
         'listing__upload_screenshot',
-        { ...args, file_path: '/private/tmp/heimdall-does-not-exist.png' },
+        { ...args, file_path: join(tmpdir(), 'heimdall-does-not-exist.png') },
         { http } as unknown as ScreenshotContext
       )
     ).rejects.toThrow(/Cannot read/);
