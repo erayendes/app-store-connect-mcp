@@ -14,6 +14,13 @@ Every mutating operation already carried a hand-reviewed risk level, but it only
 - **`destructiveHint` now means what MCP says it means**, "may perform destructive updates", not "is a DELETE". **Clients that gate on this hint will ask for approval on more tools than before.**
 - `app_store_versions__build__set` was classified `low` because the release rule matched only `create|update`. Swapping the binary under a version is a release step.
 
+#### Documentation
+The README advertised **868 tools** and "nine hand-written tools". Both were already wrong before this release — the count of hand-written tools left out the `reviews_ai__*` and `storekit__*` families entirely. It is 859 reachable operations plus 24 hand-written tools, 883 in total.
+
+Three profile counts in the guide moved with this release: `analytics` 23 → 24, `distribution` 127 → 129, `monetization` 204 → 206.
+
+`AGENTS.md` described `destructiveHint` as meaning deletes, which stopped being true in this release, and now points at the `heimdall` skill as the copy of itself that reaches users who install through `npx` and have no checkout. The guide gained a table of the macros, which had never been documented outside the changelog.
+
 #### `pricing__equalize_price` — one anchor price, every country derived by Apple
 For an app, an in-app purchase or a subscription. Give the anchor territory and the price; Apple's own currency and tax maths decides every other market. The number is never copied across currencies, because it cannot be — anchored at 3.99 TRY, Apple returns 0.99 USD for Afghanistan and 2.99 AED for the UAE.
 
@@ -186,6 +193,13 @@ Her mutasyon operasyonu zaten elle gözden geçirilmiş bir risk seviyesi taşı
 - Seviye artık HTTP metodunun gösteremediği ~120 operasyonun açıklamasında, `REVENUE-level write.` biçiminde görünüyor. Tipik sekiz sunuculuk bir kurulumda 443 token — araç tanımlarının %0,35'i.
 - **`destructiveHint` artık MCP'nin söylediği anlama geliyor**: "yıkıcı güncelleme yapabilir", "DELETE'tir" değil. **Bu ipucuna göre onay isteyen istemciler eskisinden daha fazla araçta soracak.**
 - `app_store_versions__build__set`, release kuralı yalnızca `create|update` ile eşleştiği için `low` sayılıyordu. Bir sürümün altındaki binary'yi değiştirmek bir yayın adımıdır.
+
+#### Dokümantasyon
+README **868 araç** ve "elle yazılmış dokuz araç" diyordu. İkisi de bu sürümden önce zaten yanlıştı — elle yazılmış araç sayısı `reviews_ai__*` ve `storekit__*` ailelerini hiç saymıyordu. Doğrusu: erişilebilir 859 işlem artı elle yazılmış 24 araç, toplam 883.
+
+Bu sürümle birlikte kılavuzdaki üç profil sayısı değişti: `analytics` 23 → 24, `distribution` 127 → 129, `monetization` 204 → 206.
+
+`AGENTS.md`, `destructiveHint`'i silme işlemleri olarak tarif ediyordu; bu sürümde doğru olmaktan çıktı. Artık `npx` ile kuran ve checkout'u olmayan kullanıcılara ulaşan kopyası olarak `heimdall` skill'ine işaret ediyor. Kılavuza, changelog dışında hiç belgelenmemiş olan makroların tablosu eklendi.
 
 #### `pricing__equalize_price` — tek çapa fiyat, her ülkeyi Apple türetiyor
 Uygulama, uygulama içi satın alma veya abonelik için. Çapa ülkeyi ve fiyatı verirsiniz; her pazarın karşılığını Apple'ın kendi kur ve vergi matematiği belirler. Sayı asla para birimleri arasında kopyalanmaz, çünkü kopyalanamaz — 3,99 TRY çapasında Apple Afganistan için 0,99 USD, BAE için 2,99 AED döndürüyor.
