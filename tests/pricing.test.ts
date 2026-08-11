@@ -306,12 +306,32 @@ describe('pricing__get_subscription_price worldwide', () => {
       proceeds: '4.24',
       countries: 3,
       territories: ['AFG', 'AIA', 'ATG'],
+      countryNames: ['Afghanistan', 'Anguilla', 'Antigua and Barbuda'],
     });
     // Same number, different currency, so a different group — 5.99 EUR is not
     // 5.99 USD and collapsing them would invent a price.
     const currencies = sub.byPrice.map((g: any) => `${g.customerPrice} ${g.currency}`);
     expect(currencies).toContain('19.99 AED');
     expect(currencies).toContain('5.99 EUR');
+  });
+
+  // Two parallel arrays are only useful while they line up, and nothing in the
+  // type system holds them together. Apple returns no country name at all, so a
+  // wrong pairing here is a wrong answer nobody can cross-check.
+  it('keeps countryNames index-aligned with territories in every group', async () => {
+    const result: any = await run({ app: 'Ask Quran' }, worldwideHttp());
+    const expected: Record<string, string> = {
+      AFG: 'Afghanistan',
+      AIA: 'Anguilla',
+      ATG: 'Antigua and Barbuda',
+      ARE: 'United Arab Emirates',
+    };
+    for (const group of result.prices[0].byPrice) {
+      expect(group.countryNames).toHaveLength(group.territories.length);
+      group.territories.forEach((code: string, i: number) => {
+        if (expected[code]) expect(group.countryNames[i]).toBe(expected[code]);
+      });
+    }
   });
 
   it('counts future-dated prices instead of showing today’s customers a price they do not pay', async () => {
@@ -326,6 +346,7 @@ describe('pricing__get_subscription_price worldwide', () => {
     const http = worldwideHttp();
     const result: any = await run({ app: 'Ask Quran', territory: 'TUR' }, http);
     expect(result.territory).toBe('TUR');
+    expect(result.country).toBe('Türkiye');
     expect(http.priceQueries[0]['filter[territory]']).toBe('TUR');
     // Single-country mode keeps the old flat shape, not the grouped one.
     expect(result.prices[0].byPrice).toBeUndefined();

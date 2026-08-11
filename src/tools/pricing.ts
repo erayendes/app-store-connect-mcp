@@ -15,6 +15,7 @@
 import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
+import { TERRITORY_NAMES } from '../core/territory-names.js';
 
 export const PRICING_TOOLS: McpToolDefinition[] = [
   {
@@ -159,6 +160,10 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
           type: 'string',
           description: 'The country asked about, or "worldwide" when none was given.',
         },
+        country: {
+          type: ['string', 'null'],
+          description: 'Single-country mode only. That territory\'s English name.',
+        },
         prices: {
           type: 'array',
           description: 'One row per subscription. Empty when the app has none.',
@@ -196,8 +201,15 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
                       description: 'The alpha-3 codes in this group.',
                       items: { type: 'string' },
                     },
+                    countryNames: {
+                      type: 'array',
+                      description:
+                        'English country names, same order as `territories`. Apple returns no ' +
+                        'name anywhere, so this is the only place to read one.',
+                      items: { type: 'string' },
+                    },
                   },
-                  required: ['customerPrice', 'countries', 'territories'],
+                  required: ['customerPrice', 'countries', 'territories', 'countryNames'],
                 },
               },
               scheduledChanges: {
@@ -516,8 +528,22 @@ async function readPricesWorldwide(
     groups.set(key, group);
   }
 
+  // `countryNames` is built from the sorted codes in the same expression, so
+  // the two arrays cannot drift apart. Apple returns no country name anywhere —
+  // not on a price row, not on /v1/territories — so an agent asked for a
+  // per-country table writes the dictionary itself: a live eval session hand-
+  // typed 175 entries inside a shelled-out python3, twice. Carrying the names
+  // costs a few hundred tokens against the megabyte that cost.
   const byPrice = [...groups.values()]
-    .map((g) => ({ ...g, countries: g.territories.length, territories: g.territories.sort() }))
+    .map((g) => {
+      const territories = g.territories.sort();
+      return {
+        ...g,
+        countries: territories.length,
+        territories,
+        countryNames: territories.map((code) => TERRITORY_NAMES[code] ?? code),
+      };
+    })
     .sort((a, b) => b.countries - a.countries);
 
   return {
@@ -582,7 +608,12 @@ export async function executePricingTool(
       );
     }
 
-    return { app: `${app.name} (${app.id})`, territory: scope, prices };
+    return {
+      app: `${app.name} (${app.id})`,
+      territory: scope,
+      ...(territory ? { country: TERRITORY_NAMES[territory] ?? null } : {}),
+      prices,
+    };
   }
 
   if (name === 'pricing__equalize_price') return equalizePrice(args, ctx);

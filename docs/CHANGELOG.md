@@ -41,9 +41,9 @@ Run it under `--dry-run` first: the subscription path returns the full derived t
 #### `pricing__get_subscription_price` answers "in every country", not just one
 `territory` was required, so the macro could only ever answer about one country. Asked "what does this subscription cost in each country?", a live eval session called the macro, found it did not answer the question, walked the raw chain instead, and spent 1.02M tokens and $3 writing the result to a CSV alongside a hand-written country-name dictionary in Python.
 
-Omit `territory` now and the answer covers every country Apple sells in, grouped by price so it stays readable: measured live, 175 territories collapse to 45 distinct prices — 91 countries share one of them — and the whole thing is about 1.3k tokens. The currency comes back with each group, which is the other half of an answer that "19.99" alone does not give.
+Omit `territory` now and the answer covers every country Apple sells in, grouped by price so it stays readable: measured live, 175 territories collapse to 45 distinct prices — 91 countries share one of them — and the whole thing is about 1.3k tokens. The currency comes back with each group, which is the other half of an answer that "19.99" alone does not give. So is the country name: Apple returns one nowhere — not on a price row, not on `/v1/territories`, which carries the code and the currency and nothing else — which is why that eval session hand-typed a 175-entry dictionary, and then did it again on a later run. Each group now carries `countryNames` alongside `territories`, in the same order.
 
-Single-country calls are unchanged.
+Single-country calls are unchanged, except that the response names the country too.
 
 #### Upload a screenshot, read a report — two things the raw tools could not do
 Both were chains that ended somewhere the API does not go.
@@ -221,9 +221,9 @@ Abonelikler için `preserve_current_price` zorunlu, tek-ülke makrosundaki gibi;
 #### `pricing__get_subscription_price` artık "her ülkede" sorusunu da cevaplıyor
 `territory` zorunluydu, yani makro yalnızca tek bir ülkeyi cevaplayabiliyordu. "Bu abonelik her ülkede ne kadar?" diye sorulan canlı bir değerlendirme oturumu makroyu çağırdı, sorunun cevabını bulamadı, ham zinciri yürüdü ve sonucu bir CSV'ye yazıp yanına Python'da elle ülke adı sözlüğü üreterek 1,02M token ve 3 dolar harcadı.
 
-Artık `territory`'yi atlarsanız cevap Apple'ın sattığı tüm ülkeleri kapsıyor ve okunabilir kalsın diye fiyata göre gruplanıyor: canlı ölçümde 175 ülke 45 ayrı fiyata iniyor — 91 ülke bunlardan birini paylaşıyor — ve tamamı yaklaşık 1,3k token. Her grupla birlikte para birimi de dönüyor; "19.99" tek başına eksik bir cevap.
+Artık `territory`'yi atlarsanız cevap Apple'ın sattığı tüm ülkeleri kapsıyor ve okunabilir kalsın diye fiyata göre gruplanıyor: canlı ölçümde 175 ülke 45 ayrı fiyata iniyor — 91 ülke bunlardan birini paylaşıyor — ve tamamı yaklaşık 1,3k token. Her grupla birlikte para birimi de dönüyor; "19.99" tek başına eksik bir cevap. Ülke adı da öyle: Apple hiçbir yerde ülke adı döndürmüyor — ne fiyat satırında, ne de yalnızca kod ve para birimi taşıyan `/v1/territories`'te — o değerlendirme oturumunun 175 satırlık sözlüğü elle yazmasının, sonraki bir koşuda da tekrar yazmasının sebebi bu. Her grup artık `territories` ile aynı sırada bir `countryNames` taşıyor.
 
-Tek ülke soran çağrılar değişmedi.
+Tek ülke soran çağrılar değişmedi; yalnızca cevap ülkenin adını da veriyor.
 
 #### Ekran görüntüsü yükleme ve rapor okuma — ham araçların yapamadığı iki şey
 İkisi de API'nin gitmediği bir yerde biten zincirlerdi.
