@@ -63,13 +63,15 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
   {
     name: 'pricing__get_subscription_price',
     description:
-      'What a subscription costs customers today in one territory (country), in a single ' +
-      'step. Give the app (name, bundle ID or Apple ID) and the territory (e.g. USA, TUR); ' +
-      'the subscription is optional — omit it to get every subscription in the app, which ' +
-      'is how you answer "what does the weekly one cost" without knowing its product ID. ' +
-      'Use this instead of chaining apps__list / subscription_groups / prices calls. It ' +
-      'also returns the price that is actually in effect: subscriptions__prices__list ' +
-      'returns price-less stubs unless the caller knows to include the price point.',
+      'What a subscription costs customers today — in one country, or in every country at ' +
+      'once. Give the app (name, bundle ID or Apple ID); both other arguments are optional. ' +
+      'Omit the territory to get worldwide pricing, grouped by price so the answer stays ' +
+      'readable, with the currency and the country codes in each group. Omit the ' +
+      'subscription to cover every subscription in the app, which is how you answer "what ' +
+      'does the weekly one cost" without knowing its product ID. Use this instead of ' +
+      'chaining apps__list / subscription_groups / prices calls. It also returns the price ' +
+      'actually in effect: subscriptions__prices__list returns price-less stubs unless the ' +
+      'caller knows to include the price point.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -79,7 +81,9 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         },
         territory: {
           type: 'string',
-          description: 'Territory (country) code, e.g. USA, TUR, DEU. Three letters, ISO-3166 alpha-3.',
+          description:
+            'Optional. Territory (country) code — three letters, ISO-3166 alpha-3: USA, ' +
+            'TUR, DEU. Omit it for every country Apple sells in (about 175), grouped by price.',
         },
         subscription: {
           type: 'string',
@@ -88,13 +92,16 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
             'in the app.',
         },
       },
-      required: ['app', 'territory'],
+      required: ['app'],
     },
     outputSchema: {
       type: 'object',
       properties: {
         app: { type: 'string', description: 'Resolved app, as "Name (id)".' },
-        territory: { type: 'string' },
+        territory: {
+          type: 'string',
+          description: 'The country asked about, or "worldwide" when none was given.',
+        },
         prices: {
           type: 'array',
           description: 'One row per subscription. Empty when the app has none.',
@@ -105,10 +112,37 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
               name: { type: 'string' },
               customerPrice: {
                 type: ['string', 'null'],
-                description: 'What the customer pays today. Null when no price is in effect here.',
+                description: 'Single-country mode only. What the customer pays today; null when no price is in effect here.',
               },
               proceeds: { type: 'string', description: 'What Apple pays out, after its cut.' },
               note: { type: 'string', description: 'Present instead of proceeds when there is no price in effect.' },
+              territoryCount: {
+                type: 'number',
+                description: 'Worldwide mode only. How many countries carry a price for this subscription.',
+              },
+              byPrice: {
+                type: 'array',
+                description:
+                  'Worldwide mode only. One entry per distinct price+currency, biggest group ' +
+                  'first. Countries share prices heavily — a real weekly subscription has 45 ' +
+                  'distinct prices across 175 countries, and 91 of those countries sit in one ' +
+                  'group — so this is the whole picture without a row per country.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    customerPrice: { type: ['string', 'null'] },
+                    currency: { type: ['string', 'null'], description: 'ISO currency of that price, e.g. USD, TRY.' },
+                    proceeds: { type: ['string', 'null'] },
+                    countries: { type: 'number' },
+                    territories: {
+                      type: 'array',
+                      description: 'The alpha-3 codes in this group.',
+                      items: { type: 'string' },
+                    },
+                  },
+                  required: ['customerPrice', 'countries', 'territories'],
+                },
+              },
               scheduledChanges: {
                 type: 'array',
                 description: 'Future-dated prices Apple has accepted but not applied yet.',
@@ -324,26 +358,115 @@ async function readPrice(
   };
 }
 
+/**
+ * The same question without a territory filter: what this subscription costs
+ * everywhere.
+ *
+ * Grouped by price rather than listed per country, and that is the load-bearing
+ * decision. Apple sells in about 175 territories and one subscription has a row
+ * in each; eight subscriptions is fourteen hundred rows, which is the AI-177
+ * shape all over again — a live eval session asked exactly this question, got
+ * the raw chain, and spent 1.02M tokens writing the answer to a CSV and a
+ * hand-built country dictionary because the response did not fit its head.
+ * Most countries share a price, so grouping loses nothing and costs far less:
+ * measured live on one weekly subscription, 175 territories collapse to 45
+ * distinct prices — 91 countries alone share 4.99 USD — and the whole answer is
+ * about 1.3k tokens. Every code is still listed inside its group.
+ *
+ * The currency comes from the `territory` include and is the other half of the
+ * answer — "19.99" means nothing without knowing it is AED.
+ */
+async function readPricesWorldwide(
+  http: AscHttpClient,
+  sub: Subscription,
+  today: string
+): Promise<Record<string, unknown>> {
+  // One call, not `collect`: the prices and the currencies arrive in
+  // `included`, which `collect` drops when it concatenates pages. Apple returns
+  // all ~175 territories inside limit=200, so a second page is not a case that
+  // happens — but `links.next` is checked below rather than assumed away.
+  const res: any = await http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/prices`, {
+    include: 'territory,subscriptionPricePoint',
+    limit: 200,
+  });
+  const items: any[] = res?.data ?? [];
+  const hasMore = Boolean(res?.links?.next);
+  const points = new Map<string, any>(
+    (res?.included ?? [])
+      .filter((i: any) => i.type === 'subscriptionPricePoints')
+      .map((p: any) => [String(p.id), p.attributes])
+  );
+  const currencyOf = new Map<string, string>(
+    (res?.included ?? [])
+      .filter((i: any) => i.type === 'territories')
+      .map((t: any) => [String(t.id), String(t.attributes?.currency ?? '')])
+  );
+
+  type Group = { customerPrice: string | null; currency: string | null; proceeds: string | null; territories: string[] };
+  const groups = new Map<string, Group>();
+  let scheduled = 0;
+
+  for (const row of items) {
+    const startDate = row.attributes?.startDate ?? null;
+    // A future-dated row is not what customers pay today. Counted, not shown:
+    // naming every scheduled change per country would undo the grouping.
+    if (startDate && startDate > today) {
+      scheduled++;
+      continue;
+    }
+    const code = String(row.relationships?.territory?.data?.id ?? '');
+    const point = points.get(String(row.relationships?.subscriptionPricePoint?.data?.id ?? ''));
+    const customerPrice = point?.customerPrice ?? null;
+    const currency = currencyOf.get(code) ?? null;
+    const key = `${customerPrice}|${currency}`;
+    const group: Group = groups.get(key) ?? {
+      customerPrice,
+      currency,
+      proceeds: point?.proceeds ?? null,
+      territories: [],
+    };
+    if (code) group.territories.push(code);
+    groups.set(key, group);
+  }
+
+  const byPrice = [...groups.values()]
+    .map((g) => ({ ...g, countries: g.territories.length, territories: g.territories.sort() }))
+    .sort((a, b) => b.countries - a.countries);
+
+  return {
+    subscription: sub.productId || sub.name,
+    name: sub.name,
+    territoryCount: byPrice.reduce((n, g) => n + g.countries, 0),
+    byPrice,
+    ...(scheduled ? { note: `${scheduled} future-dated price change(s) not shown; ask about one country to see them.` } : {}),
+    ...(hasMore
+      ? { truncated: 'Apple paged beyond this macro\'s limit; some countries are missing.' }
+      : {}),
+  };
+}
+
 export async function executePricingTool(
   name: string,
   args: Record<string, unknown>,
   ctx: PricingContext
 ): Promise<unknown> {
   if (name === 'pricing__get_subscription_price') {
-    for (const field of ['app', 'territory'] as const) {
-      if (!args[field] || typeof args[field] !== 'string') {
-        throw new AscApiError(`"${field}" is required.`, 0);
-      }
+    if (!args.app || typeof args.app !== 'string') {
+      throw new AscApiError('"app" is required.', 0);
     }
-    // Two letters is not an error at Apple — it is 200 and an empty list, which
-    // reads as "this country has no price". Stopping it here is the difference
-    // between an error and a confident wrong answer.
-    const territory = String(args.territory).trim().toUpperCase();
-    if (territory.length !== 3) {
+
+    // Omitted means worldwide. Present means one country, and then it has to be
+    // alpha-3: two letters is not an error at Apple — it is 200 and an empty
+    // list, which reads as "this country has no price". Stopping it here is the
+    // difference between an error and a confident wrong answer.
+    const wantsOne = typeof args.territory === 'string' && args.territory.trim() !== '';
+    const territory = wantsOne ? String(args.territory).trim().toUpperCase() : undefined;
+    if (territory && territory.length !== 3) {
       throw new AscApiError(
         `"${args.territory}" is not a territory code. Apple wants three letters ` +
           `(ISO-3166 alpha-3): USA, TUR, DEU — not US, TR, DE. A two-letter code is ` +
-          `accepted by the API and silently returns nothing.`,
+          `accepted by the API and silently returns nothing. Omit it entirely for ` +
+          `every country at once.`,
         0
       );
     }
@@ -352,15 +475,27 @@ export async function executePricingTool(
     const subs = args.subscription
       ? [await resolveSubscription(ctx.http, app.id, String(args.subscription))]
       : await listSubscriptions(ctx.http, app.id);
+    const scope = territory ?? 'worldwide';
     if (!subs.length) {
-      return { app: `${app.name} (${app.id})`, territory, prices: [], note: 'This app has no subscriptions.' };
+      return {
+        app: `${app.name} (${app.id})`,
+        territory: scope,
+        prices: [],
+        note: 'This app has no subscriptions.',
+      };
     }
 
     const today = new Date().toISOString().slice(0, 10);
     const prices = [];
-    for (const sub of subs) prices.push(await readPrice(ctx.http, sub, territory, today));
+    for (const sub of subs) {
+      prices.push(
+        territory
+          ? await readPrice(ctx.http, sub, territory, today)
+          : await readPricesWorldwide(ctx.http, sub, today)
+      );
+    }
 
-    return { app: `${app.name} (${app.id})`, territory, prices };
+    return { app: `${app.name} (${app.id})`, territory: scope, prices };
   }
 
   if (name !== 'pricing__set_subscription_price') {

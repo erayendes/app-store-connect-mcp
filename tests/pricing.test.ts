@@ -219,3 +219,123 @@ describe('normalizePrice', () => {
     expect(normalizePrice('4.99')).toBe('4.99');
   });
 });
+
+/**
+ * Worldwide mode. The fixture is the live response's shape verbatim: the
+ * territory code hangs off the row's relationship, the price off the included
+ * price point, and the currency off the included territory — three places for
+ * one answer, which is why walking this by hand goes wrong.
+ */
+function worldwideHttp() {
+  /** Every query the /prices endpoint saw, so a test can assert on the filter. */
+  const priceQueries: any[] = [];
+  const get = vi.fn(async (path: string, query?: any) => {
+    if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
+    if (path.includes('subscriptionGroups')) {
+      return {
+        data: [{ id: 'g1', attributes: {} }],
+        included: [
+          { id: 's1', type: 'subscriptions', attributes: { name: 'Weekly', productId: 'weekly.1' } },
+        ],
+      };
+    }
+    if (path.includes('/prices')) {
+      priceQueries.push(query ?? {});
+      return {
+        data: [
+          row('AFG', 'pp-499'), row('ATG', 'pp-499'), row('AIA', 'pp-499'),
+          row('ARE', 'pp-1999'),
+          row('AUT', 'pp-599eur'),
+          // Future-dated: not what customers pay today.
+          { ...row('USA', 'pp-1999'), attributes: { startDate: '2099-01-01' } },
+        ],
+        included: [
+          { type: 'territories', id: 'AFG', attributes: { currency: 'USD' } },
+          { type: 'territories', id: 'ATG', attributes: { currency: 'USD' } },
+          { type: 'territories', id: 'AIA', attributes: { currency: 'USD' } },
+          { type: 'territories', id: 'ARE', attributes: { currency: 'AED' } },
+          { type: 'territories', id: 'AUT', attributes: { currency: 'EUR' } },
+          { type: 'territories', id: 'USA', attributes: { currency: 'USD' } },
+          { type: 'subscriptionPricePoints', id: 'pp-499', attributes: { customerPrice: '4.99', proceeds: '4.24' } },
+          { type: 'subscriptionPricePoints', id: 'pp-1999', attributes: { customerPrice: '19.99', proceeds: '16.18' } },
+          { type: 'subscriptionPricePoints', id: 'pp-599eur', attributes: { customerPrice: '5.99', proceeds: '5.09' } },
+        ],
+      };
+    }
+    return { data: [] };
+  });
+  return { get, post: vi.fn(), priceQueries };
+}
+
+function row(territory: string, pointId: string) {
+  return {
+    type: 'subscriptionPrices',
+    id: `price-${territory}`,
+    attributes: { startDate: null },
+    relationships: {
+      territory: { data: { type: 'territories', id: territory } },
+      subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: pointId } },
+    },
+  };
+}
+
+describe('pricing__get_subscription_price worldwide', () => {
+  const run = (args: Record<string, unknown>, http: unknown) =>
+    executePricingTool('pricing__get_subscription_price', args, { http } as unknown as PricingContext);
+
+  it('groups countries by price and names the currency', async () => {
+    const http = worldwideHttp();
+    const result: any = await run({ app: 'Ask Quran' }, http);
+
+    expect(result.territory).toBe('worldwide');
+    // No territory filter, and the currency include asked for — the two things
+    // that make a worldwide answer possible at all.
+    expect(http.priceQueries[0]['filter[territory]']).toBeUndefined();
+    expect(String(http.priceQueries[0].include)).toContain('territory');
+    const sub = result.prices[0];
+    // Six rows in, one of them future-dated, so five countries carry a price.
+    expect(sub.territoryCount).toBe(5);
+
+    // Biggest group first — that ordering is what makes the answer skimmable.
+    expect(sub.byPrice[0]).toEqual({
+      customerPrice: '4.99',
+      currency: 'USD',
+      proceeds: '4.24',
+      countries: 3,
+      territories: ['AFG', 'AIA', 'ATG'],
+    });
+    // Same number, different currency, so a different group — 5.99 EUR is not
+    // 5.99 USD and collapsing them would invent a price.
+    const currencies = sub.byPrice.map((g: any) => `${g.customerPrice} ${g.currency}`);
+    expect(currencies).toContain('19.99 AED');
+    expect(currencies).toContain('5.99 EUR');
+  });
+
+  it('counts future-dated prices instead of showing today’s customers a price they do not pay', async () => {
+    const result: any = await run({ app: 'Ask Quran' }, worldwideHttp());
+    const sub = result.prices[0];
+    expect(sub.note).toMatch(/1 future-dated price change/);
+    // USA only had a scheduled row, so it must not appear in any group.
+    expect(sub.byPrice.flatMap((g: any) => g.territories)).not.toContain('USA');
+  });
+
+  it('still answers one country when a territory is given', async () => {
+    const http = worldwideHttp();
+    const result: any = await run({ app: 'Ask Quran', territory: 'TUR' }, http);
+    expect(result.territory).toBe('TUR');
+    expect(http.priceQueries[0]['filter[territory]']).toBe('TUR');
+    // Single-country mode keeps the old flat shape, not the grouped one.
+    expect(result.prices[0].byPrice).toBeUndefined();
+  });
+
+  it('rejects a two-letter code and points at the worldwide option', async () => {
+    await expect(run({ app: 'Ask Quran', territory: 'TR' }, worldwideHttp())).rejects.toThrow(
+      /Omit it entirely for every country/
+    );
+  });
+
+  it('treats an empty territory string as worldwide, not as a bad code', async () => {
+    const result: any = await run({ app: 'Ask Quran', territory: '  ' }, worldwideHttp());
+    expect(result.territory).toBe('worldwide');
+  });
+});

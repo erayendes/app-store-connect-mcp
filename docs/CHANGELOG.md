@@ -14,6 +14,13 @@ Every mutating operation already carried a hand-reviewed risk level, but it only
 - **`destructiveHint` now means what MCP says it means**, "may perform destructive updates", not "is a DELETE". **Clients that gate on this hint will ask for approval on more tools than before.**
 - `app_store_versions__build__set` was classified `low` because the release rule matched only `create|update`. Swapping the binary under a version is a release step.
 
+#### `pricing__get_subscription_price` answers "in every country", not just one
+`territory` was required, so the macro could only ever answer about one country. Asked "what does this subscription cost in each country?", a live eval session called the macro, found it did not answer the question, walked the raw chain instead, and spent 1.02M tokens and $3 writing the result to a CSV alongside a hand-written country-name dictionary in Python.
+
+Omit `territory` now and the answer covers every country Apple sells in, grouped by price so it stays readable: measured live, 175 territories collapse to 45 distinct prices — 91 countries share one of them — and the whole thing is about 1.3k tokens. The currency comes back with each group, which is the other half of an answer that "19.99" alone does not give.
+
+Single-country calls are unchanged.
+
 #### Upload a screenshot, read a report — two things the raw tools could not do
 Both were chains that ended somewhere the API does not go.
 - **`listing__upload_screenshot`** performs Apple's reserve → upload → commit sequence with the MD5 checksum. The raw `app_screenshots__create` only reserves a slot and moves no bytes, so the chain could not be finished from the tools at all.
@@ -162,6 +169,13 @@ Her mutasyon operasyonu zaten elle gözden geçirilmiş bir risk seviyesi taşı
 - Seviye artık HTTP metodunun gösteremediği ~120 operasyonun açıklamasında, `REVENUE-level write.` biçiminde görünüyor. Tipik sekiz sunuculuk bir kurulumda 443 token — araç tanımlarının %0,35'i.
 - **`destructiveHint` artık MCP'nin söylediği anlama geliyor**: "yıkıcı güncelleme yapabilir", "DELETE'tir" değil. **Bu ipucuna göre onay isteyen istemciler eskisinden daha fazla araçta soracak.**
 - `app_store_versions__build__set`, release kuralı yalnızca `create|update` ile eşleştiği için `low` sayılıyordu. Bir sürümün altındaki binary'yi değiştirmek bir yayın adımıdır.
+
+#### `pricing__get_subscription_price` artık "her ülkede" sorusunu da cevaplıyor
+`territory` zorunluydu, yani makro yalnızca tek bir ülkeyi cevaplayabiliyordu. "Bu abonelik her ülkede ne kadar?" diye sorulan canlı bir değerlendirme oturumu makroyu çağırdı, sorunun cevabını bulamadı, ham zinciri yürüdü ve sonucu bir CSV'ye yazıp yanına Python'da elle ülke adı sözlüğü üreterek 1,02M token ve 3 dolar harcadı.
+
+Artık `territory`'yi atlarsanız cevap Apple'ın sattığı tüm ülkeleri kapsıyor ve okunabilir kalsın diye fiyata göre gruplanıyor: canlı ölçümde 175 ülke 45 ayrı fiyata iniyor — 91 ülke bunlardan birini paylaşıyor — ve tamamı yaklaşık 1,3k token. Her grupla birlikte para birimi de dönüyor; "19.99" tek başına eksik bir cevap.
+
+Tek ülke soran çağrılar değişmedi.
 
 #### Ekran görüntüsü yükleme ve rapor okuma — ham araçların yapamadığı iki şey
 İkisi de API'nin gitmediği bir yerde biten zincirlerdi.
