@@ -4,6 +4,9 @@
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
+[![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
+[![Glama](https://img.shields.io/badge/Glama-listed-8A2BE2)](https://glama.ai/mcp/servers/bwyd9qd63y)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen.svg)](package.json)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-orange.svg)](https://buymeacoffee.com/erayendes)
@@ -38,6 +41,11 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 ```bash
 npx -y @erayendes/asc-mcp setup
 ```
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, client picker, profile picker, and a confirmation before anything is written" width="720">
+
+<sub>One pass: the key and issuer ID, the clients found on this machine, the profiles you want — and it shows the plan before writing anything. Sped up; invented credentials against a stand-in API.</sub>
 
 The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so this is the step you would otherwise repeat once per client, in a different format each time. Full walkthrough in the [Guide](docs/GUIDE.md).
 
@@ -130,6 +138,11 @@ Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikl
 ```bash
 npx -y @erayendes/asc-mcp setup
 ```
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, issuer ID, istemci seçimi, profil seçimi ve yazmadan önce onay" width="720">
+
+<sub>Tek geçiş: anahtar ve issuer ID, makinede bulunan istemciler, istediğiniz profiller — ve hiçbir şey yazılmadan önce planı gösteriyor. Hızlandırılmış; uydurma kimlik bilgileriyle, Apple yerine bir taklit sunucuya karşı.</sub>
 
 Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
 

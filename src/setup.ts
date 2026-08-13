@@ -335,7 +335,14 @@ async function verifyCredentials(
 ): Promise<'ok' | 'invalid' | 'unreachable'> {
   try {
     const tokens = new TokenProvider({ keyId, issuerId, privateKey: pem });
-    await new AscHttpClient(tokens).get('/v1/apps', { limit: 1 });
+    // Honour ASC_BASE_URL like every other call does. Without it this was the
+    // one request in the codebase pinned to Apple no matter what, so the
+    // verification step could not be exercised against a fixture server — not
+    // by a test, and not by the README demo recording.
+    await new AscHttpClient(tokens, { baseUrl: process.env.ASC_BASE_URL || undefined }).get(
+      '/v1/apps',
+      { limit: 1 }
+    );
     return 'ok';
   } catch (err) {
     return classifyVerifyError(err);
