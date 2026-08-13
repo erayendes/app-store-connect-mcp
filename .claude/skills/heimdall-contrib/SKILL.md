@@ -1,6 +1,6 @@
 ---
 name: heimdall-contrib
-description: Work on the Heimdall repository itself (@erayendes/asc-mcp) — the App Store Connect MCP server's own source. Use this whenever editing this codebase: changing tool descriptions, moving a tool between profiles, bumping Apple's OpenAPI spec, adding a macro, touching src/generated, or interpreting the AX debt numbers. Also use it before opening a PR here, and whenever a test named ax-audit, profile-invariants, search-intents or eval-intents fails and the reason is not obvious.
+description: Work on the Heimdall repository itself (@erayendes/asc-mcp) — the App Store Connect MCP server's own source. Use this whenever editing this codebase — changing tool descriptions, moving a tool between profiles, bumping Apple's OpenAPI spec, adding a macro, touching src/generated, or interpreting the AX debt numbers. Also use it before opening a PR here, and whenever a test named ax-audit, profile-invariants, search-intents or eval-intents fails and the reason is not obvious.
 ---
 
 Two files are the source of truth and nothing else is: `spec/openapi.json`
