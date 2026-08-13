@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "asc-monetization": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["dist/index.js", "monetization:subscription-pricing"],
+      "env": {
+        "ASC_BASE_URL": "http://127.0.0.1:8787",
+        "ASC_KEY_ID": "AAAAAAAAAA",
+        "ASC_ISSUER_ID": "00000000-0000-0000-0000-000000000000",
+        "ASC_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgB0n4fZRe2byJJ1e0\nKwadtouzBaZznbVIpcOyQOML5J+hRANCAAR69v/Z9bUioOKj8f0ld8f0/dGjn0fJ\nNyaO0nme1OCqeX8xqdTd1/5eDEgWtUHxvBpTmKz1fz3SI69W9kOcJYF7\n-----END PRIVATE KEY-----\n"
+      }
+    }
+  }
+}

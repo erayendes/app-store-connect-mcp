@@ -21,6 +21,14 @@ Three profile counts in the guide moved with this release: `analytics` 23 → 24
 
 `AGENTS.md` described `destructiveHint` as meaning deletes, which stopped being true in this release, and now points at the `heimdall` skill as the copy of itself that reaches users who install through `npx` and have no checkout. The guide gained a table of the macros, which had never been documented outside the changelog.
 
+The count is advertised on four surfaces and had drifted to three different numbers: `server.json` and `CITATION.cff` said 868, the GitHub repo description said 875, the README said 883. All now say 883, and `CITATION.cff` — which was two releases behind at 2.0.0 — is current.
+
+The release pre-flight now checks both, so this cannot drift again: `CITATION.cff` joins the six version fields it already compares, and the tool count is cross-checked between README, `server.json` and `CITATION.cff`. A mismatch fails the release instead of shipping.
+
+The MCP Registry description spent its 100-character budget on a wrong number and the phrase "safe writes", which distinguishes Heimdall from nothing — several App Store Connect servers list the same claim. It now leads with the thing none of them have: `Every App Store Connect + StoreKit 2 endpoint. 883 tools in 13 profiles, narrow to 24.`
+
+`.claude-plugin/plugin.json` pointed its homepage at `erayendes/asc-mcp`, a repository that does not exist.
+
 #### `pricing__equalize_price` — one anchor price, every country derived by Apple
 For an app, an in-app purchase or a subscription. Give the anchor territory and the price; Apple's own currency and tax maths decides every other market. The number is never copied across currencies, because it cannot be — anchored at 3.99 TRY, Apple returns 0.99 USD for Afghanistan and 2.99 AED for the UAE.
 
@@ -200,6 +208,14 @@ README **868 araç** ve "elle yazılmış dokuz araç" diyordu. İkisi de bu sü
 Bu sürümle birlikte kılavuzdaki üç profil sayısı değişti: `analytics` 23 → 24, `distribution` 127 → 129, `monetization` 204 → 206.
 
 `AGENTS.md`, `destructiveHint`'i silme işlemleri olarak tarif ediyordu; bu sürümde doğru olmaktan çıktı. Artık `npx` ile kuran ve checkout'u olmayan kullanıcılara ulaşan kopyası olarak `heimdall` skill'ine işaret ediyor. Kılavuza, changelog dışında hiç belgelenmemiş olan makroların tablosu eklendi.
+
+Sayı dört yüzeyde duyuruluyor ve üç ayrı değere kaymıştı: `server.json` ile `CITATION.cff` 868, GitHub repo açıklaması 875, README 883 diyordu. Hepsi artık 883, ve 2.0.0'da kalarak iki sürüm geride kalan `CITATION.cff` güncellendi.
+
+Yayın öncesi kontrol artık ikisini de denetliyor, yani bu bir daha kayamaz: `CITATION.cff` zaten karşılaştırılan altı sürüm alanına katıldı ve araç sayısı README, `server.json` ve `CITATION.cff` arasında çapraz kontrol ediliyor. Uyuşmazlık yayını geçirmek yerine durduruyor.
+
+MCP Registry açıklaması 100 karakterlik bütçesini yanlış bir sayıya ve hiçbir şeyi ayırt etmeyen "safe writes" ifadesine harcıyordu — birkaç App Store Connect sunucusu aynı şeyi yazıyor. Artık hiçbirinde olmayan şeyle başlıyor: `Every App Store Connect + StoreKit 2 endpoint. 883 tools in 13 profiles, narrow to 24.`
+
+`.claude-plugin/plugin.json` homepage alanı var olmayan bir depoyu, `erayendes/asc-mcp`'yi gösteriyordu.
 
 #### `pricing__equalize_price` — tek çapa fiyat, her ülkeyi Apple türetiyor
 Uygulama, uygulama içi satın alma veya abonelik için. Çapa ülkeyi ve fiyatı verirsiniz; her pazarın karşılığını Apple'ın kendi kur ve vergi matematiği belirler. Sayı asla para birimleri arasında kopyalanmaz, çünkü kopyalanamaz — 3,99 TRY çapasında Apple Afganistan için 0,99 USD, BAE için 2,99 AED döndürüyor.

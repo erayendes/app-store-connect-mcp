@@ -85,8 +85,14 @@ describe('the packaged skill is loadable as a plugin', () => {
     expect(existsSync('skills/heimdall/SKILL.md')).toBe(true);
   });
 
-  it('keeps the frontmatter to fields the loader accepts', () => {
-    const text = readFileSync('skills/heimdall/SKILL.md', 'utf8');
+  // Both skills, not just the shipped one. The contrib skill went out with a
+  // `: ` inside its unquoted description and GitHub refused to render the file
+  // — "mapping values are not allowed in this context" — while every test here
+  // passed, because this one only ever read skills/heimdall.
+  const SKILL_FILES = ['skills/heimdall/SKILL.md', '.claude/skills/heimdall-contrib/SKILL.md'];
+
+  it.each(SKILL_FILES)('keeps %s frontmatter to fields the loader accepts', (file) => {
+    const text = readFileSync(file, 'utf8');
     const frontmatter = /^---\n([\s\S]*?)\n---/.exec(text)![1];
     const keys = frontmatter
       .split('\n')
@@ -97,5 +103,19 @@ describe('the packaged skill is loadable as a plugin', () => {
     const description = /description: (.*)/.exec(frontmatter)![1];
     expect(description).not.toMatch(/[<>]/);
     expect(description.length).toBeLessThanOrEqual(1024);
+  });
+
+  // A plain YAML scalar ends at the first `: `, so one inside the value turns
+  // the rest into a mapping the parser cannot place. Quoting would also fix it;
+  // this pins the cheaper rule — no `: ` in an unquoted value at all — because
+  // the descriptions are long English prose and a colon is easy to reach for.
+  it.each(SKILL_FILES)('keeps ": " out of %s unquoted frontmatter values', (file) => {
+    const text = readFileSync(file, 'utf8');
+    const frontmatter = /^---\n([\s\S]*?)\n---/.exec(text)![1];
+    for (const line of frontmatter.split('\n')) {
+      const value = /^[a-z-]+: (.*)$/.exec(line)?.[1];
+      if (!value || /^["']/.test(value)) continue;
+      expect(value).not.toContain(': ');
+    }
   });
 });

@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Heimdall"
-abstract: "An MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2), with 868 tools generated from Apple's official OpenAPI spec, 13 curated profiles that keep each session small, and confirm-before-write safety."
+abstract: "An MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2), with 883 tools generated from Apple's official OpenAPI spec, 13 curated profiles that keep each session small, and confirm-before-write safety."
 type: software
 authors:
   - family-names: "Endes"
@@ -10,8 +10,8 @@ authors:
 repository-code: "https://github.com/erayendes/app-store-connect-mcp"
 url: "https://github.com/erayendes/app-store-connect-mcp"
 license: MIT
-version: 2.0.0
-date-released: "2026-08-05"
+version: 2.1.0
+date-released: "2026-08-13"
 keywords:
   - mcp
   - model-context-protocol

@@ -4,10 +4,18 @@
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
+[![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
+[![Glama](https://img.shields.io/badge/Glama-listed-8A2BE2)](https://glama.ai/mcp/servers/bwyd9qd63y)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen.svg)](package.json)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-orange.svg)](https://buymeacoffee.com/erayendes)
 [![Yerli üretim](https://img.shields.io/badge/%F0%9F%A4%9D-YERL%C4%B0%20%C3%9CRET%C4%B0M-red)](https://github.com/erayendes)
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Asking an agent what a subscription costs worldwide; Heimdall answers in one tool call" width="720">
+
+<sub>A real agent session over MCP, sped up. The App Store Connect account is a stand-in so the recording can be public — regenerate with `vhs assets/demo/demo.tape`.</sub>
 
 🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
 
@@ -34,6 +42,11 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 npx -y @erayendes/asc-mcp setup
 ```
 
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
+
+<sub>One pass: the key and issuer ID, a live credential check, then the profiles and sub-profiles you want — and the key ends up in the Keychain, not in a config file. Sped up; invented credentials against a stand-in API.</sub>
+
 The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so this is the step you would otherwise repeat once per client, in a different format each time. Full walkthrough in the [Guide](docs/GUIDE.md).
 
 > [!NOTE]
@@ -52,6 +65,11 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 | **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
 | **Private** | The `.p8` lives in the macOS Keychain, never in a plain-text config. |
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: checking monetization unfolds its sub-profiles, each with its tool count and token estimate" width="720">
+
+<sub>Checking a profile unfolds its sub-profiles, each with what it costs a session. Uncheck what this job does not need — no config file, no restart to find out.</sub>
 
 #### Profiles
 
@@ -126,6 +144,11 @@ Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikl
 npx -y @erayendes/asc-mcp setup
 ```
 
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, issuer ID, istemci seçimi, profil seçimi ve yazmadan önce onay" width="720">
+
+<sub>Tek geçiş: anahtar ve issuer ID, canlı kimlik doğrulama, sonra istediğiniz profiller ve alt profiller — anahtar da config dosyasına değil Keychain'e gidiyor. Hızlandırılmış; uydurma kimlik bilgileriyle, Apple yerine bir taklit sunucuya karşı.</sub>
+
 Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
 
 > [!NOTE]
@@ -144,6 +167,11 @@ Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiği
 | **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
 | **Gizli** | `.p8` macOS Keychain'de durur, düz metin config'de değil. |
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri araç sayısı ve token tahminiyle açılıyor" width="720">
+
+<sub>Bir profili işaretleyince alt profilleri açılıyor, her biri oturuma maliyetiyle birlikte. Bu iş için gerekmeyeni kaldırın — config dosyası yok, öğrenmek için yeniden başlatma yok.</sub>
 
 #### Profiller
 
