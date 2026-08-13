@@ -13,12 +13,13 @@ import { join } from 'node:path';
 
 // ESM namespaces are not configurable, so the CLI subprocess is replaced at
 // module level and steered per test through this hoisted state.
-const cli = vi.hoisted(() => ({ calls: [] as string[][], addFails: 0 }));
+const cli = vi.hoisted(() => ({ calls: [] as string[][], addFails: 0, removeFails: false }));
 vi.mock('node:child_process', async (original) => ({
   ...(await original<typeof import('node:child_process')>()),
   execFileSync: (_bin: string, args: string[]) => {
     cli.calls.push(args);
     if (args[0] === 'add' && cli.addFails-- > 0) throw new Error('name already in use');
+    if (args[0] === 'remove' && cli.removeFails) throw new Error('no such server');
     return '';
   },
 }));
@@ -267,9 +268,10 @@ describe('registering with a CLI client', () => {
     ],
   });
 
-  const runWith = (addFails: number) => {
+  const runWith = (addFails: number, removeFails = false) => {
     cli.calls = [];
     cli.addFails = addFails;
+    cli.removeFails = removeFails;
     const { results } = applyToClient(cliClient(), ['monetization'], []);
     return { calls: cli.calls, results };
   };
@@ -284,5 +286,17 @@ describe('registering with a CLI client', () => {
     const { calls, results } = runWith(1);
     expect(calls.map((c) => c[0])).toEqual(['add', 'remove', 'add']);
     expect(results[0].ok).toBe(true);
+  });
+
+  // The clear is a guess about why the add failed. When the guess is wrong the
+  // add's message is the only one that says anything useful, so it has to be
+  // the one that survives — otherwise a missing flag gets reported as "no such
+  // server", which sends the reader after a registration that was never there.
+  it('reports the add error, not the clear error, when clearing also fails', () => {
+    const { calls, results } = runWith(9, true);
+    expect(calls.map((c) => c[0])).toEqual(['add', 'remove']);
+    expect(results[0].ok).toBe(false);
+    expect(results[0].message).toContain('name already in use');
+    expect(results[0].message).not.toContain('no such server');
   });
 });

@@ -349,7 +349,16 @@ export function applyToClient(
             execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
           } catch (err) {
             if (!t.remove) throw err;
-            execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
+            // The add may have failed for a reason that has nothing to do with
+            // the name being taken — a missing binary, a flag the CLI stopped
+            // accepting. Clearing is a guess at that point, so its own failure
+            // must not replace the add's error, which is the one that says
+            // what actually went wrong.
+            try {
+              execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
+            } catch {
+              throw err;
+            }
             execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
           }
           record(`add:${spec}`, addLabel(spec), true);
