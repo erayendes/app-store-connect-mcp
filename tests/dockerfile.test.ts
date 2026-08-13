@@ -1,6 +1,9 @@
 /**
- * The Dockerfile exists so directories and registries can boot the server and
- * call tools/list. What it passes on the command line is therefore the only
+ * The Dockerfile exists so a directory that boots servers through Docker can
+ * start this one and call tools/list — not Glama, which builds from its own
+ * spec, and not the MCP Registry, which installs the npm package; see the
+ * header of the Dockerfile itself. What it passes on the command line is
+ * therefore the only
  * configuration those scans ever see, which makes a stale profile name there a
  * silent failure rather than a loud one: a name that was removed does not crash,
  * it hits the tombstone and starts with a single tool explaining the split. An

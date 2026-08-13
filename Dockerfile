@@ -1,9 +1,21 @@
-# Dockerfile — used only for automated introspection (Glama / MCP Registry checks).
-# It boots the MCP server so a harness can call tools/list. The ASC_* values below are
-# throwaway placeholders: the key is generated during the build, is NOT registered with
-# Apple and authorizes nothing — it only lets the server start for introspection (which
-# never calls Apple). Real users configure credentials via `npx -y @erayendes/asc-mcp
-# setup`; see README.
+# Dockerfile — used only for automated introspection: it boots the MCP server so a
+# directory or scanner can call tools/list. Nothing about installing Heimdall goes
+# through it; real users run `npx -y @erayendes/asc-mcp setup`, see README.
+#
+# Named consumers, because the header claimed two that do not read this file:
+#   Glama          builds from its own spec, not from here — debian:trixie-slim, pnpm,
+#                  mcp-proxy, cloning the repo at a pinned commit. Editing this file
+#                  changes nothing about a Glama build, and a Glama build failure is
+#                  not evidence of anything in it.
+#   MCP Registry   server.json declares one npm package and no Docker image, so the
+#                  registry installs from npm and never builds this either.
+# What is left is any directory that looks for a Dockerfile and boots it. That is worth
+# supporting and costs one file — but nobody specific is known to, so do not read a
+# green build here as a consumer being satisfied.
+#
+# The ASC_* values below are throwaway placeholders: the key is generated during the
+# build, is NOT registered with Apple and authorizes nothing — it only lets the server
+# start for introspection, which never calls Apple.
 #
 # Generated rather than pasted. The literal that used to sit here was inert, and it was
 # still a PEM in a public repository: every secret scanner flags one, and a reader has to
