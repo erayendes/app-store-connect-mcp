@@ -9,6 +9,11 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-orange.svg)](https://buymeacoffee.com/erayendes)
 [![Yerli üretim](https://img.shields.io/badge/%F0%9F%A4%9D-YERL%C4%B0%20%C3%9CRET%C4%B0M-red)](https://github.com/erayendes)
 
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Asking an agent what a subscription costs worldwide; Heimdall answers in one tool call" width="720">
+
+<sub>A real agent session over MCP, sped up. The App Store Connect account is a stand-in so the recording can be public — regenerate with `vhs assets/demo/demo.tape`.</sub>
+
 🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
 
 ## English
