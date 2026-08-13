@@ -86,7 +86,11 @@ jobs:
           // different numbers (868/875/883) before this check existed. README is
           // the source of truth because it is regenerated against the code.
           const readme = fs.readFileSync("README.md", "utf8");
-          const counts = { "README.md": (readme.match(/([0-9]{3,4}) tools\./) || [])[1], "server.json": (srv.description.match(/([0-9]{3,4}) tools/) || [])[1], "CITATION.cff": (citation.match(/with ([0-9]{3,4}) tools/) || [])[1] };
+          // README is bilingual and the English half is not the whole claim: the
+          // count is advertised again as "N araç" in the Turkish section, and a
+          // guard that reads only one half lets the two drift apart silently —
+          // which is the exact failure this check exists to prevent.
+          const counts = { "README.md (en)": (readme.match(/([0-9]{3,4}) tools\./) || [])[1], "README.md (tr)": (readme.match(/([0-9]{3,4}) ara\u00e7/) || [])[1], "server.json": (srv.description.match(/([0-9]{3,4}) tools/) || [])[1], "CITATION.cff": (citation.match(/with ([0-9]{3,4}) tools/) || [])[1] };
           const distinct = [...new Set(Object.values(counts))];
           if (distinct.length > 1 || !distinct[0]) {
             console.error("Tool count mismatch across advertised surfaces:");
