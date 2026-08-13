@@ -6,10 +6,7 @@
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
-[![Glama](https://img.shields.io/badge/Glama-listed-8A2BE2)](https://glama.ai/mcp/servers/bwyd9qd63y)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen.svg)](package.json)
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-orange.svg)](https://buymeacoffee.com/erayendes)
 [![Yerli üretim](https://img.shields.io/badge/%F0%9F%A4%9D-YERL%C4%B0%20%C3%9CRET%C4%B0M-red)](https://github.com/erayendes)
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
@@ -31,6 +28,16 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 > - *"Summarise this week's 1-star reviews and draft replies."*
 > - *"Which builds are stuck in review?"*
 > - *"Raise this subscription's price in every territory."*
+
+### What the one call saves
+
+| The question | Through the raw tools | Heimdall |
+|:--|:--|:--|
+| *"What does this subscription cost in every country?"* | one measured agent session: 1.02M tokens, $3 | ~1.3k tokens, 2.1s |
+| *"What screenshots are on the listing?"* | 53 HTTP calls, 264 KB | 4 calls, ~1 KB |
+| *"Change this subscription's price."* | 4 reads, then a choice among 842 price points | one call |
+
+The first row is a real session, not a projection: the agent walked the chain, could not fit the answer, wrote it to a CSV and hand-built a country-name dictionary in Python to finish. The other two are call counts against a live account.
 
 ### Quick start
 
@@ -123,6 +130,16 @@ Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikl
 > - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
 > - *"Hangi build'ler incelemede takıldı?"*
 > - *"Bu aboneliğin fiyatını her ülkede artır."*
+
+### Tek çağrının kazandırdığı
+
+| Soru | Ham araçlarla | Heimdall |
+|:--|:--|:--|
+| *"Bu abonelik her ülkede kaça?"* | ölçülen bir ajan oturumu: 1,02M token, 3 $ | ~1,3k token, 2,1 sn |
+| *"Mağaza sayfasında hangi ekran görüntüleri var?"* | 53 HTTP çağrısı, 264 KB | 4 çağrı, ~1 KB |
+| *"Bu aboneliğin fiyatını değiştir."* | 4 okuma, sonra 842 fiyat noktası içinden seçim | tek çağrı |
+
+İlk satır tahmin değil, gerçek bir oturum: ajan zinciri yürüdü, cevap sığmayınca bir CSV'ye yazdı ve bitirebilmek için Python'da elle ülke adı sözlüğü kurdu. Diğer ikisi canlı bir hesapta çağrı sayımı.
 
 ### Hızlı başlangıç
 
