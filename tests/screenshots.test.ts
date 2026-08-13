@@ -180,13 +180,15 @@ describe('listing__upload_screenshot', () => {
     // tmpdir(), not a literal: `/private/tmp` is macOS's real path behind the
     // /tmp symlink and does not exist on Linux, so these three passed on the
     // author's machine and failed every CI runner.
-    file_path: join(tmpdir(), 'heimdall-upload-test.png'),
+    file_path: join(tmpdir(), 'heimdall-upload-test.jpg'),
   };
 
   it('reserves, uploads every slice at Apple’s offsets, then commits the MD5', async () => {
     const { writeFile, rm } = await import('node:fs/promises');
     const { createHash } = await import('node:crypto');
-    const bytes = Buffer.from('abcdefg');
+    // Real JPEG magic bytes: the upload refuses anything that is not an image,
+    // so a fixture of plain text would be rejected before it reached Apple.
+    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0x61, 0x62, 0x63, 0x64]);
     await writeFile(args.file_path, bytes);
     try {
       const { http, puts } = fakeUploadHttp();
@@ -199,13 +201,13 @@ describe('listing__upload_screenshot', () => {
       // Reserve declares the real size — Apple cuts the slices from this.
       const reserve = http.post.mock.calls.find((c: any[]) => c[0] === '/v1/appScreenshots')!;
       expect(reserve[1].data.attributes.fileSize).toBe(7);
-      expect(reserve[1].data.attributes.fileName).toBe('heimdall-upload-test.png');
+      expect(reserve[1].data.attributes.fileName).toBe('heimdall-upload-test.jpg');
       expect(reserve[1].data.relationships.appScreenshotSet.data.id).toBe('set-67');
 
       // One PUT per operation, sliced at the offsets Apple gave, not guessed.
       expect(puts).toEqual([
-        { url: 'https://upload.apple.com/a', length: 4, first: 'a'.charCodeAt(0) },
-        { url: 'https://upload.apple.com/b', length: 3, first: 'e'.charCodeAt(0) },
+        { url: 'https://upload.apple.com/a', length: 4, first: 0xff },
+        { url: 'https://upload.apple.com/b', length: 3, first: 'b'.charCodeAt(0) },
       ]);
 
       // Commit carries the checksum of the WHOLE file, not of the last slice.
@@ -239,7 +241,7 @@ describe('listing__upload_screenshot', () => {
 
   it('says the reserved row is empty when Apple returns nowhere to upload', async () => {
     const { writeFile, rm } = await import('node:fs/promises');
-    await writeFile(args.file_path, Buffer.from('abc'));
+    await writeFile(args.file_path, Buffer.from([0xff, 0xd8, 0xff, 0x61]));
     try {
       const { http } = fakeUploadHttp([]);
       await expect(
@@ -248,6 +250,29 @@ describe('listing__upload_screenshot', () => {
       expect(http.patch).not.toHaveBeenCalled();
     } finally {
       await rm(args.file_path, { force: true });
+    }
+  });
+
+  it('refuses a file that is not an image before any of it leaves the machine', async () => {
+    // file_path is chosen by the model. Without this check it is a request to
+    // upload any readable file — a private key reaches Apple and only then
+    // comes back rejected.
+    const { writeFile, rm } = await import('node:fs/promises');
+    const key = join(tmpdir(), 'heimdall-not-an-image.p8');
+    await writeFile(key, '-----BEGIN PRIVATE KEY-----\nnope\n-----END PRIVATE KEY-----\n');
+    try {
+      const { http, puts } = fakeUploadHttp();
+      await expect(
+        executeScreenshotTool(
+          'listing__upload_screenshot',
+          { ...args, file_path: key },
+          { http } as unknown as ScreenshotContext
+        )
+      ).rejects.toThrow(/not a PNG or JPEG/);
+      expect(http.post).not.toHaveBeenCalled();
+      expect(puts).toEqual([]);
+    } finally {
+      await rm(key, { force: true });
     }
   });
 
@@ -264,7 +289,7 @@ describe('listing__upload_screenshot', () => {
 
   it('dry-run resolves the target and sends nothing', async () => {
     const { writeFile, rm } = await import('node:fs/promises');
-    await writeFile(args.file_path, Buffer.from('abc'));
+    await writeFile(args.file_path, Buffer.from([0xff, 0xd8, 0xff, 0x61]));
     try {
       const { http, puts } = fakeUploadHttp();
       const result: any = await executeScreenshotTool('listing__upload_screenshot', args, {

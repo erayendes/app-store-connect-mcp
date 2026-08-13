@@ -47,6 +47,27 @@ function jwsClaim(jws: string | undefined, claim: string): unknown {
   }
 }
 
+/**
+ * A page-capped read that says nothing about the cap reads as the complete
+ * history, and "no refunds after the first ten pages" is the answer someone
+ * grants goodwill credit on. `revision` is Apple's cursor, so the caller can
+ * resume rather than start over.
+ */
+function truncation(
+  hasMore: boolean,
+  revision: string | null,
+  cap: string
+): Record<string, unknown> {
+  if (!hasMore) return { hasMore: false };
+  return {
+    hasMore: true,
+    ...(revision ? { revision } : {}),
+    note:
+      `Stopped at ${cap} with more left at Apple. This is a partial history — ` +
+      `raise the cap or resume from "revision" before treating it as complete.`,
+  };
+}
+
 export const STOREKIT_TOOLS: McpToolDefinition[] = [
   {
     name: 'storekit__get_transaction_history',
@@ -71,7 +92,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         revoked: { type: 'boolean', description: 'Filter by revoked status.' },
         max_pages: {
           type: 'number',
-          description: 'Pages to fetch, 20 transactions each (default 5).',
+          description:
+            'Pages to fetch, 20 transactions each (default 5). The result carries hasMore ' +
+            'and a revision cursor when Apple still has more than this fetched.',
         },
       },
       required: ['transaction_id'],
@@ -310,6 +333,7 @@ export class StoreKitService {
       case 'storekit__get_refund_history': {
         const items: string[] = [];
         let revision: string | null = null;
+        let hasMore = false;
         for (let page = 0; page < 10; page++) {
           const res: RefundHistoryResponse = await client.getRefundHistory(
             args.transaction_id,
@@ -318,11 +342,19 @@ export class StoreKitService {
           if (Array.isArray(res?.signedTransactions)) {
             items.push(...res.signedTransactions);
           }
-          if (!res?.hasMore) break;
+          hasMore = Boolean(res?.hasMore);
+          if (!hasMore) break;
           revision = res.revision ?? null;
-          if (!revision) break;
+          if (!revision) {
+            hasMore = false;
+            break;
+          }
         }
-        return { signedTransactions: items, count: items.length };
+        return {
+          signedTransactions: items,
+          count: items.length,
+          ...truncation(hasMore, revision, 'the 10-page cap'),
+        };
       }
 
       case 'storekit__lookup_order': {
@@ -386,6 +418,7 @@ export class StoreKitService {
     const maxPages = Math.max(1, Math.min(Number(args.max_pages ?? 5), 50));
     const transactions: string[] = [];
     let revision: string | null = null;
+    let hasMore = false;
 
     for (let page = 0; page < maxPages; page++) {
       const res: HistoryResponse = await client.getTransactionHistory(
@@ -397,12 +430,22 @@ export class StoreKitService {
       if (Array.isArray(res?.signedTransactions)) {
         transactions.push(...res.signedTransactions);
       }
-      if (!res?.hasMore) break;
+      hasMore = Boolean(res?.hasMore);
+      if (!hasMore) break;
       revision = res.revision ?? null;
-      if (!revision) break;
+      if (!revision) {
+        // Apple says there is more but gave nothing to resume from, so this is
+        // the end of what can be read rather than a page cap.
+        hasMore = false;
+        break;
+      }
     }
 
-    return { signedTransactions: transactions, count: transactions.length };
+    return {
+      signedTransactions: transactions,
+      count: transactions.length,
+      ...truncation(hasMore, revision, 'max_pages'),
+    };
   }
 
   private async checkEntitlement(

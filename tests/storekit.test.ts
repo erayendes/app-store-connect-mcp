@@ -163,3 +163,37 @@ describe('check_entitlement', () => {
     expect(res.activeCount).toBe(0);
   });
 });
+
+/**
+ * A page cap that keeps quiet is the dangerous one: "no refunds" and "no
+ * refunds in the first N pages" are the same response, and the second is what
+ * someone grants goodwill credit against.
+ */
+describe('transaction history paging', () => {
+  const history = (pages: Array<{ signedTransactions: string[]; hasMore: boolean; revision?: string }>) => {
+    let call = 0;
+    const client = { getTransactionHistory: async () => pages[Math.min(call++, pages.length - 1)] };
+    return (new StoreKitService(config) as never as {
+      transactionHistory(client: never, args: Record<string, unknown>): Promise<any>;
+    }).transactionHistory(client as never, { transaction_id: '1', max_pages: 2 });
+  };
+
+  it('says it stopped short and hands back the cursor to resume from', async () => {
+    const res = await history([
+      { signedTransactions: ['a'], hasMore: true, revision: 'r1' },
+      { signedTransactions: ['b'], hasMore: true, revision: 'r2' },
+    ]);
+
+    expect(res.count).toBe(2);
+    expect(res.hasMore).toBe(true);
+    expect(res.revision).toBe('r2');
+    expect(res.note).toMatch(/partial history/);
+  });
+
+  it('reports a complete read as complete', async () => {
+    const res = await history([{ signedTransactions: ['a'], hasMore: false }]);
+
+    expect(res.hasMore).toBe(false);
+    expect(res.note).toBeUndefined();
+  });
+});

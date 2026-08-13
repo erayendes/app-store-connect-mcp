@@ -11,8 +11,31 @@ import { OPERATIONS } from '../src/generated/operations.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
 
 /** Fake http covering the whole resolution chain for one app. */
-function fakeHttp() {
+function fakeHttp(opts: { subscriptionsOnSecondPage?: boolean; repriced?: boolean } = {}) {
   const get = vi.fn(async (path: string, query?: any) => {
+    if (opts.repriced && path.startsWith('/v1/subscriptions/6639599999/prices')) {
+      // A subscription that has been repriced keeps every past row, and Apple
+      // does not promise an order. The oldest arrives first here.
+      return {
+        data: [
+          { id: 'sp-old', attributes: { startDate: '2020-01-01' }, relationships: { subscriptionPricePoint: { data: { id: 'pp-199' } } } },
+          { id: 'sp-now', attributes: { startDate: '2024-06-01' }, relationships: { subscriptionPricePoint: { data: { id: 'pp-499' } } } },
+        ],
+        included: [
+          { type: 'subscriptionPricePoints', id: 'pp-199', attributes: { customerPrice: '1.99', proceeds: '1.69' } },
+          { type: 'subscriptionPricePoints', id: 'pp-499', attributes: { customerPrice: '4.99', proceeds: '4.24' } },
+        ],
+      };
+    }
+    if (opts.subscriptionsOnSecondPage && path.startsWith('/v1/apps/6636549188/subscriptionGroups')) {
+      return {
+        data: [{ type: 'subscriptionGroups', id: 'g0' }],
+        included: [
+          { type: 'subscriptions', id: 'other', attributes: { name: 'unrelated', productId: 'unrelated.sub' } },
+        ],
+        links: { next: 'https://api.appstoreconnect.apple.com/v1/subscriptionGroups?cursor=2' },
+      };
+    }
     if (path === '/v1/apps' && query?.['filter[bundleId]']) {
       return { data: [{ id: '6636549188', attributes: { name: 'Ask Quran', bundleId: query['filter[bundleId]'] } }] };
     }
@@ -69,8 +92,21 @@ function fakeHttp() {
     const res: any = await get(path, query);
     return { items: res?.data ?? [], pagesFetched: 1, hasMore: false, nextUrl: undefined };
   });
+  // Pagination follow-ups go through request(); page two carries the real
+  // subscriptions, so a single-page read reports them as missing.
+  const request = vi.fn(async (_method: string, url: string) => {
+    if (url.includes('cursor=2')) {
+      return {
+        data: [{ type: 'subscriptionGroups', id: 'g1' }],
+        included: [
+          { type: 'subscriptions', id: '6639599999', attributes: { name: 'ask quran base 1week', productId: 'askquran.base.1week' } },
+        ],
+      };
+    }
+    return {};
+  });
   const post = vi.fn(async () => ({ data: { id: 'created' } }));
-  return { get, collect, post };
+  return { get, collect, request, post };
 }
 
 function ctx(overrides: Partial<PricingContext> = {}): PricingContext & { http: any } {
@@ -129,6 +165,26 @@ describe('pricing__set_subscription_price', () => {
     ).rejects.toThrow(/askquran\.base\.1week/);
   });
 
+  it('refuses an ambiguous partial name rather than pricing the first match', async () => {
+    // "ask quran base" is inside both products. Picking one would set a price
+    // on a subscription nobody named.
+    const c = ctx();
+    await expect(
+      executePricingTool(
+        'pricing__set_subscription_price',
+        { ...goodArgs, subscription: 'ask quran base' },
+        c
+      )
+    ).rejects.toThrow(/matches 2 subscriptions/);
+    expect(c.http.post).not.toHaveBeenCalled();
+  });
+
+  it('finds a subscription whose group is on the second page', async () => {
+    const c = { http: fakeHttp({ subscriptionsOnSecondPage: true }) } as any;
+    const result: any = await executePricingTool('pricing__set_subscription_price', goodArgs, c);
+    expect(result.ok).toBe(true);
+  });
+
   it('refuses to run without an explicit preserve_current_price decision', async () => {
     const { preserve_current_price: _omitted, ...args } = goodArgs;
     await expect(
@@ -166,6 +222,15 @@ describe('pricing__get_subscription_price', () => {
     // as current would tell someone their app costs 5.99 when it costs 4.99.
     expect(result.prices[0].scheduledChanges).toHaveLength(1);
     expect(result.prices[0].scheduledChanges[0].customerPrice).toBe('5.99');
+  });
+
+  it('reports the newest past price, not the first row Apple sends', async () => {
+    const c = { http: fakeHttp({ repriced: true }) } as any;
+    const result: any = await get(
+      { app: '6636549188', subscription: 'askquran.base.1week', territory: 'USA' },
+      c
+    );
+    expect(result.prices[0].customerPrice).toBe('4.99');
   });
 
   it('reads the price point, which is the only place the price exists', async () => {

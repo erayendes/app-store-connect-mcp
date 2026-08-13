@@ -283,19 +283,41 @@ interface Subscription {
   productId: string;
 }
 
-/** Every subscription in the app, in one call — groups carry them as includes. */
+/**
+ * Every subscription in the app — groups carry them as includes.
+ *
+ * All the pages of groups, not the first: an app past 50 groups would have
+ * produced "No subscription matching…" for a product that exists, and the
+ * caller's next move on that message is to create a duplicate.
+ *
+ * `collect` returns `data` and not `included`, so the pages are walked here to
+ * keep each page's includes.
+ */
 async function listSubscriptions(http: AscHttpClient, appId: string): Promise<Subscription[]> {
-  const groups: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/subscriptionGroups`, {
-    include: 'subscriptions',
-    limit: 50,
-  });
-  return (groups?.included ?? [])
-    .filter((i: any) => i.type === 'subscriptions')
-    .map((s: any) => ({
-      id: String(s.id),
-      name: String(s.attributes?.name ?? ''),
-      productId: String(s.attributes?.productId ?? ''),
-    }));
+  const subs: Subscription[] = [];
+  const seen = new Set<string>();
+  let next: string | undefined;
+
+  for (let page = 0; page < 10; page++) {
+    const res: any = next
+      ? await http.request('GET', next)
+      : await http.get(`/v1/apps/${encodeURIComponent(appId)}/subscriptionGroups`, {
+          include: 'subscriptions',
+          limit: 50,
+        });
+    for (const i of res?.included ?? []) {
+      if (i.type !== 'subscriptions' || seen.has(String(i.id))) continue;
+      seen.add(String(i.id));
+      subs.push({
+        id: String(i.id),
+        name: String(i.attributes?.name ?? ''),
+        productId: String(i.attributes?.productId ?? ''),
+      });
+    }
+    next = res?.links?.next;
+    if (!next) break;
+  }
+  return subs;
 }
 
 async function resolveSubscription(
@@ -305,19 +327,37 @@ async function resolveSubscription(
 ): Promise<Subscription> {
   const subs = await listSubscriptions(http, appId);
   const wanted = subscription.trim().toLowerCase();
-  const match =
+  const describe = (list: Subscription[]) =>
+    list.map((s) => `${s.productId} ("${s.name}")`).join(', ');
+
+  // Exact wins outright. The substring tiers exist so "1week" finds the right
+  // product, and they are the ones that can match more than one thing: this is
+  // the resolution step in front of a price write, so a second candidate is a
+  // question to ask rather than a coin to flip.
+  const exact =
     subs.find((s) => s.productId.toLowerCase() === wanted) ??
-    subs.find((s) => s.name.toLowerCase() === wanted) ??
-    subs.find((s) => s.name.toLowerCase().includes(wanted)) ??
-    subs.find((s) => s.productId.toLowerCase().includes(wanted));
-  if (!match) {
-    const available = subs.map((s) => `${s.productId} ("${s.name}")`).join(', ');
-    throw new AscApiError(
-      `No subscription matching "${subscription}" in this app. Available: ${available || 'none'}.`,
-      0
-    );
+    subs.find((s) => s.name.toLowerCase() === wanted);
+  if (exact) return exact;
+
+  for (const tier of [
+    subs.filter((s) => s.name.toLowerCase().includes(wanted)),
+    subs.filter((s) => s.productId.toLowerCase().includes(wanted)),
+  ]) {
+    if (tier.length === 1) return tier[0];
+    if (tier.length > 1) {
+      throw new AscApiError(
+        `"${subscription}" matches ${tier.length} subscriptions: ${describe(tier)}. ` +
+          `Name one exactly by product ID.`,
+        0
+      );
+    }
   }
-  return match;
+
+  throw new AscApiError(
+    `No subscription matching "${subscription}" in this app. ` +
+      `Available: ${describe(subs) || 'none'}.`,
+    0
+  );
 }
 
 async function resolvePricePoint(
@@ -444,7 +484,14 @@ async function readPrice(
     };
   });
 
-  const current = rows.find((r: any) => !r.scheduled);
+  // Apple does not promise an order, and a subscription that has been repriced
+  // carries every past row. The one in effect is the latest start date that has
+  // passed, not the first row that happens to arrive — picking the first can
+  // report a price the app stopped charging years ago. A null start date is the
+  // original price, so it sorts earliest.
+  const current = rows
+    .filter((r: any) => !r.scheduled)
+    .sort((a: any, b: any) => String(b.startDate ?? '').localeCompare(String(a.startDate ?? '')))[0];
   return {
     subscription: sub.productId || sub.name,
     name: sub.name,

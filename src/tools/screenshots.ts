@@ -343,6 +343,36 @@ export async function executeScreenshotTool(
  * success at the call site, which is exactly why this is not a set of
  * instructions for someone else to follow.
  */
+/** Apple's own ceiling for a screenshot asset, with room to spare. */
+const MAX_SCREENSHOT_BYTES = 50 * 1024 * 1024;
+
+/**
+ * The path comes from the model, and everything after this reads the file and
+ * PUTs it to Apple. Without a check on the *contents*, `file_path` is a request
+ * to exfiltrate any file this process can read — a `.p8`, an SSH key, a config
+ * — and Apple rejecting it as not-an-image happens after the bytes have already
+ * left. The first eight bytes settle it before any network call.
+ */
+function assertUploadableImage(bytes: Buffer, filePath: string): void {
+  const isPng = bytes
+    .subarray(0, 8)
+    .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (!isPng && !isJpeg) {
+    throw new AscApiError(
+      `"${filePath}" is not a PNG or JPEG. Screenshots are uploaded byte for byte, so ` +
+        `anything else is refused here rather than sent to Apple to be rejected.`,
+      0
+    );
+  }
+  if (bytes.length > MAX_SCREENSHOT_BYTES) {
+    throw new AscApiError(
+      `"${filePath}" is ${bytes.length} bytes, over the ${MAX_SCREENSHOT_BYTES}-byte limit.`,
+      0
+    );
+  }
+}
+
 async function uploadScreenshot(
   args: Record<string, unknown>,
   ctx: ScreenshotContext
@@ -372,6 +402,7 @@ async function uploadScreenshot(
     throw new AscApiError(`Cannot read "${filePath}": ${(err as Error).message}`, 0);
   }
   if (!bytes.length) throw new AscApiError(`"${filePath}" is empty.`, 0);
+  assertUploadableImage(bytes, filePath);
   const fileName = basename(filePath);
   const checksum = createHash('md5').update(bytes).digest('hex');
 

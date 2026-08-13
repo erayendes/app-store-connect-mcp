@@ -11,11 +11,32 @@ import {
  * failures from outside: a request that has produced nothing yet, and an
  * instance split across more than one segment.
  */
-function fakeHttp(opts: { segments?: number; stopped?: boolean; instances?: any[] } = {}) {
+function fakeHttp(
+  opts: {
+    segments?: number;
+    stopped?: boolean;
+    instances?: any[];
+    /** Put the wanted report on page two, where a single-page read cannot see it. */
+    reportsOnSecondPage?: boolean;
+  } = {}
+) {
   const segments = opts.segments ?? 2;
   const get = vi.fn(async (path: string, query?: any) => {
     if (path === '/v1/apps') {
       return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
+    }
+    if (opts.reportsOnSecondPage && path.endsWith('/reports')) {
+      return {
+        data: [{ id: 'rep-9', attributes: { name: 'Something Else', category: 'APP_USAGE' } }],
+        links: { next: 'https://api.appstoreconnect.apple.com/v1/reports?cursor=2' },
+      };
+    }
+    if (opts.reportsOnSecondPage && path.includes('cursor=2')) {
+      return {
+        data: [
+          { id: 'rep-1', attributes: { name: 'App Store Installations', category: 'APP_USAGE' } },
+        ],
+      };
     }
     if (path.endsWith('/analyticsReportRequests')) {
       return {
@@ -66,7 +87,21 @@ function fakeHttp(opts: { segments?: number; stopped?: boolean; instances?: any[
     return gzipSync(Buffer.from(`Date\tInstalls\n2026-08-0${n + 1}\t${(n + 1) * 100}\n`, 'utf-8'));
   });
 
-  return { http: { get, downloadAsset }, downloaded };
+  // Mirrors AscHttpClient.collect: follow links.next until the collection ends.
+  const collect = vi.fn(async (path: string, query?: any) => {
+    const items: any[] = [];
+    let res: any = await get(path, query);
+    for (;;) {
+      if (Array.isArray(res?.data)) items.push(...res.data);
+      else if (res?.data) items.push(res.data);
+      const next = res?.links?.next;
+      if (!next) break;
+      res = await get(next);
+    }
+    return { items, pagesFetched: 1, hasMore: false, nextUrl: undefined };
+  });
+
+  return { http: { get, collect, downloadAsset }, downloaded };
 }
 
 const ctx = (http: unknown) => ({ http }) as unknown as AnalyticsContext;
@@ -160,5 +195,28 @@ describe('analytics__get_report', () => {
     expect(result.rows).toHaveLength(1);
     expect(result.truncated).toBe(true);
     expect(result.note).toMatch(/Showing 1 of 2 rows/);
+  });
+
+  it('treats a nonsense max_rows as the default instead of slicing backwards', async () => {
+    // `slice(0, -1)` silently drops the last row, which reads as a short answer
+    // rather than a rejected argument.
+    const { http } = fakeHttp();
+    const result: any = await executeAnalyticsTool(
+      'analytics__get_report',
+      { app: 'Ask Quran', report: 'App Store Installations', max_rows: -1 },
+      ctx(http)
+    );
+    expect(result.rows).toHaveLength(2);
+    expect(result.truncated).toBe(false);
+  });
+
+  it('finds a report that only appears on the second page', async () => {
+    const { http } = fakeHttp({ reportsOnSecondPage: true });
+    const result: any = await executeAnalyticsTool(
+      'analytics__get_report',
+      { app: 'Ask Quran', report: 'App Store Installations' },
+      ctx(http)
+    );
+    expect(result.report).toBe('App Store Installations');
   });
 });

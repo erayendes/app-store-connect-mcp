@@ -34,6 +34,11 @@ RUN node -e "const {generateKeyPairSync}=require('node:crypto'); \
   const {privateKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'}); \
   require('node:fs').writeFileSync('/app/introspection-key.pem', privateKey.export({type:'pkcs8',format:'pem'}));"
 ENV ASC_PRIVATE_KEY_PATH=/app/introspection-key.pem
+# The image already carries a private key file, throwaway or not. Running as
+# root gives anything that reaches this process write access to the whole app
+# tree; `node` ships in the base image and needs nothing root can offer.
+RUN chown -R node:node /app && chmod 600 /app/introspection-key.pem
+USER node
 # A profile, because that is how the server is meant to be run: `setup` writes one,
 # the guide documents one, and the whole surface at once is the configuration the docs
 # warn against. Booting bare showed introspection a shape no real install has.

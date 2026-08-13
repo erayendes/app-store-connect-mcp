@@ -387,14 +387,27 @@ export async function executeReviewsAiTool(
       // period, computed in code — "up vs down" is not left to the model.
       const previousSince = now - 2 * days * 86_400_000;
 
-      const { items } = await ctx.http.collect(
+      const createdAt = (r: any): number => Date.parse(r?.attributes?.createdDate ?? '');
+      // Newest first, so the window is fully covered once a review older than
+      // its start has been seen. Stopping on a page count instead would report
+      // "12 reviews, down from 40" as a fact when it is really "the first 600
+      // reviews contained 12" — a trend the numbers cannot support.
+      const reachedWindowStart = (fetched: any[]) =>
+        fetched.some((r) => {
+          const t = createdAt(r);
+          return Number.isFinite(t) && t < previousSince;
+        });
+
+      const { items, hasMore } = await ctx.http.collect(
         `/v1/apps/${encodeURIComponent(appId)}/customerReviews`,
         { sort: '-createdDate', limit: 200 },
-        3
+        10,
+        reachedWindowStart
       );
+      const windowComplete = reachedWindowStart(items) || !hasMore;
 
       const inWindow = (r: any, from: number, to: number): boolean => {
-        const created = Date.parse(r?.attributes?.createdDate ?? '');
+        const created = createdAt(r);
         return Number.isFinite(created) && created >= from && created < to;
       };
       const current = items.filter((r: any) => inWindow(r, since, Infinity));
@@ -407,9 +420,20 @@ export async function executeReviewsAiTool(
         averageRating: { current: stats.averageRating, previous: previousStats.averageRating },
       };
 
+      // Counts below a lower bound are not a trend. Say so rather than letting
+      // the shape of the answer imply a completeness it does not have.
+      const windowNote = windowComplete
+        ? {}
+        : {
+            windowComplete: false,
+            note:
+              `More reviews exist inside this ${days}-day window than were read, so every ` +
+              `count and the trend are lower bounds. Narrow "days" to get a complete window.`,
+          };
+
       if (current.length === 0) {
         return textResult(
-          { appId, days, fetchedCount: 0, analyzedCount: 0, stats, previousStats, trend },
+          { appId, days, fetchedCount: 0, analyzedCount: 0, stats, previousStats, trend, ...windowNote },
           INSTRUCTIONS.reviews_ai__daily_briefing_empty(days)
         );
       }
@@ -427,6 +451,7 @@ export async function executeReviewsAiTool(
           stats,
           previousStats,
           trend,
+          ...windowNote,
           reviews: packed,
         },
         INSTRUCTIONS.reviews_ai__daily_briefing(days)

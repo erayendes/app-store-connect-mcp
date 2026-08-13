@@ -6,10 +6,23 @@
  * The JSON tests run against real temp files rather than a mock, because the
  * failure that matters is what ends up on disk.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+// ESM namespaces are not configurable, so the CLI subprocess is replaced at
+// module level and steered per test through this hoisted state.
+const cli = vi.hoisted(() => ({ calls: [] as string[][], addFails: 0, removeFails: false }));
+vi.mock('node:child_process', async (original) => ({
+  ...(await original<typeof import('node:child_process')>()),
+  execFileSync: (_bin: string, args: string[]) => {
+    cli.calls.push(args);
+    if (args[0] === 'add' && cli.addFails-- > 0) throw new Error('name already in use');
+    if (args[0] === 'remove' && cli.removeFails) throw new Error('no such server');
+    return '';
+  },
+}));
 import {
   CLIENTS,
   OTHER_CLIENT,
@@ -230,5 +243,60 @@ describe('reading back what is registered', () => {
 
   it('reads nothing from a config that does not exist yet', () => {
     expect(listRegistered(jsonClient('absent.json')).size).toBe(0);
+  });
+});
+
+/**
+ * The CLI clients register through a subprocess, and the destructive shape is
+ * remove-then-add: a failing add there has already deleted a registration that
+ * worked, and nothing holds the old arguments to put it back.
+ */
+describe('registering with a CLI client', () => {
+  // `node` stands in for `claude`/`codex`: the only thing that matters is that
+  // hasBinary() finds it on PATH.
+  const cliClient = (): McpClient => ({
+    id: 'cli',
+    label: 'CLI',
+    targets: [
+      {
+        kind: 'cli',
+        bin: 'node',
+        where: 'somewhere',
+        add: (name, spec) => ['add', name, spec],
+        remove: (name) => ['remove', name],
+      },
+    ],
+  });
+
+  const runWith = (addFails: number, removeFails = false) => {
+    cli.calls = [];
+    cli.addFails = addFails;
+    cli.removeFails = removeFails;
+    const { results } = applyToClient(cliClient(), ['monetization'], []);
+    return { calls: cli.calls, results };
+  };
+
+  it('does not remove anything when the add just works', () => {
+    const { calls, results } = runWith(0);
+    expect(calls.map((c) => c[0])).toEqual(['add']);
+    expect(results[0].ok).toBe(true);
+  });
+
+  it('clears the old entry only once the add has been refused', () => {
+    const { calls, results } = runWith(1);
+    expect(calls.map((c) => c[0])).toEqual(['add', 'remove', 'add']);
+    expect(results[0].ok).toBe(true);
+  });
+
+  // The clear is a guess about why the add failed. When the guess is wrong the
+  // add's message is the only one that says anything useful, so it has to be
+  // the one that survives — otherwise a missing flag gets reported as "no such
+  // server", which sends the reader after a registration that was never there.
+  it('reports the add error, not the clear error, when clearing also fails', () => {
+    const { calls, results } = runWith(9, true);
+    expect(calls.map((c) => c[0])).toEqual(['add', 'remove']);
+    expect(results[0].ok).toBe(false);
+    expect(results[0].message).toContain('name already in use');
+    expect(results[0].message).not.toContain('no such server');
   });
 });
