@@ -4,6 +4,7 @@
  * curation can quietly get wrong — and did, before this file existed.
  */
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   PROFILES,
   PROFILE_DESCRIPTIONS,
@@ -11,6 +12,7 @@ import {
   CORE_MANUAL_TOOLS,
   REMOVED_PROFILES,
   descriptionKey,
+  manualToolsFor,
   operationsFor,
   removedProfileMessage,
   resolveSelection,
@@ -219,5 +221,59 @@ describe('counts — curation output, not something that drifts on its own', () 
     // It grew by 5 when the listing pair, the analytics macro, the equalize
     // macro and the missing pricing read joined the sheet.
     expect(new Set([...tools, ...CORE_OPERATIONS]).size).toBe(loadable.length + 18);
+  });
+});
+
+/**
+ * The registry entry advertises the profile list in prose, and prose does not
+ * regenerate. `server.json` is what every MCP aggregator scrapes, so a profile
+ * added or renamed here and not there is a wrong answer served hourly to every
+ * directory downstream — the same drift class the release pre-flight guards for
+ * the tool count.
+ */
+describe('server.json stays in step with the profiles', () => {
+  const server = JSON.parse(readFileSync('server.json', 'utf8'));
+  const profileArg = server.packages?.[0]?.packageArguments?.find(
+    (a: { valueHint?: string }) => a.valueHint === 'profile'
+  );
+
+  it('describes the profile argument at all', () => {
+    // Without it an installer runs the server with no profile and serves the
+    // default working set, which is the one thing the product is not about.
+    expect(profileArg, 'server.json declares no profile argument').toBeTruthy();
+    expect(profileArg.isRequired).toBe(false);
+  });
+
+  it('names every profile, and invents none', () => {
+    const described: string[] = (profileArg.description.match(/[a-z][a-z-]+/g) ?? []).filter(
+      (w: string) => w.includes('-') || w.length > 3
+    );
+    const real = PROFILES.map((p) => p.name);
+    const missing = real.filter((n) => !profileArg.description.includes(n));
+    expect(missing, 'profiles missing from the server.json description').toEqual([]);
+    // And a renamed profile leaves its old name behind, which is worse than an
+    // omission because it reads as real.
+    const invented = described.filter(
+      (w) => /^(app|game|xcode|background)-/.test(w) && !real.includes(w)
+    );
+    expect(invented, 'server.json names a profile that does not exist').toEqual([]);
+  });
+
+  it('keeps the sub-profile example true', () => {
+    // "monetization:subscription-pricing is 24 tools instead of 206" is a claim
+    // about live data, and both halves drift.
+    const m = /monetization:([a-z-]+) is (\d+) tools instead of (\d+)/.exec(profileArg.description);
+    expect(m, 'the sub-profile example changed shape').toBeTruthy();
+    const [, subName, claimedNarrow, claimedWide] = m!;
+
+    const narrow = resolveSelection(`monetization:${subName}`)!;
+    const wide = resolveSelection('monetization')!;
+    // Same definition the guide's table and the setup picker use: the
+    // operations, the hand-written tools the selection carries, and core's.
+    const count = (sel: ReturnType<typeof resolveSelection>) =>
+      new Set([...operationsFor(sel), ...manualToolsFor(sel), ...CORE_MANUAL_TOOLS]).size;
+
+    expect(count(narrow), 'narrow count in server.json').toBe(Number(claimedNarrow));
+    expect(count(wide), 'wide count in server.json').toBe(Number(claimedWide));
   });
 });

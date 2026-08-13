@@ -62,7 +62,7 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 | | |
 | :--- | :--- |
 | **Complete** | Apple's OpenAPI spec v4.4.1, all 966 paths, 982 operations — 281 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 859 reachable operations plus 24 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
-| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 24 tools instead of 204. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
+| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 26 tools instead of 206. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
 | **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
 | **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
@@ -164,7 +164,7 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 | | |
 | :--- | :--- |
 | **Eksiksiz** | Apple'ın OpenAPI spec v4.4.1'i, tüm 966 path, 982 işlem — 281 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 859 işlem artı elle yazılmış 24 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
-| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 204 yerine 24 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
+| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 206 yerine 26 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
 | **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
 | **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
