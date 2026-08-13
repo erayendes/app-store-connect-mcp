@@ -1,7 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.erayendes/asc-mcp",
+  "title": "Heimdall",
   "description": "Every App Store Connect + StoreKit 2 endpoint. 883 tools in 13 profiles, narrow to 24.",
+  "websiteUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE.md",
   "repository": {
     "url": "https://github.com/erayendes/app-store-connect-mcp",
     "source": "github"
@@ -10,11 +12,48 @@
   "packages": [
     {
       "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@erayendes/asc-mcp",
       "version": "2.1.0",
       "transport": {
         "type": "stdio"
-      }
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "valueHint": "profile",
+          "description": "Which slice of App Store Connect to serve. One of app-info, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets. Narrow further with a colon — monetization:subscription-pricing is 26 tools instead of 206. Omit it to serve the default working set, which is larger.",
+          "isRequired": false
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "ASC_KEY_ID",
+          "description": "App Store Connect API Key ID. Normally written for you by `npx -y @erayendes/asc-mcp setup`.",
+          "isRequired": false
+        },
+        {
+          "name": "ASC_ISSUER_ID",
+          "description": "App Store Connect Issuer ID (a UUID). Normally written for you by `setup`.",
+          "isRequired": false
+        },
+        {
+          "name": "ASC_PRIVATE_KEY",
+          "description": "The .p8 private key as PEM text. Prefer `setup`, which stores it in the macOS Keychain instead of any config file; set this only where a Keychain is unavailable, such as CI.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "ASC_PRIVATE_KEY_PATH",
+          "description": "Path to the .p8 file, as an alternative to pasting its contents. Off macOS this is what `setup` records.",
+          "isRequired": false
+        },
+        {
+          "name": "ASC_BUNDLE_ID",
+          "description": "Bundle ID of one app. Only needed by the StoreKit 2 transaction tools on the monetization profile.",
+          "isRequired": false
+        }
+      ]
     }
   ]
 }

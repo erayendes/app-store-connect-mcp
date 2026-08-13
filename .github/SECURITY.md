@@ -16,6 +16,17 @@ The best habit, with this project or any other, is to check it before you trust 
 - **The tools are generated, not hand-written**, from Apple's OpenAPI spec (`spec/openapi.json`) by `scripts/generate.ts` — so what you audit is what runs.
 - **Pin a reviewed version** if you want to be strict: `npx -y @erayendes/asc-mcp@1.0.4 …`.
 
+### How the package reaches you
+
+Auditing the source only helps if the published package is built from it. The release pipeline is what connects the two, and all of it is verifiable without taking anyone's word for it.
+
+- **Published by GitHub Actions, not by a person.** npm trusted publishing (OIDC) issues a short-lived credential per release, so there is no long-lived npm token in this repository, in CI secrets, or on a maintainer's laptop to steal.
+- **Signed provenance.** Every release is published with `--provenance`, so npm records which workflow, which commit and which repository produced the tarball. `npm view @erayendes/asc-mcp` shows the attestation.
+- **An SBOM per release.** Each GitHub release carries an SPDX bill of materials for the production dependency tree.
+- **Actions pinned to commit SHAs**, so a compromised or retagged third-party action cannot change what runs in the release job. Dependabot raises the bumps as reviewable pull requests.
+- **Dependency review on every pull request**, failing on moderate severity and above.
+- **Release metadata is cross-checked before publishing.** The version has to agree across `package.json`, `server.json`, `package-lock.json`, `CITATION.cff` and the git tag, and the changelog has to carry a matching heading, or the release stops.
+
 ### What we collect: nothing
 
 Heimdall has **no backend and no telemetry**. There is nothing to opt out of.
@@ -77,6 +88,17 @@ En iyi alışkanlık, bu projede ya da başka herhangi birinde, güvenmeden önc
 
 - **Araçlar elle değil üretilerek** gelir; Apple'ın OpenAPI spec'inden (`spec/openapi.json`) `scripts/generate.ts` ile — yani denetlediğiniz şey, çalışan şeydir.
 - Katı olmak isterseniz **incelediğiniz bir sürüme sabitleyin**: `npx -y @erayendes/asc-mcp@1.0.4 …`.
+
+### Paket size nasıl ulaşıyor
+
+Kaynağı denetlemek, ancak yayınlanan paket ondan üretiliyorsa işe yarar. İkisini birbirine bağlayan şey yayın hattı ve hepsi kimsenin sözüne güvenmeden doğrulanabilir.
+
+- **Bir insan değil, GitHub Actions yayınlıyor.** npm trusted publishing (OIDC) her sürüm için kısa ömürlü bir kimlik üretiyor; yani ne bu depoda, ne CI secret'larında, ne de bir geliştiricinin dizüstünde çalınacak uzun ömürlü bir npm token'ı var.
+- **İmzalı provenance.** Her sürüm `--provenance` ile yayınlanıyor; npm, tarball'ı hangi workflow'un, hangi commit'in ve hangi deponun ürettiğini kaydediyor. `npm view @erayendes/asc-mcp` attestation'ı gösterir.
+- **Sürüm başına SBOM.** Her GitHub release'i, üretim bağımlılık ağacı için SPDX malzeme listesi taşıyor.
+- **Action'lar commit SHA'sına sabitlenmiş**, yani ele geçirilmiş ya da yeniden etiketlenmiş bir üçüncü taraf action yayın işinde çalışanı değiştiremiyor. Güncellemeleri Dependabot incelenebilir pull request'ler olarak açıyor.
+- **Her pull request'te dependency review**, orta ve üzeri önem derecesinde başarısız oluyor.
+- **Yayından önce sürüm verileri çapraz kontrol ediliyor.** Sürüm numarası `package.json`, `server.json`, `package-lock.json`, `CITATION.cff` ve git etiketi arasında uyuşmak zorunda, changelog'da eşleşen bir başlık bulunmak zorunda — yoksa yayın durur.
 
 ### Ne topluyoruz: hiçbir şey
 
