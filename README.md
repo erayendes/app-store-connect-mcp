@@ -28,13 +28,9 @@ An MCP server for the **App Store Connect API** and the **App Store Server API (
 Apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
 
 ### Ask and it answers. Tell it and it's done.
-
 > - *"Summarise this week's 1-star reviews and draft replies."*
 > - *"Which builds are stuck in review?"*
 > - *"Raise this subscription's price in every territory."*
-
-> [!IMPORTANT]
-> **2.0.0 is a breaking release.** Which tool belongs to which profile is hand-curated now, so every profile's contents changed and `user-management` was split into four. Nothing was lost, but the tool you reach for may have moved next door. Upgrading from 1.x: check the profile names in your config against the [changelog](docs/CHANGELOG.md).
 
 ### Quick start
 
@@ -45,11 +41,10 @@ npx -y @erayendes/asc-mcp setup
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
 
-<sub>One pass: the key and issuer ID, a live credential check, then the profiles and sub-profiles you want — and the key ends up in the Keychain, not in a config file. Sped up; invented credentials against a stand-in API.</sub>
+<sub>One pass, and safe throughout: the access details it needs, then a live credential check. Then your choices — the profiles and sub-profiles you want, and the key ends up in the Keychain, not in a config file.</sub>
 
-The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so this is the step you would otherwise repeat once per client, in a different format each time. Full walkthrough in the [Guide](docs/GUIDE.md).
-
-> [!NOTE]
+The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so **this is the step you would otherwise repeat once per client, in a different format each time.** Time thrown away.
+Full walkthrough in the [Guide](docs/GUIDE.md).
 > **Is an AI agent installing Heimdall for you?**
 > See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent adds the profiles with `register`, you run `setup` yourself for the key — your private key is for your eyes only, and the agent never sees it.
 
@@ -66,12 +61,9 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
 | **Private** | The `.p8` lives in the macOS Keychain, never in a plain-text config. |
 
+#### Profiles
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: checking monetization unfolds its sub-profiles, each with its tool count and token estimate" width="720">
-
-<sub>Checking a profile unfolds its sub-profiles, each with what it costs a session. Uncheck what this job does not need — no config file, no restart to find out.</sub>
-
-#### Profiles
 
 Register only the profiles your project uses. What each one covers is in the [profile table](docs/GUIDE.md#register-profiles); adding and removing them later is [here](docs/GUIDE.md#adding-and-removing-later).
 
@@ -83,9 +75,7 @@ Changing a price, submitting for review or deleting something can ask for confir
 
 #### Local by design, not by default
 
-MCP guidance recommends remote HTTP servers: one URL, no install, updates you control. Heimdall runs locally over stdio instead, and that is a deliberate trade.
-
-A remote Heimdall would have to hold your `.p8` — the private key that signs every App Store Connect request, with whatever role you granted it. Hosting it means asking every user to hand their App Store account's signing key to a third party, and making that server a target worth attacking. Running locally, the key never leaves your machine: Heimdall reads it from the Keychain, signs a short-lived token, and talks to Apple directly. Nothing sits in between.
+MCP guidance recommends remote HTTP servers: one URL, no install, updates you control. Heimdall runs locally over stdio instead, and that is a deliberate trade. Running locally, the key never leaves your machine: Heimdall reads it from the Keychain, signs a short-lived token, and talks to Apple directly. Nothing sits in between.
 
 The cost is real and worth naming: you need Node installed, and you update by version rather than by us pushing one. That is the price of the key staying yours.
 
@@ -130,13 +120,9 @@ Tool definitions in `src/generated/` are produced from Apple Inc.'s published Ap
 Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
 
 ### Sorun yanıtlasın. İsteyin yapsın.
-
 > - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
 > - *"Hangi build'ler incelemede takıldı?"*
 > - *"Bu aboneliğin fiyatını her ülkede artır."*
-
-> [!IMPORTANT]
-> **2.0.0 kırıcı bir sürümdür.** Hangi aracın hangi profile ait olduğu artık elle belirleniyor; bu yüzden her profilin içeriği değişti ve `user-management` dörde bölündü. Hiçbir araç kaybolmadı, ama aradığınız araç yan komşuya taşınmış olabilir. 1.x'ten yükseltiyorsanız config'inizdeki profil adlarını [değişiklik günlüğüyle](docs/CHANGELOG.md) karşılaştırın.
 
 ### Hızlı başlangıç
 
@@ -147,11 +133,10 @@ npx -y @erayendes/asc-mcp setup
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, issuer ID, istemci seçimi, profil seçimi ve yazmadan önce onay" width="720">
 
-<sub>Tek geçiş: anahtar ve issuer ID, canlı kimlik doğrulama, sonra istediğiniz profiller ve alt profiller — anahtar da config dosyasına değil Keychain'e gidiyor. Hızlandırılmış; uydurma kimlik bilgileriyle, Apple yerine bir taklit sunucuya karşı.</sub>
+<sub>Tek geçiş ve şahane güvenlik: Gerekli erişim bilgileri, sonra canlı kimlik doğrulama. Ardından seçimleriniz; istediğiniz profiller ve alt profiller — anahtar da config dosyasına değil Keychain'e gidiyor.</sub>
 
-Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı. Adım adım anlatım [Rehber](docs/GUIDE.md)'de.
-
-> [!NOTE]
+Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; **yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı.** Boşa vakit kaybı. 
+Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 > **Heimdall'ı bir AI agent mı kuracak?**
 > Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent profilleri `register` ile ekler, anahtar için `setup`'ı siz çalıştırırsınız — özel anahtarınız sadece sizin gözleriniz için, AI agent göremez.
 
@@ -168,14 +153,11 @@ Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiği
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
 | **Gizli** | `.p8` macOS Keychain'de durur, düz metin config'de değil. |
 
+#### Profiller
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri araç sayısı ve token tahminiyle açılıyor" width="720">
 
-<sub>Bir profili işaretleyince alt profilleri açılıyor, her biri oturuma maliyetiyle birlikte. Bu iş için gerekmeyeni kaldırın — config dosyası yok, öğrenmek için yeniden başlatma yok.</sub>
-
-#### Profiller
-
-Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığı [profil tablosunda](docs/GUIDE.md#profilleri-kaydedin), sonradan ekleme ve çıkarma [burada](docs/GUIDE.md#sonradan-ekleme-ve-çıkarma)'de.
+Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığı [profil tablosunda](docs/GUIDE.md#profilleri-kaydedin), sonradan ekleme ve çıkarma [burada](docs/GUIDE.md#sonradan-ekleme-ve-çıkarma).
 
 Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun; `asc__search_tools` o an yüklü olmayanlar dahil hepsini arar ve hangi profilde olduğunu söyler.
 
@@ -185,9 +167,7 @@ Fiyat değiştirme, incelemeye gönderme ya da bir şeyi silme çalışmadan ön
 
 #### Yerelde çalışması tercih, eksiklik değil
 
-MCP rehberleri uzak HTTP sunucularını önerir: tek URL, kurulum yok, güncellemeyi siz yönetirsiniz. Heimdall bunun yerine yerelde stdio üzerinden çalışır ve bu bilinçli bir tercihtir.
-
-Uzak bir Heimdall, `.p8` dosyanızı tutmak zorunda kalırdı — her App Store Connect isteğini imzalayan, verdiğiniz role sahip özel anahtar. Onu barındırmak, her kullanıcıdan App Store hesabının imza anahtarını üçüncü bir tarafa teslim etmesini istemek ve o sunucuyu saldırmaya değer bir hedef hâline getirmek demektir. Yerelde çalışınca anahtar makinenizden hiç çıkmaz: Heimdall onu Keychain'den okur, kısa ömürlü bir token imzalar ve doğrudan Apple ile konuşur. Arada hiçbir şey durmaz.
+MCP rehberleri uzak HTTP sunucularını önerir: tek URL, kurulum yok, güncellemeyi siz yönetirsiniz. Heimdall bunun yerine yerelde stdio üzerinden çalışır ve bu bilinçli bir tercihtir. Yerelde çalışınca anahtar makinenizden hiç çıkmaz: Heimdall onu Keychain'den okur, kısa ömürlü bir token imzalar ve doğrudan Apple ile konuşur. Arada hiçbir şey durmaz.
 
 Bedeli gerçek ve söylenmeye değer: Node kurulu olmalı ve güncelleme biz gönderdiğimiz için değil, siz sürüm seçtiğiniz için gelir. Anahtarın sizde kalmasının bedeli bu.
 
