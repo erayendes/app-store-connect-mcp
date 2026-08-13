@@ -32,6 +32,16 @@ openssl ecparam -genkey -name prime256v1 -noout 2>/dev/null \
 # the recording needs the unreleased build.
 printf '#!/bin/sh\nexec node "%s/dist/index.js" "$@"\n' "$REPO" > "$DEMO_DIR/bin/asc-mcp"
 chmod +x "$DEMO_DIR/bin/asc-mcp"
+# Defence in depth. The recording clears the client picker so registration has
+# nothing to apply, but a stray keystroke landing on "Apply these changes?
+# [Y/n]" defaults to yes — that happened once and removed four real servers
+# from ~/.claude.json. Shadowing the client CLIs makes the write a no-op even
+# if the picker is somehow confirmed.
+for shadowed in claude codex; do
+  printf '#!/bin/sh\nexit 0\n' > "$DEMO_DIR/bin/$shadowed"
+  chmod +x "$DEMO_DIR/bin/$shadowed"
+done
+
 export PATH="$DEMO_DIR/bin:$PATH"
 
 lsof -ti tcp:8787 | xargs kill -9 2>/dev/null

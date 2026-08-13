@@ -23,9 +23,10 @@
 Output assets/setup.gif
 
 Set Shell zsh
-Set FontSize 16
-Set Width 1100
-Set Height 700
+# Wide enough that the picker rows do not wrap — see picker.tape.
+Set FontSize 15
+Set Width 1400
+Set Height 780
 Set Padding 20
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 35ms
@@ -65,22 +66,61 @@ Sleep 5s
 Enter
 Sleep 3s
 
-# Client picker. The clients actually installed on this machine come checked.
-# It is a full-screen picker and takes a moment to paint; confirming before it
-# has drawn sends the keystroke to the prompt underneath instead.
-Sleep 4s
+# Client picker, hidden and cleared with `a` `a` (select all, then clear).
+#
+# Not cosmetic. With no client selected there is nothing for the final
+# "Apply these changes? [Y/n]" step to write, and that prompt defaults to yes —
+# an earlier cut of this tape drifted by one keystroke, answered it, and
+# removed four real servers from ~/.claude.json. Safety here has to be
+# structural rather than a well-timed Ctrl+C.
+Hide
+Sleep 5s
+Type "a"
+Sleep 400ms
+Type "a"
+Sleep 400ms
 Enter
 Sleep 4s
+Show
 
-# Profile picker: arrows move, space toggles, Enter confirms.
+# Profile picker. Walk down to monetization and check it — the sub-profiles
+# unfold underneath, which is the whole point of the picker and was invisible
+# in the first cut of this recording.
+Sleep 1500ms
 Down
+Sleep 200ms
+Down
+Sleep 200ms
+Down
+Sleep 200ms
+Down
+Sleep 200ms
+Down
+Sleep 200ms
+Down
+Sleep 200ms
+Down
+Sleep 200ms
+Down
+Sleep 1000ms
+Space
+Sleep 2500ms
+
+# Drop the sub-profiles this job does not need: 197 tools becomes a handful.
+Down
+Sleep 400ms
+Down
+Sleep 350ms
+Space
 Sleep 600ms
-Space
-Sleep 700ms
 Down
-Sleep 500ms
+Sleep 350ms
 Space
-Sleep 900ms
+Sleep 600ms
+Down
+Sleep 350ms
+Space
+Sleep 1800ms
 Enter
 Sleep 4s
 
