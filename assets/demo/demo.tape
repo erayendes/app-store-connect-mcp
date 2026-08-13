@@ -5,13 +5,14 @@
 # in for Apple so the GIF can be public without confirming what a real account
 # holds. Playback is sped up; the session takes about 20 seconds in real time.
 #
-# assets/demo/mcp-config.json carries an EC private key. It is a throwaway,
-# not registered with Apple, and authorizes nothing — the same key and the same
-# reasoning as the Dockerfile, which needs a bootable server for directory
-# introspection. The fixture server never checks the JWT; the key exists only
-# so TokenProvider has something to sign with.
+# The server needs a key to start, because TokenProvider signs an ES256 JWT
+# per request — the fixture never checks it, but it has to be a real EC key.
+# One is generated below and written to assets/demo/demo-key.pem, which
+# .gitignore's *.pem already covers. Nothing about it is committed: a private
+# key in a public repo is inert here and still trips every scanner that sees
+# one, and a reader has to take "throwaway" on trust.
 #
-# Prerequisites: npm run build, and `vhs` on PATH (brew install vhs).
+# Prerequisites: npm run build, `vhs` on PATH (brew install vhs), openssl.
 
 Output assets/demo.gif
 
@@ -30,6 +31,8 @@ Hide
 Type "cd $PWD"
 Enter
 Type "lsof -ti tcp:8787 | xargs -r kill -9 2>/dev/null; sleep 1"
+Enter
+Type "openssl ecparam -genkey -name prime256v1 -noout | openssl pkcs8 -topk8 -nocrypt -out assets/demo/demo-key.pem"
 Enter
 Type "setopt interactive_comments; node assets/demo/fixture-server.mjs 8787 >/dev/null 2>&1 &!"
 Enter
