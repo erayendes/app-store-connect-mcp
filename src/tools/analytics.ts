@@ -120,6 +120,19 @@ export interface AnalyticsContext {
   http: AscHttpClient;
 }
 
+/**
+ * The schema documents "default 200, hard cap 1000" and nothing enforced it.
+ * `Number(x) || 200` lets a negative through as truthy, and `slice(0, -5)`
+ * then drops the last five rows instead of returning five — a wrong answer
+ * that looks like a short one.
+ */
+const MAX_ROWS_CAP = 1000;
+function clampRows(raw: unknown): number {
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return 200;
+  return Math.min(n, MAX_ROWS_CAP);
+}
+
 async function resolveApp(http: AscHttpClient, app: string): Promise<{ id: string; name: string }> {
   const wanted = app.trim();
   if (/^\d+$/.test(wanted)) {
@@ -160,12 +173,15 @@ export async function executeAnalyticsTool(
   }
 
   const app = await resolveApp(ctx.http, String(args.app));
+  // Every hop of the chain paginates. Reading one page of any of them turns a
+  // report that exists into "no report matching…", which reads like an answer.
+  const maxRows = clampRows(args.max_rows);
 
-  const requests: any = await ctx.http.get(
+  const requests = await ctx.http.collect<any>(
     `/v1/apps/${encodeURIComponent(app.id)}/analyticsReportRequests`,
     { 'fields[analyticsReportRequests]': 'accessType,stoppedDueToInactivity', limit: 50 }
   );
-  const live = (requests?.data ?? []).filter((r: any) => !r.attributes?.stoppedDueToInactivity);
+  const live = requests.items.filter((r: any) => !r.attributes?.stoppedDueToInactivity);
   if (!live.length) {
     throw new AscApiError(
       `"${app.name}" has no active analytics report request, so Apple is not producing any ` +
@@ -181,7 +197,7 @@ export async function executeAnalyticsTool(
   const category = args.category ? String(args.category).trim().toUpperCase() : undefined;
   const reports: Array<{ id: string; name: string; category: string }> = [];
   for (const req of live) {
-    const res: any = await ctx.http.get(
+    const res = await ctx.http.collect<any>(
       `/v1/analyticsReportRequests/${encodeURIComponent(req.id)}/reports`,
       {
         ...(category ? { 'filter[category]': category } : {}),
@@ -189,7 +205,7 @@ export async function executeAnalyticsTool(
         limit: 200,
       }
     );
-    for (const r of res?.data ?? []) {
+    for (const r of res.items) {
       reports.push({
         id: r.id,
         name: String(r.attributes?.name ?? ''),
@@ -232,7 +248,7 @@ export async function executeAnalyticsTool(
   const granularity = args.granularity
     ? String(args.granularity).trim().toUpperCase()
     : 'DAILY';
-  const instances: any = await ctx.http.get(
+  const instances = await ctx.http.collect<any>(
     `/v1/analyticsReports/${encodeURIComponent(report.id)}/instances`,
     {
       'filter[granularity]': granularity,
@@ -243,7 +259,7 @@ export async function executeAnalyticsTool(
   );
   // Apple does not promise an order, so pick the newest date rather than the
   // first row — "most recent" is the whole point of the default.
-  const instance = (instances?.data ?? [])
+  const instance = instances.items
     .slice()
     .sort((a: any, b: any) =>
       String(b.attributes?.processingDate ?? '').localeCompare(
@@ -259,11 +275,11 @@ export async function executeAnalyticsTool(
     );
   }
 
-  const segmentRefs: any = await ctx.http.get(
+  const segmentRefs = await ctx.http.collect<any>(
     `/v1/analyticsReportInstances/${encodeURIComponent(instance.id)}/segments`,
     { limit: 100 }
   );
-  const refs = segmentRefs?.data ?? [];
+  const refs = segmentRefs.items;
   if (!refs.length) {
     throw new AscApiError(
       `Instance ${instance.attributes?.processingDate} of "${report.name}" has no segments — ` +
@@ -283,7 +299,7 @@ export async function executeAnalyticsTool(
     const url = seg?.data?.attributes?.url;
     if (!url) continue;
     const bytes = await ctx.http.downloadAsset(String(url));
-    tables.push(parseGzippedTsv(bytes, Number(args.max_rows) || undefined));
+    tables.push(parseGzippedTsv(bytes, maxRows));
   }
   if (!tables.length) {
     throw new AscApiError(
@@ -293,7 +309,6 @@ export async function executeAnalyticsTool(
     );
   }
 
-  const maxRows = Number(args.max_rows) || 200;
   const headers = tables[0].headers;
   const rows = tables.flatMap((t) => t.rows).slice(0, maxRows);
   const totalRows = tables.reduce((n, t) => n + t.totalRows, 0);

@@ -341,15 +341,17 @@ export function applyToClient(
       for (const spec of toAdd) {
         const name = serverName(spec);
         try {
-          // Re-registering the same name needs the old entry gone first.
-          if (t.remove) {
-            try {
-              execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
-            } catch {
-              // Not registered yet — nothing to clear.
-            }
+          // Add first. Removing up front is what re-registration needs, but
+          // only when the add would otherwise be refused for the name already
+          // being taken — do it unconditionally and a failing add has already
+          // deleted a registration that was working, with nothing to put back.
+          try {
+            execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
+          } catch (err) {
+            if (!t.remove) throw err;
+            execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
+            execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
           }
-          execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
           record(`add:${spec}`, addLabel(spec), true);
         } catch (err) {
           record(`add:${spec}`, addLabel(spec), false, firstLine(err));

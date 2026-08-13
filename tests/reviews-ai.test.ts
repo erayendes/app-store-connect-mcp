@@ -295,4 +295,48 @@ describe('reviews_ai__daily_briefing (trend computed in code)', () => {
       /app_id/
     );
   });
+
+  it('stops paging once a review older than the compared window shows up', async () => {
+    const now = Date.now();
+    const iso = (msAgo: number) => new Date(now - msAgo).toISOString();
+    const collect = vi.fn(async (_p: string, _q: any, _max: number, enough?: any) => {
+      const items = [review('c1', 5, 'great', iso(3_600_000))];
+      // Page one alone does not reach the start of the previous window.
+      expect(enough(items)).toBe(false);
+      items.push(review('old', 3, 'ancient', iso(10 * 86_400_000)));
+      expect(enough(items)).toBe(true);
+      return { items, pagesFetched: 2, hasMore: true, nextUrl: 'next' };
+    });
+
+    const result: any = await executeReviewsAiTool(
+      'reviews_ai__daily_briefing',
+      { app_id: '1', days: 1 },
+      makeCtx({ collect })
+    );
+
+    // hasMore is true, but the window is covered — no false incompleteness.
+    expect(result.structuredContent.windowComplete).toBeUndefined();
+    expect(result.structuredContent.note).toBeUndefined();
+  });
+
+  it('marks the counts as lower bounds when the window was not fully read', async () => {
+    const now = Date.now();
+    const iso = (msAgo: number) => new Date(now - msAgo).toISOString();
+    const collect = vi.fn(async () => ({
+      // Every review is inside the window, and Apple has more of them.
+      items: [review('c1', 5, 'great', iso(3_600_000)), review('c2', 1, 'bad', iso(7_200_000))],
+      pagesFetched: 10,
+      hasMore: true,
+      nextUrl: 'next',
+    }));
+
+    const result: any = await executeReviewsAiTool(
+      'reviews_ai__daily_briefing',
+      { app_id: '1', days: 1 },
+      makeCtx({ collect })
+    );
+
+    expect(result.structuredContent.windowComplete).toBe(false);
+    expect(result.structuredContent.note).toMatch(/lower bounds/);
+  });
 });

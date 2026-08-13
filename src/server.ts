@@ -49,6 +49,8 @@ import {
 } from './profiles.js';
 import {
   stripApiNoise,
+  redactPii,
+  markUntrusted,
   capResponseSize,
   truncateText,
   DEFAULT_MAX_RESPONSE_CHARS,
@@ -639,6 +641,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         if (process.env.ASC_KEEP_RAW_RESPONSES !== '1') {
           result = stripApiNoise(result);
         }
+        if (process.env.ASC_REDACT_PII === '1') {
+          result = redactPii(result);
+        }
+        // Before the size cap, so the marker cannot be the thing that gets cut.
+        result = markUntrusted(result);
         result = capResponseSize(result, maxResponseChars());
       }
 

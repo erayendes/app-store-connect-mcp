@@ -281,16 +281,30 @@ export class AscHttpClient {
     try {
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw await toApiError(res);
-      const buf = Buffer.from(await res.arrayBuffer());
-      // A cap, not a stream: these are report segments, and one that does not
-      // fit in memory is a sign the caller wanted a narrower query.
-      if (buf.length > maxBytes) {
-        throw new AscApiError(
-          `Asset is ${buf.length} bytes, over the ${maxBytes}-byte limit. Narrow the request.`,
-          0
-        );
+
+      // The cap has to bite before the bytes are in memory. Checking it after
+      // `arrayBuffer()` reads like a limit but is only a report: the oversized
+      // body has already been buffered by the time the number is known.
+      const declared = Number(res.headers.get('content-length'));
+      if (Number.isFinite(declared) && declared > maxBytes) throw tooBig(declared, maxBytes);
+
+      if (!res.body) return Buffer.alloc(0);
+      const reader = res.body.getReader();
+      const chunks: Buffer[] = [];
+      let total = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > maxBytes) {
+          // Stop the transfer rather than draining the rest of a body we have
+          // already refused.
+          await reader.cancel().catch(() => {});
+          throw tooBig(total, maxBytes);
+        }
+        chunks.push(Buffer.from(value));
       }
-      return buf;
+      return Buffer.concat(chunks);
     } catch (err) {
       if (err instanceof AscApiError) throw err;
       const isAbort = (err as Error)?.name === 'AbortError';
@@ -309,11 +323,17 @@ export class AscHttpClient {
    * Follows `links.next` until the collection is exhausted or `maxPages` is
    * hit. The result says whether it stopped early (`hasMore` + `nextUrl`), so
    * callers can't mistake a page-capped fetch for the complete collection.
+   *
+   * `enough` is for sorted collections where the caller can recognise the end
+   * of what it wanted before Apple runs out — reviews past the start of a date
+   * window, say. Without it the choice is a cap too low to be correct or one
+   * too high to be cheap.
    */
   async collect<T = unknown>(
     path: string,
     query?: Query,
-    maxPages = 10
+    maxPages = 10,
+    enough?: (items: T[]) => boolean
   ): Promise<{ items: T[]; pagesFetched: number; hasMore: boolean; nextUrl?: string }> {
     const items: T[] = [];
     let next: string | undefined;
@@ -330,9 +350,19 @@ export class AscHttpClient {
 
       next = res?.links?.next;
       if (!next) break;
+      // Satisfied, not exhausted: `hasMore` stays true because Apple does have
+      // more — the caller stopped wanting it.
+      if (enough?.(items)) break;
     }
     return { items, pagesFetched, hasMore: Boolean(next), nextUrl: next };
   }
+}
+
+function tooBig(bytes: number, maxBytes: number): AscApiError {
+  return new AscApiError(
+    `Asset is at least ${bytes} bytes, over the ${maxBytes}-byte limit. Narrow the request.`,
+    0
+  );
 }
 
 function applyQuery(url: URL, query: Query): void {
