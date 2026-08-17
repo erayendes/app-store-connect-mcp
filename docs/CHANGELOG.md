@@ -6,6 +6,38 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [2.1.1] — 2026-08-14
+
+**2.1.0 shipped without these.** The tag was cut at a commit two PRs behind `main`, so everything below is on `main` since 10 August and reached nobody. Two of them are security fixes; upgrade rather than pin 2.1.0.
+
+#### `listing__upload_screenshot` would upload any file it could read
+`file_path` comes from the model, and everything after it read that file and PUT it to Apple. Pointing it at a `.p8`, an SSH key or a config sent the bytes and learned afterwards that Apple rejects them — by which point they had already left. The first eight bytes (PNG signature, JPEG marker) settle it before any network call, with a 50 MB ceiling behind that.
+
+#### `downloadAsset`'s size cap was a report, not a limit
+It checked the 64 MiB ceiling after `arrayBuffer()` had already buffered the whole body, so an oversized response was refused only once it was in memory. It now rejects an oversized `Content-Length` up front and streams, cancelling the transfer at the cap.
+
+#### Six reads returned one page as if it were everything
+Four analytics hops, the subscription-group listing and both StoreKit histories stopped at the first page or a page cap and said nothing about it.
+
+- **`analytics__get_report`** — report requests, reports, instances and segments all paginate now. A report on page two came back as *"No report matching …"*.
+- **`listSubscriptions`** — walks group pages and merges each page's `included`. A subscription past the first 50 groups read as *"not found"*, which is the message someone answers by creating a duplicate.
+- **StoreKit transaction and refund history** — return `hasMore`, Apple's `revision` cursor and an explicit partial-history note. *"No refunds"* and *"no refunds in the first ten pages"* were the same response, and the second is what someone grants goodwill credit against.
+- **`reviews_ai__daily_briefing`** — stops once it has covered the compared window rather than at three pages, and marks its counts as lower bounds when it could not cover it. A trend over a window that was never fully read is not a trend.
+
+#### Fixed
+- **An ambiguous subscription name put a price write on the wrong product.** A partial name took the first match. Exact product ID or name still wins outright; two substring candidates is now a question.
+- **`readPrice` could report a price the app stopped charging years ago.** The price in effect is the latest start date that has passed, not the first non-scheduled row Apple happened to send.
+- **`max_rows` accepted a negative and then dropped rows.** `Number(x) || 200` let it through as truthy and `slice(0, -5)` cut the last five instead of returning five. Clamped once to `[1, 1000]`.
+- **A failing CLI registration could delete a working one.** The add goes first now; the remove only runs once the add has been refused, and if the remove fails too the add's error survives — otherwise a missing flag was reported as "no such server", sending the reader after a registration that was never there.
+
+#### Security
+- **Results carrying end-user text say so.** Review bodies and tester feedback reach the model through the generated tools with nothing marking them as data rather than instructions, and they sit next to write tools a review could ask the model to call. The reviews macro has had that rule since it shipped; the generated path has it now too.
+- **Optional PII redaction.** `ASC_REDACT_PII=1` masks `email`, `firstName` and `lastName` on tester payloads, keeping the email domain. Off by default: listing testers is how someone answers *"who hasn't installed the build?"*, and an answer naming `<redacted>` five times is one the caller has to go around this server to get.
+- **The Docker image runs as `node`, not root**, and the throwaway key file it generates is `600`.
+
+#### Documentation
+The `Dockerfile` header claimed two consumers that do not read it. Glama builds from its own spec — `debian:trixie-slim`, pnpm, `mcp-proxy` — and the MCP Registry installs the npm package `server.json` declares. Editing that file changes neither, and a failed Glama build says nothing about its contents.
+
 ### [2.1.0] — 2026-08-10
 
 #### Risky writes look risky in the tool list
@@ -180,6 +212,38 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+
+### [2.1.1] — 2026-08-14
+
+**2.1.0 bunlar olmadan çıktı.** Tag, `main`'in iki PR gerisindeki bir commit'te atılmıştı; aşağıdaki her şey 10 Ağustos'tan beri `main`'de duruyordu ve kimseye ulaşmadı. İkisi güvenlik düzeltmesi; 2.1.0'a sabitlemek yerine yükseltin.
+
+#### `listing__upload_screenshot` okuyabildiği her dosyayı yüklüyordu
+`file_path` modelden geliyor ve sonrasındaki her şey o dosyayı okuyup Apple'a PUT ediyordu. Bir `.p8`, bir SSH anahtarı ya da bir config gösterildiğinde baytlar gidiyor, Apple'ın bunu reddettiği ancak sonradan öğreniliyordu — o noktada dosya çoktan çıkmış oluyordu. İlk sekiz bayt (PNG imzası, JPEG işareti) ağa çıkılmadan önce kararı veriyor; arkasında 50 MB tavanı var.
+
+#### `downloadAsset`'in boyut sınırı bir sınır değil, rapordu
+64 MiB tavanını `arrayBuffer()` tüm gövdeyi belleğe aldıktan *sonra* kontrol ediyordu; yani büyük bir cevap ancak bellekteyken reddediliyordu. Artık büyük bir `Content-Length` baştan reddediliyor ve akış tavana ulaşınca transfer iptal ediliyor.
+
+#### Altı okuma tek sayfayı "hepsi bu" diye döndürüyordu
+Dört analitik adımı, abonelik grubu listesi ve iki StoreKit geçmişi ilk sayfada ya da sayfa tavanında durup bunu söylemiyordu.
+
+- **`analytics__get_report`** — rapor istekleri, raporlar, örnekler ve segmentlerin hepsi artık sayfalanıyor. İkinci sayfadaki bir rapor *"No report matching …"* olarak dönüyordu.
+- **`listSubscriptions`** — grup sayfalarını yürüyor ve her sayfanın `included`'ını birleştiriyor. İlk 50 grubun ötesindeki bir abonelik "bulunamadı" diye dönüyordu; o mesaja verilen cevap da kopyasını oluşturmaktır.
+- **StoreKit işlem ve iade geçmişi** — `hasMore`, Apple'ın `revision` imleci ve açık bir kısmi-geçmiş notu dönüyor. *"İade yok"* ile *"ilk on sayfada iade yok"* aynı cevaptı; ikincisine bakarak jest kredisi veriliyor.
+- **`reviews_ai__daily_briefing`** — üç sayfada değil, karşılaştırdığı pencereyi kapsadığında duruyor; kapsayamadıysa sayıları alt sınır olarak işaretliyor. Hiç tam okunmamış bir pencerenin trendi trend değildir.
+
+#### Düzeltildi
+- **Belirsiz abonelik adı yanlış ürüne fiyat yazabiliyordu.** Kısmi ad ilk eşleşmeyi alıyordu. Tam ürün ID'si ya da adı hâlâ doğrudan kazanıyor; iki aday çıkarsa artık soru soruluyor.
+- **`readPrice` yıllar önce bırakılmış bir fiyatı raporlayabiliyordu.** Yürürlükteki fiyat, Apple'ın gönderdiği ilk zamanlanmamış satır değil, geçmiş olan en son başlangıç tarihidir.
+- **`max_rows` negatif değer kabul edip satır düşürüyordu.** `Number(x) || 200` negatifi truthy diye geçiriyor, `slice(0, -5)` de beş satır döndürmek yerine son beşi kesiyordu. Tek yerde `[1, 1000]` aralığına kırpılıyor.
+- **Başarısız bir CLI kaydı, çalışan kaydı silebiliyordu.** Artık önce ekleme yapılıyor; silme yalnızca ekleme reddedilirse çalışıyor ve silme de düşerse eklemenin hatası korunuyor — aksi halde eksik bir bayrak "no such server" diye raporlanıp okuyanı hiç var olmamış bir kaydın peşine gönderiyordu.
+
+#### Güvenlik
+- **Uçtan gelen metin taşıyan cevaplar bunu söylüyor.** Yorum gövdeleri ve test kullanıcısı geri bildirimleri, üretilen araçlar üzerinden modele "bu veri, talimat değil" diyen hiçbir işaret olmadan ulaşıyordu — üstelik bir yorumun modele çağırtmak isteyebileceği yazma araçlarının yanında duruyorlar. Yorum makrosunda bu kural baştan beri vardı; artık üretilen yolda da var.
+- **İsteğe bağlı PII maskeleme.** `ASC_REDACT_PII=1`, test kullanıcısı verilerinde `email`, `firstName` ve `lastName` alanlarını maskeliyor, e-posta alan adını koruyor. Varsayılan kapalı: test kullanıcılarını listelemek *"build'i kim yüklememiş?"* sorusunun cevabıdır ve beş kez `<redacted>` diyen bir cevap, kullanıcının bu sunucuyu atlayarak alacağı bir cevaptır.
+- **Docker imajı root değil `node` kullanıcısıyla çalışıyor**, ürettiği tek kullanımlık anahtar dosyası da `600`.
+
+#### Dokümantasyon
+`Dockerfile` başlığı, o dosyayı okumayan iki tüketici iddia ediyordu. Glama kendi spec'inden derliyor — `debian:trixie-slim`, pnpm, `mcp-proxy` — MCP Registry ise `server.json`'ın bildirdiği npm paketini kuruyor. O dosyayı düzenlemek ikisini de etkilemiyor ve düşen bir Glama build'i içeriği hakkında hiçbir şey söylemiyor.
 
 ### [2.1.0] — 2026-08-10
 
