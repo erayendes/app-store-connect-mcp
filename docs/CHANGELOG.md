@@ -5,6 +5,18 @@
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/). Entries are newest-first.
 
 ## English
+### [Unreleased]
+
+#### Confirmation is back on, for the writes that are hard to undo
+The gate now defaults to the four levels the risk manifest calls `revenue`, `destructive`, `infrastructure` and `access` — changing a price, handing out Admin, deleting a certificate, pulling an app from sale. Everything below them runs on the client's own per-call tool approval, which is the gate that always exists.
+
+Both extremes were tried first and both were wrong. **On for every write** (through 2.0.0) fired constantly, and a client that declares elicitation support but cannot render the form answers `decline` — which the protocol reports identically to a user refusing — so ordinary writes came back as "you refused" on those clients. **Off entirely** (2.0.1 through 2.1.1) made the misfire go away by removing the guard from the writes that move money, which is the one place it was worth its cost.
+
+- `--confirm` / `ASC_CONFIRM_WRITES=1` asks before every write, as before.
+- `--no-confirm` / `ASC_CONFIRM_WRITES=0` asks before none. It is a real setting again rather than the no-op it became in 2.0.1.
+- The risk level is read before the preview is built, so a `low` write no longer pays for the reference lookups behind a prompt it was never going to show.
+- `tests/gate.test.ts` covers both halves from the same server: a `destructive` write is asked about with no flag, a `public` one is not. Testing only the quiet half would have passed with confirmation removed entirely.
+
 
 ### [2.1.1] — 2026-08-14
 
@@ -212,6 +224,18 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+### [Unreleased]
+
+#### Onay geri açıldı — geri alması zor yazmalar için
+Kapı artık risk manifestindeki dört seviyede varsayılan olarak açık: `revenue`, `destructive`, `infrastructure`, `access` — fiyat değiştirme, Admin yetkisi verme, sertifika silme, uygulamayı satıştan kaldırma. Bunların altındaki her şey client'ın kendi çağrı-başı araç onayıyla çalışıyor; her zaman var olan kapı da odur.
+
+İki uç da önce denendi ve ikisi de yanlıştı. **Her yazmada açık** (2.0.0'a kadar) sürekli tetikleniyordu; elicitation desteğini bildirip formu gösteremeyen bir client `decline` döner ve protokol bunu kullanıcının reddetmesiyle birebir aynı raporlar, yani o client'larda sıradan yazmalar "reddettiniz" diye geri geliyordu. **Tamamen kapalı** (2.0.1'den 2.1.1'e) bu yanlış tetiklenmeyi ortadan kaldırdı ama guard'ı parayı hareket ettiren yazmalardan da kaldırdı — oysa maliyetini hak ettiği tek yer orasıydı.
+
+- `--confirm` / `ASC_CONFIRM_WRITES=1` eskisi gibi her yazmadan önce sorar.
+- `--no-confirm` / `ASC_CONFIRM_WRITES=0` hiç sormaz. 2.0.1'de dönüştüğü no-op olmaktan çıkıp yeniden gerçek bir ayar oldu.
+- Risk seviyesi önizleme kurulmadan önce okunuyor; böylece bir `low` yazma, hiç gösterilmeyecek bir istemin arkasındaki referans sorgularının bedelini ödemiyor.
+- `tests/gate.test.ts` iki yarıyı da aynı sunucudan test ediyor: bayraksız bir `destructive` yazmada soruluyor, `public` olanda sorulmuyor. Yalnızca sessiz yarıyı test etmek, onay tamamen kaldırılmış olsa da geçerdi.
+
 
 ### [2.1.1] — 2026-08-14
 

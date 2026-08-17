@@ -67,21 +67,33 @@ describe('loadConfig confirmWrites', () => {
     process.env.ASC_PRIVATE_KEY = 'INLINE_PEM';
   });
 
-  it('is off by default', () => {
-    expect(loadConfig([]).confirmWrites).toBe(false);
+  it('asks on the strong levels by default', () => {
+    expect(loadConfig([]).confirmWrites).toBe('strong');
   });
 
-  it('is enabled by ASC_CONFIRM_WRITES=1', () => {
+  it('asks on every write with ASC_CONFIRM_WRITES=1', () => {
     process.env.ASC_CONFIRM_WRITES = '1';
-    expect(loadConfig([]).confirmWrites).toBe(true);
+    expect(loadConfig([]).confirmWrites).toBe('all');
   });
 
-  it('is enabled by the --confirm flag', () => {
-    expect(loadConfig(['--confirm']).confirmWrites).toBe(true);
+  it('asks on every write with the --confirm flag', () => {
+    expect(loadConfig(['--confirm']).confirmWrites).toBe('all');
   });
 
-  it('leaves --no-confirm from an older config as a harmless no-op', () => {
-    expect(loadConfig(['--no-confirm']).confirmWrites).toBe(false);
+  it('is turned off entirely by --no-confirm', () => {
+    expect(loadConfig(['--no-confirm']).confirmWrites).toBe('off');
+  });
+
+  it('is turned off entirely by ASC_CONFIRM_WRITES=0', () => {
+    process.env.ASC_CONFIRM_WRITES = '0';
+    expect(loadConfig([]).confirmWrites).toBe('off');
+  });
+
+  // --confirm and --no-confirm together is a config someone half-edited. The
+  // stricter reading wins: a guard asked for and asked against should not end
+  // up weaker than the default.
+  it('takes the stricter side when both flags are passed', () => {
+    expect(loadConfig(['--confirm', '--no-confirm']).confirmWrites).toBe('all');
   });
 });
 

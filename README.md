@@ -76,9 +76,9 @@ Register only the profiles your project uses. What each one covers is in the [pr
 
 There is nothing to memorise — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches everything, including what isn't loaded, and tells you which profile it lives in.
 
-#### Writes can ask first
+#### Risky writes ask first
 
-Changing a price, submitting for review or deleting something can ask for confirmation before it runs, showing what would change, so a misread instruction cannot execute unchecked. `--confirm` (or `ASC_CONFIRM_WRITES=1`) turns it on — it is off by default because your client already approves each tool call, and a client that cannot render the prompt answers "declined" for you. `--read-only` drops mutating tools entirely. See [Security](.github/SECURITY.md).
+Changing a price, handing out Admin or deleting something asks for confirmation before it runs, showing what would change, so a misread instruction cannot execute unchecked. This is the default for the four risk levels that are hard to undo — revenue, destructive, infrastructure, access — and everything else runs on your client's own tool approval. `--confirm` asks before every write instead; `--no-confirm` asks before none; `--read-only` drops mutating tools entirely. See [Security](.github/SECURITY.md).
 
 #### Local by design, not by default
 
@@ -178,9 +178,9 @@ Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığ�
 
 Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun; `asc__search_tools` o an yüklü olmayanlar dahil hepsini arar ve hangi profilde olduğunu söyler.
 
-#### Yazma işlemlerini önce sorabilir
+#### Riskli yazmalar önce sorar
 
-Fiyat değiştirme, incelemeye gönderme ya da bir şeyi silme çalışmadan önce onay isteyebilir ve neyin değişeceğini gösterir; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. `--confirm` (veya `ASC_CONFIRM_WRITES=1`) açar — varsayılan kapalıdır, çünkü client'ınız zaten her araç çağrısını onaylatıyor ve istemi gösteremeyen bir client sizin yerinize "reddedildi" der. `--read-only` mutasyon araçlarını tamamen kaldırır. Bkz. [Güvenlik](.github/SECURITY.md).
+Fiyat değiştirme, Admin yetkisi verme ya da bir şeyi silme çalışmadan önce onay ister ve neyin değişeceğini gösterir; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Bu, geri alması zor dört risk seviyesinde varsayılandır — revenue, destructive, infrastructure, access — geri kalan her şey client'ınızın kendi araç onayıyla çalışır. `--confirm` her yazmadan önce sorar, `--no-confirm` hiç sormaz, `--read-only` mutasyon araçlarını tamamen kaldırır. Bkz. [Güvenlik](.github/SECURITY.md).
 
 #### Yerelde çalışması tercih, eksiklik değil
 

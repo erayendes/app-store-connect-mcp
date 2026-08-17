@@ -19,10 +19,10 @@ export interface ServerConfig {
   /** Blocks every mutating tool. */
   readOnly: boolean;
   /**
-   * Ask the user to confirm (via MCP elicitation) before any mutating tool
-   * runs. Opt-in — see the note at the assignment for why.
+   * When to ask the user to confirm (via MCP elicitation) before a mutating
+   * tool runs. `strong` is the default — see the note at the assignment.
    */
-  confirmWrites: boolean;
+  confirmWrites: 'off' | 'strong' | 'all';
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
   /**
@@ -143,15 +143,25 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       : undefined,
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),
     readOnly: flag('read-only') || env.ASC_READ_ONLY === 'true',
-    // Off by default. Every MCP client already gates a tool call behind its own
-    // approval, and this guard only works where the client renders an
-    // elicitation form — on the ones that don't, it turned working writes into
-    // an error that reads like the user said no. Turn it on with --confirm once
-    // you have seen your client actually show the prompt.
-    // ponytail: `--no-confirm` from older configs is now a no-op that lands on
-    // this same default, so nobody's config breaks.
+    // `strong` by default: ask on the four levels the risk manifest calls
+    // revenue, destructive, infrastructure and access, and stay out of the way
+    // on the rest.
+    //
+    // The two extremes were both tried and both wrong. On by default fired on
+    // every write, and a client that declares elicitation but cannot render the
+    // form answers `decline` — indistinguishable, in the protocol, from a user
+    // refusing — so ordinary writes came back as "you refused" on those
+    // clients. Off by default made the misfire go away by removing the guard
+    // from the writes that move money and hand out Admin, which is the one
+    // place it was worth its cost. This keeps it where the blast radius is.
     confirmWrites:
-      flag('confirm') || env.ASC_CONFIRM_WRITES === 'true' || env.ASC_CONFIRM_WRITES === '1',
+      flag('confirm') || env.ASC_CONFIRM_WRITES === 'true' || env.ASC_CONFIRM_WRITES === '1'
+        ? 'all'
+        : flag('no-confirm') ||
+            env.ASC_CONFIRM_WRITES === 'false' ||
+            env.ASC_CONFIRM_WRITES === '0'
+          ? 'off'
+          : 'strong',
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     baseUrl: env.ASC_BASE_URL || undefined,
