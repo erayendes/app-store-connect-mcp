@@ -34,6 +34,7 @@ import { SCREENSHOT_TOOLS, executeScreenshotTool } from './tools/screenshots.js'
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
+import { STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
   manualToolsFor,
@@ -460,8 +461,16 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         };
       }
 
-      if (config.confirmWrites && !config.dryRun && isWriteTool(name)) {
+      if (config.confirmWrites !== 'off' && !config.dryRun && isWriteTool(name)) {
         const op = registry.get(name);
+        // Decided from the risk level alone, before the preview is built:
+        // buildWritePreview resolves reference ids over the network, and a
+        // `low` write under the default mode must not pay for a prompt it is
+        // never going to show.
+        const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
+          ? 'revenue'
+          : ((op?.risk ?? (name.includes('extend_renewal_date') ? 'revenue' : 'low')) as RiskLevel);
+        if (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk)) {
         const preview = PRICING_TOOL_NAMES.has(name)
           ? // Macro parameters are already human language — no lookups needed.
             { message: buildPricingPreview(args, name), strong: true }
@@ -492,20 +501,21 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         if (!decision.allowed) {
           const text =
             decision.reason === 'no-elicitation'
-              ? `"${name}" was blocked: write confirmation is on (--confirm), but this ` +
+              ? `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and this ` +
                 `client cannot show a confirmation prompt (no elicitation support). ` +
-                `Nothing was changed. Drop --confirm (or ASC_CONFIRM_WRITES=1) to rely on ` +
+                `Nothing was changed. Set ASC_CONFIRM_WRITES=0 (or --no-confirm) to rely on ` +
                 `the client's own tool approval instead, or use --read-only.`
               : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +
                 `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
                 `this client declared elicitation support but cannot actually show the ` +
                 `form, and answered for you — the protocol reports that identically to a ` +
-                `real refusal. In that case drop --confirm (or ASC_CONFIRM_WRITES=1) and ` +
+                `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
                 `let the client's own tool approval be the gate.`;
           return {
             content: [{ type: 'text' as const, text }],
             isError: true,
           };
+        }
         }
       }
 

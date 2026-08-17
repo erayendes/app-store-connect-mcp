@@ -151,10 +151,10 @@ interface Elicitation { message: string; schema: any }
  * indistinguishable from the gate never firing, so the first version of this
  * test passed a bug in itself off as a product defect.
  */
-function client(profile: string) {
-  // The gate is opt-in, so the test has to ask for it — without --confirm the
-  // sample writes would go straight to Apple.
-  const child: ChildProcessWithoutNullStreams = spawn(process.execPath, [ENTRY, profile, '--confirm'], {
+function client(profile: string, args: string[] = ['--confirm']) {
+  // `--confirm` by default here, so every sample is asked about regardless of
+  // its risk level. The default-mode block below spawns without it on purpose.
+  const child: ChildProcessWithoutNullStreams = spawn(process.execPath, [ENTRY, profile, ...args], {
     stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
   });
@@ -242,5 +242,48 @@ describe.skipIf(!live)('write gate, end to end (live)', () => {
     expect(schema.includes('CONFIRM'), `${sample.tool} (${sample.risk}) prompt strength`).toBe(wantsTyped);
 
     expect(text, `${sample.tool} did not report the cancellation`).toMatch(/Nothing was changed|cancelled/i);
+  }, 60_000);
+});
+
+/**
+ * The default is `strong`: ask on revenue, destructive, infrastructure and
+ * access, stay out of the way on the rest. Both halves have to be tested from
+ * the same server, because "did not ask" is also what a broken gate looks like
+ * — a run that only checked the quiet half would pass with confirmation
+ * removed entirely.
+ *
+ * One exception to this file's safety rule: the quiet half is not cancelled,
+ * because not being asked is the assertion. That call does reach Apple — a
+ * PATCH on `gate-test-not-a-real-id`, which 404s. It is the only sample here
+ * that is safe by the id being wrong rather than by the write never being
+ * built, so keep this block on a sample that cannot match anything real.
+ */
+describe.skipIf(!live)('default mode asks only on the strong levels (live)', () => {
+  const strong = SAMPLES.find((s) => STRONG_CONFIRM_LEVELS.has(s.risk))!;
+  const weak = SAMPLES.find((s) => !STRONG_CONFIRM_LEVELS.has(s.risk))!;
+  const servers = new Map<string, ReturnType<typeof client>>();
+
+  beforeAll(async () => {
+    for (const profile of new Set([strong.profile, weak.profile])) {
+      const c = client(profile, []);
+      await c.start();
+      servers.set(profile, c);
+    }
+  }, 60_000);
+
+  afterAll(() => { for (const c of servers.values()) c.stop(); });
+
+  it(`asks before ${strong.tool} (${strong.risk}) with no flag`, async () => {
+    const c = servers.get(strong.profile)!;
+    const before = c.elicitations.length;
+    await c.call(strong.tool, strong.args);
+    expect(c.elicitations.length, `${strong.tool} was not gated by default`).toBeGreaterThan(before);
+  }, 60_000);
+
+  it(`does not ask before ${weak.tool} (${weak.risk}) with no flag`, async () => {
+    const c = servers.get(weak.profile)!;
+    const before = c.elicitations.length;
+    await c.call(weak.tool, weak.args);
+    expect(c.elicitations.length, `${weak.tool} (${weak.risk}) was gated by default`).toBe(before);
   }, 60_000);
 });

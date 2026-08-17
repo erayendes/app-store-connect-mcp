@@ -22,7 +22,7 @@ import type { ServerConfig } from '../src/core/config.js';
 const config: ServerConfig = {
   credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'not-used-here' },
   readOnly: false,
-  confirmWrites: false,
+  confirmWrites: 'off',
   includeDeprecated: false,
   dryRun: true,
 };

@@ -48,12 +48,13 @@ Options:
   --domains=<list>       (no-profile mode) Comma-separated domains, or "all".
                          Default: ${DEFAULT_DOMAINS.join(',')}
   --read-only            Expose only tools that cannot modify anything.
-  --confirm              Ask the user to confirm (via MCP elicitation) before
-                         a mutating tool runs, showing what it would change.
-                         Off by default: your client already approves each tool
-                         call, and a client that cannot render the form answers
-                         "declined" for you. Turn this on once you have seen
-                         the prompt appear. ASC_CONFIRM_WRITES=1 does the same.
+  --confirm              Ask before EVERY mutating tool, not just the risky
+                         ones. ASC_CONFIRM_WRITES=1 does the same.
+  --no-confirm           Never ask. The client's own tool approval is then the
+                         only gate. ASC_CONFIRM_WRITES=0 does the same.
+                         By default Heimdall asks (via MCP elicitation) before
+                         a revenue, destructive, infrastructure or access level
+                         write and stays quiet on the rest.
   --include-deprecated   Also load operations Apple has marked deprecated.
   --dry-run              Writes never reach Apple: each mutating call returns
                          what WOULD have been sent (method, path, body, risk)
