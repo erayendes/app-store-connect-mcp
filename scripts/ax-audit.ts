@@ -65,8 +65,15 @@ export interface AxDebt {
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   Boolean(v) && typeof v === 'object' && !Array.isArray(v);
 
-/** Apple's spec words relationship filters this way; they take opaque ids. */
-const ID_FILTER_HINT = /id\(s\) of related/i;
+/**
+ * Apple's spec words relationship filters this way and stops there. The clause
+ * has to be the END of the description for the parameter to count as unhinted:
+ * the generator appends its note rather than replacing the clause, so a rule
+ * that only looked for the clause counted every fixed parameter as still
+ * broken. That is how this axis sat at 84 through a fix that moved 20 of them —
+ * a ratchet that cannot see its own progress is not a ratchet.
+ */
+const ID_FILTER_HINT = /id\(s\) of related '[^']*'\s*$/i;
 
 function isWrite(op: Operation): boolean {
   return !op.readOnly;
