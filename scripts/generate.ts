@@ -189,12 +189,41 @@ const PARAM_NOTES: Array<[RegExp, string]> = [
     'Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: ' +
       '"US" is accepted and silently returns an empty list.',
   ],
+  // 11 parameters, and the one an agent gets wrong most: everything else it
+  // knows an app by is the bundle ID, which matches nothing here.
+  [
+    /^filter\[app\]$/,
+    'The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches ' +
+      'nothing and comes back as 200 with an empty list.',
+  ],
 ];
+
+/**
+ * Apple words every relationship filter as "filter by id(s) of related 'x'" and
+ * stops there, which says what the parameter is called and nothing about what
+ * goes in it. They all fail the same silent way territory did: a plausible
+ * wrong value is not rejected, it answers 200 with an empty list, and an agent
+ * reads that as "there is none".
+ *
+ * So anything left on Apple's clause alone gets the shape of the answer and the
+ * trap, once, generated rather than hand-written per parameter — there are 64
+ * of them and Apple adds more with every spec.
+ */
+const RELATIONSHIP_FILTER = /id\(s\) of related '([^']+)'\s*$/i;
 
 function annotateParam(name: string, description: string): string {
   const note = PARAM_NOTES.find(([pattern]) => pattern.test(name))?.[1];
-  if (!note) return description;
-  return description ? `${description} ${note}` : note;
+  if (note) return description ? `${description} ${note}` : note;
+
+  const relationship = RELATIONSHIP_FILTER.exec(description ?? '')?.[1];
+  if (!relationship) return description;
+  return (
+    // `${relationship}` is Apple's own field name and is sometimes plural, so
+    // it is quoted rather than dropped into an article — no singularising.
+    `${description} Takes a '${relationship}' resource id, read from the call that lists ` +
+    `them — not a name. A value that matches nothing returns 200 with an empty list rather ` +
+    `than an error.`
+  );
 }
 
 

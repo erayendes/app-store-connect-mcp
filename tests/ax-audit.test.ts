@@ -24,8 +24,15 @@ import type { Operation } from '../src/core/types.js';
 const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
   boilerplate: 712,
-  /** AXIS2 — silent empty results: id-valued filters with no format hint. */
-  unhintedIdFilters: 77,
+  /**
+   * AXIS2 — silent empty results: id-valued filters with no format hint.
+   *
+   * Zero, and it can stay zero: the generator hints anything still ending on
+   * Apple's "id(s) of related 'x'" clause, so a new spec's parameters inherit
+   * the note. A number above zero here means Apple worded one a new way and it
+   * fell through the rule — which is exactly when someone should look.
+   */
+  unhintedIdFilters: 0,
   /** AXIS3 — opaque confirmations: reference types a preview cannot humanise. */
   unresolvedRefTypes: 179,
   /** AXIS4 — path length: writes that need a lookup call first. */

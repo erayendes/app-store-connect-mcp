@@ -1832,12 +1832,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appStoreVersionLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appPreviewSets]",
@@ -1925,12 +1925,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appStoreVersionLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appScreenshotSets]",
@@ -2551,12 +2551,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appEncryptionDeclarations]",
@@ -4337,12 +4337,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appStoreVersionLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appCustomProductPageLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization'"
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appPreviewSets]",
@@ -4430,12 +4430,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appStoreVersionLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appCustomProductPageLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization'"
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appScreenshotSets]",
@@ -4962,12 +4962,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appCustomProductPageLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization'"
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appPreviewSets]",
@@ -5055,12 +5055,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appCustomProductPageLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization'"
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization'"
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appScreenshotSets]",
@@ -6258,7 +6258,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[appEncryptionDeclarations]",
@@ -6922,17 +6922,17 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[build]",
         "type": "array",
-        "description": "filter by id(s) of related 'build'"
+        "description": "filter by id(s) of related 'build' Takes a 'build' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[build.preReleaseVersion]",
         "type": "array",
-        "description": "filter by id(s) of related 'build.preReleaseVersion'"
+        "description": "filter by id(s) of related 'build.preReleaseVersion' Takes a 'build.preReleaseVersion' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[tester]",
         "type": "array",
-        "description": "filter by id(s) of related 'tester'"
+        "description": "filter by id(s) of related 'tester' Takes a 'tester' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -7037,17 +7037,17 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[build]",
         "type": "array",
-        "description": "filter by id(s) of related 'build'"
+        "description": "filter by id(s) of related 'build' Takes a 'build' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[build.preReleaseVersion]",
         "type": "array",
-        "description": "filter by id(s) of related 'build.preReleaseVersion'"
+        "description": "filter by id(s) of related 'build.preReleaseVersion' Takes a 'build.preReleaseVersion' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[tester]",
         "type": "array",
-        "description": "filter by id(s) of related 'tester'"
+        "description": "filter by id(s) of related 'tester' Takes a 'tester' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -8052,7 +8052,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[appStoreVersions]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersions'"
+        "description": "filter by id(s) of related 'appStoreVersions' Takes a 'appStoreVersions' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[id]",
@@ -9212,7 +9212,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "fields[betaAppLocalizations]",
@@ -9326,7 +9326,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'",
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list.",
         "required": true
       },
       {
@@ -9462,7 +9462,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[build]",
         "type": "array",
-        "description": "filter by id(s) of related 'build'",
+        "description": "filter by id(s) of related 'build' Takes a 'build' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error.",
         "required": true
       },
       {
@@ -9585,7 +9585,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[build]",
         "type": "array",
-        "description": "filter by id(s) of related 'build'"
+        "description": "filter by id(s) of related 'build' Takes a 'build' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[betaBuildLocalizations]",
@@ -10170,12 +10170,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[id]",
@@ -10335,7 +10335,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "fields[betaLicenseAgreements]",
@@ -10851,17 +10851,17 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[apps]",
         "type": "array",
-        "description": "filter by id(s) of related 'apps'"
+        "description": "filter by id(s) of related 'apps' Takes a 'apps' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[betaGroups]",
         "type": "array",
-        "description": "filter by id(s) of related 'betaGroups'"
+        "description": "filter by id(s) of related 'betaGroups' Takes a 'betaGroups' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[id]",
@@ -11000,7 +11000,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[build]",
         "type": "array",
-        "description": "filter by id(s) of related 'build'"
+        "description": "filter by id(s) of related 'build' Takes a 'build' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[id]",
@@ -11781,22 +11781,22 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[preReleaseVersion]",
         "type": "array",
-        "description": "filter by id(s) of related 'preReleaseVersion'"
+        "description": "filter by id(s) of related 'preReleaseVersion' Takes a 'preReleaseVersion' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[betaGroups]",
         "type": "array",
-        "description": "filter by id(s) of related 'betaGroups'"
+        "description": "filter by id(s) of related 'betaGroups' Takes a 'betaGroups' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appStoreVersion]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersion'"
+        "description": "filter by id(s) of related 'appStoreVersion' Takes a 'appStoreVersion' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[id]",
@@ -12718,22 +12718,22 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[preReleaseVersion]",
         "type": "array",
-        "description": "filter by id(s) of related 'preReleaseVersion'"
+        "description": "filter by id(s) of related 'preReleaseVersion' Takes a 'preReleaseVersion' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[betaGroups]",
         "type": "array",
-        "description": "filter by id(s) of related 'betaGroups'"
+        "description": "filter by id(s) of related 'betaGroups' Takes a 'betaGroups' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[appStoreVersion]",
         "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersion'"
+        "description": "filter by id(s) of related 'appStoreVersion' Takes a 'appStoreVersion' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[id]",
@@ -13105,7 +13105,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -13215,7 +13215,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "fields[ciProducts]",
@@ -13359,7 +13359,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -14923,7 +14923,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterDetail]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetail'"
+        "description": "filter by id(s) of related 'gameCenterDetail' Takes a 'gameCenterDetail' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -16212,7 +16212,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterAchievement]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterAchievement'"
+        "description": "filter by id(s) of related 'gameCenterAchievement' Takes a 'gameCenterAchievement' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -17104,7 +17104,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterLeaderboard]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboard'"
+        "description": "filter by id(s) of related 'gameCenterLeaderboard' Takes a 'gameCenterLeaderboard' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -17143,7 +17143,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterLeaderboardSet]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboardSet'"
+        "description": "filter by id(s) of related 'gameCenterLeaderboardSet' Takes a 'gameCenterLeaderboardSet' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -17289,7 +17289,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[id]",
@@ -18082,7 +18082,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterDetails]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetails'"
+        "description": "filter by id(s) of related 'gameCenterDetails' Takes a 'gameCenterDetails' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "fields[gameCenterGroups]",
@@ -19062,13 +19062,13 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterLeaderboardSet]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboardSet'",
+        "description": "filter by id(s) of related 'gameCenterLeaderboardSet' Takes a 'gameCenterLeaderboardSet' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error.",
         "required": true
       },
       {
         "name": "filter[gameCenterLeaderboard]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboard'",
+        "description": "filter by id(s) of related 'gameCenterLeaderboard' Takes a 'gameCenterLeaderboard' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error.",
         "required": true
       },
       {
@@ -19782,7 +19782,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterDetail]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetail'"
+        "description": "filter by id(s) of related 'gameCenterDetail' Takes a 'gameCenterDetail' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -20269,7 +20269,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[gameCenterDetail]",
         "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetail'"
+        "description": "filter by id(s) of related 'gameCenterDetail' Takes a 'gameCenterDetail' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -22018,7 +22018,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[inAppPurchaseV2]",
         "type": "array",
-        "description": "filter by id(s) of related 'inAppPurchaseV2'"
+        "description": "filter by id(s) of related 'inAppPurchaseV2' Takes a 'inAppPurchaseV2' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "limit",
@@ -23208,7 +23208,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[relatedApps]",
         "type": "array",
-        "description": "filter by id(s) of related 'relatedApps'"
+        "description": "filter by id(s) of related 'relatedApps' Takes a 'relatedApps' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -23695,12 +23695,12 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'"
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[builds]",
         "type": "array",
-        "description": "filter by id(s) of related 'builds'"
+        "description": "filter by id(s) of related 'builds' Takes a 'builds' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -24257,7 +24257,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app'",
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list.",
         "required": true
       },
       {
@@ -26343,7 +26343,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[subscription]",
         "type": "array",
-        "description": "filter by id(s) of related 'subscription'"
+        "description": "filter by id(s) of related 'subscription' Takes a 'subscription' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[upfrontPricePointId]",
@@ -26391,7 +26391,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[subscription]",
         "type": "array",
-        "description": "filter by id(s) of related 'subscription'"
+        "description": "filter by id(s) of related 'subscription' Takes a 'subscription' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[upfrontPricePointId]",
@@ -27056,7 +27056,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[subscriptionPricePoint]",
         "type": "array",
-        "description": "filter by id(s) of related 'subscriptionPricePoint'"
+        "description": "filter by id(s) of related 'subscriptionPricePoint' Takes a 'subscriptionPricePoint' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "filter[territory]",
@@ -27476,7 +27476,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[visibleApps]",
         "type": "array",
-        "description": "filter by id(s) of related 'visibleApps'"
+        "description": "filter by id(s) of related 'visibleApps' Takes a 'visibleApps' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
@@ -27630,7 +27630,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[visibleApps]",
         "type": "array",
-        "description": "filter by id(s) of related 'visibleApps'"
+        "description": "filter by id(s) of related 'visibleApps' Takes a 'visibleApps' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
       },
       {
         "name": "sort",
