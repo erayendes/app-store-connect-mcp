@@ -22,7 +22,7 @@
  */
 import { OPERATIONS } from '../src/generated/operations.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
-import { REF_RESOLVERS } from '../src/core/confirm.js';
+import { REF_RESOLVERS, SELF_DESCRIBING, GET_BY_ID } from '../src/core/confirm.js';
 import { CURATED } from './describe.js';
 import type { Operation } from '../src/core/types.js';
 
@@ -54,7 +54,7 @@ export interface AxDebt {
   boilerplate: OpFinding[];
   /** AXIS2 — id-valued filter params with neither an enum nor a format hint. */
   unhintedIdFilters: OpFinding[];
-  /** AXIS3 — reference types appearing in write bodies with no REF_RESOLVERS entry. */
+  /** AXIS3 — reference types a confirmation prompt can only show as a raw id. */
   unresolvedRefTypes: TypeFinding[];
   /** AXIS4 — writes that cannot be called without first fetching an id. */
   writesNeedingLookup: OpFinding[];
@@ -137,7 +137,11 @@ export function auditAx(operations: readonly Operation[] = LOADABLE): AxDebt {
   }
 
   // AXIS3 — every type here shows up in a confirmation prompt as a raw id
-  // unless REF_RESOLVERS knows how to name it.
+  // because nothing can name it: no hand-written resolver, no readable id of
+  // its own, and no GET-by-id endpoint for the generic resolver to call. The
+  // count used to be "types without a hand-written resolver", which made the
+  // axis a to-do list 175 entries long instead of a measure of what a user
+  // cannot read.
   const typeUses = new Map<string, number>();
   for (const op of writes) {
     const schema = op.bodyRef ? BODY_SCHEMAS[op.bodyRef] : undefined;
@@ -147,7 +151,7 @@ export function auditAx(operations: readonly Operation[] = LOADABLE): AxDebt {
     for (const t of types) typeUses.set(t, (typeUses.get(t) ?? 0) + 1);
   }
   const unresolvedRefTypes: TypeFinding[] = [...typeUses.entries()]
-    .filter(([type]) => !REF_RESOLVERS[type])
+    .filter(([type]) => !REF_RESOLVERS[type] && !SELF_DESCRIBING.has(type) && !GET_BY_ID.has(type))
     .map(([type, uses]) => ({ type, uses }))
     .sort((a, b) => b.uses - a.uses || a.type.localeCompare(b.type));
 

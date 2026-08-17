@@ -33,8 +33,15 @@ const CEILING = {
    * fell through the rule — which is exactly when someone should look.
    */
   unhintedIdFilters: 0,
-  /** AXIS3 — opaque confirmations: reference types a preview cannot humanise. */
-  unresolvedRefTypes: 179,
+  /**
+   * AXIS3 — opaque confirmations: reference types a preview cannot humanise.
+   *
+   * 52, down from 179 when the count meant "types without a hand-written
+   * resolver". What is left are types Apple gives no GET-by-id endpoint, so
+   * there is nothing to fetch a name from — a resolver cannot be written for
+   * them, only a different write body could avoid them.
+   */
+  unresolvedRefTypes: 52,
   /** AXIS4 — path length: writes that need a lookup call first. */
   writesNeedingLookup: 256,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */

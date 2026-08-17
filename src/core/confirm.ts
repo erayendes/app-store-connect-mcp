@@ -2,28 +2,29 @@
  * Write confirmation guard.
  *
  * Mutating tools (anything not marked readOnlyHint) can change real App Store
- * Connect data — prices, submissions, deletions. With --confirm, we ask the
- * user before running one, so a vague or misread instruction ("set the price to
- * 0.99") can't execute unchecked. The prompt carries an impact preview
- * (operation, target, changed fields, risk level, reversibility), and
+ * Connect data — prices, submissions, deletions. Before a revenue, destructive,
+ * infrastructure or access one runs, we ask the user, so a vague or misread
+ * instruction ("set the price to 0.99") can't execute unchecked. The prompt
+ * carries an impact preview (operation, target, changed fields, risk level,
+ * reversibility), and
  * high-stakes levels (revenue/destructive/infrastructure/access) require the
  * user to TYPE the confirmation instead of ticking a box.
  *
- * Opt-in, not default. The gate is the client's job — every MCP client asks
- * before it runs a tool — and this guard can only run where the client renders
- * an elicitation form. On the ones that don't, it fired anyway and turned a
- * working write into "the user declined", which is the one thing the protocol
- * gives us no way to tell apart from a real refusal: a client that can't show
- * the form answers `decline` exactly like a user who clicked no. So the choice
- * is per-client and belongs to whoever configures it. What stays ours either
- * way is the preview — only this server knows that a flag spelled
- * `preserveCurrentPrice: false` moves existing subscribers to a new price.
+ * On by default for those four levels only, and that split was paid for twice.
+ * Asking on every write fired constantly, and a client that declares
+ * elicitation support but can't render the form answers `decline` — the one
+ * thing the protocol gives us no way to tell apart from a real refusal — so
+ * ordinary writes came back as "you refused". Asking on none removed the guard
+ * from the writes that move money. `--confirm` restores every write,
+ * `--no-confirm` removes it entirely.
  *
- * Turned on with --confirm / ASC_CONFIRM_WRITES=1. A client that never declared
- * elicitation can't be asked at all, so there the guard fails closed rather
- * than pretending to be on.
+ * What is ours either way is the preview: only this server knows that a flag
+ * spelled `preserveCurrentPrice: false` moves existing subscribers to a new
+ * price. A client that never declared elicitation can't be asked at all, so
+ * there the guard fails closed rather than pretending to be on.
  */
 import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, type RiskLevel } from './risk.js';
+import { OPERATIONS } from '../generated/operations.js';
 
 /** The slice of the MCP Server we need — kept tiny so the logic is unit-testable. */
 export interface WriteConfirmer {
@@ -114,6 +115,76 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
   },
 };
 
+/**
+ * Types whose id is already the human-readable thing. A territory's id is its
+ * alpha-3 code — resolving `USA` to "USA" is a round trip to learn nothing.
+ */
+export const SELF_DESCRIBING = new Set(['territories']);
+
+/**
+ * type -> the GET-by-id path Apple gives it, read off the spec rather than
+ * assumed: 156 of the types that appear in write bodies have one, and a
+ * handful sit under /v2.
+ */
+export const GET_BY_ID: ReadonlyMap<string, string> = (() => {
+  const map = new Map<string, string>();
+  for (const op of OPERATIONS) {
+    const m = /^\/(v\d+)\/([A-Za-z0-9]+)\/\{id\}$/.exec(op.path);
+    if (op.method === 'GET' && m && !map.has(m[2])) map.set(m[2], `/${m[1]}/${m[2]}`);
+  }
+  return map;
+})();
+
+/**
+ * The attributes Apple uses to name a thing, best first. A resource carries at
+ * most a couple of these, so the first hit is the label.
+ */
+const LABEL_ATTRIBUTES = [
+  'name',
+  'referenceName',
+  'title',
+  'versionString',
+  'productId',
+  'bundleId',
+  'fileName',
+  'nickname',
+  'locale',
+  'email',
+  'deviceClass',
+  'platform',
+];
+
+/**
+ * Whatever a hand-written resolver does not cover.
+ *
+ * There are 179 reference types and four resolvers. Writing 175 more was never
+ * going to happen, and each would go stale with the spec; this covers the same
+ * ground with one call and no per-type maintenance. A hand-written resolver
+ * still wins where the good label is not a single attribute — a price point
+ * reads as "99.99 TRY (TUR)", which no generic rule would assemble.
+ */
+async function resolveGeneric(
+  http: RefReader,
+  type: string,
+  id: string
+): Promise<string | undefined> {
+  const base = GET_BY_ID.get(type);
+  if (!base) return undefined;
+  const res: any = await http.get(`${base}/${encodeURIComponent(id)}`);
+  const attributes = res?.data?.attributes;
+  if (!attributes) return undefined;
+  for (const key of LABEL_ATTRIBUTES) {
+    const value = attributes[key];
+    if (typeof value === 'string' && value) return value;
+  }
+  return undefined;
+}
+
+/** True when the preview can put a name, or the id itself, in front of a user. */
+function resolvable(type: string): boolean {
+  return Boolean(REF_RESOLVERS[type]) || SELF_DESCRIBING.has(type) || GET_BY_ID.has(type);
+}
+
 /** Collects every {type,id} reference in a JSON:API body. */
 function collectRefs(node: unknown, refs: Array<{ type: string; id: string }>): void {
   if (!node || typeof node !== 'object') return;
@@ -122,7 +193,7 @@ function collectRefs(node: unknown, refs: Array<{ type: string; id: string }>): 
     return;
   }
   const rec = node as Record<string, unknown>;
-  if (typeof rec.type === 'string' && typeof rec.id === 'string' && REF_RESOLVERS[rec.type]) {
+  if (typeof rec.type === 'string' && typeof rec.id === 'string' && resolvable(rec.type)) {
     refs.push({ type: rec.type, id: rec.id });
   }
   for (const v of Object.values(rec)) collectRefs(v, refs);
@@ -150,10 +221,15 @@ export async function resolveBodyRefs(
   });
 
   const labels = new Map<string, string>();
+  // A self-describing id needs no call, so it does not spend one of the four.
+  const needLookup = unique.filter((r) => !SELF_DESCRIBING.has(r.type));
+
   await Promise.all(
-    unique.slice(0, MAX_REF_LOOKUPS).map(async ({ type, id }) => {
+    needLookup.slice(0, MAX_REF_LOOKUPS).map(async ({ type, id }) => {
       try {
-        const label = await REF_RESOLVERS[type](http, id);
+        const label = REF_RESOLVERS[type]
+          ? await REF_RESOLVERS[type](http, id)
+          : await resolveGeneric(http, type, id);
         if (label) labels.set(`${type}/${id}`, label);
       } catch {
         // Best-effort display only — the raw id stays in the preview.
