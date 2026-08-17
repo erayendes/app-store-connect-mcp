@@ -15,7 +15,8 @@
 import { describe, it, expect } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { createServer } from '../src/server.js';
+import { createServer, formatError } from '../src/server.js';
+import { AscApiError } from '../src/core/errors.js';
 import { resolveSelection } from '../src/profiles.js';
 import type { ServerConfig } from '../src/core/config.js';
 
@@ -112,5 +113,52 @@ describe('the client-independent path', () => {
     expect(res.isError).toBe(true); // missing required id
     const names = (await client.listTools()).tools.map((t) => t.name);
     expect(names).toContain('apps__app_price_schedule__get');
+  });
+});
+
+/**
+ * The half of MIL-192 that was still prose. An agent deciding what to do after
+ * a failure needs three things the old text buried: whether trying again could
+ * work at all, which field Apple rejected, and what to do about the status.
+ * `source` in particular was dropped from the type before it could reach here.
+ */
+describe('what a failure tells the caller', () => {
+  it('turns an Apple rejection into fields, not a sentence', () => {
+    const err = new AscApiError(
+      'App Store Connect API returned 409',
+      409,
+      [
+        {
+          code: 'ENTITY_ERROR',
+          title: 'An attribute value is invalid',
+          detail: 'versionString must be higher than the released version',
+          source: { pointer: '/data/attributes/versionString' },
+        },
+      ],
+      'REQ-123'
+    );
+    const parsed = JSON.parse(formatError(err, 'app_store_versions__create')).error;
+
+    expect(parsed.status).toBe(409);
+    expect(parsed.retryable).toBe(false);
+    expect(parsed.appleRequestId).toBe('REQ-123');
+    expect(parsed.issues[0].source.pointer).toBe('/data/attributes/versionString');
+    // The status hint used to be glued onto the end of the message.
+    expect(parsed.suggestedAction).toMatch(/in review or already released/);
+  });
+
+  it('marks a rate limit as worth retrying and a bad request as not', () => {
+    const retryable = (status: number) =>
+      JSON.parse(formatError(new AscApiError('x', status), 'apps__list')).error.retryable;
+    expect(retryable(429)).toBe(true);
+    expect(retryable(503)).toBe(true);
+    expect(retryable(400)).toBe(false);
+  });
+
+  // Our own refusals carry hand-written multi-line guidance — register
+  // commands, sub-profile names. JSON would turn those into \n escapes.
+  it('leaves a local refusal as the prose it was written as', () => {
+    const text = formatError(new AscApiError('Loaded read-only. Use asc__load.', 0), 'asc__call');
+    expect(text).toBe('asc__call failed: Loaded read-only. Use asc__load.');
   });
 });
