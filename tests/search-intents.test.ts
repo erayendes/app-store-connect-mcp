@@ -81,7 +81,7 @@ const PASSING = EVALUATION.filter((e) => e.pass);
 const FAILING = EVALUATION.filter((e) => !e.pass);
 
 /**
- * Pinned list of known failing queries: 118 that find nothing, 64 that rank
+ * Pinned list of known failing queries: 116 that find nothing, 66 that rank
  * below third. A failure not on this list breaks CI, so the cost of a change
  * has to be written down before it can land.
  *
@@ -203,10 +203,8 @@ const KNOWN_FAILING_QUERIES: string[] = [
   "App Store etkinliği yayınla",
   "Create an in-app event",
   "Add a promotional event to the store",
-  "reply to customer review",
   "Müşteri yorumuna cevap ver",
   "Bu App Store değerlendirmesine yanıt yaz",
-  "Reply to a customer review",
   "Get this month’s financial report",
   "ask for product usage metrics",
   "Analytics raporu talep et",
@@ -277,6 +275,14 @@ const KNOWN_FAILING_QUERIES: string[] = [
   "Yeni CI workflow ekle",
   "Mevcut aboneler de yeni fiyatı ödesin",
   "Dağıtım sertifikasını sil",
+  // Two entries left this list on 17 August 2026: "reply to customer review" and
+  // "Reply to a customer review". They pass, and had been passing since the
+  // tie-break change recorded in KNOWN_CONTESTED below — the FLOOR was raised to
+  // 83 to bank the win and nobody deleted the rows, so `npm test` printed "2
+  // queries started passing!" on every run until someone read it. The list is
+  // the budget: an entry that passes is not debt, it is noise that trains the
+  // reader to skip the message.
+  //
   // These two used to pass, on nothing. A Turkish suffix after an apostrophe
   // splits off a one- or two-letter token — "build'i" gives "i", "Workflow'un"
   // gives "un" — and a fragment that short is inside so many English words that
