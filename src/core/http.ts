@@ -12,7 +12,7 @@
  */
 import { TokenProvider } from './jwt.js';
 import { RateLimiter, type RateLimitOptions } from './rate-limit.js';
-import { AscApiError } from './errors.js';
+import { AscApiError, type AscApiErrorDetail } from './errors.js';
 
 export const ASC_HOST = 'api.appstoreconnect.apple.com';
 export const ASC_BASE_URL = `https://${ASC_HOST}`;
@@ -397,7 +397,7 @@ export function backoffMs(attempt: number, retryAfter: string | null): number {
  * Actionable hints for the Apple errors people actually hit, appended to the
  * error message so the fix travels with the failure (mirrors SUPPORT.md).
  */
-const STATUS_HINTS: Record<number, string> = {
+export const STATUS_HINTS: Record<number, string> = {
   401: 'Check that ASC_KEY_ID, ASC_ISSUER_ID and the .p8 key match and are not revoked.',
   403:
     "The API key's role lacks permission for this operation: sales/finance reports need " +
@@ -406,15 +406,15 @@ const STATUS_HINTS: Record<number, string> = {
   409:
     'App Store Connect rejected the change for the current resource state — a version in ' +
     'review or already released is locked, and many fields are only editable in specific ' +
-    "states. Fetch the resource first to see its state; the error details above name the " +
-    'field when Apple provides it.',
+    "states. Fetch the resource first to see its state; the issues[] entries name the " +
+    'field when Apple provides one.',
   429:
     "Apple's rate limit was hit even though requests are paced locally — something else " +
     'may be sharing this API key.',
 };
 
 async function toApiError(res: Response): Promise<AscApiError> {
-  let errors: Array<{ code?: string; title?: string; detail?: string }> = [];
+  let errors: AscApiErrorDetail[] = [];
   let message = `App Store Connect API returned ${res.status}`;
 
   try {

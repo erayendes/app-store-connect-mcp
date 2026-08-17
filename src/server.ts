@@ -5,7 +5,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { TokenProvider } from './core/jwt.js';
-import { AscHttpClient } from './core/http.js';
+import { AscHttpClient, STATUS_HINTS } from './core/http.js';
 import {
   ToolRegistry,
   DEFAULT_DOMAINS,
@@ -724,14 +724,44 @@ export function createRemovedProfileServer(name: string): Server {
   return server;
 }
 
-function formatError(err: unknown, toolName: string): string {
-  if (err instanceof AscApiError) {
-    const lines = [`${toolName} failed: ${err.summary}`];
-    if (err.status) lines.push(`HTTP status: ${err.status}`);
-    if (err.requestId) lines.push(`Apple request ID: ${err.requestId}`);
-    return lines.join('\n');
+/**
+ * A failure the caller can act on without reading prose.
+ *
+ * Not `structuredContent`: MCP defines that field as the result matching the
+ * tool's `outputSchema`, and five tools declare one — an error object there
+ * would fail a validating client on a response that is correctly an error.
+ * A JSON text block is what every successful generated call already returns,
+ * so this is the same shape rather than a second convention.
+ *
+ * `summary` leads because a human reads the first line. Everything under it is
+ * for the caller deciding what to do next: `retryable` says whether trying
+ * again could work at all, `issues[].source` names the field or parameter
+ * Apple rejected, and `suggestedAction` carries the status hint that used to be
+ * glued onto the end of the message.
+ */
+export function formatError(err: unknown, toolName: string): string {
+  // Status 0 is ours, not Apple's: a validation refusal, a wrong profile, a
+  // read-only block. Those messages are hand-written multi-line guidance —
+  // register commands, sub-profile names — and JSON would turn them into a
+  // wall of \n escapes. Only a real HTTP failure gets the structured shape.
+  if (!(err instanceof AscApiError) || !err.status) {
+    return `${toolName} failed: ${err instanceof AscApiError ? err.summary : (err as Error).message}`;
   }
-  return `${toolName} failed: ${(err as Error).message}`;
+  return JSON.stringify(
+    {
+      error: {
+        summary: `${toolName} failed: ${err.summary}`,
+        operation: toolName,
+        status: err.status || undefined,
+        retryable: err.retryable,
+        appleRequestId: err.requestId,
+        suggestedAction: STATUS_HINTS[err.status],
+        issues: err.errors.length ? err.errors : undefined,
+      },
+    },
+    null,
+    2
+  );
 }
 
 export { SPEC_VERSION };

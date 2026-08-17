@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### A failed call answers with fields, not a sentence
+An Apple rejection used to come back as three lines of prose, which meant an agent deciding what to do next had to parse English to learn whether trying again could work. It now returns JSON: `status`, `retryable`, `appleRequestId`, `suggestedAction`, and `issues[]` carrying Apple's own `code`, `title`, `detail` and — new — `source`, which names the field or parameter that was rejected. `source` was being dropped from the type before it could reach anyone, though Apple has been sending it all along.
+
+Our own refusals stay prose. A wrong profile or a read-only block answers with hand-written multi-line guidance — the register command, the sub-profile to load — and JSON would turn that into a wall of escapes. Only a real HTTP failure gets the structured shape.
+
+
 #### Confirmation is back on, for the writes that are hard to undo
 The gate now defaults to the four levels the risk manifest calls `revenue`, `destructive`, `infrastructure` and `access` — changing a price, handing out Admin, deleting a certificate, pulling an app from sale. Everything below them runs on the client's own per-call tool approval, which is the gate that always exists.
 
@@ -225,6 +231,12 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Başarısız bir çağrı cümle değil, alan döndürüyor
+Apple'ın reddi eskiden üç satır düz metin olarak dönüyordu; yani sonraki adıma karar veren bir ajanın, tekrar denemenin işe yarayıp yaramayacağını öğrenmek için İngilizce ayrıştırması gerekiyordu. Artık JSON dönüyor: `status`, `retryable`, `appleRequestId`, `suggestedAction` ve Apple'ın kendi `code`, `title`, `detail` alanlarını taşıyan `issues[]` — bir de yeni olarak `source`, reddedilen alanı ya da parametreyi adıyla veriyor. `source` tipten düşüyordu ve kimseye ulaşmıyordu, oysa Apple baştan beri gönderiyormuş.
+
+Kendi retlerimiz düz metin kalıyor. Yanlış profil ya da salt-okunur engeli, elle yazılmış çok satırlı yönlendirme döndürüyor — register komutu, yüklenecek alt profil — ve JSON bunu kaçış karakterleri duvarına çevirirdi. Yalnızca gerçek bir HTTP hatası yapılandırılmış biçimi alıyor.
+
 
 #### Onay geri açıldı — geri alması zor yazmalar için
 Kapı artık risk manifestindeki dört seviyede varsayılan olarak açık: `revenue`, `destructive`, `infrastructure`, `access` — fiyat değiştirme, Admin yetkisi verme, sertifika silme, uygulamayı satıştan kaldırma. Bunların altındaki her şey client'ın kendi çağrı-başı araç onayıyla çalışıyor; her zaman var olan kapı da odur.
