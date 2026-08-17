@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
-import { buildWritePreview, confirmWrite, type WriteConfirmer } from '../src/core/confirm.js';
+import {
+  buildWritePreview,
+  confirmWrite,
+  resolveBodyRefs,
+  type WriteConfirmer,
+} from '../src/core/confirm.js';
 import { ToolRegistry, toMcpTool } from '../src/core/registry.js';
 import { AscHttpClient } from '../src/core/http.js';
 import { TokenProvider } from '../src/core/jwt.js';
@@ -72,6 +77,51 @@ describe('risk manifest', () => {
       if (op.readOnly) expect(op.risk, op.name).toBeUndefined();
       else expect(op.risk, op.name).toBeTruthy();
     }
+  });
+});
+
+describe('reference resolution in a preview', () => {
+  /** Records what was fetched so "no call at all" is testable, not assumed. */
+  const reader = (attributes: Record<string, unknown>) => {
+    const paths: string[] = [];
+    return {
+      paths,
+      get: async (path: string) => {
+        paths.push(path);
+        return { data: { attributes } };
+      },
+    };
+  };
+
+  // The whole point of the generic resolver: a type nobody wrote a resolver for
+  // still reaches the user as a name. betaTesters has no entry in REF_RESOLVERS
+  // and does have a GET-by-id, which is the shape 152 other types share.
+  it('names a type that has no hand-written resolver', async () => {
+    const http = reader({ firstName: 'Ada', email: 'ada@example.com' });
+    const labels = await resolveBodyRefs(http, {
+      relationships: { betaTester: { data: { type: 'betaTesters', id: 'abc' } } },
+    });
+    expect(http.paths).toEqual(['/v1/betaTesters/abc']);
+    expect(labels.get('betaTesters/abc')).toBe('ada@example.com');
+  });
+
+  // A territory id is already its alpha-3 code. Fetching it would spend one of
+  // the four lookups to learn nothing, and the four are the latency budget.
+  it('spends no call on an id that is already readable', async () => {
+    const http = reader({ currency: 'TRY' });
+    await resolveBodyRefs(http, {
+      relationships: { territory: { data: { type: 'territories', id: 'TUR' } } },
+    });
+    expect(http.paths).toEqual([]);
+  });
+
+  it('leaves a type with no GET-by-id endpoint alone', async () => {
+    const http = reader({ name: 'never fetched' });
+    const labels = await resolveBodyRefs(http, {
+      relationships: { x: { data: { type: 'notAResourceType', id: 'zzz' } } },
+    });
+    expect(http.paths).toEqual([]);
+    expect(labels.size).toBe(0);
   });
 });
 
