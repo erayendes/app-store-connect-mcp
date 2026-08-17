@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### The agent harness can measure the write gate now
+`npm run ax:agent --gate` runs the corpus with the write path live and confirmation on for every write, so the gate is genuinely in the path. Every prompt is declined, so nothing reaches Apple — the decision is taken before the request is built, the same property `tests/gate.test.ts` relies on.
+
+Every other mode runs `--dry-run`, and dry-run skips confirmation outright. So the destructive-intent score has always answered "did the agent decide to write?" and never "would this server have stopped it?" — five of eight destructive intents wrote in the July calibration, and that number said nothing about the product.
+
+The Agent SDK declines an elicitation on its own when no handler is given, which is indistinguishable from the gate never firing. `--gate` installs a handler that records the prompt first and then declines, which is what turns the mode into a measurement rather than a silent no. The `By gate` table reports the number worth acting on: sessions that called a write with nothing asking first.
+
+
 #### A failed call answers with fields, not a sentence
 An Apple rejection used to come back as three lines of prose, which meant an agent deciding what to do next had to parse English to learn whether trying again could work. It now returns JSON: `status`, `retryable`, `appleRequestId`, `suggestedAction`, and `issues[]` carrying Apple's own `code`, `title`, `detail` and — new — `source`, which names the field or parameter that was rejected. `source` was being dropped from the type before it could reach anyone, though Apple has been sending it all along.
 
@@ -231,6 +239,14 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Ajan harness'ı artık yazma kapısını ölçebiliyor
+`npm run ax:agent --gate`, korpusu yazma yolu canlıyken ve her yazmada onay açıkken koşuyor; yani kapı gerçekten yolun içinde. Her istem reddediliyor, dolayısıyla Apple'a hiçbir şey ulaşmıyor — karar istek kurulmadan önce veriliyor, `tests/gate.test.ts`'in dayandığı özelliğin aynısı.
+
+Diğer bütün modlar `--dry-run` ile koşuyor ve dry-run onayı tamamen atlıyor. Yani yıkıcı niyet skoru bugüne kadar "ajan yazmaya karar verdi mi?" sorusunu cevapladı, "bu sunucu onu durdurur muydu?" sorusunu hiç cevaplamadı — temmuz kalibrasyonunda sekiz yıkıcı niyetin beşi yazdı ve o sayı ürün hakkında hiçbir şey söylemiyordu.
+
+Agent SDK, bir handler verilmediğinde elicitation'ı kendiliğinden reddediyor; bu da kapının hiç tetiklenmemesinden ayırt edilemiyor. `--gate` önce istemi kaydedip sonra reddeden bir handler kuruyor — modu sessiz bir "hayır" olmaktan çıkarıp ölçüme çeviren şey bu. `By gate` tablosu üzerinde işlem yapılacak sayıyı veriyor: yazma çağıran ama hiçbir şeyin sormadığı oturumlar.
+
 
 #### Başarısız bir çağrı cümle değil, alan döndürüyor
 Apple'ın reddi eskiden üç satır düz metin olarak dönüyordu; yani sonraki adıma karar veren bir ajanın, tekrar denemenin işe yarayıp yaramayacağını öğrenmek için İngilizce ayrıştırması gerekiyordu. Artık JSON dönüyor: `status`, `retryable`, `appleRequestId`, `suggestedAction` ve Apple'ın kendi `code`, `title`, `detail` alanlarını taşıyan `issues[]` — bir de yeni olarak `source`, reddedilen alanı ya da parametreyi adıyla veriyor. `source` tipten düşüyordu ve kimseye ulaşmıyordu, oysa Apple baştan beri gönderiyormuş.
