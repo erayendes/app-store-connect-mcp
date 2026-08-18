@@ -5,7 +5,7 @@
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/). Entries are newest-first.
 
 ## English
-### [Unreleased]
+### [2.3.0] — 2026-08-18
 
 #### `release__submit` — the three-step submission, in order, once
 Apple's names hide a dance. `review_submissions__create` takes an *app*, not a version, and makes an empty container. The version arrives as a separate item. And nothing reaches Apple until `submitted` is patched true. An agent that stops after the POST reports a release it did not ship — which is why those three descriptions were already worded to name the next call.
@@ -416,7 +416,7 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
-### [Unreleased]
+### [2.3.0] — 2026-08-18
 
 #### `release__submit` — üç adımlı gönderim, sırasıyla, tek seferde
 Apple'ın adlandırması bir dansı gizliyor. `review_submissions__create` sürümü değil *uygulamayı* alıyor ve boş bir kap yaratıyor. Sürüm ayrı bir öğe olarak geliyor. Ve `submitted` true'ya çekilene kadar Apple'a hiçbir şey ulaşmıyor. POST'tan sonra duran bir ajan, göndermediği bir yayını bildiriyor — o üç açıklamanın zaten bir sonraki çağrıyı adıyla söylemesinin sebebi bu.
