@@ -72,7 +72,7 @@ describe('descriptions add something the tool name does not', () => {
   // Apple's spec summaries are the source of these, so this is inherited debt
   // rather than a rule that was broken. Curating one in scripts/describe.ts
   // lowers the number; nothing should raise it.
-  const CEILING = 95;
+  const CEILING = 92;
 
   it(`no more than ${CEILING} descriptions merely restate the tool name`, () => {
     const restated = live
