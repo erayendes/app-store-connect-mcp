@@ -16,9 +16,9 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  *
  * Measured on the 50-intent corpus, 265 query phrasings:
  *
- *   passing in top-3    83   ← FLOOR
- *   ranked too low      64   the tool is found, below third
- *   no results at all  118   nothing matched — almost all of them Turkish
+ *   passing in top-3   143   ← FLOOR
+ *   ranked too low      15   the tool is found, below third
+ *   no results at all  107   nothing matched — almost all of them Turkish
  *
  * It has moved three times, and every move was the point:
  *   92 → 81   lane B stopped queries from naming their own target, so the
@@ -49,7 +49,7 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  *
  * Ceiling today is 147 (265 minus the 118 that find nothing).
  */
-const FLOOR = 83;
+const FLOOR = 143;
 
 interface IntentQueryCase {
   intent: string;
@@ -90,208 +90,148 @@ const FAILING = EVALUATION.filter((e) => !e.pass);
  * same kind of debt as the rest: nothing here needs fixing in the search code,
  * the client translates now.
  */
+/**
+ * Pinned list of known failing queries: 107 that find nothing, 15 that rank
+ * below third. A failure not on this list breaks CI, so the cost of a change
+ * has to be written down before it can land.
+ *
+ * Regenerated wholesale in MIL-208 rather than edited: 60 queries left it at
+ * once, and hand-picking which lines to delete from a list of 182 is how a
+ * stale entry survives and makes the "started passing" message fire on a run
+ * where nothing did.
+ *
+ * The zero-result block is not debt to pay here. Those are Turkish sentences
+ * handed straight to the server, and nothing is supposed to hand it Turkish —
+ * `asc__search_tools` asks for English and says so when it finds nothing, and
+ * the client translates before it searches. They are kept because they still
+ * rank the English phrasings honestly.
+ */
 const KNOWN_FAILING_QUERIES: string[] = [
-  // --- zero-result queries: the catalogue is English and these are not ---
-  "Türkiye’de haftalık aboneliği 99,99 TL yap",
-  "Türk kullanıcılar için zam yapmam lazım",
-  "Hangi pazarda ne kadar ücret aldığımızı karşılaştırmam lazım",
-  "100 jeton paketini Türkiye’de 49,99 TL yap",
-  "Jeton paketinden elde ettiğimiz geliri artırmamız lazım",
-  "Ücretli uygulamayı Türkiye’de 199,99 TL yap",
-  "Yeni kullanıcı başına daha fazla gelir elde etmeliyiz",
-  "give customers a redeemable discount",
-  "Yıllık abonelik için yüzde 20 indirimli teklif kodu oluştur",
-  "İndirim kodu aç",
-  "Eski müşterileri kampanyayla geri kazanmak istiyorum",
-  "Aylık aboneliği Almanya’da da satışa aç",
-  "DE satışını aç",
-  "Alman kullanıcılar artık abone olabilsin",
-  "Aylık aboneliğe 16 günlük ödeme ek süresi tanımla",
-  "Ek süreyi aç",
-  "Kartı reddedilen müşteriyi hemen kaybetmeyelim",
-  "Aylık aboneliğin etkin geri kazanım tekliflerini göster",
-  "Ayrılan müşterilere hangi kampanyaları sunduğumuzu görmeliyim",
-  "Türkçe açıklamayı ve 2.4 sürümünün Yenilikler metnini güncelle",
-  "Yeni özellikler mağaza sayfasında doğru görünsün",
-  "Almanya’daki kullanıcılar mağaza metnini kendi dilinde görsün",
-  "Türkçe uygulama adını ve alt başlığını yeni markaya göre değiştir",
-  "Adı ve alt başlığı güncelle",
-  "Yeni marka mağazada doğru görünsün",
-  "Kumar simülasyonu yanıtını ekleyip yaş derecelendirmesini güncelle",
-  "Yeni içerik yüzünden doğru yaş sınırını göstermeliyiz",
-  "Ana App Store kategorisini Eğitim olarak değiştir",
-  "Uygulama doğru mağaza bölümünde bulunsun",
-  "2.4 sürümünü ekleriyle birlikte incelemeye gönder",
-  "İncelemeye yolla",
-  "Bu sürüm artık Apple’ın onay kuyruğuna girsin",
-  "2.4 sürümünü yedi güne yayarak kademeli yayınla",
-  "Sorun çıkarsa herkesi etkilemeden durdurabilelim",
-  "Yeni versiyon aç",
-  "Onaydan sonra manuel yayın iste",
-  "organize external testers",
-  "Yeni bir TestFlight grubu oluştur",
-  "change StoreKit test account details",
-  "Edit this StoreKit sandbox user",
-  "Takım üyesinin rolünü değiştir",
-  "Günlük satış verisini getir",
-  "generate distribution signing credential",
-  "Yeni dağıtım sertifikası üret",
-  "Generate a new distribution certificate",
-  "Geliştirme cihazı kaydet",
-  "Yeni imzalama profili üret",
-  "Show builds from this CI workflow",
-  "Liderlik tablosuna skor gönder",
-  "Webhook adresine test isteği gönder",
-  "Endpoint’i ping ile dene",
-  "Test this webhook delivery URL",
-  "add a downloadable resource pack",
-  "Gruptaki tek bir testçi bile kalmasın",
-  "Bu ürünü bir daha kullanılamayacak şekilde kaldır",
-  "Bu subscription’ı kaldır",
-  "Eski müşterileri de zamlı tarifeye geçir",
-  "Abonelik neredeyse bedava olsun",
-  "Aboneliği bir kuruş yap",
-  "Hiçbir ülkede satışta görünmesin",
-  "Her yerde satışa kapat",
-  "Turn off store availability worldwide",
-  "remove obsolete signing credential",
-  "İmzalamada kullanılan bu sertifikayı kaldır",
-  "Takım üyesine tüm yönetici yetkilerini ver",
-  "Bu kişiyi Admin yap",
-  "Make this user an Admin",
-  "Onaylanan sürüm beklemeden canlıya çıksın",
-  "Publish the approved app right now",
-  // --- 90 ranked-too-low queries: the tool is found, below rank 3 ---
-  "TR fiyatını güncelle",
-  "Set the Turkey price for our weekly plan",
-  "Haftalık aboneliğin bugün her ülkedeki fiyatını göster",
-  "Ülke fiyatları ne?",
-  "Set a new price for this IAP",
-  "Uygulama fiyatını güncelle",
-  "Change the app price",
-  "Set a new price for the app",
-  "Make a promo code for this subscription",
-  "Make the subscription available in Germany",
-  "Add a territory to subscription availability",
-  "Win-back teklifleri ne?",
-  "Show subscription win-back offers",
-  "List offers for lapsed subscribers",
-  "Mağaza metnini değiştir",
-  "DE lokalizasyonu aç",
-  "Change the app content rating",
-  "change app store primary category",
-  "Kategoriyi güncelle",
-  "Change the primary store category",
-  "Set a different app category",
-  "Send the version to App Review",
-  "select build for app store version",
-  "Select a build for this version",
-  "Attach the uploaded build to the release",
-  "start the next release",
-  "Yeni App Store sürümü oluştur",
-  "Start the next store release",
-  "E-posta ile beta testçi davet et",
-  "Beta test grubu aç",
-  "Make a TestFlight tester group",
-  "change team member permissions",
-  "Change an App Store Connect user role",
-  "Update this team member’s permissions",
-  "Custom product page ekle",
-  "Make a campaign-specific App Store page",
-  "promote a limited-time activity",
-  "Uygulama içi etkinlik oluştur",
-  "App Store etkinliği yayınla",
-  "Create an in-app event",
-  "Add a promotional event to the store",
-  "Müşteri yorumuna cevap ver",
-  "Bu App Store değerlendirmesine yanıt yaz",
-  "Get this month’s financial report",
-  "ask for product usage metrics",
-  "Analytics raporu talep et",
-  "Add a device for provisioning",
-  "prepare app signing configuration",
-  "Make a new signing profile",
-  "set up automated build pipeline",
-  "Set up a CI workflow",
-  "Xcode Cloud build başlat",
-  "CI derlemesini çalıştır",
-  "Run the CI build now",
-  "Xcode Cloud çalıştırmalarını göster",
-  "add a new player milestone",
-  "Game Center başarımı oluştur",
-  "Oyuna yeni achievement ekle",
-  "Create a Game Center achievement",
-  "Add a new game achievement",
-  "add a ranked score board",
-  "Game Center liderlik tablosu oluştur",
-  "Yeni leaderboard ekle",
-  "Create a Game Center leaderboard",
-  "Add a score leaderboard",
-  "submit Game Center leaderboard score",
-  "Game Center puanı yolla",
-  "Submit a Game Center leaderboard score",
-  "Post this score to the leaderboard",
-  "Olay bildirim URL’si ekle",
-  "ping App Store Connect webhook",
-  "Arka plan varlık paketi oluştur",
-  "Add an iOS Background Assets package",
-  "remove all beta testers from group",
-  "TestFlight grubunu testçilerden temizle",
-  "Delete every tester in this beta group",
-  "Remove all TestFlight testers",
-  "remove recurring product entirely",
-  "Delete this subscription completely",
-  "Remove the subscription product",
-  "remove app availability all territories",
-  "Remove the app from every country",
-  "Remove the distribution certificate",
-  "make App Store Connect user Admin",
-  "Grant this team member admin access",
-  "release app store version immediately",
-  "Versiyonu şimdi yayınla",
-  "Release the version immediately",
+// --- zero-result queries: the catalogue is English and these are not ---
+  'Türkiye’de haftalık aboneliği 99,99 TL yap',
+  'TR fiyatını güncelle',
+  'Türk kullanıcılar için zam yapmam lazım',
+  'Haftalık aboneliğin bugün her ülkedeki fiyatını göster',
+  'Ülke fiyatları ne?',
+  'Hangi pazarda ne kadar ücret aldığımızı karşılaştırmam lazım',
+  '100 jeton paketini Türkiye’de 49,99 TL yap',
+  'IAP fiyatını değiştir',
+  'Jeton paketinden elde ettiğimiz geliri artırmamız lazım',
+  'Ücretli uygulamayı Türkiye’de 199,99 TL yap',
+  'Uygulama fiyatını güncelle',
+  'Yeni kullanıcı başına daha fazla gelir elde etmeliyiz',
+  'Yıllık abonelik için yüzde 20 indirimli teklif kodu oluştur',
+  'İndirim kodu aç',
+  'Eski müşterileri kampanyayla geri kazanmak istiyorum',
+  'Aylık aboneliği Almanya’da da satışa aç',
+  'DE satışını aç',
+  'Alman kullanıcılar artık abone olabilsin',
+  'Aylık aboneliğe 16 günlük ödeme ek süresi tanımla',
+  'Ek süreyi aç',
+  'Kartı reddedilen müşteriyi hemen kaybetmeyelim',
+  'Aylık aboneliğin etkin geri kazanım tekliflerini göster',
+  'Win-back teklifleri ne?',
+  'Ayrılan müşterilere hangi kampanyaları sunduğumuzu görmeliyim',
+  'Türkçe açıklamayı ve 2.4 sürümünün Yenilikler metnini güncelle',
+  'Mağaza metnini değiştir',
+  'Yeni özellikler mağaza sayfasında doğru görünsün',
+  'Mağaza sayfasına Almanca dilini ekle',
+  'DE lokalizasyonu aç',
+  'Almanya’daki kullanıcılar mağaza metnini kendi dilinde görsün',
+  'Türkçe uygulama adını ve alt başlığını yeni markaya göre değiştir',
+  'Adı ve alt başlığı güncelle',
+  'Yeni marka mağazada doğru görünsün',
+  'Kumar simülasyonu yanıtını ekleyip yaş derecelendirmesini güncelle',
+  'Yaş beyanını değiştir',
+  'Yeni içerik yüzünden doğru yaş sınırını göstermeliyiz',
+  'Ana App Store kategorisini Eğitim olarak değiştir',
+  'Kategoriyi güncelle',
+  'Uygulama doğru mağaza bölümünde bulunsun',
+  '2.4 sürümünü ekleriyle birlikte incelemeye gönder',
+  'İncelemeye yolla',
+  'Bu sürüm artık Apple’ın onay kuyruğuna girsin',
+  '2.4 sürümünü yedi güne yayarak kademeli yayınla',
+  'Kademeli yayını başlat',
+  'Sorun çıkarsa herkesi etkilemeden durdurabilelim',
+  'Bu sürüm için build seç',
+  'Yeni App Store sürümü oluştur',
+  'Yeni versiyon aç',
+  'Onaydan sonra manuel yayın iste',
+  'Sürümü elle yayınlama talebi oluştur',
+  'Son build’i TestFlight grubuna gönder',
+  'E-posta ile beta testçi davet et',
+  'Yeni TestFlight testçisi ekle',
+  'Yeni bir TestFlight grubu oluştur',
+  'change StoreKit test account details',
+  'Test kullanıcısının sandbox bilgilerini değiştir',
+  'Edit this StoreKit sandbox user',
+  'Takım üyesinin rolünü değiştir',
+  'Kullanıcı yetkisini güncelle',
+  'Mağaza sayfasına ekran görüntüsü yükle',
+  'Özel ürün sayfası oluştur',
+  'Uygulama içi etkinlik oluştur',
+  'Müşteri yorumuna cevap ver',
+  'Bu App Store değerlendirmesine yanıt yaz',
+  'Satış raporunu indir',
+  'Günlük satış verisini getir',
+  'Finans raporunu indir',
+  'Ödeme ve gelir raporunu getir',
+  'Analiz raporu isteği oluştur',
+  'Analytics raporu talep et',
+  'generate distribution signing credential',
+  'İmzalama sertifikası oluştur',
+  'Yeni dağıtım sertifikası üret',
+  'Generate a new distribution certificate',
+  'Geliştirme cihazı kaydet',
+  'Yeni test cihazını provisioning’e ekle',
+  'Provisioning profili oluştur',
+  'Yeni imzalama profili üret',
+  'Xcode Cloud iş akışı oluştur',
+  'CI derlemesini çalıştır',
+  'Workflow’un buildlerini listele',
+  'Oyuna yeni achievement ekle',
+  'Game Center liderlik tablosu oluştur',
+  'Yeni leaderboard ekle',
+  'Liderlik tablosuna skor gönder',
+  'Olay bildirim URL’si ekle',
+  'Webhook adresine test isteği gönder',
+  'Endpoint’i ping ile dene',
+  'Arka plan varlık paketi oluştur',
+  'Gruptaki tek bir testçi bile kalmasın',
+  'TestFlight grubunu testçilerden temizle',
+  'Bu ürünü bir daha kullanılamayacak şekilde kaldır',
+  'Bu subscription’ı kaldır',
+  'Eski müşterileri de zamlı tarifeye geçir',
+  'Mevcut aboneler de yeni fiyatı ödesin',
+  'Abonelik neredeyse bedava olsun',
+  'Aboneliği bir kuruş yap',
+  'Hiçbir ülkede satışta görünmesin',
+  'Her yerde satışa kapat',
+  'Turn off store availability worldwide',
+  'remove obsolete signing credential',
+  'İmzalamada kullanılan bu sertifikayı kaldır',
+  'Dağıtım sertifikasını sil',
+  'Takım üyesine tüm yönetici yetkilerini ver',
+  'Bu kişiyi Admin yap',
+  'Onaylanan sürüm beklemeden canlıya çıksın',
+  'Versiyonu şimdi yayınla',
 
-  // --- 23 queries the Turkish word list used to carry, measured on removal ---
-  "IAP fiyatını değiştir",
-  "Mağaza sayfasına Almanca dilini ekle",
-  "Yaş beyanını değiştir",
-  "Kademeli yayını başlat",
-  "Bu sürüm için build seç",
-  "Sürümü elle yayınlama talebi oluştur",
-  "Beta grubuna build ekle",
-  "Yeni TestFlight testçisi ekle",
-  "Test kullanıcısının sandbox bilgilerini değiştir",
-  "Kullanıcı yetkisini güncelle",
-  "Mağaza sayfasına ekran görüntüsü yükle",
-  "Özel ürün sayfası oluştur",
-  "Satış raporunu indir",
-  "Finans raporunu indir",
-  "Ödeme ve gelir raporunu getir",
-  "Analiz raporu isteği oluştur",
-  "İmzalama sertifikası oluştur",
-  "Yeni test cihazını provisioning’e ekle",
-  "Provisioning profili oluştur",
-  "Xcode Cloud iş akışı oluştur",
-  "Yeni CI workflow ekle",
-  "Mevcut aboneler de yeni fiyatı ödesin",
-  "Dağıtım sertifikasını sil",
-  // Two entries left this list on 17 August 2026: "reply to customer review" and
-  // "Reply to a customer review". They pass, and had been passing since the
-  // tie-break change recorded in KNOWN_CONTESTED below — the FLOOR was raised to
-  // 83 to bank the win and nobody deleted the rows, so `npm test` printed "2
-  // queries started passing!" on every run until someone read it. The list is
-  // the budget: an entry that passes is not debt, it is noise that trains the
-  // reader to skip the message.
-  //
-  // These two used to pass, on nothing. A Turkish suffix after an apostrophe
-  // splits off a one- or two-letter token — "build'i" gives "i", "Workflow'un"
-  // gives "un" — and a fragment that short is inside so many English words that
-  // it scored a hit against almost every operation. Take that padding away and
-  // "Son build'i TestFlight grubuna gönder" matches `build` and `testflight`
-  // and nothing else: two hits against a threshold of three. Same debt as the
-  // rest of this block, it was just wearing a passing grade.
-  "Son build’i TestFlight grubuna gönder",
-  "Workflow’un buildlerini listele",
+  // --- found, but not in the top three ---
+  'Set a new price for this IAP',
+  'Change the app price',
+  'Set a new price for the app',
+  'select build for app store version',
+  'Select a build for this version',
+  'Attach the uploaded build to the release',
+  'Beta grubuna build ekle',
+  'Beta test grubu aç',
+  'Run the CI build now',
+  'Xcode Cloud çalıştırmalarını göster',
+  'add a new player milestone',
+  'Game Center başarımı oluştur',
+  'Add a new game achievement',
+  'Game Center puanı yolla',
+  'make App Store Connect user Admin',
 ];
 
 describe('search intent coverage ratchet (asc__search_tools top-3)', () => {
@@ -372,10 +312,12 @@ describe('historical regression freeze cases', () => {
     expect(top8).toContain('subscription_prices.create');
   });
 
-  // Known gap: "subscription price" ranks the app-level price tool above the
-  // subscription one. Same shape as AI-201. When this starts passing, vitest
-  // fails the case and this wrapper comes off.
-  it.fails('ranks the subscription price tool in the top 3 for a subscription price query', () => {
+  // Was a known gap: "subscription price" ranked the app-level price tool above
+  // the subscription one, and this case was wrapped in `it.fails` until it
+  // stopped failing. The name tie-break (see unaskedNameParts in
+  // src/tools/meta.ts) is what fixed it — `app_price_points` carries two parts
+  // the query never mentioned where `subscription_prices` carries none.
+  it('ranks the subscription price tool in the top 3 for a subscription price query', () => {
     const top3 = searchOperations('app store subscription price change territory')
       .slice(0, 3)
       .map((op) => op.name);
@@ -404,11 +346,11 @@ describe('historical regression freeze cases', () => {
  * "contested" when the expected tool is in the top 3 but something else ranks
  * first. Measured on the same 265 phrasings:
  *
- *   53   expected tool ranks first — uncontested
- *   30   expected tool is in the top 3, another tool leads — contested
- *  182   expected tool is not in the top 3 at all (118 find nothing, 64 rank low)
+ *  115   expected tool ranks first — uncontested
+ *   28   expected tool is in the top 3, another tool leads — contested
+ *  122   expected tool is not in the top 3 at all (107 find nothing, 15 rank low)
  *
- * 53 + 30 = 83, the FLOOR. Same corpus, split by who won rather than by pass
+ * 115 + 28 = 143, the FLOOR. Same corpus, split by who won rather than by pass
  * and fail.
  *
  * Read a diff here as a routing change, not a score change: a new pair means a
@@ -432,41 +374,39 @@ describe('contested intents', () => {
     return { pairs: [...pairs].sort(), count };
   }
 
+  // Rewritten wholesale when the tie-break landed and 33 curated descriptions
+  // went in (MIL-208). Both moves reroute by design: the tie-break decides
+  // every query where a resource and its sub-resources score the same, and a
+  // curated description puts its tool ahead of neighbours it used to trail.
+  // What this list is for is the change nobody intended, so it is the list as
+  // measured after, not a diff anyone hand-edited.
   const KNOWN_CONTESTED = [
-    'app_custom_product_page_localizations.create > app_custom_product_pages.create',
+    'app_events.create > app_custom_product_pages.create',
+    'app_events.create > review_submissions.create',
     'app_info_localizations.create > app_info_localizations.update',
     'app_info_localizations.create > app_store_version_localizations.create',
     'app_screenshots.create > app_store_version_localizations.update',
+    'app_store_version_localizations.create > app_events.create',
     'app_store_version_localizations.create > app_store_versions.create',
     'app_store_versions.build.get > app_store_versions.build.set',
     'app_store_versions.create > review_submissions.create',
-    // "reply to customer review" ties now that `to` has to be its own word
-    // rather than the one inside `customer`, and a tie breaks alphabetically.
-    // The response tool is still in the top 3; it just stopped leading.
-    'app_store_versions.customer_reviews.list > customer_review_responses.create',
-    // Curating analytics_report_segments.get ("the rows are gzipped TSV at that
-    // URL — this response carries the link, not the data") put it above
-    // sales_reports.list on the sales-report queries. Accepted: both really are
-    // "get report data", and sales_reports.list still ranks in the top 3.
-    'analytics_report_segments.get > sales_reports.list',
-    // `apps.analytics_report_requests.list > analytics_report_requests.create`
-    // was here and is gone: the curated description for the create tool put it
-    // first on "Request an analytics report", which is the tool that intent
-    // wants. The listing tool no longer leads.
-    'apps.android_to_ios_app_mapping_details.list > webhook_pings.create',
-    'apps.background_assets.list > background_assets.create',
-    'apps.subscription_grace_period.get > subscription_grace_periods.update',
-    'background_asset_upload_files.create > background_assets.create',
+    'apps.list > app_events.create',
+    'background_assets.create > app_infos.update',
     'beta_testers.create > beta_groups.create',
-    'bundle_ids.create > profiles.create',
-    'ci_build_runs.builds.list > ci_workflows.build_runs.list',
-    'ci_build_runs.create > ci_workflows.create',
-    'sandbox_testers_clear_purchase_history_request_v2.create > sandbox_testers_v2.update',
-    'subscription_offer_code_custom_codes.create > subscription_offer_codes.create',
-    'subscription_plan_availabilities.available_territories.list > subscription_plan_availabilities.create',
-    'subscription_price_points.equalizations.list > subscription_prices.create',
-    'subscription_prices.create > subscriptions.prices.list',
+    'beta_testers.delete > beta_groups.builds.add',
+    'ci_build_actions.get > ci_build_runs.create',
+    'game_center_achievement_images_v2.create > game_center_achievements_v2.create',
+    'game_center_activities.leaderboards_v2.add > game_center_leaderboards_v2.create',
+    'game_center_leaderboard_images_v2.create > game_center_leaderboards_v2.create',
+    'profiles.create > certificates.create',
+    'profiles.create > subscription_offer_codes.create',
+    'sandbox_testers_v2.list > sandbox_testers_v2.update',
+    'subscription_grace_periods.get > subscription_grace_periods.update',
+    'subscription_plan_availabilities.available_territories.replace > subscription_plan_availabilities.create',
+    'subscriptions.delete > app_availabilities_v2.create',
     'subscriptions.price_points.list > subscription_prices.create',
+    'users.list > users.update',
+    'webhooks.create > webhook_pings.create',
   ];
 
   it('the same tools compete for the same intents', () => {
@@ -484,7 +424,7 @@ describe('contested intents', () => {
   it('no more queries are contested than before', () => {
     // Not a floor to hold: a rise means an existing competitor took more
     // phrasings, which the pair list alone cannot show.
-    expect(contestedPairs().count).toBeLessThanOrEqual(32);
+    expect(contestedPairs().count).toBeLessThanOrEqual(28);
   });
 
   it('splits the corpus the same way the FLOOR counts it', () => {
@@ -493,6 +433,6 @@ describe('contested intents', () => {
     const { count } = contestedPairs();
     const uncontested = PASSING.length - count;
     expect(uncontested + count).toBe(PASSING.length);
-    expect(uncontested).toBe(53);
+    expect(uncontested).toBe(115);
   });
 });

@@ -108,7 +108,7 @@ export const CURATED: Record<string, string> = {
   'apps.customer_reviews.list':
     'List customer reviews for an app. Filter by rating or territory; sort by -createdDate for the newest.',
   'app_store_versions.create':
-    'Create a new App Store version. Do this before attaching a build and submitting for review.',
+    'Start the next release: create a new App Store version to prepare. Do this before attaching a build and submitting for review.',
   'app_store_versions.update':
     'Update an App Store version, including its release type and earliest release date.',
   // Apple's names hide a three-step dance, and the old description here got it
@@ -218,13 +218,86 @@ export const CURATED: Record<string, string> = {
     'Create an in-app purchase. Set the product ID, type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION) and reference name.',
   'subscriptions.create':
     'Create an auto-renewable subscription inside a subscription group.',
+  'subscriptions.delete':
+    'Remove a recurring product entirely: delete a subscription from the catalogue. Possible only before Apple has ever approved it; anything that has been on sale is withdrawn by emptying the countries it sells in.',
+  'subscription_plan_availabilities.create':
+    'Make a subscription available in a country, and set its territory availability overall — the list of countries it is sold in. Putting a country here is what puts the subscription on sale there; a price alone does not.',
+  'subscriptions.win_back_offers.list':
+    'List the win-back offers on a subscription — the discounts shown to lapsed subscribers who cancelled, to bring them back.',
+  'subscription_offer_codes.create':
+    'Create a redeemable offer code for a subscription — a code a customer types in to claim a free or discounted period, for a campaign or a support gesture.',
   'subscription_groups.create':
     'Create a subscription group. Subscriptions in the same group are mutually exclusive upgrade/downgrade options.',
+  // --- Game Center: eleven measured phrasings, and Apple's summaries are the
+  // tool names in a sentence. Cheap to fix even though the audience is narrow.
+  'game_center_achievements_v2.create':
+    'Create a Game Center achievement — a milestone a player unlocks once, worth a share of the 1000 achievement points a game has to spend.',
+  'game_center_leaderboards_v2.create':
+    'Create a Game Center leaderboard — a ranked score board players compete on, either classic (all-time) or recurring.',
+  'game_center_leaderboard_entry_submissions.create':
+    'Post a player’s score to a Game Center leaderboard. This is the write that submits a result; the leaderboard itself is created separately.',
+
   'users.list': 'List team members with access to your App Store Connect account.',
+  // Four measured phrasings ("change team member permissions", "make App Store
+  // Connect user Admin", …) reached "Update a user." at no rank at all — the
+  // words a person uses for this are role, permissions, admin and access, and
+  // none of them were in the haystack.
+  'beta_groups.create':
+    'Make a TestFlight group to organise testers — an internal one for the team, or an external one Apple reviews before it can receive builds.',
+  'analytics_report_requests.create':
+    'Ask Apple to start producing analytics for an app — the product usage numbers behind downloads, sessions, retention and crashes. ONE_TIME_SNAPSHOT covers the past 365 days; ONGOING keeps going as new data arrives. Nothing is downloadable straight away: a fresh request has no instances for a day or more.',
+  'users.update':
+    'Change a team member’s role and which apps they can reach — Admin, App Manager, Developer, Marketing or Finance permissions. Edits an existing member; it does not invite anyone.',
+  'user_invitations.create':
+    'Invite someone to your App Store Connect team by email, with the role they get on arrival. They are not a member until they accept.',
+  // Provisioning: "signing" is the word, and neither of these carried it.
+  'profiles.create':
+    'Prepare an app’s signing configuration: make a provisioning profile from a bundle ID, a certificate and (for development) a device list. This is the file Xcode signs a build with.',
+  'devices.create':
+    'Register a device for development and ad-hoc provisioning by its UDID, so builds signed for it will install.',
+
+  // A release has three separate "start" points and the queries mix them up:
+  // create the version, attach a build, ask Apple to publish. Each says which.
+  'app_store_version_release_requests.create':
+    'Release the version immediately: publish an approved App Store version right now. Only for one Apple has already approved and that is waiting on you — the manual release button, not the submission.',
+  'ci_workflows.create':
+    'Set up an Xcode Cloud workflow — what starts a build, which actions it runs (build, test, archive) and where it goes afterwards.',
+  'ci_workflows.build_runs.list':
+    'List the Xcode Cloud builds a workflow has run, newest first, with how each one ended.',
   'ci_build_runs.create':
     'Start an Xcode Cloud build for a workflow, optionally targeting a specific branch, tag or pull request.',
   'webhooks.create':
     'Create a webhook so Apple pushes App Store Connect events to your endpoint.',
+  'background_assets.create':
+    'Add a downloadable resource pack — a Background Assets package holding large game or app content that iOS fetches separately, after install and outside the app bundle.',
+  'certificates.delete':
+    'Revoke a signing certificate. Any provisioning profile built on it stops working, so replace the profile before removing the certificate a build depends on.',
+  'beta_testers.delete':
+    'Remove a TestFlight tester from your account entirely, so they lose access to every build and group. Removing them from one group is a different call.',
+  'app_availabilities_v2.create':
+    'Set an app’s availability — the countries it is sold in. Submitting an empty list removes the app from all territories; submitting some limits it to those.',
+  'finance_reports.list':
+    'Download the monthly financial report — what Apple actually paid, by region and currency, for a fiscal period. This is the money report, as opposed to units sold. Needs ASC_VENDOR_NUMBER and a Finance role on the API key.',
+  'webhook_pings.create':
+    'Ping a webhook to check your endpoint answers — Apple sends a test delivery to it and records the result. Nothing about the app changes.',
+
+  // --- store listing settings that live on appInfo, not on the version -----
+  // "Update an app info." is Apple's summary and says nothing a person would
+  // type. Three measured phrasings about the store category found no tool at
+  // all; category, age rating and content rights are what this actually edits.
+  'app_infos.update':
+    'Change an app’s primary and secondary App Store category and its subcategories. These belong to the app rather than to a version, so changing them here changes them for every version.',
+  'age_rating_declarations.update':
+    'Answer Apple’s content questions to set the app’s age rating — violence, gambling, mature themes, unrestricted web access. The rating is derived from the answers rather than chosen.',
+
+  // --- in-app events ------------------------------------------------------
+  // Deliberately does not use the word "promotional": subscription
+  // promotional offers own that token, and four in-app-event phrasings were
+  // already competing with them.
+  'app_events.create':
+    'Create an in-app event — a limited-time activity Apple features on your store page, such as a tournament, a live stream, a challenge or a premiere. Localize it and add artwork before submitting it for review.',
+  'app_custom_product_pages.create':
+    'Create a custom product page — an alternative store page with its own screenshots and text, reached by a campaign link, for testing a message with one audience.',
 
   // --- subscription pricing (the "change the price" flow) -----------------
   'subscriptions.price_points.list':
@@ -271,9 +344,12 @@ export const CURATED: Record<string, string> = {
   'app_store_version_localizations.update':
     "Update the store listing text for one language of a version: description, keywords, " +
     "what's new (release notes), promotional text, support and marketing URLs.",
+  // "title" is the word people use for what Apple's API calls the name, and it
+  // was the token that sent "Update the listing title" to a tool about age
+  // ratings. Naming both is cheaper than a synonym table.
   'app_info_localizations.update':
-    "Update an app's name, subtitle or privacy policy text for one language. App name " +
-    'and subtitle are capped at 30 characters.',
+    "Update the listing title (Apple's field is called the name), subtitle or privacy " +
+    'policy text for one language. Name and subtitle are capped at 30 characters.',
   'app_info_localizations.create':
     "Add a new language for the app-level listing fields: name, subtitle, privacy policy.",
   'app_store_version_localizations.search_keywords.add':

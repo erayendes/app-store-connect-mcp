@@ -7,6 +7,18 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### 143 of 265 real phrasings now find their tool in the top three, up from 83
+`asc__search_tools` is how a model gets from "make the subscription available in Germany" to the one call that does it, and on a measured corpus of 265 phrasings it was landing the right tool in the top three 83 times. It is 143 now, with no phrasing losing a place it had.
+
+Most of the gain is one rule rather than one hundred rewrites. Scoring counts how many of the query's words appear in a tool's name, description and path, so every sibling of a resource ties on a query about the resource — "Create a Game Center achievement" scores full marks on the achievement tool and on its images, localizations and releases alike. Ties then broke alphabetically, which put `game_center_achievement_images.create` first and the tool the query was about fourth. No description can win that: the competitors match the same words for the same good reason.
+
+Equal coverage is now settled by which name carries the least material the query never mentioned. `achievements_v2.create` has one such part where `achievement_localizations.create` has two, and the query said achievement, not achievement localization. That rule alone moved 11 phrasings, and it costs nothing per session — unlike a description, which is paid for in every context that loads the tool.
+
+The other 33 are curated descriptions, chosen against the corpus rather than by domain size. `users.update` said "Update a user." and four phrasings about roles, permissions and admin access found it at no rank at all. `app_infos.update` said "Update an app info." and owns the store category. `app_events.create` said "Create an app event." and is the in-app event Apple features on the store page. Each one now carries the words a person actually types, and deliberately not the words that belong to a neighbour: the in-app event description avoids "promotional" because subscription promotional offers own that token.
+
+Two ratchets moved with it — descriptions that restate their own tool name 95 → 92, Apple-summary descriptions 712 → 692 — and the pinned list of failing queries was regenerated whole rather than edited. Sixty queries left it at once, and hand-picking which lines to delete from a list of 182 is how a stale entry survives and makes the "started passing" message fire on a run where nothing did.
+
+
 #### A write says which app it is about to change
 `Target:     id = 6636549188` was the one line in the confirmation prompt that says *which* thing is being written to, and it was the one line nobody could read. The references inside a request body were resolved to names; the id in the path — the target itself — never was. A destructive write with no body at all named nothing.
 
@@ -351,6 +363,18 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### 265 gerçek ifadeden 143'ü aracını ilk üçte buluyor, önce 83'tü
+`asc__search_tools`, modelin "aboneliği Almanya'da satışa aç"tan bunu yapan tek çağrıya ulaşma yolu; ölçülmüş 265 ifadelik havuzda doğru aracı ilk üçe 83 kez getiriyordu. Artık 143, ve hiçbir ifade elindeki yeri kaybetmedi.
+
+Kazancın çoğu yüz yeniden yazımdan değil, tek bir kuraldan geliyor. Puanlama, sorgunun kaç kelimesinin aracın adında, açıklamasında ve yolunda geçtiğini sayıyor; bu yüzden bir kaynak hakkındaki sorguda kaynağın tüm kardeşleri eşitleniyor — "Create a Game Center achievement" hem başarım aracında hem de onun görsellerinde, yerelleştirmelerinde ve sürümlerinde tam puan alıyor. Eşitlik alfabetik bozuluyordu, yani `game_center_achievement_images.create` birinci, sorgunun sorduğu araç dördüncü oluyordu. Bunu hiçbir açıklama kazanamaz: rakipler aynı kelimeleri aynı haklı sebeple içeriyor.
+
+Eşit kapsama artık, hangi adın sorgunun hiç anmadığı en az malzemeyi taşıdığına bakılarak çözülüyor. `achievements_v2.create`'te böyle bir parça var, `achievement_localizations.create`'te iki; sorgu başarım dedi, başarım yerelleştirmesi değil. Tek başına bu kural 11 ifadeyi taşıdı ve oturum başına hiçbir maliyeti yok — aracı yükleyen her bağlamda bedeli ödenen açıklamaların aksine.
+
+Diğer 33'ü kürasyonlu açıklama; domain büyüklüğüne göre değil, havuza karşı seçildi. `users.update` "Update a user." diyordu ve rol, izin, admin erişimi hakkındaki dört ifade onu hiçbir sırada bulamıyordu. `app_infos.update` "Update an app info." diyordu ve mağaza kategorisi onun. `app_events.create` "Create an app event." diyordu ve Apple'ın mağaza sayfasında öne çıkardığı in-app event bu. Her biri artık insanın gerçekten yazdığı kelimeleri taşıyor — ve bilerek komşusuna ait olanları taşımıyor: in-app event açıklaması "promotional" kelimesinden kaçınıyor, çünkü o token abonelik promosyon tekliflerinin.
+
+İki ratchet de onunla birlikte indi — kendi adını tekrarlayan açıklamalar 95 → 92, Apple özetinde kalanlar 712 → 692 — ve düşen sorguların sabitlenmiş listesi düzenlenmedi, baştan üretildi. Altmış sorgu listeyi aynı anda terk etti; 182 satırlık bir listeden hangilerinin silineceğini elle seçmek, tam olarak bayat bir girdinin hayatta kalıp "started passing" mesajını hiçbir şeyin geçmediği bir koşuda tetiklemesinin yolu.
+
 
 #### Bir yazma, hangi uygulamayı değiştireceğini söylüyor
 `Target:     id = 6636549188` — onay isteminde *neye* yazıldığını söyleyen tek satırdı ve okunamayan tek satır oydu. İstek gövdesinin içindeki referanslar adlara çevriliyordu; yoldaki kimlik, yani hedefin kendisi, hiç çevrilmiyordu. Gövdesi olmayan yıkıcı bir yazma hiçbir şeyi adlandırmıyordu.

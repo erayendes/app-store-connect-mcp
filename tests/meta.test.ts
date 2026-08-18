@@ -101,7 +101,11 @@ describe('asc__search_tools finds the macros', () => {
     expect(await search('create certificate')).toEqual([
       'certificates.create',
       'profiles.create',
-      'accessibility_declarations.create',
+      // Was accessibility_declarations.create, on a tie broken alphabetically.
+      // The name tie-break puts a tool whose name is two parts, one of them the
+      // query's own word, above one whose name is three parts of which only
+      // "create" was asked for.
+      'certificates.delete',
     ]);
   });
 
