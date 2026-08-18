@@ -38,6 +38,7 @@ import { STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
   manualToolsFor,
+  deprecatedOperationsFor,
   operationsFor,
   profilesForOperation,
   registerCommand,
@@ -136,7 +137,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const registry = new ToolRegistry({
     // A profile carries an explicit, hand-curated list; core (apps.list/get and
     // the four shared relationship listings) is already folded into it.
-    operations: selection ? operationsFor(selection) : undefined,
+    operations: selection
+      ? [
+          ...operationsFor(selection),
+          // Deprecated operations are in no profile, so without this the flag
+          // was a no-op in profile mode — see deprecatedOperationsFor.
+          ...(config.includeDeprecated ? deprecatedOperationsFor(selection) : []),
+        ]
+      : undefined,
     domains: selection ? undefined : config.domains,
     readOnly: config.readOnly,
     includeDeprecated: config.includeDeprecated,

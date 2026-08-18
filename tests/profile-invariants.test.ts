@@ -12,6 +12,7 @@ import {
   CORE_MANUAL_TOOLS,
   REMOVED_PROFILES,
   descriptionKey,
+  deprecatedOperationsFor,
   manualToolsFor,
   operationsFor,
   removedProfileMessage,
@@ -275,5 +276,37 @@ describe('server.json stays in step with the profiles', () => {
 
     expect(count(narrow), 'narrow count in server.json').toBe(Number(claimedNarrow));
     expect(count(wide), 'wide count in server.json').toBe(Number(claimedWide));
+  });
+});
+
+/**
+ * `--include-deprecated` was a no-op in profile mode and said nothing about it.
+ * Membership is hand-curated in spec/profiles.csv and nobody curates an
+ * endpoint Apple has retired, so 0 of the 123 deprecated operations were
+ * reachable from any profile — the flag only ever worked on the no-profile
+ * server with `--domains`.
+ */
+describe('--include-deprecated in profile mode', () => {
+  const selection = resolveSelection('game-center');
+
+  it('adds nothing on its own — the curated set has no deprecated operations', () => {
+    const curated = operationsFor(selection);
+    const deprecated = new Set(OPERATIONS.filter((op) => op.deprecated).map((op) => op.name));
+    expect(curated.filter((name) => deprecated.has(name))).toEqual([]);
+  });
+
+  it('offers the retired operations of the domains the profile covers', () => {
+    const extra = deprecatedOperationsFor(selection);
+    expect(extra.length).toBeGreaterThan(0);
+    // Every one is genuinely deprecated, and genuinely in scope for this
+    // profile — the definition is by domain, since there is no curated answer.
+    const byName = new Map(OPERATIONS.map((op) => [op.name, op]));
+    const domains = new Set(
+      operationsFor(selection).map((n) => byName.get(n)?.domain).filter(Boolean)
+    );
+    for (const name of extra) {
+      expect(byName.get(name)?.deprecated, `${name} is not deprecated`).toBe(true);
+      expect(domains.has(byName.get(name)?.domain), `${name} is out of scope`).toBe(true);
+    }
   });
 });

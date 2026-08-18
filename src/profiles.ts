@@ -11,6 +11,7 @@
  * eleven profiles could not reach their own resources from an app.
  */
 import { CORE, PROFILE_DATA, type GeneratedSubProfile } from './generated/profiles-data.js';
+import { OPERATIONS } from './generated/operations.js';
 
 export interface SubProfile extends GeneratedSubProfile {
   description: string;
@@ -208,6 +209,29 @@ export function resolveSelection(spec: string): ProfileSelection {
 /** Every spec operation a selection serves, core included. */
 export function operationsFor(selection: ProfileSelection): string[] {
   return [...new Set([...CORE_OPERATIONS, ...selection.subProfiles.flatMap((s) => s.operations)])];
+}
+
+/**
+ * The deprecated operations `--include-deprecated` should add to a selection.
+ *
+ * They are in no profile: membership is hand-curated in spec/profiles.csv and
+ * nobody curates an endpoint Apple has retired, so 0 of 123 were reachable in
+ * profile mode and the flag silently did nothing there — it only ever worked on
+ * the no-profile server with `--domains`.
+ *
+ * Membership by DOMAIN rather than by curation, and that is the honest
+ * definition rather than a shortcut: "everything retired in the areas this
+ * profile covers" is what someone passing this flag is asking for, and there is
+ * no curated answer to inherit. Most of it is Game Center — 102 of the 123 —
+ * so `game-center --include-deprecated` is the case this visibly changes.
+ */
+export function deprecatedOperationsFor(selection: ProfileSelection): string[] {
+  const domains = new Set(
+    operationsFor(selection)
+      .map((name) => OPERATIONS.find((op) => op.name === name)?.domain)
+      .filter(Boolean) as string[]
+  );
+  return OPERATIONS.filter((op) => op.deprecated && domains.has(op.domain)).map((op) => op.name);
 }
 
 /** Hand-written tools a selection serves (StoreKit, reviews-AI, pricing macros). */
