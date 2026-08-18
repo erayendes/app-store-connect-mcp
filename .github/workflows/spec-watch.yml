@@ -8,11 +8,20 @@
 # change for anyone whose config names the tool. A person reads it and a person
 # decides whether it ships.
 #
-# The pull request is opened with `gh`, not with an action. This repository
-# allows GitHub-owned actions and ossf/scorecard-action and nothing else
-# (`allowed_actions: selected`), so a third-party action fails at startup — and
-# widening that list to save a few lines would trade a real security posture for
-# convenience. `gh` is already on the runner.
+# Two of this repository's security settings shape how this works, and neither
+# is worth relaxing for a convenience:
+#
+#   allowed_actions: selected   only GitHub-owned actions and
+#                               ossf/scorecard-action run here, so
+#                               peter-evans/create-pull-request fails at startup
+#   Actions cannot open PRs     "Allow GitHub Actions to create and approve pull
+#                               requests" is off, so even `gh pr create` with the
+#                               workflow token is refused
+#
+# So this pushes the branch and writes the summary, and a person opens the pull
+# request from the link. The watching is the part that was missing; one click is
+# not the expensive half. If that setting is ever turned on, `gh pr create` here
+# is a three-line change.
 name: Spec watch
 
 on:
@@ -71,47 +80,41 @@ jobs:
         continue-on-error: true
         run: npm run typecheck && npm test
 
-      - name: Open the pull request
+      - name: Push the branch and say what changed
         if: steps.changed.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
           VERDICT: ${{ steps.verify.outcome }}
         run: |
           set -euo pipefail
           BRANCH="spec/apple-update"
           REPORT="$(git diff --no-color -- src/generated/REPORT.txt || true)"
+          VERSION="$(node -p "require('./spec/openapi.json').info.version")"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           git add spec/openapi.json src/generated
-          git commit -m "chore: regenerate from Apple's latest OpenAPI specification"
-          # Force: the branch is this workflow's alone, and a previous unmerged
-          # update is superseded by this one rather than merged with it.
+          git commit -m "chore: regenerate from Apple's OpenAPI specification v$VERSION"
+          # Force: the branch belongs to this workflow alone, and an unmerged
+          # previous update is superseded by this one rather than merged with it.
           git push --force origin "$BRANCH"
 
           {
-            echo "Apple's OpenAPI specification changed and the catalogue was regenerated from it."
+            echo "## Apple published specification v$VERSION"
             echo
-            echo "**Read the report diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation leaves every profile unless \`--include-deprecated\` is passed."
+            echo "The catalogue was regenerated and pushed to \`$BRANCH\`."
+            echo
+            echo "[Open the pull request](https://github.com/${GITHUB_REPOSITORY}/compare/main...$BRANCH?expand=1)"
             echo
             if [ "$VERDICT" = "failure" ]; then
-              echo "> **The suite does not pass on this branch.** That is the finding: Apple changed something a ratchet or a curated description depends on. The fix belongs here before it merges."
+              echo "> **The suite does not pass on that branch.** That is the finding rather than a blocker: Apple changed something a ratchet or a curated description depends on, and the fix belongs on the branch before it merges."
               echo
             fi
+            echo "**Read this diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation leaves every profile unless \`--include-deprecated\` is passed."
+            echo
             echo '```diff'
-            echo "${REPORT:-（REPORT.txt unchanged）}"
+            echo "${REPORT:-REPORT.txt unchanged}"
             echo '```'
             echo
             echo "Nothing is published by this workflow. Tagging and release stay where they were."
-          } > /tmp/body.md
-
-          # Reopen rather than duplicate: a second Apple change before the first
-          # is merged should update one pull request, not open a queue of them.
-          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
-            gh pr edit "$BRANCH" --body-file /tmp/body.md
-          else
-            gh pr create --base main --head "$BRANCH" \
-              --title "chore: Apple published a new App Store Connect specification" \
-              --body-file /tmp/body.md
-          fi
+          } >> "$GITHUB_STEP_SUMMARY"
