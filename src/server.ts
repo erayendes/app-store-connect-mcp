@@ -103,6 +103,20 @@ export const SERVER_INSTRUCTIONS = [
   '   app → group → subscription → price chain. Prefer it over walking the chain.',
 ].join('\n');
 
+/**
+ * How many tools each server actually serves, by server.
+ *
+ * A WeakMap rather than a field on the SDK's `Server`: the count has to be read
+ * from outside (index.ts prints the banner) without changing the type every
+ * call site depends on, and it must not keep a server alive.
+ */
+const toolCounts = new WeakMap<Server, () => number>();
+
+/** What `tools/list` will return for this server — the number a client sees. */
+export function servedToolCount(server: Server): number | undefined {
+  return toolCounts.get(server)?.();
+}
+
 export function createServer(config: ServerConfig, selection?: ProfileSelection): Server {
   const tokens = new TokenProvider(config.credentials);
   // ASC_BASE_URL redirects everything to a local fixture server for testing;
@@ -180,7 +194,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             loaded: loadedSubs.has(s),
             description: s.description,
           })),
-        estimatedTokens: toolCountFor(selection) * TOKENS_PER_TOOL,
+        // What this server actually serves, not what the profile maps: the
+        // estimate exists to answer "what is this costing my context".
+        estimatedTokens: (servedToolCount(server) ?? toolCountFor(selection)) * TOKENS_PER_TOOL,
         ...(unloadedSubs().length
           ? {
               hint:
@@ -382,7 +398,18 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     );
   };
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
+  /**
+   * Exactly what `tools/list` answers.
+   *
+   * Named rather than inlined so the startup banner can count the same list the
+   * client receives. It used to quote `toolCountFor`, which counts the
+   * operations the profile MAPS — a number that is stable, easy to put in a
+   * changelog, and wrong in every client: `asc__call` and `asc__describe` are
+   * always served and mapped nowhere, StoreKit only loads with a bundle id, and
+   * since #66 `--include-deprecated` adds tools too. Someone reading "24" and
+   * seeing 29 has no way to tell whether they misconfigured something.
+   */
+  const servedTools = (): McpToolDefinition[] => {
     const onDemand = loadTool();
     const tools: McpToolDefinition[] = [
       ...META_TOOLS,
@@ -400,8 +427,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       tools.push(...storekitTools);
     }
 
-    return { tools };
-  });
+    return tools;
+  };
+
+  toolCounts.set(server, () => servedTools().length);
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: servedTools() }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let name = request.params.name;

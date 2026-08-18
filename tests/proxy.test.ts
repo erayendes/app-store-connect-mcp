@@ -15,9 +15,9 @@
 import { describe, it, expect } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { createServer, formatError } from '../src/server.js';
+import { createServer, formatError, servedToolCount } from '../src/server.js';
 import { AscApiError } from '../src/core/errors.js';
-import { resolveSelection } from '../src/profiles.js';
+import { resolveSelection, toolCountFor } from '../src/profiles.js';
 import type { ServerConfig } from '../src/core/config.js';
 
 const config: ServerConfig = {
@@ -160,5 +160,29 @@ describe('what a failure tells the caller', () => {
   it('leaves a local refusal as the prose it was written as', () => {
     const text = formatError(new AscApiError('Loaded read-only. Use asc__load.', 0), 'asc__call');
     expect(text).toBe('asc__call failed: Loaded read-only. Use asc__load.');
+  });
+});
+
+/**
+ * MIL-214: the startup banner quoted the operations a profile MAPS while the
+ * client received a different number, and someone reading "24" against 29 in
+ * their client had no way to tell whether they had misconfigured something.
+ * The two have to agree by construction, not by anyone remembering to update a
+ * count when a tool moves.
+ */
+describe('the count a client sees', () => {
+  it('matches what tools/list returns, including the always-served proxy tools', async () => {
+    const selection = resolveSelection('monetization:subscription-catalog');
+    const server = createServer(config, selection);
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
+    await Promise.all([server.connect(st), client.connect(ct)]);
+
+    const listed = (await client.listTools()).tools.length;
+    expect(servedToolCount(server)).toBe(listed);
+
+    // And it is genuinely a different number from the mapped one — otherwise
+    // this test would pass with the bug still in place.
+    expect(listed).not.toBe(toolCountFor(selection));
   });
 });

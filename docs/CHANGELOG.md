@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### The startup banner counts what the client will actually receive
+`asc-monetization (206 tools)` and a client showing 199 was the same server disagreeing with itself. The banner quoted the operations the profile *maps*; `tools/list` answers with what is served, and those differ by configuration — `asc__call` and `asc__describe` are always there and mapped nowhere, StoreKit only loads with a bundle id, `--read-only` removes the writes, and since this release `--include-deprecated` adds tools too.
+
+Both now come from one list, so they cannot drift: the count is the length of the array the handler returns. `asc__status`'s token estimate follows it for the same reason — it exists to answer "what is this costing my context", which is a question about what was loaded.
+
+The catalogue number is unchanged and still means what it says: 883 tools across 13 profiles, in the README, `server.json` and `CITATION.cff`, cross-checked by the release pre-flight.
+
+
 #### `--include-deprecated` does something in profile mode
 It was a no-op there and said nothing about it. Profile membership is hand-curated in `spec/profiles.csv` and nobody curates an endpoint Apple has retired, so **0 of the 123** deprecated operations were reachable from any profile — the flag only ever worked on the no-profile server with `--domains`.
 
@@ -271,6 +279,14 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Açılış banner'ı istemcinin gerçekten alacağı sayıyı yazıyor
+`asc-monetization (206 tools)` yazıp istemcide 199 görünmesi, sunucunun kendisiyle çelişmesiydi. Banner profilin *eşlediği* işlem sayısını söylüyordu; `tools/list` ise servis edileni döndürüyor ve ikisi yapılandırmaya göre ayrışıyor — `asc__call` ile `asc__describe` her zaman var ve hiçbir yere eşlenmemiş, StoreKit yalnızca bundle ID ile yükleniyor, `--read-only` yazmaları kaldırıyor, bu sürümden itibaren `--include-deprecated` de araç ekliyor.
+
+Artık ikisi tek bir listeden geliyor, yani ayrışamazlar: sayı, handler'ın döndürdüğü dizinin uzunluğu. `asc__status`'un token tahmini de aynı sebeple onu izliyor — "bu benim bağlamıma neye mal oluyor" sorusunun cevabı, yüklenen şeyle ilgili bir soru.
+
+Katalog sayısı değişmedi ve söylediği şeyi söylemeye devam ediyor: 13 profilde 883 araç — README, `server.json` ve `CITATION.cff`'te, yayın öncesi kontrolüyle çapraz doğrulanıyor.
+
 
 #### `--include-deprecated` profil modunda bir şey yapıyor
 Orada hiçbir şey yapmıyordu ve bunu da söylemiyordu. Profil üyeliği `spec/profiles.csv`'de elle küratörlükten geçiyor ve Apple'ın emekli ettiği bir endpoint'i kimse küratörlükten geçirmiyor; yani 123 deprecated işlemin **sıfırı** hiçbir profilden erişilebilir değildi. Bayrak yalnızca profilsiz sunucuda `--domains` ile çalışıyordu.
