@@ -5,6 +5,30 @@
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/). Entries are newest-first.
 
 ## English
+### [Unreleased]
+
+#### `preflight__check_version` — the rejection you can find before you submit
+Every gap this catches is one field on one resource, and every one of them comes back days later: a build still processing, an export-compliance answer nobody gave, a demo account marked required and left blank, a locale with no description. The version sits in `WAITING_FOR_EXPORT_COMPLIANCE` with nothing attached explaining why, or comes back rejected for something that took ten seconds to fix.
+
+One call now reads the version, its build, its review detail, every localization, the screenshot sets under one of them, and the open review submission, and answers with `ready` plus a list of what is missing. Each gap names the tool that fixes it — `builds__update` for the compliance answer, `app_store_review_details__update` for the contact — because "your review contact is incomplete" without that is a second search.
+
+The calls were never the hard part; the checklist was. Knowing that `usesNonExemptEncryption` being `null` is different from it being `false`, and that a blank demo account only matters when `demoAccountRequired` is true, is the part that is not in any response body.
+
+Two things it deliberately does not do. It says nothing about whether Apple will approve the app — that question has no factual answer, and mixing it in would make the rest less trustworthy. And it does not check screenshots against Apple's required device sizes, because those are policy rather than API: a hardcoded list of them would go stale every autumn and start reporting missing sizes that Apple stopped asking for. It reports what exists and flags sets holding no images or images that failed to deliver.
+
+Read-only, in `distribution:version`. Live tool count is now 884.
+
+
+#### A confirmation prompt no longer waits on the labels it decorates itself with
+The prompt resolves the ids in a write body to names, so a person confirming a price change reads the subscription rather than `6740…`. Those lookups are decoration — the write is described correctly without them, and a failed one leaves the raw id, which is the documented behaviour.
+
+The HTTP client did not know that. It treats a network failure as worth three retries with exponential backoff, so on an unreachable API the prompt arrived **49 seconds** after the call and then showed the id anyway. A person waiting on a confirmation reads that as a hang, and looking broken is the one thing a safety gate cannot afford.
+
+The labelling step now has a three-second deadline of its own. Whichever labels have landed by then are the ones shown; the rest fall back to ids, as they already did on failure.
+
+Found by the live gate test, which had started failing two of its seventeen samples — the two whose bodies carry references — for what looked like a flake.
+
+
 ### [2.2.0] — 2026-08-18
 
 #### Apple changed the specification without changing its version
@@ -312,6 +336,30 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
+### [Unreleased]
+
+#### `preflight__check_version` — göndermeden önce bulunabilen ret
+Bunun yakaladığı her eksik, tek bir kaynaktaki tek bir alan; ve her biri günler sonra geri dönüyor: hâlâ işlenen bir build, kimsenin vermediği bir ihracat uyumluluğu cevabı, zorunlu işaretlenip boş bırakılmış bir demo hesabı, açıklaması olmayan bir dil. Sürüm `WAITING_FOR_EXPORT_COMPLIANCE`'ta nedenini açıklayan hiçbir şey olmadan bekliyor, ya da on saniyede düzeltilecek bir şey yüzünden reddedilmiş dönüyor.
+
+Artık tek çağrı sürümü, build'ini, inceleme detayını, her yerelleştirmeyi, bunlardan birinin altındaki ekran görüntüsü setlerini ve açık inceleme gönderimini okuyup `ready` ile birlikte eksiklerin listesini veriyor. Her eksik, onu düzeltecek aracı adıyla söylüyor — uyumluluk cevabı için `builds__update`, iletişim için `app_store_review_details__update` — çünkü bunlar olmadan "inceleme iletişiminiz eksik" ikinci bir arama demek.
+
+Zor olan çağrılar değildi, kontrol listesiydi. `usesNonExemptEncryption`'ın `null` olmasının `false` olmasından farklı olduğunu ve boş demo hesabının yalnızca `demoAccountRequired` true iken önemli olduğunu bilmek — hiçbir cevap gövdesinde yazmayan kısım bu.
+
+Bilerek yapmadığı iki şey var. Apple'ın uygulamayı onaylayıp onaylamayacağı hakkında hiçbir şey söylemiyor; o sorunun olgusal bir cevabı yok ve karıştırmak geri kalanı da güvenilmez yapardı. Ve ekran görüntülerini Apple'ın zorunlu cihaz boyutlarına karşı denetlemiyor, çünkü onlar API değil politika: elle yazılmış bir liste her sonbahar bayatlar ve Apple'ın artık istemediği boyutları eksik diye raporlamaya başlar. Var olanı raporluyor; görüntü tutmayan setleri ve teslim edilemeyen görüntüleri işaretliyor.
+
+Salt okunur, `distribution:version` içinde. Canlı araç sayısı artık 884.
+
+
+#### Onay istemi, kendini süslediği etiketleri artık beklemiyor
+İstem, yazma gövdesindeki kimlikleri adlara çeviriyor; böylece fiyat değişikliğini onaylayan kişi `6740…` yerine aboneliğin adını okuyor. Bu aramalar süs — yazma onlarsız da doğru anlatılıyor ve başarısız olan bir arama ham kimliği bırakıyor, belgelenmiş davranış bu.
+
+HTTP istemcisi bunu bilmiyordu. Ağ hatasını üç kez üstel backoff'la yeniden denemeye değer sayıyor; yani erişilemeyen bir API'de istem çağrıdan **49 saniye** sonra geliyor, sonra da kimliği gösteriyordu. Onay bekleyen bir insan bunu takılma olarak okur ve bir güvenlik kapısının göze alamayacağı tek şey bozuk görünmektir.
+
+Etiketleme adımının artık kendi üç saniyelik süresi var. O ana kadar gelen etiketler gösteriliyor, geri kalanı — başarısızlıkta zaten olduğu gibi — kimliğe düşüyor.
+
+Canlı kapı testiyle bulundu: on yedi örneğinden ikisi, yani gövdesi referans taşıyan ikisi, bir süredir kararsızlık gibi görünen bir sebeple düşüyordu.
+
+
 ### [2.2.0] — 2026-08-18
 
 #### Apple, spec'i sürüm numarasını değiştirmeden değiştirdi

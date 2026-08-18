@@ -26,6 +26,7 @@ import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient } from '../core/http.js';
 import { parseGzippedTsv } from '../core/report-parsing.js';
 import { AscApiError } from '../core/errors.js';
+import { resolveApp } from '../core/resolve-app.js';
 
 const GRANULARITIES = ['DAILY', 'WEEKLY', 'MONTHLY'] as const;
 const CATEGORIES = [
@@ -133,34 +134,6 @@ function clampRows(raw: unknown): number {
   return Math.min(n, MAX_ROWS_CAP);
 }
 
-async function resolveApp(http: AscHttpClient, app: string): Promise<{ id: string; name: string }> {
-  const wanted = app.trim();
-  if (/^\d+$/.test(wanted)) {
-    const res: any = await http.get(`/v1/apps/${encodeURIComponent(wanted)}`, {
-      'fields[apps]': 'name,bundleId',
-    });
-    if (!res?.data) throw new AscApiError(`No app with Apple ID ${wanted}.`, 0);
-    return { id: res.data.id, name: res.data.attributes?.name ?? wanted };
-  }
-  const res: any = await http.get('/v1/apps', {
-    ...(wanted.includes('.') ? { 'filter[bundleId]': wanted } : { limit: 200 }),
-    'fields[apps]': 'name,bundleId',
-  });
-  const hits = wanted.includes('.')
-    ? (res?.data ?? [])
-    : (res?.data ?? []).filter((a: any) =>
-        String(a.attributes?.name ?? '').toLowerCase().includes(wanted.toLowerCase())
-      );
-  if (!hits.length) throw new AscApiError(`No app matching "${wanted}".`, 0);
-  if (hits.length > 1) {
-    throw new AscApiError(
-      `"${wanted}" is ambiguous: ${hits.map((h: any) => h.attributes?.name).join(' | ')}. ` +
-        `Use the bundle ID or Apple ID.`,
-      0
-    );
-  }
-  return { id: hits[0].id, name: hits[0].attributes?.name ?? wanted };
-}
 
 export async function executeAnalyticsTool(
   name: string,

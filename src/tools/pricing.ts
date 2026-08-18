@@ -15,6 +15,7 @@
 import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
+import { resolveApp } from '../core/resolve-app.js';
 import { TERRITORY_NAMES } from '../core/territory-names.js';
 
 export const PRICING_TOOLS: McpToolDefinition[] = [
@@ -250,32 +251,6 @@ export function normalizePrice(input: string): string {
   return input.trim().replace(',', '.');
 }
 
-async function resolveApp(http: AscHttpClient, app: string): Promise<{ id: string; name: string }> {
-  const wanted = app.trim();
-  if (/^\d+$/.test(wanted)) {
-    const res: any = await http.get(`/v1/apps/${encodeURIComponent(wanted)}`);
-    if (!res?.data) throw new AscApiError(`No app with Apple ID ${wanted}.`, 0);
-    return { id: res.data.id, name: res.data.attributes?.name ?? wanted };
-  }
-  if (wanted.includes('.')) {
-    const res: any = await http.get('/v1/apps', { 'filter[bundleId]': wanted });
-    const hit = res?.data?.[0];
-    if (!hit) throw new AscApiError(`No app with bundle ID "${wanted}".`, 0);
-    return { id: hit.id, name: hit.attributes?.name ?? wanted };
-  }
-  const res: any = await http.get('/v1/apps', { limit: 200 });
-  const needle = wanted.toLowerCase();
-  const hits = (res?.data ?? []).filter((a: any) =>
-    String(a.attributes?.name ?? '').toLowerCase().includes(needle)
-  );
-  if (hits.length === 1) return { id: hits[0].id, name: hits[0].attributes.name };
-  if (hits.length === 0) throw new AscApiError(`No app matching "${wanted}".`, 0);
-  throw new AscApiError(
-    `App name "${wanted}" is ambiguous: ${hits.map((h: any) => h.attributes.name).join(' | ')}. ` +
-      `Use the bundle ID or Apple ID.`,
-    0
-  );
-}
 
 interface Subscription {
   id: string;

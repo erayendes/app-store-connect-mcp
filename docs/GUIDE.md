@@ -78,7 +78,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 129 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 130 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
@@ -286,6 +286,7 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | app → group → subscription → price points | `pricing__get_subscription_price` — one country or, with the territory omitted, all ~175 grouped by price | `monetization:subscription-pricing` |
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
+| version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
@@ -424,7 +425,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 129 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 130 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
@@ -625,6 +626,7 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | app → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da territory verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
+| sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
