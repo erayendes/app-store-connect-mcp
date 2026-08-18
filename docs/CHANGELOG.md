@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### `--include-deprecated` does something in profile mode
+It was a no-op there and said nothing about it. Profile membership is hand-curated in `spec/profiles.csv` and nobody curates an endpoint Apple has retired, so **0 of the 123** deprecated operations were reachable from any profile — the flag only ever worked on the no-profile server with `--domains`.
+
+Passing it now adds the retired operations of the domains the profile covers. Measured: `game-center` goes 184 tools to 298, `monetization` 199 to 208. Membership is by domain rather than by curation, which is the honest definition rather than a shortcut — "everything retired in the areas this profile covers" is what someone passing this flag is asking for, and there is no curated answer to inherit.
+
+
 #### StoreKit reads can return verified fields instead of a sealed envelope
 Set `ASC_APPLE_ROOT_CERTS` to Apple's DER root certificates — paths, or one directory — and `storekit__get_transaction_info`, `storekit__get_transaction_history` and `storekit__get_refund_history` verify each payload with the App Store Server Library and return decoded fields. Leave it unset and they return the signed payloads exactly as before, which is what their descriptions already promised. Every response says which one it is, so a caller never has to infer it.
 
@@ -265,6 +271,12 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### `--include-deprecated` profil modunda bir şey yapıyor
+Orada hiçbir şey yapmıyordu ve bunu da söylemiyordu. Profil üyeliği `spec/profiles.csv`'de elle küratörlükten geçiyor ve Apple'ın emekli ettiği bir endpoint'i kimse küratörlükten geçirmiyor; yani 123 deprecated işlemin **sıfırı** hiçbir profilden erişilebilir değildi. Bayrak yalnızca profilsiz sunucuda `--domains` ile çalışıyordu.
+
+Artık bayrağı verince, profilin kapsadığı domain'lerdeki emekli işlemler ekleniyor. Ölçüldü: `game-center` 184 araçtan 298'e, `monetization` 199'dan 208'e çıkıyor. Üyelik küratörlükle değil domain'le belirleniyor; bu bir kestirme değil dürüst tanım — bu bayrağı veren kişinin istediği şey "bu profilin kapsadığı alanlarda emekli olan her şey" ve devralınacak küratörlü bir cevap yok.
+
 
 #### StoreKit okumaları mühürlü zarf yerine doğrulanmış alan döndürebiliyor
 `ASC_APPLE_ROOT_CERTS`'i Apple'ın DER kök sertifikalarına ayarlayın — dosya yolları ya da tek bir dizin — ve `storekit__get_transaction_info`, `storekit__get_transaction_history`, `storekit__get_refund_history` her yükü App Store Server Library ile doğrulayıp çözülmüş alanlar döndürsün. Ayarlamazsanız eskisi gibi imzalı yükleri döndürüyorlar; açıklamalarının zaten vaat ettiği şey de bu. Her cevap hangisi olduğunu söylüyor, çağıranın tahmin etmesi gerekmiyor.

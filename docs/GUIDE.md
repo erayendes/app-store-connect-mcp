@@ -241,7 +241,7 @@ The App Store Server API answers questions about individual customers rather tha
 | `--confirm` | Ask before every write, not just the strong risk levels |
 | `--no-confirm` | Never ask; the client's own tool approval is the only gate |
 | `--dry-run` | Writes never reach Apple; each mutating call returns what would have been sent, with its risk level |
-| `--include-deprecated` | Also load the 123 operations Apple has deprecated |
+| `--include-deprecated` | Also load the 123 operations Apple has deprecated. In profile mode this adds the retired operations of the domains that profile covers — 102 of the 123 are Game Center |
 
 > [!TIP]
 > **Confirm before risky writes (on by default).** Before a `revenue`, `destructive`, `infrastructure` or `access` write runs — changing a price, handing out Admin, deleting a certificate — Heimdall asks you to confirm through your client's prompt ([MCP elicitation](https://modelcontextprotocol.io/)), showing what would change. So even if the assistant misreads "drop the price a bit" as `0.99`, nothing changes until you approve it. Everything below those levels runs on your client's own tool approval.
@@ -587,7 +587,7 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 | `--confirm` | Yalnızca güçlü risk seviyelerinde değil, her yazmadan önce sor |
 | `--no-confirm` | Hiç sorma; tek kapı client'ın kendi araç onayı olur |
 | `--dry-run` | Yazmalar Apple'a gitmez; her mutasyon çağrısı gönderilecek olanı risk seviyesiyle döndürür |
-| `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükle |
+| `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükle. Profil modunda, o profilin kapsadığı domain'lerdeki emekli işlemleri ekler — 123'ün 102'si Game Center |
 
 > [!TIP]
 > **Riskli yazmalardan önce onay (varsayılan açık).** Bir `revenue`, `destructive`, `infrastructure` ya da `access` yazması çalışmadan önce — fiyat değiştirme, Admin yetkisi verme, sertifika silme — Heimdall client'ınızın istemi üzerinden ([MCP elicitation](https://modelcontextprotocol.io/)) onay ister ve neyin değişeceğini gösterir. Yani asistan "fiyatı biraz düşür"ü yanlışlıkla `0.99` olarak anlasa bile, siz onaylamadan hiçbir şey değişmez. Bu seviyelerin altındaki her şey client'ınızın kendi araç onayıyla çalışır.
