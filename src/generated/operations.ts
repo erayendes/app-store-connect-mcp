@@ -3777,7 +3777,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=appPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "appPricePoint",
           "territory"
@@ -3886,7 +3886,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=appPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "appPricePoint",
           "territory"
@@ -22061,7 +22061,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=inAppPurchasePricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "inAppPurchasePricePoint",
           "territory"
@@ -22158,7 +22158,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=inAppPurchasePricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "inAppPurchasePricePoint",
           "territory"
@@ -26199,7 +26199,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "territory",
           "subscriptionPricePoint"
@@ -26577,7 +26577,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "territory",
           "subscriptionPricePoint"
@@ -26899,7 +26899,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "subscription",
           "territory",
@@ -27037,7 +27037,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptions/{id}/prices",
-    "description": "List the current and scheduled prices of a subscription per territory (country) — use this to see what a subscription costs today in each storefront.",
+    "description": "List the current and scheduled prices of a subscription per territory (country) — what a subscription costs today in each storefront. Each row is a start date and a reference: the amount and the currency live in the price point, so a row read without include=subscriptionPricePoint,territory carries no price at all. pricing__get_subscription_price resolves that in one call, for one country or for every one.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -27071,7 +27071,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "territory",
           "subscriptionPricePoint"
@@ -28012,7 +28012,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "include",
         "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "territory",
           "subscriptionPricePoint"

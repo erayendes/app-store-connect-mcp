@@ -243,7 +243,11 @@ export const CURATED: Record<string, string> = {
     'Cancel a scheduled subscription price change before it takes effect.',
   'subscriptions.prices.list':
     'List the current and scheduled prices of a subscription per territory (country) — ' +
-    'use this to see what a subscription costs today in each storefront.',
+    'what a subscription costs today in each storefront. Each row is a start date and a ' +
+    'reference: the amount and the currency live in the price point, so a row read ' +
+    'without include=subscriptionPricePoint,territory carries no price at all. ' +
+    'pricing__get_subscription_price resolves that in one call, for one country or for ' +
+    'every one.',
   'subscription_price_points.equalizations.list':
     'Given one price point in a base country, list the equivalent (equalized) price ' +
     'points in every other territory — for per-country pricing aligned to one anchor price.',
