@@ -78,6 +78,20 @@ export const FIELD_NOTES: Record<string, (value: unknown) => string | undefined>
 /** Max reference lookups per preview — keeps confirmation latency bounded. */
 const MAX_REF_LOOKUPS = 4;
 
+/**
+ * How long the whole labelling step gets before the preview goes out with raw
+ * ids in it.
+ *
+ * These lookups are decoration: the write is described correctly either way,
+ * and a label that does not arrive costs the reader an id instead of a name.
+ * The HTTP client does not know that — it treats a network failure as worth
+ * three retries with exponential backoff, so an unreachable API held the
+ * confirmation prompt for 49 seconds and then showed the id anyway. A person
+ * waiting on a prompt reads that as a hang, and the one thing a confirmation
+ * gate cannot afford is to look broken.
+ */
+const LABEL_DEADLINE_MS = 3_000;
+
 type RefResolver = (http: RefReader, id: string) => Promise<string | undefined>;
 
 /**
@@ -224,7 +238,7 @@ export async function resolveBodyRefs(
   // A self-describing id needs no call, so it does not spend one of the four.
   const needLookup = unique.filter((r) => !SELF_DESCRIBING.has(r.type));
 
-  await Promise.all(
+  const lookups = Promise.all(
     needLookup.slice(0, MAX_REF_LOOKUPS).map(async ({ type, id }) => {
       try {
         const label = REF_RESOLVERS[type]
@@ -236,6 +250,14 @@ export async function resolveBodyRefs(
       }
     })
   );
+
+  // Whichever labels have landed by the deadline are the ones shown. The map is
+  // filled in place, so a lookup that finishes first still counts even when a
+  // slower sibling is what runs out of time.
+  await Promise.race([
+    lookups,
+    new Promise<void>((resolve) => setTimeout(resolve, LABEL_DEADLINE_MS).unref()),
+  ]);
   return labels;
 }
 

@@ -115,6 +115,20 @@ describe('reference resolution in a preview', () => {
     expect(http.paths).toEqual([]);
   });
 
+  // A label is decoration and the write is described correctly without it. The
+  // HTTP client does not know that — it retries a network failure three times
+  // with backoff — so an unreachable API used to hold the confirmation prompt
+  // for 49 seconds and then print the raw id anyway, which reads as a hang.
+  it('gives up on a slow lookup rather than holding the prompt', async () => {
+    const slow = { get: () => new Promise<never>(() => {}) };
+    const started = Date.now();
+    const labels = await resolveBodyRefs(slow, {
+      relationships: { betaTester: { data: { type: 'betaTesters', id: 'abc' } } },
+    });
+    expect(labels.size).toBe(0);
+    expect(Date.now() - started).toBeLessThan(10_000);
+  }, 15_000);
+
   it('leaves a type with no GET-by-id endpoint alone', async () => {
     const http = reader({ name: 'never fetched' });
     const labels = await resolveBodyRefs(http, {
