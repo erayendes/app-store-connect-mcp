@@ -1,7 +1,25 @@
+# Apple ships changes to the App Store Connect OpenAPI specification without
+# announcing them, and nothing here was watching. The first sign was a user
+# reporting a tool that no longer matched the API.
+#
+# Weekly: fetch the spec, regenerate, and open a pull request if anything moved.
+# Deliberately nothing beyond that — the diff is the interesting part, because
+# Apple adds, renames and deprecates operations, and a rename is a breaking
+# change for anyone whose config names the tool. A person reads it and a person
+# decides whether it ships.
+#
+# The pull request is opened with `gh`, not with an action. This repository
+# allows GitHub-owned actions and ossf/scorecard-action and nothing else
+# (`allowed_actions: selected`), so a third-party action fails at startup — and
+# widening that list to save a few lines would trade a real security posture for
+# convenience. `gh` is already on the runner.
 name: Spec watch
 
 on:
   schedule:
+    # Mondays, 06:00 UTC. Apple does not publish on a schedule, so the day is
+    # arbitrary; what matters is that it is not the same hour as everything else
+    # on the runner fleet.
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
@@ -16,7 +34,84 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: echo "action reference"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+
+      - name: Fetch Apple's specification
+        run: npm run spec:update
+
+      - name: Stop here when nothing moved
+        id: changed
+        run: |
+          if git diff --quiet spec/openapi.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Specification unchanged."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Regenerating is what turns a spec diff into a reviewable one: the JSON
+      # is 12 MB and unreadable, while REPORT.txt is the summary a person can
+      # actually judge — how many operations, which risk levels, what got
+      # deprecated.
+      - name: Regenerate
+        if: steps.changed.outputs.changed == 'true'
+        run: npm run generate
+
+      # A failure here is the finding, not a blocker: it means Apple changed
+      # something the ratchets or the curated descriptions depend on. The pull
+      # request still opens and says so, which is more useful than a workflow
+      # failure nobody sees.
+      - name: Verify the regenerated catalogue still passes
+        id: verify
+        if: steps.changed.outputs.changed == 'true'
+        continue-on-error: true
+        run: npm run typecheck && npm test
+
       - name: Open the pull request
-        if: false
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        if: steps.changed.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERDICT: ${{ steps.verify.outcome }}
+        run: |
+          set -euo pipefail
+          BRANCH="spec/apple-update"
+          REPORT="$(git diff --no-color -- src/generated/REPORT.txt || true)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add spec/openapi.json src/generated
+          git commit -m "chore: regenerate from Apple's latest OpenAPI specification"
+          # Force: the branch is this workflow's alone, and a previous unmerged
+          # update is superseded by this one rather than merged with it.
+          git push --force origin "$BRANCH"
+
+          {
+            echo "Apple's OpenAPI specification changed and the catalogue was regenerated from it."
+            echo
+            echo "**Read the report diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation leaves every profile unless \`--include-deprecated\` is passed."
+            echo
+            if [ "$VERDICT" = "failure" ]; then
+              echo "> **The suite does not pass on this branch.** That is the finding: Apple changed something a ratchet or a curated description depends on. The fix belongs here before it merges."
+              echo
+            fi
+            echo '```diff'
+            echo "${REPORT:-（REPORT.txt unchanged）}"
+            echo '```'
+            echo
+            echo "Nothing is published by this workflow. Tagging and release stay where they were."
+          } > /tmp/body.md
+
+          # Reopen rather than duplicate: a second Apple change before the first
+          # is merged should update one pull request, not open a queue of them.
+          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
+            gh pr edit "$BRANCH" --body-file /tmp/body.md
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore: Apple published a new App Store Connect specification" \
+              --body-file /tmp/body.md
+          fi
