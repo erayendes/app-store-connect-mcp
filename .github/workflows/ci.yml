@@ -169,11 +169,44 @@ jobs:
         with:
           fail-on-severity: moderate
 
+  # Generic secret detection, which is the half GitHub's free tier leaves open:
+  # its secret scanning matches partner patterns, so a vendor's key shape is
+  # caught and a bare `-----BEGIN PRIVATE KEY-----` is not. That block is
+  # precisely what must never land here — the whole product promise is that the
+  # .p8 lives in the Keychain and never in a file someone can commit.
+  #
+  # The release binary rather than gitleaks-action, because this repository's
+  # Actions policy allows only GitHub's own actions and ossf/scorecard-action,
+  # and widening that policy to gain one scanner is a bad trade. Version and
+  # SHA-256 are pinned here, so bumping it is a reviewable diff — the same
+  # contract the SHA-pinned actions above are under.
+  #
+  # Scans the full history, not the diff: a key removed in a later commit is
+  # still published, and rotating it is the only fix once it is pushed.
+  secret-scan:
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar xzf gitleaks.tar.gz gitleaks
+      - name: Scan the full history
+        run: ./gitleaks git . --no-banner --redact --verbose
+
   # One check to require in branch protection, so the matrix can change
   # without the ruleset going stale.
   ci-ok:
     if: always()
-    needs: [test, smoke, pack, dependency-review]
+    needs: [test, smoke, pack, dependency-review, secret-scan]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a required job did not succeed
