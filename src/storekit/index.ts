@@ -11,6 +11,7 @@ import {
   Environment,
   ExtendReasonCode,
   GetTransactionHistoryVersion,
+  SignedDataVerifier,
   Status,
   type ExtendRenewalDateRequest,
   type HistoryResponse,
@@ -24,7 +25,9 @@ import {
   type SubscriptionGroupIdentifierItem,
   type TransactionHistoryRequest,
 } from '@apple/app-store-server-library';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { AscApiError } from '../core/errors.js';
 import type { McpToolDefinition } from '../core/registry.js';
 import type { ServerConfig } from '../core/config.js';
 
@@ -45,6 +48,76 @@ function jwsClaim(jws: string | undefined, claim: string): unknown {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * What a decoded transaction is allowed to carry into a model's context.
+ *
+ * Apple's payload holds more than any of these tools was asked for, and
+ * `appAccountToken` is the sharp one: it is the UUID a developer maps to their
+ * own user record, so a transaction id becomes a route back to an account
+ * inside their app. Nothing here needs it, so nothing here returns it. Anyone
+ * who does need the full payload asks for `raw`, verifies it themselves, and
+ * makes that choice deliberately.
+ */
+const TRANSACTION_FIELDS = [
+  'transactionId',
+  'originalTransactionId',
+  'productId',
+  'purchaseDate',
+  'expiresDate',
+  'quantity',
+  'type',
+  'inAppOwnershipType',
+  'revocationDate',
+  'revocationReason',
+  'isUpgraded',
+  'offerType',
+  'storefront',
+  'currency',
+  'price',
+] as const;
+
+/**
+ * Reads Apple's DER roots from paths, or from a directory of them.
+ *
+ * The library asks the caller for these rather than shipping them, and this
+ * repository does not ship them either: a certificate committed here is one
+ * more thing to keep current, and getting it wrong turns verification into a
+ * silent no. Unset is a supported state — the reads then return the signed
+ * envelope, which is what their descriptions already say.
+ */
+function readRootCertificates(paths: string[] | undefined): Buffer[] {
+  if (!paths?.length) return [];
+  const files: string[] = [];
+  for (const entry of paths) {
+    try {
+      if (statSync(entry).isDirectory()) {
+        files.push(...readdirSync(entry).filter((f) => /\.(cer|der|crt)$/i.test(f)).map((f) => join(entry, f)));
+      } else {
+        files.push(entry);
+      }
+    } catch {
+      // A path that is not there is a configuration mistake, and it surfaces
+      // below as "no roots" rather than as a crash at startup — the server has
+      // 24 other tools that do not need them.
+    }
+  }
+  return files.flatMap((f) => {
+    try {
+      return [readFileSync(f)];
+    } catch {
+      return [];
+    }
+  });
+}
+
+function pickTransactionFields(decoded: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of TRANSACTION_FIELDS) {
+    if (decoded[key] !== undefined) out[key] = decoded[key];
+  }
+  return out;
 }
 
 /**
@@ -74,8 +147,8 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     description:
       "Get a customer's full purchase history from any one of their transaction IDs. " +
       'Supports filtering by product type, product ID and date range. Returns Apple\'s ' +
-      'SIGNED transactions (JWS strings), not decoded fields — verify and decode them ' +
-      'before reading. [App Store Server API]',
+      'SIGNED transactions (JWS strings) unless ASC_APPLE_ROOT_CERTS is set, in which ' +
+      'case they arrive verified and decoded. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -84,6 +157,13 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
           description: 'Any transaction ID belonging to the customer.',
         },
         product_id: { type: 'string', description: 'Filter to one product ID.' },
+        raw: {
+          type: 'boolean',
+          description:
+            'Return Apple\'s signed JWS payloads instead of decoded fields, to verify them ' +
+            'yourself. Ignored when ASC_APPLE_ROOT_CERTS is unset — the payloads are all ' +
+            'there is then.',
+        },
         product_type: {
           type: 'string',
           enum: ['AUTO_RENEWABLE', 'NON_RENEWABLE', 'CONSUMABLE', 'NON_CONSUMABLE'],
@@ -106,13 +186,20 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_transaction_info',
     description:
       'Get a single transaction: product, price, dates, ownership type and revocation ' +
-      'state — as Apple\'s SIGNED payload (a JWS string), not as decoded fields. ' +
-      "Verify and decode it with the App Store Server Library's SignedDataVerifier, or " +
-      "any JWS verifier configured with Apple's roots. [App Store Server API]",
+      'state. Set ASC_APPLE_ROOT_CERTS and the payload arrives verified and decoded; ' +
+      "without it you get Apple's SIGNED payload (a JWS string) to verify yourself with " +
+      "the App Store Server Library. [App Store Server API]",
     inputSchema: {
       type: 'object',
       properties: {
         transaction_id: { type: 'string', description: 'Transaction ID to look up.' },
+        raw: {
+          type: 'boolean',
+          description:
+            'Return Apple\'s signed JWS payloads instead of decoded fields, to verify them ' +
+            'yourself. Ignored when ASC_APPLE_ROOT_CERTS is unset — the payloads are all ' +
+            'there is then.',
+        },
       },
       required: ['transaction_id'],
     },
@@ -170,13 +257,22 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_refund_history',
     description:
       'List every refunded transaction for a customer. Useful for auditing refund ' +
-      'abuse before granting goodwill credit. [App Store Server API]',
+      'abuse before granting goodwill credit. Returns Apple\'s SIGNED transactions ' +
+      '(JWS strings) unless ASC_APPLE_ROOT_CERTS is set, in which case they arrive ' +
+      'verified and decoded. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
         transaction_id: {
           type: 'string',
           description: 'Any transaction ID belonging to the customer.',
+        },
+        raw: {
+          type: 'boolean',
+          description:
+            'Return Apple\'s signed JWS payloads instead of decoded fields, to verify them ' +
+            'yourself. Ignored when ASC_APPLE_ROOT_CERTS is unset — the payloads are all ' +
+            'there is then.',
         },
       },
       required: ['transaction_id'],
@@ -276,6 +372,10 @@ export class StoreKitService {
   private readonly issuerId: string;
   private readonly bundleId: string;
   private readonly defaultEnvironment: 'Production' | 'Sandbox';
+  private readonly appAppleId?: number;
+  /** Apple's DER roots, read once. Empty means verified decoding is off. */
+  private readonly rootCertificates: Buffer[];
+  private readonly verifiers = new Map<'Production' | 'Sandbox', SignedDataVerifier>();
   // One transaction lives in exactly one environment, so callers can override
   // per request; clients are built lazily and cached per environment.
   private readonly clients = new Map<'Production' | 'Sandbox', AppStoreServerAPIClient>();
@@ -293,6 +393,100 @@ export class StoreKitService {
     this.issuerId = config.credentials.issuerId;
     this.bundleId = config.storekit.bundleId;
     this.defaultEnvironment = config.storekit.environment === 'Production' ? 'Production' : 'Sandbox';
+    this.appAppleId = config.storekit.appAppleId;
+    this.rootCertificates = readRootCertificates(config.storekit.appleRootCerts);
+  }
+
+  /** True when a caller configured Apple's roots, so payloads can be verified. */
+  private get canVerify(): boolean {
+    return this.rootCertificates.length > 0;
+  }
+
+  private verifierFor(env: 'Production' | 'Sandbox'): SignedDataVerifier {
+    let verifier = this.verifiers.get(env);
+    if (!verifier) {
+      try {
+        verifier = this.buildVerifier(env);
+      } catch (err) {
+        // A file that is not a DER certificate fails here, inside OpenSSL, with
+        // a message nobody can act on ("PEM routines::no start line"). Say what
+        // was being attempted and with what.
+        throw new AscApiError(
+          `ASC_APPLE_ROOT_CERTS does not parse as Apple's DER root certificates: ` +
+            `${(err as Error).message}. Point it at the .cer files Apple publishes, or ` +
+            `unset it to receive the signed payloads instead.`,
+          0
+        );
+      }
+      this.verifiers.set(env, verifier);
+    }
+    return verifier;
+  }
+
+  private buildVerifier(env: 'Production' | 'Sandbox'): SignedDataVerifier {
+    return new SignedDataVerifier(
+      this.rootCertificates,
+      // Online checks fetch Apple's CRLs on every call. Off: the roots pin the
+      // chain, and a read tool should not add a second network dependency whose
+      // outage looks like a verification failure.
+      false,
+      env === 'Production' ? Environment.PRODUCTION : Environment.SANDBOX,
+      this.bundleId,
+      this.appAppleId
+    );
+  }
+
+  /**
+   * Verified fields, or the sealed envelope — never a decode without a check.
+   *
+   * A failure is an error rather than a warning attached to data. The whole
+   * point of verifying is that the caller can treat what comes back as fact;
+   * handing back "here are the fields, but we could not confirm them" invites
+   * exactly the reading it was supposed to prevent.
+   */
+  private async decode(
+    signed: string[],
+    env: 'Production' | 'Sandbox',
+    raw: boolean
+  ): Promise<unknown[]> {
+    if (raw || !this.canVerify) return signed;
+    const verifier = this.verifierFor(env);
+    const out: unknown[] = [];
+    for (const jws of signed) {
+      try {
+        const decoded = await verifier.verifyAndDecodeTransaction(jws);
+        out.push(pickTransactionFields(decoded as unknown as Record<string, unknown>));
+      } catch (err) {
+        throw new AscApiError(
+          `A transaction payload failed signature verification: ${(err as Error).message}. ` +
+            `Nothing was decoded. Check that ASC_APPLE_ROOT_CERTS points at Apple's current ` +
+            `root certificates and that the environment (${env}) matches the transaction.`,
+          0
+        );
+      }
+    }
+    return out;
+  }
+
+  /** The environment a call runs against: the argument, else the default. */
+  private envFor(environment?: unknown): 'Production' | 'Sandbox' {
+    return environment === 'Production' || environment === 'Sandbox'
+      ? environment
+      : this.defaultEnvironment;
+  }
+
+  /**
+   * The shape both history tools return: decoded fields when verification is
+   * available and not waived, the signed array otherwise. `verified` is stated
+   * either way so a caller never has to infer which one it got.
+   */
+  private async envelopeOrFields(
+    signed: string[],
+    args: Record<string, any>
+  ): Promise<Record<string, unknown>> {
+    const raw = Boolean(args.raw);
+    if (raw || !this.canVerify) return { signedTransactions: signed, verified: false };
+    return { transactions: await this.decode(signed, this.envFor(args.environment), false), verified: true };
   }
 
   /** Client for the requested environment, or the configured default. */
@@ -322,14 +516,12 @@ export class StoreKitService {
         return this.transactionHistory(client, args);
 
       case 'storekit__get_transaction_info': {
-        // The sealed envelope, on purpose. `jwsClaim` above can open one in two
-        // lines, and those are the wrong two lines: it splits on `.` and
-        // base64-decodes without checking the signature, which is presenting
-        // unverified data as fact. Handing the JWS back is the honest of the
-        // two behaviours until MIL-218 threads Apple's roots through and
-        // decides what happens when verification fails.
         const res = await client.getTransactionInfo(args.transaction_id);
-        return { signedTransactionInfo: res.signedTransactionInfo };
+        const signed = res.signedTransactionInfo ? [res.signedTransactionInfo] : [];
+        const [one] = await this.decode(signed, this.envFor(args.environment), Boolean(args.raw));
+        return this.canVerify && !args.raw
+          ? { transaction: one ?? null, verified: true }
+          : { signedTransactionInfo: res.signedTransactionInfo, verified: false };
       }
 
       case 'storekit__get_subscription_statuses':
@@ -362,7 +554,7 @@ export class StoreKitService {
           }
         }
         return {
-          signedTransactions: items,
+          ...(await this.envelopeOrFields(items, args)),
           count: items.length,
           ...truncation(hasMore, revision, 'the 10-page cap'),
         };
@@ -453,7 +645,7 @@ export class StoreKitService {
     }
 
     return {
-      signedTransactions: transactions,
+      ...(await this.envelopeOrFields(transactions, args)),
       count: transactions.length,
       ...truncation(hasMore, revision, 'max_pages'),
     };
