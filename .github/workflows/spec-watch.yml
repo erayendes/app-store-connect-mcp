@@ -1,0 +1,103 @@
+# Apple ships changes to the App Store Connect OpenAPI specification without
+# announcing them, and nothing here was watching. The first sign was a user
+# reporting a tool that no longer matched the API.
+#
+# Weekly: fetch the spec, regenerate, and open a pull request if anything moved.
+# Deliberately NOT automatic beyond that — the diff is the interesting part
+# (Apple adds, renames and deprecates operations, and a rename is a breaking
+# change for anyone whose config names the tool), so a person reads it and a
+# person decides whether it ships.
+name: Spec watch
+
+on:
+  schedule:
+    # Mondays, 06:00 UTC. Apple does not publish on a schedule, so the day is
+    # arbitrary; what matters is that it is not the same hour as everything else
+    # on the runner fleet.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+
+      - name: Fetch Apple's specification
+        run: npm run spec:update
+
+      - name: Stop here when nothing moved
+        id: changed
+        run: |
+          if git diff --quiet spec/openapi.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Specification unchanged."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Regenerating is what turns a spec diff into a reviewable one: the JSON
+      # is 12 MB and unreadable, while REPORT.txt is the summary a person can
+      # actually judge — how many operations, which risk levels, what got
+      # deprecated.
+      - name: Regenerate
+        if: steps.changed.outputs.changed == 'true'
+        run: npm run generate
+
+      - name: Build the report diff
+        if: steps.changed.outputs.changed == 'true'
+        id: report
+        run: |
+          {
+            echo 'diff<<REPORT_EOF'
+            git diff --no-color -- src/generated/REPORT.txt || true
+            echo 'REPORT_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify the regenerated catalogue still passes
+        if: steps.changed.outputs.changed == 'true'
+        run: npm run typecheck && npm test
+        # A failure here is the finding, not a blocker: it means Apple changed
+        # something the ratchets or the curated descriptions depend on. The PR
+        # still opens, carrying a red check, because that is more useful than a
+        # silent workflow failure nobody sees.
+        continue-on-error: true
+
+      - name: Open the pull request
+        if: steps.changed.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: spec/apple-update
+          base: main
+          title: 'chore: Apple published a new App Store Connect specification'
+          commit-message: |
+            chore: regenerate from Apple's latest OpenAPI specification
+
+            Opened by the weekly spec watch. The generated catalogue moved
+            because Apple's specification did; the report diff in the pull
+            request body says how.
+          body: |
+            Apple's OpenAPI specification changed and the catalogue was regenerated from it.
+
+            **Read the report diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation disappears from every profile unless `--include-deprecated` is passed.
+
+            ```diff
+            ${{ steps.report.outputs.diff }}
+            ```
+
+            If the test job above is red, that is the finding rather than a blocker: Apple changed something a ratchet or a curated description depends on, and the fix belongs in this branch before it merges.
+
+            Nothing is published by this workflow. Tagging and release stay where they were.
+          labels: spec
+          delete-branch: true
