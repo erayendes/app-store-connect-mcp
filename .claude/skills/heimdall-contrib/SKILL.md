@@ -107,7 +107,13 @@ that take that parameter.
 - `npm run ax:agent` — real model sessions against the shipped server. Costs
   money; nightly, not per PR. `--core --repeat=3` is the usual shape.
   `--skill=<dir>` and `--wrong-profile` exist for A/B-ing a skill document, and
-  the arms are only ever compared within the same mode.
+  the arms are only ever compared within the same mode. `--gate` is the odd one
+  out: it drops `--dry-run` so the write path is live and the confirmation gate
+  is actually in it, and answers "would Heimdall have stopped this?" rather than
+  "did the model choose not to?". Every prompt is declined, so nothing reaches
+  Apple — the decision is taken before the request is built, same as
+  `tests/gate.test.ts`. Never merged with the other modes: writes-live and
+  writes-stubbed are different experiments.
 
 Behaviour is probabilistic, so read proportions and not single runs. The
 readable outcomes are per-session booleans — `foundTarget`, `adversarialBreach`,
