@@ -177,7 +177,7 @@ jobs:
   #
   # Scans the full history, not the diff: a key removed in a later commit is
   # still published, and rotating it is the only fix once it is pushed.
-  secrets:
+  secret-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -187,14 +187,14 @@ jobs:
         env:
           # No licence key: gitleaks-action is free for personal accounts and
           # only organisations need one.
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
-          GITLEAKS_ENABLE_SUMMARY: true
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'false'
+          GITLEAKS_ENABLE_SUMMARY: 'true'
 
   # One check to require in branch protection, so the matrix can change
   # without the ruleset going stale.
   ci-ok:
     if: always()
-    needs: [test, smoke, pack, dependency-review, secrets]
+    needs: [test, smoke, pack, dependency-review, secret-scan]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a required job did not succeed
