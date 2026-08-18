@@ -11,3 +11,11 @@ keys/
 companies.json
 .DS_Store
 coverage/
+
+# The .mcpb bundle and its staging directory — built, never committed.
+dist-mcpb/
+
+# Only the hand-written manifest is source; the rest is assembled into dist-mcpb.
+mcpb/server/
+mcpb/skills/
+mcpb/package.json

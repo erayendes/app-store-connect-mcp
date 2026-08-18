@@ -78,7 +78,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 130 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
@@ -92,6 +92,28 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | `webhooks` | Webhook configuration and diagnostics | 17 | — |
 
 Every profile also carries the **core set** — `apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`. So whichever profile you install can look up an app ID and point you to a tool it doesn't have.
+
+#### Starter packs
+
+"Which profile do I install?" answered by role rather than by browsing the table above. Every one of these also carries the core set, so it can find an app ID and point you at a tool it does not have.
+
+| You are | Install | Tools |
+|:--|:--|--:|
+| Release manager | `distribution` + `app-info` | 194 |
+| ASO / marketing | `marketing` + `analytics` | 125 |
+| QA / TestFlight | `testflight` + `access` | 120 |
+| Monetization | `monetization` | 207 |
+| Game developer | `game-center` + `distribution` | 319 |
+| Customer support | `monetization:storekit` | 19 |
+| Build & signing | `provisioning` + `xcode-cloud` | 102 |
+
+```bash
+npx -y @erayendes/asc-mcp register distribution app-info
+```
+
+Start narrower than feels safe. Nothing is lost by skipping a profile: `asc__call` reaches any operation in the catalogue whether it is loaded or not, and `asc__search_tools` names the profile that carries it. Adding one later is a line of config, while every tool you loaded and never called is paid for in every session.
+
+Worked examples for each of these — with the part that usually goes wrong — are in [examples/](../examples/README.md).
 
 #### Pick per project
 
@@ -109,6 +131,19 @@ Writing the config by hand, the syntax is:
 npx -y @erayendes/asc-mcp monetization                       everything
 npx -y @erayendes/asc-mcp monetization:subscription-pricing  that slice plus core
 ```
+
+#### Or install it from the Connectors menu
+
+Two registries exist and only one of them is a config file. Profiles registered by `setup` are what the agent and the CLI read; the Claude app's **Connectors** menu is fed by MCPB bundles instead, and a local server in `~/.claude.json` does not appear there.
+
+[Releases](https://github.com/erayendes/app-store-connect-mcp/releases) carries a `.mcpb` for that menu. Download it, drag it onto Claude, and a form asks for the profile and — if you have not run `setup` — the key details. Nothing else is needed: the bundle carries the server and its dependencies, so no Node toolchain has to exist on the machine.
+
+Two things worth knowing before you choose this route:
+
+- **One bundle serves one profile.** That is an MCPB constraint rather than a decision: a bundle is one server and one toggle. Install it again to add another area.
+- **`setup` is still the better home for the key.** Leave the credential fields empty and the bundle uses the shared config `setup` wrote, with the `.p8` in the Keychain. Fill them in and the path to the key is stored by the host instead — safely, but on disk rather than in the Keychain.
+
+Build it yourself with `npm run mcpb`. The bundle is unsigned, so the installer says so; signing needs a code-signing certificate this project does not carry.
 
 #### Where it registers
 
@@ -286,6 +321,9 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | app → group → subscription → price points | `pricing__get_subscription_price` — one country or, with the territory omitted, all ~175 grouped by price | `monetization:subscription-pricing` |
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
+| open a submission, add the version, hand it over — three calls in that order | `release__submit` — refuses what the pre-flight blocks | `distribution:submission` |
+| comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
+| pasting a translation into each locale by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
 | two versions × every locale, compared by hand | `listing__diff_metadata` — only the fields that differ, plus locales added or dropped | `distribution:version` |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
@@ -305,6 +343,10 @@ Three workflows are offered as MCP prompts, which clients surface as slash comma
 | `price-check` | worldwide prices in one call, then what looks unintended | `monetization:subscription-pricing` |
 
 A prompt only appears when every tool it names is served, so a narrowed profile or `--read-only` removes it the same way it removed the tools. Each one stops at the write: the submission, the reply and the price change are the user's to make.
+
+Naming an app works everywhere it is the target, not only in the macros: the 46 tools rooted at `/v1/apps/{id}` take a name, a bundle ID or the numeric Apple ID, and resolve it before the call. Only there, and only when the value is not already numeric — anywhere else an id is an id.
+
+The `metadata_ai__*` trio never writes on its own judgement, and the reason is ASO rather than caution. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. So the audit reports and stops, the draft only touches the languages you name and returns text for you to read, and the write takes its values from a file you prepared — read straight from it rather than retyped, because transcription is where a carefully chosen keyword list becomes a nearly-identical one.
 
 Naming an app works everywhere it is the target, not only in the macros: the 46 tools rooted at `/v1/apps/{id}` take a name, a bundle ID or the numeric Apple ID, and resolve it before the call. Only there, and only when the value is not already numeric — anywhere else an id is an id.
 
@@ -441,7 +483,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 130 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
@@ -455,6 +497,28 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
 
 Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, dört ortak ilişki listelemesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`. Yani hangi profili kurarsanız kurun, bir uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini size gösterebilir.
+
+#### Başlangıç paketleri
+
+"Hangi profili kurayım?" sorusunun, yukarıdaki tabloyu taramak yerine role göre cevabı. Bunların hepsi çekirdek seti de taşır; yani bir app ID bulabilir ve sahip olmadığı bir aracı size gösterebilir.
+
+| Siz | Kurun | Araç |
+|:--|:--|--:|
+| Yayın yöneticisi | `distribution` + `app-info` | 194 |
+| ASO / pazarlama | `marketing` + `analytics` | 125 |
+| QA / TestFlight | `testflight` + `access` | 120 |
+| Monetizasyon | `monetization` | 207 |
+| Oyun geliştirici | `game-center` + `distribution` | 319 |
+| Müşteri desteği | `monetization:storekit` | 19 |
+| Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
+
+```bash
+npx -y @erayendes/asc-mcp register distribution app-info
+```
+
+Güvenli hissettirenden dar başlayın. Bir profili atlamakla hiçbir şey kaybetmezsiniz: `asc__call` katalogdaki her işleme yüklü olsun olmasın ulaşır, `asc__search_tools` da onu taşıyan profili söyler. Sonradan eklemek bir satır yapılandırma; yükleyip hiç çağırmadığınız her aracın bedeli ise her oturumda ödenir.
+
+Her biri için — ve genelde nerede ters gittiğiyle birlikte — çalışılmış örnekler: [examples/](../examples/README.md).
 
 #### Projeye göre seçin
 
@@ -472,6 +536,19 @@ Config'i elle yazacaksanız sözdizimi:
 npx -y @erayendes/asc-mcp monetization                       tamamı
 npx -y @erayendes/asc-mcp monetization:subscription-pricing  o dilim + çekirdek
 ```
+
+#### Ya da Connectors menüsünden kurun
+
+İki kayıt sistemi var ve yalnızca biri bir yapılandırma dosyası. `setup`'ın kaydettiği profilleri ajan ve CLI okur; Claude uygulamasının **Connectors** menüsü ise MCPB paketlerinden beslenir ve `~/.claude.json`'daki yerel bir sunucu orada görünmez.
+
+[Releases](https://github.com/erayendes/app-store-connect-mcp/releases) sayfasında o menü için bir `.mcpb` var. İndirin, Claude'un üzerine sürükleyin; bir form profili ve — `setup` çalıştırmadıysanız — anahtar bilgilerini sorar. Başka bir şey gerekmez: paket sunucuyu ve bağımlılıklarını taşır, yani makinede Node kurulu olmak zorunda değil.
+
+Bu yolu seçmeden önce bilinmesi gereken iki şey:
+
+- **Bir paket bir profil sunar.** Bu bir karar değil, MCPB kısıtı: bir paket bir sunucu ve bir anahtardır. Başka bir alan için tekrar kurun.
+- **Anahtar için `setup` hâlâ daha iyi bir yer.** Kimlik alanlarını boş bırakırsanız paket, `setup`'ın yazdığı ortak yapılandırmayı kullanır ve `.p8` Keychain'de kalır. Doldurursanız anahtarın yolunu bu kez host saklar — güvenli biçimde, ama Keychain'de değil diskte.
+
+Kendiniz derlemek için `npm run mcpb`. Paket imzasız, kurulum sırasında bunu söyler; imzalamak bu projenin taşımadığı bir kod imzalama sertifikası ister.
 
 #### Nereye kaydedilir
 
@@ -642,6 +719,9 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | app → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da territory verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
+| submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` — ön denetimin blokladığını reddeder | `distribution:submission` |
+| kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
+| her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
 | iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
@@ -661,6 +741,10 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | `price-check` | tek çağrıda dünya fiyatları, ardından istenmemiş görünenler | `monetization:subscription-pricing` |
 
 Bir prompt yalnızca adını andığı her araç sunuluyorsa görünür; daraltılmış bir profil ya da `--read-only`, araçları nasıl kaldırıyorsa prompt'u da öyle kaldırır. Her biri yazma işleminin önünde durur: gönderim, yanıt ve fiyat değişikliği kullanıcının kararıdır.
+
+Bir uygulamayı adıyla vermek yalnızca makrolarda değil, hedef olduğu her yerde çalışır: `/v1/apps/{id}` köklü 46 araç ad, bundle ID ya da sayısal Apple ID alır ve çağrıdan önce çözer. Yalnızca orada ve yalnızca değer zaten sayısal değilse — başka her yerde kimlik kimliktir.
+
+`metadata_ai__*` üçlüsü kendi kararıyla asla yazmaz ve sebep temkinlilik değil, ASO. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. Bu yüzden denetim rapor edip durur, taslak yalnızca adını verdiğiniz dillere dokunur ve okumanız için metin döndürür, yazma ise değerleri hazırladığınız dosyadan alır — yeniden yazılarak değil doğrudan okunarak, çünkü özenle seçilmiş bir anahtar kelime listesi tam da kopyalanırken neredeyse-aynısına dönüşür.
 
 Bir uygulamayı adıyla vermek yalnızca makrolarda değil, hedef olduğu her yerde çalışır: `/v1/apps/{id}` köklü 46 araç ad, bundle ID ya da sayısal Apple ID alır ve çağrıdan önce çözer. Yalnızca orada ve yalnızca değer zaten sayısal değilse — başka her yerde kimlik kimliktir.
 

@@ -20,7 +20,7 @@
 
 **Heimdall.** One tool for your entire App Store Connect account.
 
-An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 886 tools.**
+An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 890 tools.**
 
 Apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
 
@@ -61,9 +61,8 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 
 | | |
 | :--- | :--- |
-| **Complete** | Apple's OpenAPI spec v4.4.1, all 966 paths, 982 operations — 281 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 859 reachable operations plus 27 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
-| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 207. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
-| **Workflows, not just tools** | Three MCP prompts your client shows as slash commands: release readiness, review triage, price check — each one a sequence of calls that stops before the write. |
+| **Complete** | Apple's OpenAPI spec v4.4.1, all 966 paths, 982 operations — 281 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 859 reachable operations plus 24 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
+| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 26 tools instead of 206. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
 | **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
 | **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
@@ -74,6 +73,8 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: checking monetization unfolds its sub-profiles, each with its tool count and token estimate" width="720">
 
 Register only the profiles your project uses. What each one covers is in the [profile table](docs/GUIDE.md#register-profiles); adding and removing them later is [here](docs/GUIDE.md#adding-and-removing-later).
+
+Not sure which? [Starter packs](docs/GUIDE.md#starter-packs) answers it by role — a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics` — and [examples/](examples/README.md) works each one through, including the part that usually goes wrong.
 
 There is nothing to memorise — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches everything, including what isn't loaded, and tells you which profile it lives in.
 
@@ -94,6 +95,7 @@ Heimdall is not a Fastlane alternative — it is the interactive half. Keep [Fas
 ### Documentation
 
 - [Guide](docs/GUIDE.md) — API key, install, setup wizard, profiles, configuration, examples
+- [Examples](examples/README.md) — starter packs by role, seven worked scenarios, and a GitHub Actions workflow
 - [Security](.github/SECURITY.md) — credential handling, safety modes, pre-install audit, vulnerability reporting
 - [Support](.github/SUPPORT.md) — getting help, troubleshooting
 - [Changelog](docs/CHANGELOG.md) — release history
@@ -123,7 +125,7 @@ Tool definitions in `src/generated/` are produced from Apple Inc.'s published Ap
 
 **Heimdall.** Tüm App Store Connect hesabınız için tek bir araç.
 
-**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 886 araç.**
+**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 890 araç.**
 
 Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
 
@@ -164,9 +166,8 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 
 | | |
 | :--- | :--- |
-| **Eksiksiz** | Apple'ın OpenAPI spec v4.4.1'i, tüm 966 path, 982 işlem — 281 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 859 işlem artı elle yazılmış 27 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
-| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 207 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
-| **Sadece araç değil, iş akışı** | İstemcinizin eğik çizgi komutu olarak gösterdiği üç MCP prompt'u: yayına hazırlık, yorum triyajı, fiyat kontrolü — her biri yazma işleminin önünde duran bir çağrı dizisi. |
+| **Eksiksiz** | Apple'ın OpenAPI spec v4.4.1'i, tüm 966 path, 982 işlem — 281 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 859 işlem artı elle yazılmış 24 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
+| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 206 yerine 26 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
 | **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
 | **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
@@ -177,6 +178,8 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri araç sayısı ve token tahminiyle açılıyor" width="720">
 
 Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığı [profil tablosunda](docs/GUIDE.md#profilleri-kaydedin), sonradan ekleme ve çıkarma [burada](docs/GUIDE.md#sonradan-ekleme-ve-çıkarma).
+
+Hangisi olduğundan emin değil misiniz? [Başlangıç paketleri](docs/GUIDE.md#başlangıç-paketleri) bunu role göre cevaplıyor — yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics` — ve [examples/](examples/README.md) her birini, genelde nerede ters gittiğiyle birlikte, baştan sona işliyor.
 
 Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun; `asc__search_tools` o an yüklü olmayanlar dahil hepsini arar ve hangi profilde olduğunu söyler.
 
@@ -197,6 +200,7 @@ Heimdall bir Fastlane alternatifi değil, interaktif yarısıdır. Tekrarlanabil
 ### Dokümantasyon
 
 - [Rehber](docs/GUIDE.md) — API anahtarı, kurulum, setup sihirbazı, profiller, yapılandırma, örnekler
+- [Örnekler](examples/README.md) — role göre başlangıç paketleri, yedi işlenmiş senaryo ve bir GitHub Actions workflow'u
 - [Güvenlik](.github/SECURITY.md) — kimlik bilgisi yönetimi, güvenlik modları, kurulum öncesi denetim, açık bildirimi
 - [Destek](.github/SUPPORT.md) — yardım alma, sorun giderme
 - [Değişiklik günlüğü](docs/CHANGELOG.md) — sürüm geçmişi

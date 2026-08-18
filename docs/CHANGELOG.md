@@ -7,6 +7,72 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### `release__submit` — the three-step submission, in order, once
+Apple's names hide a dance. `review_submissions__create` takes an *app*, not a version, and makes an empty container. The version arrives as a separate item. And nothing reaches Apple until `submitted` is patched true. An agent that stops after the POST reports a release it did not ship — which is why those three descriptions were already worded to name the next call.
+
+Naming the next call is a workaround. This does the three in order, and says which one actually reached Apple:
+
+```
+Opened review submission sub-1 — empty, and nothing sent yet.
+Added version 3.2.0 to it. Still nothing sent.
+Handed it to Apple (submitted=true). This is the step that starts the queue.
+```
+
+It also refuses to submit something that will bounce. `preflight__check_version` already knows what Apple enforces — a build still processing, an unanswered export-compliance question, a locale with no description — and running it first is the step no chain of raw calls remembers. A refusal names the tool that fixes each gap and sends nothing; `skip_preflight: true` overrides it, for the caller who knows something the check does not.
+
+An open submission is reused rather than duplicated, and a version already on it is not added twice. Apple allows one submission at a time, and a second POST fails with a message about state that says nothing about the one already sitting there.
+
+`--dry-run` returns the plan — the three steps it would take — before any of them.
+
+This is the workflow macro the issue asks for and the test it sets: a deterministic order that the client keeps getting wrong, and one approval instead of three. Macros that only save calls are not in this release; chaining reads is something a model does well.
+
+
+#### `metadata_ai__*` — three tools that never write on their own judgement
+Translating store metadata into forty languages is the biggest manual job in App Store Connect, and the obvious tool for it is the wrong one. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. A tool that renders English keywords into Turkish and writes them has quietly replaced a ranking decision with a language exercise, and nobody finds out until the installs do not arrive.
+
+So the work is split three ways and each part refuses the next one's job.
+
+**`metadata_ai__audit_localizations`** compares every language and reports what is missing or over Apple's limit — and stops. Its instruction to the host model says, in as many words, not to offer to fill anything in: a report that ends "shall I write these?" is how an audit turns into a write. A field no language uses is left alone rather than flagged on every locale, because that is a decision, and a report nobody can skim is a report nobody reads.
+
+**`metadata_ai__draft_translation`** runs only for the languages you name. `to_locales` is required and never inferred — translating a language nobody asked about is how a deliberate choice gets overwritten. It returns a draft alongside what each target already has, so the draft can say "replacing" rather than "filling in". Ask it for keywords and it says plainly that a translation is a starting point rather than an answer.
+
+**`metadata_ai__apply_localizations`** writes, from a CSV or JSON file you prepared. The values are read straight from the file rather than retyped by a model, which is the point: transcription is exactly where a carefully chosen keyword list becomes a nearly-identical one. Every value is checked against Apple's character limits first, and one failure sends nothing at all — a rejection on the eleventh language would otherwise leave ten already changed and no way to tell from the error which ones landed. An empty cell means "I did not touch this" rather than "make it empty", because that is what an empty cell means in a spreadsheet.
+
+The CSV parser handles quoted fields, because a real description contains commas and newlines and the person editing this file is doing it in Numbers.
+
+
+#### A `.mcpb` bundle, for the menu `~/.claude.json` cannot reach
+Two registries exist and only one of them is a config file. Profiles registered by `setup` are what the agent and the CLI read; the Claude app's **Connectors** menu is fed by MCPB bundles instead, and a local server in `~/.claude.json` never appears there. So "it works but it is not in the menu" was not a bug to find — the menu was reading somewhere else the whole time.
+
+Every release now carries `heimdall-asc-<version>.mcpb`. Drag it onto Claude and a form asks for the profile and, if `setup` has not already run, the key details. The bundle carries the server and its dependencies inlined, so nothing on the machine needs Node.
+
+Two constraints stated rather than worked around. **One bundle serves one profile** — a bundle is one server and one toggle, which is MCPB's shape, not a decision here; installing it again adds another area. And **`setup` is still the better home for the key**: leave the credential fields empty and the bundle uses the shared config, with the `.p8` in the Keychain. Fill them in and the host stores the path instead — safely, but on disk.
+
+Unsigned, and the installer says so. Signing wants a code-signing certificate this project does not carry, and a warning that is true beats a bundle that will not install.
+
+While the manifest was being written, `package.json`'s own description turned out to claim **875 tools**. It is a fifth surface advertising the count and the release pre-flight checks four; it now says 884 like the others.
+
+
+#### Starter packs, and seven scenarios worked through
+"Which profile do I install?" had one answer and it was a table of thirteen rows sorted by nothing in particular. There is a second answer now, by role: a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics`, customer support `monetization:storekit` and eighteen tools. Seven packs, in the guide and in the README, with tool counts a test keeps honest — `docs/GUIDE.md` carried "distribution … 129" through two releases where the number was 130, because prose has no tests.
+
+`examples/` is new and is the other half. Seven scenarios — sales and finance reports, TestFlight invitations, creating a version and attaching a build, review triage, keywords for one language, sandbox testers, CI — each saying which profile it needs and, more usefully, the part that usually goes wrong. Finance and sales are different reports and "revenue" almost always means the first. A tester belongs to the account before they belong to a group. Keywords live on the version localization and the name lives somewhere else entirely, because one belongs to the release and the other to the app.
+
+`examples/ci/release-notes.yml` is a working GitHub Actions workflow: an agent reads the commits since the last tag, writes the "What's New" text, and puts it on the version. It rehearses by default — `dry_run: true` — so a first run cannot reach Apple, and it sets `ASC_CONFIRM_WRITES=0` explicitly rather than letting the write fail closed. No user is present on a runner to answer a confirmation prompt, and a gate refusing a write it was never going to get an answer for reads, in a log, exactly like a bug.
+
+
+#### 143 of 265 real phrasings now find their tool in the top three, up from 83
+`asc__search_tools` is how a model gets from "make the subscription available in Germany" to the one call that does it, and on a measured corpus of 265 phrasings it was landing the right tool in the top three 83 times. It is 143 now, with no phrasing losing a place it had.
+
+Most of the gain is one rule rather than one hundred rewrites. Scoring counts how many of the query's words appear in a tool's name, description and path, so every sibling of a resource ties on a query about the resource — "Create a Game Center achievement" scores full marks on the achievement tool and on its images, localizations and releases alike. Ties then broke alphabetically, which put `game_center_achievement_images.create` first and the tool the query was about fourth. No description can win that: the competitors match the same words for the same good reason.
+
+Equal coverage is now settled by which name carries the least material the query never mentioned. `achievements_v2.create` has one such part where `achievement_localizations.create` has two, and the query said achievement, not achievement localization. That rule alone moved 11 phrasings, and it costs nothing per session — unlike a description, which is paid for in every context that loads the tool.
+
+The other 33 are curated descriptions, chosen against the corpus rather than by domain size. `users.update` said "Update a user." and four phrasings about roles, permissions and admin access found it at no rank at all. `app_infos.update` said "Update an app info." and owns the store category. `app_events.create` said "Create an app event." and is the in-app event Apple features on the store page. Each one now carries the words a person actually types, and deliberately not the words that belong to a neighbour: the in-app event description avoids "promotional" because subscription promotional offers own that token.
+
+Two ratchets moved with it — descriptions that restate their own tool name 95 → 92, Apple-summary descriptions 712 → 692 — and the pinned list of failing queries was regenerated whole rather than edited. Sixty queries left it at once, and hand-picking which lines to delete from a list of 182 is how a stale entry survives and makes the "started passing" message fire on a run where nothing did.
+
+
 #### A write says which app it is about to change
 `Target:     id = 6636549188` was the one line in the confirmation prompt that says *which* thing is being written to, and it was the one line nobody could read. The references inside a request body were resolved to names; the id in the path — the target itself — never was. A destructive write with no body at all named nothing.
 
@@ -351,6 +417,72 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### `release__submit` — üç adımlı gönderim, sırasıyla, tek seferde
+Apple'ın adlandırması bir dansı gizliyor. `review_submissions__create` sürümü değil *uygulamayı* alıyor ve boş bir kap yaratıyor. Sürüm ayrı bir öğe olarak geliyor. Ve `submitted` true'ya çekilene kadar Apple'a hiçbir şey ulaşmıyor. POST'tan sonra duran bir ajan, göndermediği bir yayını bildiriyor — o üç açıklamanın zaten bir sonraki çağrıyı adıyla söylemesinin sebebi bu.
+
+Bir sonraki çağrıyı adıyla söylemek bir çare. Bu araç üçünü sırasıyla yapıyor ve hangisinin gerçekten Apple'a ulaştığını söylüyor:
+
+```
+Opened review submission sub-1 — empty, and nothing sent yet.
+Added version 3.2.0 to it. Still nothing sent.
+Handed it to Apple (submitted=true). This is the step that starts the queue.
+```
+
+Geri dönecek bir şeyi göndermeyi de reddediyor. `preflight__check_version` Apple'ın neyi dayattığını zaten biliyor — hâlâ işlenen bir build, cevapsız bir ihracat uyumluluğu sorusu, açıklaması olmayan bir dil — ve onu önce koşturmak, ham çağrı zincirinin hiç hatırlamadığı adım. Ret, her eksiği düzeltecek aracı adıyla söylüyor ve hiçbir şey göndermiyor; `skip_preflight: true` bunu geçersiz kılıyor — denetimin bilmediği bir şeyi bilen çağıran için.
+
+Açık bir submission çoğaltılmıyor, yeniden kullanılıyor; üzerinde zaten olan bir sürüm ikinci kez eklenmiyor. Apple aynı anda bir submission'a izin veriyor ve ikinci POST, orada duran hakkında hiçbir şey söylemeyen bir durum mesajıyla düşüyor.
+
+`--dry-run` planı döndürüyor — atacağı üç adımı, hiçbirini atmadan.
+
+Issue'nun istediği ve ölçüt olarak koyduğu iş akışı makrosu bu: istemcinin sürekli yanlış yaptığı deterministik bir sıra ve üç onay yerine bir. Yalnızca çağrı tasarruf eden makrolar bu sürümde yok; okuma zincirlemeyi bir model zaten iyi yapıyor.
+
+
+#### `metadata_ai__*` — kendi kararıyla asla yazmayan üç araç
+Mağaza metadata'sını kırk dile çevirmek App Store Connect'teki en büyük elle iş ve bunun için akla gelen araç yanlış araç. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. İngilizce anahtar kelimeleri Türkçeye çevirip yazan bir araç, bir sıralama kararını sessizce bir dil alıştırmasıyla değiştirmiştir ve bunu kimse kurulumlar gelmeyene kadar fark etmez.
+
+Bu yüzden iş üçe bölündü ve her parça diğerinin işini reddediyor.
+
+**`metadata_ai__audit_localizations`** her dili karşılaştırır, eksik olanı ve Apple'ın sınırını aşanı raporlar — ve durur. Host modele verdiği talimat açık açık "hiçbir şeyi doldurmayı teklif etme" diyor: "bunları yazayım mı?" diye biten bir rapor, denetimin yazmaya dönüşme yoludur. Hiçbir dilin kullanmadığı bir alan, her dilde işaretlenmek yerine rahat bırakılır; çünkü o bir karardır ve göz gezdirilemeyen bir rapor okunmayan bir rapordur.
+
+**`metadata_ai__draft_translation`** yalnızca adını verdiğiniz diller için çalışır. `to_locales` zorunlu ve asla tahmin edilmiyor — kimsenin sormadığı bir dili çevirmek, bilinçli bir tercihin üzerine yazma yoludur. Taslağı, her hedefte hâlihazırda ne olduğuyla birlikte döndürür; böylece taslak "dolduruyorum" değil "değiştiriyorum" diyebilir. Anahtar kelime isterseniz, çevirinin bir cevap değil başlangıç noktası olduğunu açıkça söyler.
+
+**`metadata_ai__apply_localizations`** yazar — hazırladığınız CSV veya JSON dosyadan. Değerler bir model tarafından yeniden yazılmadan doğrudan dosyadan okunuyor; mesele de bu: özenle seçilmiş bir anahtar kelime listesi tam da kopyalanırken neredeyse-aynısına dönüşüyor. Her değer önce Apple'ın karakter sınırlarına karşı denetleniyor ve tek bir hata hiçbir şeyin gönderilmemesi demek — aksi hâlde on birinci dildeki bir ret, onunun çoktan değişmiş olmasını ve hatadan hangilerinin gittiğinin anlaşılamamasını bırakırdı. Boş bir hücre "boşalt" değil "buna dokunmadım" demek; çünkü bir tabloda boş hücre bu demek.
+
+CSV ayrıştırıcısı tırnaklı alanları işliyor, çünkü gerçek bir açıklama virgül ve satır sonu içerir ve bu dosyayı düzenleyen kişi bunu Numbers'ta yapıyor.
+
+
+#### `~/.claude.json`'ın ulaşamadığı menü için bir `.mcpb` paketi
+İki kayıt sistemi var ve yalnızca biri bir yapılandırma dosyası. `setup`'ın kaydettiği profilleri ajan ve CLI okur; Claude uygulamasının **Connectors** menüsü ise MCPB paketlerinden beslenir ve `~/.claude.json`'daki yerel bir sunucu orada hiç görünmez. Yani "çalışıyor ama menüde yok" bulunacak bir hata değildi — menü baştan beri başka bir yeri okuyordu.
+
+Artık her sürüm `heimdall-asc-<sürüm>.mcpb` taşıyor. Claude'un üzerine sürükleyin; bir form profili ve `setup` çalışmadıysa anahtar bilgilerini sorar. Paket sunucuyu ve bağımlılıklarını içine gömülü taşır, yani makinede Node'a gerek yok.
+
+Etrafından dolaşılmayıp söylenen iki kısıt. **Bir paket bir profil sunar** — bir paket bir sunucu ve bir anahtar demek; bu MCPB'nin biçimi, burada verilmiş bir karar değil. Başka bir alan için tekrar kurun. Ve **anahtar için `setup` hâlâ daha iyi bir yer**: kimlik alanlarını boş bırakırsanız paket ortak yapılandırmayı kullanır, `.p8` Keychain'de kalır. Doldurursanız yolu bu kez host saklar — güvenli biçimde, ama diskte.
+
+İmzasız ve kurulum bunu söylüyor. İmzalamak bu projenin taşımadığı bir kod imzalama sertifikası ister; doğru olan bir uyarı, kurulamayan bir paketten iyidir.
+
+Manifest yazılırken `package.json`'ın kendi açıklamasının **875 araç** dediği ortaya çıktı. Sayıyı ilan eden beşinci yüzey ve yayın öncesi kontrolü dördünü denetliyor; artık o da diğerleri gibi 884 diyor.
+
+
+#### Başlangıç paketleri ve baştan sona işlenmiş yedi senaryo
+"Hangi profili kurayım?" sorusunun tek cevabı vardı ve o da özel bir sıraya göre dizilmemiş on üç satırlık bir tabloydu. Artık ikinci bir cevap var, role göre: yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics`, müşteri desteği `monetization:storekit` ve on sekiz araç. Yedi paket; rehberde ve README'de, araç sayılarını dürüst tutan bir testle birlikte — `docs/GUIDE.md` iki sürüm boyunca "distribution … 129" yazdı, doğrusu 130'du, çünkü düzyazının testi yok.
+
+`examples/` yeni ve işin diğer yarısı. Yedi senaryo — satış ve finans raporları, TestFlight daveti, sürüm oluşturup build bağlama, yorum triyajı, tek dilin anahtar kelimeleri, sandbox testçileri, CI — her biri hangi profili gerektirdiğini ve daha da işe yararı, genelde nerede ters gittiğini söylüyor. Finans ve satış farklı raporlar ve "gelir" neredeyse her zaman birincisi demek. Testçi, gruba ait olmadan önce hesaba ait olur. Anahtar kelimeler sürüm yerelleştirmesinde, ad ise bambaşka bir yerde yaşar; çünkü biri yayına, diğeri uygulamaya ait.
+
+`examples/ci/release-notes.yml` çalışan bir GitHub Actions workflow'u: bir ajan son tag'den beri gelen commit'leri okuyor, "Yenilikler" metnini yazıyor ve sürüme koyuyor. Varsayılan olarak prova yapıyor — `dry_run: true` — yani ilk koşu Apple'a ulaşamaz; ve `ASC_CONFIRM_WRITES=0`'ı yazmanın kapıda kapanmasına bırakmak yerine açıkça ayarlıyor. Runner'da onay istemini cevaplayacak kullanıcı yok ve zaten cevap alamayacağı bir yazmayı reddeden bir kapı, logda tam olarak bir hata gibi okunur.
+
+
+#### 265 gerçek ifadeden 143'ü aracını ilk üçte buluyor, önce 83'tü
+`asc__search_tools`, modelin "aboneliği Almanya'da satışa aç"tan bunu yapan tek çağrıya ulaşma yolu; ölçülmüş 265 ifadelik havuzda doğru aracı ilk üçe 83 kez getiriyordu. Artık 143, ve hiçbir ifade elindeki yeri kaybetmedi.
+
+Kazancın çoğu yüz yeniden yazımdan değil, tek bir kuraldan geliyor. Puanlama, sorgunun kaç kelimesinin aracın adında, açıklamasında ve yolunda geçtiğini sayıyor; bu yüzden bir kaynak hakkındaki sorguda kaynağın tüm kardeşleri eşitleniyor — "Create a Game Center achievement" hem başarım aracında hem de onun görsellerinde, yerelleştirmelerinde ve sürümlerinde tam puan alıyor. Eşitlik alfabetik bozuluyordu, yani `game_center_achievement_images.create` birinci, sorgunun sorduğu araç dördüncü oluyordu. Bunu hiçbir açıklama kazanamaz: rakipler aynı kelimeleri aynı haklı sebeple içeriyor.
+
+Eşit kapsama artık, hangi adın sorgunun hiç anmadığı en az malzemeyi taşıdığına bakılarak çözülüyor. `achievements_v2.create`'te böyle bir parça var, `achievement_localizations.create`'te iki; sorgu başarım dedi, başarım yerelleştirmesi değil. Tek başına bu kural 11 ifadeyi taşıdı ve oturum başına hiçbir maliyeti yok — aracı yükleyen her bağlamda bedeli ödenen açıklamaların aksine.
+
+Diğer 33'ü kürasyonlu açıklama; domain büyüklüğüne göre değil, havuza karşı seçildi. `users.update` "Update a user." diyordu ve rol, izin, admin erişimi hakkındaki dört ifade onu hiçbir sırada bulamıyordu. `app_infos.update` "Update an app info." diyordu ve mağaza kategorisi onun. `app_events.create` "Create an app event." diyordu ve Apple'ın mağaza sayfasında öne çıkardığı in-app event bu. Her biri artık insanın gerçekten yazdığı kelimeleri taşıyor — ve bilerek komşusuna ait olanları taşımıyor: in-app event açıklaması "promotional" kelimesinden kaçınıyor, çünkü o token abonelik promosyon tekliflerinin.
+
+İki ratchet de onunla birlikte indi — kendi adını tekrarlayan açıklamalar 95 → 92, Apple özetinde kalanlar 712 → 692 — ve düşen sorguların sabitlenmiş listesi düzenlenmedi, baştan üretildi. Altmış sorgu listeyi aynı anda terk etti; 182 satırlık bir listeden hangilerinin silineceğini elle seçmek, tam olarak bayat bir girdinin hayatta kalıp "started passing" mesajını hiçbir şeyin geçmediği bir koşuda tetiklemesinin yolu.
+
 
 #### Bir yazma, hangi uygulamayı değiştireceğini söylüyor
 `Target:     id = 6636549188` — onay isteminde *neye* yazıldığını söyleyen tek satırdı ve okunamayan tek satır oydu. İstek gövdesinin içindeki referanslar adlara çevriliyordu; yoldaki kimlik, yani hedefin kendisi, hiç çevrilmiyordu. Gövdesi olmayan yıkıcı bir yazma hiçbir şeyi adlandırmıyordu.

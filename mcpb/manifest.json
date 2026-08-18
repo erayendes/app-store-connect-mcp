@@ -1,0 +1,101 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
+  "manifest_version": "0.4",
+  "name": "heimdall-asc",
+  "display_name": "Heimdall — App Store Connect",
+  "version": "2.2.0",
+  "description": "Every App Store Connect and StoreKit 2 endpoint, narrowed to the profile you pick.",
+  "long_description": "Heimdall serves the App Store Connect API and the App Store Server API (StoreKit 2), with every tool generated from Apple's own OpenAPI specification. Pick one profile at install time — distribution, monetization, marketing, testflight and nine more — and only that area's tools are served.\n\nThe key never leaves this machine: Heimdall reads it, signs a short-lived token, and talks to Apple directly. Nothing sits in between.\n\nIf you have already run `npx -y @erayendes/asc-mcp setup`, leave the credential fields below empty — the shared config it wrote is used instead, with the key still in the Keychain.",
+  "author": {
+    "name": "Eray Endes",
+    "url": "https://github.com/erayendes"
+  },
+  "homepage": "https://github.com/erayendes/app-store-connect-mcp",
+  "documentation": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE.md",
+  "support": "https://github.com/erayendes/app-store-connect-mcp/issues",
+  "license": "MIT",
+  "keywords": [
+    "app-store-connect",
+    "apple",
+    "storekit",
+    "testflight",
+    "ios"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js",
+        "${user_config.profile}"
+      ],
+      "env": {
+        "ASC_KEY_ID": "${user_config.key_id}",
+        "ASC_ISSUER_ID": "${user_config.issuer_id}",
+        "ASC_PRIVATE_KEY_PATH": "${user_config.private_key_path}",
+        "ASC_VENDOR_NUMBER": "${user_config.vendor_number}",
+        "ASC_BUNDLE_ID": "${user_config.bundle_id}",
+        "ASC_READ_ONLY": "${user_config.read_only}"
+      }
+    }
+  },
+  "user_config": {
+    "profile": {
+      "type": "string",
+      "title": "Profile",
+      "description": "Which area of App Store Connect to serve. One bundle serves one profile; install it again with a different profile to add another.",
+      "default": "distribution",
+      "required": true
+    },
+    "key_id": {
+      "type": "string",
+      "title": "Key ID",
+      "description": "From App Store Connect → Users and Access → Integrations. Leave empty to use the credentials `asc-mcp setup` already wrote.",
+      "required": false
+    },
+    "issuer_id": {
+      "type": "string",
+      "title": "Issuer ID",
+      "description": "Shown above the key list on the same page. Leave empty to use the credentials `asc-mcp setup` already wrote.",
+      "required": false
+    },
+    "private_key_path": {
+      "type": "file",
+      "title": "Private key (.p8)",
+      "description": "The file Apple let you download exactly once. Heimdall reads it to sign a short-lived token; it is never sent anywhere. Leave empty if `asc-mcp setup` already put your key in the Keychain — that is the better place for it.",
+      "required": false,
+      "sensitive": true
+    },
+    "vendor_number": {
+      "type": "string",
+      "title": "Vendor number",
+      "description": "Only for sales and finance reports. Payments and Financial Reports → the number beside your legal entity.",
+      "required": false
+    },
+    "bundle_id": {
+      "type": "string",
+      "title": "Bundle ID",
+      "description": "Only for StoreKit 2 — customer transactions, entitlements and refunds. The App Store Server API is scoped to one app, so these tools appear only when this is set.",
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read-only",
+      "description": "Serve only tools that cannot change anything. A server that cannot write cannot write by accident.",
+      "default": false,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=20.19.0"
+    }
+  }
+}

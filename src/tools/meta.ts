@@ -135,6 +135,34 @@ function tokenTest(token: string): (haystack: string) => boolean {
  * "works but discouraged", calls the tool, and gets "no such tool". Measured
  * on "create leaderboard" — two of the top five were unreachable.
  */
+/**
+ * How much of a tool's name the query did not ask about — the tie-break.
+ *
+ * Scoring counts how many query tokens land somewhere in name, description and
+ * path, so every sibling of a resource ties on a query about the resource:
+ * "Create a Game Center achievement" scores full marks on
+ * `game_center_achievements_v2.create` and on the achievement's images,
+ * localizations and releases alike. Ties then broke alphabetically, which put
+ * `game_center_achievement_images.create` first and the tool the query was
+ * about fourth — an ordering with no meaning behind it, and one that no
+ * description rewrite can beat, because the competitors match the same words
+ * for the same good reason.
+ *
+ * Equal coverage of the query is settled here by which name carries the least
+ * material the query never mentioned. `achievements_v2.create` has one such
+ * part; `achievement_localizations.create` has two. The query said achievement,
+ * not achievement localization, and the shorter name is the more direct answer.
+ *
+ * Measured on the 265-phrasing corpus: 125 queries found their tool in the top
+ * three before this and 136 after, with no query losing one it had.
+ */
+function unaskedNameParts(name: string, tokens: string[]): number {
+  return name
+    .toLowerCase()
+    .split(/[._]/)
+    .filter((part) => !tokens.some((t) => part.includes(t) || t.includes(part))).length;
+}
+
 export function searchOperations(
   query: string,
   includeDeprecated = false
@@ -144,14 +172,18 @@ export function searchOperations(
 
   const tests = tokens.map(tokenTest);
   const pool = includeDeprecated ? OPERATIONS : OPERATIONS.filter((op) => !op.deprecated);
-  const scored = pool.map((op) => {
-    const haystack = `${op.name} ${op.description} ${op.path}`.toLowerCase();
-    const score = tests.reduce((n, hit) => n + (hit(haystack) ? 1 : 0), 0);
-    return { op, score };
-  }).filter((s) => s.score > 0 && s.score >= Math.ceil(tokens.length / 2));
+  const scored = pool
+    .map((op) => {
+      const haystack = `${op.name} ${op.description} ${op.path}`.toLowerCase();
+      const score = tests.reduce((n, hit) => n + (hit(haystack) ? 1 : 0), 0);
+      return { op, score, extra: unaskedNameParts(op.name, tokens) };
+    })
+    .filter((s) => s.score > 0 && s.score >= Math.ceil(tokens.length / 2));
 
   return scored
-    .sort((a, b) => b.score - a.score || a.op.name.localeCompare(b.op.name))
+    .sort(
+      (a, b) => b.score - a.score || a.extra - b.extra || a.op.name.localeCompare(b.op.name)
+    )
     .map((s) => s.op);
 }
 
