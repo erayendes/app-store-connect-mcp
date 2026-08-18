@@ -192,17 +192,42 @@ export const OTHER_CLIENT: McpClient = { id: 'other', label: 'Other / not listed
  * Walks PATH rather than shelling out to `which`: no subprocess per client on
  * every setup run, and no `shell: true`, which Node now warns about because the
  * arguments are concatenated rather than escaped.
+ *
+ * Windows needs both halves of this spelled out. Executables there are
+ * `claude.cmd` or `claude.exe`, never bare `claude`, so looking for the plain
+ * name found nothing — every CLI client read as absent and `register` reported
+ * success having written nothing. And `X_OK` is not meaningful on Windows:
+ * `accessSync` accepts it and answers about readability, so it was never the
+ * part doing the work anyway.
+ *
+ * Found by putting the suite on a Windows runner, where three registration
+ * tests failed with an empty call list.
  */
-const hasBinary = (bin: string): boolean =>
-  (process.env.PATH ?? '').split(delimiter).some((d) => {
+const hasBinary = (bin: string): boolean => {
+  const windows = process.platform === 'win32';
+  const names = windows
+    ? [
+        bin,
+        ...(process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
+          .split(';')
+          .filter(Boolean)
+          .map((ext) => bin + ext.toLowerCase()),
+      ]
+    : [bin];
+  const mode = windows ? constants.F_OK : constants.X_OK;
+
+  return (process.env.PATH ?? '').split(delimiter).some((d) => {
     if (!d) return false;
-    try {
-      accessSync(join(d, bin), constants.X_OK);
-      return true;
-    } catch {
-      return false;
-    }
+    return names.some((name) => {
+      try {
+        accessSync(join(d, name), mode);
+        return true;
+      } catch {
+        return false;
+      }
+    });
   });
+};
 
 /** An app bundle, in either place macOS puts them. */
 const hasApp = (name: string): boolean =>

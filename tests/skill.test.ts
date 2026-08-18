@@ -35,7 +35,9 @@ describe('skill installation', () => {
 
     const path = skillPathFor('claude', home)!;
     expect(path).toBe(join(home, '.claude', 'skills', 'heimdall', 'SKILL.md'));
-    const text = readFileSync(path, 'utf8');
+    // Normalised for the same reason as the frontmatter checks below: the file
+    // is copied byte for byte, so on a Windows checkout it arrives with CRLF.
+    const text = readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
     expect(text.startsWith('---\nname: heimdall\n')).toBe(true);
     // The one claim the skill exists to make; losing it would leave a document
     // that costs tokens and changes nothing.
@@ -92,7 +94,9 @@ describe('the packaged skill is loadable as a plugin', () => {
   const SKILL_FILES = ['skills/heimdall/SKILL.md', '.claude/skills/heimdall-contrib/SKILL.md'];
 
   it.each(SKILL_FILES)('keeps %s frontmatter to fields the loader accepts', (file) => {
-    const text = readFileSync(file, 'utf8');
+    // Normalised: Windows checks out with CRLF, and `^---\n` then matches
+    // nothing — the frontmatter reads as absent rather than as malformed.
+    const text = readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
     const frontmatter = /^---\n([\s\S]*?)\n---/.exec(text)![1];
     const keys = frontmatter
       .split('\n')
@@ -110,7 +114,9 @@ describe('the packaged skill is loadable as a plugin', () => {
   // this pins the cheaper rule — no `: ` in an unquoted value at all — because
   // the descriptions are long English prose and a colon is easy to reach for.
   it.each(SKILL_FILES)('keeps ": " out of %s unquoted frontmatter values', (file) => {
-    const text = readFileSync(file, 'utf8');
+    // Normalised: Windows checks out with CRLF, and `^---\n` then matches
+    // nothing — the frontmatter reads as absent rather than as malformed.
+    const text = readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
     const frontmatter = /^---\n([\s\S]*?)\n---/.exec(text)![1];
     for (const line of frontmatter.split('\n')) {
       const value = /^[a-z-]+: (.*)$/.exec(line)?.[1];
