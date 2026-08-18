@@ -206,7 +206,7 @@ The App Store Server API answers questions about individual customers rather tha
 | `ASC_READ_ONLY` | no | `true` to expose only non-mutating tools |
 | `ASC_CONFIRM_WRITES` | no | `1` / `true` to ask before every write, `0` / `false` to never ask (default: only the strong risk levels) |
 | `ASC_DRY_RUN` | no | `1` / `true`: writes never reach Apple — each mutating call returns what would have been sent (method, path, body, risk) after validation. Reads run normally |
-| `ASC_MAX_RESPONSE_CHARS` | no | Response size ceiling in characters (default 100000). Oversized lists are cut to the items that fit, with an explicit truncation note |
+| `ASC_MAX_RESPONSE_CHARS` | no | Response size ceiling in characters (default 100000). Oversized lists are cut to the items that fit, with an explicit truncation note; the full response is kept as an `asc-response://` MCP resource the client can read without spending context |
 | `ASC_KEEP_RAW_RESPONSES` | no | `1` to pass Apple's payloads through untouched — by default per-resource `links` and links-only `relationships` URL noise is stripped (~85% smaller listings) |
 | `ASC_REDACT_PII` | no | `1` to mask tester identities (`email`, `firstName`, `lastName`) on the way to the model, keeping the email domain. Off by default: listing testers is how you answer "who hasn't installed the build?", and a redacted answer sends you around this server to get it. Turn it on for shared transcripts or contractor contexts |
 | `ASC_REVIEWS_BRAND_VOICE` | no | Brand-voice guidance for `reviews_ai__draft_response`, e.g. "friendly, concise, we say 'folks'" |
@@ -552,7 +552,7 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 | `ASC_READ_ONLY` | hayır | Yalnızca değiştirmeyen araçları göstermek için `true` |
 | `ASC_CONFIRM_WRITES` | hayır | Her yazmadan önce sormak için `1` / `true`, hiç sormamak için `0` / `false` (varsayılan: yalnızca güçlü risk seviyeleri) |
 | `ASC_DRY_RUN` | hayır | `1` / `true`: yazmalar Apple'a hiç gitmez — her mutasyon çağrısı, doğrulamadan sonra gönderilecek olanı (metod, path, body, risk) döndürür. Okumalar normal çalışır |
-| `ASC_MAX_RESPONSE_CHARS` | hayır | Cevap boyutu tavanı, karakter (varsayılan 100000). Büyük listeler sığan öğelere kırpılır, açık kesme notuyla |
+| `ASC_MAX_RESPONSE_CHARS` | hayır | Cevap boyutu tavanı, karakter (varsayılan 100000). Büyük listeler sığan öğelere kırpılır, açık kesme notuyla; cevabın tamamı istemcinin bağlam harcamadan okuyabileceği bir `asc-response://` MCP kaynağı olarak saklanır |
 | `ASC_KEEP_RAW_RESPONSES` | hayır | Apple cevaplarını olduğu gibi geçirmek için `1` — varsayılan olarak kaynak-başı `links` ve links-only `relationships` URL gürültüsü atılır (listeler ~%85 küçülür) |
 | `ASC_REDACT_PII` | hayır | Modele giden test kullanıcısı kimliklerini (`email`, `firstName`, `lastName`) maskelemek için `1`; e-posta alan adı korunur. Varsayılan kapalı: "kim build'i kurmamış?" sorusunun cevabı tam da o listedir, maskeli cevap kullanıcıyı bu sunucunun dışına iter. Paylaşılan transkript veya dış ekip bağlamlarında açın |
 | `ASC_REVIEWS_BRAND_VOICE` | hayır | `reviews_ai__draft_response` için marka sesi, ör. "samimi, kısa" |
