@@ -7,6 +7,16 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### A response too big to send is no longer a response you have to fetch twice
+The size ceiling has always been right — one localization listing is 264 KB, and sending it whole crowds out the conversation it was meant to inform. What was wrong was where the rest went: nowhere. The reply carried the items that fit and a note suggesting narrower parameters, so the only route to the remainder was to run the same query again and pay for the whole listing a second time.
+
+The full response is now kept and the reply links to it: an `asc-response://` MCP resource the client reads over `resources/read`, without any of it passing through the model. The text block is unchanged — same items, same truncation note — plus one line naming the resource, so a client that ignores resources is exactly where it was.
+
+This covers the gzipped sales and finance reports for free. They were never a list to cut down, so the text-level fallback sliced the base64 mid-string and handed back a blob that could not be gunzipped. The resource holds the bytes intact; `parse=true` remains the shorter path when rows are what you wanted.
+
+Kept in memory, not in a temp file, and bounded — the twenty most recent, up to 32 MB. A file on disk would need permissions, a retention policy and a cleanup path for every way a process can die; the store lives as long as the server process, which is as long as the session that produced it. Reading an evicted URI says so rather than reporting it as unknown.
+
+
 #### The startup banner counts what the client will actually receive
 `asc-monetization (206 tools)` and a client showing 199 was the same server disagreeing with itself. The banner quoted the operations the profile *maps*; `tools/list` answers with what is served, and those differ by configuration — `asc__call` and `asc__describe` are always there and mapped nowhere, StoreKit only loads with a bundle id, `--read-only` removes the writes, and since this release `--include-deprecated` adds tools too.
 
@@ -279,6 +289,16 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Gönderilemeyecek kadar büyük cevap artık iki kez çekilmiyor
+Boyut tavanı baştan beri doğruydu — tek bir yerelleştirme listesi 264 KB ve bütün hâlde gönderildiğinde besleyeceği konuşmanın yerini kaplıyor. Yanlış olan, kalanın nereye gittiğiydi: hiçbir yere. Cevap sığan öğeleri ve "daha dar parametre kullan" notunu taşıyordu; geri kalanına ulaşmanın tek yolu aynı sorguyu tekrar koşup listenin tamamının bedelini ikinci kez ödemekti.
+
+Artık cevabın tamamı saklanıyor ve yanıt ona bağlanıyor: istemcinin `resources/read` ile okuduğu bir `asc-response://` MCP kaynağı — hiçbir kısmı modelden geçmeden. Metin bloğu aynı kaldı: aynı öğeler, aynı kesme notu, üstüne kaynağı adlandıran tek satır. Kaynakları yok sayan bir istemci tam olarak eskisi yerinde.
+
+Gzip'li satış ve finans raporları da bedavaya kapsama girdi. Onlar kısaltılacak bir liste hiç değildi; metin düzeyindeki kesme base64'ü ortasından bölüp gunzip edilemeyen bir blob geri veriyordu. Kaynak baytları bozulmadan tutuyor; satır istiyorsanız `parse=true` hâlâ kısa yol.
+
+Geçici dosyada değil bellekte ve sınırlı: en yeni yirmi cevap, 32 MB'a kadar. Diskteki bir dosya izin, saklama süresi ve sürecin ölebileceği her yol için bir temizlik yolu isterdi; bu depo sunucu süreci kadar yaşıyor, o da onu üreten oturum kadar. Elenmiş bir URI okunduğunda bunu söylüyor, "böyle bir şey yok" demiyor.
+
 
 #### Açılış banner'ı istemcinin gerçekten alacağı sayıyı yazıyor
 `asc-monetization (206 tools)` yazıp istemcide 199 görünmesi, sunucunun kendisiyle çelişmesiydi. Banner profilin *eşlediği* işlem sayısını söylüyordu; `tools/list` ise servis edileni döndürüyor ve ikisi yapılandırmaya göre ayrışıyor — `asc__call` ile `asc__describe` her zaman var ve hiçbir yere eşlenmemiş, StoreKit yalnızca bundle ID ile yükleniyor, `--read-only` yazmaları kaldırıyor, bu sürümden itibaren `--include-deprecated` de araç ekliyor.

@@ -2,7 +2,9 @@ import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
+  ListResourcesRequestSchema,
   ListToolsRequestSchema,
+  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient, STATUS_HINTS } from './core/http.js';
@@ -14,6 +16,7 @@ import {
   type McpToolDefinition,
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
+import { ResourceStore } from './core/resources.js';
 import {
   confirmWrite,
   buildWritePreview,
@@ -252,11 +255,37 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const server = new Server(
     { name: selection ? `asc-${selection.profile.name}` : 'app-store-connect-mcp', version: VERSION },
     {
-      // listChanged: the tool list can grow mid-session via asc__load.
-      capabilities: { tools: { listChanged: true } },
+      // listChanged: the tool list can grow mid-session via asc__load, and a
+      // resource appears whenever a response is too big to send whole.
+      capabilities: { tools: { listChanged: true }, resources: { listChanged: true } },
       instructions: SERVER_INSTRUCTIONS,
     }
   );
+
+  // Overflow from responses the size cap had to cut. Registered here rather
+  // than lazily so a client that lists resources at startup gets an empty
+  // list instead of "method not found".
+  const resources = new ResourceStore();
+  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+    resources: resources.list().map(({ uri, name, mimeType }) => ({
+      uri,
+      name,
+      mimeType,
+      description: 'The complete response of an earlier call, kept because it exceeded the size cap.',
+    })),
+  }));
+  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const found = resources.read(request.params.uri);
+    if (!found) {
+      // Eviction is the usual reason, and it is worth saying so: the caller
+      // asked for something that existed, not something that never did.
+      throw new Error(
+        `No such resource: ${request.params.uri}. Only the ${resources.list().length} most ` +
+          `recent oversized responses are kept; re-run the tool to produce it again.`
+      );
+    }
+    return { contents: [{ uri: found.uri, mimeType: found.mimeType, text: found.text }] };
+  });
 
   /**
    * Whether a tool mutates, so the write guard knows what to confirm. Computed
@@ -559,6 +588,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       }
 
       let result: unknown;
+      // What the size cap cut, kept so the reply can link to it.
+      let uncapped: unknown;
       let structured = false;
 
       if (name === 'asc__load' && selection) {
@@ -695,18 +726,42 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         }
         // Before the size cap, so the marker cannot be the thing that gets cut.
         result = markUntrusted(result);
+        uncapped = result;
         result = capResponseSize(result, maxResponseChars());
       }
+
+      const text = truncateText(
+        JSON.stringify(result ?? { ok: true }, null, 2),
+        maxResponseChars()
+      );
+      // Only when something was actually lost. Comparing the two serialisations
+      // catches both ways a response gets cut — rows dropped by capResponseSize
+      // and characters dropped by truncateText — without either having to
+      // report back that it fired.
+      const fullText = JSON.stringify(uncapped ?? result ?? { ok: true }, null, 2);
+      const link = fullText.length > text.length ? resources.store(name, fullText) : undefined;
 
       return {
         content: [
           {
             type: 'text' as const,
-            text: truncateText(
-              JSON.stringify(result ?? { ok: true }, null, 2),
-              maxResponseChars()
-            ),
+            text: link
+              ? `${text}\n\nThe complete response (${Math.round(fullText.length / 1024)} KB) is ` +
+                `kept as MCP resource ${link.uri}. Read it with resources/read — that returns ` +
+                `the rest without re-running the query.`
+              : text,
           },
+          ...(link
+            ? [
+                {
+                  type: 'resource_link' as const,
+                  uri: link.uri,
+                  name: link.name,
+                  mimeType: link.mimeType,
+                  description: `The untruncated result of ${name}.`,
+                },
+              ]
+            : []),
         ],
         // The text block stays either way: a client that ignores structured
         // output must still see the whole answer.
