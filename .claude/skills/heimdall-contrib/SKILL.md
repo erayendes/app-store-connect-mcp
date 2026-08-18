@@ -100,6 +100,21 @@ a parameter description, it should be one of those rather than prose. A
 parameter description is generated, so it states itself on all 23 operations
 that take that parameter.
 
+## Running the tests
+
+`npm test` is pinned to `vitest run --dir tests`, and the `--dir` is load-bearing.
+Without it vitest globs from the repository root and collects anything test-shaped
+it finds there — including a git worktree under `.claude/worktrees/`, which is how
+one checkout became 66 files and 1016 tests instead of 33 and 508. The duplicated
+files then run in parallel against each other: `cli.test.ts` spawns processes and
+writes client config, so two copies of it fight over the same paths and fail
+differently every run. That was the whole of "four files only fail when run
+together".
+
+Rebuild before any run that spawns the binary. `gate.test.ts` and the smoke tests
+execute `dist/index.js`, so switching branches without `npm run build` measures
+the other branch's code and the failures read like logic errors.
+
 ## Measuring
 
 - `npm run ax:report` — static debt across four axes.
