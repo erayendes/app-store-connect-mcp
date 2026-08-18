@@ -3805,11 +3805,7 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
        },
        "purchaseRequirement": {
         "type": "string",
-        "nullable": true,
-        "enum": [
-         "NO_COST_ASSOCIATED",
-         "IN_APP_PURCHASE"
-        ]
+        "nullable": true
        },
        "primaryLocale": {
         "type": "string",
@@ -3960,11 +3956,7 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
        },
        "purchaseRequirement": {
         "type": "string",
-        "nullable": true,
-        "enum": [
-         "NO_COST_ASSOCIATED",
-         "IN_APP_PURCHASE"
-        ]
+        "nullable": true
        },
        "primaryLocale": {
         "type": "string",
@@ -9205,8 +9197,7 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
         "enum": [
          "IOS",
          "MAC_OS",
-         "UNIVERSAL",
-         "SERVICES"
+         "UNIVERSAL"
         ]
        },
        "identifier": {
@@ -10968,8 +10959,7 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
         "enum": [
          "IOS",
          "MAC_OS",
-         "UNIVERSAL",
-         "SERVICES"
+         "UNIVERSAL"
         ]
        },
        "udid": {
@@ -26073,71 +26063,6 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
       },
       "id": {
        "type": "string"
-      },
-      "relationships": {
-       "type": "object",
-       "required": [
-        "territory"
-       ],
-       "properties": {
-        "territory": {
-         "type": "object",
-         "required": [
-          "data"
-         ],
-         "properties": {
-          "data": {
-           "type": "object",
-           "required": [
-            "type",
-            "id"
-           ],
-           "properties": {
-            "type": {
-             "type": "string",
-             "enum": [
-              "territories"
-             ]
-            },
-            "id": {
-             "type": "string"
-            }
-           },
-           "additionalProperties": false
-          }
-         },
-         "additionalProperties": false
-        },
-        "subscriptionPricePoint": {
-         "type": "object",
-         "required": [
-          "data"
-         ],
-         "properties": {
-          "data": {
-           "type": "object",
-           "required": [
-            "type",
-            "id"
-           ],
-           "properties": {
-            "type": {
-             "type": "string",
-             "enum": [
-              "subscriptionPricePoints"
-             ]
-            },
-            "id": {
-             "type": "string"
-            }
-           },
-           "additionalProperties": false
-          }
-         },
-         "additionalProperties": false
-        }
-       },
-       "additionalProperties": false
       }
      },
      "required": [
