@@ -5,7 +5,21 @@
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/). Entries are newest-first.
 
 ## English
-### [Unreleased]
+### [2.2.0] — 2026-08-18
+
+#### Apple changed the specification without changing its version
+The App Store Connect specification is still v4.4.1 and its content is not the content it was, so `npm run spec:update` — which compares the version string — reported nothing to do while sixteen things had moved. The weekly spec watch compares the file instead, which is how this surfaced.
+
+Six of the changes narrow what Apple accepts, and those are the ones to read before upgrading:
+
+- `BundleIdPlatform` no longer lists `SERVICES`.
+- `WinBackOfferPriceInlineCreate` lost its `relationships`.
+- Five list endpoints gained an `items` enum on their parameters — `appStoreVersionLocalizations`, `appCustomProductPageLocalizations`, and `searchKeywords` in three places.
+
+Three loosen: `purchaseRequirement` lost its enum in `AppEvent` and both of its request bodies, so it is an unconstrained string now. `ResponseError` was deleted as a named schema and inlined into `ErrorResponse.errors.items`, which is the same shape by another route, and `AppEvent.deepLink` gained a format.
+
+No operation was added, removed or renamed. The catalogue is unchanged at 883 tools across 13 profiles, and no tool name a config might carry has moved.
+
 
 #### A response too big to send is no longer a response you have to fetch twice
 The size ceiling has always been right — one localization listing is 264 KB, and sending it whole crowds out the conversation it was meant to inform. What was wrong was where the rest went: nowhere. The reply carried the items that fit and a note suggesting narrower parameters, so the only route to the remainder was to run the same query again and pay for the whole listing a second time.
@@ -69,6 +83,16 @@ The Agent SDK declines an elicitation on its own when no handler is given, which
 An Apple rejection used to come back as three lines of prose, which meant an agent deciding what to do next had to parse English to learn whether trying again could work. It now returns JSON: `status`, `retryable`, `appleRequestId`, `suggestedAction`, and `issues[]` carrying Apple's own `code`, `title`, `detail` and — new — `source`, which names the field or parameter that was rejected. `source` was being dropped from the type before it could reach anyone, though Apple has been sending it all along.
 
 Our own refusals stay prose. A wrong profile or a read-only block answers with hand-written multi-line guidance — the register command, the sub-profile to load — and JSON would turn that into a wall of escapes. Only a real HTTP failure gets the structured shape.
+
+
+#### A confirmation prompt names what it is about to change
+The prompt used to show what Apple's request body shows — `{"data":{"relationships":{"subscription":{"data":{"id":"6740…"}}}}}` — and a person confirming a price change was reading an opaque id and taking the tool's word for what it pointed at. It now resolves the references and names them.
+
+The resolution is one lookup driven by the specification rather than a function per type. The hand-written version had 175 of them and covered the types someone had gotten to; anything newer fell back to the id. Deriving it from `OPERATIONS` means a type Apple adds is covered the day the spec is regenerated.
+
+
+#### A relationship filter says what it takes
+`filter[app]` on a subscription listing accepts an app id, and the description said "filter by app" — true, and not the question being asked, which is *what goes in this field*. The generator now names the related type for every relationship filter, which also lets the AX audit see the difference: unhinted id filters went from 84 to 0.
 
 
 #### Confirmation is back on, for the writes that are hard to undo
@@ -288,7 +312,21 @@ Safety and usability release: every write is now schema-checked locally, preview
 - AI-assisted review tools via MCP Sampling.
 
 ## Türkçe
-### [Unreleased]
+### [2.2.0] — 2026-08-18
+
+#### Apple, spec'i sürüm numarasını değiştirmeden değiştirdi
+App Store Connect spec'i hâlâ v4.4.1 ve içeriği eski içerik değil. Sürüm dizesine bakan `npm run spec:update` "yapılacak bir şey yok" derken on altı şey yerinden oynamıştı. Haftalık spec izleyicisi dizeyi değil dosyayı karşılaştırıyor; bu yüzden ortaya çıktı.
+
+Altısı Apple'ın kabul ettiğini daraltıyor — yükseltmeden önce okunacaklar bunlar:
+
+- `BundleIdPlatform` artık `SERVICES` listelemiyor.
+- `WinBackOfferPriceInlineCreate` `relationships`'ini kaybetti.
+- Beş list endpoint'i parametrelerinde `items` enum'u kazandı: `appStoreVersionLocalizations`, `appCustomProductPageLocalizations` ve üç yerde `searchKeywords`.
+
+Üçü gevşetiyor: `purchaseRequirement`, `AppEvent`'te ve her iki istek gövdesinde enum'unu kaybetti, artık kısıtsız bir string. `ResponseError` adlı şema silinip `ErrorResponse.errors.items` içine gömüldü — başka yoldan aynı şekil. `AppEvent.deepLink` bir format kazandı.
+
+Hiçbir işlem eklenmedi, silinmedi, yeniden adlandırılmadı. Katalog 13 profilde 883 araçla aynı; bir yapılandırmanın taşıyor olabileceği hiçbir araç adı yerinden oynamadı.
+
 
 #### Gönderilemeyecek kadar büyük cevap artık iki kez çekilmiyor
 Boyut tavanı baştan beri doğruydu — tek bir yerelleştirme listesi 264 KB ve bütün hâlde gönderildiğinde besleyeceği konuşmanın yerini kaplıyor. Yanlış olan, kalanın nereye gittiğiydi: hiçbir yere. Cevap sığan öğeleri ve "daha dar parametre kullan" notunu taşıyordu; geri kalanına ulaşmanın tek yolu aynı sorguyu tekrar koşup listenin tamamının bedelini ikinci kez ödemekti.
@@ -352,6 +390,16 @@ Agent SDK, bir handler verilmediğinde elicitation'ı kendiliğinden reddediyor;
 Apple'ın reddi eskiden üç satır düz metin olarak dönüyordu; yani sonraki adıma karar veren bir ajanın, tekrar denemenin işe yarayıp yaramayacağını öğrenmek için İngilizce ayrıştırması gerekiyordu. Artık JSON dönüyor: `status`, `retryable`, `appleRequestId`, `suggestedAction` ve Apple'ın kendi `code`, `title`, `detail` alanlarını taşıyan `issues[]` — bir de yeni olarak `source`, reddedilen alanı ya da parametreyi adıyla veriyor. `source` tipten düşüyordu ve kimseye ulaşmıyordu, oysa Apple baştan beri gönderiyormuş.
 
 Kendi retlerimiz düz metin kalıyor. Yanlış profil ya da salt-okunur engeli, elle yazılmış çok satırlı yönlendirme döndürüyor — register komutu, yüklenecek alt profil — ve JSON bunu kaçış karakterleri duvarına çevirirdi. Yalnızca gerçek bir HTTP hatası yapılandırılmış biçimi alıyor.
+
+
+#### Onay istemi neyi değiştireceğini adıyla söylüyor
+İstem, Apple'ın istek gövdesinde ne varsa onu gösteriyordu — `{"data":{"relationships":{"subscription":{"data":{"id":"6740…"}}}}}` — ve bir fiyat değişikliğini onaylayan kişi anlamsız bir kimliği okuyup neyi işaret ettiği konusunda aracın sözüne güveniyordu. Artık referanslar çözülüp adlandırılıyor.
+
+Çözüm, tip başına bir fonksiyon değil, spec'in sürdüğü tek bir arama. Elle yazılmış hâlinde 175 tane vardı ve yalnızca birilerinin yetiştiği tipleri kapsıyordu; daha yenisi kimliğe düşüyordu. `OPERATIONS`'tan türetmek, Apple'ın eklediği bir tipin spec yeniden üretildiği gün kapsanması demek.
+
+
+#### İlişki filtresi neyi aldığını söylüyor
+Abonelik listesindeki `filter[app]` bir app kimliği alıyor, açıklaması ise "app'e göre filtrele" diyordu — doğru, ama sorulan soru bu değil: *bu alana ne yazılacak*. Üretici artık her ilişki filtresi için ilgili tipi adlandırıyor. AX denetimi de farkı görebiliyor: ipucusuz kimlik filtreleri 84'ten 0'a indi.
 
 
 #### Onay geri açıldı — geri alması zor yazmalar için
