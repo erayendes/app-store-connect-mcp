@@ -36,7 +36,8 @@
  * as much as the product — `--repeat` is what turns an anecdote into a ratio.
  *
  * Every profile starts with --dry-run: writes resolve fully and are never sent
- * to Apple. Reads are real.
+ * to Apple. Reads are real. The exception is `--gate`, which is the whole point
+ * of that mode — see its comment below.
  *
  * This costs money — one model session per intent per repeat. Run it nightly,
  * not per PR.
@@ -788,7 +789,13 @@ async function main(): Promise<void> {
     `\n${bold('Agent-in-the-loop eval')} — app ${APP}, profiles ${PROFILES.join(', ')}, model ${MODEL ?? 'default'}\n` +
       dim(
         `${total} real session${total === 1 ? '' : 's'} (${selected.length} intents × ${REPEAT}), ` +
-          `each capped at ${MAX_TURNS} turns. Writes are dry-run.`
+          `each capped at ${MAX_TURNS} turns. ` +
+          // The one mode where this line has to be right: --gate exists to put
+          // real writes in front of the gate, and a banner still promising
+          // dry-run is how someone points it at a production account.
+          (gateMode
+            ? 'Writes are LIVE — the gate is being measured, and every prompt is declined.'
+            : 'Writes are dry-run.')
       ) +
       (outPath ? dim(`\nAppending each session to ${outPath} as it ends.`) : '')
   );
