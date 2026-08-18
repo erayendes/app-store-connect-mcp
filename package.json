@@ -41,7 +41,7 @@
     "build": "npm run generate && tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "test": "vitest run",
+    "test": "vitest run --dir tests",
     "typecheck": "tsc --noEmit",
     "spec:update": "tsx scripts/update-spec.ts",
     "ax:report": "tsx scripts/ax-report.ts",
