@@ -10,10 +10,25 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Three operating systems because the failures differ by platform and none
+    # of them show up on the author's machine: Windows disagrees about path
+    # separators and quoting, macOS is the only one with a Keychain, and Ubuntu
+    # is what CI and most users' containers actually run.
+    #
+    # The full Node matrix runs on Ubuntu; the other two run one version each.
+    # Nine jobs to catch a platform bug that one job per platform already
+    # catches is paying for a matrix rather than a signal.
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         node: ['20', '22', '24']
+        include:
+          - os: macos-latest
+            node: '24'
+          - os: windows-latest
+            node: '24'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -70,6 +85,79 @@ jobs:
           }, 2500);
           "
 
+  # What `npm ci` in this checkout cannot tell you: whether the tarball npm
+  # actually publishes works. `files` decides what ships, and a path left out of
+  # it fails nowhere until someone installs the package — the listing macros
+  # shipped unreachable in 2.0.0 for a neighbouring reason. So: pack, install
+  # into a directory that has none of this repository, and run the binary.
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Install the packed tarball into a clean directory
+        run: |
+          set -euo pipefail
+          TARBALL="$(npm pack --silent)"
+          mkdir -p /tmp/packtest
+          mv "$TARBALL" /tmp/packtest/
+          cd /tmp/packtest
+          npm init -y >/dev/null
+          npm install --silent "./$TARBALL"
+
+      - name: The installed binary answers for itself
+        run: |
+          set -euo pipefail
+          cd /tmp/packtest
+          BIN=node_modules/.bin/asc-mcp
+          test -x "$BIN" || { echo "no executable at $BIN — check the bin field"; exit 1; }
+          "$BIN" --version
+          "$BIN" --help | grep -q 'Profiles:' || { echo "--help lost its profile list"; exit 1; }
+
+      # Booting is the part that catches a missing file: --help reads no
+      # generated output, while starting a profile loads the catalogue, the
+      # profile data and the macros.
+      - name: The installed server starts and serves a profile
+        run: |
+          set -euo pipefail
+          cd /tmp/packtest
+          node -e "
+          const { generateKeyPairSync } = require('crypto');
+          const { privateKey } = generateKeyPairSync('ec', {
+            namedCurve: 'P-256',
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
+          });
+          require('fs').writeFileSync('/tmp/pack.p8', privateKey);
+          "
+          ASC_KEY_ID=CI0000000 \
+          ASC_ISSUER_ID=00000000-0000-0000-0000-000000000000 \
+          ASC_PRIVATE_KEY_PATH=/tmp/pack.p8 \
+          node -e "
+          const { spawn } = require('child_process');
+          const p = spawn('node_modules/.bin/asc-mcp', ['app-info'], { env: process.env });
+          let out = '';
+          p.stdout.on('data', d => out += d);
+          p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'pack',version:'1'}}}) + '\n');
+          setTimeout(() => {
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'}) + '\n');
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/list'}) + '\n');
+          }, 500);
+          setTimeout(() => {
+            p.kill();
+            const listed = out.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(r => r && r.id === 2);
+            const count = listed?.result?.tools?.length ?? 0;
+            console.log('Tools served from the packed install:', count);
+            process.exit(count > 40 ? 0 : 1);
+          }, 3000);
+          "
+
   # Flags dependencies a pull request would newly introduce that carry known
   # advisories or an incompatible licence, before they reach the lockfile.
   dependency-review:
@@ -85,7 +173,7 @@ jobs:
   # without the ruleset going stale.
   ci-ok:
     if: always()
-    needs: [test, smoke, dependency-review]
+    needs: [test, smoke, pack, dependency-review]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a required job did not succeed
