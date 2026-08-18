@@ -7,6 +7,20 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### A write says which app it is about to change
+`Target:     id = 6636549188` was the one line in the confirmation prompt that says *which* thing is being written to, and it was the one line nobody could read. The references inside a request body were resolved to names; the id in the path — the target itself — never was. A destructive write with no body at all named nothing.
+
+It now reads `id = 6636549188 (Ask Quran)`. The type comes from the path segment before the placeholder rather than a table, so a nested path is covered too: `/v1/apps/{id}/relationships/betaTesters` is still an app. Path targets and body references share one lookup budget and one deadline, so this costs no extra wait on a write that already had a body.
+
+
+#### The 46 app-rooted tools take an app name or bundle ID, like the macros always did
+`pricing__get_subscription_price` has always accepted `Ask Quran`, `com.example.app` or `6636549188`. `apps__update` accepted only the number, said `id`, and answered a bundle ID with a 404 — so the same request worked or failed depending on which tool the model reached for, and nothing in the schema said which was which.
+
+The generated tools rooted at `/v1/apps/{id}` now resolve a name or bundle ID the same way, and their `id` says so. Deliberately narrow: only a path segment that literally reads `apps`, and only a value that is not already numeric — which is a value Apple was going to reject anyway. A call that would have worked cannot change meaning, and an ambiguous name is an error rather than a guess, since picking the first of two apps is the exact accident this is meant to prevent.
+
+`TOKENS_PER_TOOL` moves 264 → 268 with it. Two earlier changes had already landed without the constant following them, so the figure `asc__status` reports was 4 low per tool across the whole catalogue.
+
+
 #### `preflight__check_version` — the rejection you can find before you submit
 Every gap this catches is one field on one resource, and every one of them comes back days later: a build still processing, an export-compliance answer nobody gave, a demo account marked required and left blank, a locale with no description. The version sits in `WAITING_FOR_EXPORT_COMPLIANCE` with nothing attached explaining why, or comes back rejected for something that took ten seconds to fix.
 
@@ -337,6 +351,20 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Bir yazma, hangi uygulamayı değiştireceğini söylüyor
+`Target:     id = 6636549188` — onay isteminde *neye* yazıldığını söyleyen tek satırdı ve okunamayan tek satır oydu. İstek gövdesinin içindeki referanslar adlara çevriliyordu; yoldaki kimlik, yani hedefin kendisi, hiç çevrilmiyordu. Gövdesi olmayan yıkıcı bir yazma hiçbir şeyi adlandırmıyordu.
+
+Artık `id = 6636549188 (Ask Quran)` yazıyor. Tip, bir tablodan değil yoldaki yer tutucudan önceki parçadan geliyor; iç içe yollar da kapsanıyor: `/v1/apps/{id}/relationships/betaTesters` hâlâ bir uygulama. Yol hedefleri ve gövde referansları tek arama bütçesini ve tek süreyi paylaşıyor, yani gövdesi zaten olan bir yazmaya ek bekleme getirmiyor.
+
+
+#### Uygulama köklü 46 araç, makroların hep aldığı gibi ad veya bundle ID alıyor
+`pricing__get_subscription_price` baştan beri `Ask Quran`, `com.example.app` ya da `6636549188` kabul ediyordu. `apps__update` yalnızca sayıyı kabul ediyor, `id` diyor ve bundle ID'ye 404 cevap veriyordu — yani aynı istek, modelin hangi araca uzandığına göre çalışıyor ya da düşüyordu, ve şemada hangisinin hangisi olduğunu söyleyen hiçbir şey yoktu.
+
+`/v1/apps/{id}` köklü üretilmiş araçlar artık adı veya bundle ID'yi aynı şekilde çözüyor ve `id` bunu söylüyor. Bilerek dar tutuldu: yalnızca düz `apps` yazan bir yol parçası ve yalnızca zaten sayısal olmayan bir değer — ki bu değeri Apple zaten reddedecekti. Çalışacak bir çağrının anlamı değişemez; belirsiz bir ad da tahmin değil hata, çünkü iki uygulamadan ilkini seçmek tam da önlenmek istenen kaza.
+
+`TOKENS_PER_TOOL` da 264 → 268 oluyor. Daha önceki iki değişiklik sabit güncellenmeden inmişti; `asc__status`'un bildirdiği rakam tüm katalog boyunca araç başına 4 eksikti.
+
 
 #### `preflight__check_version` — göndermeden önce bulunabilen ret
 Bunun yakaladığı her eksik, tek bir kaynaktaki tek bir alan; ve her biri günler sonra geri dönüyor: hâlâ işlenen bir build, kimsenin vermediği bir ihracat uyumluluğu cevabı, zorunlu işaretlenip boş bırakılmış bir demo hesabı, açıklaması olmayan bir dil. Sürüm `WAITING_FOR_EXPORT_COMPLIANCE`'ta nedenini açıklayan hiçbir şey olmadan bekliyor, ya da on saniyede düzeltilecek bir şey yüzünden reddedilmiş dönüyor.

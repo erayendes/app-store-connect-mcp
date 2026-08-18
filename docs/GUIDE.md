@@ -292,6 +292,8 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 
+Naming an app works everywhere it is the target, not only in the macros: the 46 tools rooted at `/v1/apps/{id}` take a name, a bundle ID or the numeric Apple ID, and resolve it before the call. Only there, and only when the value is not already numeric — anywhere else an id is an id.
+
 Two of them do something the raw tools cannot do at all rather than merely faster: `listing__upload_screenshot` performs Apple's reserve → upload → commit sequence (the raw tool only reserves a slot and moves no bytes), and `analytics__get_report` downloads the report, where the raw chain ends holding a link.
 
 `pricing__equalize_price` is a REVENUE-level write covering about 175 countries. Run it under `--dry-run` first: it returns the full derived table before anything is sent.
@@ -631,6 +633,8 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+
+Bir uygulamayı adıyla vermek yalnızca makrolarda değil, hedef olduğu her yerde çalışır: `/v1/apps/{id}` köklü 46 araç ad, bundle ID ya da sayısal Apple ID alır ve çağrıdan önce çözer. Yalnızca orada ve yalnızca değer zaten sayısal değilse — başka her yerde kimlik kimliktir.
 
 Bunlardan ikisi ham araçların daha hızlı yaptığı bir şeyi değil, hiç yapamadığı bir şeyi yapıyor: `listing__upload_screenshot` Apple'ın rezerve et → yükle → onayla dizisini yürütüyor (ham araç yalnızca yer ayırıyor, tek bayt taşımıyor) ve `analytics__get_report` raporu indiriyor — ham zincir elinde bir bağlantıyla bitiyor.
 

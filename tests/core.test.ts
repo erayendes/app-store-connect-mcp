@@ -331,6 +331,60 @@ describe('ToolRegistry', () => {
     expect(registry.unloadedDomains()).not.toContain('apps');
   });
 
+  // The macros have always taken an app the way a person says one; the
+  // generated tools took only the number, so the same request worked or 404'd
+  // depending on which tool the model reached for.
+  describe('an app named where an Apple ID belongs', () => {
+    // Both entry points, because resolveApp calls `get` and the execute path
+    // itself goes through `request`.
+    const spy = (data: unknown) => {
+      const paths: string[] = [];
+      const record = async (path: string) => {
+        paths.push(path);
+        return data;
+      };
+      return {
+        paths,
+        http: {
+          get: record,
+          request: (_method: string, path: string) => record(path),
+        } as never,
+      };
+    };
+
+    it('resolves a bundle ID on an app-rooted path', async () => {
+      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const { paths, http } = spy({ data: [{ id: '6636549188', attributes: { name: 'Ask Quran' } }] });
+      await registry.execute('apps__get', { id: 'com.milowda.askquranai' }, http);
+      expect(paths[0]).toBe('/v1/apps');
+      expect(paths[1]).toBe('/v1/apps/6636549188');
+    });
+
+    it('spends no lookup on a value Apple would have accepted', async () => {
+      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const { paths, http } = spy({ data: { id: '6636549188' } });
+      await registry.execute('apps__get', { id: '6636549188' }, http);
+      expect(paths).toEqual(['/v1/apps/6636549188']);
+    });
+
+    it('leaves a non-app id alone, however unlike a number it looks', async () => {
+      // Most Apple ids are UUIDs. Resolving those as app names would turn a
+      // working call into a search that finds nothing.
+      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const { paths, http } = spy({ data: { id: 'x' } });
+      await registry.execute('builds__get', { id: '8f0c-not-a-number' }, http);
+      expect(paths).toEqual(['/v1/builds/8f0c-not-a-number']);
+    });
+
+    it('says so in the schema, since a tool nobody knows takes a name gets none', () => {
+      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const appsGet = registry.listTools().find((t) => t.name === 'apps__get')!;
+      const buildsGet = registry.listTools().find((t) => t.name === 'builds__get')!;
+      expect((appsGet.inputSchema.properties as any).id.description).toContain('bundle ID');
+      expect((buildsGet.inputSchema.properties as any).id.description).toBe('ID from the matching list call.');
+    });
+  });
+
   it('refuses to execute a mutating tool in read-only mode', async () => {
     const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
     const readOnly = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });

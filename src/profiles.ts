@@ -242,16 +242,19 @@ export function manualToolsFor(selection: ProfileSelection): string[] {
 /**
  * Rough tokens a tool definition costs in context — for size hints only.
  * Measured by `npm run generate`'s token report over the full generated
- * corpus: 258,877 definition tokens / 982 tools = 264 avg. Re-measure and
+ * corpus: 263,040 definition tokens / 982 tools = 268 avg. Re-measure and
  * update this after any change to `toMcpTool` or the generator. It has moved
- * four times and every move was paid for: shortening the repeated `next_url`
+ * five times and every move was paid for: shortening the repeated `next_url`
  * and `id` descriptions took it 225 to 213, the sparse-fieldset params
- * (fields[...]) took it back to 254, and giving `id` a description again
- * (AI-217) to 264 — because on a delete or a relationship read `id` is the
- * only parameter, and an undescribed one is a tool that documents nothing
- * about its input.
+ * (fields[...]) took it back to 254, giving `id` a description again (AI-217)
+ * to 264 — because on a delete or a relationship read `id` is the only
+ * parameter, and an undescribed one is a tool that documents nothing about its
+ * input — and telling the 46 app-rooted tools that their `id` also takes a name
+ * or bundle ID to 268. Two of those moves had already landed without the
+ * constant following them; it is 4 too low across the whole catalogue, which is
+ * most of what `asc__status` reports.
  */
-export const TOKENS_PER_TOOL = 264;
+export const TOKENS_PER_TOOL = 268;
 
 /** How many tools a selection serves, meta tools included. */
 export function toolCountFor(selection: ProfileSelection): number {

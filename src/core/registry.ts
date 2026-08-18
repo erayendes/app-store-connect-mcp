@@ -6,6 +6,7 @@ import type { AscHttpClient, Query } from './http.js';
 import { OPERATIONS } from '../generated/operations.js';
 import { BODY_SCHEMAS } from '../generated/body-schemas.js';
 import { AscApiError } from './errors.js';
+import { resolveApp } from './resolve-app.js';
 import { validateBody } from './validate.js';
 import type { RiskLevel } from './risk.js';
 import {
@@ -173,6 +174,14 @@ const ANNOUNCED_RISKS: ReadonlySet<RiskLevel> = new Set<RiskLevel>([
   'access',
 ]);
 
+/**
+ * Whether this operation's `{id}` is an app's — the one path parameter the
+ * server will resolve from a name or bundle ID.
+ */
+function appRootedId(op: { path: string }): boolean {
+  return /^\/v\d+\/apps\/\{id\}/.test(op.path);
+}
+
 function describeOperation(op: Operation): string {
   // The endpoint is appended so the model can reason about REST semantics
   // (and so a human reading the tool list can cross-reference Apple's docs).
@@ -209,7 +218,18 @@ export function toMcpTool(
           // name does not. See task-7-report.md and AI-217.
           // Every word here is paid 678 times, so it says the one thing the
           // parameter name cannot: where the value comes from.
-          { type: 'string', description: 'ID from the matching list call.' }
+          //
+          // The 46 app-rooted operations say more, because they accept more:
+          // the server resolves a name or bundle ID here (see resolvePathValue),
+          // and a tool that takes one without saying so is a tool nobody hands
+          // one to.
+          appRootedId(op)
+          ? {
+              type: 'string',
+              description:
+                'App name, bundle ID (com.example.app) or numeric Apple ID.',
+            }
+          : { type: 'string', description: 'ID from the matching list call.' }
         : { type: 'string', description: `Path parameter "${param}".` };
     required.push(param);
   }
@@ -381,6 +401,35 @@ export class ToolRegistry {
     return ALL_DOMAINS.filter((d) => !loaded.has(d));
   }
 
+  /**
+   * An app named where an Apple ID belongs.
+   *
+   * The macros have always taken an app the way a person says one — a name, a
+   * bundle ID, the numeric id — and the generated tools took only the number.
+   * So the same request either worked or 404'd depending on which tool the
+   * model reached for, and the model had no way to know: `apps__update` says
+   * "id", and `com.example.app` is a perfectly reasonable thing to put there.
+   *
+   * Narrow on purpose. Only a path segment that literally reads `apps` and only
+   * a value that is not already numeric, which is a value Apple was going to
+   * reject anyway — so this converts a certain failure into a lookup, and never
+   * changes the meaning of a call that would have worked. An ambiguous name is
+   * an error rather than a guess, because picking the first of two apps is the
+   * exact accident this is meant to prevent.
+   */
+  private async resolvePathValue(
+    http: AscHttpClient,
+    path: string,
+    param: string,
+    value: string
+  ): Promise<string> {
+    if (/^\d+$/.test(value)) return value;
+    const segments = path.split('/');
+    const owner = segments[segments.indexOf(`{${param}}`) - 1];
+    if (owner !== 'apps') return value;
+    return (await resolveApp(http, value)).id;
+  }
+
   async execute(
     name: string,
     args: Record<string, unknown>,
@@ -438,7 +487,10 @@ export class ToolRegistry {
       if (value === undefined || value === null || value === '') {
         throw new AscApiError(`Missing required parameter "${param}" for ${name}.`, 0);
       }
-      path = path.replace(`{${param}}`, encodeURIComponent(String(value)));
+      path = path.replace(
+        `{${param}}`,
+        encodeURIComponent(await this.resolvePathValue(http, op.path, param, String(value)))
+      );
     }
 
     // An argument nobody recognises used to be dropped without a word, and the

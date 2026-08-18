@@ -139,6 +139,48 @@ describe('reference resolution in a preview', () => {
   });
 });
 
+describe('the preview names the thing it is about to write to', () => {
+  const named = (attributes: Record<string, unknown>) => ({
+    get: async () => ({ data: { attributes } }),
+  });
+
+  // The one line that says *which* app is being changed was the one line
+  // nobody could read: "Target: id = 6636549188".
+  it('resolves the path id, not only the references in the body', async () => {
+    const preview = await buildWritePreview(
+      'apps__update',
+      { method: 'PATCH', path: '/v1/apps/{id}', risk: 'public' },
+      { id: '6636549188', body: { data: { type: 'apps', id: '6636549188', attributes: {} } } },
+      undefined,
+      named({ name: 'Ask Quran' })
+    );
+    expect(preview.message).toContain('Target:     id = 6636549188 (Ask Quran)');
+  });
+
+  it('names it on a write that carries no body at all', async () => {
+    const preview = await buildWritePreview(
+      'apps__beta_testers__remove',
+      { method: 'DELETE', path: '/v1/apps/{id}/relationships/betaTesters', risk: 'destructive' },
+      { id: '6636549188' },
+      undefined,
+      named({ name: 'Ask Quran' })
+    );
+    expect(preview.message).toContain('(Ask Quran)');
+  });
+
+  it('falls back to the bare id when the lookup says nothing', async () => {
+    const preview = await buildWritePreview(
+      'apps__update',
+      { method: 'PATCH', path: '/v1/apps/{id}', risk: 'public' },
+      { id: '6636549188' },
+      undefined,
+      { get: async () => ({ data: {} }) }
+    );
+    expect(preview.message).toContain('Target:     id = 6636549188');
+    expect(preview.message).not.toContain('(');
+  });
+});
+
 describe('buildWritePreview', () => {
   const op = {
     method: 'POST',
