@@ -74,6 +74,8 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 
 Register only the profiles your project uses. What each one covers is in the [profile table](docs/GUIDE.md#register-profiles); adding and removing them later is [here](docs/GUIDE.md#adding-and-removing-later).
 
+Not sure which? [Starter packs](docs/GUIDE.md#starter-packs) answers it by role — a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics` — and [examples/](examples/README.md) works each one through, including the part that usually goes wrong.
+
 There is nothing to memorise — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches everything, including what isn't loaded, and tells you which profile it lives in.
 
 #### Risky writes ask first
@@ -93,6 +95,7 @@ Heimdall is not a Fastlane alternative — it is the interactive half. Keep [Fas
 ### Documentation
 
 - [Guide](docs/GUIDE.md) — API key, install, setup wizard, profiles, configuration, examples
+- [Examples](examples/README.md) — starter packs by role, seven worked scenarios, and a GitHub Actions workflow
 - [Security](.github/SECURITY.md) — credential handling, safety modes, pre-install audit, vulnerability reporting
 - [Support](.github/SUPPORT.md) — getting help, troubleshooting
 - [Changelog](docs/CHANGELOG.md) — release history
@@ -176,6 +179,8 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 
 Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığı [profil tablosunda](docs/GUIDE.md#profilleri-kaydedin), sonradan ekleme ve çıkarma [burada](docs/GUIDE.md#sonradan-ekleme-ve-çıkarma).
 
+Hangisi olduğundan emin değil misiniz? [Başlangıç paketleri](docs/GUIDE.md#başlangıç-paketleri) bunu role göre cevaplıyor — yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics` — ve [examples/](examples/README.md) her birini, genelde nerede ters gittiğiyle birlikte, baştan sona işliyor.
+
 Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun; `asc__search_tools` o an yüklü olmayanlar dahil hepsini arar ve hangi profilde olduğunu söyler.
 
 #### Riskli yazmalar önce sorar
@@ -195,6 +200,7 @@ Heimdall bir Fastlane alternatifi değil, interaktif yarısıdır. Tekrarlanabil
 ### Dokümantasyon
 
 - [Rehber](docs/GUIDE.md) — API anahtarı, kurulum, setup sihirbazı, profiller, yapılandırma, örnekler
+- [Örnekler](examples/README.md) — role göre başlangıç paketleri, yedi işlenmiş senaryo ve bir GitHub Actions workflow'u
 - [Güvenlik](.github/SECURITY.md) — kimlik bilgisi yönetimi, güvenlik modları, kurulum öncesi denetim, açık bildirimi
 - [Destek](.github/SUPPORT.md) — yardım alma, sorun giderme
 - [Değişiklik günlüğü](docs/CHANGELOG.md) — sürüm geçmişi

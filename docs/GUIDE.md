@@ -93,6 +93,28 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 
 Every profile also carries the **core set** — `apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`. So whichever profile you install can look up an app ID and point you to a tool it doesn't have.
 
+#### Starter packs
+
+"Which profile do I install?" answered by role rather than by browsing the table above. Every one of these also carries the core set, so it can find an app ID and point you at a tool it does not have.
+
+| You are | Install | Tools |
+|:--|:--|--:|
+| Release manager | `distribution` + `app-info` | 187 |
+| ASO / marketing | `marketing` + `analytics` | 123 |
+| QA / TestFlight | `testflight` + `access` | 118 |
+| Monetization | `monetization` | 206 |
+| Game developer | `game-center` + `distribution` | 312 |
+| Customer support | `monetization:storekit` | 18 |
+| Build & signing | `provisioning` + `xcode-cloud` | 100 |
+
+```bash
+npx -y @erayendes/asc-mcp register distribution app-info
+```
+
+Start narrower than feels safe. Nothing is lost by skipping a profile: `asc__call` reaches any operation in the catalogue whether it is loaded or not, and `asc__search_tools` names the profile that carries it. Adding one later is a line of config, while every tool you loaded and never called is paid for in every session.
+
+Worked examples for each of these — with the part that usually goes wrong — are in [examples/](../examples/README.md).
+
 #### Pick per project
 
 MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (122 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
@@ -441,6 +463,28 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
 
 Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, dört ortak ilişki listelemesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`. Yani hangi profili kurarsanız kurun, bir uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini size gösterebilir.
+
+#### Başlangıç paketleri
+
+"Hangi profili kurayım?" sorusunun, yukarıdaki tabloyu taramak yerine role göre cevabı. Bunların hepsi çekirdek seti de taşır; yani bir app ID bulabilir ve sahip olmadığı bir aracı size gösterebilir.
+
+| Siz | Kurun | Araç |
+|:--|:--|--:|
+| Yayın yöneticisi | `distribution` + `app-info` | 187 |
+| ASO / pazarlama | `marketing` + `analytics` | 123 |
+| QA / TestFlight | `testflight` + `access` | 118 |
+| Monetizasyon | `monetization` | 206 |
+| Oyun geliştirici | `game-center` + `distribution` | 312 |
+| Müşteri desteği | `monetization:storekit` | 18 |
+| Build ve imzalama | `provisioning` + `xcode-cloud` | 100 |
+
+```bash
+npx -y @erayendes/asc-mcp register distribution app-info
+```
+
+Güvenli hissettirenden dar başlayın. Bir profili atlamakla hiçbir şey kaybetmezsiniz: `asc__call` katalogdaki her işleme yüklü olsun olmasın ulaşır, `asc__search_tools` da onu taşıyan profili söyler. Sonradan eklemek bir satır yapılandırma; yükleyip hiç çağırmadığınız her aracın bedeli ise her oturumda ödenir.
+
+Her biri için — ve genelde nerede ters gittiğiyle birlikte — çalışılmış örnekler: [examples/](../examples/README.md).
 
 #### Projeye göre seçin
 
