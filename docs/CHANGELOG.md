@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### StoreKit reads stop promising fields they do not return
+`storekit__get_transaction_info` advertised "the decoded details of a single transaction: product, price, dates, ownership type and revocation state" and returns one signed JWS string. The history, refund and entitlement tools do the same with whole arrays of them. A caller planning around five named fields receives `header.payload.signature`, nothing crashes, and there is no way to tell whether the wrong tool was called.
+
+The descriptions now say the payloads are signed and that the caller verifies and decodes them, with the App Store Server Library's `SignedDataVerifier` named once rather than on all four — repeating it put the word "certificates" into four descriptions and took the top of "create certificate" off `certificates.create`.
+
+Returning the sealed envelope stays the behaviour. `jwsClaim` could open it in two lines, and those are the wrong two lines: it base64-decodes without checking the signature, which is presenting unverified data as fact. Decoding properly needs Apple's roots and a decision about what happens when verification fails, which is MIL-218 — now named in a code comment so the next reader knows the envelope is the interim answer rather than the intended one.
+
+
 #### A price list that says it carries no prices
 `subscriptions.prices.list` was described as showing "what a subscription costs today" and returns rows with no amount and no currency — the number lives in the price point, one `include` away. A live eval session believed the description: it called the tool fifteen times, gave up, pulled all 842 price *points* instead, and reported "2.99 – 35 TRY" as the current price. The real answer was a single number.
 
@@ -247,6 +255,14 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### StoreKit okumaları döndürmedikleri alanları vaat etmeyi bıraktı
+`storekit__get_transaction_info` kendini "tek bir işlemin çözülmüş detayları: ürün, fiyat, tarihler, sahiplik tipi ve iptal durumu" diye tanıtıyor ve imzalı tek bir JWS metni döndürüyor. Geçmiş, iade ve yetki araçları aynısını dizilerle yapıyor. Beş isimli alana göre plan yapan bir çağıran `header.payload.signature` alıyor, hiçbir şey çökmüyor ve yanlış aracı çağırıp çağırmadığını anlamanın yolu yok.
+
+Açıklamalar artık yüklerin imzalı olduğunu ve çözmenin çağırana ait olduğunu söylüyor. App Store Server Library'nin `SignedDataVerifier`'ı dördünde değil bir kez adlandırılıyor — dördüne birden yazmak "certificates" kelimesini dört açıklamaya sokup "create certificate" sorgusunun birinciliğini `certificates.create`'ten aldı.
+
+Mühürlü zarfı döndürmek davranış olarak kalıyor. `jwsClaim` onu iki satırda açabilir ve o iki satır yanlış olanlar: imzayı kontrol etmeden base64 çözüyor, yani doğrulanmamış veriyi gerçek gibi sunuyor. Düzgün çözmek Apple'ın kök sertifikalarını ve doğrulama başarısız olunca ne olacağına dair bir kararı gerektiriyor — o da MIL-218. Bir kod yorumu artık onu adıyla anıyor, ki sonraki okuyan zarfın geçici cevap olduğunu bilsin.
+
 
 #### Fiyat taşımadığını söyleyen bir fiyat listesi
 `subscriptions.prices.list`, "bir aboneliğin bugün ne kadara mal olduğunu" gösterdiği söylenerek tarif ediliyordu ve tutar da para birimi de olmayan satırlar döndürüyor — sayı bir `include` ötedeki price point'te. Canlı bir değerlendirme oturumu açıklamaya inandı: aracı on beş kez çağırdı, pes etti, onun yerine 842 fiyat *noktasının* tamamını çekti ve güncel fiyat olarak "2,99 – 35 TRY" raporladı. Gerçek cevap tek bir sayıydı.

@@ -73,8 +73,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_transaction_history',
     description:
       "Get a customer's full purchase history from any one of their transaction IDs. " +
-      'Supports filtering by product type, product ID and date range. ' +
-      '[App Store Server API]',
+      'Supports filtering by product type, product ID and date range. Returns Apple\'s ' +
+      'SIGNED transactions (JWS strings), not decoded fields — verify and decode them ' +
+      'before reading. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -104,8 +105,10 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
   {
     name: 'storekit__get_transaction_info',
     description:
-      'Get the decoded details of a single transaction: product, price, dates, ' +
-      'ownership type and revocation state. [App Store Server API]',
+      'Get a single transaction: product, price, dates, ownership type and revocation ' +
+      'state — as Apple\'s SIGNED payload (a JWS string), not as decoded fields. ' +
+      "Verify and decode it with the App Store Server Library's SignedDataVerifier, or " +
+      "any JWS verifier configured with Apple's roots. [App Store Server API]",
     inputSchema: {
       type: 'object',
       properties: {
@@ -119,8 +122,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_subscription_statuses',
     description:
       "Get the status of every subscription a customer holds, including expiry date, " +
-      'auto-renew state, billing retry and grace period. Use this for entitlement ' +
-      'checks. [App Store Server API]',
+      'auto-renew state, billing retry and grace period. Apple returns those fields ' +
+      'inside SIGNED payloads (JWS strings) on each item, so verify and decode them ' +
+      'before reading. Use this for entitlement checks. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -143,8 +147,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__check_entitlement',
     description:
       'Answer the single question "does this customer currently have access?". ' +
-      'Returns a boolean plus the active subscriptions backing it. ' +
-      'Optionally narrow to one product ID. [App Store Server API]',
+      'Returns a boolean plus the active subscriptions backing it — those come back as ' +
+      'Apple\'s SIGNED payloads (JWS strings), so verify and decode them before reading ' +
+      'any field. Optionally narrow to one product ID. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -317,6 +322,12 @@ export class StoreKitService {
         return this.transactionHistory(client, args);
 
       case 'storekit__get_transaction_info': {
+        // The sealed envelope, on purpose. `jwsClaim` above can open one in two
+        // lines, and those are the wrong two lines: it splits on `.` and
+        // base64-decodes without checking the signature, which is presenting
+        // unverified data as fact. Handing the JWS back is the honest of the
+        // two behaviours until MIL-218 threads Apple's roots through and
+        // decides what happens when verification fails.
         const res = await client.getTransactionInfo(args.transaction_id);
         return { signedTransactionInfo: res.signedTransactionInfo };
       }
