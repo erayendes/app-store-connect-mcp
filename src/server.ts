@@ -42,6 +42,7 @@ import {
 } from './tools/pricing.js';
 import { SCREENSHOT_TOOLS, executeScreenshotTool } from './tools/screenshots.js';
 import { PREFLIGHT_TOOLS, PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
+import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool } from './tools/release.js';
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
@@ -248,7 +249,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * this cost" on a server built to answer questions would be the wrong kind of
    * safe.
    */
-  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS].filter(
+  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].filter(
     (t) =>
       wantsFamily(`${t.name.split('__')[0]}__`) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
@@ -257,7 +258,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /** The macros that declare an outputSchema, so their result can be sent structured. */
   const READ_MACRO_NAMES = new Set(
-    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
   );
 
   const server = new Server(
@@ -303,7 +304,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS].find((t) => t.name === name);
+    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].find((t) => t.name === name);
     if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
@@ -545,7 +546,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         // never going to show.
         const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
-          : METADATA_I18N_WRITE_TOOLS.has(name)
+          : RELEASE_TOOL_NAMES.has(name)
+            ? // Handing a version to Apple is the `release` level its three raw
+              // calls carry; doing them in one go does not make it lighter.
+              'release'
+            : METADATA_I18N_WRITE_TOOLS.has(name)
             ? // One call rewrites the store listing in every language it names.
               // The raw tool behind it is `public` per operation; doing forty
               // at once is not forty times as reversible.
@@ -703,6 +708,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? await executePreflightTool(name, args, { http })
           : METADATA_I18N_WRITE_TOOLS.has(name)
           ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
+          : RELEASE_TOOL_NAMES.has(name)
+          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple

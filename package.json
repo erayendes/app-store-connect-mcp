@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "Heimdall — MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2). 887 tools across 13 profiles, generated from Apple's official OpenAPI spec, plus review triage and reply drafting that runs on your own model, and confirm-before-write safety. Works with Claude, Codex, Cursor and any MCP client.",
+  "description": "Heimdall — MCP server for the Apple App Store Connect API and App Store Server API (StoreKit 2). 888 tools across 13 profiles, generated from Apple's official OpenAPI spec, plus review triage and reply drafting that runs on your own model, and confirm-before-write safety. Works with Claude, Codex, Cursor and any MCP client.",
   "author": {
     "name": "Eray Endeş",
     "email": "erayendes@gmail.com",

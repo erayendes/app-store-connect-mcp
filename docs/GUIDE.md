@@ -78,7 +78,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 133 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 134 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
@@ -99,11 +99,11 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 190 |
+| Release manager | `distribution` + `app-info` | 191 |
 | ASO / marketing | `marketing` + `analytics` | 123 |
 | QA / TestFlight | `testflight` + `access` | 118 |
 | Monetization | `monetization` | 206 |
-| Game developer | `game-center` + `distribution` | 315 |
+| Game developer | `game-center` + `distribution` | 316 |
 | Customer support | `monetization:storekit` | 18 |
 | Build & signing | `provisioning` + `xcode-cloud` | 100 |
 
@@ -321,6 +321,7 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | app → group → subscription → price points | `pricing__get_subscription_price` — one country or, with the territory omitted, all ~175 grouped by price | `monetization:subscription-pricing` |
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
+| open a submission, add the version, hand it over — three calls in that order | `release__submit` — refuses what the pre-flight blocks | `distribution:submission` |
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
 | pasting a translation into each locale by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
@@ -466,7 +467,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 133 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 134 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
@@ -487,11 +488,11 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 190 |
+| Yayın yöneticisi | `distribution` + `app-info` | 191 |
 | ASO / pazarlama | `marketing` + `analytics` | 123 |
 | QA / TestFlight | `testflight` + `access` | 118 |
 | Monetizasyon | `monetization` | 206 |
-| Oyun geliştirici | `game-center` + `distribution` | 315 |
+| Oyun geliştirici | `game-center` + `distribution` | 316 |
 | Müşteri desteği | `monetization:storekit` | 18 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 100 |
 
@@ -702,6 +703,7 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | app → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da territory verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
+| submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` — ön denetimin blokladığını reddeder | `distribution:submission` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
