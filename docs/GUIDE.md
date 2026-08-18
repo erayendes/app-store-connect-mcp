@@ -287,10 +287,24 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
+| two versions × every locale, compared by hand | `listing__diff_metadata` — only the fields that differ, plus locales added or dropped | `distribution:version` |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+| listing apps, then a versions call each, then reading App Store states | `asc__account_status` — every app, what is live, what is in flight, and whether the next move is yours or Apple's | core, so every profile |
+
+### Prompts
+
+Three workflows are offered as MCP prompts, which clients surface as slash commands. They carry the order of the calls rather than a second description of them — the sequence is what a model otherwise invents differently each time.
+
+| Prompt | What it runs | Offered when |
+|:--|:--|:--|
+| `release-readiness` | `preflight__check_version`, then `listing__diff_metadata`, ending in GO or NO-GO | `distribution:version` |
+| `review-triage` | briefing → triage → a drafted reply per review, none of them sent | `marketing:customer-review` |
+| `price-check` | worldwide prices in one call, then what looks unintended | `monetization:subscription-pricing` |
+
+A prompt only appears when every tool it names is served, so a narrowed profile or `--read-only` removes it the same way it removed the tools. Each one stops at the write: the submission, the reply and the price change are the user's to make.
 
 Naming an app works everywhere it is the target, not only in the macros: the 46 tools rooted at `/v1/apps/{id}` take a name, a bundle ID or the numeric Apple ID, and resolve it before the call. Only there, and only when the value is not already numeric — anywhere else an id is an id.
 
@@ -629,10 +643,24 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
+| iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+| uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | çekirdek, yani her profilde |
+
+### Prompt'lar
+
+Üç iş akışı MCP prompt'u olarak sunuluyor; istemciler bunları eğik çizgi komutu olarak gösteriyor. Araçların ikinci bir tarifini değil, çağrıların sırasını taşıyorlar — model o sırayı kendi kurduğunda her seferinde başka türlü kuruyor.
+
+| Prompt | Ne çalıştırır | Ne zaman sunulur |
+|:--|:--|:--|
+| `release-readiness` | `preflight__check_version`, ardından `listing__diff_metadata`, sonuçta GO ya da NO-GO | `distribution:version` |
+| `review-triage` | brifing → triyaj → yorum başına taslak yanıt, hiçbiri gönderilmeden | `marketing:customer-review` |
+| `price-check` | tek çağrıda dünya fiyatları, ardından istenmemiş görünenler | `monetization:subscription-pricing` |
+
+Bir prompt yalnızca adını andığı her araç sunuluyorsa görünür; daraltılmış bir profil ya da `--read-only`, araçları nasıl kaldırıyorsa prompt'u da öyle kaldırır. Her biri yazma işleminin önünde durur: gönderim, yanıt ve fiyat değişikliği kullanıcının kararıdır.
 
 Bir uygulamayı adıyla vermek yalnızca makrolarda değil, hedef olduğu her yerde çalışır: `/v1/apps/{id}` köklü 46 araç ad, bundle ID ya da sayısal Apple ID alır ve çağrıdan önce çözer. Yalnızca orada ve yalnızca değer zaten sayısal değilse — başka her yerde kimlik kimliktir.
 

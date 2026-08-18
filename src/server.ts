@@ -2,6 +2,8 @@ import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
+  GetPromptRequestSchema,
+  ListPromptsRequestSchema,
   ListResourcesRequestSchema,
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
@@ -35,6 +37,9 @@ import {
 } from './tools/pricing.js';
 import { SCREENSHOT_TOOLS, executeScreenshotTool } from './tools/screenshots.js';
 import { PREFLIGHT_TOOLS, PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
+import { METADATA_TOOLS, METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
+import { ACCOUNT_TOOLS, ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
+import { availablePrompts } from './prompts.js';
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
@@ -44,6 +49,7 @@ import {
   manualToolsFor,
   deprecatedOperationsFor,
   operationsFor,
+  CORE_MANUAL_TOOLS,
   profilesForOperation,
   registerCommand,
   removedProfileMessage,
@@ -213,8 +219,13 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   // Which hand-written tool families this selection carries. The curation
   // sheet decides — a sub-profile listing `storekit__*` is what turns them on,
-  // so unchecking that sub-profile turns them off with no second switch.
-  const manualTools = selection ? new Set(manualToolsFor(selection)) : undefined;
+  // so unchecking that sub-profile turns them off with no second switch. The
+  // core rows are in every selection by definition, and leaving them out here
+  // is how a core macro ships unreachable from every profile-mode server while
+  // the sheet says otherwise.
+  const manualTools = selection
+    ? new Set([...manualToolsFor(selection), ...CORE_MANUAL_TOOLS])
+    : undefined;
   const wantsFamily = (prefix: string): boolean =>
     manualTools ? [...manualTools].some((t) => t.startsWith(prefix)) : true;
 
@@ -241,7 +252,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * this cost" on a server built to answer questions would be the wrong kind of
    * safe.
    */
-  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS].filter(
+  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS].filter(
     (t) =>
       wantsFamily(`${t.name.split('__')[0]}__`) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
@@ -250,7 +261,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /** The macros that declare an outputSchema, so their result can be sent structured. */
   const READ_MACRO_NAMES = new Set(
-    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
   );
 
   const server = new Server(
@@ -258,7 +269,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     {
       // listChanged: the tool list can grow mid-session via asc__load, and a
       // resource appears whenever a response is too big to send whole.
-      capabilities: { tools: { listChanged: true }, resources: { listChanged: true } },
+      capabilities: {
+        tools: { listChanged: true },
+        resources: { listChanged: true },
+        prompts: {},
+      },
       instructions: SERVER_INSTRUCTIONS,
     }
   );
@@ -296,7 +311,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS].find((t) => t.name === name);
+    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS].find((t) => t.name === name);
     if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
@@ -461,6 +476,43 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   };
 
   toolCounts.set(server, () => servedTools().length);
+
+  /**
+   * Workflows, offered only where every tool they name is served. Built from
+   * the live tool list rather than from the profile, so `--read-only` and a
+   * narrowed sub-profile both remove a prompt the same way its tools went.
+   */
+  const promptsFor = () => availablePrompts(new Set(servedTools().map((t) => t.name)));
+
+  server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+    prompts: promptsFor().map(({ name, description, arguments: args }) => ({
+      name,
+      description,
+      arguments: args,
+    })),
+  }));
+
+  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    const wanted = request.params.name;
+    const prompt = promptsFor().find((p) => p.name === wanted);
+    if (!prompt) {
+      const offered = promptsFor().map((p) => p.name);
+      throw new Error(
+        `Unknown prompt "${wanted}". This server offers: ${offered.join(', ') || 'none — its tools are in another profile'}.`
+      );
+    }
+    const args = (request.params.arguments ?? {}) as Record<string, string>;
+    const missing = prompt.arguments.filter((a) => a.required && !String(args[a.name] ?? '').trim());
+    if (missing.length) {
+      throw new Error(`"${wanted}" needs ${missing.map((a) => a.name).join(', ')}.`);
+    }
+    return {
+      description: prompt.description,
+      messages: [
+        { role: 'user' as const, content: { type: 'text' as const, text: prompt.body(args) } },
+      ],
+    };
+  });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: servedTools() }));
 
@@ -683,6 +735,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? await executeAnalyticsTool(name, args, { http })
           : PREFLIGHT_TOOL_NAMES.has(name)
           ? await executePreflightTool(name, args, { http })
+          : METADATA_TOOL_NAMES.has(name)
+          ? await executeMetadataTool(name, args, { http })
+          : ACCOUNT_TOOL_NAMES.has(name)
+          ? await executeAccountTool(name, args, { http })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
