@@ -4,7 +4,12 @@ import { pathToFileURL } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadConfig } from './core/config.js';
 import { ConfigError } from './core/errors.js';
-import { createServer, createRemovedProfileServer, VERSION } from './server.js';
+import {
+  createServer,
+  createRemovedProfileServer,
+  servedToolCount,
+  VERSION,
+} from './server.js';
 import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor } from './profiles.js';
@@ -158,10 +163,16 @@ async function main(): Promise<void> {
   await server.connect(transport);
 
   // stderr is safe: stdout carries the MCP protocol itself.
+  //
+  // The count is what tools/list will actually answer, not what the profile
+  // maps. Those differ by configuration — StoreKit needs a bundle id,
+  // --read-only removes writes, --include-deprecated adds tools — and quoting
+  // the mapped number meant every client showed something else.
+  const served = servedToolCount(server);
   const scope = selection
     ? `asc-${selection.profile.name}` +
       (selection.partial ? `:${selection.subProfiles.map((s) => s.name).join(',')}` : '') +
-      ` (${toolCountFor(selection)} tools)`
+      ` (${served ?? toolCountFor(selection)} tools)`
     : 'asc-mcp';
   console.error(
     `${scope} v${VERSION} ready (spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
