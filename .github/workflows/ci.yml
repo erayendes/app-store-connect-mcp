@@ -169,11 +169,32 @@ jobs:
         with:
           fail-on-severity: moderate
 
+  # Generic secret detection, which is the half GitHub's free tier leaves open:
+  # its secret scanning matches partner patterns, so a vendor's key shape is
+  # caught and a bare `-----BEGIN PRIVATE KEY-----` is not. That block is
+  # precisely what must never land here — the whole product promise is that the
+  # .p8 lives in the Keychain and never in a file someone can commit.
+  #
+  # Scans the full history, not the diff: a key removed in a later commit is
+  # still published, and rotating it is the only fix once it is pushed.
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          # No licence key: gitleaks-action is free for personal accounts and
+          # only organisations need one.
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+          GITLEAKS_ENABLE_SUMMARY: true
+
   # One check to require in branch protection, so the matrix can change
   # without the ruleset going stale.
   ci-ok:
     if: always()
-    needs: [test, smoke, pack, dependency-review]
+    needs: [test, smoke, pack, dependency-review, secrets]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a required job did not succeed

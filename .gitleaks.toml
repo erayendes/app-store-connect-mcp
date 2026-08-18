@@ -1,0 +1,32 @@
+# Secret scanning for the parts GitHub's free tier does not cover.
+#
+# GitHub's own secret scanning is on for this repository, but it only matches
+# partner patterns — an AWS key, a Stripe token, shapes vendors registered with
+# GitHub. A generic `-----BEGIN PRIVATE KEY-----` in a commit is exactly the
+# thing this project must never ship, and it is not a partner pattern.
+#
+# The allowlist is written against the placeholder *text*, not the file. A path
+# allowlist would mean a real key pasted into that same test file scans clean,
+# which is how an allowlist becomes the hole it was meant to close.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Truncated PEM placeholders in tests — headers with no key material behind them."
+regexTarget = "match"
+regexes = [
+  # tests/keychain.test.ts: proves the Keychain read passes the PEM through.
+  '''MIG\.\.\.''',
+  # tests/storekit-verify.test.ts: a config fixture that must parse, not verify.
+  '''MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg''',
+]
+
+[[allowlists]]
+description = """
+Two commits that carried a self-generated EC key used to boot the server for Glama/registry introspection and for the demo recording. Verified: key id AAAAAAAAAA, issuer 00000000-…, never registered with Apple, authorises nothing. Both files moved to a generated key file afterwards, so the leak is historical and there is nothing to rotate. Listed by commit rather than by path so the same shape reappearing in a new commit still fails.
+"""
+commits = [
+  "3a5f0df9308fc80adca7c02baf50f68ff15c8fe4",
+  "8c39a1a64757ce671b5279b6f535b8ee38280c14",
+]
