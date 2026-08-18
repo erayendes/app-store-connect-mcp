@@ -225,7 +225,40 @@ export async function resolveBodyRefs(
 ): Promise<Map<string, string>> {
   const refs: Array<{ type: string; id: string }> = [];
   collectRefs(body, refs);
+  return resolveRefs(http, refs);
+}
 
+/**
+ * The `{id}` in the path, as a reference the resolver understands.
+ *
+ * `PATCH /v1/apps/{id}` names the app it is about to change and the preview
+ * printed the raw id — the one line in the prompt that says *which* thing is
+ * being written to was the one line nobody could read. The segment before the
+ * placeholder is the JSON:API type in Apple's spec, including on a nested path
+ * (`/v1/apps/{id}/relationships/betaTesters` is still an app), so the type
+ * comes from the path rather than from a table that would need maintaining.
+ */
+export function pathTargets(
+  path: string,
+  args: Record<string, unknown>
+): Array<{ type: string; id: string; param: string }> {
+  const targets: Array<{ type: string; id: string; param: string }> = [];
+  const segments = path.split('/');
+  segments.forEach((segment, i) => {
+    const param = /^\{(.+)\}$/.exec(segment)?.[1];
+    const type = segments[i - 1];
+    const value = param ? args[param] : undefined;
+    if (param && type && typeof value === 'string' && resolvable(type)) {
+      targets.push({ type, id: value, param });
+    }
+  });
+  return targets;
+}
+
+async function resolveRefs(
+  http: RefReader,
+  refs: Array<{ type: string; id: string }>
+): Promise<Map<string, string>> {
   const seen = new Set<string>();
   const unique = refs.filter((r) => {
     const key = `${r.type}/${r.id}`;
@@ -344,16 +377,25 @@ export async function buildWritePreview(
     `Operation:  ${op.method} ${op.path}`,
   ];
 
+  // Path targets and body references share one lookup budget and one deadline,
+  // so naming the target costs no extra wait on a write that also carries a
+  // body — and a write with no body finally names its target at all.
+  const body = (args.body as any)?.data;
+  const targets = pathTargets(op.path, args);
+  const bodyRefs: Array<{ type: string; id: string }> = [];
+  if (body) collectRefs(body, bodyRefs);
+  const labels = http ? await resolveRefs(http, [...targets, ...bodyRefs]) : new Map<string, string>();
+
   const ids = Object.entries(args)
     .filter(([k, v]) => k !== 'body' && typeof v === 'string' && op.path.includes(`{${k}}`))
-    .map(([k, v]) => `${k} = ${v}`);
+    .map(([k, v]) => {
+      const label = labels.get(`${targets.find((t) => t.param === k)?.type}/${v}`);
+      return label ? `${k} = ${v} (${label})` : `${k} = ${v}`;
+    });
   if (ids.length) lines.push(`Target:     ${ids.join(', ')}`);
   if (account) lines.push(`Account:    ${account}`);
 
-  const body = (args.body as any)?.data;
   if (body) {
-    const labels = http ? await resolveBodyRefs(http, body) : new Map<string, string>();
-
     // The two labels that answer "what am I approving?" get their own lines.
     for (const [key, label] of labels) {
       if (key.startsWith('subscriptions/')) lines.push(`Product:    ${label}`);
