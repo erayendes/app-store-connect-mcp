@@ -7,6 +7,20 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### `metadata_ai__*` — three tools that never write on their own judgement
+Translating store metadata into forty languages is the biggest manual job in App Store Connect, and the obvious tool for it is the wrong one. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. A tool that renders English keywords into Turkish and writes them has quietly replaced a ranking decision with a language exercise, and nobody finds out until the installs do not arrive.
+
+So the work is split three ways and each part refuses the next one's job.
+
+**`metadata_ai__audit_localizations`** compares every language and reports what is missing or over Apple's limit — and stops. Its instruction to the host model says, in as many words, not to offer to fill anything in: a report that ends "shall I write these?" is how an audit turns into a write. A field no language uses is left alone rather than flagged on every locale, because that is a decision, and a report nobody can skim is a report nobody reads.
+
+**`metadata_ai__draft_translation`** runs only for the languages you name. `to_locales` is required and never inferred — translating a language nobody asked about is how a deliberate choice gets overwritten. It returns a draft alongside what each target already has, so the draft can say "replacing" rather than "filling in". Ask it for keywords and it says plainly that a translation is a starting point rather than an answer.
+
+**`metadata_ai__apply_localizations`** writes, from a CSV or JSON file you prepared. The values are read straight from the file rather than retyped by a model, which is the point: transcription is exactly where a carefully chosen keyword list becomes a nearly-identical one. Every value is checked against Apple's character limits first, and one failure sends nothing at all — a rejection on the eleventh language would otherwise leave ten already changed and no way to tell from the error which ones landed. An empty cell means "I did not touch this" rather than "make it empty", because that is what an empty cell means in a spreadsheet.
+
+The CSV parser handles quoted fields, because a real description contains commas and newlines and the person editing this file is doing it in Numbers.
+
+
 #### A `.mcpb` bundle, for the menu `~/.claude.json` cannot reach
 Two registries exist and only one of them is a config file. Profiles registered by `setup` are what the agent and the CLI read; the Claude app's **Connectors** menu is fed by MCPB bundles instead, and a local server in `~/.claude.json` never appears there. So "it works but it is not in the menu" was not a bug to find — the menu was reading somewhere else the whole time.
 
@@ -383,6 +397,20 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### `metadata_ai__*` — kendi kararıyla asla yazmayan üç araç
+Mağaza metadata'sını kırk dile çevirmek App Store Connect'teki en büyük elle iş ve bunun için akla gelen araç yanlış araç. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. İngilizce anahtar kelimeleri Türkçeye çevirip yazan bir araç, bir sıralama kararını sessizce bir dil alıştırmasıyla değiştirmiştir ve bunu kimse kurulumlar gelmeyene kadar fark etmez.
+
+Bu yüzden iş üçe bölündü ve her parça diğerinin işini reddediyor.
+
+**`metadata_ai__audit_localizations`** her dili karşılaştırır, eksik olanı ve Apple'ın sınırını aşanı raporlar — ve durur. Host modele verdiği talimat açık açık "hiçbir şeyi doldurmayı teklif etme" diyor: "bunları yazayım mı?" diye biten bir rapor, denetimin yazmaya dönüşme yoludur. Hiçbir dilin kullanmadığı bir alan, her dilde işaretlenmek yerine rahat bırakılır; çünkü o bir karardır ve göz gezdirilemeyen bir rapor okunmayan bir rapordur.
+
+**`metadata_ai__draft_translation`** yalnızca adını verdiğiniz diller için çalışır. `to_locales` zorunlu ve asla tahmin edilmiyor — kimsenin sormadığı bir dili çevirmek, bilinçli bir tercihin üzerine yazma yoludur. Taslağı, her hedefte hâlihazırda ne olduğuyla birlikte döndürür; böylece taslak "dolduruyorum" değil "değiştiriyorum" diyebilir. Anahtar kelime isterseniz, çevirinin bir cevap değil başlangıç noktası olduğunu açıkça söyler.
+
+**`metadata_ai__apply_localizations`** yazar — hazırladığınız CSV veya JSON dosyadan. Değerler bir model tarafından yeniden yazılmadan doğrudan dosyadan okunuyor; mesele de bu: özenle seçilmiş bir anahtar kelime listesi tam da kopyalanırken neredeyse-aynısına dönüşüyor. Her değer önce Apple'ın karakter sınırlarına karşı denetleniyor ve tek bir hata hiçbir şeyin gönderilmemesi demek — aksi hâlde on birinci dildeki bir ret, onunun çoktan değişmiş olmasını ve hatadan hangilerinin gittiğinin anlaşılamamasını bırakırdı. Boş bir hücre "boşalt" değil "buna dokunmadım" demek; çünkü bir tabloda boş hücre bu demek.
+
+CSV ayrıştırıcısı tırnaklı alanları işliyor, çünkü gerçek bir açıklama virgül ve satır sonu içerir ve bu dosyayı düzenleyen kişi bunu Numbers'ta yapıyor.
+
 
 #### `~/.claude.json`'ın ulaşamadığı menü için bir `.mcpb` paketi
 İki kayıt sistemi var ve yalnızca biri bir yapılandırma dosyası. `setup`'ın kaydettiği profilleri ajan ve CLI okur; Claude uygulamasının **Connectors** menüsü ise MCPB paketlerinden beslenir ve `~/.claude.json`'daki yerel bir sunucu orada hiç görünmez. Yani "çalışıyor ama menüde yok" bulunacak bir hata değildi — menü baştan beri başka bir yeri okuyordu.

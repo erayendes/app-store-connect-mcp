@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   CallToolRequestSchema,
   ListResourcesRequestSchema,
@@ -26,6 +27,12 @@ import {
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
+import {
+  METADATA_I18N_TOOLS,
+  METADATA_I18N_TOOL_NAMES,
+  METADATA_I18N_WRITE_TOOLS,
+  executeMetadataI18nTool,
+} from './tools/metadata-i18n.js';
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import {
   PRICING_TOOLS,
@@ -241,7 +248,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * this cost" on a server built to answer questions would be the wrong kind of
    * safe.
    */
-  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS].filter(
+  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS].filter(
     (t) =>
       wantsFamily(`${t.name.split('__')[0]}__`) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
@@ -250,7 +257,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /** The macros that declare an outputSchema, so their result can be sent structured. */
   const READ_MACRO_NAMES = new Set(
-    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
   );
 
   const server = new Server(
@@ -296,7 +303,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS].find((t) => t.name === name);
+    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_I18N_TOOLS].find((t) => t.name === name);
     if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
@@ -538,7 +545,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         // never going to show.
         const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
-          : ((op?.risk ?? (name.includes('extend_renewal_date') ? 'revenue' : 'low')) as RiskLevel);
+          : METADATA_I18N_WRITE_TOOLS.has(name)
+            ? // One call rewrites the store listing in every language it names.
+              // The raw tool behind it is `public` per operation; doing forty
+              // at once is not forty times as reversible.
+              'public'
+            : ((op?.risk ?? (name.includes('extend_renewal_date') ? 'revenue' : 'low')) as RiskLevel);
         if (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk)) {
         const preview = PRICING_TOOL_NAMES.has(name)
           ? // Macro parameters are already human language — no lookups needed.
@@ -676,6 +688,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               }
             : undefined,
         });
+      } else if (macroOffered(name) && METADATA_I18N_TOOL_NAMES.has(name) && !METADATA_I18N_WRITE_TOOLS.has(name)) {
+        // The audit and the draft answer with data plus an instruction for the
+        // host model, like reviews-ai — not the generic JSON dump below, which
+        // would wrap a CallToolResult inside another one. Checked before the
+        // general macro branch, which would otherwise take them first.
+        return (await executeMetadataI18nTool(name, args, { http })) as CallToolResult;
       } else if (macroOffered(name)) {
         result = PRICING_TOOL_NAMES.has(name)
           ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
@@ -683,6 +701,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? await executeAnalyticsTool(name, args, { http })
           : PREFLIGHT_TOOL_NAMES.has(name)
           ? await executePreflightTool(name, args, { http })
+          : METADATA_I18N_WRITE_TOOLS.has(name)
+          ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
