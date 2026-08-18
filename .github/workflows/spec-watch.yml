@@ -3,10 +3,25 @@
 # reporting a tool that no longer matched the API.
 #
 # Weekly: fetch the spec, regenerate, and open a pull request if anything moved.
-# Deliberately NOT automatic beyond that — the diff is the interesting part
-# (Apple adds, renames and deprecates operations, and a rename is a breaking
-# change for anyone whose config names the tool), so a person reads it and a
-# person decides whether it ships.
+# Deliberately nothing beyond that — the diff is the interesting part, because
+# Apple adds, renames and deprecates operations, and a rename is a breaking
+# change for anyone whose config names the tool. A person reads it and a person
+# decides whether it ships.
+#
+# Two of this repository's security settings shape how this works, and neither
+# is worth relaxing for a convenience:
+#
+#   allowed_actions: selected   only GitHub-owned actions and
+#                               ossf/scorecard-action run here, so
+#                               peter-evans/create-pull-request fails at startup
+#   Actions cannot open PRs     "Allow GitHub Actions to create and approve pull
+#                               requests" is off, so even `gh pr create` with the
+#                               workflow token is refused
+#
+# So this pushes the branch and writes the summary, and a person opens the pull
+# request from the link. The watching is the part that was missing; one click is
+# not the expensive half. If that setting is ever turned on, `gh pr create` here
+# is a three-line change.
 name: Spec watch
 
 on:
@@ -37,6 +52,10 @@ jobs:
       - name: Fetch Apple's specification
         run: npm run spec:update
 
+      # Compared after parsing, not as text. The stored copy and Apple's download
+      # differ in formatting, and a byte comparison reports 247,000 changed lines
+      # every week for a specification nobody touched. The first run through here
+      # normalises the file; after that the diffs are the changes.
       - name: Stop here when nothing moved
         id: changed
         run: |
@@ -55,49 +74,51 @@ jobs:
         if: steps.changed.outputs.changed == 'true'
         run: npm run generate
 
-      - name: Build the report diff
-        if: steps.changed.outputs.changed == 'true'
-        id: report
-        run: |
-          {
-            echo 'diff<<REPORT_EOF'
-            git diff --no-color -- src/generated/REPORT.txt || true
-            echo 'REPORT_EOF'
-          } >> "$GITHUB_OUTPUT"
-
+      # A failure here is the finding, not a blocker: it means Apple changed
+      # something the ratchets or the curated descriptions depend on. The pull
+      # request still opens and says so, which is more useful than a workflow
+      # failure nobody sees.
       - name: Verify the regenerated catalogue still passes
+        id: verify
         if: steps.changed.outputs.changed == 'true'
-        run: npm run typecheck && npm test
-        # A failure here is the finding, not a blocker: it means Apple changed
-        # something the ratchets or the curated descriptions depend on. The PR
-        # still opens, carrying a red check, because that is more useful than a
-        # silent workflow failure nobody sees.
         continue-on-error: true
+        run: npm run typecheck && npm test
 
-      - name: Open the pull request
+      - name: Push the branch and say what changed
         if: steps.changed.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-          branch: spec/apple-update
-          base: main
-          title: 'chore: Apple published a new App Store Connect specification'
-          commit-message: |
-            chore: regenerate from Apple's latest OpenAPI specification
+        env:
+          VERDICT: ${{ steps.verify.outcome }}
+        run: |
+          set -euo pipefail
+          BRANCH="spec/apple-update"
+          REPORT="$(git diff --no-color -- src/generated/REPORT.txt || true)"
+          VERSION="$(node -p "require('./spec/openapi.json').info.version")"
 
-            Opened by the weekly spec watch. The generated catalogue moved
-            because Apple's specification did; the report diff in the pull
-            request body says how.
-          body: |
-            Apple's OpenAPI specification changed and the catalogue was regenerated from it.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add spec/openapi.json src/generated
+          git commit -m "chore: regenerate from Apple's OpenAPI specification v$VERSION"
+          # Force: the branch belongs to this workflow alone, and an unmerged
+          # previous update is superseded by this one rather than merged with it.
+          git push --force origin "$BRANCH"
 
-            **Read the report diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation disappears from every profile unless `--include-deprecated` is passed.
-
-            ```diff
-            ${{ steps.report.outputs.diff }}
-            ```
-
-            If the test job above is red, that is the finding rather than a blocker: Apple changed something a ratchet or a curated description depends on, and the fix belongs in this branch before it merges.
-
-            Nothing is published by this workflow. Tagging and release stay where they were.
-          labels: spec
-          delete-branch: true
+          {
+            echo "## Apple published specification v$VERSION"
+            echo
+            echo "The catalogue was regenerated and pushed to \`$BRANCH\`."
+            echo
+            echo "[Open the pull request](https://github.com/${GITHUB_REPOSITORY}/compare/main...$BRANCH?expand=1)"
+            echo
+            if [ "$VERDICT" = "failure" ]; then
+              echo "> **The suite does not pass on that branch.** That is the finding rather than a blocker: Apple changed something a ratchet or a curated description depends on, and the fix belongs on the branch before it merges."
+              echo
+            fi
+            echo "**Read this diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation leaves every profile unless \`--include-deprecated\` is passed."
+            echo
+            echo '```diff'
+            echo "${REPORT:-REPORT.txt unchanged}"
+            echo '```'
+            echo
+            echo "Nothing is published by this workflow. Tagging and release stay where they were."
+          } >> "$GITHUB_STEP_SUMMARY"
