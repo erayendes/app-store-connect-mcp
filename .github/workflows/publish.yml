@@ -166,6 +166,23 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: npm sbom --sbom-format spdx --omit=dev > "asc-mcp-${TAG}-sbom.spdx.json"
 
+      # The Claude app's Connectors menu is fed by MCPB bundles, not by
+      # ~/.claude.json, so this is the only route into it. Built here rather
+      # than committed: it is 3.7 MB of bundled server, and a copy in the repo
+      # would go stale the first time anyone forgot to rebuild it.
+      #
+      # Unsigned. `mcpb sign` wants a code-signing certificate this project does
+      # not carry, and an unsigned bundle installs behind a warning that says
+      # something true rather than not installing at all.
+      - name: Build the .mcpb bundle
+        # esbuild still ships a postinstall that fetches its platform binary,
+        # and `npm ci` above ran with --ignore-scripts for the SBOM. Rebuilding
+        # it here is cheaper than dropping that flag, which would let every
+        # dependency's install script run in a job that holds contents:write.
+        run: |
+          npm rebuild esbuild
+          npm run mcpb
+
       - name: Create GitHub release from the changelog
         env:
           GH_TOKEN: ${{ github.token }}
@@ -187,10 +204,11 @@ jobs:
           # Release immutability freezes assets at publish time, so the SBOM has
           # to go up with the release rather than being attached afterwards.
           sbom="asc-mcp-${TAG}-sbom.spdx.json"
+          bundle="dist-mcpb/heimdall-asc-${TAG#v}.mcpb"
 
           if [ -s /tmp/notes.md ]; then
-            gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md "$sbom"
+            gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md "$sbom" "$bundle"
           else
             echo "No changelog entry for $TAG — falling back to generated notes."
-            gh release create "$TAG" --title "$TAG" --generate-notes "$sbom"
+            gh release create "$TAG" --title "$TAG" --generate-notes "$sbom" "$bundle"
           fi

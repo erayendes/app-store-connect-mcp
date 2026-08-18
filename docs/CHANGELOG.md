@@ -7,6 +7,18 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### A `.mcpb` bundle, for the menu `~/.claude.json` cannot reach
+Two registries exist and only one of them is a config file. Profiles registered by `setup` are what the agent and the CLI read; the Claude app's **Connectors** menu is fed by MCPB bundles instead, and a local server in `~/.claude.json` never appears there. So "it works but it is not in the menu" was not a bug to find — the menu was reading somewhere else the whole time.
+
+Every release now carries `heimdall-asc-<version>.mcpb`. Drag it onto Claude and a form asks for the profile and, if `setup` has not already run, the key details. The bundle carries the server and its dependencies inlined, so nothing on the machine needs Node.
+
+Two constraints stated rather than worked around. **One bundle serves one profile** — a bundle is one server and one toggle, which is MCPB's shape, not a decision here; installing it again adds another area. And **`setup` is still the better home for the key**: leave the credential fields empty and the bundle uses the shared config, with the `.p8` in the Keychain. Fill them in and the host stores the path instead — safely, but on disk.
+
+Unsigned, and the installer says so. Signing wants a code-signing certificate this project does not carry, and a warning that is true beats a bundle that will not install.
+
+While the manifest was being written, `package.json`'s own description turned out to claim **875 tools**. It is a fifth surface advertising the count and the release pre-flight checks four; it now says 884 like the others.
+
+
 #### Starter packs, and seven scenarios worked through
 "Which profile do I install?" had one answer and it was a table of thirteen rows sorted by nothing in particular. There is a second answer now, by role: a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics`, customer support `monetization:storekit` and eighteen tools. Seven packs, in the guide and in the README, with tool counts a test keeps honest — `docs/GUIDE.md` carried "distribution … 129" through two releases where the number was 130, because prose has no tests.
 
@@ -371,6 +383,18 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### `~/.claude.json`'ın ulaşamadığı menü için bir `.mcpb` paketi
+İki kayıt sistemi var ve yalnızca biri bir yapılandırma dosyası. `setup`'ın kaydettiği profilleri ajan ve CLI okur; Claude uygulamasının **Connectors** menüsü ise MCPB paketlerinden beslenir ve `~/.claude.json`'daki yerel bir sunucu orada hiç görünmez. Yani "çalışıyor ama menüde yok" bulunacak bir hata değildi — menü baştan beri başka bir yeri okuyordu.
+
+Artık her sürüm `heimdall-asc-<sürüm>.mcpb` taşıyor. Claude'un üzerine sürükleyin; bir form profili ve `setup` çalışmadıysa anahtar bilgilerini sorar. Paket sunucuyu ve bağımlılıklarını içine gömülü taşır, yani makinede Node'a gerek yok.
+
+Etrafından dolaşılmayıp söylenen iki kısıt. **Bir paket bir profil sunar** — bir paket bir sunucu ve bir anahtar demek; bu MCPB'nin biçimi, burada verilmiş bir karar değil. Başka bir alan için tekrar kurun. Ve **anahtar için `setup` hâlâ daha iyi bir yer**: kimlik alanlarını boş bırakırsanız paket ortak yapılandırmayı kullanır, `.p8` Keychain'de kalır. Doldurursanız yolu bu kez host saklar — güvenli biçimde, ama diskte.
+
+İmzasız ve kurulum bunu söylüyor. İmzalamak bu projenin taşımadığı bir kod imzalama sertifikası ister; doğru olan bir uyarı, kurulamayan bir paketten iyidir.
+
+Manifest yazılırken `package.json`'ın kendi açıklamasının **875 araç** dediği ortaya çıktı. Sayıyı ilan eden beşinci yüzey ve yayın öncesi kontrolü dördünü denetliyor; artık o da diğerleri gibi 884 diyor.
+
 
 #### Başlangıç paketleri ve baştan sona işlenmiş yedi senaryo
 "Hangi profili kurayım?" sorusunun tek cevabı vardı ve o da özel bir sıraya göre dizilmemiş on üç satırlık bir tabloydu. Artık ikinci bir cevap var, role göre: yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics`, müşteri desteği `monetization:storekit` ve on sekiz araç. Yedi paket; rehberde ve README'de, araç sayılarını dürüst tutan bir testle birlikte — `docs/GUIDE.md` iki sürüm boyunca "distribution … 129" yazdı, doğrusu 130'du, çünkü düzyazının testi yok.

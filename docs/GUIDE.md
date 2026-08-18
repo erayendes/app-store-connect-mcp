@@ -132,6 +132,19 @@ npx -y @erayendes/asc-mcp monetization                       everything
 npx -y @erayendes/asc-mcp monetization:subscription-pricing  that slice plus core
 ```
 
+#### Or install it from the Connectors menu
+
+Two registries exist and only one of them is a config file. Profiles registered by `setup` are what the agent and the CLI read; the Claude app's **Connectors** menu is fed by MCPB bundles instead, and a local server in `~/.claude.json` does not appear there.
+
+[Releases](https://github.com/erayendes/app-store-connect-mcp/releases) carries a `.mcpb` for that menu. Download it, drag it onto Claude, and a form asks for the profile and — if you have not run `setup` — the key details. Nothing else is needed: the bundle carries the server and its dependencies, so no Node toolchain has to exist on the machine.
+
+Two things worth knowing before you choose this route:
+
+- **One bundle serves one profile.** That is an MCPB constraint rather than a decision: a bundle is one server and one toggle. Install it again to add another area.
+- **`setup` is still the better home for the key.** Leave the credential fields empty and the bundle uses the shared config `setup` wrote, with the `.p8` in the Keychain. Fill them in and the path to the key is stored by the host instead — safely, but on disk rather than in the Keychain.
+
+Build it yourself with `npm run mcpb`. The bundle is unsigned, so the installer says so; signing needs a code-signing certificate this project does not carry.
+
 #### Where it registers
 
 `setup` registers the profiles with every MCP client it finds. None of these clients share a config file, so this is the step that would otherwise be done once per client, by hand, in a different format each time.
@@ -502,6 +515,19 @@ Config'i elle yazacaksanız sözdizimi:
 npx -y @erayendes/asc-mcp monetization                       tamamı
 npx -y @erayendes/asc-mcp monetization:subscription-pricing  o dilim + çekirdek
 ```
+
+#### Ya da Connectors menüsünden kurun
+
+İki kayıt sistemi var ve yalnızca biri bir yapılandırma dosyası. `setup`'ın kaydettiği profilleri ajan ve CLI okur; Claude uygulamasının **Connectors** menüsü ise MCPB paketlerinden beslenir ve `~/.claude.json`'daki yerel bir sunucu orada görünmez.
+
+[Releases](https://github.com/erayendes/app-store-connect-mcp/releases) sayfasında o menü için bir `.mcpb` var. İndirin, Claude'un üzerine sürükleyin; bir form profili ve — `setup` çalıştırmadıysanız — anahtar bilgilerini sorar. Başka bir şey gerekmez: paket sunucuyu ve bağımlılıklarını taşır, yani makinede Node kurulu olmak zorunda değil.
+
+Bu yolu seçmeden önce bilinmesi gereken iki şey:
+
+- **Bir paket bir profil sunar.** Bu bir karar değil, MCPB kısıtı: bir paket bir sunucu ve bir anahtardır. Başka bir alan için tekrar kurun.
+- **Anahtar için `setup` hâlâ daha iyi bir yer.** Kimlik alanlarını boş bırakırsanız paket, `setup`'ın yazdığı ortak yapılandırmayı kullanır ve `.p8` Keychain'de kalır. Doldurursanız anahtarın yolunu bu kez host saklar — güvenli biçimde, ama Keychain'de değil diskte.
+
+Kendiniz derlemek için `npm run mcpb`. Paket imzasız, kurulum sırasında bunu söyler; imzalamak bu projenin taşımadığı bir kod imzalama sertifikası ister.
 
 #### Nereye kaydedilir
 
