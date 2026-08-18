@@ -78,7 +78,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 130 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 133 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
@@ -99,11 +99,11 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 187 |
+| Release manager | `distribution` + `app-info` | 190 |
 | ASO / marketing | `marketing` + `analytics` | 123 |
 | QA / TestFlight | `testflight` + `access` | 118 |
 | Monetization | `monetization` | 206 |
-| Game developer | `game-center` + `distribution` | 312 |
+| Game developer | `game-center` + `distribution` | 315 |
 | Customer support | `monetization:storekit` | 18 |
 | Build & signing | `provisioning` + `xcode-cloud` | 100 |
 
@@ -321,11 +321,15 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | app → group → subscription → price points | `pricing__get_subscription_price` — one country or, with the territory omitted, all ~175 grouped by price | `monetization:subscription-pricing` |
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
+| comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
+| pasting a translation into each locale by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+
+The `metadata_ai__*` trio never writes on its own judgement, and the reason is ASO rather than caution. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. So the audit reports and stops, the draft only touches the languages you name and returns text for you to read, and the write takes its values from a file you prepared — read straight from it rather than retyped, because transcription is where a carefully chosen keyword list becomes a nearly-identical one.
 
 Naming an app works everywhere it is the target, not only in the macros: the 46 tools rooted at `/v1/apps/{id}` take a name, a bundle ID or the numeric Apple ID, and resolve it before the call. Only there, and only when the value is not already numeric — anywhere else an id is an id.
 
@@ -462,7 +466,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 130 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 133 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
@@ -483,11 +487,11 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 187 |
+| Yayın yöneticisi | `distribution` + `app-info` | 190 |
 | ASO / pazarlama | `marketing` + `analytics` | 123 |
 | QA / TestFlight | `testflight` + `access` | 118 |
 | Monetizasyon | `monetization` | 206 |
-| Oyun geliştirici | `game-center` + `distribution` | 312 |
+| Oyun geliştirici | `game-center` + `distribution` | 315 |
 | Müşteri desteği | `monetization:storekit` | 18 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 100 |
 
@@ -698,11 +702,15 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | app → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da territory verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
+| kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
+| her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+
+`metadata_ai__*` üçlüsü kendi kararıyla asla yazmaz ve sebep temkinlilik değil, ASO. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. Bu yüzden denetim rapor edip durur, taslak yalnızca adını verdiğiniz dillere dokunur ve okumanız için metin döndürür, yazma ise değerleri hazırladığınız dosyadan alır — yeniden yazılarak değil doğrudan okunarak, çünkü özenle seçilmiş bir anahtar kelime listesi tam da kopyalanırken neredeyse-aynısına dönüşür.
 
 Bir uygulamayı adıyla vermek yalnızca makrolarda değil, hedef olduğu her yerde çalışır: `/v1/apps/{id}` köklü 46 araç ad, bundle ID ya da sayısal Apple ID alır ve çağrıdan önce çözer. Yalnızca orada ve yalnızca değer zaten sayısal değilse — başka her yerde kimlik kimliktir.
 

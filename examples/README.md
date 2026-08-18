@@ -18,11 +18,11 @@ one you install can find an app ID and point you at a tool it does not have.
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 187 |
+| Release manager | `distribution` + `app-info` | 190 |
 | ASO / marketing | `marketing` + `analytics` | 123 |
 | QA / TestFlight | `testflight` + `access` | 118 |
 | Monetization | `monetization` | 206 |
-| Game developer | `game-center` + `distribution` | 312 |
+| Game developer | `game-center` + `distribution` | 315 |
 | Customer support | `monetization:storekit` | 18 |
 | Build & signing | `provisioning` + `xcode-cloud` | 100 |
 
@@ -165,11 +165,11 @@ gösterebilir.
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 187 |
+| Yayın yöneticisi | `distribution` + `app-info` | 190 |
 | ASO / pazarlama | `marketing` + `analytics` | 123 |
 | QA / TestFlight | `testflight` + `access` | 118 |
 | Monetizasyon | `monetization` | 206 |
-| Oyun geliştirici | `game-center` + `distribution` | 312 |
+| Oyun geliştirici | `game-center` + `distribution` | 315 |
 | Müşteri desteği | `monetization:storekit` | 18 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 100 |
 
