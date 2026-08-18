@@ -52,6 +52,10 @@ jobs:
       - name: Fetch Apple's specification
         run: npm run spec:update
 
+      # Compared after parsing, not as text. The stored copy and Apple's download
+      # differ in formatting, and a byte comparison reports 247,000 changed lines
+      # every week for a specification nobody touched. The first run through here
+      # normalises the file; after that the diffs are the changes.
       - name: Stop here when nothing moved
         id: changed
         run: |
