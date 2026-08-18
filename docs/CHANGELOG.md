@@ -7,6 +7,16 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### StoreKit reads can return verified fields instead of a sealed envelope
+Set `ASC_APPLE_ROOT_CERTS` to Apple's DER root certificates — paths, or one directory — and `storekit__get_transaction_info`, `storekit__get_transaction_history` and `storekit__get_refund_history` verify each payload with the App Store Server Library and return decoded fields. Leave it unset and they return the signed payloads exactly as before, which is what their descriptions already promised. Every response says which one it is, so a caller never has to infer it.
+
+Nothing is decoded without being checked. A payload that fails verification is an error, not fields with a caveat attached: the point of verifying is that the result can be treated as fact, and "here are the values, but we could not confirm them" invites the reading it was supposed to prevent.
+
+The decoded shape is an allowlist rather than Apple's whole payload. `appAccountToken` is left out deliberately — it is the UUID a developer maps to their own user record, so a transaction id becomes a route back to an account inside their app, and none of these tools was asked for that. `raw: true` returns the signed payload for anyone who wants to verify it themselves.
+
+No certificates ship in this package. They are Apple's to publish and one more thing to keep current, and a stale one would turn verification into a silent no.
+
+
 #### StoreKit reads stop promising fields they do not return
 `storekit__get_transaction_info` advertised "the decoded details of a single transaction: product, price, dates, ownership type and revocation state" and returns one signed JWS string. The history, refund and entitlement tools do the same with whole arrays of them. A caller planning around five named fields receives `header.payload.signature`, nothing crashes, and there is no way to tell whether the wrong tool was called.
 
@@ -255,6 +265,16 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### StoreKit okumaları mühürlü zarf yerine doğrulanmış alan döndürebiliyor
+`ASC_APPLE_ROOT_CERTS`'i Apple'ın DER kök sertifikalarına ayarlayın — dosya yolları ya da tek bir dizin — ve `storekit__get_transaction_info`, `storekit__get_transaction_history`, `storekit__get_refund_history` her yükü App Store Server Library ile doğrulayıp çözülmüş alanlar döndürsün. Ayarlamazsanız eskisi gibi imzalı yükleri döndürüyorlar; açıklamalarının zaten vaat ettiği şey de bu. Her cevap hangisi olduğunu söylüyor, çağıranın tahmin etmesi gerekmiyor.
+
+Kontrol edilmeden hiçbir şey çözülmüyor. Doğrulaması başarısız olan bir yük, kenarına şerh düşülmüş alanlar değil, hatadır: doğrulamanın amacı sonucun gerçek gibi kullanılabilmesi ve "işte değerler, ama teyit edemedik" tam da engellemesi gereken okumayı davet ediyor.
+
+Çözülmüş şekil, Apple'ın tüm yükü değil bir beyaz liste. `appAccountToken` bilerek dışarıda — geliştiricinin kendi kullanıcı kaydına eşlediği UUID o, yani bir işlem kimliği uygulamasındaki bir hesaba geri dönüş yolu oluyor ve bu araçların hiçbiri onu istemedi. `raw: true` kendisi doğrulamak isteyene imzalı yükü veriyor.
+
+Bu pakette hiçbir sertifika taşınmıyor. Onlar Apple'ın yayınladığı şeyler ve güncel tutulması gereken bir kalem daha; bayat kalan bir tanesi doğrulamayı sessiz bir hayıra çevirirdi.
+
 
 #### StoreKit okumaları döndürmedikleri alanları vaat etmeyi bıraktı
 `storekit__get_transaction_info` kendini "tek bir işlemin çözülmüş detayları: ürün, fiyat, tarihler, sahiplik tipi ve iptal durumu" diye tanıtıyor ve imzalı tek bir JWS metni döndürüyor. Geçmiş, iade ve yetki araçları aynısını dizilerle yapıyor. Beş isimli alana göre plan yapan bir çağıran `header.payload.signature` alıyor, hiçbir şey çökmüyor ve yanlış aracı çağırıp çağırmadığını anlamanın yolu yok.

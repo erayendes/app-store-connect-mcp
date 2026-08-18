@@ -13,6 +13,8 @@ export interface ServerConfig {
     bundleId: string;
     appAppleId?: number;
     environment: 'Sandbox' | 'Production';
+    /** Paths to Apple's DER root certificates; enables verified decoding. */
+    appleRootCerts?: string[];
   };
   /** When set, only these domains are exposed as tools. */
   domains?: string[];
@@ -139,6 +141,12 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
             (env.ASC_ENVIRONMENT ?? shared?.environment) === 'Production'
               ? 'Production'
               : 'Sandbox',
+          // Apple's DER root certificates, which the App Store Server Library
+          // asks the caller for rather than shipping. Comma-separated paths, or
+          // one directory. Unset means the StoreKit reads keep handing back the
+          // signed envelope — the honest default, since decoding without
+          // verifying would present unverified data as fact.
+          appleRootCerts: parseList(env.ASC_APPLE_ROOT_CERTS),
         }
       : undefined,
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),

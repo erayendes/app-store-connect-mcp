@@ -201,6 +201,7 @@ The App Store Server API answers questions about individual customers rather tha
 | `ASC_BUNDLE_ID` | no | Enables App Store Server API (StoreKit 2) tools |
 | `ASC_APP_APPLE_ID` | no | Your app's numeric Apple ID |
 | `ASC_ENVIRONMENT` | no | `Sandbox` (default) or `Production`, for StoreKit 2 |
+| `ASC_APPLE_ROOT_CERTS` | no | Paths (or one directory) of Apple's DER root certificates. Set it and the StoreKit reads return verified, decoded fields; unset they return Apple's signed payloads |
 | `ASC_DOMAINS` | no | Comma-separated domains to load, or `all` (env form of `--domains`) |
 | `ASC_READ_ONLY` | no | `true` to expose only non-mutating tools |
 | `ASC_CONFIRM_WRITES` | no | `1` / `true` to ask before every write, `0` / `false` to never ask (default: only the strong risk levels) |
@@ -546,6 +547,7 @@ App Store Server API, listeniz hakkında değil tek tek müşteriler hakkında s
 | `ASC_BUNDLE_ID` | hayır | App Store Server API (StoreKit 2) araçlarını etkinleştirir |
 | `ASC_APP_APPLE_ID` | hayır | Uygulamanın sayısal Apple ID'si |
 | `ASC_ENVIRONMENT` | hayır | StoreKit 2 için `Sandbox` (varsayılan) veya `Production` |
+| `ASC_APPLE_ROOT_CERTS` | hayır | Apple'ın DER kök sertifikalarının yolları (ya da tek bir dizin). Ayarlıysa StoreKit okumaları doğrulanmış ve çözülmüş alanlar döndürür; ayarlı değilse Apple'ın imzalı yüklerini döndürür |
 | `ASC_DOMAINS` | hayır | Yüklenecek domainler, virgülle ayrılmış ya da `all` |
 | `ASC_READ_ONLY` | hayır | Yalnızca değiştirmeyen araçları göstermek için `true` |
 | `ASC_CONFIRM_WRITES` | hayır | Her yazmadan önce sormak için `1` / `true`, hiç sormamak için `0` / `false` (varsayılan: yalnızca güçlü risk seviyeleri) |
