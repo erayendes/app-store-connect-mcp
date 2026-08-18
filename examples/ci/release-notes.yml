@@ -1,0 +1,97 @@
+# Write release notes into App Store Connect from CI.
+#
+# An agent reads the commits since the last tag, writes the "What's New" text,
+# and puts it on the App Store version — the one part of a release that is
+# prose, done by the thing that is good at prose, in the pipeline that already
+# knows what shipped.
+#
+# Run it manually first. `dry_run: true` is the default on purpose: every write
+# comes back as what WOULD have been sent (method, path, body, risk level)
+# after validation, and nothing reaches Apple. Read that output once before
+# trusting the real thing.
+name: Release notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'App Store version string (e.g. 3.2.0)'
+        required: true
+      locale:
+        description: 'Which localization to write'
+        default: en-US
+      dry_run:
+        description: 'Rehearse without sending anything to Apple'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      # The whole history, because the agent's first job is to read it: a
+      # shallow clone has no previous tag to diff against.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Collect what shipped
+        id: log
+        run: |
+          previous=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo '')
+          {
+            echo 'commits<<COMMITS_EOF'
+            if [ -n "$previous" ]; then
+              git log --no-merges --pretty='- %s' "$previous"..HEAD
+            else
+              git log --no-merges --pretty='- %s' -30
+            fi
+            echo 'COMMITS_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Register the profile this job needs
+        # `distribution` alone: version localizations live there, and a job that
+        # cannot reach the pricing tools cannot touch a price by accident.
+        run: npx -y @erayendes/asc-mcp register distribution --clients=claude
+
+      - name: Write the release notes
+        env:
+          # An inline PEM is the right form on a runner. There is no Keychain
+          # here, and a key written to disk is one more thing to clean up on
+          # every exit path, including the ones that do not run.
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          # No user is here to answer an elicitation prompt. Left at the default
+          # `strong`, the write would be refused and reported as a refusal —
+          # which reads, in a log, exactly like a bug. Saying so explicitly is
+          # the honest form.
+          ASC_CONFIRM_WRITES: '0'
+          ASC_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COMMITS: ${{ steps.log.outputs.commits }}
+        run: |
+          npx -y @anthropic-ai/claude-code \
+            --print \
+            --allowedTools 'mcp__asc-distribution__*' \
+            "Here are the commits since the last release:
+
+          $COMMITS
+
+          Write App Store release notes for version ${{ inputs.version }} of the
+          app in this account — user-facing, under 4000 characters, no commit
+          hashes, no internal ticket numbers, and nothing about refactors or
+          tests. Then put them in the whatsNew field of the ${{ inputs.locale }}
+          localization for that version.
+
+          Read before you write: find the version by its versionString, and
+          confirm it is still editable. A version already in review cannot be
+          changed, and reporting success on one that was not is worse than
+          failing."

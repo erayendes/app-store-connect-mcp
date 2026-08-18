@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### Starter packs, and seven scenarios worked through
+"Which profile do I install?" had one answer and it was a table of thirteen rows sorted by nothing in particular. There is a second answer now, by role: a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics`, customer support `monetization:storekit` and eighteen tools. Seven packs, in the guide and in the README, with tool counts a test keeps honest — `docs/GUIDE.md` carried "distribution … 129" through two releases where the number was 130, because prose has no tests.
+
+`examples/` is new and is the other half. Seven scenarios — sales and finance reports, TestFlight invitations, creating a version and attaching a build, review triage, keywords for one language, sandbox testers, CI — each saying which profile it needs and, more usefully, the part that usually goes wrong. Finance and sales are different reports and "revenue" almost always means the first. A tester belongs to the account before they belong to a group. Keywords live on the version localization and the name lives somewhere else entirely, because one belongs to the release and the other to the app.
+
+`examples/ci/release-notes.yml` is a working GitHub Actions workflow: an agent reads the commits since the last tag, writes the "What's New" text, and puts it on the version. It rehearses by default — `dry_run: true` — so a first run cannot reach Apple, and it sets `ASC_CONFIRM_WRITES=0` explicitly rather than letting the write fail closed. No user is present on a runner to answer a confirmation prompt, and a gate refusing a write it was never going to get an answer for reads, in a log, exactly like a bug.
+
+
 #### 143 of 265 real phrasings now find their tool in the top three, up from 83
 `asc__search_tools` is how a model gets from "make the subscription available in Germany" to the one call that does it, and on a measured corpus of 265 phrasings it was landing the right tool in the top three 83 times. It is 143 now, with no phrasing losing a place it had.
 
@@ -363,6 +371,14 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Başlangıç paketleri ve baştan sona işlenmiş yedi senaryo
+"Hangi profili kurayım?" sorusunun tek cevabı vardı ve o da özel bir sıraya göre dizilmemiş on üç satırlık bir tabloydu. Artık ikinci bir cevap var, role göre: yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics`, müşteri desteği `monetization:storekit` ve on sekiz araç. Yedi paket; rehberde ve README'de, araç sayılarını dürüst tutan bir testle birlikte — `docs/GUIDE.md` iki sürüm boyunca "distribution … 129" yazdı, doğrusu 130'du, çünkü düzyazının testi yok.
+
+`examples/` yeni ve işin diğer yarısı. Yedi senaryo — satış ve finans raporları, TestFlight daveti, sürüm oluşturup build bağlama, yorum triyajı, tek dilin anahtar kelimeleri, sandbox testçileri, CI — her biri hangi profili gerektirdiğini ve daha da işe yararı, genelde nerede ters gittiğini söylüyor. Finans ve satış farklı raporlar ve "gelir" neredeyse her zaman birincisi demek. Testçi, gruba ait olmadan önce hesaba ait olur. Anahtar kelimeler sürüm yerelleştirmesinde, ad ise bambaşka bir yerde yaşar; çünkü biri yayına, diğeri uygulamaya ait.
+
+`examples/ci/release-notes.yml` çalışan bir GitHub Actions workflow'u: bir ajan son tag'den beri gelen commit'leri okuyor, "Yenilikler" metnini yazıyor ve sürüme koyuyor. Varsayılan olarak prova yapıyor — `dry_run: true` — yani ilk koşu Apple'a ulaşamaz; ve `ASC_CONFIRM_WRITES=0`'ı yazmanın kapıda kapanmasına bırakmak yerine açıkça ayarlıyor. Runner'da onay istemini cevaplayacak kullanıcı yok ve zaten cevap alamayacağı bir yazmayı reddeden bir kapı, logda tam olarak bir hata gibi okunur.
+
 
 #### 265 gerçek ifadeden 143'ü aracını ilk üçte buluyor, önce 83'tü
 `asc__search_tools`, modelin "aboneliği Almanya'da satışa aç"tan bunu yapan tek çağrıya ulaşma yolu; ölçülmüş 265 ifadelik havuzda doğru aracı ilk üçe 83 kez getiriyordu. Artık 143, ve hiçbir ifade elindeki yeri kaybetmedi.
