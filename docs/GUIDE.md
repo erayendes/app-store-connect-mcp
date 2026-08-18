@@ -78,7 +78,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 134 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
@@ -99,13 +99,13 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 191 |
-| ASO / marketing | `marketing` + `analytics` | 123 |
-| QA / TestFlight | `testflight` + `access` | 118 |
-| Monetization | `monetization` | 206 |
-| Game developer | `game-center` + `distribution` | 316 |
-| Customer support | `monetization:storekit` | 18 |
-| Build & signing | `provisioning` + `xcode-cloud` | 100 |
+| Release manager | `distribution` + `app-info` | 194 |
+| ASO / marketing | `marketing` + `analytics` | 125 |
+| QA / TestFlight | `testflight` + `access` | 120 |
+| Monetization | `monetization` | 207 |
+| Game developer | `game-center` + `distribution` | 319 |
+| Customer support | `monetization:storekit` | 19 |
+| Build & signing | `provisioning` + `xcode-cloud` | 102 |
 
 ```bash
 npx -y @erayendes/asc-mcp register distribution app-info
@@ -325,10 +325,26 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
 | pasting a translation into each locale by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
+| two versions × every locale, compared by hand | `listing__diff_metadata` — only the fields that differ, plus locales added or dropped | `distribution:version` |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+| listing apps, then a versions call each, then reading App Store states | `asc__account_status` — every app, what is live, what is in flight, and whether the next move is yours or Apple's | core, so every profile |
+
+### Prompts
+
+Three workflows are offered as MCP prompts, which clients surface as slash commands. They carry the order of the calls rather than a second description of them — the sequence is what a model otherwise invents differently each time.
+
+| Prompt | What it runs | Offered when |
+|:--|:--|:--|
+| `release-readiness` | `preflight__check_version`, then `listing__diff_metadata`, ending in GO or NO-GO | `distribution:version` |
+| `review-triage` | briefing → triage → a drafted reply per review, none of them sent | `marketing:customer-review` |
+| `price-check` | worldwide prices in one call, then what looks unintended | `monetization:subscription-pricing` |
+
+A prompt only appears when every tool it names is served, so a narrowed profile or `--read-only` removes it the same way it removed the tools. Each one stops at the write: the submission, the reply and the price change are the user's to make.
+
+Naming an app works everywhere it is the target, not only in the macros: the 46 tools rooted at `/v1/apps/{id}` take a name, a bundle ID or the numeric Apple ID, and resolve it before the call. Only there, and only when the value is not already numeric — anywhere else an id is an id.
 
 The `metadata_ai__*` trio never writes on its own judgement, and the reason is ASO rather than caution. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. So the audit reports and stops, the draft only touches the languages you name and returns text for you to read, and the write takes its values from a file you prepared — read straight from it rather than retyped, because transcription is where a carefully chosen keyword list becomes a nearly-identical one.
 
@@ -467,7 +483,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 134 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
@@ -488,13 +504,13 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 191 |
-| ASO / pazarlama | `marketing` + `analytics` | 123 |
-| QA / TestFlight | `testflight` + `access` | 118 |
-| Monetizasyon | `monetization` | 206 |
-| Oyun geliştirici | `game-center` + `distribution` | 316 |
-| Müşteri desteği | `monetization:storekit` | 18 |
-| Build ve imzalama | `provisioning` + `xcode-cloud` | 100 |
+| Yayın yöneticisi | `distribution` + `app-info` | 194 |
+| ASO / pazarlama | `marketing` + `analytics` | 125 |
+| QA / TestFlight | `testflight` + `access` | 120 |
+| Monetizasyon | `monetization` | 207 |
+| Oyun geliştirici | `game-center` + `distribution` | 319 |
+| Müşteri desteği | `monetization:storekit` | 19 |
+| Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
 
 ```bash
 npx -y @erayendes/asc-mcp register distribution app-info
@@ -707,10 +723,26 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
+| iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
+| uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | çekirdek, yani her profilde |
+
+### Prompt'lar
+
+Üç iş akışı MCP prompt'u olarak sunuluyor; istemciler bunları eğik çizgi komutu olarak gösteriyor. Araçların ikinci bir tarifini değil, çağrıların sırasını taşıyorlar — model o sırayı kendi kurduğunda her seferinde başka türlü kuruyor.
+
+| Prompt | Ne çalıştırır | Ne zaman sunulur |
+|:--|:--|:--|
+| `release-readiness` | `preflight__check_version`, ardından `listing__diff_metadata`, sonuçta GO ya da NO-GO | `distribution:version` |
+| `review-triage` | brifing → triyaj → yorum başına taslak yanıt, hiçbiri gönderilmeden | `marketing:customer-review` |
+| `price-check` | tek çağrıda dünya fiyatları, ardından istenmemiş görünenler | `monetization:subscription-pricing` |
+
+Bir prompt yalnızca adını andığı her araç sunuluyorsa görünür; daraltılmış bir profil ya da `--read-only`, araçları nasıl kaldırıyorsa prompt'u da öyle kaldırır. Her biri yazma işleminin önünde durur: gönderim, yanıt ve fiyat değişikliği kullanıcının kararıdır.
+
+Bir uygulamayı adıyla vermek yalnızca makrolarda değil, hedef olduğu her yerde çalışır: `/v1/apps/{id}` köklü 46 araç ad, bundle ID ya da sayısal Apple ID alır ve çağrıdan önce çözer. Yalnızca orada ve yalnızca değer zaten sayısal değilse — başka her yerde kimlik kimliktir.
 
 `metadata_ai__*` üçlüsü kendi kararıyla asla yazmaz ve sebep temkinlilik değil, ASO. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. Bu yüzden denetim rapor edip durur, taslak yalnızca adını verdiğiniz dillere dokunur ve okumanız için metin döndürür, yazma ise değerleri hazırladığınız dosyadan alır — yeniden yazılarak değil doğrudan okunarak, çünkü özenle seçilmiş bir anahtar kelime listesi tam da kopyalanırken neredeyse-aynısına dönüşür.
 

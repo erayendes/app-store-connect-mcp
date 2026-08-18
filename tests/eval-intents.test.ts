@@ -5,6 +5,9 @@ import { PRICING_TOOL_NAMES } from '../src/tools/pricing.js';
 import { REVIEWS_AI_TOOL_NAMES } from '../src/tools/reviews-ai.js';
 import { SCREENSHOT_TOOL_NAMES } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOL_NAMES } from '../src/tools/analytics.js';
+import { PREFLIGHT_TOOL_NAMES } from '../src/tools/preflight.js';
+import { METADATA_TOOL_NAMES } from '../src/tools/metadata.js';
+import { ACCOUNT_TOOL_NAMES } from '../src/tools/account.js';
 import { INTENTS } from './eval/intents.js';
 
 const operationNames = new Set(OPERATIONS.map((operation) => operation.name));
@@ -14,6 +17,9 @@ const macroNames = new Set([
   ...REVIEWS_AI_TOOL_NAMES,
   ...SCREENSHOT_TOOL_NAMES,
   ...ANALYTICS_TOOL_NAMES,
+  ...PREFLIGHT_TOOL_NAMES,
+  ...METADATA_TOOL_NAMES,
+  ...ACCOUNT_TOOL_NAMES,
 ]);
 const SHARED_NORMAL_ADVERSARIAL_TOOLS = [
   'app_store_version_release_requests.create',
