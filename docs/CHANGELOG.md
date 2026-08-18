@@ -7,6 +7,26 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### `release__submit` — the three-step submission, in order, once
+Apple's names hide a dance. `review_submissions__create` takes an *app*, not a version, and makes an empty container. The version arrives as a separate item. And nothing reaches Apple until `submitted` is patched true. An agent that stops after the POST reports a release it did not ship — which is why those three descriptions were already worded to name the next call.
+
+Naming the next call is a workaround. This does the three in order, and says which one actually reached Apple:
+
+```
+Opened review submission sub-1 — empty, and nothing sent yet.
+Added version 3.2.0 to it. Still nothing sent.
+Handed it to Apple (submitted=true). This is the step that starts the queue.
+```
+
+It also refuses to submit something that will bounce. `preflight__check_version` already knows what Apple enforces — a build still processing, an unanswered export-compliance question, a locale with no description — and running it first is the step no chain of raw calls remembers. A refusal names the tool that fixes each gap and sends nothing; `skip_preflight: true` overrides it, for the caller who knows something the check does not.
+
+An open submission is reused rather than duplicated, and a version already on it is not added twice. Apple allows one submission at a time, and a second POST fails with a message about state that says nothing about the one already sitting there.
+
+`--dry-run` returns the plan — the three steps it would take — before any of them.
+
+This is the workflow macro the issue asks for and the test it sets: a deterministic order that the client keeps getting wrong, and one approval instead of three. Macros that only save calls are not in this release; chaining reads is something a model does well.
+
+
 #### `metadata_ai__*` — three tools that never write on their own judgement
 Translating store metadata into forty languages is the biggest manual job in App Store Connect, and the obvious tool for it is the wrong one. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. A tool that renders English keywords into Turkish and writes them has quietly replaced a ranking decision with a language exercise, and nobody finds out until the installs do not arrive.
 
@@ -397,6 +417,26 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### `release__submit` — üç adımlı gönderim, sırasıyla, tek seferde
+Apple'ın adlandırması bir dansı gizliyor. `review_submissions__create` sürümü değil *uygulamayı* alıyor ve boş bir kap yaratıyor. Sürüm ayrı bir öğe olarak geliyor. Ve `submitted` true'ya çekilene kadar Apple'a hiçbir şey ulaşmıyor. POST'tan sonra duran bir ajan, göndermediği bir yayını bildiriyor — o üç açıklamanın zaten bir sonraki çağrıyı adıyla söylemesinin sebebi bu.
+
+Bir sonraki çağrıyı adıyla söylemek bir çare. Bu araç üçünü sırasıyla yapıyor ve hangisinin gerçekten Apple'a ulaştığını söylüyor:
+
+```
+Opened review submission sub-1 — empty, and nothing sent yet.
+Added version 3.2.0 to it. Still nothing sent.
+Handed it to Apple (submitted=true). This is the step that starts the queue.
+```
+
+Geri dönecek bir şeyi göndermeyi de reddediyor. `preflight__check_version` Apple'ın neyi dayattığını zaten biliyor — hâlâ işlenen bir build, cevapsız bir ihracat uyumluluğu sorusu, açıklaması olmayan bir dil — ve onu önce koşturmak, ham çağrı zincirinin hiç hatırlamadığı adım. Ret, her eksiği düzeltecek aracı adıyla söylüyor ve hiçbir şey göndermiyor; `skip_preflight: true` bunu geçersiz kılıyor — denetimin bilmediği bir şeyi bilen çağıran için.
+
+Açık bir submission çoğaltılmıyor, yeniden kullanılıyor; üzerinde zaten olan bir sürüm ikinci kez eklenmiyor. Apple aynı anda bir submission'a izin veriyor ve ikinci POST, orada duran hakkında hiçbir şey söylemeyen bir durum mesajıyla düşüyor.
+
+`--dry-run` planı döndürüyor — atacağı üç adımı, hiçbirini atmadan.
+
+Issue'nun istediği ve ölçüt olarak koyduğu iş akışı makrosu bu: istemcinin sürekli yanlış yaptığı deterministik bir sıra ve üç onay yerine bir. Yalnızca çağrı tasarruf eden makrolar bu sürümde yok; okuma zincirlemeyi bir model zaten iyi yapıyor.
+
 
 #### `metadata_ai__*` — kendi kararıyla asla yazmayan üç araç
 Mağaza metadata'sını kırk dile çevirmek App Store Connect'teki en büyük elle iş ve bunun için akla gelen araç yanlış araç. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. İngilizce anahtar kelimeleri Türkçeye çevirip yazan bir araç, bir sıralama kararını sessizce bir dil alıştırmasıyla değiştirmiştir ve bunu kimse kurulumlar gelmeyene kadar fark etmez.

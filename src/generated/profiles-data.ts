@@ -136,8 +136,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "submission",
       operations: ["app_store_review_attachments.create","app_store_review_attachments.delete","app_store_review_attachments.get","app_store_review_attachments.update","app_store_review_details.app_store_review_attachments.list","app_store_review_details.create","app_store_review_details.get","app_store_review_details.update","apps.review_submissions.list"],
-      manualTools: [],
-      rootResources: ["app_store_review_attachments","app_store_review_details","apps"],
+      manualTools: ["release__submit"],
+      rootResources: ["(makro)","app_store_review_attachments","app_store_review_details","apps"],
     },
     {
       name: "version",
