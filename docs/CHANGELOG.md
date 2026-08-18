@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format is based on 
 ## English
 ### [Unreleased]
 
+#### A price list that says it carries no prices
+`subscriptions.prices.list` was described as showing "what a subscription costs today" and returns rows with no amount and no currency — the number lives in the price point, one `include` away. A live eval session believed the description: it called the tool fifteen times, gave up, pulled all 842 price *points* instead, and reported "2.99 – 35 TRY" as the current price. The real answer was a single number.
+
+The description now says what a row actually is and names `pricing__get_subscription_price`, which resolves it in one call. Nine sibling lists have the same shape — offer prices, app prices, in-app purchase prices — and they get the instruction from a rule rather than nine hand-written strings: a list whose `include` enum offers a `*PricePoint` is a list whose rows are empty without it.
+
+That note lands on the `include` **parameter**, not the tool description, and the placement was measured. Putting it in the descriptions gave nine tools the same sentence about prices and currencies, and `subscriptions.prices.list` fell from first to fifth on *"List current subscription prices worldwide"* — two offer-price lists above it. The search ratchet caught it before it shipped.
+
+
 #### The agent harness can measure the write gate now
 `npm run ax:agent --gate` runs the corpus with the write path live and confirmation on for every write, so the gate is genuinely in the path. Every prompt is declined, so nothing reaches Apple — the decision is taken before the request is built, the same property `tests/gate.test.ts` relies on.
 
@@ -239,6 +247,14 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ## Türkçe
 ### [Unreleased]
+
+#### Fiyat taşımadığını söyleyen bir fiyat listesi
+`subscriptions.prices.list`, "bir aboneliğin bugün ne kadara mal olduğunu" gösterdiği söylenerek tarif ediliyordu ve tutar da para birimi de olmayan satırlar döndürüyor — sayı bir `include` ötedeki price point'te. Canlı bir değerlendirme oturumu açıklamaya inandı: aracı on beş kez çağırdı, pes etti, onun yerine 842 fiyat *noktasının* tamamını çekti ve güncel fiyat olarak "2,99 – 35 TRY" raporladı. Gerçek cevap tek bir sayıydı.
+
+Açıklama artık bir satırın gerçekte ne olduğunu söylüyor ve tek çağrıda çözen `pricing__get_subscription_price`'ı adıyla veriyor. Dokuz kardeş liste aynı şekle sahip — teklif fiyatları, uygulama fiyatları, uygulama içi satın alma fiyatları — ve talimatı dokuz elle yazılmış metinden değil bir kuraldan alıyorlar: `include` enum'unda bir `*PricePoint` sunan liste, o olmadan satırları boş olan listedir.
+
+O not araç açıklamasına değil, `include` **parametresine** düşüyor ve bu yerleşim ölçülerek seçildi. Açıklamalara koyunca dokuz araç fiyat ve para birimi hakkında aynı cümleyi taşıdı ve `subscriptions.prices.list`, *"List current subscription prices worldwide"* sorgusunda birincilikten beşinciliğe düştü — üstünde iki teklif-fiyatı listesi vardı. Arama ratchet'i bunu yayınlanmadan yakaladı.
+
 
 #### Ajan harness'ı artık yazma kapısını ölçebiliyor
 `npm run ax:agent --gate`, korpusu yazma yolu canlıyken ve her yazmada onay açıkken koşuyor; yani kapı gerçekten yolun içinde. Her istem reddediliyor, dolayısıyla Apple'a hiçbir şey ulaşmıyor — karar istek kurulmadan önce veriliyor, `tests/gate.test.ts`'in dayandığı özelliğin aynısı.

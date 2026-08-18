@@ -211,6 +211,46 @@ const PARAM_NOTES: Array<[RegExp, string]> = [
  */
 const RELATIONSHIP_FILTER = /id\(s\) of related '([^']+)'\s*$/i;
 
+/**
+ * A price list that carries no price until you ask for one.
+ *
+ * This lands on the `include` PARAMETER, not on the tool description, and that
+ * placement is the whole design. `searchOperations` ranks on
+ * `name + description + path`, so nine tools carrying the same sentence about
+ * prices and currencies is nine tools competing for every price query: the
+ * first attempt put this text in the descriptions and dropped
+ * `subscriptions.prices.list` from first to fifth on "List current subscription
+ * prices worldwide", with two offer-price lists above it. The information is
+ * needed at the moment the model fills in parameters, which is where it now is.
+ *
+ * `/subscriptions/{id}/prices` and its five siblings return JSON:API
+ * relationship stubs — `{type, id}` and a start date, no number, no currency.
+ * The description promised "what a subscription costs today" and a live session
+ * believed it: fifteen calls to the same tool, then it gave up, pulled all 842
+ * price *points* instead and reported a range as the current price. The real
+ * answer was one number.
+ *
+ * The tell is machine-readable, so this is a rule rather than six curated
+ * strings: a list whose `include` enum offers a `*PricePoint` is a list whose
+ * rows are empty without it. Apple adds more of these; a hand-written set would
+ * not cover them.
+ */
+function pricePointIncludeNote(paramName: string, values: string[] | undefined): string | undefined {
+  if (paramName !== 'include') return undefined;
+  const pricePoint = values?.find((v) => /PricePoint$/.test(v));
+  if (!pricePoint) return undefined;
+  const parts = [pricePoint, ...(values!.includes('territory') ? ['territory'] : [])];
+  // No macro named here. `pricing__get_subscription_price` answers the base
+  // price of a subscription and nothing else — pointing an app price list, an
+  // in-app purchase list or an introductory-offer list at it would be the same
+  // class of wrong pointer this rule exists to remove. That sentence belongs on
+  // the one tool it is true for, in CURATED.
+  return (
+    `ALWAYS pass include=${parts.join(',')} — without it every row is an opaque ` +
+    `id with no price and no currency, which reads as "there is no price here".`
+  );
+}
+
 function annotateParam(name: string, description: string): string {
   const note = PARAM_NOTES.find(([pattern]) => pattern.test(name))?.[1];
   if (note) return description ? `${description} ${note}` : note;
@@ -468,10 +508,12 @@ function main(): void {
         .map((p) => ({
           name: p.name,
           type: schemaType(p.schema),
-          description: annotateParam(
-            p.name,
-            (p.description ?? '').replace(/\s+/g, ' ').slice(0, 200)
-          ),
+          description: [
+            annotateParam(p.name, (p.description ?? '').replace(/\s+/g, ' ').slice(0, 200)),
+            pricePointIncludeNote(p.name, enumValues(p.schema)),
+          ]
+            .filter(Boolean)
+            .join(' '),
           enum: enumValues(p.schema)?.slice(0, 40),
           ...(p.required ? { required: true } : {}),
         }));
@@ -505,13 +547,17 @@ function main(): void {
         domain: domainFor(rootResource(path)),
         method: method.toUpperCase(),
         path,
-        description: describe({
-          operationId: op.operationId,
-          method: method.toUpperCase(),
-          path,
-          toolName: name,
-          deprecated: Boolean(op.deprecated),
-        }),
+        description: [
+          describe({
+            operationId: op.operationId,
+            method: method.toUpperCase(),
+            path,
+            toolName: name,
+            deprecated: Boolean(op.deprecated),
+          }),
+        ]
+          .filter(Boolean)
+          .join(' '),
         readOnly: method === 'get',
         deprecated: Boolean(op.deprecated),
         pathParams,
