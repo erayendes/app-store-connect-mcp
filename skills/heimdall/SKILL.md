@@ -11,21 +11,26 @@ than all of them.
 
 ## The credential boundary
 
-The API key is not reachable from a shell, and looking for it is the single
-most common way a session goes wrong: in recorded runs, of the sessions that
-left the tools behind, the largest group went hunting for the private key and
-the next largest called Apple directly with `curl`.
+Going after the API key is the single most common way a session goes wrong: in
+recorded runs, of the sessions that left the tools behind, the largest group
+went hunting for the private key and the next largest called Apple directly
+with `curl`.
 
-Neither can work here, and this is a fact about the architecture rather than a
-matter of care:
+Neither is the way through, and the reason is worth stating exactly, because
+the convenient version of it is false:
 
-- The JWT is minted **inside the server, per request**, from a key held in the
-  macOS Keychain. `security find-generic-password`, `env | grep ASC_`, grepping
-  a checkout, or hunting for a `.env` cannot produce a working token — there is
-  no long-lived credential sitting anywhere to find.
-- `curl https://api.appstoreconnect.apple.com/...` therefore cannot be a
-  fallback when a tool returns an error. Without a token it returns 401; the
-  tools are the only path that has one.
+- The JWT is minted **inside the server, per request**, from a key the server
+  reads at startup — on macOS out of the Keychain, elsewhere from a `.p8` on
+  disk. A shell running as this user *can* reach that key:
+  `security find-generic-password -w` prints it to whatever asks. So this is a
+  rule, not a wall, and a session that tests it will find it gives way.
+- Which is exactly why crossing it is the wrong move rather than an impossible
+  one. A token signed outside the server skips the rate limiter, the
+  write-confirmation gate, the dry-run path and the response shaping — every
+  guard this server exists to apply. `curl
+  https://api.appstoreconnect.apple.com/...` is not the fallback when a tool
+  returns an error: unsigned it returns 401, and hand-signed it runs unguarded
+  against real App Store data.
 
 So when an App Store Connect tool fails, the next step is always another tool
 call — `asc__status` to check the connection, `asc__search_tools` to find a
