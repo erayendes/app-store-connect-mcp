@@ -63,6 +63,16 @@ export const META_TOOLS: McpToolDefinition[] = [
             'Also list signing certificates and provisioning profiles expiring within 30 days ' +
             '(two extra API calls; default false).',
         },
+        check_capabilities: {
+          type: 'boolean',
+          description:
+            'Also report what this API key can reach, by probing one cheap endpoint per role ' +
+            'family (reports, metadata, reviews, user management, provisioning) and recording ' +
+            'ok/forbidden/unauthorized per family — never the role name itself, which no ' +
+            'endpoint returns. Up to five extra API calls, fewer when check_connection or ' +
+            'check_expirations already covered part of it; default false. Call this once, ' +
+            'before relying on a family, rather than discovering the gap from a 403 mid-task.',
+        },
       },
     },
     annotations: { readOnlyHint: true },
@@ -262,6 +272,125 @@ export function summarizeExpirations(
   };
 }
 
+/**
+ * What one capability probe found. `unknown` covers every case where the
+ * probe cannot speak to permission at all — a network failure, a 5xx, or (for
+ * an app-scoped family) no app to run it against — which is deliberately
+ * indistinguishable from a slow API. Collapsing that into `forbidden` is the
+ * one mistake this has to never make: it would tell a working key to go
+ * through setup again for no reason.
+ */
+export type ProbeState = 'ok' | 'forbidden' | 'unauthorized' | 'unknown';
+
+/**
+ * Apple's role split does not line up with the shape of the work: the
+ * Analytics Reports API answers only to Admin, Finance or Sales (Access to
+ * Reports), first requesting a report type is Admin-only with no path to it
+ * in the App Store Connect UI, and metadata plus customer reviews want Admin
+ * or App Manager. None of that is in any response body — a role is chosen
+ * when a team key is created and never read back, and an individual key
+ * silently inherits its creator's roles and app restrictions. So a session
+ * only learns its key is narrow when a 403 lands mid-task, and reads that as
+ * the tool being broken rather than the key being scoped. This is the probe:
+ * one cheap GET per family, asked once, up front.
+ */
+function classifyProbe(err: unknown): ProbeState {
+  const status = (err as { status?: number } | undefined)?.status;
+  if (status === 401) return 'unauthorized';
+  if (status === 403) return 'forbidden';
+  // status 0 is a network failure that never reached Apple; anything else
+  // (5xx, an unrecognised shape) is inconclusive rather than a denial.
+  return 'unknown';
+}
+
+async function probeFamily(http: AscHttpClient, path: string): Promise<ProbeState> {
+  try {
+    await http.get(path, { limit: 1 });
+    return 'ok';
+  } catch (err) {
+    return classifyProbe(err);
+  }
+}
+
+export interface CapabilityReport {
+  baseline: ProbeState;
+  reports: ProbeState;
+  metadata: ProbeState;
+  reviews: ProbeState;
+  userManagement: ProbeState;
+  provisioning: ProbeState;
+  summary: string;
+}
+
+function summarizeCapabilities(states: Omit<CapabilityReport, 'summary'>): string {
+  const families: Array<[string, ProbeState]> = [
+    ['reports', states.reports],
+    ['metadata', states.metadata],
+    ['reviews', states.reviews],
+    ['user management', states.userManagement],
+    ['provisioning', states.provisioning],
+  ];
+  const denied = families.filter(([, s]) => s === 'forbidden').map(([n]) => n);
+  const unclear = families.filter(([, s]) => s === 'unknown').map(([n]) => n);
+
+  const parts: string[] = [];
+  parts.push(
+    denied.length ? `no access to ${denied.join(', ')}` : 'no denials among the families probed'
+  );
+  if (unclear.length) parts.push(`${unclear.join(', ')} inconclusive — re-run to be sure`);
+  return `${parts.join('; ')}.`;
+}
+
+/**
+ * Runs the five family probes and folds in whatever the caller already knows
+ * from `check_connection` (the baseline call) and `check_expirations` (the
+ * certificates call) so `check_capabilities` never repeats a request the same
+ * `asc__status` call already made.
+ *
+ * A baseline of `unauthorized` short-circuits: the key itself is not
+ * authenticating, so every family probe would fail the same way for the same
+ * reason, and running five more requests to confirm that once each spends
+ * calls to learn nothing new.
+ */
+export async function probeCapabilities(
+  http: AscHttpClient,
+  baseline: ProbeState,
+  appId: string | undefined,
+  certificatesProbe?: ProbeState
+): Promise<CapabilityReport> {
+  if (baseline === 'unauthorized') {
+    const states = {
+      baseline,
+      reports: 'unauthorized' as const,
+      metadata: 'unauthorized' as const,
+      reviews: 'unauthorized' as const,
+      userManagement: 'unauthorized' as const,
+      provisioning: 'unauthorized' as const,
+    };
+    return {
+      ...states,
+      summary: 'The API key itself is not authenticating; nothing else was probed.',
+    };
+  }
+
+  // App-scoped families have nothing to probe without an app id — that is
+  // itself the "no app to cover the probe" case `unknown` exists for, not a
+  // reason to guess.
+  const appScoped = (path: string) =>
+    appId ? probeFamily(http, path) : Promise.resolve<ProbeState>('unknown');
+
+  const [reports, metadata, reviews, userManagement, provisioning] = await Promise.all([
+    appScoped(`/v1/apps/${encodeURIComponent(appId ?? '')}/analyticsReportRequests`),
+    appScoped(`/v1/apps/${encodeURIComponent(appId ?? '')}/appInfos`),
+    appScoped(`/v1/apps/${encodeURIComponent(appId ?? '')}/customerReviews`),
+    probeFamily(http, '/v1/users'),
+    certificatesProbe ?? probeFamily(http, '/v1/certificates'),
+  ]);
+
+  const states = { baseline, reports, metadata, reviews, userManagement, provisioning };
+  return { ...states, summary: summarizeCapabilities(states) };
+}
+
 export async function executeMetaTool(
   name: string,
   args: Record<string, unknown>,
@@ -425,6 +554,9 @@ export async function executeMetaTool(
 
     case 'asc__status': {
       const checkConnection = args.check_connection !== false;
+      const checkExpirations = args.check_expirations === true;
+      const checkCapabilities = args.check_capabilities === true;
+
       const result: Record<string, unknown> = {
         specVersion: SPEC_VERSION,
         loadedDomains: ctx.loadedDomains,
@@ -438,19 +570,37 @@ export async function executeMetaTool(
         rateLimit: ctx.http.limiter.status(),
       };
 
-      if (checkConnection) {
+      // check_capabilities' baseline probe and check_connection's own check
+      // are the same request (GET /v1/apps?limit=1), so this runs it once for
+      // either or both — and is where the capability probes get the app id
+      // they scope three of the five families to.
+      let appId: string | undefined;
+      let baselineProbe: ProbeState | undefined;
+      if (checkConnection || checkCapabilities) {
         try {
           const res: any = await ctx.http.get('/v1/apps', { limit: 1 });
-          result.connection = {
-            ok: true,
-            appsVisible: res?.meta?.paging?.total ?? res?.data?.length ?? 0,
-          };
+          appId = res?.data?.[0]?.id;
+          baselineProbe = 'ok';
+          if (checkConnection) {
+            result.connection = {
+              ok: true,
+              appsVisible: res?.meta?.paging?.total ?? res?.data?.length ?? 0,
+            };
+          }
         } catch (err) {
-          result.connection = { ok: false, error: (err as Error).message };
+          baselineProbe = classifyProbe(err);
+          if (checkConnection) {
+            result.connection = { ok: false, error: (err as Error).message };
+          }
         }
       }
 
-      if (args.check_expirations === true) {
+      // Certificates are fetched here (limit 200) when expirations were
+      // asked for; check_capabilities' provisioning probe below reuses this
+      // outcome instead of firing its own limit:1 request at the same
+      // endpoint.
+      let certificatesProbe: ProbeState | undefined;
+      if (checkExpirations) {
         // Two extra calls, so opt-in only. A key without the provisioning role
         // gets a 403 here — report it instead of failing the whole status.
         try {
@@ -458,10 +608,24 @@ export async function executeMetaTool(
             ctx.http.get<any>('/v1/certificates', { limit: 200 }),
             ctx.http.get<any>('/v1/profiles', { limit: 200 }),
           ]);
+          certificatesProbe = 'ok';
           result.expirations = summarizeExpirations(certs?.data ?? [], profiles?.data ?? []);
         } catch (err) {
+          certificatesProbe = classifyProbe(err);
           result.expirations = { error: (err as Error).message };
         }
+      }
+
+      if (checkCapabilities) {
+        // baselineProbe is always set by this point: the block above runs
+        // whenever checkCapabilities is true, whether or not checkConnection
+        // is also true.
+        result.capabilities = await probeCapabilities(
+          ctx.http,
+          baselineProbe!,
+          appId,
+          certificatesProbe
+        );
       }
 
       return result;
