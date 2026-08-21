@@ -10,6 +10,7 @@ import { STOREKIT_TOOLS } from '../storekit/index.js';
 import { PRICING_TOOLS } from './pricing.js';
 import { SCREENSHOT_TOOLS } from './screenshots.js';
 import type { AscHttpClient } from '../core/http.js';
+import { AscApiError } from '../core/errors.js';
 import type { TokenProvider } from '../core/jwt.js';
 
 export const META_TOOLS: McpToolDefinition[] = [
@@ -280,7 +281,7 @@ export function summarizeExpirations(
  * one mistake this has to never make: it would tell a working key to go
  * through setup again for no reason.
  */
-export type ProbeState = 'ok' | 'forbidden' | 'unauthorized' | 'unknown';
+export type ProbeState = 'ok' | 'forbidden' | 'unauthorized' | 'agreement' | 'unknown';
 
 /**
  * Apple's role split does not line up with the shape of the work: the
@@ -297,11 +298,17 @@ export type ProbeState = 'ok' | 'forbidden' | 'unauthorized' | 'unknown';
 function classifyProbe(err: unknown): ProbeState {
   const status = (err as { status?: number } | undefined)?.status;
   if (status === 401) return 'unauthorized';
+  // An unsigned agreement is a 403 too, and reporting it as a narrow key is
+  // the one wrong answer that costs a credential rotation to disprove.
+  if (err instanceof AscApiError && err.requiresAgreement) return 'agreement';
   if (status === 403) return 'forbidden';
   // status 0 is a network failure that never reached Apple; anything else
   // (5xx, an unrecognised shape) is inconclusive rather than a denial.
   return 'unknown';
 }
+
+/** Exported for the test: the classification is the decision worth pinning. */
+export const classifyProbeForTest = classifyProbe;
 
 async function probeFamily(http: AscHttpClient, path: string): Promise<ProbeState> {
   try {
@@ -331,9 +338,16 @@ function summarizeCapabilities(states: Omit<CapabilityReport, 'summary'>): strin
     ['provisioning', states.provisioning],
   ];
   const denied = families.filter(([, s]) => s === 'forbidden').map(([n]) => n);
+  const blocked = families.filter(([, s]) => s === 'agreement').map(([n]) => n);
   const unclear = families.filter(([, s]) => s === 'unknown').map(([n]) => n);
 
   const parts: string[] = [];
+  if (blocked.length) {
+    parts.push(
+      `${blocked.join(', ')} blocked by an unsigned or expired agreement, which only the ` +
+        'Account Holder can accept at https://developer.apple.com/account'
+    );
+  }
   parts.push(
     denied.length ? `no access to ${denied.join(', ')}` : 'no denials among the families probed'
   );
@@ -358,18 +372,23 @@ export async function probeCapabilities(
   appId: string | undefined,
   certificatesProbe?: ProbeState
 ): Promise<CapabilityReport> {
-  if (baseline === 'unauthorized') {
+  if (baseline === 'unauthorized' || baseline === 'agreement') {
     const states = {
       baseline,
-      reports: 'unauthorized' as const,
-      metadata: 'unauthorized' as const,
-      reviews: 'unauthorized' as const,
-      userManagement: 'unauthorized' as const,
-      provisioning: 'unauthorized' as const,
+      reports: baseline,
+      metadata: baseline,
+      reviews: baseline,
+      userManagement: baseline,
+      provisioning: baseline,
     };
     return {
       ...states,
-      summary: 'The API key itself is not authenticating; nothing else was probed.',
+      summary:
+        baseline === 'agreement'
+          ? 'The account has an unsigned or expired agreement, so every family is blocked for ' +
+            'that reason and none was probed. Only the Account Holder can accept it, at ' +
+            'https://developer.apple.com/account — the key and its roles are not the problem.'
+          : 'The API key itself is not authenticating; nothing else was probed.',
     };
   }
 

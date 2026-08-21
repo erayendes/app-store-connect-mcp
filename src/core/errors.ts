@@ -26,6 +26,24 @@ export class AscApiError extends Error {
     this.name = 'AscApiError';
   }
 
+  /**
+   * Whether Apple refused because a legal agreement is unsigned rather than
+   * because the key is scoped too narrowly. The two arrive as the same 403 and
+   * lead opposite ways: one is fixed by the Account Holder accepting terms on
+   * the developer website, the other by a role or a new key. Guessing wrong
+   * costs an afternoon of rotating credentials that were never the problem.
+   *
+   * Apple has no endpoint that reports agreement state — `/v1/agreements` was
+   * removed — so this error code is the only signal there is, and it only
+   * appears once the grace period is over.
+   */
+  get requiresAgreement(): boolean {
+    return (
+      this.status === 403 &&
+      this.errors.some((e) => String(e.code ?? '').startsWith('FORBIDDEN.REQUIRED_AGREEMENTS'))
+    );
+  }
+
   /** A short, human-readable explanation suitable for showing to the caller. */
   get summary(): string {
     if (this.errors.length === 0) return this.message;
