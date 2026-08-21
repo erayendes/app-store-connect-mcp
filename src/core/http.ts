@@ -413,6 +413,23 @@ export const STATUS_HINTS: Record<number, string> = {
     'may be sharing this API key.',
 };
 
+/**
+ * The other 403. Apple returns the same status for "your key is scoped too
+ * narrowly" and "nobody signed the current agreement", and the generic hint
+ * sends the second case hunting through roles and fresh API keys — none of
+ * which can fix it, because the block is on the account and not on the key.
+ *
+ * Only the Account Holder can clear it, only on the developer website, and
+ * the "Agreements, Tax, and Banking" page in App Store Connect is a different
+ * agreement that looks like the right place and is not.
+ */
+export const AGREEMENT_HINT =
+  'This is not a permissions problem and a new API key will not fix it: the account has an ' +
+  'unsigned or expired agreement. Only the Account Holder can accept it, by signing in at ' +
+  'https://developer.apple.com/account and agreeing to the current Program License Agreement ' +
+  '(the "Agreements, Tax, and Banking" page in App Store Connect is a different agreement). ' +
+  'Every App Store Connect API call stays blocked until then.';
+
 async function toApiError(res: Response): Promise<AscApiError> {
   let errors: AscApiErrorDetail[] = [];
   let message = `App Store Connect API returned ${res.status}`;
@@ -430,7 +447,12 @@ async function toApiError(res: Response): Promise<AscApiError> {
     // Non-JSON error body; the status line is all we have.
   }
 
-  const hint = STATUS_HINTS[res.status];
+  // The agreement 403 is answered before the generic one: same status, and
+  // the generic text would send the reader to the roles that cannot fix it.
+  const agreement = errors.some((e) =>
+    String(e.code ?? '').startsWith('FORBIDDEN.REQUIRED_AGREEMENTS')
+  );
+  const hint = agreement ? AGREEMENT_HINT : STATUS_HINTS[res.status];
   if (hint) message += `. ${hint}`;
 
   return new AscApiError(
