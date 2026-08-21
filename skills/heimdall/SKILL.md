@@ -38,6 +38,38 @@ different operation — never the shell. If the credentials genuinely are not
 configured, `asc__status` says so, and the fix is `setup` (below), which only
 the user can run.
 
+## Least privilege
+
+No endpoint returns a key's role, so a 403 partway through a task is often the
+first anyone learns the key is narrower than assumed. Before telling the user
+their key is broken or asking them to mint an Admin one, call `asc__status`
+with `check_capabilities: true` — one cheap probe per role family
+(`reports`, `metadata`, `reviews`, `userManagement`, `provisioning`), each
+`ok` / `forbidden` / `unauthorized` / `agreement` / `unknown`. `unknown` means
+the probe was inconclusive (network, a 5xx, no app to test against) —
+`agreement` means the account has an unsigned or expired agreement, the same
+403 a narrow role gives for an unrelated reason. Never read either as a
+denial that a wider key would fix — `agreement` in particular is not a role
+problem at all, and no key clears it.
+
+Four facts worth knowing before reaching for a wider key:
+
+- **App Manager covers almost everything** — versions, builds, TestFlight,
+  pricing, metadata. Most 403s are not a reason to go to Admin.
+- **Admin is only load-bearing for two things**: user management, and the
+  first-ever request of an analytics report type an account has never asked
+  for before — that one request has no path in the App Store Connect UI at
+  all, API-only. A `forbidden` on `reports` alone, everything else `ok`, is
+  usually exactly this, not a broken key.
+- **An `agreement` result means the account is blocked, not the key.** Say so
+  and stop — only the Account Holder, signed in at
+  [developer.apple.com/account](https://developer.apple.com/account), can
+  clear it. Suggesting a new key here wastes a rotation on a problem it
+  cannot touch.
+- **Contracts, tax and banking are Account Holder-only, at every role.** No
+  key reaches that page, Admin included. If a task needs it, say so and stop
+  — the fix is a person signing in, not a wider key.
+
 ## Installing it
 
 Two steps, and they are not both yours. **You register. The user hands over the
