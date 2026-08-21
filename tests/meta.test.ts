@@ -4,7 +4,9 @@ import {
   executeMetaTool,
   searchOperations,
   summarizeExpirations,
+  probeCapabilities,
 } from '../src/tools/meta.js';
+import { AscApiError } from '../src/core/errors.js';
 
 const DAY = 86_400_000;
 
@@ -184,5 +186,164 @@ describe('short tokens do not match mid-word', () => {
       // Also alongside real words, where the token has to survive scoring too.
       expect(() => searchOperations(`price ${token} app`), JSON.stringify(token)).not.toThrow();
     }
+  });
+});
+
+/**
+ * check_capabilities: one cheap probe per role family, because Apple never
+ * says which role a key has. A team key's role is picked at creation and
+ * never read back; an individual key silently inherits its creator's roles
+ * and app restrictions. So the only honest way to answer "can this key do X"
+ * is to try X cheaply and see what comes back — never to guess from a name.
+ */
+describe('asc__status check_capabilities', () => {
+  const baseCtx = (http: any): any => ({
+    registry: { get: () => undefined, size: 0, unloadedDomains: () => [] },
+    http,
+    tokens: { status: () => ({}) },
+    readOnly: false,
+    loadedDomains: [],
+  });
+
+  /**
+   * An `AscHttpClient`-shaped fake: `.get` answers per exact path and records
+   * every path it saw, `.limiter` satisfies the `rateLimit` field every
+   * `asc__status` call reads regardless of which flags are set.
+   */
+  function fakeHttp(answer: (path: string) => unknown): { get: any; limiter: any; calls: string[] } {
+    const calls: string[] = [];
+    return {
+      calls,
+      limiter: { status: () => ({}) },
+      get: async (path: string) => {
+        calls.push(path);
+        const result = answer(path);
+        if (result instanceof Error) throw result;
+        return result;
+      },
+    };
+  }
+
+  const appsOk = { data: [{ id: 'app-1' }] };
+  const ok = () => ({ data: [] });
+  const forbidden = () => new AscApiError('forbidden', 403);
+  const unauthorized = () => new AscApiError('unauthorized', 401);
+  const networkError = () => new AscApiError('Network error: fetch failed', 0);
+  const serverError = () => new AscApiError('server error', 503);
+
+  it('reports each of the four states, read straight off the probe', async () => {
+    const http = fakeHttp((path) => {
+      if (path.endsWith('/analyticsReportRequests')) return forbidden();
+      if (path.endsWith('/appInfos')) return unauthorized();
+      if (path.endsWith('/customerReviews')) return networkError();
+      if (path === '/v1/users') return ok();
+      if (path === '/v1/certificates') return serverError();
+      return ok();
+    });
+    const report = await probeCapabilities(http as any, 'ok', 'app-1');
+    expect(report.reports).toBe('forbidden');
+    expect(report.metadata).toBe('unauthorized');
+    // Network failure — must never read as forbidden. This is the one
+    // mistake that would send a working key back through setup for nothing.
+    expect(report.reviews).toBe('unknown');
+    expect(report.userManagement).toBe('ok');
+    // A 5xx is inconclusive, same bucket as a network failure.
+    expect(report.provisioning).toBe('unknown');
+  });
+
+  it('never calls a family probe forbidden because the network failed', async () => {
+    // Same case as above, isolated: every family probe fails at the
+    // transport layer, and every single one must land on unknown.
+    const http = fakeHttp(() => networkError());
+    const report = await probeCapabilities(http as any, 'ok', 'app-1');
+    for (const family of ['reports', 'metadata', 'reviews', 'userManagement', 'provisioning'] as const) {
+      expect(report[family], family).toBe('unknown');
+    }
+  });
+
+  it('short-circuits on an unauthorized baseline: nothing else is probed', async () => {
+    const http = fakeHttp(() => ok());
+    const report = await probeCapabilities(http as any, 'unauthorized', undefined);
+    expect(report.reports).toBe('unauthorized');
+    expect(report.metadata).toBe('unauthorized');
+    expect(report.reviews).toBe('unauthorized');
+    expect(report.userManagement).toBe('unauthorized');
+    expect(report.provisioning).toBe('unauthorized');
+    expect(report.summary).toMatch(/key itself is not authenticating/);
+    // The whole point of the short circuit: five calls that would all fail
+    // the same way for the same reason are never made.
+    expect(http.calls).toEqual([]);
+  });
+
+  it('marks the app-scoped families unknown, not forbidden, when there is no app to probe', async () => {
+    // A baseline that answers ok with zero apps in the account (or that
+    // itself came back forbidden/unknown) leaves no app id. That is exactly
+    // the "no app to cover the probe" shape unknown exists for.
+    const http = fakeHttp((path) => {
+      if (path === '/v1/users' || path === '/v1/certificates') return ok();
+      throw new Error('an app-scoped family was probed with no app id');
+    });
+    const report = await probeCapabilities(http as any, 'ok', undefined);
+    expect(report.reports).toBe('unknown');
+    expect(report.metadata).toBe('unknown');
+    expect(report.reviews).toBe('unknown');
+    expect(report.userManagement).toBe('ok');
+    expect(report.provisioning).toBe('ok');
+  });
+
+  it('reuses a certificates probe already made for check_expirations', async () => {
+    const http = fakeHttp((path) => {
+      if (path === '/v1/certificates') throw new Error('provisioning re-fetched certificates');
+      return ok();
+    });
+    const report = await probeCapabilities(http as any, 'ok', 'app-1', 'forbidden');
+    expect(report.provisioning).toBe('forbidden');
+    expect(http.calls).not.toContain('/v1/certificates');
+  });
+
+  it('does not fire a single probe when the flag is off', async () => {
+    const http = fakeHttp(() => appsOk);
+    const res: any = await executeMetaTool(
+      'asc__status',
+      { check_connection: false },
+      baseCtx(http)
+    );
+    expect(res.capabilities).toBeUndefined();
+    expect(http.calls).toEqual([]);
+  });
+
+  it('shares the baseline call with check_connection instead of asking twice', async () => {
+    const http = fakeHttp((path) => (path === '/v1/apps' ? appsOk : ok()));
+    const res: any = await executeMetaTool(
+      'asc__status',
+      { check_capabilities: true },
+      baseCtx(http)
+    );
+    expect(res.connection.ok).toBe(true);
+    expect(res.capabilities.baseline).toBe('ok');
+    expect(http.calls.filter((p) => p === '/v1/apps')).toHaveLength(1);
+  });
+
+  it('shares the certificates call with check_expirations instead of asking twice', async () => {
+    const http = fakeHttp((path) => {
+      if (path === '/v1/apps') return appsOk;
+      if (path === '/v1/certificates') return { data: [] };
+      if (path === '/v1/profiles') return { data: [] };
+      return ok();
+    });
+    const res: any = await executeMetaTool(
+      'asc__status',
+      { check_expirations: true, check_capabilities: true },
+      baseCtx(http)
+    );
+    expect(res.expirations.summary).toBeDefined();
+    expect(res.capabilities.provisioning).toBe('ok');
+    expect(http.calls.filter((p) => p === '/v1/certificates')).toHaveLength(1);
+  });
+
+  it('stays a read-only tool with the new flag added', () => {
+    const status = META_TOOLS.find((t) => t.name === 'asc__status')!;
+    expect(status.annotations?.readOnlyHint).toBe(true);
+    expect((status.inputSchema.properties as any).check_capabilities.type).toBe('boolean');
   });
 });
