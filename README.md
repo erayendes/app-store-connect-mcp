@@ -82,6 +82,10 @@ There is nothing to memorise — ask *"is there a tool for in-app events?"* and 
 
 Changing a price, handing out Admin or deleting something asks for confirmation before it runs, showing what would change, so a misread instruction cannot execute unchecked. This is the default for the four risk levels that are hard to undo — revenue, destructive, infrastructure, access — and everything else runs on your client's own tool approval. `--confirm` asks before every write instead; `--no-confirm` asks before none; `--read-only` drops mutating tools entirely. See [Security](.github/SECURITY.md).
 
+#### Least privilege, and a way to check it
+
+Apple never returns a key's role from any endpoint, so **App Manager** — not Admin — is the right default for day-to-day release work; Admin only earns its place for user management and for the one-time first request of a new analytics report type, which has no path in the App Store Connect UI at all. Contracts, tax and banking sit behind the Account Holder alone, reachable by no API key regardless of role. Call `asc__status` with `check_capabilities: true` to see what a key actually has rather than guessing from a 403 mid-task. Full breakdown in the [Guide](docs/GUIDE.md#least-privilege-in-practice).
+
 #### Local by design, not by default
 
 MCP guidance recommends remote HTTP servers: one URL, no install, updates you control. Heimdall runs locally over stdio instead, and that is a deliberate trade. Running locally, the key never leaves your machine: Heimdall reads it from the Keychain, signs a short-lived token, and talks to Apple directly. Nothing sits in between.
@@ -186,6 +190,10 @@ Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir ar
 #### Riskli yazmalar önce sorar
 
 Fiyat değiştirme, Admin yetkisi verme ya da bir şeyi silme çalışmadan önce onay ister ve neyin değişeceğini gösterir; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Bu, geri alması zor dört risk seviyesinde varsayılandır — revenue, destructive, infrastructure, access — geri kalan her şey client'ınızın kendi araç onayıyla çalışır. `--confirm` her yazmadan önce sorar, `--no-confirm` hiç sormaz, `--read-only` mutasyon araçlarını tamamen kaldırır. Bkz. [Güvenlik](.github/SECURITY.md).
+
+#### En az yetki, ve onu kontrol etmenin yolu
+
+Apple hiçbir endpoint'ten anahtarın rolünü döndürmüyor, bu yüzden günlük release işi için doğru varsayılan Admin değil **App Manager** — Admin yalnızca kullanıcı yönetimi ve yeni bir analytics rapor tipinin bir kereye mahsus ilk isteği için gerekli, ki bunun App Store Connect arayüzünde hiçbir yolu yok. Sözleşme, vergi ve banka bilgileri yalnızca Account Holder'a açık, role bakılmaksızın hiçbir API anahtarı oraya ulaşamıyor. Bir anahtarın gerçekte neye sahip olduğunu görmek için `asc__status`'u `check_capabilities: true` ile çağırın — görev ortasında gelen bir 403'ten tahmin etmek yerine. Tam döküm [Rehber](docs/GUIDE.md#pratikte-en-az-yetki)'de.
 
 #### Yerelde çalışması tercih, eksiklik değil
 

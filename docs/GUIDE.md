@@ -31,6 +31,31 @@ The role you give the key decides which permissions an agent gets — and what i
 
 Most day-to-day release work needs only **App Manager**; add **Developer** for CI build uploads, or **Finance**/**Sales** only if you actually run `analytics` tools. For how to cap the risk regardless of role, see [SECURITY.md](../.github/SECURITY.md) — `--read-only` mode removes all mutation risk.
 
+### Least privilege in practice
+
+The table above is what you *choose* when a key is created. No endpoint reads it back afterward — a team key's role is fixed at creation with no API to confirm it, and an individual key silently inherits whatever roles and app restrictions its creator has. So the honest way to know what a key can actually do is to ask it, not to remember what you picked.
+
+**App Manager covers almost everything.** Versions, builds, TestFlight, pricing, subscriptions, metadata — all of it. Two things sit outside it on purpose:
+
+- **User management is Admin-only.** Adding a team member, changing a role, revoking access — all of it needs Admin, because it is the one capability that can affect people other than you.
+- **First requesting a given analytics report type is Admin-only, once.** After that first request the report exists and Sales, Finance or a key with "Access to Reports" can read it — but *starting* a report type Apple has not seen this account request before needs Admin, and there is no path to that first request in the App Store Connect web UI at all. It has to come from the API, with an Admin key.
+
+**Nothing reaches the Account Holder's area, at any role.** Contracts, tax forms and banking live on their own page — "Agreements, Tax, and Banking" — and no API key opens it, Admin included. That page is legally tied to one person on the account, and only that person, signed in on the developer website, can touch it. If a task needs that page, it needs the Account Holder at a keyboard, not a wider key.
+
+An unsigned or expired agreement is the same story wearing a different status code: Apple answers with a 403, exactly like a role that is too narrow, but no role fixes it — the account itself is blocked until the Account Holder signs in and accepts the current Program License Agreement.
+
+**Reading what a key actually has:** call `asc__status` with `check_capabilities: true`. It probes five families with one cheap request each — `reports` (Analytics Reports API), `metadata` (app info), `reviews` (customer reviews), `userManagement`, `provisioning` (certificates and profiles) — and reports each as:
+
+| State | Meaning |
+|:--|:--|
+| `ok` | The probe succeeded. This family is open. |
+| `forbidden` | Apple refused this specific request. The key authenticates; this family is not in its role. |
+| `unauthorized` | The key itself is not authenticating — every family will read this way, and the fix is the key, not a role. |
+| `agreement` | The account has an unsigned or expired agreement — the same 403 a narrow role would give, for an unrelated reason. Only the Account Holder can clear it, at [developer.apple.com/account](https://developer.apple.com/account); no key, however wide, fixes this. |
+| `unknown` | Inconclusive: a network failure, a 5xx, or (for `reports`/`metadata`/`reviews`) no app on the account to probe against. Never treat this as a denial — it is not one. |
+
+`unauthorized` and `agreement` on the baseline both short-circuit the rest of the probe: five more requests that would all fail for the same reason answer nothing new, so they are not sent. A `forbidden` on `reports` alone, with everything else `ok`, is exactly the first-request-needs-Admin case above — read literally, not as evidence the whole key is broken.
+
 ### Install
 
 ```bash
@@ -435,6 +460,31 @@ Anahtara verdiğiniz rol, bir agent'ın hangi yetkileri aldığını — ve bir 
 
 > [!NOTE]
 > Günlük release işlerinin çoğu yalnızca **App Manager** ister; CI build yüklemeleri için **Developer** ekleyin, sadece gerçekten `analytics` araçlarını kullanacaksanız **Finance**/**Sales** ekleyin. Role bakılmaksızın riski nasıl sınırlayacağınız için [SECURITY.md](../.github/SECURITY.md)'ye bakın — `--read-only` modu tüm mutasyon riskini kaldırır.
+
+### Pratikte en az yetki
+
+Yukarıdaki tablo, anahtar oluşturulurken *seçtiğiniz* şey. Hiçbir endpoint bunu sonradan geri okumuyor — bir takım anahtarının rolü oluşturulurken sabitleniyor ve bunu doğrulayacak bir API yok; bireysel bir anahtar ise oluşturan kişinin rollerini ve uygulama kısıtlarını sessizce miras alıyor. Yani bir anahtarın gerçekte ne yapabildiğini bilmenin dürüst yolu, ne seçtiğinizi hatırlamak değil, ona sormak.
+
+**App Manager neredeyse her şeyi açar.** Sürümler, build'ler, TestFlight, fiyatlandırma, abonelikler, metadata — hepsi. Bilerek dışarıda bırakılan iki şey var:
+
+- **Kullanıcı yönetimi yalnızca Admin'e açık.** Takım üyesi eklemek, rol değiştirmek, erişimi iptal etmek — hepsi Admin ister, çünkü sizin dışınızdaki insanları etkileyebilecek tek yetenek bu.
+- **Bir analytics rapor tipini ilk kez istemek, bir kez, yalnızca Admin'e açık.** İlk istekten sonra rapor var olur ve Sales, Finance ya da "Access to Reports" yetkili bir anahtar onu okuyabilir — ama Apple'ın bu hesaptan daha önce hiç istenmemiş bir rapor tipini *başlatmak*, Admin ister ve bu ilk isteğe App Store Connect web arayüzünde hiçbir yol yok. Yalnızca API'den, bir Admin anahtarıyla yapılabilir.
+
+**Account Holder alanına, hiçbir rolle ulaşılmıyor.** Sözleşmeler, vergi formları ve banka bilgileri kendi sayfasında yaşıyor — "Agreements, Tax, and Banking" — ve hiçbir API anahtarı, Admin dahil, oraya açılmıyor. O sayfa hesaptaki tek bir kişiye yasal olarak bağlı ve yalnızca o kişi, developer web sitesinde oturum açmış hâlde, ona dokunabilir. Bir görev o sayfayı gerektiriyorsa, ihtiyacı olan daha geniş bir anahtar değil, klavye başında Account Holder'ın kendisi.
+
+İmzasız ya da süresi dolmuş bir sözleşme, farklı bir durum koduyla aynı hikâye: Apple 403 döner, tıpkı dar bir rol gibi, ama hiçbir rol bunu düzeltmez — hesabın kendisi, Account Holder oturum açıp güncel Program Lisans Sözleşmesi'ni kabul edene kadar bloklu.
+
+**Bir anahtarın gerçekte neye sahip olduğunu okumak:** `asc__status`'u `check_capabilities: true` ile çağırın. Beşi de ucuz birer istekle beş aileyi yoklar — `reports` (Analytics Reports API), `metadata` (uygulama bilgisi), `reviews` (müşteri yorumları), `userManagement`, `provisioning` (sertifikalar ve profiller) — ve her birini şöyle raporlar:
+
+| Durum | Anlamı |
+|:--|:--|
+| `ok` | Prob başarılı oldu. Bu aile açık. |
+| `forbidden` | Apple bu belirli isteği reddetti. Anahtar kimlik doğruluyor; bu aile onun rolünde değil. |
+| `unauthorized` | Anahtarın kendisi kimlik doğrulamıyor — her aile böyle okunacak, çözüm bir rol değil anahtarın kendisi. |
+| `agreement` | Hesabın imzasız ya da süresi dolmuş bir sözleşmesi var — dar bir rolün vereceğiyle aynı 403, alakasız bir sebepten. Yalnızca Account Holder çözebilir, [developer.apple.com/account](https://developer.apple.com/account)'ta; hiçbir anahtar, ne kadar geniş olursa olsun, bunu düzeltmez. |
+| `unknown` | Belirsiz: ağ hatası, 5xx, ya da (`reports`/`metadata`/`reviews` için) hesapta yoklanacak uygulama yok. Bunu asla bir ret olarak okumayın — değil. |
+
+Baseline'daki `unauthorized` ve `agreement`, ikisi de probun geri kalanını kısa devre yaptırır: aynı sebeple aynı şekilde başarısız olacak beş istek daha atmak hiçbir şey öğretmez, o yüzden atılmazlar. Geri kalanı `ok` iken tek başına `reports`'ta bir `forbidden`, yukarıdaki "ilk istek Admin ister" durumunun ta kendisi — anahtarın tamamen bozuk olduğuna kanıt olarak değil, olduğu gibi okunmalı.
 
 ### Kurun
 
