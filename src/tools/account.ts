@@ -115,7 +115,7 @@ export function verdictFor(state: string | undefined, version?: string): Verdict
     case 'PREPARE_FOR_SUBMISSION':
       return {
         waitingOn: 'you',
-        action: `${v}has never been submitted. Check it with preflight__check_version, then submit with review_submissions__create.`,
+        action: `${v}has never been submitted. Submit it with release__submit, which checks it first and does all three steps; review_submissions__create alone opens an empty container and sends nothing.`,
       };
     case 'WAITING_FOR_EXPORT_COMPLIANCE':
       return {
@@ -125,7 +125,7 @@ export function verdictFor(state: string | undefined, version?: string): Verdict
     case 'DEVELOPER_REJECTED':
       return {
         waitingOn: 'you',
-        action: `${v}was pulled from review by you and has not gone back. Resubmit with review_submissions__create.`,
+        action: `${v}was pulled from review by you and has not gone back. Resubmit with release__submit.`,
       };
     case 'REJECTED':
     case 'METADATA_REJECTED':

@@ -102,19 +102,19 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 
 | Profile | Serves | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
-| `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 57 | — |
+| `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 58 | — |
 | `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
-| `marketing` | Screenshots, product pages, in-app events, customer reviews | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
-| `access` | Beta groups, individual testers, invitations, team members | 64 | beta-testers, beta-groups, users |
-| `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 54 | — |
-| `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
-| `app-clips` | Default and advanced experiences, header images, beta invocations | 51 | — |
-| `xcode-cloud` | CI workflows, build runs, artifacts | 51 | — |
-| `provisioning` | Certificates, provisioning profiles, devices, bundle IDs | 49 | — |
-| `analytics` | Sales/finance reports, analytics, performance metrics | 24 | — |
-| `background-assets` | Background Assets (iOS 26) | 23 | — |
-| `webhooks` | Webhook configuration and diagnostics | 17 | — |
+| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 207 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `marketing` | Screenshots, product pages, in-app events, customer reviews | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
+| `access` | Beta groups, individual testers, invitations, team members | 65 | beta-testers, beta-groups, users |
+| `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 55 | — |
+| `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
+| `app-clips` | Default and advanced experiences, header images, beta invocations | 52 | — |
+| `xcode-cloud` | CI workflows, build runs, artifacts | 52 | — |
+| `provisioning` | Certificates, provisioning profiles, devices, bundle IDs | 50 | — |
+| `analytics` | Sales/finance reports, analytics, performance metrics | 25 | — |
+| `background-assets` | Background Assets (iOS 26) | 24 | — |
+| `webhooks` | Webhook configuration and diagnostics | 18 | — |
 
 Every profile also carries the **core set** — `apps__list`, `apps__get`, the four shared relationship listings, and `asc__status` / `asc__search_tools` / `asc__discover_domains`. So whichever profile you install can look up an app ID and point you to a tool it doesn't have.
 
@@ -142,13 +142,13 @@ Worked examples for each of these — with the part that usually goes wrong — 
 
 #### Pick per project
 
-MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (122 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
+MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (125 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
 
 #### Sub-profiles
 
 These narrow a large profile. Check a profile in the setup picker; move the cursor onto it and its sub-profiles unfold underneath, all on — uncheck what you don't need.
 
-`monetization` is 204 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 24. The server is called `asc-monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
+`monetization` is 207 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 27. The server is called `asc-monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
 
 Writing the config by hand, the syntax is:
 
@@ -532,19 +532,19 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
-| `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 57 | — |
+| `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 58 | — |
 | `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 206 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
-| `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 99 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
-| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 64 | beta-testers, beta-groups, users |
-| `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 54 | — |
-| `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 182 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
-| `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 51 | — |
-| `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 51 | — |
-| `provisioning` | Sertifikalar, provisioning profilleri, cihazlar, bundle ID'ler | 49 | — |
-| `analytics` | Satış/finans raporları, analytics, performans metrikleri | 24 | — |
-| `background-assets` | Background Assets (iOS 26) | 23 | — |
-| `webhooks` | Webhook yapılandırma ve teşhis | 17 | — |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 207 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
+| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 65 | beta-testers, beta-groups, users |
+| `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 55 | — |
+| `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
+| `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 52 | — |
+| `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 52 | — |
+| `provisioning` | Sertifikalar, provisioning profilleri, cihazlar, bundle ID'ler | 50 | — |
+| `analytics` | Satış/finans raporları, analytics, performans metrikleri | 25 | — |
+| `background-assets` | Background Assets (iOS 26) | 24 | — |
+| `webhooks` | Webhook yapılandırma ve teşhis | 18 | — |
 
 Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, dört ortak ilişki listelemesi ve `asc__status` / `asc__search_tools` / `asc__discover_domains`. Yani hangi profili kurarsanız kurun, bir uygulama ID'si bulabilir ve sahip olmadığı bir aracın yerini size gösterebilir.
 
@@ -572,13 +572,13 @@ Her biri için — ve genelde nerede ters gittiğiyle birlikte — çalışılm�
 
 #### Projeye göre seçin
 
-MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (122 araç); oyun `asc-game-center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
+MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (125 araç); oyun `asc-game-center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
 
 #### Alt profiller
 
 Büyük bir profili daraltır. Setup seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır, istemediğinizi kaldırın.
 
-Örneğin `monetization` 204 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 24 araç. Sunucunun adı iki durumda da `asc-monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+Örneğin `monetization` 207 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 27 araç. Sunucunun adı iki durumda da `asc-monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
 
 Config'i elle yazacaksanız sözdizimi:
 

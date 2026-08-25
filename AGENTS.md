@@ -16,7 +16,7 @@ The install is two steps and they are not both yours. **You register. The user h
 
 Ask what the user works on. If they have not said, `analytics`, `marketing` and `app-info` are a sensible default. Each profile is a small scoped server; the table is in [GUIDE.md](docs/GUIDE.md#register-profiles).
 
-A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 24 tools where `monetization` is 204. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `asc-monetization`.
+A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 55 tools where `monetization` is 207. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `asc-monetization`.
 
 **Say what you are about to do and wait for a yes**, then run:
 

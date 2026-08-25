@@ -19,6 +19,8 @@ interface Options {
   state?: string;
   openSubmission?: boolean;
   itemAlreadyThere?: boolean;
+  /** null models Apple answering with no platform at all. */
+  platform?: string | null;
 }
 
 function fakeHttp(o: Options = {}) {
@@ -72,7 +74,11 @@ function fakeHttp(o: Options = {}) {
         data: [
           {
             id: 'v-320',
-            attributes: { versionString: '3.2.0', appStoreState: o.state ?? 'PREPARE_FOR_SUBMISSION', platform: 'IOS' },
+            attributes: {
+              versionString: '3.2.0',
+              appStoreState: o.state ?? 'PREPARE_FOR_SUBMISSION',
+              ...(o.platform === null ? {} : { platform: o.platform ?? 'IOS' }),
+            },
             relationships: {
               ...(o.build === null ? {} : { build: { data: { id: 'b-1' } } }),
               appStoreReviewDetail: { data: { id: 'r-1' } },
@@ -158,6 +164,22 @@ describe('release__submit', () => {
     const res = await run({ app: 'Ask Quran' }, http, true);
     expect(res.dryRun).toBe(true);
     expect(res.wouldDo).toHaveLength(3);
+    expect(writes).toEqual([]);
+  });
+
+  it('submits for the version\'s real platform, not a default', async () => {
+    // The sparse fieldset used to omit `platform`, so `?? 'IOS'` fired every
+    // time and a macOS or visionOS version was submitted as iOS — accepted by
+    // Apple, and wrong in a way nobody sees until the release does not appear.
+    const { http, writes } = fakeHttp({ platform: 'MAC_OS' });
+    await run({ app: 'Ask Quran' }, http);
+    const created = writes.find((w) => w.path === '/v1/reviewSubmissions');
+    expect(created!.body.data.attributes.platform).toBe('MAC_OS');
+  });
+
+  it('refuses rather than guessing when Apple returns no platform', async () => {
+    const { http, writes } = fakeHttp({ platform: null });
+    await expect(run({ app: 'Ask Quran' }, http)).rejects.toThrow(/no platform/i);
     expect(writes).toEqual([]);
   });
 

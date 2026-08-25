@@ -22,6 +22,7 @@ import {
   executeMetadataI18nTool,
   parseDelimited,
 } from '../src/tools/metadata-i18n.js';
+import { AscApiError } from '../src/core/errors.js';
 
 const LOCALES = [
   { id: 'l-en', locale: 'en-US', description: 'An app.', keywords: 'quran,islam', whatsNew: 'Fixes.' },
@@ -166,6 +167,65 @@ describe('metadata_ai__apply_localizations', () => {
     const res = await run('metadata_ai__apply_localizations', { app: 'Ask Quran', file_path: file }, http, true);
     expect(res.dryRun).toBe(true);
     expect(calls).toEqual([]);
+  });
+
+  it('names which locales landed when Apple rejects one part-way', async () => {
+    // Validation is all-or-nothing, but Apple is not: these are N independent
+    // PATCHes with no transaction across them. The description used to claim
+    // a rejection "cannot leave ten already changed", which was false — what
+    // matters is that the error says where to resume from.
+    const calls: string[] = [];
+    const rows = [
+      { id: 'l-en', locale: 'en-US', description: 'A.', keywords: 'k', whatsNew: 'w' },
+      { id: 'l-tr', locale: 'tr', description: 'B.', keywords: 'k', whatsNew: 'w' },
+      { id: 'l-de', locale: 'de-DE', description: 'C.', keywords: 'k', whatsNew: 'w' },
+    ];
+    const http: any = {
+      get: async (path: string) => {
+        if (path === '/v1/apps') return { data: [{ id: '663', attributes: { name: 'Ask Quran' } }] };
+        if (path.includes('/appStoreVersionLocalizations'))
+          return { data: rows.map((l) => ({ id: l.id, attributes: l })) };
+        if (path.includes('/appStoreVersions'))
+          return { data: [{ id: 'v', attributes: { versionString: '3.2.0' } }] };
+        return { data: [] };
+      },
+      request: async (_m: string, path: string) => {
+        calls.push(path);
+        if (path.includes('l-de')) throw new Error('Apple said no');
+        return { data: {} };
+      },
+    };
+    const file = withFile('locale,keywords\nen-US,a\ntr,b\nde-DE,c\n');
+    await expect(
+      run('metadata_ai__apply_localizations', { app: 'Ask Quran', file_path: file }, http)
+    ).rejects.toThrow(/already written: en-US, tr/);
+    expect(calls).toHaveLength(3);
+  });
+
+  it('keeps Apple\'s status rather than reporting a 403 as retryable', async () => {
+    // Status 0 means "never reached Apple", which AscApiError reads as
+    // retryable. Flattening a 403 to 0 tells the caller to try again at
+    // something that will fail identically every time.
+    const rows = [{ id: 'l-tr', locale: 'tr', description: 'B.', keywords: 'k', whatsNew: 'w' }];
+    const http: any = {
+      get: async (path: string) => {
+        if (path === '/v1/apps') return { data: [{ id: '663', attributes: { name: 'Ask Quran' } }] };
+        if (path.includes('/appStoreVersionLocalizations'))
+          return { data: rows.map((l) => ({ id: l.id, attributes: l })) };
+        if (path.includes('/appStoreVersions'))
+          return { data: [{ id: 'v', attributes: { versionString: '3.2.0' } }] };
+        return { data: [] };
+      },
+      request: async () => {
+        throw new AscApiError('forbidden', 403, [{ code: 'FORBIDDEN' }], 'req-1');
+      },
+    };
+    const file = withFile('locale,keywords\ntr,b\n');
+    const err = await run('metadata_ai__apply_localizations', { app: 'Ask Quran', file_path: file }, http)
+      .then(() => null, (e) => e);
+    expect(err.status).toBe(403);
+    expect(err.retryable).toBe(false);
+    expect(err.requestId).toBe('req-1');
   });
 
   it('is the only one of the three that can write', () => {

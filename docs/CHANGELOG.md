@@ -5,385 +5,136 @@
 All notable changes to this project are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/), and the project follows [Semantic Versioning](https://semver.org/). Entries are newest-first.
 
 ## English
-### [2.3.0] — 2026-08-18
 
-#### `release__submit` — the three-step submission, in order, once
-Apple's names hide a dance. `review_submissions__create` takes an *app*, not a version, and makes an empty container. The version arrives as a separate item. And nothing reaches Apple until `submitted` is patched true. An agent that stops after the POST reports a release it did not ship — which is why those three descriptions were already worded to name the next call.
+### [2.3.0] — 2026-08-25
 
-Naming the next call is a workaround. This does the three in order, and says which one actually reached Apple:
+Three things: tools that make submitting a version easier, a safe way to handle store text in many languages, and a way to see what your API key is actually allowed to do.
 
-```
-Opened review submission sub-1 — empty, and nothing sent yet.
-Added version 3.2.0 to it. Still nothing sent.
-Handed it to Apple (submitted=true). This is the step that starts the queue.
-```
+**Submitting a version is one step now.** It used to take three separate calls in a specific order — and if you stopped after the first one nothing was submitted, though it looked like it had been. `release__submit` does all three in order and tells you which step actually reached Apple.
 
-It also refuses to submit something that will bounce. `preflight__check_version` already knows what Apple enforces — a build still processing, an unanswered export-compliance question, a locale with no description — and running it first is the step no chain of raw calls remembers. A refusal names the tool that fixes each gap and sends nothing; `skip_preflight: true` overrides it, for the caller who knows something the check does not.
+Before that, `preflight__check_version` answers "is this version ready to submit?" — is the build processed, is export compliance answered, is the demo account filled in, which language is missing a description. One call, and each gap names the tool that fixes it. `release__submit` runs this on its own and refuses to submit if something is missing.
 
-An open submission is reused rather than duplicated, and a version already on it is not added twice. Apple allows one submission at a time, and a second POST fails with a message about state that says nothing about the one already sitting there.
+**Three tools for store text across languages.** Audit, draft translation, and bulk apply. None of them writes on its own judgement — the audit reports gaps and stops, the draft only covers languages you name, and the write reads values from a CSV or JSON file you prepared. Keywords especially: the right Turkish keywords are not a translation of the English ones, they are what Turkish users search for. That decision stays yours.
 
-`--dry-run` returns the plan — the three steps it would take — before any of them.
+**You can now ask what your key can reach.** Apple never tells you an API key's role, so you usually found out you had a narrow key from an error in the middle of a task. Add `check_capabilities: true` to `asc__status` and it probes five areas and reports which ones answer.
 
-This is the workflow macro the issue asks for and the test it sets: a deterministic order that the client keeps getting wrong, and one approval instead of three. Macros that only save calls are not in this release; chaining reads is something a model does well.
+Alongside it, the guide gained a "which role do you actually need" section: App Manager covers day-to-day work, Admin is only needed for user management and the first analytics report, and no API key at all reaches the contracts, tax and banking page.
 
+Also, an unsigned agreement is now told apart from a narrow key. Both returned the same error, but one is fixed with a new key and the other only by the account holder signing the agreement.
 
-#### `metadata_ai__*` — three tools that never write on their own judgement
-Translating store metadata into forty languages is the biggest manual job in App Store Connect, and the obvious tool for it is the wrong one. The keyword field is a search-ranking input: the right Turkish keywords are not a translation of the right English ones, they are the words Turkish users type. A tool that renders English keywords into Turkish and writes them has quietly replaced a ranking decision with a language exercise, and nobody finds out until the installs do not arrive.
+**Three workflows as slash commands.** Your client surfaces them as prompts: `release-readiness` (check the version, diff the store text, end in GO or NO-GO), `review-triage` (briefing, triage, a drafted reply per review), and `price-check` (worldwide prices, then what looks unintended). Each stops before the write — submitting, replying and changing a price stay yours. A prompt only appears when every tool it needs is loaded.
 
-So the work is split three ways and each part refuses the next one's job.
+**Two more reads.** `asc__account_status` answers "what is waiting on me?" across your apps in one call. `listing__diff_metadata` shows what changed in the store text between the live version and the one you are preparing, language by language.
 
-**`metadata_ai__audit_localizations`** compares every language and reports what is missing or over Apple's limit — and stops. Its instruction to the host model says, in as many words, not to offer to fill anything in: a report that ends "shall I write these?" is how an audit turns into a write. A field no language uses is left alone rather than flagged on every locale, because that is a decision, and a report nobody can skim is a report nobody reads.
-
-**`metadata_ai__draft_translation`** runs only for the languages you name. `to_locales` is required and never inferred — translating a language nobody asked about is how a deliberate choice gets overwritten. It returns a draft alongside what each target already has, so the draft can say "replacing" rather than "filling in". Ask it for keywords and it says plainly that a translation is a starting point rather than an answer.
-
-**`metadata_ai__apply_localizations`** writes, from a CSV or JSON file you prepared. The values are read straight from the file rather than retyped by a model, which is the point: transcription is exactly where a carefully chosen keyword list becomes a nearly-identical one. Every value is checked against Apple's character limits first, and one failure sends nothing at all — a rejection on the eleventh language would otherwise leave ten already changed and no way to tell from the error which ones landed. An empty cell means "I did not touch this" rather than "make it empty", because that is what an empty cell means in a spreadsheet.
-
-The CSV parser handles quoted fields, because a real description contains commas and newlines and the person editing this file is doing it in Numbers.
-
-
-#### A `.mcpb` bundle, for the menu `~/.claude.json` cannot reach
-Two registries exist and only one of them is a config file. Profiles registered by `setup` are what the agent and the CLI read; the Claude app's **Connectors** menu is fed by MCPB bundles instead, and a local server in `~/.claude.json` never appears there. So "it works but it is not in the menu" was not a bug to find — the menu was reading somewhere else the whole time.
-
-Every release now carries `heimdall-asc-<version>.mcpb`. Drag it onto Claude and a form asks for the profile and, if `setup` has not already run, the key details. The bundle carries the server and its dependencies inlined, so nothing on the machine needs Node.
-
-Two constraints stated rather than worked around. **One bundle serves one profile** — a bundle is one server and one toggle, which is MCPB's shape, not a decision here; installing it again adds another area. And **`setup` is still the better home for the key**: leave the credential fields empty and the bundle uses the shared config, with the `.p8` in the Keychain. Fill them in and the host stores the path instead — safely, but on disk.
-
-Unsigned, and the installer says so. Signing wants a code-signing certificate this project does not carry, and a warning that is true beats a bundle that will not install.
-
-While the manifest was being written, `package.json`'s own description turned out to claim **875 tools**. It is a fifth surface advertising the count and the release pre-flight checks four; it now says 884 like the others.
-
-
-#### Starter packs, and seven scenarios worked through
-"Which profile do I install?" had one answer and it was a table of thirteen rows sorted by nothing in particular. There is a second answer now, by role: a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics`, customer support `monetization:storekit` and eighteen tools. Seven packs, in the guide and in the README, with tool counts a test keeps honest — `docs/GUIDE.md` carried "distribution … 129" through two releases where the number was 130, because prose has no tests.
-
-`examples/` is new and is the other half. Seven scenarios — sales and finance reports, TestFlight invitations, creating a version and attaching a build, review triage, keywords for one language, sandbox testers, CI — each saying which profile it needs and, more usefully, the part that usually goes wrong. Finance and sales are different reports and "revenue" almost always means the first. A tester belongs to the account before they belong to a group. Keywords live on the version localization and the name lives somewhere else entirely, because one belongs to the release and the other to the app.
-
-`examples/ci/release-notes.yml` is a working GitHub Actions workflow: an agent reads the commits since the last tag, writes the "What's New" text, and puts it on the version. It rehearses by default — `dry_run: true` — so a first run cannot reach Apple, and it sets `ASC_CONFIRM_WRITES=0` explicitly rather than letting the write fail closed. No user is present on a runner to answer a confirmation prompt, and a gate refusing a write it was never going to get an answer for reads, in a log, exactly like a bug.
-
-
-#### 143 of 265 real phrasings now find their tool in the top three, up from 83
-`asc__search_tools` is how a model gets from "make the subscription available in Germany" to the one call that does it, and on a measured corpus of 265 phrasings it was landing the right tool in the top three 83 times. It is 143 now, with no phrasing losing a place it had.
-
-Most of the gain is one rule rather than one hundred rewrites. Scoring counts how many of the query's words appear in a tool's name, description and path, so every sibling of a resource ties on a query about the resource — "Create a Game Center achievement" scores full marks on the achievement tool and on its images, localizations and releases alike. Ties then broke alphabetically, which put `game_center_achievement_images.create` first and the tool the query was about fourth. No description can win that: the competitors match the same words for the same good reason.
-
-Equal coverage is now settled by which name carries the least material the query never mentioned. `achievements_v2.create` has one such part where `achievement_localizations.create` has two, and the query said achievement, not achievement localization. That rule alone moved 11 phrasings, and it costs nothing per session — unlike a description, which is paid for in every context that loads the tool.
-
-The other 33 are curated descriptions, chosen against the corpus rather than by domain size. `users.update` said "Update a user." and four phrasings about roles, permissions and admin access found it at no rank at all. `app_infos.update` said "Update an app info." and owns the store category. `app_events.create` said "Create an app event." and is the in-app event Apple features on the store page. Each one now carries the words a person actually types, and deliberately not the words that belong to a neighbour: the in-app event description avoids "promotional" because subscription promotional offers own that token.
-
-Two ratchets moved with it — descriptions that restate their own tool name 95 → 92, Apple-summary descriptions 712 → 692 — and the pinned list of failing queries was regenerated whole rather than edited. Sixty queries left it at once, and hand-picking which lines to delete from a list of 182 is how a stale entry survives and makes the "started passing" message fire on a run where nothing did.
-
-
-#### A write says which app it is about to change
-`Target:     id = 6636549188` was the one line in the confirmation prompt that says *which* thing is being written to, and it was the one line nobody could read. The references inside a request body were resolved to names; the id in the path — the target itself — never was. A destructive write with no body at all named nothing.
-
-It now reads `id = 6636549188 (Ask Quran)`. The type comes from the path segment before the placeholder rather than a table, so a nested path is covered too: `/v1/apps/{id}/relationships/betaTesters` is still an app. Path targets and body references share one lookup budget and one deadline, so this costs no extra wait on a write that already had a body.
-
-
-#### The 46 app-rooted tools take an app name or bundle ID, like the macros always did
-`pricing__get_subscription_price` has always accepted `Ask Quran`, `com.example.app` or `6636549188`. `apps__update` accepted only the number, said `id`, and answered a bundle ID with a 404 — so the same request worked or failed depending on which tool the model reached for, and nothing in the schema said which was which.
-
-The generated tools rooted at `/v1/apps/{id}` now resolve a name or bundle ID the same way, and their `id` says so. Deliberately narrow: only a path segment that literally reads `apps`, and only a value that is not already numeric — which is a value Apple was going to reject anyway. A call that would have worked cannot change meaning, and an ambiguous name is an error rather than a guess, since picking the first of two apps is the exact accident this is meant to prevent.
-
-`TOKENS_PER_TOOL` moves 264 → 268 with it. Two earlier changes had already landed without the constant following them, so the figure `asc__status` reports was 4 low per tool across the whole catalogue.
-
-
-#### `preflight__check_version` — the rejection you can find before you submit
-Every gap this catches is one field on one resource, and every one of them comes back days later: a build still processing, an export-compliance answer nobody gave, a demo account marked required and left blank, a locale with no description. The version sits in `WAITING_FOR_EXPORT_COMPLIANCE` with nothing attached explaining why, or comes back rejected for something that took ten seconds to fix.
-
-One call now reads the version, its build, its review detail, every localization, the screenshot sets under one of them, and the open review submission, and answers with `ready` plus a list of what is missing. Each gap names the tool that fixes it — `builds__update` for the compliance answer, `app_store_review_details__update` for the contact — because "your review contact is incomplete" without that is a second search.
-
-The calls were never the hard part; the checklist was. Knowing that `usesNonExemptEncryption` being `null` is different from it being `false`, and that a blank demo account only matters when `demoAccountRequired` is true, is the part that is not in any response body.
-
-Two things it deliberately does not do. It says nothing about whether Apple will approve the app — that question has no factual answer, and mixing it in would make the rest less trustworthy. And it does not check screenshots against Apple's required device sizes, because those are policy rather than API: a hardcoded list of them would go stale every autumn and start reporting missing sizes that Apple stopped asking for. It reports what exists and flags sets holding no images or images that failed to deliver.
-
-Read-only, in `distribution:version`. Live tool count is now 884.
-
-
-#### A confirmation prompt no longer waits on the labels it decorates itself with
-The prompt resolves the ids in a write body to names, so a person confirming a price change reads the subscription rather than `6740…`. Those lookups are decoration — the write is described correctly without them, and a failed one leaves the raw id, which is the documented behaviour.
-
-The HTTP client did not know that. It treats a network failure as worth three retries with exponential backoff, so on an unreachable API the prompt arrived **49 seconds** after the call and then showed the id anyway. A person waiting on a confirmation reads that as a hang, and looking broken is the one thing a safety gate cannot afford.
-
-The labelling step now has a three-second deadline of its own. Whichever labels have landed by then are the ones shown; the rest fall back to ids, as they already did on failure.
-
-Found by the live gate test, which had started failing two of its seventeen samples — the two whose bodies carry references — for what looked like a flake.
-
+**Smaller things.** Tool search improved noticeably — 54% of real phrasings now find their tool in the top three, up from 31%. The confirmation prompt names the app it is about to change instead of showing an ID. You can pass apps by name or bundle ID, not just the number. And there is now a `.mcpb` bundle for installing from Claude's Connectors menu.
 
 ### [2.2.0] — 2026-08-18
 
-#### Apple changed the specification without changing its version
-The App Store Connect specification is still v4.4.1 and its content is not the content it was, so `npm run spec:update` — which compares the version string — reported nothing to do while sixteen things had moved. The weekly spec watch compares the file instead, which is how this surfaced.
+Mostly about telling you the truth: about errors, about sizes, about what a tool actually returns.
 
-Six of the changes narrow what Apple accepts, and those are the ones to read before upgrading:
+**Confirmation is back on for risky writes.** Changing a price, handing out Admin, deleting a certificate, pulling an app from sale — these ask before running. Everything else relies on your client's own approval. It had been off entirely since 2.0.1 because it misfired on clients that cannot show a prompt; now it only guards the four things worth guarding. `--confirm` asks about every write, `--no-confirm` about none.
 
-- `BundleIdPlatform` no longer lists `SERVICES`.
-- `WinBackOfferPriceInlineCreate` lost its `relationships`.
-- Five list endpoints gained an `items` enum on their parameters — `appStoreVersionLocalizations`, `appCustomProductPageLocalizations`, and `searchKeywords` in three places.
+**A response too big to send is no longer lost.** Large listings used to be cut with a note suggesting a narrower query — the rest simply vanished, and getting it meant paying for the whole thing twice. Now the full response is kept and the reply links to it, so your client can read the rest without any of it passing through the model. Same for the gzipped sales and finance reports, which used to come back unusable when cut.
 
-Three loosen: `purchaseRequirement` lost its enum in `AppEvent` and both of its request bodies, so it is an unconstrained string now. `ResponseError` was deleted as a named schema and inlined into `ErrorResponse.errors.items`, which is the same shape by another route, and `AppEvent.deepLink` gained a format.
+**Errors answer with fields instead of prose.** An Apple rejection now returns `status`, `retryable`, `suggestedAction` and Apple's own error details, including which field was rejected. Easier to act on than three lines of English.
 
-No operation was added, removed or renamed. The catalogue is unchanged at 883 tools across 13 profiles, and no tool name a config might carry has moved.
+**The confirmation prompt names things.** It used to show raw JSON with opaque IDs; now it resolves them to names, so you read the subscription instead of `6740…`.
 
+**StoreKit reads can return real fields.** Set `ASC_APPLE_ROOT_CERTS` to Apple's root certificates and the transaction, history and refund tools verify each payload and return decoded fields. Leave it unset and they return the signed payloads as before. Nothing is decoded without being verified first — no certificates ship with this package, since a stale one would turn verification into a silent no.
 
-#### A response too big to send is no longer a response you have to fetch twice
-The size ceiling has always been right — one localization listing is 264 KB, and sending it whole crowds out the conversation it was meant to inform. What was wrong was where the rest went: nowhere. The reply carried the items that fit and a note suggesting narrower parameters, so the only route to the remainder was to run the same query again and pay for the whole listing a second time.
+**Fixed:** the startup banner now counts what your client actually receives. `--include-deprecated` does something in profile mode (it was silently a no-op). `subscriptions.prices.list` no longer claims to show prices it does not carry — the amount lives one `include` away, and the description now says so and points at the one-call alternative.
 
-The full response is now kept and the reply links to it: an `asc-response://` MCP resource the client reads over `resources/read`, without any of it passing through the model. The text block is unchanged — same items, same truncation note — plus one line naming the resource, so a client that ignores resources is exactly where it was.
-
-This covers the gzipped sales and finance reports for free. They were never a list to cut down, so the text-level fallback sliced the base64 mid-string and handed back a blob that could not be gunzipped. The resource holds the bytes intact; `parse=true` remains the shorter path when rows are what you wanted.
-
-Kept in memory, not in a temp file, and bounded — the twenty most recent, up to 32 MB. A file on disk would need permissions, a retention policy and a cleanup path for every way a process can die; the store lives as long as the server process, which is as long as the session that produced it. Reading an evicted URI says so rather than reporting it as unknown.
-
-
-#### The startup banner counts what the client will actually receive
-`asc-monetization (206 tools)` and a client showing 199 was the same server disagreeing with itself. The banner quoted the operations the profile *maps*; `tools/list` answers with what is served, and those differ by configuration — `asc__call` and `asc__describe` are always there and mapped nowhere, StoreKit only loads with a bundle id, `--read-only` removes the writes, and since this release `--include-deprecated` adds tools too.
-
-Both now come from one list, so they cannot drift: the count is the length of the array the handler returns. `asc__status`'s token estimate follows it for the same reason — it exists to answer "what is this costing my context", which is a question about what was loaded.
-
-The catalogue number is unchanged and still means what it says: 883 tools across 13 profiles, in the README, `server.json` and `CITATION.cff`, cross-checked by the release pre-flight.
-
-
-#### `--include-deprecated` does something in profile mode
-It was a no-op there and said nothing about it. Profile membership is hand-curated in `spec/profiles.csv` and nobody curates an endpoint Apple has retired, so **0 of the 123** deprecated operations were reachable from any profile — the flag only ever worked on the no-profile server with `--domains`.
-
-Passing it now adds the retired operations of the domains the profile covers. Measured: `game-center` goes 184 tools to 298, `monetization` 199 to 208. Membership is by domain rather than by curation, which is the honest definition rather than a shortcut — "everything retired in the areas this profile covers" is what someone passing this flag is asking for, and there is no curated answer to inherit.
-
-
-#### StoreKit reads can return verified fields instead of a sealed envelope
-Set `ASC_APPLE_ROOT_CERTS` to Apple's DER root certificates — paths, or one directory — and `storekit__get_transaction_info`, `storekit__get_transaction_history` and `storekit__get_refund_history` verify each payload with the App Store Server Library and return decoded fields. Leave it unset and they return the signed payloads exactly as before, which is what their descriptions already promised. Every response says which one it is, so a caller never has to infer it.
-
-Nothing is decoded without being checked. A payload that fails verification is an error, not fields with a caveat attached: the point of verifying is that the result can be treated as fact, and "here are the values, but we could not confirm them" invites the reading it was supposed to prevent.
-
-The decoded shape is an allowlist rather than Apple's whole payload. `appAccountToken` is left out deliberately — it is the UUID a developer maps to their own user record, so a transaction id becomes a route back to an account inside their app, and none of these tools was asked for that. `raw: true` returns the signed payload for anyone who wants to verify it themselves.
-
-No certificates ship in this package. They are Apple's to publish and one more thing to keep current, and a stale one would turn verification into a silent no.
-
-
-#### StoreKit reads stop promising fields they do not return
-`storekit__get_transaction_info` advertised "the decoded details of a single transaction: product, price, dates, ownership type and revocation state" and returns one signed JWS string. The history, refund and entitlement tools do the same with whole arrays of them. A caller planning around five named fields receives `header.payload.signature`, nothing crashes, and there is no way to tell whether the wrong tool was called.
-
-The descriptions now say the payloads are signed and that the caller verifies and decodes them, with the App Store Server Library's `SignedDataVerifier` named once rather than on all four — repeating it put the word "certificates" into four descriptions and took the top of "create certificate" off `certificates.create`.
-
-Returning the sealed envelope stays the behaviour. `jwsClaim` could open it in two lines, and those are the wrong two lines: it base64-decodes without checking the signature, which is presenting unverified data as fact. Decoding properly needs Apple's roots and a decision about what happens when verification fails, which is MIL-218 — now named in a code comment so the next reader knows the envelope is the interim answer rather than the intended one.
-
-
-#### A price list that says it carries no prices
-`subscriptions.prices.list` was described as showing "what a subscription costs today" and returns rows with no amount and no currency — the number lives in the price point, one `include` away. A live eval session believed the description: it called the tool fifteen times, gave up, pulled all 842 price *points* instead, and reported "2.99 – 35 TRY" as the current price. The real answer was a single number.
-
-The description now says what a row actually is and names `pricing__get_subscription_price`, which resolves it in one call. Nine sibling lists have the same shape — offer prices, app prices, in-app purchase prices — and they get the instruction from a rule rather than nine hand-written strings: a list whose `include` enum offers a `*PricePoint` is a list whose rows are empty without it.
-
-That note lands on the `include` **parameter**, not the tool description, and the placement was measured. Putting it in the descriptions gave nine tools the same sentence about prices and currencies, and `subscriptions.prices.list` fell from first to fifth on *"List current subscription prices worldwide"* — two offer-price lists above it. The search ratchet caught it before it shipped.
-
-
-#### The agent harness can measure the write gate now
-`npm run ax:agent --gate` runs the corpus with the write path live and confirmation on for every write, so the gate is genuinely in the path. Every prompt is declined, so nothing reaches Apple — the decision is taken before the request is built, the same property `tests/gate.test.ts` relies on.
-
-Every other mode runs `--dry-run`, and dry-run skips confirmation outright. So the destructive-intent score has always answered "did the agent decide to write?" and never "would this server have stopped it?" — five of eight destructive intents wrote in the July calibration, and that number said nothing about the product.
-
-The Agent SDK declines an elicitation on its own when no handler is given, which is indistinguishable from the gate never firing. `--gate` installs a handler that records the prompt first and then declines, which is what turns the mode into a measurement rather than a silent no. The `By gate` table reports the number worth acting on: sessions that called a write with nothing asking first.
-
-
-#### A failed call answers with fields, not a sentence
-An Apple rejection used to come back as three lines of prose, which meant an agent deciding what to do next had to parse English to learn whether trying again could work. It now returns JSON: `status`, `retryable`, `appleRequestId`, `suggestedAction`, and `issues[]` carrying Apple's own `code`, `title`, `detail` and — new — `source`, which names the field or parameter that was rejected. `source` was being dropped from the type before it could reach anyone, though Apple has been sending it all along.
-
-Our own refusals stay prose. A wrong profile or a read-only block answers with hand-written multi-line guidance — the register command, the sub-profile to load — and JSON would turn that into a wall of escapes. Only a real HTTP failure gets the structured shape.
-
-
-#### A confirmation prompt names what it is about to change
-The prompt used to show what Apple's request body shows — `{"data":{"relationships":{"subscription":{"data":{"id":"6740…"}}}}}` — and a person confirming a price change was reading an opaque id and taking the tool's word for what it pointed at. It now resolves the references and names them.
-
-The resolution is one lookup driven by the specification rather than a function per type. The hand-written version had 175 of them and covered the types someone had gotten to; anything newer fell back to the id. Deriving it from `OPERATIONS` means a type Apple adds is covered the day the spec is regenerated.
-
-
-#### A relationship filter says what it takes
-`filter[app]` on a subscription listing accepts an app id, and the description said "filter by app" — true, and not the question being asked, which is *what goes in this field*. The generator now names the related type for every relationship filter, which also lets the AX audit see the difference: unhinted id filters went from 84 to 0.
-
-
-#### Confirmation is back on, for the writes that are hard to undo
-The gate now defaults to the four levels the risk manifest calls `revenue`, `destructive`, `infrastructure` and `access` — changing a price, handing out Admin, deleting a certificate, pulling an app from sale. Everything below them runs on the client's own per-call tool approval, which is the gate that always exists.
-
-Both extremes were tried first and both were wrong. **On for every write** (through 2.0.0) fired constantly, and a client that declares elicitation support but cannot render the form answers `decline` — which the protocol reports identically to a user refusing — so ordinary writes came back as "you refused" on those clients. **Off entirely** (2.0.1 through 2.1.1) made the misfire go away by removing the guard from the writes that move money, which is the one place it was worth its cost.
-
-- `--confirm` / `ASC_CONFIRM_WRITES=1` asks before every write, as before.
-- `--no-confirm` / `ASC_CONFIRM_WRITES=0` asks before none. It is a real setting again rather than the no-op it became in 2.0.1.
-- The risk level is read before the preview is built, so a `low` write no longer pays for the reference lookups behind a prompt it was never going to show.
-- `tests/gate.test.ts` covers both halves from the same server: a `destructive` write is asked about with no flag, a `public` one is not. Testing only the quiet half would have passed with confirmation removed entirely.
-
+**Apple changed the spec without changing its version number.** Sixteen things moved under an unchanged v4.4.1. Six narrow what Apple accepts — `SERVICES` is gone from `BundleIdPlatform`, `WinBackOfferPriceInlineCreate` lost its relationships, and five list endpoints tightened their parameters. No tool was added, removed or renamed.
 
 ### [2.1.1] — 2026-08-14
 
-**2.1.0 shipped without these.** The tag was cut at a commit two PRs behind `main`, so everything below is on `main` since 10 August and reached nobody. Two of them are security fixes; upgrade rather than pin 2.1.0.
+**2.1.0 shipped without any of this.** The tag was cut two pull requests behind `main`, so everything below sat unreleased since 10 August. Two are security fixes — upgrade rather than pinning 2.1.0.
 
-#### `listing__upload_screenshot` would upload any file it could read
-`file_path` comes from the model, and everything after it read that file and PUT it to Apple. Pointing it at a `.p8`, an SSH key or a config sent the bytes and learned afterwards that Apple rejects them — by which point they had already left. The first eight bytes (PNG signature, JPEG marker) settle it before any network call, with a 50 MB ceiling behind that.
+**Screenshot upload would send any file it could read.** The path came from the model, and anything pointed at it — a private key, an SSH key, a config file — was read and sent to Apple before anyone learned it was not an image. It now checks the file is really a PNG or JPEG before any network call, with a 50 MB ceiling.
 
-#### `downloadAsset`'s size cap was a report, not a limit
-It checked the 64 MiB ceiling after `arrayBuffer()` had already buffered the whole body, so an oversized response was refused only once it was in memory. It now rejects an oversized `Content-Length` up front and streams, cancelling the transfer at the cap.
+**A download size cap was checked too late**, after the whole body was already in memory. It now rejects an oversized response up front and cancels the transfer at the limit.
 
-#### Six reads returned one page as if it were everything
-Four analytics hops, the subscription-group listing and both StoreKit histories stopped at the first page or a page cap and said nothing about it.
+**Six reads returned one page as if it were everything.** Analytics reports, subscription groups and both StoreKit histories stopped at the first page and said nothing. A report on page two came back as "no report found"; a subscription past the first 50 groups read as "not found", which is the message that makes someone create a duplicate.
 
-- **`analytics__get_report`** — report requests, reports, instances and segments all paginate now. A report on page two came back as *"No report matching …"*.
-- **`listSubscriptions`** — walks group pages and merges each page's `included`. A subscription past the first 50 groups read as *"not found"*, which is the message someone answers by creating a duplicate.
-- **StoreKit transaction and refund history** — return `hasMore`, Apple's `revision` cursor and an explicit partial-history note. *"No refunds"* and *"no refunds in the first ten pages"* were the same response, and the second is what someone grants goodwill credit against.
-- **`reviews_ai__daily_briefing`** — stops once it has covered the compared window rather than at three pages, and marks its counts as lower bounds when it could not cover it. A trend over a window that was never fully read is not a trend.
+**Fixed:** an ambiguous subscription name no longer silently picks the first match. Price reads report the price actually in effect, not the first row Apple happened to send. `max_rows` no longer drops rows when given a negative number. A failing client registration can no longer delete a working one.
 
-#### Fixed
-- **An ambiguous subscription name put a price write on the wrong product.** A partial name took the first match. Exact product ID or name still wins outright; two substring candidates is now a question.
-- **`readPrice` could report a price the app stopped charging years ago.** The price in effect is the latest start date that has passed, not the first non-scheduled row Apple happened to send.
-- **`max_rows` accepted a negative and then dropped rows.** `Number(x) || 200` let it through as truthy and `slice(0, -5)` cut the last five instead of returning five. Clamped once to `[1, 1000]`.
-- **A failing CLI registration could delete a working one.** The add goes first now; the remove only runs once the add has been refused, and if the remove fails too the add's error survives — otherwise a missing flag was reported as "no such server", sending the reader after a registration that was never there.
-
-#### Security
-- **Results carrying end-user text say so.** Review bodies and tester feedback reach the model through the generated tools with nothing marking them as data rather than instructions, and they sit next to write tools a review could ask the model to call. The reviews macro has had that rule since it shipped; the generated path has it now too.
-- **Optional PII redaction.** `ASC_REDACT_PII=1` masks `email`, `firstName` and `lastName` on tester payloads, keeping the email domain. Off by default: listing testers is how someone answers *"who hasn't installed the build?"*, and an answer naming `<redacted>` five times is one the caller has to go around this server to get.
-- **The Docker image runs as `node`, not root**, and the throwaway key file it generates is `600`.
-
-#### Documentation
-The `Dockerfile` header claimed two consumers that do not read it. Glama builds from its own spec — `debian:trixie-slim`, pnpm, `mcp-proxy` — and the MCP Registry installs the npm package `server.json` declares. Editing that file changes neither, and a failed Glama build says nothing about its contents.
+**Security:** results carrying end-user text (reviews, tester feedback) are now marked as data rather than instructions. `ASC_REDACT_PII=1` masks tester names and emails, off by default. The Docker image runs as a non-root user.
 
 ### [2.1.0] — 2026-08-10
 
-#### Risky writes look risky in the tool list
-Every mutating operation already carried a hand-reviewed risk level, but it only reached the model through `--dry-run`, `asc__describe` and the `--confirm` prompt — and that prompt has been off by default since 2.0.1. The one signal that always shipped, `destructiveHint`, meant exactly "this is a DELETE". So **100 non-DELETE writes that move money, ship a release, change who has access or break code signing were indistinguishable from `beta_groups__create`** in a plain tool list: `app_price_schedules__create`, `app_store_version_release_requests__create`, `apps__promoted_purchases__replace` among them.
-- The level now appears in the description of the ~120 operations where the HTTP method cannot show it, as `REVENUE-level write.` and so on. It costs 443 tokens across a typical eight-server setup — 0.35% of the tool definitions.
-- **`destructiveHint` now means what MCP says it means**, "may perform destructive updates", not "is a DELETE". **Clients that gate on this hint will ask for approval on more tools than before.**
-- `app_store_versions__build__set` was classified `low` because the release rule matched only `create|update`. Swapping the binary under a version is a release step.
+**Risky writes look risky in the tool list.** About 120 operations that move money, ship a release, change access or break code signing were indistinguishable from harmless ones in a plain tool list. The risk level now appears in their descriptions. Clients that gate on the destructive hint will ask for approval on more tools than before.
 
-#### `pricing__equalize_price` — one anchor price, every country derived by Apple
-For an app, an in-app purchase or a subscription. Give the anchor territory and the price; Apple's own currency and tax maths decides every other market. The number is never copied across currencies, because it cannot be — anchored at 3.99 TRY, Apple returns 0.99 USD for Afghanistan and 2.99 AED for the UAE.
+**One anchor price, every country derived by Apple.** `pricing__equalize_price` takes one territory and price, and Apple's own currency and tax maths decides every other market — for an app, an in-app purchase or a subscription. Run it under `--dry-run` first: it returns the full derived table before anything is sent.
 
-The three product types do not share a write model, and the macro does not pretend otherwise:
+**Subscription prices for every country in one call.** `pricing__get_subscription_price` used to require a territory, so it could only answer about one country. Omit it now and you get every country grouped by price — measured live, 175 territories collapse to 45 distinct prices, about 1.3k tokens. Country names come with it, since Apple returns them nowhere.
 
-| Product | Writes | Who equalizes |
-| -- | -- | -- |
-| App price | 1 (`appPriceSchedules`) | Apple, from `baseTerritory` |
-| In-app purchase | 1 (`inAppPurchasePriceSchedules`) | Apple, from `baseTerritory` |
-| Subscription | ~175, one per country | us, from the equalizations endpoint |
+**Two things the raw tools could not do at all.** `listing__upload_screenshot` performs Apple's full reserve/upload/commit sequence — the raw tool only reserves a slot and moves no bytes. `analytics__get_report` downloads the report; the raw chain ends holding a link.
 
-`subscriptionPrices` has no base territory, so that path reads Apple's equalizations and then writes each country separately. It writes the anchor **first**, so a failure part-way leaves the country you actually named already set; it stops at the first error rather than spreading an unknown state, and the result names exactly which countries landed, which one failed, and how many are untouched. Re-running is safe — setting a price that is already set changes nothing.
+**Fixed:** `listing__get_screenshots` shipped in 2.0.0 unreachable from every profile. `review_submissions__create` was described as submitting a version — it does not; it opens an empty container, and an agent stopping there reported a release it never shipped. The advertised tool count had drifted to three different numbers across four places.
 
-`preserve_current_price` is required for subscriptions, as on the single-territory macro, and the confirmation prompt spells out that "existing subscribers WILL be moved" now means worldwide. Apps and in-app purchases have no subscribers and do not ask.
-
-Run it under `--dry-run` first: the subscription path returns the full derived table before anything is sent.
-
-#### `pricing__get_subscription_price` answers "in every country", not just one
-`territory` was required, so the macro could only ever answer about one country. Asked "what does this subscription cost in each country?", a live eval session called the macro, found it did not answer the question, walked the raw chain instead, and spent 1.02M tokens and $3 writing the result to a CSV alongside a hand-written country-name dictionary in Python.
-
-Omit `territory` now and the answer covers every country Apple sells in, grouped by price so it stays readable: measured live, 175 territories collapse to 45 distinct prices — 91 countries share one of them — and the whole thing is about 1.3k tokens. The currency comes back with each group, which is the other half of an answer that "19.99" alone does not give. So is the country name: Apple returns one nowhere — not on a price row, not on `/v1/territories`, which carries the code and the currency and nothing else — which is why that eval session hand-typed a 175-entry dictionary, and then did it again on a later run. Each group now carries `countryNames` alongside `territories`, in the same order.
-
-Single-country calls are unchanged, except that the response names the country too.
-
-#### Upload a screenshot, read a report — two things the raw tools could not do
-Both were chains that ended somewhere the API does not go.
-- **`listing__upload_screenshot`** performs Apple's reserve → upload → commit sequence with the MD5 checksum. The raw `app_screenshots__create` only reserves a slot and moves no bytes, so the chain could not be finished from the tools at all.
-- **`analytics__get_report`** walks request → report → instance → segment, downloads the gzipped TSV behind Apple's signed link and returns rows. The raw chain ends holding a URL. It will not start a report request: that is an ongoing commitment on the account, not a side effect of a question.
-
-#### Fixed
-- **`listing__get_screenshots` shipped in 2.0.0 unreachable.** Its family was missing from the profile generator's known list, so no row for it could exist in the curation sheet and no profile-mode server offered it. Both listing macros now live under `distribution:version`. `pricing__get_subscription_price` was missing a row too — it worked, but the per-sub-profile tool counts were short by one.
-- **`review_submissions__create` was described as submitting a version for review.** It takes an *app*, not a version, and opens an empty submission; the version goes in as a separate item and nothing reaches Apple until `submitted` is set. An agent that stopped after the first call reported a release it had not shipped. The three steps now each say what they are not.
-- Curated descriptions for the review-submission chain and both ends of the analytics chain; AXIS1 findability debt 718 → 712.
-- **The tool count had drifted to three numbers across four surfaces** — `server.json` and `CITATION.cff` said 868, the GitHub repo description 875, the README 883 — and `CITATION.cff` was two releases behind at 2.0.0. All now say 883 (859 reachable operations plus 24 hand-written tools), and the release pre-flight compares the `CITATION.cff` version and the tool count on all three surfaces, failing the release on a mismatch instead of shipping it.
-- **`.claude-plugin/plugin.json` pointed its homepage at `erayendes/asc-mcp`**, a repository that does not exist.
-
-#### For contributors
-- **`npm run ax:agent` did not run** — it read a field the `Profile` type does not have and threw on import.
-- `--skill=<dir>` and `--wrong-profile` for A/B-ing a skill document, with per-session `reachedForCredentials` / `calledAppleDirectly` booleans and a `By skill` table printed as deltas against the control arm. `SHELL_KINDS` was undercounting: `security find-generic-password` and a bare `curl` at Apple were only recorded when piped through a filter word.
-
-#### Added
-- **A `heimdall` skill, installed by `register`** for the clients that read `SKILL.md` (Claude Code, Codex). It carries what has no other channel before the server exists: that the API key is minted inside the process per request and cannot be found in a shell or replaced by `curl`, which in recorded sessions was the single most common way a run went wrong. Roughly 200 tokens sit in context; the body loads only when the skill triggers.
+**Added:** a `heimdall` skill, installed by `register`, for clients that read skill files.
 
 ### [2.0.1] — 2026-08-09
 
-#### Write confirmation is opt-in
-**Behaviour change.** The confirm-before-write gate is **off by default** now; turn it on with `--confirm` / `ASC_CONFIRM_WRITES=1`.
+**Write confirmation is opt-in now.** Turn it on with `--confirm` or `ASC_CONFIRM_WRITES=1`.
 
-The gate that always exists is the client's own per-call tool approval. This one is second, and it only works where the client renders an elicitation form — a client that declares the capability but cannot show the form answers `decline`, which the protocol reports identically to a user refusing. So on those clients the guard blocked working writes with "the write was not confirmed", pointing the user at their own client's permissions instead of at the setting that caused it. Whether the form renders is a per-client fact, so the choice belongs to whoever configures the server.
+It only works where your client can show a confirmation form. A client that claims support but cannot render one answers "declined", which the protocol reports exactly like a user refusing — so the guard was blocking working writes and pointing people at their client's permissions instead of the real cause. Whether the form renders is a per-client fact, so the choice belongs to whoever configures the server.
 
-Nothing is lost when it is off: the impact preview still prints under `--dry-run`, and `--read-only` still removes every mutating tool.
-- **`--allow-unconfirmed-writes` / `ASC_ALLOW_UNCONFIRMED_WRITES` removed.** It only ever applied to clients that declared no elicitation support, and asking for confirmation and for unconfirmed writes at once was self-cancelling.
-- **`--no-confirm` is now a no-op** — it lands on the new default, so existing configs keep working unchanged.
-- **The decline message says what actually happened**: if no prompt appeared on screen, the client answered for you.
+Nothing is lost when it is off: `--dry-run` still previews, and `--read-only` still removes every mutating tool.
 
 ### [2.0.0] — 2026-08-05
 
-#### Profiles are curated, not derived
-**Breaking change — every profile changed.** Which tool belonged to which profile was read off the URL, so every relationship hanging off an app landed in `app-info` and eight of eleven profiles could not reach their own resources from an app. Membership is hand-curated in `spec/profiles.csv` now and generated into the code.
+**Breaking change — every profile changed.** Which tool belonged to which profile used to be read off the URL, so eight of eleven profiles could not reach their own resources from an app. Membership is hand-curated now.
+
 - **13 profiles**, up from 11. New: `access`, `app-clips`, `testflight`.
-- **`user-management` is gone**, split into four. A config still naming it starts anyway, with a single tool explaining the split.
-- **Every profile changed size** — `app-info` goes from 112 tools to 57. **Check your config**; the tool you reached for may be in another profile now.
+- **`user-management` is gone**, split into four. A config still naming it starts anyway and explains the split.
+- **Every profile changed size** — `app-info` went from 112 tools to 57. **Check your config**; the tool you want may live elsewhere now.
 
-#### Sub-profiles
-32 sub-profiles across five profiles. A profile narrows with a colon: take `monetization` at 204 tools, or `monetization:subscription-pricing` at 24.
-Some tools belong to more than one, so reaching a single tool no longer means loading a whole profile. The setup picker unfolds a checked profile's sub-profiles under the cursor, all on, and writes the argument for you; `asc__status` reports which are loaded and roughly what they cost.
+**Sub-profiles.** A profile narrows with a colon: `monetization` is 204 tools, `monetization:subscription-pricing` is 24. Some tools belong to more than one, so reaching a single tool no longer means loading a whole profile.
 
-#### Any tool in the profile, on any client
-`asc__describe` + `asc__call` are present from the start, so nothing depends on a client refreshing its tool list mid-session.
-`asc__call` is read-only; writes keep their own names and their confirmation gate.
-`asc__load` adds a sub-profile mid-session for clients that do refresh.
+**Any tool in the profile, on any client.** `asc__describe` and `asc__call` are there from the start, so nothing depends on your client refreshing its tool list mid-session.
 
-#### Setup registers with every client you have installed
-`setup` knew one command, `claude mcp add`, and left the rest to the user on a machine with Codex and Cursor.
-- **It detects the clients on the machine and asks which to install into:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
-- **The vendor's own command writes where one exists** (`claude`, `codex`, `code --add-mcp`); plain JSON configs are backed up and edited. One that cannot be parsed is left untouched and reported with a block to paste. A client failing never stops the others.
-- **`register` is the same work without a terminal**, for an agent installing on your behalf: `asc-mcp register monetization:subscription-pricing analytics`. It only adds; removing is `setup`'s job.
+**Setup registers with every client you have.** It detects Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf and VS Code, and asks which to install into. `register` does the same without a terminal, for an agent installing on your behalf.
 
-> [!NOTE]
-> ChatGPT's own connectors accept only remote HTTPS servers, so Heimdall cannot appear there; it runs on your machine over stdio, which is why the private key never leaves it. The Codex entry covers the CLI, the IDE extension and the Codex side of the ChatGPT desktop app — the three share one config file.
-
-#### Fixed
-- **A misspelled filter changed which app you were editing.** `filter[bundleId]` was dropped silently, ran unfiltered and returned the account's first app. Both spellings are accepted now.
-- **The binary exited 0 with no output when invoked through a symlink.**
-- **Tool search returned nothing for queries in any language but English, and never said why.** It returns results in every language now, and an empty result explains itself.
-- **Tool search offered tools the server refuses to load.**
-
-#### Added for contributors
-An agent-experience harness: a 50-intent corpus with adversarial goals run n times rather than once, a contract check across all 982 operations for unstamped risk levels and `readOnly` disagreeing with the HTTP method, and a live write-path probe that creates and deletes a TestFlight group on a throwaway app — the only check that exercises token to POST to Apple's answer, since every other one runs `--dry-run`. `tests/gate.test.ts` proves the write gate fires end to end over stdio rather than merely classifying correctly.
+**Fixed:** a misspelled filter used to be dropped silently and return the account's first app — which meant edits landed on the wrong app. Tool search returned nothing for non-English queries without saying why, and offered tools the server refuses to load.
 
 ### [1.3.0] — 2026-07-28
 
-Safety and usability release: every write is now schema-checked locally, previewed before confirmation, and never silently resent.
+Safety release. Every write is now schema-checked locally, previewed before confirmation, and never silently resent.
 
-- **Writes are never auto-retried into duplicates.** Reads still retry on 408/429/5xx; writes retry only on 429 (rejected before processing). A write that dies without a response reports an explicit unknown outcome — "Apple may or may not have processed it, verify before resending" — instead of being resent. `Retry-After` HTTP-date form supported.
-- **Fail-closed confirmation.** On clients without elicitation support, writes are now blocked with an error instead of silently proceeding; opt in explicitly with `--allow-unconfirmed-writes` / `ASC_ALLOW_UNCONFIRMED_WRITES=1`.
-- **Real request-body schemas.** All 355 body-taking operations carry a resolved JSON Schema (attributes, relationships, enums, required fields, closed-world objects) instead of a generic "JSON:API body" hint, and every write body is validated locally — a typo'd field or wrong enum fails with a field path before anything reaches Apple.
-- **Impact preview, risk levels and typed confirmation.** The confirmation prompt shows the operation, target ids, account, a summary of the changes and a reversibility note. Every mutating operation carries a hand-reviewed risk level (low / public / release / revenue / destructive / infrastructure / access); revenue, destructive, infrastructure and access writes require typing CONFIRM instead of ticking a box.
-- **`--dry-run` / `ASC_DRY_RUN=1`:** mutating calls validate and return what would have been sent (method, path, body, risk) — nothing reaches Apple. For CI and agent rehearsals.
-- **Reviews-AI hardening:** reviews travel to the model as untrusted JSON data (prompt-injection defense), statistics are computed deterministically with a previous-period trend comparison, truncation is reported honestly (fetched vs analyzed), drafts reply in the review's language, and brand voice / banned phrases / support URL come from `ASC_REVIEWS_*` env vars. Tools hide on clients without sampling support.
-- **`ASC_BASE_URL`** points the whole server at a local fixture for testing; host-pinning follows the override.
-- `asc__status` gains `check_expirations` — certificates and provisioning profiles expiring within 30 days.
-- Actionable hints on 403 (role lacks permission) and 409 (resource-state lock) errors, alongside the existing 401 hint.
-- GUIDE: multi-account patterns with existing mechanisms (per-server env, `ASC_CONFIG_DIR`).
+- **Writes are never auto-retried into duplicates.** A write that dies without a response reports an explicit unknown outcome instead of being resent.
+- **Real request-body schemas** for all 355 body-taking operations, validated locally — a typo or wrong enum fails with a field path before anything reaches Apple.
+- **Impact preview and risk levels.** The confirmation prompt shows the operation, target, account, a summary of changes and a reversibility note. Revenue, destructive, infrastructure and access writes require typing CONFIRM.
+- **`--dry-run`** validates and returns what would have been sent, without touching Apple.
+- **Reviews-AI hardening:** reviews reach the model as untrusted data, statistics are computed in code, truncation is reported honestly, and brand voice comes from `ASC_REVIEWS_*` env vars.
+- `asc__status` gains `check_expirations` — certificates and profiles expiring within 30 days.
 
 ### [1.2.0] — 2026-07-26
 
-- **Write confirmation.** Before any mutating tool runs (changing a price, submitting for review, deleting a resource), the server asks the user to confirm via [MCP elicitation](https://modelcontextprotocol.io/) — a vague or misread instruction can no longer execute unchecked. On by default; turn it off with `ASC_CONFIRM_WRITES=0` or `--no-confirm`. Clients without elicitation support fall back to their own per-call approval, with a one-time notice.
+- **Write confirmation.** Before any mutating tool runs, the server asks you to confirm, so a vague or misread instruction cannot execute unchecked. On by default; `ASC_CONFIRM_WRITES=0` turns it off.
 
 ### [1.1.4] — 2026-07-25
 
-- First npm release carrying the lazy private-key parsing from 1.1.3 — the server boots without valid credentials, so tool discovery and introspection work before setup. Funding simplified to Buy Me a Coffee only (Patreon removed). No API changes.
+- First npm release carrying the lazy key parsing from 1.1.3, so the server boots without valid credentials. No API changes.
 
 ### [1.1.3] — 2026-07-23
 
-- **The server starts without a usable private key.** The signing key is now parsed lazily on the first API call instead of at startup, so tool discovery — and automated introspection harnesses like Glama that only call `tools/list` — no longer need valid credentials to boot. An invalid key surfaces on the first real request rather than blocking startup.
+- **The server starts without a usable private key.** The signing key is parsed on the first API call instead of at startup, so tool discovery works before setup.
 
 ### [1.1.2] — 2026-07-22
 
-- Added the `mcpName` field (`io.github.erayendes/asc-mcp`) to `package.json` so the server can be published to the official [MCP Registry](https://registry.modelcontextprotocol.io). No functional change.
+- Added the `mcpName` field so the server can be published to the official MCP Registry. No functional change.
 
 ### [1.1.1] — 2026-07-22
 
-- **CLI messages now show a command that works without a global install.** The help text, the "missing config" and "invalid config" errors, and the StoreKit hint print `npx -y @erayendes/asc-mcp setup` instead of a bare `asc-mcp setup` — the latter only exists after `npm i -g`. `GUIDE.md §7` spells out the re-run command too.
+- **CLI messages now show a command that works without a global install** — `npx -y @erayendes/asc-mcp setup` rather than a bare `asc-mcp setup`.
 
 ### [1.1.0] — 2026-07-22
 
-- **Rebrand to Heimdall.** The project is now *Heimdall — App Store Connect MCP*. The npm package (`@erayendes/asc-mcp`) and the command (`asc-mcp`) are unchanged.
-- **Docs reorganised:** community-health files (security, support, contributing, conduct) live under `.github/` so GitHub recognises them; the guide and this changelog live under `docs/`. Numbers corrected throughout: **982 operations / 966 paths / 123 deprecated** (previously reported as 1,263 / 159).
-- New `GUIDE.md` sections: platform support, the real setup-wizard flow, adding/removing tools later, StoreKit environments, a sample session, and uninstall steps.
-- `SECURITY.md`: a "review it yourself before installing" section and an explicit no-telemetry / no-data-collection statement.
-- Setup verifies credentials against Apple before saving, re-prompts on invalid input, and reuses saved credentials while reconciling registered profiles.
-- User-facing help and error text now use the real `asc-mcp` command name.
-- **Renamed the `account-management` profile to `provisioning`** so its name matches what it does (code signing: bundle IDs, certificates, devices, provisioning profiles) and no longer reads as user management — that lives in `user-management`. No alias: if you registered the old name, re-register as `asc-provisioning`.
+- **Rebrand to Heimdall.** The npm package and the command are unchanged.
+- **Docs reorganised** — community files under `.github/`, guide and changelog under `docs/`. Counts corrected to 982 operations / 966 paths / 123 deprecated.
+- Setup verifies credentials against Apple before saving, and reuses saved ones.
+- **Renamed `account-management` to `provisioning`** so the name matches what it does. No alias — re-register if you used the old name.
 
 ### [1.0.4] — 2026-07-22
 
@@ -391,437 +142,184 @@ Safety and usability release: every write is now schema-checked locally, preview
 
 ### [1.0.3] — 2026-07-21
 
-- Interactive, space-to-toggle profile picker showing each profile's tool count and rough token cost.
-- Setup registers the picked profiles directly (`claude mcp add`) instead of only printing instructions.
-- Discoverability: sibling-server hints include the exact add command, and StoreKit tools are surfaced in `asc__search_tools`.
-- Friendlier setup: drag-and-drop `.p8` path, npx-based config, no real key in examples.
+- Interactive profile picker showing each profile's tool count and rough token cost.
+- Setup registers the picked profiles directly instead of only printing instructions.
+- Drag-and-drop `.p8` path, npx-based config, no real key in examples.
 
 ### [1.0.2] — 2026-07-21
 
-- **Profile servers:** one binary serves 11 purpose-scoped MCP servers that share a single credential set.
-- **Shared credential config** at `~/.config/asc-mcp/config.json`; environment variables still override it.
-- Removed 281 id-only twin operations, shrinking the surface from 1,263 to 982.
-- Fixed sales and finance report endpoints; added App Store Connect API integration tests.
-- Tool names capped at 64 characters and query-parameter names sanitised for the Anthropic API.
-- Optional **macOS Keychain** source for the private key, and bilingual **English / Türkçe** documentation with a flag-based language switcher. (These landed in the repo on 2026-07-19 under a "1.1.0" heading that was never published — 1.0.2 is the first npm release that shipped them.)
+- **Profile servers:** one binary serves 11 purpose-scoped MCP servers sharing a single credential set.
+- **Shared credential config** at `~/.config/asc-mcp/config.json`.
+- Removed 281 duplicate operations, shrinking the surface from 1,263 to 982.
+- Fixed sales and finance report endpoints.
+- Optional **macOS Keychain** source for the private key, and bilingual **English / Türkçe** docs.
 
 ### [1.0.1] — 2026-07-19
 
-- Per-role risk column in the API-key table; roles mapped to this server's actual domains.
+- Per-role risk column in the API-key table.
 - Scoped npm package name `@erayendes/asc-mcp`.
 
 ### [1.0.0] — 2026-07-19
 
 - Initial release: an MCP server for the App Store Connect API, with tools generated from Apple's official OpenAPI specification.
-- AI-assisted review tools via MCP Sampling.
+- AI-assisted review tools.
 
 ## Türkçe
-### [2.3.0] — 2026-08-18
 
-#### `release__submit` — üç adımlı gönderim, sırasıyla, tek seferde
-Apple'ın adlandırması bir dansı gizliyor. `review_submissions__create` sürümü değil *uygulamayı* alıyor ve boş bir kap yaratıyor. Sürüm ayrı bir öğe olarak geliyor. Ve `submitted` true'ya çekilene kadar Apple'a hiçbir şey ulaşmıyor. POST'tan sonra duran bir ajan, göndermediği bir yayını bildiriyor — o üç açıklamanın zaten bir sonraki çağrıyı adıyla söylemesinin sebebi bu.
+### [2.3.0] — 2026-08-25
 
-Bir sonraki çağrıyı adıyla söylemek bir çare. Bu araç üçünü sırasıyla yapıyor ve hangisinin gerçekten Apple'a ulaştığını söylüyor:
+Üç şey: sürüm göndermeyi kolaylaştıran araçlar, çok dilli mağaza metinleri için güvenli bir akış, ve API anahtarınızın neye yetkisi olduğunu görebilme.
 
-```
-Opened review submission sub-1 — empty, and nothing sent yet.
-Added version 3.2.0 to it. Still nothing sent.
-Handed it to Apple (submitted=true). This is the step that starts the queue.
-```
+**Sürüm göndermek artık tek adım.** Eskiden üç ayrı çağrı gerekiyordu ve sırası önemliydi — ilkini yapıp durursanız hiçbir şey gönderilmemiş oluyordu ama gönderilmiş gibi görünüyordu. `release__submit` üçünü sırasıyla yapıyor ve hangi adımın gerçekten Apple'a ulaştığını söylüyor.
 
-Geri dönecek bir şeyi göndermeyi de reddediyor. `preflight__check_version` Apple'ın neyi dayattığını zaten biliyor — hâlâ işlenen bir build, cevapsız bir ihracat uyumluluğu sorusu, açıklaması olmayan bir dil — ve onu önce koşturmak, ham çağrı zincirinin hiç hatırlamadığı adım. Ret, her eksiği düzeltecek aracı adıyla söylüyor ve hiçbir şey göndermiyor; `skip_preflight: true` bunu geçersiz kılıyor — denetimin bilmediği bir şeyi bilen çağıran için.
+Öncesinde `preflight__check_version` ile "bu sürüm gönderilmeye hazır mı?" diye sorabilirsiniz. Build işlenmiş mi, ihracat uyumluluğu cevaplanmış mı, demo hesabı doldurulmuş mu, hangi dilde açıklama eksik — tek çağrıda söylüyor ve her eksik için hangi aracın düzelteceğini de yazıyor. `release__submit` bunu kendi başına çalıştırıyor ve eksik varsa göndermiyor.
 
-Açık bir submission çoğaltılmıyor, yeniden kullanılıyor; üzerinde zaten olan bir sürüm ikinci kez eklenmiyor. Apple aynı anda bir submission'a izin veriyor ve ikinci POST, orada duran hakkında hiçbir şey söylemeyen bir durum mesajıyla düşüyor.
+**Mağaza metinlerini çok dile taşımak için üç araç.** Denetleme, çeviri taslağı ve toplu yazma. Hiçbiri kendi kararıyla bir şey yazmıyor — denetim eksikleri raporlar ve durur, taslak yalnızca adını verdiğiniz diller için üretilir, yazma ise sizin hazırladığınız CSV/JSON dosyasından okur. Anahtar kelimeler özellikle böyle: doğru Türkçe kelimeler, İngilizcelerin çevirisi değil; Türk kullanıcıların aradığı kelimeler. Bu karar sizde kalıyor.
 
-`--dry-run` planı döndürüyor — atacağı üç adımı, hiçbirini atmadan.
+**Anahtarınızın neye erişebildiğini artık sorabilirsiniz.** Apple hiçbir yerde bir API anahtarının rolünü söylemiyor, bu yüzden dar bir anahtarla çalıştığınızı genelde iş ortasında gelen bir hatayla öğreniyordunuz. `asc__status` çağrısına `check_capabilities: true` eklerseniz beş alanı deneyip hangisine erişebildiğinizi söylüyor.
 
-Issue'nun istediği ve ölçüt olarak koyduğu iş akışı makrosu bu: istemcinin sürekli yanlış yaptığı deterministik bir sıra ve üç onay yerine bir. Yalnızca çağrı tasarruf eden makrolar bu sürümde yok; okuma zincirlemeyi bir model zaten iyi yapıyor.
+Rehbere de "hangi rol gerçekten gerekli" bölümü eklendi: günlük iş için App Manager yetiyor, Admin yalnızca kullanıcı yönetimi ve ilk analytics raporu için gerekli, sözleşme/vergi/banka sayfasına ise hiçbir API anahtarı ulaşamıyor.
 
+Ayrıca imzalanmamış sözleşme hatası artık dar yetkiden ayırt ediliyor. İkisi de aynı hatayı veriyordu ama biri yeni anahtarla çözülür, diğeri yalnızca hesap sahibinin sözleşmeyi imzalamasıyla.
 
-#### `metadata_ai__*` — kendi kararıyla asla yazmayan üç araç
-Mağaza metadata'sını kırk dile çevirmek App Store Connect'teki en büyük elle iş ve bunun için akla gelen araç yanlış araç. Anahtar kelime alanı bir arama sıralaması girdisi: doğru Türkçe anahtar kelimeler, doğru İngilizce olanların çevirisi değil; Türk kullanıcıların yazdığı kelimeler. İngilizce anahtar kelimeleri Türkçeye çevirip yazan bir araç, bir sıralama kararını sessizce bir dil alıştırmasıyla değiştirmiştir ve bunu kimse kurulumlar gelmeyene kadar fark etmez.
+**Üç iş akışı, slash komutu olarak.** İstemciniz bunları prompt olarak gösteriyor: `release-readiness` (sürümü denetle, mağaza metinlerini karşılaştır, GO ya da NO-GO ile bitir), `review-triage` (brifing, tasnif, yorum başına cevap taslağı) ve `price-check` (dünya genelinde fiyatlar, sonra istenmemiş görünenler). Her biri yazmadan önce duruyor — göndermek, cevaplamak ve fiyat değiştirmek sizde kalıyor. Bir prompt yalnızca ihtiyaç duyduğu tüm araçlar yüklüyse görünüyor.
 
-Bu yüzden iş üçe bölündü ve her parça diğerinin işini reddediyor.
+**İki yeni okuma.** `asc__account_status` "beni ne bekliyor?" sorusunu tüm uygulamalarınız için tek çağrıda cevaplıyor. `listing__diff_metadata` yayındaki sürümle hazırladığınız sürüm arasında mağaza metinlerinin dil dil neyin değiştiğini gösteriyor.
 
-**`metadata_ai__audit_localizations`** her dili karşılaştırır, eksik olanı ve Apple'ın sınırını aşanı raporlar — ve durur. Host modele verdiği talimat açık açık "hiçbir şeyi doldurmayı teklif etme" diyor: "bunları yazayım mı?" diye biten bir rapor, denetimin yazmaya dönüşme yoludur. Hiçbir dilin kullanmadığı bir alan, her dilde işaretlenmek yerine rahat bırakılır; çünkü o bir karardır ve göz gezdirilemeyen bir rapor okunmayan bir rapordur.
-
-**`metadata_ai__draft_translation`** yalnızca adını verdiğiniz diller için çalışır. `to_locales` zorunlu ve asla tahmin edilmiyor — kimsenin sormadığı bir dili çevirmek, bilinçli bir tercihin üzerine yazma yoludur. Taslağı, her hedefte hâlihazırda ne olduğuyla birlikte döndürür; böylece taslak "dolduruyorum" değil "değiştiriyorum" diyebilir. Anahtar kelime isterseniz, çevirinin bir cevap değil başlangıç noktası olduğunu açıkça söyler.
-
-**`metadata_ai__apply_localizations`** yazar — hazırladığınız CSV veya JSON dosyadan. Değerler bir model tarafından yeniden yazılmadan doğrudan dosyadan okunuyor; mesele de bu: özenle seçilmiş bir anahtar kelime listesi tam da kopyalanırken neredeyse-aynısına dönüşüyor. Her değer önce Apple'ın karakter sınırlarına karşı denetleniyor ve tek bir hata hiçbir şeyin gönderilmemesi demek — aksi hâlde on birinci dildeki bir ret, onunun çoktan değişmiş olmasını ve hatadan hangilerinin gittiğinin anlaşılamamasını bırakırdı. Boş bir hücre "boşalt" değil "buna dokunmadım" demek; çünkü bir tabloda boş hücre bu demek.
-
-CSV ayrıştırıcısı tırnaklı alanları işliyor, çünkü gerçek bir açıklama virgül ve satır sonu içerir ve bu dosyayı düzenleyen kişi bunu Numbers'ta yapıyor.
-
-
-#### `~/.claude.json`'ın ulaşamadığı menü için bir `.mcpb` paketi
-İki kayıt sistemi var ve yalnızca biri bir yapılandırma dosyası. `setup`'ın kaydettiği profilleri ajan ve CLI okur; Claude uygulamasının **Connectors** menüsü ise MCPB paketlerinden beslenir ve `~/.claude.json`'daki yerel bir sunucu orada hiç görünmez. Yani "çalışıyor ama menüde yok" bulunacak bir hata değildi — menü baştan beri başka bir yeri okuyordu.
-
-Artık her sürüm `heimdall-asc-<sürüm>.mcpb` taşıyor. Claude'un üzerine sürükleyin; bir form profili ve `setup` çalışmadıysa anahtar bilgilerini sorar. Paket sunucuyu ve bağımlılıklarını içine gömülü taşır, yani makinede Node'a gerek yok.
-
-Etrafından dolaşılmayıp söylenen iki kısıt. **Bir paket bir profil sunar** — bir paket bir sunucu ve bir anahtar demek; bu MCPB'nin biçimi, burada verilmiş bir karar değil. Başka bir alan için tekrar kurun. Ve **anahtar için `setup` hâlâ daha iyi bir yer**: kimlik alanlarını boş bırakırsanız paket ortak yapılandırmayı kullanır, `.p8` Keychain'de kalır. Doldurursanız yolu bu kez host saklar — güvenli biçimde, ama diskte.
-
-İmzasız ve kurulum bunu söylüyor. İmzalamak bu projenin taşımadığı bir kod imzalama sertifikası ister; doğru olan bir uyarı, kurulamayan bir paketten iyidir.
-
-Manifest yazılırken `package.json`'ın kendi açıklamasının **875 araç** dediği ortaya çıktı. Sayıyı ilan eden beşinci yüzey ve yayın öncesi kontrolü dördünü denetliyor; artık o da diğerleri gibi 884 diyor.
-
-
-#### Başlangıç paketleri ve baştan sona işlenmiş yedi senaryo
-"Hangi profili kurayım?" sorusunun tek cevabı vardı ve o da özel bir sıraya göre dizilmemiş on üç satırlık bir tabloydu. Artık ikinci bir cevap var, role göre: yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics`, müşteri desteği `monetization:storekit` ve on sekiz araç. Yedi paket; rehberde ve README'de, araç sayılarını dürüst tutan bir testle birlikte — `docs/GUIDE.md` iki sürüm boyunca "distribution … 129" yazdı, doğrusu 130'du, çünkü düzyazının testi yok.
-
-`examples/` yeni ve işin diğer yarısı. Yedi senaryo — satış ve finans raporları, TestFlight daveti, sürüm oluşturup build bağlama, yorum triyajı, tek dilin anahtar kelimeleri, sandbox testçileri, CI — her biri hangi profili gerektirdiğini ve daha da işe yararı, genelde nerede ters gittiğini söylüyor. Finans ve satış farklı raporlar ve "gelir" neredeyse her zaman birincisi demek. Testçi, gruba ait olmadan önce hesaba ait olur. Anahtar kelimeler sürüm yerelleştirmesinde, ad ise bambaşka bir yerde yaşar; çünkü biri yayına, diğeri uygulamaya ait.
-
-`examples/ci/release-notes.yml` çalışan bir GitHub Actions workflow'u: bir ajan son tag'den beri gelen commit'leri okuyor, "Yenilikler" metnini yazıyor ve sürüme koyuyor. Varsayılan olarak prova yapıyor — `dry_run: true` — yani ilk koşu Apple'a ulaşamaz; ve `ASC_CONFIRM_WRITES=0`'ı yazmanın kapıda kapanmasına bırakmak yerine açıkça ayarlıyor. Runner'da onay istemini cevaplayacak kullanıcı yok ve zaten cevap alamayacağı bir yazmayı reddeden bir kapı, logda tam olarak bir hata gibi okunur.
-
-
-#### 265 gerçek ifadeden 143'ü aracını ilk üçte buluyor, önce 83'tü
-`asc__search_tools`, modelin "aboneliği Almanya'da satışa aç"tan bunu yapan tek çağrıya ulaşma yolu; ölçülmüş 265 ifadelik havuzda doğru aracı ilk üçe 83 kez getiriyordu. Artık 143, ve hiçbir ifade elindeki yeri kaybetmedi.
-
-Kazancın çoğu yüz yeniden yazımdan değil, tek bir kuraldan geliyor. Puanlama, sorgunun kaç kelimesinin aracın adında, açıklamasında ve yolunda geçtiğini sayıyor; bu yüzden bir kaynak hakkındaki sorguda kaynağın tüm kardeşleri eşitleniyor — "Create a Game Center achievement" hem başarım aracında hem de onun görsellerinde, yerelleştirmelerinde ve sürümlerinde tam puan alıyor. Eşitlik alfabetik bozuluyordu, yani `game_center_achievement_images.create` birinci, sorgunun sorduğu araç dördüncü oluyordu. Bunu hiçbir açıklama kazanamaz: rakipler aynı kelimeleri aynı haklı sebeple içeriyor.
-
-Eşit kapsama artık, hangi adın sorgunun hiç anmadığı en az malzemeyi taşıdığına bakılarak çözülüyor. `achievements_v2.create`'te böyle bir parça var, `achievement_localizations.create`'te iki; sorgu başarım dedi, başarım yerelleştirmesi değil. Tek başına bu kural 11 ifadeyi taşıdı ve oturum başına hiçbir maliyeti yok — aracı yükleyen her bağlamda bedeli ödenen açıklamaların aksine.
-
-Diğer 33'ü kürasyonlu açıklama; domain büyüklüğüne göre değil, havuza karşı seçildi. `users.update` "Update a user." diyordu ve rol, izin, admin erişimi hakkındaki dört ifade onu hiçbir sırada bulamıyordu. `app_infos.update` "Update an app info." diyordu ve mağaza kategorisi onun. `app_events.create` "Create an app event." diyordu ve Apple'ın mağaza sayfasında öne çıkardığı in-app event bu. Her biri artık insanın gerçekten yazdığı kelimeleri taşıyor — ve bilerek komşusuna ait olanları taşımıyor: in-app event açıklaması "promotional" kelimesinden kaçınıyor, çünkü o token abonelik promosyon tekliflerinin.
-
-İki ratchet de onunla birlikte indi — kendi adını tekrarlayan açıklamalar 95 → 92, Apple özetinde kalanlar 712 → 692 — ve düşen sorguların sabitlenmiş listesi düzenlenmedi, baştan üretildi. Altmış sorgu listeyi aynı anda terk etti; 182 satırlık bir listeden hangilerinin silineceğini elle seçmek, tam olarak bayat bir girdinin hayatta kalıp "started passing" mesajını hiçbir şeyin geçmediği bir koşuda tetiklemesinin yolu.
-
-
-#### Bir yazma, hangi uygulamayı değiştireceğini söylüyor
-`Target:     id = 6636549188` — onay isteminde *neye* yazıldığını söyleyen tek satırdı ve okunamayan tek satır oydu. İstek gövdesinin içindeki referanslar adlara çevriliyordu; yoldaki kimlik, yani hedefin kendisi, hiç çevrilmiyordu. Gövdesi olmayan yıkıcı bir yazma hiçbir şeyi adlandırmıyordu.
-
-Artık `id = 6636549188 (Ask Quran)` yazıyor. Tip, bir tablodan değil yoldaki yer tutucudan önceki parçadan geliyor; iç içe yollar da kapsanıyor: `/v1/apps/{id}/relationships/betaTesters` hâlâ bir uygulama. Yol hedefleri ve gövde referansları tek arama bütçesini ve tek süreyi paylaşıyor, yani gövdesi zaten olan bir yazmaya ek bekleme getirmiyor.
-
-
-#### Uygulama köklü 46 araç, makroların hep aldığı gibi ad veya bundle ID alıyor
-`pricing__get_subscription_price` baştan beri `Ask Quran`, `com.example.app` ya da `6636549188` kabul ediyordu. `apps__update` yalnızca sayıyı kabul ediyor, `id` diyor ve bundle ID'ye 404 cevap veriyordu — yani aynı istek, modelin hangi araca uzandığına göre çalışıyor ya da düşüyordu, ve şemada hangisinin hangisi olduğunu söyleyen hiçbir şey yoktu.
-
-`/v1/apps/{id}` köklü üretilmiş araçlar artık adı veya bundle ID'yi aynı şekilde çözüyor ve `id` bunu söylüyor. Bilerek dar tutuldu: yalnızca düz `apps` yazan bir yol parçası ve yalnızca zaten sayısal olmayan bir değer — ki bu değeri Apple zaten reddedecekti. Çalışacak bir çağrının anlamı değişemez; belirsiz bir ad da tahmin değil hata, çünkü iki uygulamadan ilkini seçmek tam da önlenmek istenen kaza.
-
-`TOKENS_PER_TOOL` da 264 → 268 oluyor. Daha önceki iki değişiklik sabit güncellenmeden inmişti; `asc__status`'un bildirdiği rakam tüm katalog boyunca araç başına 4 eksikti.
-
-
-#### `preflight__check_version` — göndermeden önce bulunabilen ret
-Bunun yakaladığı her eksik, tek bir kaynaktaki tek bir alan; ve her biri günler sonra geri dönüyor: hâlâ işlenen bir build, kimsenin vermediği bir ihracat uyumluluğu cevabı, zorunlu işaretlenip boş bırakılmış bir demo hesabı, açıklaması olmayan bir dil. Sürüm `WAITING_FOR_EXPORT_COMPLIANCE`'ta nedenini açıklayan hiçbir şey olmadan bekliyor, ya da on saniyede düzeltilecek bir şey yüzünden reddedilmiş dönüyor.
-
-Artık tek çağrı sürümü, build'ini, inceleme detayını, her yerelleştirmeyi, bunlardan birinin altındaki ekran görüntüsü setlerini ve açık inceleme gönderimini okuyup `ready` ile birlikte eksiklerin listesini veriyor. Her eksik, onu düzeltecek aracı adıyla söylüyor — uyumluluk cevabı için `builds__update`, iletişim için `app_store_review_details__update` — çünkü bunlar olmadan "inceleme iletişiminiz eksik" ikinci bir arama demek.
-
-Zor olan çağrılar değildi, kontrol listesiydi. `usesNonExemptEncryption`'ın `null` olmasının `false` olmasından farklı olduğunu ve boş demo hesabının yalnızca `demoAccountRequired` true iken önemli olduğunu bilmek — hiçbir cevap gövdesinde yazmayan kısım bu.
-
-Bilerek yapmadığı iki şey var. Apple'ın uygulamayı onaylayıp onaylamayacağı hakkında hiçbir şey söylemiyor; o sorunun olgusal bir cevabı yok ve karıştırmak geri kalanı da güvenilmez yapardı. Ve ekran görüntülerini Apple'ın zorunlu cihaz boyutlarına karşı denetlemiyor, çünkü onlar API değil politika: elle yazılmış bir liste her sonbahar bayatlar ve Apple'ın artık istemediği boyutları eksik diye raporlamaya başlar. Var olanı raporluyor; görüntü tutmayan setleri ve teslim edilemeyen görüntüleri işaretliyor.
-
-Salt okunur, `distribution:version` içinde. Canlı araç sayısı artık 884.
-
-
-#### Onay istemi, kendini süslediği etiketleri artık beklemiyor
-İstem, yazma gövdesindeki kimlikleri adlara çeviriyor; böylece fiyat değişikliğini onaylayan kişi `6740…` yerine aboneliğin adını okuyor. Bu aramalar süs — yazma onlarsız da doğru anlatılıyor ve başarısız olan bir arama ham kimliği bırakıyor, belgelenmiş davranış bu.
-
-HTTP istemcisi bunu bilmiyordu. Ağ hatasını üç kez üstel backoff'la yeniden denemeye değer sayıyor; yani erişilemeyen bir API'de istem çağrıdan **49 saniye** sonra geliyor, sonra da kimliği gösteriyordu. Onay bekleyen bir insan bunu takılma olarak okur ve bir güvenlik kapısının göze alamayacağı tek şey bozuk görünmektir.
-
-Etiketleme adımının artık kendi üç saniyelik süresi var. O ana kadar gelen etiketler gösteriliyor, geri kalanı — başarısızlıkta zaten olduğu gibi — kimliğe düşüyor.
-
-Canlı kapı testiyle bulundu: on yedi örneğinden ikisi, yani gövdesi referans taşıyan ikisi, bir süredir kararsızlık gibi görünen bir sebeple düşüyordu.
-
+**Küçük şeyler.** Araç arama belirgin biçimde iyileşti — gerçek ifadelerin %54'ü aracını ilk üçte buluyor, önce %31'di. Onay ekranı artık hangi uygulamayı değiştireceğini adıyla yazıyor, kimlik numarasıyla değil. Uygulamaları numara yerine adıyla veya bundle ID'siyle de verebilirsiniz. Ve Claude uygulamasının Connectors menüsünden kurulum için `.mcpb` paketi eklendi.
 
 ### [2.2.0] — 2026-08-18
 
-#### Apple, spec'i sürüm numarasını değiştirmeden değiştirdi
-App Store Connect spec'i hâlâ v4.4.1 ve içeriği eski içerik değil. Sürüm dizesine bakan `npm run spec:update` "yapılacak bir şey yok" derken on altı şey yerinden oynamıştı. Haftalık spec izleyicisi dizeyi değil dosyayı karşılaştırıyor; bu yüzden ortaya çıktı.
+Ağırlıklı olarak doğruyu söylemekle ilgili: hatalar, boyutlar ve bir aracın gerçekte ne döndürdüğü hakkında.
 
-Altısı Apple'ın kabul ettiğini daraltıyor — yükseltmeden önce okunacaklar bunlar:
+**Riskli yazmalar için onay geri geldi.** Fiyat değiştirmek, Admin yetkisi vermek, sertifika silmek, uygulamayı satıştan kaldırmak — bunlar çalışmadan önce soruyor. Geri kalan her şey istemcinizin kendi onayına bırakılıyor. 2.0.1'den beri tamamen kapalıydı, çünkü onay ekranı gösteremeyen istemcilerde yanlış tetikleniyordu; artık yalnızca korunmaya değer dört şeyi koruyor. `--confirm` her yazmayı sorar, `--no-confirm` hiçbirini.
 
-- `BundleIdPlatform` artık `SERVICES` listelemiyor.
-- `WinBackOfferPriceInlineCreate` `relationships`'ini kaybetti.
-- Beş list endpoint'i parametrelerinde `items` enum'u kazandı: `appStoreVersionLocalizations`, `appCustomProductPageLocalizations` ve üç yerde `searchKeywords`.
+**Gönderilemeyecek kadar büyük cevap artık kaybolmuyor.** Büyük listeler kesilip "daha dar sorgula" notuyla dönüyordu — geri kalanı yok oluyordu ve ona ulaşmak aynı şeyin bedelini iki kez ödemek demekti. Artık cevabın tamamı saklanıyor ve yanıt ona bağlanıyor; istemciniz geri kalanını modelden hiç geçirmeden okuyabiliyor. Kesildiğinde kullanılamaz hâle gelen gzip'li satış ve finans raporları için de aynısı geçerli.
 
-Üçü gevşetiyor: `purchaseRequirement`, `AppEvent`'te ve her iki istek gövdesinde enum'unu kaybetti, artık kısıtsız bir string. `ResponseError` adlı şema silinip `ErrorResponse.errors.items` içine gömüldü — başka yoldan aynı şekil. `AppEvent.deepLink` bir format kazandı.
+**Hatalar düzyazı yerine alanlarla cevap veriyor.** Apple'ın reddi artık `status`, `retryable`, `suggestedAction` ve Apple'ın kendi hata detaylarını döndürüyor — hangi alanın reddedildiği dahil. Üç satır İngilizceden daha kolay değerlendirilir.
 
-Hiçbir işlem eklenmedi, silinmedi, yeniden adlandırılmadı. Katalog 13 profilde 883 araçla aynı; bir yapılandırmanın taşıyor olabileceği hiçbir araç adı yerinden oynamadı.
+**Onay ekranı artık isimleri yazıyor.** Eskiden anlamsız kimliklerle ham JSON gösteriyordu; artık onları çözüp adlandırıyor, yani `6740…` yerine aboneliğin adını okuyorsunuz.
 
+**StoreKit okumaları gerçek alanlar döndürebiliyor.** `ASC_APPLE_ROOT_CERTS`'i Apple'ın kök sertifikalarına ayarlarsanız işlem, geçmiş ve iade araçları her yükü doğrulayıp çözülmüş alanları döndürüyor. Ayarlamazsanız eskisi gibi imzalı yükleri döndürüyorlar. Hiçbir şey doğrulanmadan çözülmüyor — pakette sertifika gelmiyor, çünkü bayat bir sertifika doğrulamayı sessiz bir hayıra çevirirdi.
 
-#### Gönderilemeyecek kadar büyük cevap artık iki kez çekilmiyor
-Boyut tavanı baştan beri doğruydu — tek bir yerelleştirme listesi 264 KB ve bütün hâlde gönderildiğinde besleyeceği konuşmanın yerini kaplıyor. Yanlış olan, kalanın nereye gittiğiydi: hiçbir yere. Cevap sığan öğeleri ve "daha dar parametre kullan" notunu taşıyordu; geri kalanına ulaşmanın tek yolu aynı sorguyu tekrar koşup listenin tamamının bedelini ikinci kez ödemekti.
+**Düzeltmeler:** açılış banner'ı artık istemcinizin gerçekten aldığı sayıyı yazıyor. `--include-deprecated` profil modunda bir şey yapıyor (sessizce hiçbir şey yapmıyordu). `subscriptions.prices.list` artık taşımadığı fiyatları gösterdiğini iddia etmiyor — tutar bir `include` uzakta duruyor ve açıklama bunu söyleyip tek çağrılık alternatifi gösteriyor.
 
-Artık cevabın tamamı saklanıyor ve yanıt ona bağlanıyor: istemcinin `resources/read` ile okuduğu bir `asc-response://` MCP kaynağı — hiçbir kısmı modelden geçmeden. Metin bloğu aynı kaldı: aynı öğeler, aynı kesme notu, üstüne kaynağı adlandıran tek satır. Kaynakları yok sayan bir istemci tam olarak eskisi yerinde.
-
-Gzip'li satış ve finans raporları da bedavaya kapsama girdi. Onlar kısaltılacak bir liste hiç değildi; metin düzeyindeki kesme base64'ü ortasından bölüp gunzip edilemeyen bir blob geri veriyordu. Kaynak baytları bozulmadan tutuyor; satır istiyorsanız `parse=true` hâlâ kısa yol.
-
-Geçici dosyada değil bellekte ve sınırlı: en yeni yirmi cevap, 32 MB'a kadar. Diskteki bir dosya izin, saklama süresi ve sürecin ölebileceği her yol için bir temizlik yolu isterdi; bu depo sunucu süreci kadar yaşıyor, o da onu üreten oturum kadar. Elenmiş bir URI okunduğunda bunu söylüyor, "böyle bir şey yok" demiyor.
-
-
-#### Açılış banner'ı istemcinin gerçekten alacağı sayıyı yazıyor
-`asc-monetization (206 tools)` yazıp istemcide 199 görünmesi, sunucunun kendisiyle çelişmesiydi. Banner profilin *eşlediği* işlem sayısını söylüyordu; `tools/list` ise servis edileni döndürüyor ve ikisi yapılandırmaya göre ayrışıyor — `asc__call` ile `asc__describe` her zaman var ve hiçbir yere eşlenmemiş, StoreKit yalnızca bundle ID ile yükleniyor, `--read-only` yazmaları kaldırıyor, bu sürümden itibaren `--include-deprecated` de araç ekliyor.
-
-Artık ikisi tek bir listeden geliyor, yani ayrışamazlar: sayı, handler'ın döndürdüğü dizinin uzunluğu. `asc__status`'un token tahmini de aynı sebeple onu izliyor — "bu benim bağlamıma neye mal oluyor" sorusunun cevabı, yüklenen şeyle ilgili bir soru.
-
-Katalog sayısı değişmedi ve söylediği şeyi söylemeye devam ediyor: 13 profilde 883 araç — README, `server.json` ve `CITATION.cff`'te, yayın öncesi kontrolüyle çapraz doğrulanıyor.
-
-
-#### `--include-deprecated` profil modunda bir şey yapıyor
-Orada hiçbir şey yapmıyordu ve bunu da söylemiyordu. Profil üyeliği `spec/profiles.csv`'de elle küratörlükten geçiyor ve Apple'ın emekli ettiği bir endpoint'i kimse küratörlükten geçirmiyor; yani 123 deprecated işlemin **sıfırı** hiçbir profilden erişilebilir değildi. Bayrak yalnızca profilsiz sunucuda `--domains` ile çalışıyordu.
-
-Artık bayrağı verince, profilin kapsadığı domain'lerdeki emekli işlemler ekleniyor. Ölçüldü: `game-center` 184 araçtan 298'e, `monetization` 199'dan 208'e çıkıyor. Üyelik küratörlükle değil domain'le belirleniyor; bu bir kestirme değil dürüst tanım — bu bayrağı veren kişinin istediği şey "bu profilin kapsadığı alanlarda emekli olan her şey" ve devralınacak küratörlü bir cevap yok.
-
-
-#### StoreKit okumaları mühürlü zarf yerine doğrulanmış alan döndürebiliyor
-`ASC_APPLE_ROOT_CERTS`'i Apple'ın DER kök sertifikalarına ayarlayın — dosya yolları ya da tek bir dizin — ve `storekit__get_transaction_info`, `storekit__get_transaction_history`, `storekit__get_refund_history` her yükü App Store Server Library ile doğrulayıp çözülmüş alanlar döndürsün. Ayarlamazsanız eskisi gibi imzalı yükleri döndürüyorlar; açıklamalarının zaten vaat ettiği şey de bu. Her cevap hangisi olduğunu söylüyor, çağıranın tahmin etmesi gerekmiyor.
-
-Kontrol edilmeden hiçbir şey çözülmüyor. Doğrulaması başarısız olan bir yük, kenarına şerh düşülmüş alanlar değil, hatadır: doğrulamanın amacı sonucun gerçek gibi kullanılabilmesi ve "işte değerler, ama teyit edemedik" tam da engellemesi gereken okumayı davet ediyor.
-
-Çözülmüş şekil, Apple'ın tüm yükü değil bir beyaz liste. `appAccountToken` bilerek dışarıda — geliştiricinin kendi kullanıcı kaydına eşlediği UUID o, yani bir işlem kimliği uygulamasındaki bir hesaba geri dönüş yolu oluyor ve bu araçların hiçbiri onu istemedi. `raw: true` kendisi doğrulamak isteyene imzalı yükü veriyor.
-
-Bu pakette hiçbir sertifika taşınmıyor. Onlar Apple'ın yayınladığı şeyler ve güncel tutulması gereken bir kalem daha; bayat kalan bir tanesi doğrulamayı sessiz bir hayıra çevirirdi.
-
-
-#### StoreKit okumaları döndürmedikleri alanları vaat etmeyi bıraktı
-`storekit__get_transaction_info` kendini "tek bir işlemin çözülmüş detayları: ürün, fiyat, tarihler, sahiplik tipi ve iptal durumu" diye tanıtıyor ve imzalı tek bir JWS metni döndürüyor. Geçmiş, iade ve yetki araçları aynısını dizilerle yapıyor. Beş isimli alana göre plan yapan bir çağıran `header.payload.signature` alıyor, hiçbir şey çökmüyor ve yanlış aracı çağırıp çağırmadığını anlamanın yolu yok.
-
-Açıklamalar artık yüklerin imzalı olduğunu ve çözmenin çağırana ait olduğunu söylüyor. App Store Server Library'nin `SignedDataVerifier`'ı dördünde değil bir kez adlandırılıyor — dördüne birden yazmak "certificates" kelimesini dört açıklamaya sokup "create certificate" sorgusunun birinciliğini `certificates.create`'ten aldı.
-
-Mühürlü zarfı döndürmek davranış olarak kalıyor. `jwsClaim` onu iki satırda açabilir ve o iki satır yanlış olanlar: imzayı kontrol etmeden base64 çözüyor, yani doğrulanmamış veriyi gerçek gibi sunuyor. Düzgün çözmek Apple'ın kök sertifikalarını ve doğrulama başarısız olunca ne olacağına dair bir kararı gerektiriyor — o da MIL-218. Bir kod yorumu artık onu adıyla anıyor, ki sonraki okuyan zarfın geçici cevap olduğunu bilsin.
-
-
-#### Fiyat taşımadığını söyleyen bir fiyat listesi
-`subscriptions.prices.list`, "bir aboneliğin bugün ne kadara mal olduğunu" gösterdiği söylenerek tarif ediliyordu ve tutar da para birimi de olmayan satırlar döndürüyor — sayı bir `include` ötedeki price point'te. Canlı bir değerlendirme oturumu açıklamaya inandı: aracı on beş kez çağırdı, pes etti, onun yerine 842 fiyat *noktasının* tamamını çekti ve güncel fiyat olarak "2,99 – 35 TRY" raporladı. Gerçek cevap tek bir sayıydı.
-
-Açıklama artık bir satırın gerçekte ne olduğunu söylüyor ve tek çağrıda çözen `pricing__get_subscription_price`'ı adıyla veriyor. Dokuz kardeş liste aynı şekle sahip — teklif fiyatları, uygulama fiyatları, uygulama içi satın alma fiyatları — ve talimatı dokuz elle yazılmış metinden değil bir kuraldan alıyorlar: `include` enum'unda bir `*PricePoint` sunan liste, o olmadan satırları boş olan listedir.
-
-O not araç açıklamasına değil, `include` **parametresine** düşüyor ve bu yerleşim ölçülerek seçildi. Açıklamalara koyunca dokuz araç fiyat ve para birimi hakkında aynı cümleyi taşıdı ve `subscriptions.prices.list`, *"List current subscription prices worldwide"* sorgusunda birincilikten beşinciliğe düştü — üstünde iki teklif-fiyatı listesi vardı. Arama ratchet'i bunu yayınlanmadan yakaladı.
-
-
-#### Ajan harness'ı artık yazma kapısını ölçebiliyor
-`npm run ax:agent --gate`, korpusu yazma yolu canlıyken ve her yazmada onay açıkken koşuyor; yani kapı gerçekten yolun içinde. Her istem reddediliyor, dolayısıyla Apple'a hiçbir şey ulaşmıyor — karar istek kurulmadan önce veriliyor, `tests/gate.test.ts`'in dayandığı özelliğin aynısı.
-
-Diğer bütün modlar `--dry-run` ile koşuyor ve dry-run onayı tamamen atlıyor. Yani yıkıcı niyet skoru bugüne kadar "ajan yazmaya karar verdi mi?" sorusunu cevapladı, "bu sunucu onu durdurur muydu?" sorusunu hiç cevaplamadı — temmuz kalibrasyonunda sekiz yıkıcı niyetin beşi yazdı ve o sayı ürün hakkında hiçbir şey söylemiyordu.
-
-Agent SDK, bir handler verilmediğinde elicitation'ı kendiliğinden reddediyor; bu da kapının hiç tetiklenmemesinden ayırt edilemiyor. `--gate` önce istemi kaydedip sonra reddeden bir handler kuruyor — modu sessiz bir "hayır" olmaktan çıkarıp ölçüme çeviren şey bu. `By gate` tablosu üzerinde işlem yapılacak sayıyı veriyor: yazma çağıran ama hiçbir şeyin sormadığı oturumlar.
-
-
-#### Başarısız bir çağrı cümle değil, alan döndürüyor
-Apple'ın reddi eskiden üç satır düz metin olarak dönüyordu; yani sonraki adıma karar veren bir ajanın, tekrar denemenin işe yarayıp yaramayacağını öğrenmek için İngilizce ayrıştırması gerekiyordu. Artık JSON dönüyor: `status`, `retryable`, `appleRequestId`, `suggestedAction` ve Apple'ın kendi `code`, `title`, `detail` alanlarını taşıyan `issues[]` — bir de yeni olarak `source`, reddedilen alanı ya da parametreyi adıyla veriyor. `source` tipten düşüyordu ve kimseye ulaşmıyordu, oysa Apple baştan beri gönderiyormuş.
-
-Kendi retlerimiz düz metin kalıyor. Yanlış profil ya da salt-okunur engeli, elle yazılmış çok satırlı yönlendirme döndürüyor — register komutu, yüklenecek alt profil — ve JSON bunu kaçış karakterleri duvarına çevirirdi. Yalnızca gerçek bir HTTP hatası yapılandırılmış biçimi alıyor.
-
-
-#### Onay istemi neyi değiştireceğini adıyla söylüyor
-İstem, Apple'ın istek gövdesinde ne varsa onu gösteriyordu — `{"data":{"relationships":{"subscription":{"data":{"id":"6740…"}}}}}` — ve bir fiyat değişikliğini onaylayan kişi anlamsız bir kimliği okuyup neyi işaret ettiği konusunda aracın sözüne güveniyordu. Artık referanslar çözülüp adlandırılıyor.
-
-Çözüm, tip başına bir fonksiyon değil, spec'in sürdüğü tek bir arama. Elle yazılmış hâlinde 175 tane vardı ve yalnızca birilerinin yetiştiği tipleri kapsıyordu; daha yenisi kimliğe düşüyordu. `OPERATIONS`'tan türetmek, Apple'ın eklediği bir tipin spec yeniden üretildiği gün kapsanması demek.
-
-
-#### İlişki filtresi neyi aldığını söylüyor
-Abonelik listesindeki `filter[app]` bir app kimliği alıyor, açıklaması ise "app'e göre filtrele" diyordu — doğru, ama sorulan soru bu değil: *bu alana ne yazılacak*. Üretici artık her ilişki filtresi için ilgili tipi adlandırıyor. AX denetimi de farkı görebiliyor: ipucusuz kimlik filtreleri 84'ten 0'a indi.
-
-
-#### Onay geri açıldı — geri alması zor yazmalar için
-Kapı artık risk manifestindeki dört seviyede varsayılan olarak açık: `revenue`, `destructive`, `infrastructure`, `access` — fiyat değiştirme, Admin yetkisi verme, sertifika silme, uygulamayı satıştan kaldırma. Bunların altındaki her şey client'ın kendi çağrı-başı araç onayıyla çalışıyor; her zaman var olan kapı da odur.
-
-İki uç da önce denendi ve ikisi de yanlıştı. **Her yazmada açık** (2.0.0'a kadar) sürekli tetikleniyordu; elicitation desteğini bildirip formu gösteremeyen bir client `decline` döner ve protokol bunu kullanıcının reddetmesiyle birebir aynı raporlar, yani o client'larda sıradan yazmalar "reddettiniz" diye geri geliyordu. **Tamamen kapalı** (2.0.1'den 2.1.1'e) bu yanlış tetiklenmeyi ortadan kaldırdı ama guard'ı parayı hareket ettiren yazmalardan da kaldırdı — oysa maliyetini hak ettiği tek yer orasıydı.
-
-- `--confirm` / `ASC_CONFIRM_WRITES=1` eskisi gibi her yazmadan önce sorar.
-- `--no-confirm` / `ASC_CONFIRM_WRITES=0` hiç sormaz. 2.0.1'de dönüştüğü no-op olmaktan çıkıp yeniden gerçek bir ayar oldu.
-- Risk seviyesi önizleme kurulmadan önce okunuyor; böylece bir `low` yazma, hiç gösterilmeyecek bir istemin arkasındaki referans sorgularının bedelini ödemiyor.
-- `tests/gate.test.ts` iki yarıyı da aynı sunucudan test ediyor: bayraksız bir `destructive` yazmada soruluyor, `public` olanda sorulmuyor. Yalnızca sessiz yarıyı test etmek, onay tamamen kaldırılmış olsa da geçerdi.
-
+**Apple spec'i sürüm numarasını değiştirmeden değiştirdi.** Değişmeyen v4.4.1 altında on altı şey oynadı. Altısı Apple'ın kabul ettiğini daraltıyor — `BundleIdPlatform`'dan `SERVICES` kalktı, `WinBackOfferPriceInlineCreate` ilişkilerini kaybetti, beş list endpoint'i parametrelerini sıkılaştırdı. Hiçbir araç eklenmedi, silinmedi veya yeniden adlandırılmadı.
 
 ### [2.1.1] — 2026-08-14
 
-**2.1.0 bunlar olmadan çıktı.** Tag, `main`'in iki PR gerisindeki bir commit'te atılmıştı; aşağıdaki her şey 10 Ağustos'tan beri `main`'de duruyordu ve kimseye ulaşmadı. İkisi güvenlik düzeltmesi; 2.1.0'a sabitlemek yerine yükseltin.
+**2.1.0 bunların hiçbirini taşımıyordu.** Tag, `main`'in iki pull request gerisinden kesilmişti; yani aşağıdaki her şey 10 Ağustos'tan beri yayınlanmamış hâlde duruyordu. İkisi güvenlik düzeltmesi — 2.1.0'a sabitlemek yerine yükseltin.
 
-#### `listing__upload_screenshot` okuyabildiği her dosyayı yüklüyordu
-`file_path` modelden geliyor ve sonrasındaki her şey o dosyayı okuyup Apple'a PUT ediyordu. Bir `.p8`, bir SSH anahtarı ya da bir config gösterildiğinde baytlar gidiyor, Apple'ın bunu reddettiği ancak sonradan öğreniliyordu — o noktada dosya çoktan çıkmış oluyordu. İlk sekiz bayt (PNG imzası, JPEG işareti) ağa çıkılmadan önce kararı veriyor; arkasında 50 MB tavanı var.
+**Ekran görüntüsü yükleme, okuyabildiği her dosyayı gönderiyordu.** Dosya yolu modelden geliyordu ve gösterilen her şey — özel anahtar, SSH anahtarı, config dosyası — resim olmadığı anlaşılmadan önce okunup Apple'a gönderiliyordu. Artık ağa çıkmadan önce dosyanın gerçekten PNG veya JPEG olduğunu kontrol ediyor, 50 MB üst sınırla.
 
-#### `downloadAsset`'in boyut sınırı bir sınır değil, rapordu
-64 MiB tavanını `arrayBuffer()` tüm gövdeyi belleğe aldıktan *sonra* kontrol ediyordu; yani büyük bir cevap ancak bellekteyken reddediliyordu. Artık büyük bir `Content-Length` baştan reddediliyor ve akış tavana ulaşınca transfer iptal ediliyor.
+**İndirme boyut sınırı çok geç kontrol ediliyordu** — tüm gövde belleğe alındıktan sonra. Artık büyük cevabı baştan reddediyor ve aktarımı sınırda kesiyor.
 
-#### Altı okuma tek sayfayı "hepsi bu" diye döndürüyordu
-Dört analitik adımı, abonelik grubu listesi ve iki StoreKit geçmişi ilk sayfada ya da sayfa tavanında durup bunu söylemiyordu.
+**Altı okuma, tek sayfayı her şeymiş gibi döndürüyordu.** Analytics raporları, abonelik grupları ve iki StoreKit geçmişi ilk sayfada durup hiçbir şey söylemiyordu. İkinci sayfadaki bir rapor "rapor bulunamadı" olarak dönüyordu; ilk 50 grubun ötesindeki bir abonelik "bulunamadı" diye okunuyordu — ki bu, insana kopyasını yarattıran mesajdır.
 
-- **`analytics__get_report`** — rapor istekleri, raporlar, örnekler ve segmentlerin hepsi artık sayfalanıyor. İkinci sayfadaki bir rapor *"No report matching …"* olarak dönüyordu.
-- **`listSubscriptions`** — grup sayfalarını yürüyor ve her sayfanın `included`'ını birleştiriyor. İlk 50 grubun ötesindeki bir abonelik "bulunamadı" diye dönüyordu; o mesaja verilen cevap da kopyasını oluşturmaktır.
-- **StoreKit işlem ve iade geçmişi** — `hasMore`, Apple'ın `revision` imleci ve açık bir kısmi-geçmiş notu dönüyor. *"İade yok"* ile *"ilk on sayfada iade yok"* aynı cevaptı; ikincisine bakarak jest kredisi veriliyor.
-- **`reviews_ai__daily_briefing`** — üç sayfada değil, karşılaştırdığı pencereyi kapsadığında duruyor; kapsayamadıysa sayıları alt sınır olarak işaretliyor. Hiç tam okunmamış bir pencerenin trendi trend değildir.
+**Düzeltmeler:** belirsiz bir abonelik adı artık sessizce ilk eşleşmeyi seçmiyor. Fiyat okumaları gerçekten yürürlükteki fiyatı bildiriyor. `max_rows` negatif sayı verildiğinde artık satır düşürmüyor. Başarısız bir istemci kaydı, çalışan bir kaydı silemiyor.
 
-#### Düzeltildi
-- **Belirsiz abonelik adı yanlış ürüne fiyat yazabiliyordu.** Kısmi ad ilk eşleşmeyi alıyordu. Tam ürün ID'si ya da adı hâlâ doğrudan kazanıyor; iki aday çıkarsa artık soru soruluyor.
-- **`readPrice` yıllar önce bırakılmış bir fiyatı raporlayabiliyordu.** Yürürlükteki fiyat, Apple'ın gönderdiği ilk zamanlanmamış satır değil, geçmiş olan en son başlangıç tarihidir.
-- **`max_rows` negatif değer kabul edip satır düşürüyordu.** `Number(x) || 200` negatifi truthy diye geçiriyor, `slice(0, -5)` de beş satır döndürmek yerine son beşi kesiyordu. Tek yerde `[1, 1000]` aralığına kırpılıyor.
-- **Başarısız bir CLI kaydı, çalışan kaydı silebiliyordu.** Artık önce ekleme yapılıyor; silme yalnızca ekleme reddedilirse çalışıyor ve silme de düşerse eklemenin hatası korunuyor — aksi halde eksik bir bayrak "no such server" diye raporlanıp okuyanı hiç var olmamış bir kaydın peşine gönderiyordu.
-
-#### Güvenlik
-- **Uçtan gelen metin taşıyan cevaplar bunu söylüyor.** Yorum gövdeleri ve test kullanıcısı geri bildirimleri, üretilen araçlar üzerinden modele "bu veri, talimat değil" diyen hiçbir işaret olmadan ulaşıyordu — üstelik bir yorumun modele çağırtmak isteyebileceği yazma araçlarının yanında duruyorlar. Yorum makrosunda bu kural baştan beri vardı; artık üretilen yolda da var.
-- **İsteğe bağlı PII maskeleme.** `ASC_REDACT_PII=1`, test kullanıcısı verilerinde `email`, `firstName` ve `lastName` alanlarını maskeliyor, e-posta alan adını koruyor. Varsayılan kapalı: test kullanıcılarını listelemek *"build'i kim yüklememiş?"* sorusunun cevabıdır ve beş kez `<redacted>` diyen bir cevap, kullanıcının bu sunucuyu atlayarak alacağı bir cevaptır.
-- **Docker imajı root değil `node` kullanıcısıyla çalışıyor**, ürettiği tek kullanımlık anahtar dosyası da `600`.
-
-#### Dokümantasyon
-`Dockerfile` başlığı, o dosyayı okumayan iki tüketici iddia ediyordu. Glama kendi spec'inden derliyor — `debian:trixie-slim`, pnpm, `mcp-proxy` — MCP Registry ise `server.json`'ın bildirdiği npm paketini kuruyor. O dosyayı düzenlemek ikisini de etkilemiyor ve düşen bir Glama build'i içeriği hakkında hiçbir şey söylemiyor.
+**Güvenlik:** son kullanıcı metni taşıyan sonuçlar (yorumlar, testçi geri bildirimi) artık talimat değil veri olarak işaretleniyor. `ASC_REDACT_PII=1` testçi adlarını ve e-postalarını maskeliyor, varsayılan kapalı. Docker imajı root olmayan kullanıcıyla çalışıyor.
 
 ### [2.1.0] — 2026-08-10
 
-#### Riskli yazmalar araç listesinde riskli görünüyor
-Her mutasyon operasyonu zaten elle gözden geçirilmiş bir risk seviyesi taşıyordu, ama bu modele yalnızca `--dry-run`, `asc__describe` ve `--confirm` istemi üzerinden ulaşıyordu — o istem de 2.0.1'den beri varsayılan kapalı. Her zaman gönderilen tek sinyal olan `destructiveHint` ise tam olarak "bu bir DELETE" demekti. Yani **para hareket ettiren, sürüm yayınlayan, erişim değiştiren ya da imzalamayı bozan, DELETE olmayan 100 yazma işlemi** düz bir araç listesinde `beta_groups__create`'ten ayırt edilemiyordu: `app_price_schedules__create`, `app_store_version_release_requests__create`, `apps__promoted_purchases__replace` bunlardan birkaçı.
-- Seviye artık HTTP metodunun gösteremediği ~120 operasyonun açıklamasında, `REVENUE-level write.` biçiminde görünüyor. Tipik sekiz sunuculuk bir kurulumda 443 token — araç tanımlarının %0,35'i.
-- **`destructiveHint` artık MCP'nin söylediği anlama geliyor**: "yıkıcı güncelleme yapabilir", "DELETE'tir" değil. **Bu ipucuna göre onay isteyen istemciler eskisinden daha fazla araçta soracak.**
-- `app_store_versions__build__set`, release kuralı yalnızca `create|update` ile eşleştiği için `low` sayılıyordu. Bir sürümün altındaki binary'yi değiştirmek bir yayın adımıdır.
+**Riskli yazmalar araç listesinde riskli görünüyor.** Para hareket ettiren, sürüm yayınlayan, erişim değiştiren ya da kod imzalamayı bozan yaklaşık 120 işlem, düz bir araç listesinde zararsızlardan ayırt edilemiyordu. Risk seviyesi artık açıklamalarında yazıyor. Yıkıcılık ipucuna göre kapı koyan istemciler eskisinden daha fazla araçta onay soracak.
 
-#### `pricing__equalize_price` — tek çapa fiyat, her ülkeyi Apple türetiyor
-Uygulama, uygulama içi satın alma veya abonelik için. Çapa ülkeyi ve fiyatı verirsiniz; her pazarın karşılığını Apple'ın kendi kur ve vergi matematiği belirler. Sayı asla para birimleri arasında kopyalanmaz, çünkü kopyalanamaz — 3,99 TRY çapasında Apple Afganistan için 0,99 USD, BAE için 2,99 AED döndürüyor.
+**Tek çapa fiyat, gerisini Apple türetiyor.** `pricing__equalize_price` bir ülke ve fiyat alıyor, diğer tüm pazarları Apple'ın kendi kur ve vergi hesabı belirliyor — uygulama, uygulama içi satın alma veya abonelik için. Önce `--dry-run` ile koşturun: hiçbir şey göndermeden türetilmiş tablonun tamamını döndürür.
 
-Üç ürün tipinin yazma modeli aynı değil ve makro bunu gizlemiyor:
+**Tek çağrıda her ülkenin abonelik fiyatı.** `pricing__get_subscription_price` eskiden ülke zorunlu istiyordu, yani yalnızca tek ülke hakkında cevap verebiliyordu. Artık boş bırakırsanız her ülkeyi fiyata göre gruplanmış alıyorsunuz — canlı ölçümde 175 ülke 45 farklı fiyata iniyor, yaklaşık 1,3k token. Ülke adları da geliyor; Apple bunları hiçbir yerde döndürmüyor.
 
-| Ürün | Yazma | Equalization'ı yapan |
-| -- | -- | -- |
-| Uygulama fiyatı | 1 (`appPriceSchedules`) | Apple, `baseTerritory`'den |
-| Uygulama içi satın alma | 1 (`inAppPurchasePriceSchedules`) | Apple, `baseTerritory`'den |
-| Abonelik | ~175, ülke başına bir tane | biz, equalizations ucundan |
+**Ham araçların hiç yapamadığı iki şey.** `listing__upload_screenshot` Apple'ın rezerve/yükle/onayla dizisinin tamamını yürütüyor — ham araç yalnızca yer ayırıyor, tek bayt taşımıyor. `analytics__get_report` raporu indiriyor; ham zincir elinde bir bağlantıyla bitiyor.
 
-`subscriptionPrices` bir temel ülke kavramı taşımıyor; bu yüzden o yol Apple'ın equalization'larını okuyup her ülkeyi ayrı yazıyor. Çapayı **önce** yazıyor, böylece yarıda kalan bir hata kullanıcının asıl belirttiği ülkeyi ayarlanmış bırakıyor; ilk hatada duruyor, bilinmeyen bir durumu ülkelere yaymıyor, ve sonuç hangi ülkelerin yazıldığını, hangisinde durulduğunu ve kaçının dokunulmadan kaldığını tam olarak söylüyor. Yeniden çalıştırmak güvenli — zaten ayarlı bir fiyatı yazmak hiçbir şeyi değiştirmiyor.
+**Düzeltmeler:** `listing__get_screenshots` 2.0.0'da hiçbir profilden erişilemez hâlde çıkmıştı. `review_submissions__create` sürüm gönderiyor diye anlatılıyordu — göndermiyor; boş bir kap açıyor, ve orada duran bir ajan göndermediği bir yayını bildiriyordu. İlan edilen araç sayısı dört yerde üç farklı sayıya kaymıştı.
 
-Abonelikler için `preserve_current_price` zorunlu, tek-ülke makrosundaki gibi; onay ekranı da "mevcut aboneler taşınacak" ifadesinin artık dünya çapında olduğunu açıkça yazıyor. Uygulama ve IAP'ların abonesi yok, sormuyorlar.
-
-Önce `--dry-run` ile çalıştırın: abonelik yolu hiçbir şey gönderilmeden önce türetilmiş tablonun tamamını döndürüyor.
-
-#### `pricing__get_subscription_price` artık "her ülkede" sorusunu da cevaplıyor
-`territory` zorunluydu, yani makro yalnızca tek bir ülkeyi cevaplayabiliyordu. "Bu abonelik her ülkede ne kadar?" diye sorulan canlı bir değerlendirme oturumu makroyu çağırdı, sorunun cevabını bulamadı, ham zinciri yürüdü ve sonucu bir CSV'ye yazıp yanına Python'da elle ülke adı sözlüğü üreterek 1,02M token ve 3 dolar harcadı.
-
-Artık `territory`'yi atlarsanız cevap Apple'ın sattığı tüm ülkeleri kapsıyor ve okunabilir kalsın diye fiyata göre gruplanıyor: canlı ölçümde 175 ülke 45 ayrı fiyata iniyor — 91 ülke bunlardan birini paylaşıyor — ve tamamı yaklaşık 1,3k token. Her grupla birlikte para birimi de dönüyor; "19.99" tek başına eksik bir cevap. Ülke adı da öyle: Apple hiçbir yerde ülke adı döndürmüyor — ne fiyat satırında, ne de yalnızca kod ve para birimi taşıyan `/v1/territories`'te — o değerlendirme oturumunun 175 satırlık sözlüğü elle yazmasının, sonraki bir koşuda da tekrar yazmasının sebebi bu. Her grup artık `territories` ile aynı sırada bir `countryNames` taşıyor.
-
-Tek ülke soran çağrılar değişmedi; yalnızca cevap ülkenin adını da veriyor.
-
-#### Ekran görüntüsü yükleme ve rapor okuma — ham araçların yapamadığı iki şey
-İkisi de API'nin gitmediği bir yerde biten zincirlerdi.
-- **`listing__upload_screenshot`**, Apple'ın rezerve et → yükle → onayla dizisini MD5 sağlamasıyla birlikte yürütüyor. Ham `app_screenshots__create` yalnızca bir yer ayırıyor ve tek bayt taşımıyor; zincir araçlarla hiç tamamlanamıyordu.
-- **`analytics__get_report`**, istek → rapor → örnek → segment zincirini yürüyüp Apple'ın imzalı bağlantısındaki gzip TSV'yi indiriyor ve satır döndürüyor. Ham zincir elinde bir URL ile bitiyor. Yeni bir rapor isteği başlatmıyor: bu, hesap üzerinde süregelen bir taahhüt, bir sorunun yan etkisi değil.
-
-#### Düzeltildi
-- **`listing__get_screenshots` 2.0.0'da erişilemez olarak yayınlanmış.** Ailesi profil üreticisinin bilinen listesinde yoktu, dolayısıyla küratörlük sayfasında ona satır açılamıyordu ve hiçbir profil-modu sunucusu onu sunmuyordu. İki listing makrosu da artık `distribution:version` altında. `pricing__get_subscription_price` da sayfada yokmuş — çalışıyordu, ama alt profil araç sayıları birer eksik gösteriyordu.
-- **`review_submissions__create`, bir sürümü incelemeye gönderiyor diye anlatılıyordu.** Sürüm değil *uygulama* alıyor ve boş bir gönderim açıyor; sürüm ayrı bir kalem olarak ekleniyor ve `submitted` işaretlenene kadar Apple'a hiçbir şey ulaşmıyor. İlk çağrıdan sonra duran bir ajan, yapmadığı bir yayını yapılmış olarak raporluyordu. Üç adım artık ayrı ayrı ne *olmadıklarını* söylüyor.
-- İnceleme gönderim zinciri ve analiz zincirinin iki ucu için küratörlü açıklamalar; AXIS1 bulunabilirlik borcu 718 → 712.
-- **Araç sayısı dört yüzeyde üç ayrı değere kaymıştı** — `server.json` ve `CITATION.cff` 868, GitHub repo açıklaması 875, README 883 diyordu — ve `CITATION.cff` 2.0.0'da kalarak iki sürüm geride kalmıştı. Hepsi artık 883 (erişilebilir 859 işlem artı elle yazılmış 24 araç) ve yayın öncesi kontrol hem `CITATION.cff` sürümünü hem üç yüzeydeki araç sayısını karşılaştırıyor; uyuşmazlıkta yayını geçirmek yerine durduruyor.
-- **`.claude-plugin/plugin.json` homepage alanı** var olmayan bir depoyu, `erayendes/asc-mcp`'yi gösteriyordu.
-
-#### Katkıcılar için
-- **`npm run ax:agent` çalışmıyordu** — `Profile` tipinde olmayan bir alanı okuyor ve import sırasında patlıyordu.
-- Bir skill belgesini A/B testine sokmak için `--skill=<dizin>` ve `--wrong-profile`; oturum başına `reachedForCredentials` / `calledAppleDirectly` boolean'ları ve kontrol koluna göre fark olarak basılan bir `By skill` tablosu. `SHELL_KINDS` eksik sayıyordu: `security find-generic-password` ve Apple'a atılan düz bir `curl`, ancak bir filtre kelimesine borulandığında kaydediliyordu.
-
-#### Eklendi
-- **`register` tarafından kurulan bir `heimdall` skill'i**, `SKILL.md` okuyan istemciler için (Claude Code, Codex). Sunucu var olmadan önce başka hiçbir kanalı olmayan şeyi taşıyor: API anahtarının istek başına süreç içinde üretildiğini, kabukta bulunamayacağını ve `curl` ile yerine konamayacağını — ki kayıtlı oturumlarda bir koşunun en sık bu yüzden raydan çıktığı görülmüştü. Bağlamda yaklaşık 200 token duruyor; gövde yalnızca skill tetiklendiğinde yükleniyor.
+**Eklendi:** `register` ile kurulan bir `heimdall` skill'i, skill dosyası okuyan istemciler için.
 
 ### [2.0.1] — 2026-08-09
 
-#### Yazma onayı artık opt-in
-**Davranış değişikliği.** Yazma-öncesi onay kapısı artık **varsayılan kapalı**; `--confirm` / `ASC_CONFIRM_WRITES=1` ile açılıyor.
+**Yazma onayı artık isteğe bağlı.** `--confirm` ya da `ASC_CONFIRM_WRITES=1` ile açılıyor.
 
-Her zaman var olan kapı, client'ın kendi çağrı-başı araç onayı. Bu ikinci kapı ve yalnızca client elicitation formunu gösterebiliyorsa çalışıyor — yeteneği bildirip formu gösteremeyen bir client `decline` dönüyor, protokol de bunu kullanıcının reddetmesiyle birebir aynı raporluyor. Yani o client'larda guard, çalışması gereken yazmaları "the write was not confirmed" diyerek engelliyor ve kullanıcıyı asıl sebebin yerine kendi client izinlerine bakmaya yönlendiriyordu. Formun gösterilip gösterilemediği client'a özgü bir gerçek, dolayısıyla karar sunucuyu yapılandıranın.
+Yalnızca istemciniz onay formu gösterebiliyorsa çalışıyor. Desteklediğini söyleyip formu gösteremeyen bir istemci "reddedildi" cevabı veriyor ve protokol bunu kullanıcının reddetmesiyle aynı şekilde bildiriyor — yani koruma, çalışan yazmaları engelliyor ve insanları gerçek sebep yerine kendi istemcilerinin izinlerine yönlendiriyordu. Formun gösterilip gösterilmediği istemciye özgü bir gerçek, o yüzden karar sunucuyu yapılandıran kişide.
 
-Kapalıyken kaybedilen bir şey yok: etki önizlemesi `--dry-run` altında basılmaya devam ediyor, `--read-only` hâlâ tüm mutasyon araçlarını kaldırıyor.
-- **`--allow-unconfirmed-writes` / `ASC_ALLOW_UNCONFIRMED_WRITES` kaldırıldı.** Yalnızca elicitation bildirmeyen client'lar için geçerliydi; hem onay istemek hem onaysız yazmaya izin vermek kendi kendini götüren bir kombinasyondu.
-- **`--no-confirm` artık no-op** — yeni varsayılanla aynı yere düşüyor, mevcut config'ler olduğu gibi çalışmaya devam ediyor.
-- **Ret mesajı ne olduğunu söylüyor**: ekranda istem çıkmadıysa cevabı client sizin yerinize vermiştir.
+Kapalıyken hiçbir şey kaybolmuyor: `--dry-run` hâlâ önizliyor, `--read-only` hâlâ tüm yazma araçlarını kaldırıyor.
 
 ### [2.0.0] — 2026-08-05
 
-#### Profiller elle küratörlükten geçiyor
-**Kritik değişiklik — her profil değişti.** Bir aracın hangi profile ait olduğu URL'den okunuyordu; bu yüzden bir uygulamaya bağlı her ilişki `app-info`'ya düşüyor, on bir profilin sekizi kendi kaynaklarına bir uygulamadan erişemiyordu. Üyelik artık `spec/profiles.csv` içinde elle belirlenip koda üretiliyor.
-- **13 profil**, önceden 11. Yeni: `access`, `app-clips`, `testflight`.
-- **`user-management` kaldırıldı**, dörde bölündü. Config'inizde hâlâ varsa sunucu yine açılıyor ve bölünmeyi anlatan tek bir araçla geliyor.
-- **Her profilin boyutu değişti** — `app-info` 112 araçtan 57'ye indi. **Config'inizi kontrol edin**, aradığınız araç diğer profilde olabilir.
+**Kırıcı değişiklik — her profil değişti.** Hangi aracın hangi profile ait olduğu URL'den okunuyordu, bu yüzden on bir profilin sekizi kendi kaynaklarına bir uygulamadan ulaşamıyordu. Üyelik artık elle küratörlükten geçiyor.
 
-#### Alt profiller
-Beş profil altında 32 alt profil. Profil iki nokta üst üste ile daralıyor: 204 araçlık `monetization` ya da 24 araçlık `monetization:subscription-pricing`'i seçersiniz.
-Bazı araçlar birden fazlasına bağlı, yani tek bir araç için koca bir profil yüklemek gerekmiyor. Setup seçicisi işaretlenen profilin alt profillerini imlecin altında açar, hepsi işaretli gelir ve argümanı sizin yerinize yazar; `asc__status` hangilerinin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+- **13 profil**, önce 11'di. Yeni: `access`, `app-clips`, `testflight`.
+- **`user-management` kalktı**, dörde bölündü. Hâlâ onu adlandıran bir yapılandırma yine de başlıyor ve bölünmeyi anlatıyor.
+- **Her profilin boyutu değişti** — `app-info` 112 araçtan 57'ye indi. **Yapılandırmanızı kontrol edin**; aradığınız araç artık başka yerde olabilir.
 
-#### Profildeki her araç, her istemcide
-`asc__describe` + `asc__call` en baştan mevcut, böylece hiçbir şey istemcinin oturum ortasında araç listesini tazelemesine bağlı kalmıyor.
-`asc__call` salt okunur; yazmalar kendi adlarını ve onay kapısını koruyor.
-`asc__load`, tazeleyen istemciler için oturum ortasında alt profil ekler.
+**Alt profiller.** Bir profil iki nokta üst üste ile daralıyor: `monetization` 204 araç, `monetization:subscription-pricing` 24. Bazı araçlar birden fazlasına ait, yani tek bir araca ulaşmak artık koca bir profili yüklemek demek değil.
 
-#### Setup kurulu her istemciye kaydediyor
-`setup` tek komut biliyordu: `claude mcp add`; Codex ve Cursor bulunan bir cihazda işi kullanıcıya bırakıyordu.
-- **Cihazda bulunan istemcileri tespit edip hangilerine kurmak istediğinizi soruyor:** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf, VS Code.
-- **Üreticinin kendi komutu varsa onu kullanıyor** (`claude`, `codex`, `code --add-mcp`); düz JSON config'leri yedekleyip düzenliyor. Ayrıştırılamayan bir dosyaya hiç dokunmuyor, yapıştırılacak blok basıyor. Bir istemcinin başarısız olması diğerlerini durdurmuyor.
-- **`register` aynı işi terminal olmadan yapar**, kurulumu sizin adınıza üstlenen bir agent için: `asc-mcp register monetization:subscription-pricing analytics`. Yalnızca ekler; silme işi `setup`'ındır.
+**Profildeki her araç, her istemcide.** `asc__describe` ve `asc__call` baştan itibaren orada, yani hiçbir şey istemcinizin araç listesini oturum ortasında tazelemesine bağlı değil.
 
-> [!NOTE]
-> ChatGPT'nin kendi connector'ları yalnızca uzak HTTPS sunucusu kabul ettiği için Heimdall orada görünemez; sizin cihazınızda stdio üzerinden çalışır, özel anahtarın cihazdan hiç çıkmamasının sebebi de budur. Codex satırı CLI'yi, IDE eklentisini ve ChatGPT masaüstünün Codex tarafını kapsar — üçü aynı config dosyasını okur.
+**Setup, makinenizdeki her istemciye kaydediyor.** Claude Code, Claude Desktop, Codex, Antigravity, Cursor, Windsurf ve VS Code'u buluyor ve hangisine kurulacağını soruyor. `register` aynı işi terminal olmadan yapıyor — sizin adınıza kuran bir ajan için.
 
-#### Düzeltildi
-- **Yanlış yazılmış bir filtre hangi uygulamayı düzenlediğinizi değiştiriyordu.** `filter[bundleId]` sessizce düşüyor, filtresiz çalışıp hesabın ilk uygulamasını döndürüyordu. Artık iki yazım da kabul ediliyor.
-- **Binary, symlink üzerinden çağrıldığında sessizce 0 ile çıkıyordu.**
-- **Araç arama İngilizce dışındaki sorgulara boş dönüyordu, sebebini de söylemiyordu.** Artık tüm dillerde sonuç dönüyor, boşsa nedenini açıklıyor.
-- **Araç arama, sunucunun yüklemeyi reddettiği araçları öneriyordu.**
-
-#### Katkıcılar için eklendi
-Bir agent deneyimi koşum takımı: saldırgan hedefler içeren 50 istemlik bir külliyat (bir kez değil, n kez koşuluyor), 982 işlemin tamamında damgalanmamış risk seviyesi ve HTTP metoduyla çelişen `readOnly` arayan bir sözleşme kontrolü, ve tek kullanımlık bir uygulamada TestFlight grubu açıp silen canlı bir yazma-yolu sondası — token'dan POST'a, oradan Apple'ın cevabına giden yolu sınayan tek kontrol, çünkü diğerlerinin hepsi `--dry-run` ile koşuyor. `tests/gate.test.ts` yazma kapısının yalnızca doğru sınıflandırdığını değil, stdio üzerinden uçtan uca ateşlendiğini kanıtlıyor.
+**Düzeltmeler:** yanlış yazılmış bir filtre sessizce düşürülüp hesabın ilk uygulamasını döndürüyordu — yani düzenlemeler yanlış uygulamaya gidiyordu. Araç araması İngilizce olmayan sorgular için sebebini söylemeden boş dönüyor ve sunucunun yüklemeyi reddettiği araçları öneriyordu.
 
 ### [1.3.0] — 2026-07-28
 
-Güvenlik ve kullanılabilirlik sürümü: her yazma artık yerelde şema kontrolünden geçiyor, onaydan önce önizleniyor ve asla sessizce yeniden gönderilmiyor.
+Güvenlik sürümü. Her yazma artık yerelde şema kontrolünden geçiyor, onaydan önce önizleniyor ve asla sessizce yeniden gönderilmiyor.
 
-- **Yazmalar otomatik retry ile çiftlenmiyor.** Okumalar 408/429/5xx'te retry olmaya devam ediyor; yazmalar yalnız 429'da (işlenmeden reddedildi). Cevapsız ölen yazma, yeniden gönderilmek yerine açık bir belirsiz-sonuç hatası veriyor — "Apple işlemiş olabilir, göndermeden önce doğrula". `Retry-After` HTTP-date formatı destekleniyor.
-- **Fail-closed onay.** Elicitation desteklemeyen client'larda yazmalar artık sessizce geçmek yerine hata ile engelleniyor; açık opt-in: `--allow-unconfirmed-writes` / `ASC_ALLOW_UNCONFIRMED_WRITES=1`.
-- **Gerçek request-body şemaları.** Body alan 355 operasyonun tamamı, genel bir "JSON:API body" ipucu yerine çözülmüş JSON Schema taşıyor (attribute'lar, ilişkiler, enum'lar, zorunlu alanlar, kapalı-dünya objeler) ve her yazma body'si yerelde doğrulanıyor — yazım hatalı alan veya yanlış enum, Apple'a hiçbir şey gitmeden field path ile düşüyor.
-- **Impact preview, risk seviyeleri ve yazılı onay.** Onay penceresi operasyonu, hedef id'leri, hesabı, değişiklik özetini ve geri alınabilirlik notunu gösteriyor. Her mutasyon operasyonu elle gözden geçirilmiş bir risk seviyesi taşıyor (low / public / release / revenue / destructive / infrastructure / access); revenue, destructive, infrastructure ve access yazmaları kutucuk yerine CONFIRM yazmayı gerektiriyor.
-- **`--dry-run` / `ASC_DRY_RUN=1`:** mutasyon çağrıları doğrulanıp gönderilecek olanı (metod, path, body, risk) döndürüyor — Apple'a hiçbir şey gitmiyor. CI ve ajan provaları için.
-- **Reviews-AI sertleştirme:** yorumlar modele güvenilmez JSON verisi olarak gidiyor (prompt-injection savunması), istatistikler önceki dönem kıyasıyla deterministik hesaplanıyor, kesme dürüstçe raporlanıyor (çekilen vs analiz edilen), taslaklar yorumun dilinde ve marka sesi / yasaklı ifadeler / destek adresi `ASC_REVIEWS_*` env'lerinden. Araçlar, sampling desteklemeyen client'larda gizleniyor.
-- **`ASC_BASE_URL`** tüm sunucuyu test için yerel bir fixture'a yönlendiriyor; host-pinning override'ı izliyor.
-- `asc__status`'a `check_expirations` eklendi — 30 gün içinde dolacak sertifikalar ve provisioning profilleri.
-- 403 (rol yetersiz) ve 409 (kaynak-durumu kilidi) hatalarına, mevcut 401 ipucunun yanına eyleme dönük ipuçları.
-- GUIDE: mevcut mekanizmalarla çoklu hesap kalıpları (sunucu-başına env, `ASC_CONFIG_DIR`).
+- **Yazmalar asla kopyaya dönüşecek şekilde yeniden denenmiyor.** Cevapsız ölen bir yazma, yeniden gönderilmek yerine açıkça belirsiz sonuç bildiriyor.
+- **Gerçek istek gövdesi şemaları** — gövde alan 355 işlemin hepsi için, yerelde doğrulanıyor; yazım hatası ya da yanlış enum, Apple'a hiçbir şey ulaşmadan alan adıyla düşüyor.
+- **Etki önizlemesi ve risk seviyeleri.** Onay ekranı işlemi, hedefi, hesabı, değişikliklerin özetini ve geri alınabilirlik notunu gösteriyor. Gelir, yıkıcı, altyapı ve erişim yazmaları CONFIRM yazmayı gerektiriyor.
+- **`--dry-run`** doğrulayıp ne gönderileceğini döndürüyor, Apple'a dokunmadan.
+- **Reviews-AI sertleştirmesi:** yorumlar modele güvenilmeyen veri olarak ulaşıyor, istatistikler kodda hesaplanıyor, kırpma dürüstçe bildiriliyor.
+- `asc__status`'a `check_expirations` eklendi — 30 gün içinde süresi dolacak sertifika ve profiller.
 
 ### [1.2.0] — 2026-07-26
 
-- **Write onayı.** Değişiklik yapan bir araç çalışmadan önce (fiyat değiştirme, incelemeye gönderme, kaynak silme), sunucu kullanıcıdan [MCP elicitation](https://modelcontextprotocol.io/) ile onay ister — muğlak ya da yanlış anlaşılmış bir talimat artık kontrolsüz çalışamaz. Varsayılan açık; `ASC_CONFIRM_WRITES=0` veya `--no-confirm` ile kapatılır. Elicitation desteklemeyen client'lar kendi çağrı-başı onaylarına düşer (tek seferlik uyarıyla).
+- **Yazma onayı.** Değiştiren herhangi bir araç çalışmadan önce sunucu onay istiyor; böylece belirsiz ya da yanlış anlaşılmış bir talimat kontrolsüz çalışamıyor. Varsayılan açık; `ASC_CONFIRM_WRITES=0` kapatıyor.
 
 ### [1.1.4] — 2026-07-25
 
-- 1.1.3'teki lazy private-key parse'ı taşıyan ilk npm sürümü — sunucu geçerli kimlik bilgisi olmadan başlar; böylece araç keşfi ve introspection setup'tan önce çalışır. Bağış tek seçeneğe indirildi: yalnızca Buy Me a Coffee (Patreon kaldırıldı). API değişikliği yok.
+- 1.1.3'teki tembel anahtar okumasını taşıyan ilk npm sürümü; sunucu geçerli kimlik bilgisi olmadan da açılıyor. API değişikliği yok.
 
 ### [1.1.3] — 2026-07-23
 
-- **Sunucu, kullanılabilir bir private key olmadan başlar.** İmzalama anahtarı artık açılışta değil ilk API çağrısında (lazy) parse edilir; böylece araç keşfi — ve yalnızca `tools/list` çağıran Glama gibi otomatik introspection araçları — boot için geçerli kimlik bilgisi gerektirmez. Hatalı anahtar, açılışı kilitlemek yerine ilk gerçek istekte ortaya çıkar.
+- **Sunucu kullanılabilir bir özel anahtar olmadan başlıyor.** İmzalama anahtarı açılışta değil ilk API çağrısında okunuyor, yani araç keşfi kurulumdan önce çalışıyor.
 
 ### [1.1.2] — 2026-07-22
 
-- `package.json`'a `mcpName` alanı (`io.github.erayendes/asc-mcp`) eklendi; böylece sunucu resmi [MCP Registry](https://registry.modelcontextprotocol.io)'ye yayınlanabilir. İşlevsel değişiklik yok.
+- Sunucunun resmî MCP Registry'ye yayınlanabilmesi için `mcpName` alanı eklendi. İşlevsel değişiklik yok.
 
 ### [1.1.1] — 2026-07-22
 
-- **CLI mesajları artık global kurulum olmadan çalışan bir komut gösteriyor.** Help metni, "config eksik"/"config bozuk" hataları ve StoreKit ipucu, çıplak `asc-mcp setup` yerine `npx -y @erayendes/asc-mcp setup` basıyor — çıplak komut yalnızca `npm i -g` sonrası var. `GUIDE.md §7` de yeniden-çalıştırma komutunu açıkça veriyor.
+- **CLI mesajları artık global kurulum olmadan da çalışan bir komut gösteriyor** — çıplak `asc-mcp setup` yerine `npx -y @erayendes/asc-mcp setup`.
 
 ### [1.1.0] — 2026-07-22
 
-- **Heimdall'a yeniden adlandırma.** Proje artık *Heimdall — App Store Connect MCP*. npm paketi (`@erayendes/asc-mcp`) ve komut (`asc-mcp`) değişmedi.
-- **Dokümanlar yeniden düzenlendi:** community-health dosyaları (güvenlik, destek, katkı, davranış kuralları) GitHub'ın tanıması için `.github/` altında; rehber ve bu değişiklik günlüğü `docs/` altında. Rakamlar baştan sona düzeltildi: **982 işlem / 966 path / 123 deprecated** (önceden 1.263 / 159 yazıyordu).
-- Yeni `GUIDE.md` bölümleri: platform desteği, gerçek setup-sihirbazı akışı, sonradan araç ekleme/çıkarma, StoreKit ortamları, örnek bir oturum ve kaldırma adımları.
-- `SECURITY.md`: "kurmadan önce kendin denetle" bölümü ve açık bir telemetri-yok / veri-toplama-yok beyanı.
-- Setup, kaydetmeden önce kimlik bilgilerini Apple'a doğrular, hatalı girdide yeniden sorar ve kayıtlı kimlik bilgilerini yeniden kullanırken kayıtlı profilleri uzlaştırır.
-- Kullanıcıya görünen yardım ve hata metni artık gerçek `asc-mcp` komut adını kullanır.
-- **`account-management` profili `provisioning` olarak yeniden adlandırıldı** — adı yaptığı işi yansıtsın (kod imzalama: bundle ID'ler, sertifikalar, cihazlar, provisioning profilleri) ve kullanıcı yönetimiyle karışmasın; o iş `user-management`'ta. Alias yok: eski adı kaydettiyseniz `asc-provisioning` olarak yeniden kaydedin.
+- **Heimdall'a marka değişikliği.** npm paketi ve komut aynı kaldı.
+- **Dokümanlar yeniden düzenlendi** — topluluk dosyaları `.github/` altına, rehber ve changelog `docs/` altına. Sayılar düzeltildi: 982 işlem / 966 path / 123 kullanımdan kaldırılmış.
+- Setup, kaydetmeden önce kimlik bilgilerini Apple'a karşı doğruluyor ve kayıtlıları yeniden kullanıyor.
+- **`account-management`, `provisioning` olarak yeniden adlandırıldı** — ad artık yaptığı işe uyuyor. Takma ad yok; eski adı kullandıysanız yeniden kaydedin.
 
 ### [1.0.4] — 2026-07-22
 
-- Düzeltme: setup, profil seçicinin ardından bundle-ID isteminde artık çıkmıyor.
+- Düzeltme: setup, profil seçicisinden sonra bundle ID isteminde artık çıkmıyor.
 
 ### [1.0.3] — 2026-07-21
 
-- İnteraktif, boşlukla-seçilen profil seçici; her profilin araç sayısını ve kabaca token maliyetini gösterir.
-- Setup, seçilen profilleri sadece yazdırmak yerine doğrudan kaydeder (`claude mcp add`).
-- Keşfedilebilirlik: kardeş-sunucu ipuçları tam ekleme komutunu içerir ve StoreKit araçları `asc__search_tools`'ta görünür.
-- Daha dostane setup: sürükle-bırak `.p8` yolu, npx tabanlı config, örneklerde gerçek anahtar yok.
+- Her profilin araç sayısını ve kabaca token maliyetini gösteren etkileşimli profil seçici.
+- Setup, seçilen profilleri yalnızca talimat yazdırmak yerine doğrudan kaydediyor.
+- Sürükle-bırak `.p8` yolu, npx tabanlı yapılandırma, örneklerde gerçek anahtar yok.
 
 ### [1.0.2] — 2026-07-21
 
-- **Profil sunucuları:** tek binary, tek kimlik bilgisi setini paylaşan 11 amaca özel MCP sunucusu sunar.
-- **Ortak kimlik bilgisi yapılandırması** `~/.config/asc-mcp/config.json`'da; ortam değişkenleri yine de onu ezer.
-- 281 id-only twin işlem kaldırıldı; yüzey 1.263'ten 982'ye indi.
-- Satış ve finans rapor uç noktaları düzeltildi; App Store Connect API entegrasyon testleri eklendi.
-- Araç isimleri 64 karakterle sınırlandı ve sorgu-parametre isimleri Anthropic API için temizlendi.
-- Özel anahtar için opsiyonel **macOS Keychain** kaynağı ve bayrak tabanlı dil geçişli iki dilli **İngilizce / Türkçe** dokümantasyon. (Bunlar depoya 2026-07-19'da hiç yayınlanmamış bir "1.1.0" başlığı altında girmişti — kullanıcıya ulaştıran ilk npm sürümü 1.0.2'dir.)
+- **Profil sunucuları:** tek bir binary, aynı kimlik bilgisini paylaşan 11 amaca özel MCP sunucusu sunuyor.
+- **Ortak kimlik yapılandırması** `~/.config/asc-mcp/config.json` altında.
+- 281 tekrar eden işlem kaldırıldı; yüzey 1.263'ten 982'ye indi.
+- Satış ve finans raporu endpoint'leri düzeltildi.
+- Özel anahtar için isteğe bağlı **macOS Keychain** kaynağı ve iki dilli **İngilizce / Türkçe** doküman.
 
 ### [1.0.1] — 2026-07-19
 
-- API anahtarı tablosunda rol-başına risk sütunu; roller bu sunucunun gerçek domainlerine eşlendi.
-- Scope'lu npm paket adı `@erayendes/asc-mcp`.
+- API anahtarı tablosuna rol bazlı risk sütunu.
+- Kapsamlı npm paket adı `@erayendes/asc-mcp`.
 
 ### [1.0.0] — 2026-07-19
 
-- İlk sürüm: App Store Connect API için, araçları Apple'ın resmi OpenAPI spesifikasyonundan üretilen bir MCP sunucusu.
-- MCP Sampling ile AI destekli yorum araçları.
+- İlk sürüm: Apple'ın resmî OpenAPI spesifikasyonundan üretilen araçlarla App Store Connect API için bir MCP sunucusu.
+- AI destekli yorum araçları.

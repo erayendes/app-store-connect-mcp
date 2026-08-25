@@ -126,8 +126,8 @@ No strong preference: `analytics`, `marketing` and `app-info` is a reasonable
 default.
 
 A large profile takes a colon and a list of sub-profiles —
-`monetization:subscription-pricing,subscription-offers` is 24 tools where
-`monetization` is 204. Worth suggesting for `monetization`, `game-center`,
+`monetization:subscription-pricing,subscription-offers` is 55 tools where
+`monetization` is 207. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `asc-monetization`.
 
 ## Prefer the macro over the chain
@@ -143,6 +143,10 @@ right choice for anything the macro does not cover.
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` |
+| checking a version by hand before submitting it | `preflight__check_version` |
+| open a submission, add the version, hand it over | `release__submit` |
+| comparing store text across languages by eye | `metadata_ai__audit_localizations` |
+| pasting a translation into each locale | `metadata_ai__apply_localizations` |
 
 Two of these do something the raw tools cannot do at all, not merely faster:
 `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence
