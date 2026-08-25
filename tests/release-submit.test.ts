@@ -40,7 +40,28 @@ function fakeHttp(o: Options = {}) {
       },
     },
   ];
-  const get = async (path: string) => {
+  /**
+   * Apple honours sparse fieldsets, so the fake has to as well. Without this
+   * the mock returns every attribute regardless of what was asked for, and a
+   * tool that forgets to request `platform` still sees one — which is exactly
+   * how the iOS-default bug survived a test written to catch it.
+   */
+  const applyFieldset = (res: any, query?: Record<string, unknown>) => {
+    const fields = query?.['fields[appStoreVersions]'];
+    if (typeof fields !== 'string' || !Array.isArray(res?.data)) return res;
+    const keep = new Set(fields.split(','));
+    return {
+      ...res,
+      data: res.data.map((row: any) => ({
+        ...row,
+        attributes: Object.fromEntries(
+          Object.entries(row.attributes ?? {}).filter(([k]) => keep.has(k))
+        ),
+      })),
+    };
+  };
+
+  const get = async (path: string, query?: Record<string, unknown>) => {
     if (path === '/v1/apps') {
       return { data: [{ id: '663', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } }] };
     }
@@ -70,7 +91,7 @@ function fakeHttp(o: Options = {}) {
         : { data: [] };
     }
     if (path.includes('/appStoreVersions')) {
-      return {
+      return applyFieldset({
         data: [
           {
             id: 'v-320',
@@ -86,7 +107,7 @@ function fakeHttp(o: Options = {}) {
           },
         ],
         included: o.build === null ? included.filter((i) => i.type !== 'builds') : included,
-      };
+      }, query);
     }
     return { data: [] };
   };
