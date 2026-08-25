@@ -19,6 +19,10 @@ interface Options {
   state?: string;
   openSubmission?: boolean;
   itemAlreadyThere?: boolean;
+  /** null models Apple answering with no platform at all. */
+  platform?: string | null;
+  /** Which platform the already-open submission belongs to. */
+  openSubmissionPlatform?: string;
 }
 
 function fakeHttp(o: Options = {}) {
@@ -38,7 +42,28 @@ function fakeHttp(o: Options = {}) {
       },
     },
   ];
-  const get = async (path: string) => {
+  /**
+   * Apple honours sparse fieldsets, so the fake has to as well. Without this
+   * the mock returns every attribute regardless of what was asked for, and a
+   * tool that forgets to request `platform` still sees one — which is exactly
+   * how the iOS-default bug survived a test written to catch it.
+   */
+  const applyFieldset = (res: any, query?: Record<string, unknown>) => {
+    const fields = query?.['fields[appStoreVersions]'];
+    if (typeof fields !== 'string' || !Array.isArray(res?.data)) return res;
+    const keep = new Set(fields.split(','));
+    return {
+      ...res,
+      data: res.data.map((row: any) => ({
+        ...row,
+        attributes: Object.fromEntries(
+          Object.entries(row.attributes ?? {}).filter(([k]) => keep.has(k))
+        ),
+      })),
+    };
+  };
+
+  const get = async (path: string, query?: Record<string, unknown>) => {
     if (path === '/v1/apps') {
       return { data: [{ id: '663', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } }] };
     }
@@ -58,6 +83,13 @@ function fakeHttp(o: Options = {}) {
       return { data: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } }] };
     }
     if (path.includes('/reviewSubmissions')) {
+      // Apple filters by platform here, so the fake must too: an app on iOS and
+      // macOS can have one open submission on each, and handing back the wrong
+      // one puts a macOS version into the iOS submission.
+      const wanted = query?.['filter[platform]'];
+      if (o.openSubmission && wanted && wanted !== (o.openSubmissionPlatform ?? 'IOS')) {
+        return { data: [] };
+      }
       return o.openSubmission
         ? {
             data: [{ id: 'sub-1' }],
@@ -68,11 +100,15 @@ function fakeHttp(o: Options = {}) {
         : { data: [] };
     }
     if (path.includes('/appStoreVersions')) {
-      return {
+      return applyFieldset({
         data: [
           {
             id: 'v-320',
-            attributes: { versionString: '3.2.0', appStoreState: o.state ?? 'PREPARE_FOR_SUBMISSION', platform: 'IOS' },
+            attributes: {
+              versionString: '3.2.0',
+              appStoreState: o.state ?? 'PREPARE_FOR_SUBMISSION',
+              ...(o.platform === null ? {} : { platform: o.platform ?? 'IOS' }),
+            },
             relationships: {
               ...(o.build === null ? {} : { build: { data: { id: 'b-1' } } }),
               appStoreReviewDetail: { data: { id: 'r-1' } },
@@ -80,7 +116,7 @@ function fakeHttp(o: Options = {}) {
           },
         ],
         included: o.build === null ? included.filter((i) => i.type !== 'builds') : included,
-      };
+      }, query);
     }
     return { data: [] };
   };
@@ -159,6 +195,37 @@ describe('release__submit', () => {
     expect(res.dryRun).toBe(true);
     expect(res.wouldDo).toHaveLength(3);
     expect(writes).toEqual([]);
+  });
+
+  it('submits for the version\'s real platform, not a default', async () => {
+    // The sparse fieldset used to omit `platform`, so `?? 'IOS'` fired every
+    // time and a macOS or visionOS version was submitted as iOS — accepted by
+    // Apple, and wrong in a way nobody sees until the release does not appear.
+    const { http, writes } = fakeHttp({ platform: 'MAC_OS' });
+    await run({ app: 'Ask Quran' }, http);
+    const created = writes.find((w) => w.path === '/v1/reviewSubmissions');
+    expect(created!.body.data.attributes.platform).toBe('MAC_OS');
+  });
+
+  it('refuses rather than guessing when Apple returns no platform', async () => {
+    const { http, writes } = fakeHttp({ platform: null });
+    await expect(run({ app: 'Ask Quran' }, http)).rejects.toThrow(/no platform/i);
+    expect(writes).toEqual([]);
+  });
+
+  it('does not reuse an open submission belonging to another platform', async () => {
+    // An app on both iOS and macOS can have one open submission on each.
+    // Filtering only by state and taking the first would attach this macOS
+    // version to the iOS submission — accepted by Apple, and wrong.
+    const { http, writes } = fakeHttp({
+      platform: 'MAC_OS',
+      openSubmission: true,
+      openSubmissionPlatform: 'IOS',
+    });
+    await run({ app: 'Ask Quran' }, http);
+    const created = writes.find((w) => w.path === '/v1/reviewSubmissions');
+    expect(created, 'should have opened its own macOS submission').toBeDefined();
+    expect(created!.body.data.attributes.platform).toBe('MAC_OS');
   });
 
   it('is a write, and says so in the tool list', () => {

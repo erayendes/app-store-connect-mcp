@@ -102,13 +102,31 @@ export async function executeReleaseTool(
 
   // Resolved after the pre-flight so a refusal costs one call rather than four.
   const versions: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/appStoreVersions`, {
-    'fields[appStoreVersions]': 'versionString,appStoreState',
+    // platform is load-bearing: the submission below is created for it, and a
+    // sparse fieldset that omits it makes every macOS, tvOS and visionOS
+    // submission silently claim to be iOS.
+    'fields[appStoreVersions]': 'versionString,appStoreState,platform',
     limit: 20,
   });
   const version = (versions?.data ?? []).find(
     (v: any) => String(v.attributes?.versionString ?? '') === preflight.version
   );
   if (!version) throw new AscApiError(`Version ${preflight.version} disappeared between calls.`, 0);
+
+  // Refused rather than defaulted. A submission carries a platform, and
+  // guessing IOS for a macOS or visionOS version creates the submission
+  // against the wrong one — which Apple accepts and nobody notices until the
+  // release does not appear where it was meant to.
+  const versionPlatform = String(version.attributes?.platform ?? '');
+  if (!versionPlatform) {
+    throw new AscApiError(
+      `Apple returned no platform for version ${preflight.version}, and a review submission ` +
+        `has to name one. Read the version with app_store_versions__get to see what Apple ` +
+        `reports, then try again — submitting without it would guess, and a submission ` +
+        `created for the wrong platform is accepted and silently wrong.`,
+      0
+    );
+  }
 
   const steps: string[] = [];
   if (ctx.dryRun) {
@@ -126,10 +144,16 @@ export async function executeReleaseTool(
   }
 
   // An open submission is reused rather than duplicated: Apple allows one at a
-  // time, and a second POST fails with a message about state that says nothing
-  // about the submission already sitting there.
+  // time per platform, and a second POST fails with a message about state that
+  // says nothing about the submission already sitting there.
+  //
+  // Filtered by platform as well as state. An app shipping on iOS and macOS can
+  // have one open on each, and reusing whichever came back first would put a
+  // macOS version into the iOS submission — the same wrong-platform mistake the
+  // fieldset above exists to prevent, arrived at from the other side.
   const open: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/reviewSubmissions`, {
     'filter[state]': 'READY_FOR_REVIEW',
+    'filter[platform]': versionPlatform,
     include: 'items',
     limit: 5,
   });
@@ -141,7 +165,7 @@ export async function executeReleaseTool(
       body: {
         data: {
           type: 'reviewSubmissions',
-          attributes: { platform: version.attributes?.platform ?? 'IOS' },
+          attributes: { platform: versionPlatform },
           relationships: { app: { data: { type: 'apps', id: app.id } } },
         },
       },

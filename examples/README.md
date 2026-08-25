@@ -30,8 +30,8 @@ one you install can find an app ID and point you at a tool it does not have.
 npx -y @erayendes/asc-mcp register distribution app-info
 ```
 
-Narrower is better than broader: `monetization:subscription-pricing` is 26
-tools where `monetization` is 206, and everything you skipped is one
+Narrower is better than broader: `monetization:subscription-pricing` is 27
+tools where `monetization` is 207, and everything you skipped is one
 `asc__call` away — the proxy reaches any operation in the catalogue, loaded or
 not.
 
@@ -177,8 +177,8 @@ gösterebilir.
 npx -y @erayendes/asc-mcp register distribution app-info
 ```
 
-Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 26 araç,
-`monetization` 206. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
+Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
+`monetization` 207. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
 yüklü olsun olmasın katalogdaki her işleme ulaşır.
 
 ---

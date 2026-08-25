@@ -105,8 +105,10 @@ export const METADATA_I18N_TOOLS: McpToolDefinition[] = [
       'Write store text for several languages at once from a file the user prepared — the ' +
       'values are theirs, read straight from the file rather than retyped. Accepts CSV with ' +
       'a "locale" column and one column per field, or JSON keyed by locale. Every value is ' +
-      'checked against Apple’s character limits before anything is sent, so a rejection on ' +
-      'the eleventh language cannot leave ten already changed.',
+      'checked against Apple’s character limits before anything is sent, so a file with a ' +
+      'bad value changes nothing at all. Apple is still asked one language at a time: if it ' +
+      'rejects the eleventh, the first ten are already written and the error names exactly ' +
+      'which ones landed.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -400,13 +402,54 @@ export async function executeMetadataI18nTool(
     };
   }
 
+  // Validation above is all-or-nothing, so a bad file changes nothing. Apple is
+  // a separate matter: these are N independent PATCHes and there is no
+  // transaction across them. A rejection on the eleventh leaves the first ten
+  // written, and the one thing that must not happen then is an error that says
+  // only "failed" — the caller has to know where to resume from.
   const applied: Array<{ locale: string; fields: string[] }> = [];
   for (const write of writes) {
-    await ctx.http.request('PATCH', `/v1/appStoreVersionLocalizations/${encodeURIComponent(write.id)}`, {
-      body: {
-        data: { type: 'appStoreVersionLocalizations', id: write.id, attributes: write.values },
-      },
-    });
+    try {
+      await ctx.http.request('PATCH', `/v1/appStoreVersionLocalizations/${encodeURIComponent(write.id)}`, {
+        body: {
+          data: { type: 'appStoreVersionLocalizations', id: write.id, attributes: write.values },
+        },
+      });
+    } catch (err) {
+      const done = applied.map((a) => a.locale);
+      // Apple's own status, request id and issues are carried through rather
+      // than flattened to 0. Status 0 means "never reached Apple", which reads
+      // as retryable — exactly the wrong thing to say about a 403 that will
+      // fail identically every time.
+      const cause = err instanceof AscApiError ? err : undefined;
+      // Status 0 is the request that never got an answer, and the HTTP layer is
+      // careful to say it may or may not have been applied. Reporting that as
+      // "Apple rejected it" and "nothing was written" would be two false
+      // statements about the one locale whose outcome nobody knows.
+      const unknown = !cause || cause.status === 0;
+      const notAttempted =
+        writes.slice(applied.length + 1).map((w) => w.locale).join(', ') || '(none)';
+      const rerun =
+        'Re-running with the same file is safe — writing a value that is already set changes nothing.';
+
+      throw new AscApiError(
+        (unknown
+          ? `${filePath} stopped at ${write.locale}, and whether that one was applied is ` +
+            `unknown — the request never returned an answer: ${(err as Error).message}\n` +
+            `  written: ${done.join(', ') || '(none)'}\n` +
+            `  unknown: ${write.locale}\n` +
+            `  not attempted: ${notAttempted}\n` +
+            `Read ${write.locale} back before deciding what to do. ${rerun}`
+          : `${filePath} was applied to ${done.length} of ${writes.length} locales, then Apple ` +
+            `rejected ${write.locale}: ${(err as Error).message}\n` +
+            `  written: ${done.join(', ') || '(none)'}\n` +
+            `  not attempted: ${notAttempted}\n` +
+            rerun),
+        cause?.status ?? 0,
+        cause?.errors ?? [],
+        cause?.requestId
+      );
+    }
     applied.push({ locale: write.locale, fields: Object.keys(write.values) });
   }
 
