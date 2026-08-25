@@ -21,6 +21,8 @@ interface Options {
   itemAlreadyThere?: boolean;
   /** null models Apple answering with no platform at all. */
   platform?: string | null;
+  /** Which platform the already-open submission belongs to. */
+  openSubmissionPlatform?: string;
 }
 
 function fakeHttp(o: Options = {}) {
@@ -81,6 +83,13 @@ function fakeHttp(o: Options = {}) {
       return { data: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } }] };
     }
     if (path.includes('/reviewSubmissions')) {
+      // Apple filters by platform here, so the fake must too: an app on iOS and
+      // macOS can have one open submission on each, and handing back the wrong
+      // one puts a macOS version into the iOS submission.
+      const wanted = query?.['filter[platform]'];
+      if (o.openSubmission && wanted && wanted !== (o.openSubmissionPlatform ?? 'IOS')) {
+        return { data: [] };
+      }
       return o.openSubmission
         ? {
             data: [{ id: 'sub-1' }],
@@ -202,6 +211,21 @@ describe('release__submit', () => {
     const { http, writes } = fakeHttp({ platform: null });
     await expect(run({ app: 'Ask Quran' }, http)).rejects.toThrow(/no platform/i);
     expect(writes).toEqual([]);
+  });
+
+  it('does not reuse an open submission belonging to another platform', async () => {
+    // An app on both iOS and macOS can have one open submission on each.
+    // Filtering only by state and taking the first would attach this macOS
+    // version to the iOS submission — accepted by Apple, and wrong.
+    const { http, writes } = fakeHttp({
+      platform: 'MAC_OS',
+      openSubmission: true,
+      openSubmissionPlatform: 'IOS',
+    });
+    await run({ app: 'Ask Quran' }, http);
+    const created = writes.find((w) => w.path === '/v1/reviewSubmissions');
+    expect(created, 'should have opened its own macOS submission').toBeDefined();
+    expect(created!.body.data.attributes.platform).toBe('MAC_OS');
   });
 
   it('is a write, and says so in the tool list', () => {

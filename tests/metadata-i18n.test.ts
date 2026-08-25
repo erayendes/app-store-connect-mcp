@@ -198,7 +198,7 @@ describe('metadata_ai__apply_localizations', () => {
     const file = withFile('locale,keywords\nen-US,a\ntr,b\nde-DE,c\n');
     await expect(
       run('metadata_ai__apply_localizations', { app: 'Ask Quran', file_path: file }, http)
-    ).rejects.toThrow(/already written: en-US, tr/);
+    ).rejects.toThrow(/written: en-US, tr/);
     expect(calls).toHaveLength(3);
   });
 
@@ -226,6 +226,37 @@ describe('metadata_ai__apply_localizations', () => {
     expect(err.status).toBe(403);
     expect(err.retryable).toBe(false);
     expect(err.requestId).toBe('req-1');
+  });
+
+  it('says a locale\'s outcome is unknown when the request never answered', async () => {
+    // The HTTP layer reports a write that got no response as "may or may not
+    // have been processed". Calling that "Apple rejected it" and "nothing was
+    // written" would be two false claims about the one locale nobody knows.
+    const rows = [
+      { id: 'l-en', locale: 'en-US', description: 'A.', keywords: 'k', whatsNew: 'w' },
+      { id: 'l-tr', locale: 'tr', description: 'B.', keywords: 'k', whatsNew: 'w' },
+    ];
+    const http: any = {
+      get: async (path: string) => {
+        if (path === '/v1/apps') return { data: [{ id: '663', attributes: { name: 'Ask Quran' } }] };
+        if (path.includes('/appStoreVersionLocalizations'))
+          return { data: rows.map((l) => ({ id: l.id, attributes: l })) };
+        if (path.includes('/appStoreVersions'))
+          return { data: [{ id: 'v', attributes: { versionString: '3.2.0' } }] };
+        return { data: [] };
+      },
+      request: async (_m: string, path: string) => {
+        if (path.includes('l-tr')) throw new AscApiError('Network error: fetch failed', 0);
+        return { data: {} };
+      },
+    };
+    const file = withFile('locale,keywords\nen-US,a\ntr,b\n');
+    const err = await run('metadata_ai__apply_localizations', { app: 'Ask Quran', file_path: file }, http)
+      .then(() => null, (e) => e);
+    expect(err.message).toMatch(/unknown/);
+    expect(err.message).toMatch(/unknown: tr/);
+    expect(err.message).not.toMatch(/rejected/);
+    expect(err.message).toContain('written: en-US');
   });
 
   it('is the only one of the three that can write', () => {

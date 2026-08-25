@@ -144,10 +144,16 @@ export async function executeReleaseTool(
   }
 
   // An open submission is reused rather than duplicated: Apple allows one at a
-  // time, and a second POST fails with a message about state that says nothing
-  // about the submission already sitting there.
+  // time per platform, and a second POST fails with a message about state that
+  // says nothing about the submission already sitting there.
+  //
+  // Filtered by platform as well as state. An app shipping on iOS and macOS can
+  // have one open on each, and reusing whichever came back first would put a
+  // macOS version into the iOS submission — the same wrong-platform mistake the
+  // fieldset above exists to prevent, arrived at from the other side.
   const open: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/reviewSubmissions`, {
     'filter[state]': 'READY_FOR_REVIEW',
+    'filter[platform]': versionPlatform,
     include: 'items',
     limit: 5,
   });

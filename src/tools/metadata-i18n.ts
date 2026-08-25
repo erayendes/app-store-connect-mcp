@@ -422,16 +422,29 @@ export async function executeMetadataI18nTool(
       // as retryable — exactly the wrong thing to say about a 403 that will
       // fail identically every time.
       const cause = err instanceof AscApiError ? err : undefined;
+      // Status 0 is the request that never got an answer, and the HTTP layer is
+      // careful to say it may or may not have been applied. Reporting that as
+      // "Apple rejected it" and "nothing was written" would be two false
+      // statements about the one locale whose outcome nobody knows.
+      const unknown = !cause || cause.status === 0;
+      const notAttempted =
+        writes.slice(applied.length + 1).map((w) => w.locale).join(', ') || '(none)';
+      const rerun =
+        'Re-running with the same file is safe — writing a value that is already set changes nothing.';
+
       throw new AscApiError(
-        `${filePath} was applied to ${done.length} of ${writes.length} locales, then Apple ` +
-          `rejected ${write.locale}: ${(err as Error).message}\n` +
-          (done.length
-            ? `  already written: ${done.join(', ')}\n  not attempted: ${writes
-                .slice(applied.length + 1)
-                .map((w) => w.locale)
-                .join(', ') || '(none)'}\n` +
-              `Re-running with the same file is safe — writing a value that is already set changes nothing.`
-            : 'Nothing was written.'),
+        (unknown
+          ? `${filePath} stopped at ${write.locale}, and whether that one was applied is ` +
+            `unknown — the request never returned an answer: ${(err as Error).message}\n` +
+            `  written: ${done.join(', ') || '(none)'}\n` +
+            `  unknown: ${write.locale}\n` +
+            `  not attempted: ${notAttempted}\n` +
+            `Read ${write.locale} back before deciding what to do. ${rerun}`
+          : `${filePath} was applied to ${done.length} of ${writes.length} locales, then Apple ` +
+            `rejected ${write.locale}: ${(err as Error).message}\n` +
+            `  written: ${done.join(', ') || '(none)'}\n` +
+            `  not attempted: ${notAttempted}\n` +
+            rerun),
         cause?.status ?? 0,
         cause?.errors ?? [],
         cause?.requestId

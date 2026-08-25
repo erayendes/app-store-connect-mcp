@@ -59,6 +59,18 @@ describe('verdictFor', () => {
     }
   });
 
+  it('sends people to the tool that actually submits, not the one that opens a container', () => {
+    // review_submissions__create alone opens an empty submission and sends
+    // nothing — the exact failure release__submit exists to prevent. These
+    // strings were written before that tool existed and pointed at the wrong
+    // one for a release; only `waitingOn` was asserted, so nothing caught it.
+    for (const state of ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED']) {
+      const { action } = verdictFor(state, '2.0');
+      expect(action, state).toContain('release__submit');
+      expect(action, state).not.toMatch(/submit with review_submissions__create/);
+    }
+  });
+
   it('is quiet about an app with nothing in flight', () => {
     expect(verdictFor(undefined)).toEqual({ waitingOn: 'nobody', action: 'No version in flight.' });
   });
