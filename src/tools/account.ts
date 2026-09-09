@@ -29,7 +29,9 @@ export const ACCOUNT_TOOLS: McpToolDefinition[] = [
       'Show every app in the account with the version that is live, the version in ' +
       'flight, and whose move it is — in one call. Translates App Store states into ' +
       'the action they imply: approved-and-held apps, rejections, submissions stuck on ' +
-      'export compliance, and versions never submitted. Start here when the question is ' +
+      'export compliance, and versions never submitted. Also opens each app\'s review ' +
+      'submission, so an in-app purchase or event Apple rejected shows up even when the ' +
+      'version itself reads as fine. Start here when the question is ' +
       '"what needs my attention?" rather than one app. Read-only.',
     inputSchema: {
       type: 'object',
@@ -60,6 +62,17 @@ export const ACCOUNT_TOOLS: McpToolDefinition[] = [
                 properties: {
                   version: { type: 'string' },
                   state: { type: 'string' },
+                },
+              },
+              rejectedItems: {
+                type: 'array',
+                description:
+                  'Items Apple rejected in the open submission — an in-app purchase, ' +
+                  'event or experiment sent with the version. Empty means none; null ' +
+                  'means the submission could not be read, not that it was clean.',
+                items: {
+                  type: 'object',
+                  properties: { kind: { type: 'string' }, id: { type: 'string' } },
                 },
               },
               waitingOn: {
@@ -97,6 +110,57 @@ const CLOSED_STATES = new Set([
   'DEVELOPER_REMOVED_FROM_SALE',
   'NOT_APPLICABLE',
 ]);
+
+interface RejectedItem {
+  kind: string;
+  id: string;
+}
+
+/**
+ * A submission is a basket, not a version: the version goes in it, and so do
+ * the in-app purchases, subscriptions, events and experiments sent alongside.
+ * Apple rules on each item separately, so a version can sit at
+ * PENDING_DEVELOPER_RELEASE while the subscription that shipped with it was
+ * rejected — and `appStoreState`, the only thing this tool used to read, says
+ * nothing at all about that.
+ */
+const MAX_SUBMISSION_PROBES = 25;
+
+/** An item is whichever one thing it points at; that relationship is its kind. */
+export function itemKind(item: any): RejectedItem {
+  const rels = (item?.relationships ?? {}) as Record<string, any>;
+  for (const [kind, rel] of Object.entries(rels)) {
+    if (kind === 'reviewSubmission') continue;
+    const id = rel?.data?.id;
+    if (id) return { kind, id: String(id) };
+  }
+  return { kind: 'unknown', id: String(item?.id ?? '') };
+}
+
+/**
+ * Null, not an empty array, when the read fails: a key without App Manager
+ * gets 403 here while still reading versions fine, and reporting that as "no
+ * rejected items" would be the tool inventing a clean bill of health.
+ */
+async function rejectedItemsFor(http: AscHttpClient, appId: string): Promise<RejectedItem[] | null> {
+  // A submission Apple has ruled against stays in UNRESOLVED_ISSUES until the
+  // developer clears it, so the filter is the whole query — a healthy app
+  // costs one empty page.
+  let res: any;
+  try {
+    res = await http.get(`/v1/apps/${encodeURIComponent(appId)}/reviewSubmissions`, {
+      'filter[state]': 'UNRESOLVED_ISSUES',
+      include: 'items',
+      limit: 5,
+      'limit[items]': 50,
+    });
+  } catch {
+    return null;
+  }
+  return ((res?.included ?? []) as any[])
+    .filter((i) => i?.type === 'reviewSubmissionItems' && i?.attributes?.state === 'REJECTED')
+    .map(itemKind);
+}
 
 interface Verdict {
   waitingOn: 'you' | 'Apple' | 'nobody';
@@ -193,12 +257,38 @@ export async function executeAccountTool(
       bundleId: String(app.attributes?.bundleId ?? ''),
       live: live?.version ?? null,
       inFlight: inFlight ? { version: inFlight.version, state: inFlight.state } : null,
+      rejectedItems: null as RejectedItem[] | null,
       ...verdict,
     };
   });
 
+  // Read the baskets too. This is the only way a rejected in-app purchase
+  // reaches the answer: the version it shipped with can read ACCEPTED.
+  const probes = await Promise.all(
+    apps.slice(0, MAX_SUBMISSION_PROBES).map((a) => rejectedItemsFor(ctx.http, a.appleId))
+  );
+  probes.forEach((rejected, i) => {
+    const app = apps[i] as any;
+    app.rejectedItems = rejected;
+    if (!rejected?.length) return;
+    const kinds = [...new Set(rejected.map((r) => r.kind))].join(', ');
+    const n = rejected.length;
+    app.waitingOn = 'you';
+    app.action =
+      `${app.action} Apple rejected ${n} item${n === 1 ? '' : 's'} in the open submission ` +
+      `(${kinds}). Why is not in the API — read the resolution centre in App Store Connect.`;
+  });
+
   const onlyActionable = args.only_actionable === true;
   const shown = onlyActionable ? apps.filter((a) => a.waitingOn === 'you') : apps;
+
+  const notes: string[] = [];
+  if (apps.length === 100) notes.push('The account has at least 100 apps; this is the first page.');
+  if (apps.length > MAX_SUBMISSION_PROBES) {
+    notes.push(
+      `Open submissions were read for the first ${MAX_SUBMISSION_PROBES} apps only; the rest report rejectedItems as null.`
+    );
+  }
 
   return {
     apps: shown,
@@ -207,9 +297,6 @@ export async function executeAccountTool(
       waitingOnYou: apps.filter((a) => a.waitingOn === 'you').length,
       waitingOnApple: apps.filter((a) => a.waitingOn === 'Apple').length,
     },
-    note:
-      apps.length === 100
-        ? 'The account has at least 100 apps; this is the first page.'
-        : undefined,
+    note: notes.length ? notes.join(' ') : undefined,
   };
 }
