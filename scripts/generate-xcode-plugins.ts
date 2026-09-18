@@ -26,7 +26,7 @@ const { version, author, license, repository } = manifest;
 
 /**
  * What Xcode prints in its plug-in list is the marketplace entry's `name`, so
- * that one is written for a person: "Heimdall · ASC App Info". The plug-in
+ * that one is written for a person: "Heimdall | ASC App Info". The plug-in
  * manifests underneath keep the kebab-case `asc-app-info`, which is what the
  * Claude Code SDK accepts and what `setup` calls the same server elsewhere.
  */
@@ -37,7 +37,7 @@ const label = (profile: string): string =>
     .split('-')
     .map((w) => w[0].toUpperCase() + w.slice(1))
     .join(' ');
-const displayName = (area: string): string => `Heimdall · ASC ${area}`;
+const displayName = (area: string): string => `Heimdall | ASC ${area}`;
 
 const write = (path: string, value: unknown) =>
   writeFileSync(resolve(root, path), JSON.stringify(value, null, 2) + '\n');
