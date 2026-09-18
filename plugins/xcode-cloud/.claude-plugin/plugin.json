@@ -1,6 +1,6 @@
 {
   "name": "asc-xcode-cloud",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Apple's CI/CD: workflows, build runs, artifacts, source control.",
   "author": {
     "name": "Eray Endes",

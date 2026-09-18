@@ -1,6 +1,6 @@
 {
   "name": "asc-provisioning",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Code signing infrastructure: bundle IDs, certificates, devices, provisioning profiles.",
   "author": {
     "name": "Eray Endes",
