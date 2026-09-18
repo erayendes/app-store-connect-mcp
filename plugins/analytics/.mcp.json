@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-analytics": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "analytics"
+      ]
+    }
+  }
+}

@@ -88,16 +88,31 @@ describe('the packaged skill is loadable as a plugin', () => {
     expect(existsSync('skills/heimdall/SKILL.md')).toBe(true);
   });
 
-  it('lists every profile in .mcp.json, launched the way setup launches it', () => {
-    // Xcode 27 installs the repository root as a plug-in from its Git URL and
-    // reads the servers from this file. A profile missing here is a profile
-    // Xcode users cannot install; a different command or name is a server
-    // that will not match what `setup` registered everywhere else.
-    const { mcpServers } = JSON.parse(readFileSync('.mcp.json', 'utf8'));
-    expect(Object.keys(mcpServers).sort()).toEqual(PROFILES.map((p) => serverName(p.name)).sort());
+  it('offers Xcode one plug-in per profile, launched the way setup launches it', () => {
+    // Xcode 27 installs from the Git URL and shows a checkbox per marketplace
+    // entry — the only place a user gets to pick areas, since a plug-in's
+    // servers cannot be switched off afterwards. A profile missing here is a
+    // profile Xcode users cannot install; a different command or name is a
+    // server that will not match what `setup` registered everywhere else.
+    // `npm run generate` rewrites all of this from PROFILES.
+    const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
+    expect(marketplace.plugins.map((p: { name: string }) => p.name)).toEqual([
+      'heimdall',
+      ...PROFILES.map((p) => serverName(p.name)),
+    ]);
+    expect(marketplace.plugins[0].source).toBe('./');
     for (const p of PROFILES) {
-      expect(mcpServers[serverName(p.name)]).toEqual({ command: SERVER_COMMAND, args: serverArgs(p.name) });
+      const dir = `plugins/${p.name}`;
+      expect(marketplace.plugins.find((e: { name: string }) => e.name === serverName(p.name)).source).toBe(`./${dir}`);
+      const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));
+      expect(manifest.name).toBe(serverName(p.name));
+      expect(manifest.description).toBe(p.description);
+      const { mcpServers } = JSON.parse(readFileSync(`${dir}/.mcp.json`, 'utf8'));
+      expect(mcpServers).toEqual({ [serverName(p.name)]: { command: SERVER_COMMAND, args: serverArgs(p.name) } });
     }
+    // The root carries the skill and nothing that would start a server: a
+    // root .mcp.json is what made the first cut install all thirteen at once.
+    expect(existsSync('.mcp.json')).toBe(false);
   });
 
   // Both skills, not just the shipped one. The contrib skill went out with a

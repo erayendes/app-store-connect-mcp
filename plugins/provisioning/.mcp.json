@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-provisioning": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "provisioning"
+      ]
+    }
+  }
+}

@@ -8,7 +8,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ### [Unreleased]
 
-**Xcode 27.** The repository is now installable as an Xcode plug-in: Settings → Intelligence → Plug-ins → Add from URL, with the repository's address. `.mcp.json` at the root lists one server per profile, and the plug-in manifest describes Heimdall instead of an internal test arm. Run `setup` first — Xcode has no config file for `setup` to write, and the key still lives in the Keychain. ([#101](https://github.com/erayendes/app-store-connect-mcp/issues/101))
+**Xcode 27.** The repository is now installable as an Xcode plug-in: Settings → Intelligence → Plug-ins → Add from URL, with the repository's address. The repository is a plug-in marketplace — one plug-in per profile plus the skill — so Xcode's "Choose Plug-ins" sheet lets you pick areas the way `setup` does; a single plug-in would have installed all thirteen servers with no way to switch one off. Run `setup` first — Xcode has no config file for `setup` to write, and the key still lives in the Keychain. ([#101](https://github.com/erayendes/app-store-connect-mcp/issues/101))
 
 ### [2.3.0] — 2026-08-25
 
@@ -172,7 +172,7 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 
 ### [Yayınlanmamış]
 
-**Xcode 27.** Depo artık Xcode eklentisi olarak kurulabiliyor: Settings → Intelligence → Plug-ins → Add from URL, deponun adresiyle. Kökteki `.mcp.json` her profil için bir sunucu listeler; eklenti manifestosu da artık iç test kolunu değil Heimdall'ı anlatıyor. Önce `setup` çalıştırın — Xcode'un `setup`'ın yazacağı bir config dosyası yok, anahtar hâlâ Keychain'de. ([#101](https://github.com/erayendes/app-store-connect-mcp/issues/101))
+**Xcode 27.** Depo artık Xcode eklentisi olarak kurulabiliyor: Settings → Intelligence → Plug-ins → Add from URL, deponun adresiyle. Depo bir eklenti marketi — profil başına bir eklenti artı skill — böylece Xcode'un "Choose Plug-ins" ekranı `setup` gibi alan seçtiriyor; tek eklenti olsaydı on üç sunucu birden kurulur, hiçbiri kapatılamazdı. Önce `setup` çalıştırın — Xcode'un `setup`'ın yazacağı bir config dosyası yok, anahtar hâlâ Keychain'de. ([#101](https://github.com/erayendes/app-store-connect-mcp/issues/101))
 
 ### [2.3.0] — 2026-08-25
 

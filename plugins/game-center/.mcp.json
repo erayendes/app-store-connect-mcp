@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-game-center": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "game-center"
+      ]
+    }
+  }
+}

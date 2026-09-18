@@ -2,7 +2,7 @@
   "name": "heimdall",
   "displayName": "Heimdall",
   "version": "2.3.0",
-  "description": "App Store Connect from your editor: listings and metadata, TestFlight, subscription and in-app-purchase prices, customer reviews, sales and analytics, certificates and profiles. One MCP server per area — pick the ones you need.",
+  "description": "The Heimdall skill for App Store Connect: what each asc-* server covers, which one owns a task, and how to stay inside the credential boundary. Pair it with the asc-* plug-ins for the areas you need.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"

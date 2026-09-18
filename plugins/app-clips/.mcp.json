@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-app-clips": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "app-clips"
+      ]
+    }
+  }
+}

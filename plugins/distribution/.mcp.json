@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-distribution": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "distribution"
+      ]
+    }
+  }
+}
