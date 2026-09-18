@@ -1,0 +1,11 @@
+{
+  "name": "asc-xcode-cloud",
+  "version": "2.3.0",
+  "description": "Apple's CI/CD: workflows, build runs, artifacts, source control.",
+  "author": {
+    "name": "Eray Endes",
+    "url": "https://github.com/erayendes"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/erayendes/app-store-connect-mcp"
+}

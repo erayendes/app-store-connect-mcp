@@ -1,9 +1,23 @@
 {
   "name": "heimdall",
-  "version": "2.1.0",
-  "description": "The heimdall skill, packaged so `ax:agent --skill=.` can load it as an A/B arm without opening settingSources.",
+  "displayName": "Heimdall",
+  "version": "2.3.0",
+  "description": "The Heimdall skill for App Store Connect: what each asc-* server covers, which one owns a task, and how to stay inside the credential boundary. Pair it with the asc-* plug-ins for the areas you need.",
   "author": {
-    "name": "Eray Endes"
+    "name": "Eray Endes",
+    "url": "https://github.com/erayendes"
   },
-  "homepage": "https://github.com/erayendes/app-store-connect-mcp"
+  "homepage": "https://github.com/erayendes/app-store-connect-mcp",
+  "repository": "https://github.com/erayendes/app-store-connect-mcp",
+  "license": "MIT",
+  "keywords": [
+    "app-store-connect",
+    "testflight",
+    "xcode",
+    "ios",
+    "macos",
+    "mcp",
+    "storekit",
+    "subscriptions"
+  ]
 }

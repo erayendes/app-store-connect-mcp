@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-xcode-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "xcode-cloud"
+      ]
+    }
+  }
+}

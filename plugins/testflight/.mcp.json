@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-testflight": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "testflight"
+      ]
+    }
+  }
+}

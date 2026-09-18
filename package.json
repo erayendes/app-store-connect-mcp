@@ -37,7 +37,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "generate": "tsx scripts/generate.ts && tsx scripts/generate-profiles.ts",
+    "generate": "tsx scripts/generate.ts && tsx scripts/generate-profiles.ts && tsx scripts/generate-xcode-plugins.ts",
     "mcpb": "tsx scripts/build-mcpb.ts",
     "build": "npm run generate && tsc",
     "dev": "tsx watch src/index.ts",

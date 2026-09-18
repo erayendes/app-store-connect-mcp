@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-marketing": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "marketing"
+      ]
+    }
+  }
+}

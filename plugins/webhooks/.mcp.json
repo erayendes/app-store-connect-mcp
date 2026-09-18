@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-webhooks": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "webhooks"
+      ]
+    }
+  }
+}

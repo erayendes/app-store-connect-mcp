@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-background-assets": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "background-assets"
+      ]
+    }
+  }
+}

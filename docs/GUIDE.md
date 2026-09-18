@@ -239,6 +239,22 @@ The proxy exists because MCP lets a server revise its tool list but says nothing
 
 **And if the tool is in another profile entirely?** `asc__search_tools` searches all 982 operations plus StoreKit, names the sibling server that owns anything not loaded, and prints the command to add it. Install lean and let the server tell you what you are missing.
 
+### Heimdall in Xcode 27
+
+1. Run `npx -y @erayendes/asc-mcp setup` once, if you have not. Your key goes into the Keychain; the plug-in has no other way to reach it.
+2. Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** → `https://github.com/erayendes/app-store-connect-mcp`.
+
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode's Add Plug-in sheet with the repository URL entered" width="560">
+
+3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per plug-in. Tick **Heimdall | ASC Skill** and the areas you need; all thirteen is 982 tools in one context window. Need another area later? Add from URL again with the same address: the sheet greys out what is already in as "Already imported", so tick the new one and Import. To drop an area, open its plug-in from the list and Delete Plug-in.
+
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode's Choose Plug-ins sheet listing Heimdall | ASC Access, Analytics, App Clips, App Info, Background Assets, each with a checkbox" width="560">
+
+4. Open a conversation and pick an **agent** from the model menu — Claude Agent, Codex or Gemini. Plug-ins go to the agents Xcode hosts, not to its built-in chat.
+5. The first App Store Connect call asks for permission, the way any agent tool does.
+
+From here on it is the Heimdall you know.
+
 ### StoreKit 2 — customer transactions
 
 The App Store Server API answers questions about individual customers rather than your listing: purchase history, entitlement, refunds, subscription status. It's enabled when a **bundle ID** is configured (via `setup` or `ASC_BUNDLE_ID`) and served by the `monetization` profile or the combined server.
@@ -668,6 +684,22 @@ Daralttığınız bir profil geri kalanını yine de bilir:
 Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine izin verir ama istemcinin bunu modele **ne zaman** ileteceği hakkında hiçbir şey söylemez. Aynı istemle üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex yükledi, oturum araç listesinin onu çağrılabilir yapmadığını bildirdi ve vazgeçti. `asc__describe` ve `asc__call` en baştan listede olduğu için hiçbir şeyin zamanında ulaşması gerekmiyor.
 
 **Peki araç bambaşka bir profildeyse?** `asc__search_tools` tüm 982 işlemi artı StoreKit'i arar, yüklü olmayan her şey için sahibi olan kardeş sunucuyu adlandırır ve ekleme komutunu basar. Yalın kurun, sunucu size neyin eksik olduğunu söylesin.
+
+### Xcode 27'de Heimdall kullanmak
+
+1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp setup` çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir; eklentinin ona ulaşmasının başka yolu yok.
+2. Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** → `https://github.com/erayendes/app-store-connect-mcp`.
+
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo URL'si girilmiş" width="560">
+
+3. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin; on üçü birden tek bağlam penceresine 982 araç demek. Sonradan başka bir alan mı gerekti? Aynı adresle yeniden Add from URL: ekran kurulu olanları "Already imported" diye gri gösterir; yenisini tikleyip Import deyin. Bir alanı atmak için listeden eklentisini açıp Delete Plug-in.
+
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall | ASC Access, Analytics, App Clips, App Info, Background Assets, her biri onay kutulu" width="560">
+
+4. Bir sohbet açın ve model menüsünden bir **agent** seçin — Claude Agent, Codex veya Gemini. Eklentiler Xcode'un barındırdığı agent'lara verilir, yerleşik chat'e değil.
+5. İlk App Store Connect çağrısı, her agent aracı gibi izin sorar.
+
+Bundan sonrası bildiğiniz Heimdall.
 
 ### StoreKit 2 — müşteri işlemleri
 

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-monetization": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "monetization"
+      ]
+    }
+  }
+}

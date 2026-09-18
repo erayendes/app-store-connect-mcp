@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { installSkill, removeSkill, skillPathFor, clientTakesSkill } from '../src/skill.js';
-import { CLIENTS } from '../src/clients.js';
+import { CLIENTS, SERVER_COMMAND, serverArgs, serverName } from '../src/clients.js';
+import { PROFILES } from '../src/profiles.js';
 
 const homes: string[] = [];
 const fakeHome = () => {
@@ -85,6 +86,35 @@ describe('the packaged skill is loadable as a plugin', () => {
     const manifest = JSON.parse(readFileSync('.claude-plugin/plugin.json', 'utf8'));
     expect(manifest.name).toBe('heimdall');
     expect(existsSync('skills/heimdall/SKILL.md')).toBe(true);
+  });
+
+  it('offers Xcode one plug-in per profile, launched the way setup launches it', () => {
+    // Xcode 27 installs from the Git URL and shows a checkbox per marketplace
+    // entry — the only place a user gets to pick areas, since a plug-in's
+    // servers cannot be switched off afterwards. A profile missing here is a
+    // profile Xcode users cannot install; a different command or name is a
+    // server that will not match what `setup` registered everywhere else.
+    // `npm run generate` rewrites all of this from PROFILES.
+    // The entry names are what Xcode prints, so they are written for a person
+    // ("Heimdall | ASC App Info"); the manifests underneath keep the kebab-case
+    // server names. Sources tie the two together.
+    const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
+    const entries: { name: string; source: string }[] = marketplace.plugins;
+    expect(entries.map((e) => e.source)).toEqual(['./', ...PROFILES.map((p) => `./plugins/${p.name}`)]);
+    expect(entries[0].name).toBe('Heimdall | ASC Skill');
+    for (const e of entries) expect(e.name).toMatch(/^Heimdall \| ASC [A-Z][A-Za-z ]+$/);
+    expect(entries.find((e) => e.source === './plugins/testflight')!.name).toBe('Heimdall | ASC TestFlight');
+    for (const p of PROFILES) {
+      const dir = `plugins/${p.name}`;
+      const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));
+      expect(manifest.name).toBe(serverName(p.name));
+      expect(manifest.description).toBe(p.description);
+      const { mcpServers } = JSON.parse(readFileSync(`${dir}/.mcp.json`, 'utf8'));
+      expect(mcpServers).toEqual({ [serverName(p.name)]: { command: SERVER_COMMAND, args: serverArgs(p.name) } });
+    }
+    // The root carries the skill and nothing that would start a server: a
+    // root .mcp.json is what made the first cut install all thirteen at once.
+    expect(existsSync('.mcp.json')).toBe(false);
   });
 
   // Both skills, not just the shipped one. The contrib skill went out with a

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-access": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "access"
+      ]
+    }
+  }
+}

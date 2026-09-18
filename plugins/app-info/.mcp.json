@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "asc-app-info": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "app-info"
+      ]
+    }
+  }
+}
