@@ -239,6 +239,16 @@ The proxy exists because MCP lets a server revise its tool list but says nothing
 
 **And if the tool is in another profile entirely?** `asc__search_tools` searches all 982 operations plus StoreKit, names the sibling server that owns anything not loaded, and prints the command to add it. Install lean and let the server tell you what you are missing.
 
+### Xcode 27
+
+Xcode installs MCP servers as plug-ins, from a Git URL, and imports nothing from other clients' config files — so `setup` cannot register there. This repository is that plug-in: `.mcp.json` at the root lists one server per profile, named exactly as `setup` names them.
+
+1. Run `npx -y @erayendes/asc-mcp setup` once, if you have not. The key goes into the Keychain; the plug-in has no other way to get it.
+2. Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** → `https://github.com/erayendes/app-store-connect-mcp`.
+3. Xcode lists the thirteen servers as components. Untick the ones you do not need — two or three is the usual shape, all thirteen is 982 tools in one context window.
+
+Xcode starts each server with `npx -y @erayendes/asc-mcp <profile>`, the same command every other client runs, so everything above about profiles, `asc__search_tools` and the credential boundary holds unchanged.
+
 ### StoreKit 2 — customer transactions
 
 The App Store Server API answers questions about individual customers rather than your listing: purchase history, entitlement, refunds, subscription status. It's enabled when a **bundle ID** is configured (via `setup` or `ASC_BUNDLE_ID`) and served by the `monetization` profile or the combined server.
@@ -668,6 +678,16 @@ Daralttığınız bir profil geri kalanını yine de bilir:
 Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine izin verir ama istemcinin bunu modele **ne zaman** ileteceği hakkında hiçbir şey söylemez. Aynı istemle üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex yükledi, oturum araç listesinin onu çağrılabilir yapmadığını bildirdi ve vazgeçti. `asc__describe` ve `asc__call` en baştan listede olduğu için hiçbir şeyin zamanında ulaşması gerekmiyor.
 
 **Peki araç bambaşka bir profildeyse?** `asc__search_tools` tüm 982 işlemi artı StoreKit'i arar, yüklü olmayan her şey için sahibi olan kardeş sunucuyu adlandırır ve ekleme komutunu basar. Yalın kurun, sunucu size neyin eksik olduğunu söylesin.
+
+### Xcode 27
+
+Xcode MCP sunucularını eklenti olarak, Git URL'sinden kurar; başka istemcilerin config dosyalarından hiçbir şey almaz — bu yüzden `setup` oraya kayıt yapamaz. Bu depo o eklentinin kendisidir: kökteki `.mcp.json`, her profil için bir sunucu listeler; adları `setup`'ın verdiğiyle aynıdır.
+
+1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp setup` çalıştırın. Anahtar Keychain'e girer; eklentinin ona ulaşmasının başka yolu yok.
+2. Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** → `https://github.com/erayendes/app-store-connect-mcp`.
+3. Xcode on üç sunucuyu bileşen olarak listeler. Gerekmeyenlerin tikini kaldırın — iki üç tanesi olağan şekildir; on üçü birden tek bağlam penceresine 982 araç demek.
+
+Xcode her sunucuyu diğer istemcilerle aynı komutla, `npx -y @erayendes/asc-mcp <profil>` ile başlatır; yukarıda profiller, `asc__search_tools` ve kimlik bilgisi sınırı hakkında yazan her şey olduğu gibi geçerlidir.
 
 ### StoreKit 2 — müşteri işlemleri
 

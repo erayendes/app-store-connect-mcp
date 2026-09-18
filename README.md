@@ -52,6 +52,8 @@ npx -y @erayendes/asc-mcp setup
 
 The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so **this is the step you would otherwise repeat once per client, in a different format each time.** Time thrown away.
 Full walkthrough in the [Guide](docs/GUIDE.md).
+
+**Xcode 27** is not on that list because Xcode has no config file to write — it installs plug-ins from a Git URL. After `setup`, open Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL**, paste `https://github.com/erayendes/app-store-connect-mcp`, and untick the areas you do not need. The plug-in launches the same servers, and they read the key `setup` stored.
 > **Is an AI agent installing Heimdall for you?**
 > See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent adds the profiles with `register`, you run `setup` yourself for the key — your private key is for your eyes only, and the agent never sees it.
 
@@ -161,6 +163,8 @@ npx -y @erayendes/asc-mcp setup
 
 Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; **yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı.** Boşa vakit kaybı. 
 Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
+
+**Xcode 27** bu listede yok, çünkü Xcode'un yazılacak bir config dosyası yok — eklentileri Git URL'sinden kurar. `setup`'tan sonra Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** deyin, `https://github.com/erayendes/app-store-connect-mcp` yapıştırın ve ihtiyaç duymadığınız alanların tikini kaldırın. Eklenti aynı sunucuları başlatır; onlar da `setup`'ın sakladığı anahtarı okur.
 > **Heimdall'ı bir AI agent mı kuracak?**
 > Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent profilleri `register` ile ekler, anahtar için `setup`'ı siz çalıştırırsınız — özel anahtarınız sadece sizin gözleriniz için, AI agent göremez.
 

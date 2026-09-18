@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { installSkill, removeSkill, skillPathFor, clientTakesSkill } from '../src/skill.js';
-import { CLIENTS } from '../src/clients.js';
+import { CLIENTS, SERVER_COMMAND, serverArgs, serverName } from '../src/clients.js';
+import { PROFILES } from '../src/profiles.js';
 
 const homes: string[] = [];
 const fakeHome = () => {
@@ -85,6 +86,18 @@ describe('the packaged skill is loadable as a plugin', () => {
     const manifest = JSON.parse(readFileSync('.claude-plugin/plugin.json', 'utf8'));
     expect(manifest.name).toBe('heimdall');
     expect(existsSync('skills/heimdall/SKILL.md')).toBe(true);
+  });
+
+  it('lists every profile in .mcp.json, launched the way setup launches it', () => {
+    // Xcode 27 installs the repository root as a plug-in from its Git URL and
+    // reads the servers from this file. A profile missing here is a profile
+    // Xcode users cannot install; a different command or name is a server
+    // that will not match what `setup` registered everywhere else.
+    const { mcpServers } = JSON.parse(readFileSync('.mcp.json', 'utf8'));
+    expect(Object.keys(mcpServers).sort()).toEqual(PROFILES.map((p) => serverName(p.name)).sort());
+    for (const p of PROFILES) {
+      expect(mcpServers[serverName(p.name)]).toEqual({ command: SERVER_COMMAND, args: serverArgs(p.name) });
+    }
   });
 
   // Both skills, not just the shipped one. The contrib skill went out with a

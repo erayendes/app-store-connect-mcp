@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [Unreleased]
+
+**Xcode 27.** The repository is now installable as an Xcode plug-in: Settings → Intelligence → Plug-ins → Add from URL, with the repository's address. `.mcp.json` at the root lists one server per profile, and the plug-in manifest describes Heimdall instead of an internal test arm. Run `setup` first — Xcode has no config file for `setup` to write, and the key still lives in the Keychain. ([#101](https://github.com/erayendes/app-store-connect-mcp/issues/101))
+
 ### [2.3.0] — 2026-08-25
 
 Three things: tools that make submitting a version easier, a safe way to handle store text in many languages, and a way to see what your API key is actually allowed to do.
@@ -165,6 +169,10 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 - AI-assisted review tools.
 
 ## Türkçe
+
+### [Yayınlanmamış]
+
+**Xcode 27.** Depo artık Xcode eklentisi olarak kurulabiliyor: Settings → Intelligence → Plug-ins → Add from URL, deponun adresiyle. Kökteki `.mcp.json` her profil için bir sunucu listeler; eklenti manifestosu da artık iç test kolunu değil Heimdall'ı anlatıyor. Önce `setup` çalıştırın — Xcode'un `setup`'ın yazacağı bir config dosyası yok, anahtar hâlâ Keychain'de. ([#101](https://github.com/erayendes/app-store-connect-mcp/issues/101))
 
 ### [2.3.0] — 2026-08-25
 

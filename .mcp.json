@@ -1,0 +1,108 @@
+{
+  "mcpServers": {
+    "asc-app-info": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "app-info"
+      ]
+    },
+    "asc-distribution": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "distribution"
+      ]
+    },
+    "asc-monetization": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "monetization"
+      ]
+    },
+    "asc-marketing": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "marketing"
+      ]
+    },
+    "asc-access": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "access"
+      ]
+    },
+    "asc-testflight": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "testflight"
+      ]
+    },
+    "asc-game-center": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "game-center"
+      ]
+    },
+    "asc-app-clips": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "app-clips"
+      ]
+    },
+    "asc-xcode-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "xcode-cloud"
+      ]
+    },
+    "asc-provisioning": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "provisioning"
+      ]
+    },
+    "asc-analytics": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "analytics"
+      ]
+    },
+    "asc-background-assets": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "background-assets"
+      ]
+    },
+    "asc-webhooks": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erayendes/asc-mcp",
+        "webhooks"
+      ]
+    }
+  }
+}
