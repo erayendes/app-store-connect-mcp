@@ -95,15 +95,17 @@ describe('the packaged skill is loadable as a plugin', () => {
     // profile Xcode users cannot install; a different command or name is a
     // server that will not match what `setup` registered everywhere else.
     // `npm run generate` rewrites all of this from PROFILES.
+    // The entry names are what Xcode prints, so they are written for a person
+    // ("Heimdall · ASC App Info"); the manifests underneath keep the kebab-case
+    // server names. Sources tie the two together.
     const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
-    expect(marketplace.plugins.map((p: { name: string }) => p.name)).toEqual([
-      'heimdall',
-      ...PROFILES.map((p) => serverName(p.name)),
-    ]);
-    expect(marketplace.plugins[0].source).toBe('./');
+    const entries: { name: string; source: string }[] = marketplace.plugins;
+    expect(entries.map((e) => e.source)).toEqual(['./', ...PROFILES.map((p) => `./plugins/${p.name}`)]);
+    expect(entries[0].name).toBe('Heimdall · ASC Skill');
+    for (const e of entries) expect(e.name).toMatch(/^Heimdall · ASC [A-Z][A-Za-z ]+$/);
+    expect(entries.find((e) => e.source === './plugins/testflight')!.name).toBe('Heimdall · ASC TestFlight');
     for (const p of PROFILES) {
       const dir = `plugins/${p.name}`;
-      expect(marketplace.plugins.find((e: { name: string }) => e.name === serverName(p.name)).source).toBe(`./${dir}`);
       const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));
       expect(manifest.name).toBe(serverName(p.name));
       expect(manifest.description).toBe(p.description);

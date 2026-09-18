@@ -245,7 +245,7 @@ Xcode installs MCP servers as plug-ins, from a Git URL, and imports nothing from
 
 1. Run `npx -y @erayendes/asc-mcp setup` once, if you have not. The key goes into the Keychain; the plug-in has no other way to get it.
 2. Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** → `https://github.com/erayendes/app-store-connect-mcp`.
-3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per entry. Tick **heimdall** — the skill, which tells the agent what each server covers — and the areas you need. Two or three is the usual shape; all thirteen is 982 tools in one context window. Choose here: once a plug-in is in, its servers cannot be switched off individually, only the plug-in deleted.
+3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per entry. Tick **Heimdall · ASC Skill** — it tells the agent what each server covers — and the areas you need. Two or three is the usual shape; all thirteen is 982 tools in one context window. Choose here: once a plug-in is in, its servers cannot be switched off individually, only the plug-in deleted.
 4. Open a conversation and pick an **agent** from the model menu — Claude Agent, Codex or Gemini. Plug-ins are handed to the agents Xcode hosts, not to its built-in chat: with a built-in model selected, "list my apps" searches your project for `App.swift` and never reaches App Store Connect.
 
 The agent starts each server with `npx -y @erayendes/asc-mcp <profile>`, the same command every other client runs, so everything above about profiles, `asc__search_tools` and the credential boundary holds unchanged. The first App Store Connect call asks for permission the way any agent tool does.
@@ -688,7 +688,7 @@ Xcode MCP sunucularını eklenti olarak, Git URL'sinden kurar; başka istemciler
 
 1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp setup` çalıştırın. Anahtar Keychain'e girer; eklentinin ona ulaşmasının başka yolu yok.
 2. Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** → `https://github.com/erayendes/app-store-connect-mcp`.
-3. Xcode her kayıt için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **heimdall**'ı — skill; agent'a hangi sunucunun neyi kapsadığını anlatır — ve gereken alanları tikleyin. İki üç tanesi olağan şekildir; on üçü birden tek bağlam penceresine 982 araç demek. Seçimi burada yapın: eklenti bir kez kurulunca sunucuları tek tek kapatılamıyor, yalnızca eklenti silinebiliyor.
+3. Xcode her kayıt için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall · ASC Skill**'i — agent'a hangi sunucunun neyi kapsadığını anlatır — ve gereken alanları tikleyin. İki üç tanesi olağan şekildir; on üçü birden tek bağlam penceresine 982 araç demek. Seçimi burada yapın: eklenti bir kez kurulunca sunucuları tek tek kapatılamıyor, yalnızca eklenti silinebiliyor.
 4. Bir sohbet açın ve model menüsünden bir **agent** seçin — Claude Agent, Codex veya Gemini. Eklentiler Xcode'un barındırdığı agent'lara verilir, yerleşik chat'e değil: yerleşik bir model seçiliyken "list my apps" projede `App.swift` arar, App Store Connect'e hiç ulaşmaz.
 
 Agent her sunucuyu diğer istemcilerle aynı komutla, `npx -y @erayendes/asc-mcp <profil>` ile başlatır; yukarıda profiller, `asc__search_tools` ve kimlik bilgisi sınırı hakkında yazan her şey olduğu gibi geçerlidir. İlk App Store Connect çağrısı, her agent aracı gibi izin sorar.

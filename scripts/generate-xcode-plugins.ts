@@ -24,6 +24,21 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(resolve(root, '.claude-plugin', 'plugin.json'), 'utf8'));
 const { version, author, license, repository } = manifest;
 
+/**
+ * What Xcode prints in its plug-in list is the marketplace entry's `name`, so
+ * that one is written for a person: "Heimdall · ASC App Info". The plug-in
+ * manifests underneath keep the kebab-case `asc-app-info`, which is what the
+ * Claude Code SDK accepts and what `setup` calls the same server elsewhere.
+ */
+const SPELLINGS: Record<string, string> = { testflight: 'TestFlight' };
+const label = (profile: string): string =>
+  SPELLINGS[profile] ??
+  profile
+    .split('-')
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(' ');
+const displayName = (area: string): string => `Heimdall · ASC ${area}`;
+
 const write = (path: string, value: unknown) =>
   writeFileSync(resolve(root, path), JSON.stringify(value, null, 2) + '\n');
 
@@ -52,7 +67,7 @@ write('.claude-plugin/marketplace.json', {
   },
   plugins: [
     {
-      name: manifest.name,
+      name: displayName('Skill'),
       source: './',
       description:
         'The Heimdall skill: what the servers below can do, which one owns what, and how to stay ' +
@@ -60,7 +75,7 @@ write('.claude-plugin/marketplace.json', {
       version,
     },
     ...PROFILES.map((p) => ({
-      name: serverName(p.name),
+      name: displayName(label(p.name)),
       source: `./plugins/${p.name}`,
       description: p.description,
       version,

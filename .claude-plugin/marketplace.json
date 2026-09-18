@@ -10,85 +10,85 @@
   },
   "plugins": [
     {
-      "name": "heimdall",
+      "name": "Heimdall · ASC Skill",
       "source": "./",
       "description": "The Heimdall skill: what the servers below can do, which one owns what, and how to stay inside the credential boundary. Install it with whichever areas you pick.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-access",
+      "name": "Heimdall · ASC Access",
       "source": "./plugins/access",
       "description": "Team and tester access: beta groups, individual testers, invitations, team members.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-analytics",
+      "name": "Heimdall · ASC Analytics",
       "source": "./plugins/analytics",
       "description": "Sales and finance reports, analytics report requests, performance metrics.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-app-clips",
+      "name": "Heimdall · ASC App Clips",
       "source": "./plugins/app-clips",
       "description": "App Clips: default and advanced experiences, header images, beta invocations.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-app-info",
+      "name": "Heimdall · ASC App Info",
       "source": "./plugins/app-info",
       "description": "App identity and store metadata: names, bundle IDs, categories, availability, age ratings, accessibility labels, the end user license agreement, Android-to-iOS mapping.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-background-assets",
+      "name": "Heimdall · ASC Background Assets",
       "source": "./plugins/background-assets",
       "description": "Background Assets (iOS 26): asset packs downloaded outside the app binary.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-distribution",
+      "name": "Heimdall · ASC Distribution",
       "source": "./plugins/distribution",
       "description": "Release pipeline: App Store versions, localizations, phased releases, review submissions, builds, export compliance, EU alternative distribution.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-game-center",
+      "name": "Heimdall · ASC Game Center",
       "source": "./plugins/game-center",
       "description": "Game Center: achievements, leaderboards, activities, challenges, matchmaking.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-marketing",
+      "name": "Heimdall · ASC Marketing",
       "source": "./plugins/marketing",
       "description": "Store presence: screenshots, previews, custom product pages, in-app events, customer reviews.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-monetization",
+      "name": "Heimdall · ASC Monetization",
       "source": "./plugins/monetization",
       "description": "Money: subscriptions, in-app purchases, offers, app pricing, StoreKit 2 transactions.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-provisioning",
+      "name": "Heimdall · ASC Provisioning",
       "source": "./plugins/provisioning",
       "description": "Code signing infrastructure: bundle IDs, certificates, devices, provisioning profiles.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-testflight",
+      "name": "Heimdall · ASC TestFlight",
       "source": "./plugins/testflight",
       "description": "TestFlight build metadata: beta app localizations, review details, crash feedback, the beta license agreement testers accept.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-webhooks",
+      "name": "Heimdall · ASC Webhooks",
       "source": "./plugins/webhooks",
       "description": "Webhooks pushing App Store Connect events to your endpoint.",
       "version": "2.3.0"
     },
     {
-      "name": "asc-xcode-cloud",
+      "name": "Heimdall · ASC Xcode Cloud",
       "source": "./plugins/xcode-cloud",
       "description": "Apple's CI/CD: workflows, build runs, artifacts, source control.",
       "version": "2.3.0"
