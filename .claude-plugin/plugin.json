@@ -1,7 +1,7 @@
 {
   "name": "heimdall",
   "displayName": "Heimdall",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "The Heimdall skill for App Store Connect: what each asc-* server covers, which one owns a task, and how to stay inside the credential boundary. Pair it with the asc-* plug-ins for the areas you need.",
   "author": {
     "name": "Eray Endes",
