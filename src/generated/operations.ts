@@ -8219,7 +8219,8 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'deviceType'"
       }
     ],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "application/vnd.apple.xcode-metrics+json"
   },
   {
     "name": "apps.pre_release_versions.list",
@@ -11922,7 +11923,8 @@ export const OPERATIONS: Operation[] = [
         "description": "filter by attribute 'deviceType'"
       }
     ],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "application/vnd.apple.xcode-metrics+json"
   },
   {
     "name": "builds.pre_release_version.get",
@@ -13897,7 +13899,8 @@ export const OPERATIONS: Operation[] = [
         "description": "maximum resources per page"
       }
     ],
-    "hasBody": false
+    "hasBody": false,
+    "accept": "application/vnd.apple.diagnostic-logs+json"
   },
   {
     "name": "end_app_availability_pre_orders.create",

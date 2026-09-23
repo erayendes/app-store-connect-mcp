@@ -415,6 +415,13 @@ describe('ToolRegistry', () => {
     expect(calls[1].accept).toBeUndefined();
   });
 
+  it('forwards the vendor JSON Accept header metrics and diagnostic logs require', () => {
+    const acceptOf = (name: string) => OPERATIONS.find((o) => o.name === name)?.accept;
+    expect(acceptOf('builds.perf_power_metrics.list')).toBe('application/vnd.apple.xcode-metrics+json');
+    expect(acceptOf('apps.perf_power_metrics.list')).toBe('application/vnd.apple.xcode-metrics+json');
+    expect(acceptOf('diagnostic_signatures.logs.list')).toBe('application/vnd.apple.diagnostic-logs+json');
+  });
+
   it('marks and enforces query params Apple requires', async () => {
     const op = OPERATIONS.find((o) => o.name === 'sales_reports.list')!;
     expect(toMcpTool(op).inputSchema.required).toContain('filter_vendorNumber');
