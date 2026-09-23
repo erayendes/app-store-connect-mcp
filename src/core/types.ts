@@ -30,8 +30,10 @@ export interface Operation {
    */
   risk?: RiskLevel;
   /**
-   * Accept header the endpoint requires, when it is not JSON. Sales and finance
-   * reports only serve `application/a-gzip` and answer 406 to anything else.
+   * Accept header the endpoint requires, when it is not `application/json`.
+   * Sales and finance reports only serve `application/a-gzip`; perfPowerMetrics
+   * and diagnostic logs only serve vendor `+json` types. Each answers 406 to
+   * anything else.
    */
   accept?: string;
 }

@@ -526,12 +526,15 @@ function main(): void {
         bodySchemas[bodyRef] = simplifyBodySchema(componentSchemas, bodySchema);
       }
 
-      // Most endpoints serve JSON; a handful (sales/finance reports) only serve
-      // gzipped TSV and reject a JSON Accept header with 406.
+      // Most endpoints serve application/json. The rest answer 406 to it:
+      // sales/finance reports serve gzipped TSV, and perfPowerMetrics and
+      // diagnostic logs serve vendor JSON types (…xcode-metrics+json,
+      // …diagnostic-logs+json) — JSON on the wire, but not an accepted
+      // media type, so a substring match on "json" is not enough.
       const responseTypes = Object.keys(
         op.responses?.['200']?.content ?? op.responses?.['201']?.content ?? {}
       );
-      const accept = responseTypes.some((t) => t.includes('json'))
+      const accept = responseTypes.length === 0 || responseTypes.includes('application/json')
         ? undefined
         : responseTypes[0];
 
