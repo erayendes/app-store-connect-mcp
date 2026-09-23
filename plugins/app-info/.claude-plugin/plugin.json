@@ -1,6 +1,6 @@
 {
   "name": "asc-app-info",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "App identity and store metadata: names, bundle IDs, categories, availability, age ratings, accessibility labels, the end user license agreement, Android-to-iOS mapping.",
   "author": {
     "name": "Eray Endes",

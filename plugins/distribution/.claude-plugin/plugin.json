@@ -1,6 +1,6 @@
 {
   "name": "asc-distribution",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Release pipeline: App Store versions, localizations, phased releases, review submissions, builds, export compliance, EU alternative distribution.",
   "author": {
     "name": "Eray Endes",
