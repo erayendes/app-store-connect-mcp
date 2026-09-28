@@ -1,5 +1,5 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.4.1
+// Source: Apple App Store Connect OpenAPI specification v4.5
 // Regenerate with: npm run generate
 
 /** Simplified JSON Schemas for request bodies, keyed by Operation.bodyRef. */
@@ -440,9 +440,15 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
         "nullable": true,
         "enum": [
          "NONE",
+         "ALL",
+         "TWELVE_PLUS",
          "FIFTEEN_PLUS",
          "NINETEEN_PLUS"
         ]
+       },
+       "gracRatingClassificationNumber": {
+        "type": "string",
+        "nullable": true
        },
        "developerAgeRatingInfoUrl": {
         "type": "string",
@@ -13972,6 +13978,48 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
   ],
   "additionalProperties": false
  },
+ "GameCenterDetailPlayerUpdateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "gameCenterDetailPlayers"
+      ]
+     },
+     "id": {
+      "type": "string"
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "blocked": {
+        "type": "boolean",
+        "nullable": true
+       },
+       "bundleId": {
+        "type": "string",
+        "nullable": true
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "id",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
  "GameCenterDetailCreateRequest": {
   "type": "object",
   "properties": {
@@ -17953,6 +18001,44 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
     },
     "required": [
      "attributes",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "GameCenterScoreModerationUpdateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "gameCenterScoreModerations"
+      ]
+     },
+     "id": {
+      "type": "string"
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "blocked": {
+        "type": "boolean",
+        "nullable": true
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "id",
      "type"
     ],
     "additionalProperties": false
@@ -24788,6 +24874,26 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
        },
        "groupLevel": {
         "type": "integer",
+        "nullable": true
+       },
+       "multiSeatStatus": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+         "ENABLED",
+         "DISABLED"
+        ]
+       },
+       "marketSettings": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "enum": [
+          "APPLE_SCHOOL",
+          "APP_STORE",
+          "APPLE_BUSINESS"
+         ]
+        },
         "nullable": true
        }
       },

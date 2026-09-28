@@ -1,5 +1,5 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.4.1
+// Source: Apple App Store Connect OpenAPI specification v4.5
 // Regenerate with: npm run generate
 
 export const DOMAIN_DESCRIPTIONS: Record<string, string> = {
