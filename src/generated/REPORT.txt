@@ -9,7 +9,7 @@ Risk levels:    low:175 destructive:110 revenue:88 public:60 infrastructure:16 r
 Body schemas:   336 (298 KB resolved, avg 910 chars)
 
 By domain:
-  game_center          275
+  game_center          277
   apps                 117
   subscriptions        105
   versions             102
@@ -26,4 +26,3 @@ By domain:
   pricing              7
   reviews              5
   sandbox              3
-  misc                 2

@@ -16216,7 +16216,7 @@ export const OPERATIONS: Operation[] = [
   },
   {
     "name": "game_center_detail_players.update",
-    "domain": "misc",
+    "domain": "game_center",
     "method": "PATCH",
     "path": "/v1/gameCenterDetailPlayers/{id}",
     "description": "Update a Game Center detail player.",
@@ -21296,7 +21296,7 @@ export const OPERATIONS: Operation[] = [
   },
   {
     "name": "game_center_score_moderations.update",
-    "domain": "misc",
+    "domain": "game_center",
     "method": "PATCH",
     "path": "/v1/gameCenterScoreModerations/{id}",
     "description": "Update a Game Center score moderation.",
