@@ -19,10 +19,10 @@ one you install can find an app ID and point you at a tool it does not have.
 | You are | Install | Tools |
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 194 |
-| ASO / marketing | `marketing` + `analytics` | 125 |
+| ASO / marketing | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
 | Monetization | `monetization` | 207 |
-| Game developer | `game-center` + `distribution` | 319 |
+| Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
 | Build & signing | `provisioning` + `xcode-cloud` | 102 |
 
@@ -166,10 +166,10 @@ gösterebilir.
 | Siz | Kurun | Araç |
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
-| ASO / pazarlama | `marketing` + `analytics` | 125 |
+| ASO / pazarlama | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
 | Monetizasyon | `monetization` | 207 |
-| Oyun geliştirici | `game-center` + `distribution` | 319 |
+| Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
 

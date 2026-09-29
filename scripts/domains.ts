@@ -207,6 +207,8 @@ export const DOMAIN_MAP: Record<string, string> = {
   gameCenterPlayerAchievementSubmissions: 'game_center',
   gameCenterChallengeVersionReleases: 'game_center',
   gameCenterActivityVersionReleases: 'game_center',
+  gameCenterDetailPlayers: 'game_center',
+  gameCenterScoreModerations: 'game_center',
   achievements: 'game_center',
   leaderboards: 'game_center',
   leaderboardSets: 'game_center',

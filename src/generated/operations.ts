@@ -1,10 +1,10 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.4.1
+// Source: Apple App Store Connect OpenAPI specification v4.5
 // Regenerate with: npm run generate
 
 import type { Operation } from '../core/types.js';
 
-export const SPEC_VERSION = "4.4.1";
+export const SPEC_VERSION = "4.5";
 
 export const OPERATIONS: Operation[] = [
   {
@@ -3226,7 +3226,6 @@ export const OPERATIONS: Operation[] = [
           "brazilAgeRatingV2",
           "franceAgeRating",
           "koreaAgeRating",
-          "kidsAgeBand",
           "app",
           "ageRatingDeclaration",
           "appInfoLocalizations",
@@ -6395,7 +6394,6 @@ export const OPERATIONS: Operation[] = [
           "brazilAgeRatingV2",
           "franceAgeRating",
           "koreaAgeRating",
-          "kidsAgeBand",
           "app",
           "ageRatingDeclaration",
           "appInfoLocalizations",
@@ -7740,12 +7738,12 @@ export const OPERATIONS: Operation[] = [
           "inAppPurchases",
           "subscriptionGroups",
           "gameCenterEnabledVersions",
+          "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
           "inAppPurchasesV2",
           "promotedPurchases",
-          "appEvents",
-          "reviewSubmissions"
+          "appEvents"
         ]
       },
       {
@@ -8116,12 +8114,12 @@ export const OPERATIONS: Operation[] = [
           "inAppPurchases",
           "subscriptionGroups",
           "gameCenterEnabledVersions",
+          "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
           "inAppPurchasesV2",
           "promotedPurchases",
-          "appEvents",
-          "reviewSubmissions"
+          "appEvents"
         ]
       },
       {
@@ -8221,6 +8219,27 @@ export const OPERATIONS: Operation[] = [
     ],
     "hasBody": false,
     "accept": "application/vnd.apple.xcode-metrics+json"
+  },
+  {
+    "name": "apps.performance_overviews.list",
+    "domain": "apps",
+    "method": "GET",
+    "path": "/v1/apps/{id}/performanceOverviews",
+    "description": "List the performance overviews belonging to an app.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[deviceType]",
+        "type": "array",
+        "description": "filter by attribute 'deviceType'"
+      }
+    ],
+    "hasBody": false,
+    "accept": "application/vnd.apple.xcode-overview+json"
   },
   {
     "name": "apps.pre_release_versions.list",
@@ -10515,12 +10534,12 @@ export const OPERATIONS: Operation[] = [
           "inAppPurchases",
           "subscriptionGroups",
           "gameCenterEnabledVersions",
+          "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
           "inAppPurchasesV2",
           "promotedPurchases",
-          "appEvents",
-          "reviewSubmissions"
+          "appEvents"
         ]
       },
       {
@@ -16196,6 +16215,22 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
+    "name": "game_center_detail_players.update",
+    "domain": "game_center",
+    "method": "PATCH",
+    "path": "/v1/gameCenterDetailPlayers/{id}",
+    "description": "Update a Game Center detail player.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "GameCenterDetailPlayerUpdateRequest",
+    "risk": "public"
+  },
+  {
     "name": "game_center_details.achievement_releases.list",
     "domain": "game_center",
     "method": "GET",
@@ -16258,6 +16293,26 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "version"
         ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "game_center_details.blocked_players.list",
+    "domain": "game_center",
+    "method": "GET",
+    "path": "/v1/gameCenterDetails/{id}/blockedPlayers",
+    "description": "List the blocked players belonging to a Game Center detail.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
       }
     ],
     "hasBody": false
@@ -17053,6 +17108,7 @@ export const OPERATIONS: Operation[] = [
           "challengeReleases",
           "leaderboardReleases",
           "leaderboardSetReleases",
+          "blockedPlayers",
           "challengesMinimumPlatformVersions"
         ]
       },
@@ -17696,6 +17752,7 @@ export const OPERATIONS: Operation[] = [
           "challengeReleases",
           "leaderboardReleases",
           "leaderboardSetReleases",
+          "blockedPlayers",
           "challengesMinimumPlatformVersions"
         ]
       },
@@ -19352,6 +19409,7 @@ export const OPERATIONS: Operation[] = [
           "gameCenterDetail",
           "gameCenterGroup",
           "gameCenterLeaderboardSets",
+          "gameCenterScoreModerations",
           "activity",
           "challenge",
           "versions"
@@ -19960,6 +20018,54 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
+    "name": "game_center_leaderboards_v2.game_center_score_moderations.list",
+    "domain": "game_center",
+    "method": "GET",
+    "path": "/v2/gameCenterLeaderboards/{id}/gameCenterScoreModerations",
+    "description": "List the Game Center score moderations belonging to a Game Center leaderboards (v2).",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "exists[blocked]",
+        "type": "boolean",
+        "description": "filter by attribute 'blocked'"
+      },
+      {
+        "name": "fields[gameCenterScoreModerations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type gameCenterScoreModerations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "rank",
+          "score",
+          "submittedDate",
+          "blocked",
+          "preReleased",
+          "context",
+          "challengeIds",
+          "player"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "player"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
     "name": "game_center_leaderboards_v2.get",
     "domain": "game_center",
     "method": "GET",
@@ -19992,6 +20098,7 @@ export const OPERATIONS: Operation[] = [
           "gameCenterDetail",
           "gameCenterGroup",
           "gameCenterLeaderboardSets",
+          "gameCenterScoreModerations",
           "activity",
           "challenge",
           "versions"
@@ -21186,6 +21293,22 @@ export const OPERATIONS: Operation[] = [
     "hasBody": true,
     "bodyRef": "GameCenterPlayerAchievementSubmissionCreateRequest",
     "risk": "low"
+  },
+  {
+    "name": "game_center_score_moderations.update",
+    "domain": "game_center",
+    "method": "PATCH",
+    "path": "/v1/gameCenterScoreModerations/{id}",
+    "description": "Update a Game Center score moderation.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "GameCenterScoreModerationUpdateRequest",
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.create",
@@ -25445,6 +25568,8 @@ export const OPERATIONS: Operation[] = [
           "subscriptionPeriod",
           "reviewNote",
           "groupLevel",
+          "multiSeatStatus",
+          "marketSettings",
           "subscriptionLocalizations",
           "appStoreReviewScreenshot",
           "group",
@@ -26356,7 +26481,8 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[planType]",
         "type": "array",
-        "description": "filter by planType"
+        "description": "filter by planType",
+        "required": true
       },
       {
         "name": "limit",
@@ -26810,6 +26936,8 @@ export const OPERATIONS: Operation[] = [
           "subscriptionPeriod",
           "reviewNote",
           "groupLevel",
+          "multiSeatStatus",
+          "marketSettings",
           "subscriptionLocalizations",
           "appStoreReviewScreenshot",
           "group",

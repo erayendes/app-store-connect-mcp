@@ -127,7 +127,13 @@ describe('chain integrity — a write needs a read that produces its id', () => 
    * `beta_app_clip_invocations.get` with an `include` parameter. A listed
    * exception, so the invariant stays strict for everything else.
    */
-  const KNOWN_EXCEPTIONS = new Set(['beta_app_clip_invocation_localizations']);
+  const KNOWN_EXCEPTIONS = new Set([
+    'beta_app_clip_invocation_localizations',
+    // Its ids come from `game_center_details.blocked_players.list`, which
+    // returns GameCenterDetailPlayers under a path named `blockedPlayers` —
+    // the same resource, a name this matcher cannot pair.
+    'game_center_detail_players',
+  ]);
 
   it.each(
     PROFILES.flatMap((p) => p.subProfiles.map((s) => [`${p.name}/${s.name || '-'}`, p.name, s.name] as const))
@@ -213,10 +219,10 @@ describe('counts — curation output, not something that drifts on its own', () 
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 933 CSV rows - 10 core rows. Not a count of distinct tools: the screenshot
+    // 938 CSV rows - 10 core rows. Not a count of distinct tools: the screenshot
     // and preview tools sit under all three pages that can list a set, and ten
     // entry reads are deliberately in two slices.
-    expect(tools.length).toBe(923);
+    expect(tools.length).toBe(928);
     // The offset is the hand-written tools in the sheet, which are not spec
     // operations: 9 storekit, 3 reviews_ai, 3 pricing, 3 listing, 1 analytics,
     // 1 preflight, 1 account, 3 metadata_ai, 1 release. It grew by 5 when the
