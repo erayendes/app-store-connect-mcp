@@ -91,8 +91,9 @@ export const RULES: RiskRule[] = [
   // --- customer-visible store content ------------------------------------
   {
     pattern:
-      /localization|screenshot|preview|^app_infos?\.|^apps\.update|^customer_review_response|^app_events?|^app_custom_product_page|^nominations\.|search_keywords/,
+      /localization|screenshot|preview|^app_infos?\.|^apps\.update|^customer_review_response|^app_events?|^app_custom_product_page|^nominations\.|search_keywords|^game_center_detail_players\.|^game_center_score_moderations\./,
     level: 'public',
+    // Blocking a Game Center player or score hides them from other players.
     why: 'changes what customers see on the App Store',
   },
 

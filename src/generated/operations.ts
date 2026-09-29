@@ -16228,7 +16228,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailPlayerUpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "game_center_details.achievement_releases.list",
@@ -21308,7 +21308,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterScoreModerationUpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.create",

@@ -125,10 +125,10 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 | You are | Install | Tools |
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 194 |
-| ASO / marketing | `marketing` + `analytics` | 125 |
+| ASO / marketing | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
 | Monetization | `monetization` | 207 |
-| Game developer | `game-center` + `distribution` | 319 |
+| Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
 | Build & signing | `provisioning` + `xcode-cloud` | 102 |
 
@@ -142,7 +142,7 @@ Worked examples for each of these — with the part that usually goes wrong — 
 
 #### Pick per project
 
-MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (125 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
+MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (126 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
 
 #### Sub-profiles
 
@@ -571,10 +571,10 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
-| ASO / pazarlama | `marketing` + `analytics` | 125 |
+| ASO / pazarlama | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
 | Monetizasyon | `monetization` | 207 |
-| Oyun geliştirici | `game-center` + `distribution` | 319 |
+| Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
 
@@ -588,7 +588,7 @@ Her biri için — ve genelde nerede ters gittiğiyle birlikte — çalışılm�
 
 #### Projeye göre seçin
 
-MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (125 araç); oyun `asc-game-center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
+MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (126 araç); oyun `asc-game-center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
 
 #### Alt profiller
 

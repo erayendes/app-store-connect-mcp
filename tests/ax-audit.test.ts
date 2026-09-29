@@ -23,7 +23,8 @@ import type { Operation } from '../src/core/types.js';
  */
 const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
-  boilerplate: 692,
+  // Spec 4.5 (+5 tools, Apple's own summaries) raised four ceilings by 2–4.
+  boilerplate: 696,
   /**
    * AXIS2 — silent empty results: id-valued filters with no format hint.
    *
@@ -36,16 +37,16 @@ const CEILING = {
   /**
    * AXIS3 — opaque confirmations: reference types a preview cannot humanise.
    *
-   * 52, down from 179 when the count meant "types without a hand-written
+   * 54, down from 179 when the count meant "types without a hand-written
    * resolver". What is left are types Apple gives no GET-by-id endpoint, so
    * there is nothing to fetch a name from — a resolver cannot be written for
    * them, only a different write body could avoid them.
    */
-  unresolvedRefTypes: 52,
+  unresolvedRefTypes: 54,
   /** AXIS4 — path length: writes that need a lookup call first. */
-  writesNeedingLookup: 256,
+  writesNeedingLookup: 258,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
-  unfilterableLists: 97,
+  unfilterableLists: 99,
 };
 
 const debt = auditAx();
