@@ -53,6 +53,10 @@ npx -y @erayendes/asc-mcp setup
 The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so **this is the step you would otherwise repeat once per client, in a different format each time.** Time thrown away.
 Full walkthrough in the [Guide](docs/GUIDE.md).
 
+**Cursor**, one click per profile — `analytics`, `marketing`, `app-info`. The links only register the servers; run `setup` once for the key.
+
+[![asc-analytics](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=asc-analytics&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFuYWx5dGljcyJdfQ%3D%3D) [![asc-marketing](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=asc-marketing&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsIm1hcmtldGluZyJdfQ%3D%3D) [![asc-app-info](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=asc-app-info&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFwcC1pbmZvIl19)
+
 **Xcode 27** is not on that list because Xcode has no config file to write — it installs plug-ins from a Git URL. After `setup`, open Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL**, paste `https://github.com/erayendes/app-store-connect-mcp`, and tick **Heimdall | ASC Skill** plus the areas you need. Then pick an **agent** in the conversation's model menu — Claude Agent, Codex or Gemini — rather than a built-in model: plug-ins reach the agents, not Xcode's own chat. The agent launches the same servers, and they read the key `setup` stored.
 > **Is an AI agent installing Heimdall for you?**
 > See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent adds the profiles with `register`, you run `setup` yourself for the key — your private key is for your eyes only, and the agent never sees it.
@@ -163,6 +167,10 @@ npx -y @erayendes/asc-mcp setup
 
 Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; **yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı.** Boşa vakit kaybı. 
 Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
+
+**Cursor** için profil başına tek tık — `analytics`, `marketing`, `app-info`. Linkler yalnızca sunucuları kaydeder; anahtar için `setup`'ı bir kez çalıştırın.
+
+[![asc-analytics](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=asc-analytics&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFuYWx5dGljcyJdfQ%3D%3D) [![asc-marketing](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=asc-marketing&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsIm1hcmtldGluZyJdfQ%3D%3D) [![asc-app-info](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=asc-app-info&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFwcC1pbmZvIl19)
 
 **Xcode 27** bu listede yok, çünkü Xcode'un yazılacak bir config dosyası yok — eklentileri Git URL'sinden kurar. `setup`'tan sonra Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** deyin, `https://github.com/erayendes/app-store-connect-mcp` yapıştırın; **Heimdall | ASC Skill**'i ve gereken alanları tikleyin. Sonra sohbetin model menüsünden yerleşik bir model değil, bir **agent** seçin — Claude Agent, Codex veya Gemini: eklentiler Xcode'un kendi chat'ine değil, agent'lara gider. Agent aynı sunucuları başlatır; onlar da `setup`'ın sakladığı anahtarı okur.
 > **Heimdall'ı bir AI agent mı kuracak?**
