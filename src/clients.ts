@@ -18,7 +18,18 @@
  *   - ChatGPT desktop, Codex CLI and the Codex IDE extension share one file.
  */
 import { execFileSync } from 'node:child_process';
-import { accessSync, constants, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  accessSync,
+  constants,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -455,7 +466,21 @@ function writeJsonServers(
     servers[serverName(spec)] = { command: SERVER_COMMAND, args: serverArgs(spec) };
   }
   doc[t.key] = servers;
-  writeFileSync(t.path, `${JSON.stringify(doc, null, 2)}\n`);
+  writeAtomic(t.path, `${JSON.stringify(doc, null, 2)}\n`);
+}
+
+/**
+ * Write through a temp file and rename it into place, so an interrupted run
+ * leaves either the old config or the new one — never half of ~/.claude.json.
+ * Resolves symlinks first (dotfile managers link these files; renaming over
+ * the link would replace it with a plain file) and keeps the file's mode,
+ * since some clients keep their config 0600.
+ */
+function writeAtomic(path: string, text: string): void {
+  const real = existsSync(path) ? realpathSync(path) : path;
+  const tmp = `${real}.${process.pid}.tmp`;
+  writeFileSync(tmp, text, existsSync(real) ? { mode: statSync(real).mode & 0o777 } : undefined);
+  renameSync(tmp, real);
 }
 
 /** What to paste when nothing could write it for you. */

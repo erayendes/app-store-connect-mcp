@@ -438,6 +438,16 @@ describe('ToolRegistry', () => {
       /Missing required parameter "id"/
     );
   });
+
+  it('refuses a dot segment as a path parameter', async () => {
+    // URL resolution turns /v1/apps/.. into /v1/ — a different operation.
+    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    for (const id of ['.', '..']) {
+      await expect(registry.execute('apps__get', { id }, {} as never)).rejects.toThrow(
+        /must be a resource ID/
+      );
+    }
+  });
 });
 
 describe('MCP tool schema', () => {
