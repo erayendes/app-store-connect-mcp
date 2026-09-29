@@ -46,7 +46,7 @@ The generated report (`src/generated/REPORT.txt`) shows exactly what changed —
 
 ### The most useful contribution
 
-Apple's OpenAPI specification contains no summaries or descriptions, only tags. Tool descriptions are therefore synthesised in `scripts/describe.ts` — and those descriptions are what an LLM reads when choosing which of 982 tools to call.
+Apple's OpenAPI specification contains no summaries or descriptions, only tags. Tool descriptions are therefore synthesised in `scripts/describe.ts` — and those descriptions are what an LLM reads when choosing which of 987 tools to call.
 
 A generated description like *"Update an app Store version phased release"* is accurate but says nothing about when you'd want it. The curated version says *"Pause, resume or complete a phased release. Set phasedReleaseState to PAUSE, ACTIVE or COMPLETE."*
 
@@ -127,7 +127,7 @@ npm test              # hiçbir şeyin bozulmadığını doğrula
 
 ### En faydalı katkı
 
-Apple'ın OpenAPI spesifikasyonu özet veya açıklama içermez, sadece etiketler içerir. Bu yüzden araç açıklamaları `scripts/describe.ts`'de sentezlenir — ve bu açıklamalar, bir LLM'in 982 araçtan hangisini çağıracağına karar verirken okuduğu şeydir.
+Apple'ın OpenAPI spesifikasyonu özet veya açıklama içermez, sadece etiketler içerir. Bu yüzden araç açıklamaları `scripts/describe.ts`'de sentezlenir — ve bu açıklamalar, bir LLM'in 987 araçtan hangisini çağıracağına karar verirken okuduğu şeydir.
 
 *"Update an app Store version phased release"* gibi üretilmiş bir açıklama doğrudur ama ne zaman ihtiyaç duyacağınız konusunda hiçbir şey söylemez. Düzenlenmiş versiyon şöyle der: *"Pause, resume or complete a phased release. Set phasedReleaseState to PAUSE, ACTIVE or COMPLETE."*
 

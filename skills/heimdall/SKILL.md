@@ -5,7 +5,7 @@ description: Work with an Apple App Store Connect account through Heimdall's MCP
 
 Heimdall is one binary serving several separately scoped MCP servers, one per
 profile: `asc-monetization`, `asc-distribution`, `asc-testflight` and so on.
-Apple's API is 982 operations, which costs more in tool definitions than most
+Apple's API is 987 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
 
@@ -164,6 +164,6 @@ a link.
   `DE`. The two-letter form is not rejected; it returns 200 and an empty list
   that reads as "no data here".
 - A tool that is not in this session's list may still belong to this account.
-  `asc__search_tools` searches all 982 operations and names the profile that
+  `asc__search_tools` searches all 987 operations and names the profile that
   owns each one; the server's own error messages print the exact command to add
   it. Do not conclude the operation does not exist.

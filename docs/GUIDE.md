@@ -237,7 +237,7 @@ A profile you narrowed still knows about the rest of itself:
 
 The proxy exists because MCP lets a server revise its tool list but says nothing about *when* a client hands that revision to the model. Measured with one prompt in three clients: Claude Code used a newly loaded tool in the same turn; Codex loaded it, reported that the session tool list never made it callable, and gave up. `asc__describe` and `asc__call` are in the list from the start, so nothing has to arrive in time.
 
-**And if the tool is in another profile entirely?** `asc__search_tools` searches all 982 operations plus StoreKit, names the sibling server that owns anything not loaded, and prints the command to add it. Install lean and let the server tell you what you are missing.
+**And if the tool is in another profile entirely?** `asc__search_tools` searches all 987 operations plus StoreKit, names the sibling server that owns anything not loaded, and prints the command to add it. Install lean and let the server tell you what you are missing.
 
 ### Heimdall in Xcode 27
 
@@ -246,7 +246,7 @@ The proxy exists because MCP lets a server revise its tool list but says nothing
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode's Add Plug-in sheet with the repository URL entered" width="560">
 
-3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per plug-in. Tick **Heimdall | ASC Skill** and the areas you need; all thirteen is 982 tools in one context window. Need another area later? Add from URL again with the same address: the sheet greys out what is already in as "Already imported", so tick the new one and Import. To drop an area, open its plug-in from the list and Delete Plug-in.
+3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per plug-in. Tick **Heimdall | ASC Skill** and the areas you need; all thirteen is 987 tools in one context window. Need another area later? Add from URL again with the same address: the sheet greys out what is already in as "Already imported", so tick the new one and Import. To drop an area, open its plug-in from the list and Delete Plug-in.
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode's Choose Plug-ins sheet listing Heimdall | ASC Access, Analytics, App Clips, App Info, Background Assets, each with a checkbox" width="560">
 
@@ -683,7 +683,7 @@ Daralttığınız bir profil geri kalanını yine de bilir:
 
 Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine izin verir ama istemcinin bunu modele **ne zaman** ileteceği hakkında hiçbir şey söylemez. Aynı istemle üç istemcide ölçüldü: Claude Code yeni yüklenen aracı aynı turda kullandı; Codex yükledi, oturum araç listesinin onu çağrılabilir yapmadığını bildirdi ve vazgeçti. `asc__describe` ve `asc__call` en baştan listede olduğu için hiçbir şeyin zamanında ulaşması gerekmiyor.
 
-**Peki araç bambaşka bir profildeyse?** `asc__search_tools` tüm 982 işlemi artı StoreKit'i arar, yüklü olmayan her şey için sahibi olan kardeş sunucuyu adlandırır ve ekleme komutunu basar. Yalın kurun, sunucu size neyin eksik olduğunu söylesin.
+**Peki araç bambaşka bir profildeyse?** `asc__search_tools` tüm 987 işlemi artı StoreKit'i arar, yüklü olmayan her şey için sahibi olan kardeş sunucuyu adlandırır ve ekleme komutunu basar. Yalın kurun, sunucu size neyin eksik olduğunu söylesin.
 
 ### Xcode 27'de Heimdall kullanmak
 
@@ -692,7 +692,7 @@ Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo URL'si girilmiş" width="560">
 
-3. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin; on üçü birden tek bağlam penceresine 982 araç demek. Sonradan başka bir alan mı gerekti? Aynı adresle yeniden Add from URL: ekran kurulu olanları "Already imported" diye gri gösterir; yenisini tikleyip Import deyin. Bir alanı atmak için listeden eklentisini açıp Delete Plug-in.
+3. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin; on üçü birden tek bağlam penceresine 987 araç demek. Sonradan başka bir alan mı gerekti? Aynı adresle yeniden Add from URL: ekran kurulu olanları "Already imported" diye gri gösterir; yenisini tikleyip Import deyin. Bir alanı atmak için listeden eklentisini açıp Delete Plug-in.
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall | ASC Access, Analytics, App Clips, App Info, Background Assets, her biri onay kutulu" width="560">
 
