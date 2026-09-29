@@ -211,7 +211,8 @@ describe('writing a JSON client config', () => {
     applyToClient(jsonClient(), ['analytics'], []);
     expect(lstatSync(join(dir, 'mcp.json')).isSymbolicLink()).toBe(true);
     expect(JSON.parse(readFileSync(real, 'utf8')).mcpServers['asc-analytics']).toBeDefined();
-    expect(statSync(real).mode & 0o777).toBe(0o600);
+    // Windows has no POSIX modes to keep: chmod only toggles read-only.
+    if (process.platform !== 'win32') expect(statSync(real).mode & 0o777).toBe(0o600);
     expect(readdirSync(dir).filter((f) => f.endsWith('.tmp'))).toEqual([]);
   });
 
