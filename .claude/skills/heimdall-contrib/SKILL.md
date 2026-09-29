@@ -40,7 +40,7 @@ npm run ax:report
 
 ## Curating a description is the highest-leverage change here
 
-Descriptions are what a model reads when choosing among 982 tools, and roughly
+Descriptions are what a model reads when choosing among 987 tools, and roughly
 700 are still Apple's own one-line summary. Add entries to `CURATED` in
 `scripts/describe.ts`. What earns the space is what comes back, what narrows
 it, and which neighbouring tool this one is *not*.

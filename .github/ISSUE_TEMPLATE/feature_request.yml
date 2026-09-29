@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         **Looking for an Apple operation that isn't in your tool list?** Ask your agent to run
-        `asc__search_tools` first — it searches all 982 operations, including the ones your
+        `asc__search_tools` first — it searches all 987 operations, including the ones your
         current profile hasn't loaded, and prints the command to register the profile that has it.
 
         Türkçe yazabilirsiniz.

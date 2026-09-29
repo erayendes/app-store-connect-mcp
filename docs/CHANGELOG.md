@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [2.4.2] — 2026-09-29
+
+**Apple's specification v4.5: five new tools, 987 operations.** `apps__performance_overviews__list` joins `analytics`. Game Center gains blocked players and score moderation: list and block or unblock, in `game-center` under `gc-details` and `gc-leaderboard`. Blocking hides a player or a score from other players, so both writes are rated `public` rather than `low` ([#111](https://github.com/erayendes/app-store-connect-mcp/pull/111)).
+
+**Safer path parameters and config writes.** A path parameter of `.` or `..` is refused instead of walking the request to another endpoint. Client configs such as `~/.claude.json` are written through a temp file and a rename, so an interrupted `setup` can no longer leave one half-written; symlinked configs stay symlinks and keep their permissions ([#120](https://github.com/erayendes/app-store-connect-mcp/pull/120)).
+
+**One-click Cursor install** links in the README for `analytics`, `marketing` and `app-info` ([#119](https://github.com/erayendes/app-store-connect-mcp/pull/119)). `@modelcontextprotocol/sdk` 1.30.1.
+
 ### [2.4.1] — 2026-09-23
 
 **Performance metrics and diagnostic logs were broken.** Three read tools always returned 406. [@roidayan1](https://github.com/roidayan1) found and fixed it — thank you ([#106](https://github.com/erayendes/app-store-connect-mcp/pull/106) · fix(generator): send the vendor JSON Accept header metrics and diagnostic logs require).
@@ -173,6 +181,14 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 - AI-assisted review tools.
 
 ## Türkçe
+
+### [2.4.2] — 2026-09-29
+
+**Apple spesifikasyonu v4.5: beş yeni araç, 987 işlem.** `apps__performance_overviews__list` `analytics`'e eklendi. Game Center'a engellenen oyuncular ve skor denetimi geldi: listeleme ve engelleme/engeli kaldırma, `game-center` altında `gc-details` ve `gc-leaderboard`'da. Engelleme bir oyuncuyu ya da skoru diğer oyunculardan gizlediği için iki yazma işlemi `low` değil `public` sayılıyor ([#111](https://github.com/erayendes/app-store-connect-mcp/pull/111)).
+
+**Daha güvenli path parametreleri ve config yazımı.** `.` veya `..` değerli bir path parametresi, isteği başka bir endpoint'e götürmek yerine reddediliyor. `~/.claude.json` gibi istemci config'leri geçici dosya ve rename ile yazılıyor; yarıda kesilen bir `setup` artık dosyayı yarım bırakamaz. Symlink olan config'ler symlink olarak kalır, izinleri korunur ([#120](https://github.com/erayendes/app-store-connect-mcp/pull/120)).
+
+README'de `analytics`, `marketing` ve `app-info` için **tek tıkla Cursor kurulumu** ([#119](https://github.com/erayendes/app-store-connect-mcp/pull/119)). `@modelcontextprotocol/sdk` 1.30.1.
 
 ### [2.4.1] — 2026-09-23
 

@@ -9,7 +9,7 @@
 - **Bug or unexpected behaviour?** Open an [issue](https://github.com/erayendes/app-store-connect-mcp/issues) with reproduction steps, the profile or `--domains`/`--read-only` flags you ran, and the tool name involved. Redact your Key ID, Issuer ID and any `.p8` contents.
 - **Security vulnerability?** Don't open a public issue — see [SECURITY.md](SECURITY.md) for private reporting.
 - **Question about a specific Apple API operation?** Cross-reference the tool's `METHOD /path` (in its description) against [Apple's official documentation](https://developer.apple.com/documentation/appstoreconnectapi) first — many "is this a bug" questions turn out to be Apple's API behaving as documented.
-- **Feature request?** Open an issue. If it's a new Apple operation, check first with `asc__search_tools`, which searches all 982 operations even when not loaded.
+- **Feature request?** Open an issue. If it's a new Apple operation, check first with `asc__search_tools`, which searches all 987 operations even when not loaded.
 
 ### Troubleshooting
 
@@ -35,7 +35,7 @@ Heimdall is free and open. If it helps you, a [coffee](https://buymeacoffee.com/
 - **Bug ya da beklenmedik davranış mı?** [Issue](https://github.com/erayendes/app-store-connect-mcp/issues) açın; yeniden üretim adımlarını, çalıştırdığınız profili ya da `--domains`/`--read-only` bayraklarını ve ilgili araç adını ekleyin. Key ID, Issuer ID ve `.p8` içeriğini gizleyin.
 - **Güvenlik açığı mı?** Açık bir issue açmayın — özel bildirim için [SECURITY.md](SECURITY.md)'ye bakın.
 - **Belirli bir Apple API işlemi hakkında soru mu?** Önce aracın açıklamasındaki `METHOD /path`'i [Apple'ın resmi dokümantasyonuyla](https://developer.apple.com/documentation/appstoreconnectapi) karşılaştırın — "bu bug mı" sorularının çoğu Apple'ın API'sinin dokümante edildiği gibi davranmasından çıkar.
-- **Özellik isteği mi?** Issue açın. Yeni bir Apple işlemiyse önce `asc__search_tools` ile kontrol edin; yüklenmemiş olsa bile tüm 982 işlemi arar.
+- **Özellik isteği mi?** Issue açın. Yeni bir Apple işlemiyse önce `asc__search_tools` ile kontrol edin; yüklenmemiş olsa bile tüm 987 işlemi arar.
 
 ### Sorun giderme
 
