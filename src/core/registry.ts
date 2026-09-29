@@ -487,10 +487,18 @@ export class ToolRegistry {
       if (value === undefined || value === null || value === '') {
         throw new AscApiError(`Missing required parameter "${param}" for ${name}.`, 0);
       }
-      path = path.replace(
-        `{${param}}`,
-        encodeURIComponent(await this.resolvePathValue(http, op.path, param, String(value)))
-      );
+      // encodeURIComponent leaves dots alone, and URL resolution then treats
+      // "." and ".." as directory steps: `apps__get(id: "..")` went out as
+      // GET /v1/ instead of failing. The host is pinned, so no token leaves
+      // Apple, but the call still lands on an operation nobody chose.
+      if (value === '.' || value === '..') {
+        throw new AscApiError(
+          `Parameter "${param}" for ${name} must be a resource ID, not "${value}".`,
+          0
+        );
+      }
+      const resolved = await this.resolvePathValue(http, op.path, param, String(value));
+      path = path.replace(`{${param}}`, encodeURIComponent(resolved));
     }
 
     // An argument nobody recognises used to be dropped without a word, and the

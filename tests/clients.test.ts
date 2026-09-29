@@ -7,7 +7,19 @@
  * failure that matters is what ends up on disk.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -187,6 +199,20 @@ describe('writing a JSON client config', () => {
     expect(existsSync(join(dir, 'mcp.json.bak'))).toBe(true);
     // The backup is the only copy of the user's original indentation.
     expect(readFileSync(join(dir, 'mcp.json.bak'), 'utf8')).toContain('    ');
+  });
+
+  it('writes through a symlink, keeps the mode, and leaves no temp file', () => {
+    // Dotfile managers link these configs; renaming over the link would
+    // silently replace it with a plain file and detach it from the repo.
+    const real = join(dir, 'real.json');
+    writeFileSync(real, JSON.stringify({ mcpServers: {} }));
+    chmodSync(real, 0o600);
+    symlinkSync(real, join(dir, 'mcp.json'));
+    applyToClient(jsonClient(), ['analytics'], []);
+    expect(lstatSync(join(dir, 'mcp.json')).isSymbolicLink()).toBe(true);
+    expect(JSON.parse(readFileSync(real, 'utf8')).mcpServers['asc-analytics']).toBeDefined();
+    expect(statSync(real).mode & 0o777).toBe(0o600);
+    expect(readdirSync(dir).filter((f) => f.endsWith('.tmp'))).toEqual([]);
   });
 
   it('removes a server that is no longer chosen', () => {
