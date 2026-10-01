@@ -37,7 +37,7 @@ describe('what a client receives', () => {
     const client = await connect('app-info');
     expect(client.getServerCapabilities()?.tools).toBeDefined();
     const info = client.getServerVersion();
-    expect(info?.name).toBe('asc-app-info');
+    expect(info?.name).toBe('ASC-App-Info');
     // A version a client can report back is how a bug lands with a number
     // attached instead of "the App Store one".
     expect(info?.version).toMatch(/^\d+\.\d+\.\d+/);

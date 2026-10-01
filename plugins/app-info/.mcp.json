@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-app-info": {
+    "ASC-App-Info": {
       "command": "npx",
       "args": [
         "-y",

@@ -36,8 +36,30 @@ import { homedir } from 'node:os';
 /** `npx` rather than an absolute path: portable, and survives a reinstall. */
 export const SERVER_COMMAND = 'npx';
 export const serverArgs = (spec: string): string[] => ['-y', '@erayendes/asc-mcp', spec];
-/** `monetization:iap,storekit` registers as `asc-monetization`. */
-export const serverName = (spec: string): string => `asc-${spec.split(':', 1)[0]}`;
+const SPELLINGS: Record<string, string> = { testflight: 'TestFlight' };
+/** `app-info` -> `App Info`: a profile name the way a person reads it. */
+export const profileLabel = (profile: string): string =>
+  SPELLINGS[profile] ??
+  profile
+    .split('-')
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(' ');
+
+/**
+ * `monetization:iap,storekit` registers as `ASC-Monetization`.
+ *
+ * The config key is the name every client list shows, so it is written for a
+ * person. Not `ASC Monetization`: `claude mcp add` accepts only letters, digits,
+ * `-` and `_`, and `codex mcp add` little more, and Claude merges its two
+ * configs by key — a spaced name in Desktop and a hyphenated one in Claude
+ * Code would list the same server twice.
+ */
+export const serverName = (spec: string): string =>
+  `ASC-${profileLabel(spec.split(':', 1)[0]).replace(/ /g, '-')}`;
+
+/** `ASC-App-Info`, or `ASC-App-Info` as written before 2.5.0 -> `app-info`. */
+export const profileOfServer = (name: string): string | undefined =>
+  /^asc-/i.test(name) ? name.slice(4).toLowerCase() : undefined;
 
 const home = (...parts: string[]): string => join(homedir(), ...parts);
 
@@ -300,9 +322,9 @@ export function listRegistered(client: McpClient): Map<string, string> {
       try {
         const out = execFileSync(t.bin, t.list, { encoding: 'utf8' });
         for (const line of out.split('\n')) {
-          const name = line.match(/^(asc-[a-z0-9-]+)\b/)?.[1];
+          const name = line.match(/^(asc-[a-z0-9-]+)\b/i)?.[1];
           if (!name) continue;
-          found.set(name, line.match(/@erayendes\/asc-mcp\s+(\S+)/)?.[1] ?? name.replace(/^asc-/, ''));
+          found.set(name, line.match(/@erayendes\/asc-mcp\s+(\S+)/)?.[1] ?? profileOfServer(name)!);
         }
       } catch {
         // Listing failed — treat as nothing registered rather than guessing.
@@ -312,9 +334,10 @@ export function listRegistered(client: McpClient): Map<string, string> {
     const servers = readJsonServers(t);
     if (!servers) continue;
     for (const [name, entry] of Object.entries(servers)) {
-      if (!name.startsWith('asc-')) continue;
+      const profile = profileOfServer(name);
+      if (!profile) continue;
       const args = (entry as { args?: unknown })?.args;
-      const spec = Array.isArray(args) ? String(args[args.length - 1]) : name.replace(/^asc-/, '');
+      const spec = Array.isArray(args) ? String(args[args.length - 1]) : profile;
       found.set(name, spec);
     }
   }
@@ -369,7 +392,7 @@ export function applyToClient(
   };
   const addLabel = (spec: string): string => {
     const name = serverName(spec);
-    return `added ${name}${spec === name.slice(4) ? '' : ` (${spec})`}`;
+    return `added ${name}${spec.includes(':') ? ` (${spec})` : ''}`;
   };
 
   for (const t of writableTargets(client)) {

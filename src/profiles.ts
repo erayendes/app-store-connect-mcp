@@ -12,13 +12,14 @@
  */
 import { CORE, PROFILE_DATA, type GeneratedSubProfile } from './generated/profiles-data.js';
 import { OPERATIONS } from './generated/operations.js';
+import { serverName } from './clients.js';
 
 export interface SubProfile extends GeneratedSubProfile {
   description: string;
 }
 
 export interface Profile {
-  /** Positional CLI argument and the suffix of the server name (`asc-<name>`). */
+  /** Positional CLI argument and the suffix of the server name (`ASC-<Name>`). */
   name: string;
   description: string;
   /** Always at least one. A profile without sub-profiles has a single unnamed one. */
@@ -283,7 +284,7 @@ export function subProfileOwning(profile: Profile, operation: string): SubProfil
 /** The exact command that registers a profile's server — a copy-paste remedy. */
 export function registerCommand(spec: string): string {
   const name = spec.split(':', 1)[0];
-  return `claude mcp add -s user asc-${name} -- npx -y @erayendes/asc-mcp ${spec}`;
+  return `claude mcp add -s user ${serverName(name)} -- npx -y @erayendes/asc-mcp ${spec}`;
 }
 
 /**

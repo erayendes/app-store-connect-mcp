@@ -38,6 +38,7 @@ import {
   listRegistered,
   manualBlock,
   serverName,
+  profileOfServer,
   type McpClient,
 } from './clients.js';
 
@@ -124,8 +125,8 @@ function registeredAcross(clients: McpClient[]): {
     const found = listRegistered(client);
     perClient.set(client.id, found);
     for (const [name, spec] of found) {
-      const profile = name.replace(/^asc-/, '');
-      if (known.has(profile)) union.set(profile, spec);
+      const profile = profileOfServer(name);
+      if (profile && known.has(profile)) union.set(profile, spec);
     }
   }
   return { perClient, union };
@@ -238,7 +239,7 @@ async function selectProfiles(
     await ask('Profiles to register — comma-separated names, or "all" (default): ', false)
   ).trim();
   if (!answer || answer.toLowerCase() === 'all') return PROFILES.map((p) => p.name);
-  const wanted = answer.split(',').map((s) => s.trim().replace(/^asc-/, '')).filter(Boolean);
+  const wanted = answer.split(',').map((s) => s.trim().replace(/^asc-/i, '').toLowerCase()).filter(Boolean);
   return wanted.filter((spec) => {
     try {
       resolveSelection(spec);
@@ -539,12 +540,23 @@ function planChanges(
   return clients
     .map((client) => {
       const registered = registeredPerClient.get(client.id) ?? new Map<string, string>();
+      // A name older versions wrote (`ASC-Analytics` before 2.5.0) is the same
+      // server under another key; left beside the new one, Claude lists it
+      // twice. It moves to the new name — unless setup is pruning it anyway.
+      const legacy = [...registered].filter(([n, spec]) => n !== serverName(spec));
+      const migrate = legacy
+        .map(([, spec]) => spec)
+        .filter((spec) => !prune || chosenNames.has(serverName(spec)));
+      const wanted = [...new Set([...chosen, ...migrate])];
       return {
         client,
-        toAdd: client.targets.length ? chosen.filter((spec) => registered.get(serverName(spec)) !== spec) : chosen,
+        toAdd: client.targets.length ? wanted.filter((spec) => registered.get(serverName(spec)) !== spec) : chosen,
         // `register` never prunes: an agent adding one profile must not silently
         // drop the six the user set up last week.
-        toRemove: prune ? [...registered.keys()].filter((n) => !chosenNames.has(n)) : [],
+        toRemove: [
+          ...legacy.map(([n]) => n),
+          ...(prune ? [...registered.keys()].filter((n) => !chosenNames.has(n) && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
+        ],
       };
     })
     .filter((p) => p.toAdd.length || p.toRemove.length);
@@ -555,7 +567,7 @@ function printPlan(plan: ClientPlan[]): void {
   console.log('\nPlanned changes:\n');
   for (const { client, toAdd, toRemove } of plan) {
     const bits: string[] = [];
-    if (toAdd.length) bits.push(`+ ${toAdd.map((s) => `asc-${s}`).join(', ')}`);
+    if (toAdd.length) bits.push(`+ ${toAdd.map(serverName).join(', ')}`);
     if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
     console.log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
   }

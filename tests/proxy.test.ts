@@ -89,7 +89,7 @@ describe('the client-independent path', () => {
       arguments: { tool: 'game_center_details__get' },
     });
     expect(res.isError).toBe(true);
-    expect(textOf(res)).toMatch(/asc-game-center/);
+    expect(textOf(res)).toMatch(/ASC-Game-Center/);
   });
 
   it('says so plainly when the name is not a tool at all', async () => {

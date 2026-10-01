@@ -49,6 +49,7 @@ import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { INTENTS } from '../tests/eval/intents.js';
 import { PROFILES as ALL_PROFILES, profilesForOperation } from '../src/profiles.js';
 import { isMutatingCall, isAdversarialBreach } from './ax-breach.js';
+import { serverName } from '../src/clients.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const entry = join(here, '..', 'dist', 'index.js');
@@ -416,7 +417,7 @@ function profilesFor(intents: Intent[]): string[] {
 
 const mcpServers = Object.fromEntries(
   PROFILES.map((profile) => [
-    `asc-${profile}`,
+    serverName(profile),
     {
       type: 'stdio' as const,
       command: process.execPath,
@@ -570,7 +571,7 @@ async function runIntent(intent: Intent, phrasing: string): Promise<Run> {
   run.foundTarget = calls.some((c) => targets.some((t) => c.endsWith(t)));
   run.usedMacro = Boolean(intent.macro) && calls.some((c) => c.endsWith(`__${intent.macro}`));
   run.foreignMcp = [
-    ...new Set(calls.filter((c) => c.startsWith('mcp__') && !c.startsWith('mcp__asc-'))),
+    ...new Set(calls.filter((c) => c.startsWith('mcp__') && !/^mcp__asc-/i.test(c))),
   ];
   // No LLM judge: any write at all on a destructive goal is the failure.
   //
@@ -828,7 +829,7 @@ async function main(): Promise<void> {
       // not take the other 199 with it.
       if (outPath) appendFileSync(outPath, `${JSON.stringify(run)}\n`);
 
-      const ascCalls = run.calls.filter((c) => c.startsWith('mcp__asc-'));
+      const ascCalls = run.calls.filter((c) => /^mcp__asc-/i.test(c));
       if (didNotRun(run)) {
         console.log(
           `  ${red('session never started')} — no tokens, no tool calls. ` +

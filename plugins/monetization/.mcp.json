@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-monetization": {
+    "ASC-Monetization": {
       "command": "npx",
       "args": [
         "-y",

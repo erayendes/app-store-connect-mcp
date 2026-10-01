@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-distribution": {
+    "ASC-Distribution": {
       "command": "npx",
       "args": [
         "-y",

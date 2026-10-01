@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-game-center": {
+    "ASC-Game-Center": {
       "command": "npx",
       "args": [
         "-y",

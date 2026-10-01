@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-marketing": {
+    "ASC-Marketing": {
       "command": "npx",
       "args": [
         "-y",

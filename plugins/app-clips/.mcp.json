@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-app-clips": {
+    "ASC-App-Clips": {
       "command": "npx",
       "args": [
         "-y",

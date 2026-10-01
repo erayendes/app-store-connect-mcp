@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-analytics": {
+    "ASC-Analytics": {
       "command": "npx",
       "args": [
         "-y",

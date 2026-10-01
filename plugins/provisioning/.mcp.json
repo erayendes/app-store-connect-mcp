@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-provisioning": {
+    "ASC-Provisioning": {
       "command": "npx",
       "args": [
         "-y",

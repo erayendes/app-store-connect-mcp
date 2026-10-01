@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [Unreleased]
+
+**Server names read like names.** `setup` and `register` now write `ASC-Marketing`, `ASC-App-Info`, `ASC-TestFlight` instead of `asc-marketing`: the config key is what every client lists. Not `ASC Marketing` with a space, because `claude mcp add` and `codex mcp add` refuse one. Existing `asc-*` entries move to the new name the next time `setup` or `register` runs, so nothing is listed twice; tool ids change with them (`mcp__ASC-Marketing__…`), so a tool you had set to "always allow" asks once more.
+
 ### [2.4.2] — 2026-09-29
 
 **Apple's specification v4.5: five new tools, 987 operations.** `apps__performance_overviews__list` joins `analytics`. Game Center gains blocked players and score moderation: list and block or unblock, in `game-center` under `gc-details` and `gc-leaderboard`. Blocking hides a player or a score from other players, so both writes are rated `public` rather than `low` ([#111](https://github.com/erayendes/app-store-connect-mcp/pull/111)).
@@ -181,6 +185,10 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 - AI-assisted review tools.
 
 ## Türkçe
+
+### [Unreleased]
+
+**Sunucu adları artık okunur.** `setup` ve `register` `asc-marketing` yerine `ASC-Marketing`, `ASC-App-Info`, `ASC-TestFlight` yazıyor: her istemcinin listelediği ad config anahtarı. Boşluklu `ASC Marketing` değil, çünkü `claude mcp add` ve `codex mcp add` boşluğu kabul etmiyor. Mevcut `asc-*` kayıtları `setup` ya da `register` bir sonraki çalıştığında yeni ada taşınır, hiçbir şey iki kez listelenmez; araç kimlikleri de değişir (`mcp__ASC-Marketing__…`), bu yüzden "her zaman izin ver" dediğin bir araç bir kez daha sorar.
 
 ### [2.4.2] — 2026-09-29
 

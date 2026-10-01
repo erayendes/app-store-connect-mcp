@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-access": {
+    "ASC-Access": {
       "command": "npx",
       "args": [
         "-y",

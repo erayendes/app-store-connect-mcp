@@ -13,6 +13,7 @@ import {
 import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor } from './profiles.js';
+import { serverName } from './clients.js';
 
 /** Exported so a test can prove the profile list here never drifts from the code. */
 export function helpText(): string {
@@ -24,7 +25,7 @@ Usage:
   npx -y @erayendes/asc-mcp setup
 
 One install backs many small MCP servers: pass a profile name and only that
-profile's tools are served (as "asc-<profile>"). Add one entry per profile to
+profile's tools are served (as "ASC-<Profile>"). Add one entry per profile to
 your client config and pick per project. No profile = the classic combined
 server.
 
@@ -170,7 +171,7 @@ async function main(): Promise<void> {
   // the mapped number meant every client showed something else.
   const served = servedToolCount(server);
   const scope = selection
-    ? `asc-${selection.profile.name}` +
+    ? serverName(selection.profile.name) +
       (selection.partial ? `:${selection.subProfiles.map((s) => s.name).join(',')}` : '') +
       ` (${served ?? toolCountFor(selection)} tools)`
     : 'asc-mcp';

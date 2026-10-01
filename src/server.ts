@@ -51,6 +51,7 @@ import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool } from './tools/r
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
+import { serverName } from './clients.js';
 import { STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
@@ -159,7 +160,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         }
         const homes = profilesForOperation(op.name).filter((n) => n !== selection.profile.name);
         return homes.length
-          ? `It is served by the "asc-${homes[0]}" MCP server. Register it with:\n` +
+          ? `It is served by the "${serverName(homes[0])}" MCP server. Register it with:\n` +
             `  ${registerCommand(homes[0])}\n` +
             `(or add the same entry to your MCP client config), then restart your client.`
           : `Run the server without a profile and with --domains=${op.domain} to reach it.`;
@@ -273,7 +274,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   );
 
   const server = new Server(
-    { name: selection ? `asc-${selection.profile.name}` : 'app-store-connect-mcp', version: VERSION },
+    { name: selection ? serverName(selection.profile.name) : 'app-store-connect-mcp', version: VERSION },
     {
       // listChanged: the tool list can grow mid-session via asc__load, and a
       // resource appears whenever a response is too big to send whole.
@@ -446,7 +447,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     return (
       `"${raw}" is not part of this profile. ` +
       (homes.length
-        ? `It is served by the "asc-${homes[0]}" MCP server:\n  ${registerCommand(homes[0])}`
+        ? `It is served by the "${serverName(homes[0])}" MCP server:\n  ${registerCommand(homes[0])}`
         : `Run the server without a profile and with --domains=${known.domain} to reach it.`)
     );
   };
@@ -734,7 +735,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                   lines.push(
                     `The rest live on sibling MCP servers. Register the ones you need — ` +
                       `the command is the same everywhere:\n` +
-                      homes.map((n) => `  asc-${n}  ->  npx -y @erayendes/asc-mcp ${n}`).join('\n') +
+                      homes.map((n) => `  ${serverName(n)}  ->  npx -y @erayendes/asc-mcp ${n}`).join('\n') +
                       `\nFor example, in Claude Code:\n` +
                       homes.map((n) => `  ${registerCommand(n)}`).join('\n') +
                       `\nOn other clients (Codex, Antigravity, Claude Desktop, …) add the same ` +
