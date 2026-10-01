@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "ASC-Background-Assets": {
+    "ASC-BackgroundAssets": {
       "command": "npx",
       "args": [
         "-y",

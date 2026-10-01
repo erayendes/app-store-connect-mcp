@@ -142,7 +142,7 @@ Worked examples for each of these — with the part that usually goes wrong — 
 
 #### Pick per project
 
-MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `ASC-Analytics` + `ASC-Marketing` (126 tools); a game adds `ASC-Game-Center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
+MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `ASC-Analytics` + `ASC-Marketing` (126 tools); a game adds `ASC-GameCenter`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
 
 #### Sub-profiles
 
@@ -588,7 +588,7 @@ Her biri için — ve genelde nerede ters gittiğiyle birlikte — çalışılm�
 
 #### Projeye göre seçin
 
-MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `ASC-Analytics` + `ASC-Marketing` alır (126 araç); oyun `ASC-Game-Center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
+MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `ASC-Analytics` + `ASC-Marketing` alır (126 araç); oyun `ASC-GameCenter` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
 
 #### Alt profiller
 

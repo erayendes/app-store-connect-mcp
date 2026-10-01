@@ -46,20 +46,26 @@ export const profileLabel = (profile: string): string =>
     .join(' ');
 
 /**
- * `monetization:iap,storekit` registers as `ASC-Monetization`.
+ * `monetization:iap,storekit` registers as `ASC-Monetization`, `app-info` as
+ * `ASC-AppInfo`.
  *
  * The config key is the name every client list shows, so it is written for a
- * person. Not `ASC Monetization`: `claude mcp add` accepts only letters, digits,
- * `-` and `_`, and `codex mcp add` little more, and Claude merges its two
- * configs by key — a spaced name in Desktop and a hyphenated one in Claude
- * Code would list the same server twice.
+ * person: one hyphen after the brand, the area run together the way Apple
+ * writes TestFlight. Not `ASC App Info`: `claude mcp add` accepts only letters,
+ * digits, `-` and `_`, `codex mcp add` little more, and Claude merges its two
+ * configs by key — a spaced name in Desktop and another in Claude Code would
+ * list the same server twice.
  */
 export const serverName = (spec: string): string =>
-  `ASC-${profileLabel(spec.split(':', 1)[0]).replace(/ /g, '-')}`;
+  `ASC-${profileLabel(spec.split(':', 1)[0]).replace(/ /g, '')}`;
 
-/** `ASC-App-Info`, or `ASC-App-Info` as written before 2.5.0 -> `app-info`. */
-export const profileOfServer = (name: string): string | undefined =>
-  /^asc-/i.test(name) ? name.slice(4).toLowerCase() : undefined;
+/** `ASC-AppInfo`, or `asc-app-info` as written before 2.5.0 -> `app-info`. */
+export const profileOfServer = (name: string): string | undefined => {
+  if (!/^asc-/i.test(name)) return undefined;
+  const rest = name.slice(4);
+  const spelled = Object.entries(SPELLINGS).find(([, v]) => v === rest)?.[0];
+  return spelled ?? rest.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+};
 
 const home = (...parts: string[]): string => join(homedir(), ...parts);
 

@@ -28,7 +28,7 @@ const { version, author, license, repository } = manifest;
  * What Xcode prints in its plug-in list is the marketplace entry's `name`, so
  * that one is written for a person: "Heimdall | ASC App Info". The plug-in
  * manifests underneath keep kebab-case ids (`asc-app-info`); the server each
- * one declares uses `serverName` (`ASC-App-Info`), the same key `setup` writes,
+ * one declares uses `serverName` (`ASC-AppInfo`), the same key `setup` writes,
  * so a server added both ways is listed once.
  */
 const label = profileLabel;

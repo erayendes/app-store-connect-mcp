@@ -44,8 +44,10 @@ import {
   manualBlock,
   serverArgs,
   serverName,
+  profileOfServer,
   type McpClient,
 } from '../src/clients.js';
+import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
 beforeEach(() => {
@@ -121,6 +123,18 @@ describe('the registry itself', () => {
     expect(serverName('webhooks')).toBe('ASC-Webhooks');
     // The spec still has to survive into the arguments, or narrowing is lost.
     expect(serverArgs('monetization:storekit').at(-1)).toBe('monetization:storekit');
+  });
+
+  it('reads a profile back from either spelling of its server name', () => {
+    expect(serverName('app-info')).toBe('ASC-AppInfo');
+    expect(serverName('testflight')).toBe('ASC-TestFlight');
+    // Every profile survives the round trip, and so does the pre-2.5.0 key:
+    // migration finds old entries by it.
+    for (const p of PROFILES) {
+      expect(profileOfServer(serverName(p.name))).toBe(p.name);
+      expect(profileOfServer(`asc-${p.name}`)).toBe(p.name);
+    }
+    expect(profileOfServer('github')).toBeUndefined();
   });
 
   it('emits a paste block that parses back to a runnable entry', () => {
@@ -250,7 +264,7 @@ describe('writing a JSON client config', () => {
   it('honours a client that keys its servers differently', () => {
     applyToClient(jsonClient('vs.json', 'servers'), ['app-info'], []);
     const doc = JSON.parse(readFileSync(join(dir, 'vs.json'), 'utf8'));
-    expect(doc.servers['ASC-App-Info']).toBeDefined();
+    expect(doc.servers['ASC-AppInfo']).toBeDefined();
     expect(doc.mcpServers).toBeUndefined();
   });
 });
