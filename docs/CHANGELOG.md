@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
-### [Unreleased]
+### [2.5.0] — 2026-10-01
 
 **Server names updated.** Run `setup` again after upgrading.
 
@@ -186,7 +186,7 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 
 ## Türkçe
 
-### [Unreleased]
+### [2.5.0] — 2026-10-01
 
 **Sunucu adları güncellendi.** Güncellemeden sonra `setup`'ı yeniden çalıştırın.
 
