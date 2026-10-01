@@ -244,7 +244,7 @@ import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 describe('AI-136 improvements', () => {
   it('registerCommand emits a runnable claude mcp add line', () => {
     expect(registerCommand('monetization')).toBe(
-      'claude mcp add -s user asc-monetization -- npx -y @erayendes/asc-mcp monetization'
+      'claude mcp add -s user ASC-Monetization -- npx -y @erayendes/asc-mcp monetization'
     );
   });
 

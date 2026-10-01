@@ -107,7 +107,8 @@ describe('the packaged skill is loadable as a plugin', () => {
     for (const p of PROFILES) {
       const dir = `plugins/${p.name}`;
       const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));
-      expect(manifest.name).toBe(serverName(p.name));
+      // Plug-in ids stay kebab-case; the server key inside is the readable name.
+      expect(manifest.name).toBe(`asc-${p.name}`);
       expect(manifest.description).toBe(p.description);
       const { mcpServers } = JSON.parse(readFileSync(`${dir}/.mcp.json`, 'utf8'));
       expect(mcpServers).toEqual({ [serverName(p.name)]: { command: SERVER_COMMAND, args: serverArgs(p.name) } });

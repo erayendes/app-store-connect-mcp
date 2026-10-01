@@ -71,7 +71,7 @@ body:
     attributes:
       label: Profile or flags
       description: Which server you registered, plus any `--domains`, `--read-only` or `--no-confirm` flags.
-      placeholder: asc-marketing, no extra flags
+      placeholder: ASC-Marketing, no extra flags
     validations:
       required: true
 

@@ -13,7 +13,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -83,9 +83,9 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
     const { home, cursor } = sandbox();
     const { out, code } = register(home, ['monetization:storekit', 'analytics', '--clients=cursor']);
     expect(code).toBe(0);
-    expect(out).toContain('✓ added asc-monetization');
-    expect(servers(cursor)).toEqual(['asc-monetization', 'asc-analytics']);
-    const args = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['asc-monetization'].args;
+    expect(out).toContain('✓ added ASC-Monetization');
+    expect(servers(cursor)).toEqual(['ASC-Monetization', 'ASC-Analytics']);
+    const args = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Monetization'].args;
     expect(args.at(-1)).toBe('monetization:storekit');
     rmSync(home, { recursive: true, force: true });
   });
@@ -96,7 +96,28 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
     const { home, cursor } = sandbox();
     register(home, ['analytics', '--clients=cursor']);
     register(home, ['webhooks', '--clients=cursor']);
-    expect(servers(cursor)).toEqual(['asc-analytics', 'asc-webhooks']);
+    expect(servers(cursor)).toEqual(['ASC-Analytics', 'ASC-Webhooks']);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('moves every pre-2.5.0 name to the new one, and touches nothing else', () => {
+    // Claude merges its configs by key: leaving `asc-analytics` beside
+    // `ASC-Analytics` lists the same server twice.
+    const { home, cursor } = sandbox();
+    writeFileSync(
+      cursor,
+      JSON.stringify({
+        mcpServers: {
+          'asc-analytics': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'analytics'] },
+          'asc-webhooks': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'webhooks'] },
+          github: { command: 'gh' },
+        },
+      })
+    );
+    register(home, ['analytics', '--clients=cursor']);
+    // register never prunes: webhooks was not asked for, but it moves to the
+    // new name rather than being lost.
+    expect(servers(cursor).sort()).toEqual(['ASC-Analytics', 'ASC-Webhooks', 'github'].sort());
     rmSync(home, { recursive: true, force: true });
   });
 

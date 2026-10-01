@@ -142,13 +142,13 @@ Worked examples for each of these — with the part that usually goes wrong — 
 
 #### Pick per project
 
-MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `asc-analytics` + `asc-marketing` (126 tools); a game adds `asc-game-center`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
+MCP connects every configured server at session start — there's no "load the right server for the topic" mechanism. So the practical form of on-demand loading is to register only the profiles a project uses. A revenue project gets `ASC-Analytics` + `ASC-Marketing` (126 tools); a game adds `ASC-GameCenter`. Agents defer tool schemas until first use, keeping even several connected profiles cheap.
 
 #### Sub-profiles
 
 These narrow a large profile. Check a profile in the setup picker; move the cursor onto it and its sub-profiles unfold underneath, all on — uncheck what you don't need.
 
-`monetization` is 207 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 27. The server is called `asc-monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
+`monetization` is 207 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 27. The server is called `ASC-Monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
 
 Writing the config by hand, the syntax is:
 
@@ -197,8 +197,8 @@ Files edited here are backed up first. One that cannot be parsed — a JSON conf
 The command is always `npx -y @erayendes/asc-mcp <profile>`; only where you put it differs.
 
 ```bash
-claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics
-codex  mcp add asc-analytics -- npx -y @erayendes/asc-mcp analytics
+claude mcp add -s user ASC-Analytics -- npx -y @erayendes/asc-mcp analytics
+codex  mcp add ASC-Analytics -- npx -y @erayendes/asc-mcp analytics
 ```
 
 For JSON clients (no env block needed after `setup`):
@@ -206,7 +206,7 @@ For JSON clients (no env block needed after `setup`):
 ```json
 {
   "mcpServers": {
-    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] }
+    "ASC-Analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] }
   }
 }
 ```
@@ -415,8 +415,8 @@ Talk to your client in plain language:
 > **You:** For Acme, is the current version ready to submit?
 > **Agent:** *(calls `apps__app_store_versions__list`, `app_store_versions__get`)* Version 3.2 is in PREPARE_FOR_SUBMISSION. Screenshots and description are set; the build is attached. Nothing is blocking submission.
 > **You:** Is there a tool to manage in-app events? *(you didn't load `marketing`)*
-> **Agent:** *(calls `asc__search_tools`)* Yes — `app_events__*` live on `asc-marketing`, which isn't loaded. Add it with:
-> `claude mcp add -s user asc-marketing -- npx -y @erayendes/asc-mcp marketing`
+> **Agent:** *(calls `asc__search_tools`)* Yes — `app_events__*` live on `ASC-Marketing`, which isn't loaded. Add it with:
+> `claude mcp add -s user ASC-Marketing -- npx -y @erayendes/asc-mcp marketing`
 
 ### Uninstall
 
@@ -425,8 +425,8 @@ Talk to your client in plain language:
 To do it by hand, each client needs its own pass. There is no single list to consult:
 
 ```bash
-claude mcp remove asc-analytics       # …once per profile
-codex mcp remove asc-analytics
+claude mcp remove ASC-Analytics       # …once per profile
+codex mcp remove ASC-Analytics
 ```
 
 - **Claude Desktop:** delete the `asc-*` entries from `claude_desktop_config.json`.
@@ -588,13 +588,13 @@ Her biri için — ve genelde nerede ters gittiğiyle birlikte — çalışılm�
 
 #### Projeye göre seçin
 
-MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `asc-analytics` + `asc-marketing` alır (126 araç); oyun `asc-game-center` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
+MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru sunucuyu yükle" mekanizması yoktur. Bu yüzden isteğe bağlı yüklemenin pratik hâli, her projeye yalnızca kullandığı profilleri kaydetmektir. Gelir projesi `ASC-Analytics` + `ASC-Marketing` alır (126 araç); oyun `ASC-GameCenter` ekler. Ajanlar araç şemalarını ilk kullanıma kadar erteler, böylece birkaç profil bağlı olsa bile maliyet düşük kalır.
 
 #### Alt profiller
 
 Büyük bir profili daraltır. Setup seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır, istemediğinizi kaldırın.
 
-Örneğin `monetization` 207 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 27 araç. Sunucunun adı iki durumda da `asc-monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+Örneğin `monetization` 207 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 27 araç. Sunucunun adı iki durumda da `ASC-Monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
 
 Config'i elle yazacaksanız sözdizimi:
 
@@ -643,8 +643,8 @@ Buradan düzenlenen dosyaların önce yedeği alınır. Ayrıştırılamayan bir
 Komut her zaman `npx -y @erayendes/asc-mcp <profil>`; yalnızca nereye koyduğunuz değişir.
 
 ```bash
-claude mcp add -s user asc-analytics -- npx -y @erayendes/asc-mcp analytics
-codex  mcp add asc-analytics -- npx -y @erayendes/asc-mcp analytics
+claude mcp add -s user ASC-Analytics -- npx -y @erayendes/asc-mcp analytics
+codex  mcp add ASC-Analytics -- npx -y @erayendes/asc-mcp analytics
 ```
 
 JSON istemcileri için (setup sonrası env bloğu gerekmez):
@@ -652,7 +652,7 @@ JSON istemcileri için (setup sonrası env bloğu gerekmez):
 ```json
 {
   "mcpServers": {
-    "asc-analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] }
+    "ASC-Analytics": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "analytics"] }
   }
 }
 ```
@@ -851,8 +851,8 @@ Bunlardan ikisi ham araçların daha hızlı yaptığı bir şeyi değil, hiç y
 > **Siz:** Acme için mevcut sürüm gönderime hazır mı?
 > **Agent:** *(`apps__app_store_versions__list`, `app_store_versions__get` çağırır)* Sürüm 3.2, PREPARE_FOR_SUBMISSION durumunda. Ekran görüntüleri ve açıklama ayarlı; build ekli. Gönderimi engelleyen bir şey yok.
 > **Siz:** Uygulama içi etkinlikleri yönetecek bir araç var mı? *(`marketing`'i yüklememişsiniz)*
-> **Agent:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `asc-marketing`'te. Şununla ekle:
-> `claude mcp add -s user asc-marketing -- npx -y @erayendes/asc-mcp marketing`
+> **Agent:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `ASC-Marketing`'te. Şununla ekle:
+> `claude mcp add -s user ASC-Marketing -- npx -y @erayendes/asc-mcp marketing`
 
 ### Kaldırma
 
@@ -861,8 +861,8 @@ Bunlardan ikisi ham araçların daha hızlı yaptığı bir şeyi değil, hiç y
 Elle yapacaksanız her istemci ayrı bir tur ister. Bakılacak tek bir liste yok:
 
 ```bash
-claude mcp remove asc-analytics       # …her profil için bir kez
-codex mcp remove asc-analytics
+claude mcp remove ASC-Analytics       # …her profil için bir kez
+codex mcp remove ASC-Analytics
 ```
 
 - **Claude Desktop:** `claude_desktop_config.json`'dan `asc-*` girdilerini silin.

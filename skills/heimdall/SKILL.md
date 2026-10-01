@@ -4,7 +4,7 @@ description: Work with an Apple App Store Connect account through Heimdall's MCP
 ---
 
 Heimdall is one binary serving several separately scoped MCP servers, one per
-profile: `asc-monetization`, `asc-distribution`, `asc-testflight` and so on.
+profile: `ASC-Monetization`, `ASC-Distribution`, `ASC-TestFlight` and so on.
 Apple's API is 987 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
@@ -128,7 +128,7 @@ default.
 A large profile takes a colon and a list of sub-profiles —
 `monetization:subscription-pricing,subscription-offers` is 55 tools where
 `monetization` is 207. Worth suggesting for `monetization`, `game-center`,
-`distribution`, `marketing` and `access`. The server is still `asc-monetization`.
+`distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
 ## Prefer the macro over the chain
 

@@ -17,7 +17,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SERVER_COMMAND, serverArgs, serverName } from '../src/clients.js';
+import { SERVER_COMMAND, profileLabel, serverArgs, serverName } from '../src/clients.js';
 import { PROFILES } from '../src/profiles.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -27,16 +27,11 @@ const { version, author, license, repository } = manifest;
 /**
  * What Xcode prints in its plug-in list is the marketplace entry's `name`, so
  * that one is written for a person: "Heimdall | ASC App Info". The plug-in
- * manifests underneath keep the kebab-case `asc-app-info`, which is what the
- * Claude Code SDK accepts and what `setup` calls the same server elsewhere.
+ * manifests underneath keep kebab-case ids (`asc-app-info`); the server each
+ * one declares uses `serverName` (`ASC-AppInfo`), the same key `setup` writes,
+ * so a server added both ways is listed once.
  */
-const SPELLINGS: Record<string, string> = { testflight: 'TestFlight' };
-const label = (profile: string): string =>
-  SPELLINGS[profile] ??
-  profile
-    .split('-')
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(' ');
+const label = profileLabel;
 const displayName = (area: string): string => `Heimdall | ASC ${area}`;
 
 const write = (path: string, value: unknown) =>
@@ -46,7 +41,8 @@ for (const p of PROFILES) {
   const name = serverName(p.name);
   mkdirSync(resolve(root, 'plugins', p.name, '.claude-plugin'), { recursive: true });
   write(`plugins/${p.name}/.claude-plugin/plugin.json`, {
-    name,
+    // Plug-in ids are kebab-case; only the server key below is for people.
+    name: `asc-${p.name}`,
     version,
     description: p.description,
     author,

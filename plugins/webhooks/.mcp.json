@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-webhooks": {
+    "ASC-Webhooks": {
       "command": "npx",
       "args": [
         "-y",

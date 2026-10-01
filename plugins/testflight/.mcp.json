@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-testflight": {
+    "ASC-TestFlight": {
       "command": "npx",
       "args": [
         "-y",

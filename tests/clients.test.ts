@@ -44,8 +44,10 @@ import {
   manualBlock,
   serverArgs,
   serverName,
+  profileOfServer,
   type McpClient,
 } from '../src/clients.js';
+import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
 beforeEach(() => {
@@ -117,15 +119,27 @@ describe('the registry itself', () => {
   });
 
   it('names a server after the profile, never the sub-profile spec', () => {
-    expect(serverName('monetization:iap-offers,storekit')).toBe('asc-monetization');
-    expect(serverName('webhooks')).toBe('asc-webhooks');
+    expect(serverName('monetization:iap-offers,storekit')).toBe('ASC-Monetization');
+    expect(serverName('webhooks')).toBe('ASC-Webhooks');
     // The spec still has to survive into the arguments, or narrowing is lost.
     expect(serverArgs('monetization:storekit').at(-1)).toBe('monetization:storekit');
   });
 
+  it('reads a profile back from either spelling of its server name', () => {
+    expect(serverName('app-info')).toBe('ASC-AppInfo');
+    expect(serverName('testflight')).toBe('ASC-TestFlight');
+    // Every profile survives the round trip, and so does the pre-2.5.0 key:
+    // migration finds old entries by it.
+    for (const p of PROFILES) {
+      expect(profileOfServer(serverName(p.name))).toBe(p.name);
+      expect(profileOfServer(`asc-${p.name}`)).toBe(p.name);
+    }
+    expect(profileOfServer('github')).toBeUndefined();
+  });
+
   it('emits a paste block that parses back to a runnable entry', () => {
     const doc = JSON.parse(manualBlock(CLIENTS[0], ['distribution:version']));
-    expect(doc.mcpServers['asc-distribution']).toEqual({
+    expect(doc.mcpServers['ASC-Distribution']).toEqual({
       command: 'npx',
       args: ['-y', '@erayendes/asc-mcp', 'distribution:version'],
     });
@@ -148,12 +162,12 @@ describe('what it reports back', () => {
     // sixteen ticks for eight profiles, next to eight for every other client,
     // which reads as though the others came up short.
     const { results } = applyToClient(twoTargets(), ['analytics', 'webhooks'], []);
-    expect(results.map((r) => r.message)).toEqual(['added asc-analytics', 'added asc-webhooks']);
+    expect(results.map((r) => r.message)).toEqual(['added ASC-Analytics', 'added ASC-Webhooks']);
     // Both files really were written — the collapse is in the reporting only.
     for (const f of ['a.json', 'b.json']) {
       expect(Object.keys(JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers)).toEqual([
-        'asc-analytics',
-        'asc-webhooks',
+        'ASC-Analytics',
+        'ASC-Webhooks',
       ]);
     }
   });
@@ -176,7 +190,7 @@ describe('writing a JSON client config', () => {
     expect(needsManual).toBe(false);
     expect(results.every((r) => r.ok)).toBe(true);
     const doc = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8'));
-    expect(doc.mcpServers['asc-monetization'].args).toContain('monetization');
+    expect(doc.mcpServers['ASC-Monetization'].args).toContain('monetization');
   });
 
   it('leaves every other server and top-level key alone', () => {
@@ -190,7 +204,7 @@ describe('writing a JSON client config', () => {
     const doc = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8'));
     expect(doc.theme).toBe('dark');
     expect(doc.mcpServers.github).toEqual({ command: 'gh' });
-    expect(doc.mcpServers['asc-analytics']).toBeDefined();
+    expect(doc.mcpServers['ASC-Analytics']).toBeDefined();
   });
 
   it('backs the file up before rewriting it', () => {
@@ -210,7 +224,7 @@ describe('writing a JSON client config', () => {
     symlinkSync(real, join(dir, 'mcp.json'));
     applyToClient(jsonClient(), ['analytics'], []);
     expect(lstatSync(join(dir, 'mcp.json')).isSymbolicLink()).toBe(true);
-    expect(JSON.parse(readFileSync(real, 'utf8')).mcpServers['asc-analytics']).toBeDefined();
+    expect(JSON.parse(readFileSync(real, 'utf8')).mcpServers['ASC-Analytics']).toBeDefined();
     // Windows has no POSIX modes to keep: chmod only toggles read-only.
     if (process.platform !== 'win32') expect(statSync(real).mode & 0o777).toBe(0o600);
     expect(readdirSync(dir).filter((f) => f.endsWith('.tmp'))).toEqual([]);
@@ -219,11 +233,11 @@ describe('writing a JSON client config', () => {
   it('removes a server that is no longer chosen', () => {
     writeFileSync(
       join(dir, 'mcp.json'),
-      JSON.stringify({ mcpServers: { 'asc-analytics': { command: 'npx' }, keep: {} } })
+      JSON.stringify({ mcpServers: { 'ASC-Analytics': { command: 'npx' }, keep: {} } })
     );
-    applyToClient(jsonClient(), [], ['asc-analytics']);
+    applyToClient(jsonClient(), [], ['ASC-Analytics']);
     const doc = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8'));
-    expect(doc.mcpServers['asc-analytics']).toBeUndefined();
+    expect(doc.mcpServers['ASC-Analytics']).toBeUndefined();
     expect(doc.mcpServers.keep).toBeDefined();
   });
 
@@ -231,8 +245,8 @@ describe('writing a JSON client config', () => {
     applyToClient(jsonClient(), ['monetization'], []);
     applyToClient(jsonClient(), ['monetization:storekit'], []);
     const doc = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8'));
-    expect(Object.keys(doc.mcpServers)).toEqual(['asc-monetization']);
-    expect(doc.mcpServers['asc-monetization'].args.at(-1)).toBe('monetization:storekit');
+    expect(Object.keys(doc.mcpServers)).toEqual(['ASC-Monetization']);
+    expect(doc.mcpServers['ASC-Monetization'].args.at(-1)).toBe('monetization:storekit');
   });
 
   it('refuses to touch a file it could not parse, and says so', () => {
@@ -250,7 +264,7 @@ describe('writing a JSON client config', () => {
   it('honours a client that keys its servers differently', () => {
     applyToClient(jsonClient('vs.json', 'servers'), ['app-info'], []);
     const doc = JSON.parse(readFileSync(join(dir, 'vs.json'), 'utf8'));
-    expect(doc.servers['asc-app-info']).toBeDefined();
+    expect(doc.servers['ASC-AppInfo']).toBeDefined();
     expect(doc.mcpServers).toBeUndefined();
   });
 });
@@ -260,7 +274,7 @@ describe('reading back what is registered', () => {
     // Returning the bare name would make the next run re-register it wide and
     // silently undo the user's narrowing.
     applyToClient(jsonClient(), ['monetization:storekit,iap-offers'], []);
-    expect(listRegistered(jsonClient()).get('asc-monetization')).toBe('monetization:storekit,iap-offers');
+    expect(listRegistered(jsonClient()).get('ASC-Monetization')).toBe('monetization:storekit,iap-offers');
   });
 
   it('ignores servers that are not ours', () => {

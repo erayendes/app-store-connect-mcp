@@ -42,7 +42,7 @@ export interface RegistryOptions {
   extraOperations?: string[];
   /**
    * Overrides the "not loaded here" remedy sentence for one operation. Profile
-   * mode points at the sibling MCP server (`use the asc-monetization server`)
+   * mode points at the sibling MCP server (`use the ASC-Monetization server`)
    * instead of the --domains flag, which is meaningless to a profile user.
    */
   missingToolHint?: (op: Operation) => string | undefined;

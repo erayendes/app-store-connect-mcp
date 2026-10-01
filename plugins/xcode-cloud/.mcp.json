@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "asc-xcode-cloud": {
+    "ASC-XcodeCloud": {
       "command": "npx",
       "args": [
         "-y",
