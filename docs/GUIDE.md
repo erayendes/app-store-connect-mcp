@@ -106,7 +106,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 210 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
-| `access` | Beta groups, individual testers, invitations, team members | 65 | beta-testers, beta-groups, users |
+| `access` | Beta groups, individual testers, invitations, team members | 66 | beta-testers, beta-groups, users |
 | `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 55 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Default and advanced experiences, header images, beta invocations | 52 | — |
@@ -126,7 +126,7 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 120 |
+| QA / TestFlight | `testflight` + `access` | 121 |
 | Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
@@ -365,6 +365,7 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
 | open a submission, add the version, hand it over — three calls in that order | `release__submit` — refuses what the pre-flight blocks | `distribution:submission` |
+| find a build, resolve beta groups, check and add missing links | `testflight__assign_build_to_groups` — requires a build number or ID; reports each group and warns about possible external beta review | `access:beta-groups` |
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
 | pasting a translation into each locale by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
@@ -559,7 +560,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 210 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
-| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 65 | beta-testers, beta-groups, users |
+| `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 66 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 55 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 52 | — |
@@ -579,7 +580,7 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 120 |
+| QA / TestFlight | `testflight` + `access` | 121 |
 | Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
@@ -811,6 +812,7 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
 | submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` — ön denetimin blokladığını reddeder | `distribution:submission` |
+| build'i bul, beta gruplarını çözümle, eksik bağlantıları ekle | `testflight__assign_build_to_groups` — build numarası veya ID ister; her grubun sonucunu ve olası harici beta incelemesini bildirir | `access:beta-groups` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
