@@ -266,6 +266,93 @@ describe('pricing__get_subscription_price', () => {
   });
 });
 
+describe('schedule price reads', () => {
+  function scheduleHttp(kind: 'app' | 'iap') {
+    const root = kind === 'app' ? 'appPriceSchedules' : 'inAppPurchasePriceSchedules';
+    const pointType = kind === 'app' ? 'appPricePoints' : 'inAppPurchasePricePoints';
+    const pointRel = kind === 'app' ? 'appPricePoint' : 'inAppPurchasePricePoint';
+    const price = (id: string, territory: string, amount: string, startDate: string | null = null,
+      endDate: string | null = null) => ({
+      data: [{ id, attributes: { startDate, endDate }, relationships: {
+        territory: { data: { id: territory } }, [pointRel]: { data: { id: `p-${id}` } },
+      } }],
+      included: [
+        { type: pointType, id: `p-${id}`, attributes: { customerPrice: amount, proceeds: '3.49' } },
+        { type: 'territories', id: territory, attributes: { currency: territory === 'USA' ? 'USD' : 'TRY' } },
+      ],
+    });
+    const get = vi.fn(async (path: string, query?: any): Promise<any> => {
+      if (path === '/v1/apps/1') return { data: { id: '1', attributes: { name: 'Example' } } };
+      if (path === '/v2/inAppPurchases/2') return { data: { id: '2', attributes: { productId: 'coins.100' } } };
+      if (path.endsWith('PriceSchedule')) return { data: { id: 'schedule-1' } };
+      if (path === `/v1/${root}/schedule-1/manualPrices`) {
+        return { ...price('m1', 'USA', '4.99'), links: { next: 'https://api.appstoreconnect.apple.com/next-manual' } };
+      }
+      if (path === `/v1/${root}/schedule-1/automaticPrices`) return price('a1', 'TUR', '149.99', '2099-01-01');
+      return {};
+    });
+    const request = vi.fn(async () => price('m2', 'TUR', '139.99'));
+    const collect = vi.fn(async () => ({ items: [{ id: '2', attributes: { productId: 'coins.100', name: '100 coins' } }], hasMore: false }));
+    return { get, request, collect, post: vi.fn() };
+  }
+
+  it.each([
+    ['pricing__get_app_price', 'app', { app: '1' }, '/v1/apps/1/appPriceSchedule'],
+    ['pricing__get_iap_price', 'iap', { iap: '2' }, '/v2/inAppPurchases/2/iapPriceSchedule'],
+  ] as const)('%s reads both collections and their next pages', async (name, kind, args, schedulePath) => {
+    const http = scheduleHttp(kind);
+    const result: any = await executePricingTool(name, args, { http } as unknown as PricingContext);
+    expect(http.get).toHaveBeenCalledWith(schedulePath);
+    expect(http.request).toHaveBeenCalledWith('GET', 'https://api.appstoreconnect.apple.com/next-manual');
+    expect(result.prices).toHaveLength(3);
+    expect(result.prices).toContainEqual(expect.objectContaining({ territory: 'USA', currency: 'USD',
+      customerPrice: '4.99', proceeds: '3.49', source: 'manual', status: 'current',
+      startDate: null, endDate: null }));
+    expect(result.prices).toContainEqual(expect.objectContaining({ territory: 'TUR',
+      customerPrice: '149.99', source: 'automatic', status: 'scheduled' }));
+    expect(http.post).not.toHaveBeenCalled();
+    expect(PRICING_TOOLS.find((tool) => tool.name === name)?.annotations).toMatchObject({ readOnlyHint: true });
+  });
+
+  it('resolves an IAP product ID inside its app and filters both price collections', async () => {
+    const http = scheduleHttp('iap');
+    const result: any = await executePricingTool('pricing__get_iap_price',
+      { app: '1', iap: 'coins.100', territory: 'TUR' }, { http } as unknown as PricingContext);
+    expect(result.product).toBe('coins.100');
+    expect(result.prices.map((p: any) => p.territory)).toEqual(['TUR', 'TUR']);
+    for (const [path, query] of http.get.mock.calls.filter(([path]) => path.endsWith('Prices'))) {
+      expect(path).toMatch(/(?:manual|automatic)Prices$/);
+      expect(query).toMatchObject({ 'filter[territory]': 'TUR', include: 'inAppPurchasePricePoint,territory', limit: 200 });
+    }
+  });
+
+  it('says when pagination is capped', async () => {
+    const http = scheduleHttp('app');
+    http.request.mockImplementation(async () => ({ data: [], links: { next: 'https://api.appstoreconnect.apple.com/next-manual' } }));
+    const result: any = await executePricingTool('pricing__get_app_price', { app: '1' },
+      { http } as unknown as PricingContext);
+    expect(http.request).toHaveBeenCalledTimes(9);
+    expect(result.truncated).toMatch(/incomplete/);
+  });
+
+  it('reports an app without a price schedule', async () => {
+    const http = scheduleHttp('app');
+    http.get.mockResolvedValueOnce({ data: { id: '1', attributes: { name: 'Example' } } });
+    http.get.mockResolvedValueOnce({ data: null });
+    const result: any = await executePricingTool('pricing__get_app_price', { app: '1' },
+      { http } as unknown as PricingContext);
+    expect(result).toMatchObject({ prices: [], note: 'No price schedule exists.' });
+    expect(http.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects two-letter territories before requesting prices', async () => {
+    const http = scheduleHttp('app');
+    await expect(executePricingTool('pricing__get_app_price', { app: '1', territory: 'US' },
+      { http } as unknown as PricingContext)).rejects.toThrow(/three-letter/);
+    expect(http.get).not.toHaveBeenCalled();
+  });
+});
+
 describe('buildPricingPreview', () => {
   it('is human language with the subscriber consequence spelled out', () => {
     const msg = buildPricingPreview(goodArgs);

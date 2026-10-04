@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### Unreleased
+
+**IAP and app price reads.** `pricing__get_iap_price` and `pricing__get_app_price` return current and scheduled prices by territory, including currency, customer price, proceeds, dates and manual or automatic source. They are read-only and live under `monetization:iap-pricing` and `monetization:app-price`.
+
 ### [2.5.0] — 2026-10-01
 
 **Server names updated.** Run `setup` again after upgrading.
@@ -185,6 +189,10 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 - AI-assisted review tools.
 
 ## Türkçe
+
+### Yayımlanmamış
+
+**IAP ve uygulama fiyatlarını okuma.** `pricing__get_iap_price` ve `pricing__get_app_price`, ülkeye göre güncel ve planlanmış fiyatları para birimi, müşteri fiyatı, gelir, tarihler ve elle/otomatik kaynağıyla döndürür. Salt okunurdur; `monetization:iap-pricing` ve `monetization:app-price` altında bulunur.
 
 ### [2.5.0] — 2026-10-01
 

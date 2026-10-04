@@ -28,6 +28,9 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 > - *"Summarise this week's 1-star reviews and draft replies."*
 > - *"Which builds are stuck in review?"*
 > - *"Raise this subscription's price in every territory."*
+> - *"Show current and scheduled IAP or app prices in each country."*
+
+`pricing__get_iap_price` (`monetization:iap-pricing`) and `pricing__get_app_price` (`monetization:app-price`) read these prices without changing them.
 
 ### What the one call saves
 
@@ -68,7 +71,7 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 | | |
 | :--- | :--- |
 | **Complete** | Apple's OpenAPI spec v4.5, all 973 paths, 987 operations — 283 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 864 reachable operations plus 31 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
-| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 207. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
+| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 209. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
 | **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
 | **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
@@ -143,6 +146,9 @@ Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikl
 > - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
 > - *"Hangi build'ler incelemede takıldı?"*
 > - *"Bu aboneliğin fiyatını her ülkede artır."*
+> - *"IAP veya uygulamanın güncel ve planlanmış fiyatlarını ülke ülke göster."*
+
+`pricing__get_iap_price` (`monetization:iap-pricing`) ve `pricing__get_app_price` (`monetization:app-price`) bu fiyatları değiştirmeden okur.
 
 ### Tek çağrının kazandırdığı
 
@@ -183,7 +189,7 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 | | |
 | :--- | :--- |
 | **Eksiksiz** | Apple'ın OpenAPI spec v4.5'i, tüm 973 path, 987 işlem — 283 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 864 işlem artı elle yazılmış 31 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
-| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 207 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
+| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 209 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
 | **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
 | **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |

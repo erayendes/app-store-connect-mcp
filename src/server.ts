@@ -263,7 +263,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    */
   const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].filter(
     (t) =>
-      wantsFamily(`${t.name.split('__')[0]}__`) &&
+      (!manualTools || manualTools.has(t.name)) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
   );
   const macroOffered = (name: string): boolean => macroTools.some((t) => t.name === name);

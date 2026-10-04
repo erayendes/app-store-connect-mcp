@@ -22,7 +22,7 @@
         {
           "type": "positional",
           "valueHint": "profile",
-          "description": "Which slice of App Store Connect to serve. One of app-info, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets. Narrow further with a colon — monetization:subscription-pricing is 27 tools instead of 207. Omit it to serve the default working set, which is larger.",
+          "description": "Which slice of App Store Connect to serve. One of app-info, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets. Narrow further with a colon — monetization:subscription-pricing is 27 tools instead of 209. Omit it to serve the default working set, which is larger.",
           "isRequired": false
         }
       ],

@@ -127,7 +127,7 @@ default.
 
 A large profile takes a colon and a list of sub-profiles —
 `monetization:subscription-pricing,subscription-offers` is 55 tools where
-`monetization` is 207. Worth suggesting for `monetization`, `game-center`,
+`monetization` is 209. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
 ## Prefer the macro over the chain
@@ -139,6 +139,8 @@ right choice for anything the macro does not cover.
 | Instead of | Call |
 |---|---|
 | app → group → subscription → price points | `pricing__get_subscription_price` / `pricing__set_subscription_price` |
+| app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:iap-pricing`) |
+| app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
