@@ -30,7 +30,7 @@ one you install can find an app ID and point you at a tool it does not have.
 npx -y @erayendes/asc-mcp register distribution app-info
 ```
 
-Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest non-succeeded run within the newest 40, and lists only failed tests.
+Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
 Narrower is better than broader: `monetization:subscription-pricing` is 27
 tools where `monetization` is 207, and everything you skipped is one
@@ -179,7 +179,7 @@ gösterebilir.
 npx -y @erayendes/asc-mcp register distribution app-info
 ```
 
-“Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni başarılı olmayanı seçer ve yalnızca başarısız testleri listeler.
+“Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
 Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
 `monetization` 207. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,

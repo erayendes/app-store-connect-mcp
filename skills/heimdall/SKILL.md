@@ -142,7 +142,7 @@ right choice for anything the macro does not cover.
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
-| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest non-succeeded run among newest 40 by default) |
+| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |
 | fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` |
 | checking a version by hand before submitting it | `preflight__check_version` |
 | open a submission, add the version, hand it over | `release__submit` |

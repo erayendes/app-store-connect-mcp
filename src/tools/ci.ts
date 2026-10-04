@@ -8,13 +8,15 @@ const RUN_PAGE = 20;
 const ACTION_PAGE = 50;
 const DETAIL_PAGE = 50;
 const DETAIL_SHOWN = 20;
+// Canceled and skipped runs did not fail; the default looks past them.
+const FAILED_RUN = new Set(['FAILED', 'ERRORED']);
 
 export const CI_TOOLS: McpToolDefinition[] = [{
   name: 'ci__diagnose_run',
-  description: 'Diagnose why an Xcode Cloud build failed in one call. Give an app name, bundle ID or Apple ID; optionally a build run ID or number and a workflow name or ID. By default inspect the newest run whose completionStatus is not SUCCEEDED (within the newest 40 runs). Returns failing actions, issues and failed tests, with bounded counts and truncation notes. Read-only.',
+  description: 'Diagnose why an Xcode Cloud build failed in one call. Give an app name, bundle ID or Apple ID; optionally a build run ID or number and a workflow name or ID. By default inspect the newest run whose completionStatus is FAILED or ERRORED (canceled and skipped runs are passed over) (within the newest 40 runs). Returns failing actions, issues and failed tests, with bounded counts and truncation notes. Read-only.',
   inputSchema: { type: 'object', properties: {
     app: { type: 'string', description: 'App name, bundle ID or numeric Apple ID.' },
-    run: { type: 'string', description: 'Build run ID or run number. Omit for newest non-succeeded run.' },
+    run: { type: 'string', description: 'Build run ID or run number. Omit for the newest failed or errored run.' },
     workflow: { type: 'string', description: 'Workflow name or ID to narrow the run search.' },
   }, required: ['app'] },
   outputSchema: { type: 'object', properties: {
@@ -94,17 +96,17 @@ export async function executeCiTool(name: string, args: Record<string, unknown>,
     const runs = await http.collect<any>(path, { sort: '-number', limit: RUN_PAGE }, 2,
       (items) => requested
         ? items.some((r) => value(r.attributes?.number) === requested || value(r.id) === requested)
-        : items.some((r) => r.attributes?.completionStatus && r.attributes.completionStatus !== 'SUCCEEDED'));
+        : items.some((r) => FAILED_RUN.has(r.attributes?.completionStatus)));
     selected = requested
       ? runs.items.find((r) => value(r.attributes?.number) === requested || value(r.id) === requested)
-      : runs.items.find((r) => r.attributes?.completionStatus && r.attributes.completionStatus !== 'SUCCEEDED');
+      : runs.items.find((r) => FAILED_RUN.has(r.attributes?.completionStatus));
     if (!selected && requested && /^\d+$/.test(requested)) {
       try { selected = (await http.get<any>(`/v1/ciBuildRuns/${encoded(requested)}`))?.data; }
       catch (error) { if (!(error instanceof AscApiError && error.status === 404)) throw error; }
     }
     if (!selected && !requested && !runs.hasMore) selected = runs.items[0];
     if (!selected && runs.hasMore) {
-      return { app: appLabel, note: `No matching ${requested ? 'run' : 'non-succeeded run'} in the newest 40; older runs were not searched.`, truncated: true, actions: [], actionsOmittedAtLeast: 0 };
+      return { app: appLabel, note: `No matching ${requested ? 'run' : 'failed or errored run'} in the newest 40; older runs were not searched.`, truncated: true, actions: [], actionsOmittedAtLeast: 0 };
     }
   }
   if (!selected) return { app: appLabel, note: requested ? `No build run "${requested}" found.` : 'No Xcode Cloud build runs found.', truncated: false, actions: [], actionsOmittedAtLeast: 0 };
