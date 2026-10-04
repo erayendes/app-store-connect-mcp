@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### Unreleased
+
+**Xcode Cloud failure diagnosis.** `ci__diagnose_run` on `xcode-cloud` reads the newest non-succeeded build run among the newest 40 by default, or a requested run ID/number and workflow. It reports failing actions, issues and failed tests in bounded lists with truncation notes. It is available in read-only mode and makes no changes.
+
 ### [2.5.0] — 2026-10-01
 
 **Server names updated.** Run `setup` again after upgrading.
@@ -185,6 +189,10 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 - AI-assisted review tools.
 
 ## Türkçe
+
+### Yayınlanmamış
+
+**Xcode Cloud hata tanısı.** `xcode-cloud` profilindeki `ci__diagnose_run`, varsayılan olarak en yeni 40 koşu içindeki en yeni başarılı olmayan derlemeyi ya da belirtilen koşu ID/numarasını ve iş akışını okur. Başarısız adımları, sorunları ve başarısız testleri sınırlandırılmış listeler ve kesilme notlarıyla döndürür. Salt okunur modda kullanılabilir; değişiklik yapmaz.
 
 ### [2.5.0] — 2026-10-01
 

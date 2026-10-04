@@ -68,7 +68,7 @@ describe('everything the examples name exists', () => {
       // Hand-written tools are not in the generated catalogue.
       'asc__status', 'asc__search_tools', 'asc__discover_domains', 'asc__call', 'asc__describe',
       'asc__load', 'preflight__check_version', 'listing__get_screenshots',
-      'listing__upload_screenshot', 'analytics__get_report', 'reviews_ai__triage',
+      'listing__upload_screenshot', 'analytics__get_report', 'ci__diagnose_run', 'reviews_ai__triage',
       'reviews_ai__daily_briefing', 'reviews_ai__draft_response',
       'pricing__get_subscription_price', 'pricing__set_subscription_price',
       'pricing__equalize_price',

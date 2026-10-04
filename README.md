@@ -20,7 +20,7 @@
 
 **Heimdall.** One tool for your entire App Store Connect account.
 
-An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 895 tools.**
+An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 896 tools.**
 
 Apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
 
@@ -36,6 +36,7 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 | *"What does this subscription cost in every country?"* | one measured agent session: 1.02M tokens, $3 | ~1.3k tokens, 2.1s |
 | *"What screenshots are on the listing?"* | 53 HTTP calls, 264 KB | 4 calls, ~1 KB |
 | *"Change this subscription's price."* | 4 reads, then a choice among 842 price points | one call |
+| *"Why did my Xcode Cloud build fail?"* | product → run → actions → issues and tests | `ci__diagnose_run` on `xcode-cloud` |
 
 The first row is a real session, not a projection: the agent walked the chain, could not fit the answer, wrote it to a CSV and hand-built a country-name dictionary in Python to finish. The other two are call counts against a live account.
 
@@ -67,7 +68,7 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 
 | | |
 | :--- | :--- |
-| **Complete** | Apple's OpenAPI spec v4.5, all 973 paths, 987 operations — 283 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 864 reachable operations plus 31 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
+| **Complete** | Apple's OpenAPI spec v4.5, all 973 paths, 987 operations — 283 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 864 reachable operations plus 32 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
 | **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 207. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
 | **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
 | **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
@@ -135,7 +136,7 @@ Tool definitions in `src/generated/` are produced from Apple Inc.'s published Ap
 
 **Heimdall.** Tüm App Store Connect hesabınız için tek bir araç.
 
-**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 895 araç.**
+**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 896 araç.**
 
 Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
 
@@ -182,7 +183,7 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 
 | | |
 | :--- | :--- |
-| **Eksiksiz** | Apple'ın OpenAPI spec v4.5'i, tüm 973 path, 987 işlem — 283 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 864 işlem artı elle yazılmış 31 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
+| **Eksiksiz** | Apple'ın OpenAPI spec v4.5'i, tüm 973 path, 987 işlem — 283 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 864 işlem artı elle yazılmış 32 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
 | **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 207 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
 | **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
 | **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
@@ -214,6 +215,8 @@ MCP rehberleri uzak HTTP sunucularını önerir: tek URL, kurulum yok, güncelle
 Bedeli gerçek ve söylenmeye değer: Node kurulu olmalı ve güncelleme biz gönderdiğimiz için değil, siz sürüm seçtiğiniz için gelir. Anahtarın sizde kalmasının bedeli bu.
 
 #### Fastlane ile birlikte çalışır
+
+`xcode-cloud` profilindeki `ci__diagnose_run`, bir Xcode Cloud derlemesinin neden başarısız olduğunu tek çağrıda; sorunları ve başarısız testleri sınırlandırılmış listelerle gösterir. Varsayılan olarak en yeni başarısız ya da hata veren koşuyu arar.
 
 Heimdall bir Fastlane alternatifi değil, interaktif yarısıdır. Tekrarlanabilir, scriptli CI işleri (kod imzalama, build yükleme, metadata gönderimi) için [Fastlane](https://fastlane.tools/)'i kullanmaya devam edin. Pipeline için Fastlane, keşif ve tek seferlik değişiklikler için Heimdall.
 

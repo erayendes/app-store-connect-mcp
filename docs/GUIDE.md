@@ -110,7 +110,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 55 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Default and advanced experiences, header images, beta invocations | 52 | — |
-| `xcode-cloud` | CI workflows, build runs, artifacts | 52 | — |
+| `xcode-cloud` | CI workflows, build runs, artifacts | 53 | — |
 | `provisioning` | Certificates, provisioning profiles, devices, bundle IDs | 50 | — |
 | `analytics` | Sales/finance reports, analytics, performance metrics | 25 | — |
 | `background-assets` | Background Assets (iOS 26) | 24 | — |
@@ -130,7 +130,7 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 | Monetization | `monetization` | 207 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
-| Build & signing | `provisioning` + `xcode-cloud` | 102 |
+| Build & signing | `provisioning` + `xcode-cloud` | 103 |
 
 ```bash
 npx -y @erayendes/asc-mcp register distribution app-info
@@ -370,6 +370,7 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
+| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` — defaults to newest non-succeeded run among the newest 40; accepts a run ID/number and workflow name/ID; caps all reads | `xcode-cloud` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 | listing apps, then a versions call each, then reading App Store states | `asc__account_status` — every app, what is live, what is in flight, and whether the next move is yours or Apple's | core, so every profile |
 
@@ -556,7 +557,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 55 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 52 | — |
-| `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 52 | — |
+| `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 53 | — |
 | `provisioning` | Sertifikalar, provisioning profilleri, cihazlar, bundle ID'ler | 50 | — |
 | `analytics` | Satış/finans raporları, analytics, performans metrikleri | 25 | — |
 | `background-assets` | Background Assets (iOS 26) | 24 | — |
@@ -576,7 +577,7 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 | Monetizasyon | `monetization` | 207 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
-| Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
+| Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
 
 ```bash
 npx -y @erayendes/asc-mcp register distribution app-info
@@ -809,6 +810,7 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
+| uygulama → Xcode Cloud ürünü → koşu → adımlar → sorunlar ve testler | `ci__diagnose_run` — en yeni 40 koşu içindeki en yeni başarılı olmayanı seçer; koşu ID/numarası ve iş akışı adı/ID alır; tüm okumaları sınırlar | `xcode-cloud` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 | uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | çekirdek, yani her profilde |
 

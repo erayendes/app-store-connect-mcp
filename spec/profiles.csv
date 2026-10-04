@@ -885,6 +885,7 @@ webhooks,,webhooks__delete,webhook · sil,sil,HAYIR,50,webhooks,webhooks,webhook
 webhooks,,webhooks__deliveries__list,webhook → deliveries · listele,listele,EVET,198,webhooks,webhooks,webhooks.deliveries.list,GET,/v1/webhooks/{id}/deliveries,List the deliveries belonging to a webhook.
 webhooks,,webhooks__get,webhook · getir,getir,EVET,79,webhooks,webhooks,webhooks.get,GET,/v1/webhooks/{id},Read one webhook by ID.
 webhooks,,webhooks__update,webhook · güncelle,güncelle,HAYIR,50,webhooks,webhooks,webhooks.update,PATCH,/v1/webhooks/{id},Update a webhook.
+xcode-cloud,,ci__diagnose_run,Xcode Cloud build hatasını tanıla,tanıla,EVET,150,ci_build_runs,xcode_cloud,(elle yazılmış),GET,/v1/ciBuildRuns,Xcode Cloud build koşusundaki başarısız adımları ve testleri özetler.
 xcode-cloud,,apps__ci_product__get,uygulama → Xcode Cloud ürünü · getir,getir,EVET,94,apps,apps,apps.ci_product.get,GET,/v1/apps/{id}/ciProduct,Read the Xcode Cloud product for an app.
 xcode-cloud,,ci_artifacts__get,build çıktısı (artifact) · getir,getir,EVET,55,ci_artifacts,xcode_cloud,ci_artifacts.get,GET,/v1/ciArtifacts/{id},Read one Xcode Cloud artifact by ID.
 xcode-cloud,,ci_build_actions__artifacts__list,build adımı → çıktı · listele,listele,EVET,84,ci_build_actions,xcode_cloud,ci_build_actions.artifacts.list,GET,/v1/ciBuildActions/{id}/artifacts,List the artifacts belonging to an Xcode Cloud build action.
