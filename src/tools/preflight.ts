@@ -471,12 +471,14 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
 
   // One page per read, with explicit caps even for existence checks. Retain
   // next/total before response shaping so an unseen row never becomes "missing".
-  const page = async (path: string, limit: number, notes: string[], params: Record<string, string> = {}) => {
+  // `exists` reads answer only "is there at least one": a row settles that, so
+  // more rows behind it are not a gap worth reporting.
+  const page = async (path: string, limit: number, notes: string[], params: Record<string, string> = {}, exists = false) => {
     const res: any = await http.get(path, { ...params, limit });
     const rows: any[] = (res?.data ?? []).slice(0, limit);
     const more = Boolean(res?.links?.next) || Number(res?.meta?.paging?.total ?? 0) > rows.length ||
       (res?.data ?? []).length > limit;
-    if (more) notes.push(`${path}: truncated at one page (${limit} rows); additional rows were not inspected.`);
+    if (more && !(exists && rows.length)) notes.push(`${path}: truncated at one page (${limit} rows); additional rows were not inspected.`);
     return { rows, more };
   };
   const groups = await page(`/v1/apps/${encodeURIComponent(app.id)}/subscriptionGroups`, 20, truncated, {
@@ -529,7 +531,7 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
   // Both v1 catalog and v2 version-localization operations are current in the
   // checked-in spec. Prefer v1 here: this macro audits the catalog, as pricing
   // does, and takes no version selector. It does not grade a v2 version draft.
-  const groupLocs = await page(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptionGroupLocalizations`, 50, groupTruncated, {
+  const groupLocs = await page(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptionGroupLocalizations`, 200, groupTruncated, {
     'fields[subscriptionGroupLocalizations]': 'locale,name',
   });
   const groupFindings: SubscriptionFinding[] = [];
@@ -563,7 +565,9 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     if (a.familySharable == null) add('family sharing', 'warning', 'Subscription familySharable is unset.', 'subscriptions__update');
     if (!String(a.reviewNote ?? '').trim()) add('review note', 'warning', 'Subscription reviewNote is empty.', 'subscriptions__update');
 
-    const locs = await page(`${base}/subscriptionLocalizations`, 50, notes, {
+    // Apple lists a locale twice while a draft sits beside the approved copy,
+    // so 200 rows is 100 locales at worst — more than the store offers.
+    const locs = await page(`${base}/subscriptionLocalizations`, 200, notes, {
       'fields[subscriptionLocalizations]': 'locale,name,description',
     });
     if (!locs.rows.length && !locs.more) {
@@ -575,11 +579,11 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     }
     if (!locs.more) {
       const locales = new Set(locs.rows.map((l) => l.attributes?.locale));
-      const missing = groupLocs.rows.map((l) => l.attributes?.locale).filter((l) => l && !locales.has(l));
+      const missing = [...new Set(groupLocs.rows.map((l) => l.attributes?.locale))].filter((l) => l && !locales.has(l));
       if (missing.length) add('locale coverage', 'warning', `Group locales missing on the subscription: ${missing.join(', ')}.`, 'subscription_localizations__create');
     }
 
-    const prices = await page(`${base}/prices`, 1, notes, { 'fields[subscriptionPrices]': 'startDate' });
+    const prices = await page(`${base}/prices`, 1, notes, { 'fields[subscriptionPrices]': 'startDate' }, true);
     if (!prices.rows.length && !prices.more) add('price', 'blocking', 'The subscription has no price in any territory.', 'subscription_prices__create');
 
     const plans = await page(`${base}/planAvailabilities`, 5, notes, { 'fields[subscriptionPlanAvailabilities]': 'planType' });
@@ -589,7 +593,7 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
       let hasTerritory = false;
       let incomplete = plans.more;
       for (const plan of plans.rows) {
-        const territories = await page(`/v1/subscriptionPlanAvailabilities/${encodeURIComponent(plan.id)}/availableTerritories`, 1, notes);
+        const territories = await page(`/v1/subscriptionPlanAvailabilities/${encodeURIComponent(plan.id)}/availableTerritories`, 1, notes, {}, true);
         hasTerritory ||= territories.rows.length > 0;
         incomplete ||= territories.more;
       }

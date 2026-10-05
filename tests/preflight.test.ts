@@ -389,7 +389,7 @@ describe(subscriptionTool, () => {
     await expect(executePreflightTool(subscriptionTool, args, { http })).rejects.toThrow();
     expect(http.get).not.toHaveBeenCalled();
   });
-  it('reports truncation for every paginated check and does not infer missing unseen locales', async () => {
+  it('reports truncation for every paginated list and does not infer missing unseen locales', async () => {
     const more = { next: '/unread' };
     const result = await runCatalog({
       '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [groupLocale('tr')], links: more },
@@ -398,8 +398,20 @@ describe(subscriptionTool, () => {
       '/v1/subscriptions/s1/planAvailabilities': { data: [{ id: 'plan1' }], links: more },
       '/v1/subscriptionPlanAvailabilities/plan1/availableTerritories': { data: [{ id: 'USA' }], links: more },
     });
-    expect(result.subscriptions[0].truncated).toHaveLength(5);
+    // Prices and territories are presence checks: the one row read answers them,
+    // so the rows behind it are not reported. Live data had every subscription
+    // flagged as truncated because of these two.
+    expect(result.subscriptions[0].truncated).toHaveLength(3);
+    expect(result.subscriptions[0].truncated.join()).not.toMatch(/prices|availableTerritories/);
     expect(result.subscriptions[0].findings).toEqual([]);
+  });
+  it('names each missing group locale once, though Apple lists a draft beside the approved copy', async () => {
+    const result = await runCatalog({
+      '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [groupLocale('tr'), groupLocale('tr'), groupLocale('en-US')] },
+      '/v1/subscriptions/s1/subscriptionLocalizations': { data: [subscriptionLocale()] },
+    });
+    const coverage = result.subscriptions[0].findings.find((f: any) => f.check === 'locale coverage');
+    expect(coverage?.problem.match(/\btr\b/g)).toHaveLength(1);
   });
   it('never claims no availability or localizations when the cap hides rows', async () => {
     const result = await runCatalog({

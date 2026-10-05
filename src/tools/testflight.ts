@@ -315,9 +315,19 @@ async function assignBuildToGroups(
   }, 2);
   if (builds.hasMore) throw new AscApiError('Build list is incomplete; refusing to guess which build to assign.', 0);
   const matches = builds.items.filter((b) => buildId ? b.id === args.build : b.attributes?.version === args.build);
-  if (matches.length !== 1) throw new AscApiError(
-    matches.length ? `Build "${args.build}" is ambiguous; use its build ID.` : `Build "${args.build}" was not found for ${app.name}.`, 0
-  );
+  if (!matches.length) throw new AscApiError(`Build "${args.build}" was not found for ${app.name}.`, 0);
+  if (matches.length > 1) {
+    // A build number repeats across marketing versions and platforms (build 72
+    // of iOS 1.6.1 and of tvOS 1.6), so name each one for the caller to pick.
+    const named = await Promise.all(matches.slice(0, 10).map(async (b) => {
+      const pre: any = await ctx.http.get(`/v1/builds/${encodeURIComponent(b.id)}/preReleaseVersion`, {
+        'fields[preReleaseVersions]': 'version,platform',
+      }).catch(() => undefined);
+      const v = pre?.data?.attributes;
+      return v ? `${b.id} (${v.platform} ${v.version})` : b.id;
+    }));
+    throw new AscApiError(`Build "${args.build}" matches ${matches.length} builds; pass one of these build IDs: ${named.join(', ')}.`, 0);
+  }
   const build = matches[0];
   if (build.attributes?.processingState !== 'VALID' || build.attributes?.expired !== false ||
       (typeof build.attributes?.expirationDate === 'string' && Date.parse(build.attributes.expirationDate) <= Date.now())) {
@@ -341,8 +351,10 @@ async function assignBuildToGroups(
 
   const results: Array<Record<string, unknown>> = [];
   // Finish all reads before writing, so a read failure cannot leave a half-applied request.
+  // Apple allows one relationship filter per request, so the build alone scopes
+  // this; it was already checked to belong to the app.
   const assigned = await ctx.http.collect<AssignResource>('/v1/betaGroups', {
-    'filter[app]': app.id, 'filter[builds]': build.id, limit: 200,
+    'filter[builds]': build.id, limit: 200,
   }, 1);
   if (assigned.hasMore) throw new AscApiError('Assigned beta group list is incomplete; nothing was assigned.', 0);
   const assignedIds = new Set(assigned.items.map((g) => g.id));

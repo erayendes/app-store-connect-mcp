@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Unreleased
 
+**Fixes from a live-account run.** `testflight__assign_build_to_groups` sent two relationship filters in one request, which Apple rejects ("Only one relationship filter can be applied"), so it could not assign anything; it now filters by build alone. When a build number matches several builds, as it does across platforms and marketing versions, the error lists each build ID with its platform and version. `preflight__check_subscription` no longer lists a missing locale twice when Apple returns a draft beside the approved copy, reads up to 200 localization rows, and no longer reports its one-row presence checks as truncated.
+
 **App names past the first 200.** Finding an app by name read only the first 200 apps, so in a larger account the right app could be missed, or a second one with a similar name could go unnoticed. Name lookup now reads up to 1,000 apps, and refuses past that with a request for the bundle ID or Apple ID.
 
 **One IAP price, nothing else lost.** `pricing__set_iap_price` changes an in-app purchase's price in one territory, now or from a start date. Apple replaces an IAP price schedule as a whole, so it reads the current schedule and re-sends every other manual price and scheduled change unchanged, and refuses to write when that schedule could not be read completely. A REVENUE-level write behind the confirmation gate; `--dry-run` returns the before/after diff and warns when the base territory's change moves Apple's automatic prices. In `monetization:iap-pricing`, removed under `--read-only`. 899 tools in total, 211 in monetization.
@@ -205,6 +207,8 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 ## Türkçe
 
 ### Yayımlanmamış
+
+**Gerçek hesapta denemeden çıkan düzeltmeler.** `testflight__assign_build_to_groups` tek istekte iki ilişki filtresi gönderiyordu; Apple bunu reddettiği için ("Only one relationship filter can be applied") hiçbir atama yapamıyordu. Artık yalnızca build ile filtreliyor. Bir build numarası birden fazla build'e denk geldiğinde (platformlar ve sürümler arasında olduğu gibi) hata her build ID'sini platformu ve sürümüyle listeliyor. `preflight__check_subscription`, Apple onaylı kopyanın yanında taslağı da döndürdüğünde eksik bir dili artık iki kez yazmıyor, 200 yerelleştirme satırına kadar okuyor ve tek satırlık varlık kontrollerini artık kesilmiş diye raporlamıyor.
 
 **İlk 200'ün ötesindeki uygulama adları.** Uygulamayı adıyla bulmak yalnızca ilk 200 uygulamayı okuyordu; büyük bir hesapta doğru uygulama gözden kaçabiliyor ya da benzer adlı ikinci bir uygulama fark edilmeyebiliyordu. Ad araması artık 1.000 uygulamaya kadar okuyor; daha fazlasında bundle ID ya da Apple ID istiyor.
 
