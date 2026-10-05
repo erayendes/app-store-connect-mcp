@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { searchOperations, executeMetaTool } from '../src/tools/meta.js';
+import { ToolRegistry } from '../src/core/registry.js';
 import { INTENTS, FILTER_PROBES } from './eval/intents.js';
 
 /**
@@ -49,7 +50,7 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  *
  * Ceiling today is 160 (270 minus the 110 that find nothing).
  */
-const FLOOR = 143;
+const FLOOR = 145;
 
 interface IntentQueryCase {
   intent: string;
@@ -107,6 +108,11 @@ const FAILING = EVALUATION.filter((e) => !e.pass);
  * rank the English phrasings honestly.
  */
 const KNOWN_FAILING_QUERIES: string[] = [
+  // New feedback corpus: raw-operation search misses the broad query and
+  // Turkish; macro-aware search is pinned separately below.
+  'beta feedback reports',
+  'TestFlight testçileri ne bildiriyor?',
+  'Beta geri bildirimlerini özetle',
   // The new catalog-preflight intent has no single raw-operation equivalent.
   // The actual search finds the macro (tested below); this ratchet measures raw tools.
   'subscription review readiness',
@@ -410,6 +416,9 @@ describe('contested intents', () => {
     'app_store_versions.create > review_submissions.create',
     'apps.list > app_events.create',
     'background_assets.create > app_infos.update',
+    // The new feedback corpus exposes these raw-tool ties; the macro wins in asc__search_tools.
+    'beta_feedback_crash_submissions.delete > apps.beta_feedback_crash_submissions.list',
+    'beta_feedback_screenshot_submissions.delete > apps.beta_feedback_screenshot_submissions.list',
     'beta_testers.create > beta_groups.create',
     'beta_testers.delete > beta_groups.builds.add',
     'ci_build_actions.get > ci_build_runs.create',
@@ -442,7 +451,7 @@ describe('contested intents', () => {
   it('no more queries are contested than before', () => {
     // Not a floor to hold: a rise means an existing competitor took more
     // phrasings, which the pair list alone cannot show.
-    expect(contestedPairs().count).toBeLessThanOrEqual(28);
+    expect(contestedPairs().count).toBeLessThanOrEqual(30);
   });
 
   it('splits the corpus the same way the FLOOR counts it', () => {
@@ -452,5 +461,28 @@ describe('contested intents', () => {
     const uncontested = PASSING.length - count;
     expect(uncontested + count).toBe(PASSING.length);
     expect(uncontested).toBe(115);
+  });
+});
+
+describe('TestFlight digest search intents', () => {
+  it('names the owning profile even when only the unloaded macro matches', async () => {
+    const result: any = await executeMetaTool('asc__search_tools', { query: 'testflight__feedback_digest', limit: 1 }, {
+      registry: new ToolRegistry({}), loadedDomains: [], macroOffered: () => false,
+    } as any);
+    expect(result.matches[0]).toMatchObject({ tool: 'testflight__feedback_digest', loaded: false });
+    expect(result.hint).toContain('register testflight');
+    expect(result.hint).not.toContain('--domains=macro');
+  });
+
+  it.each([
+    'TestFlight feedback', 'What are my TestFlight testers reporting?',
+    'beta feedback reports', 'Show recent beta crash feedback',
+    'Summarize beta screenshot feedback',
+  ])('offers the read macro before raw operations for %s', async (query) => {
+    const result: any = await executeMetaTool('asc__search_tools', { query }, {
+      registry: new ToolRegistry({}), loadedDomains: [], config: {},
+      macroOffered: (name: string) => name === 'testflight__feedback_digest',
+    } as any);
+    expect(result.matches[0]).toMatchObject({ tool: 'testflight__feedback_digest', loaded: true });
   });
 });

@@ -20,7 +20,7 @@ one you install can find an app ID and point you at a tool it does not have.
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 121 |
+| QA / TestFlight | `testflight` + `access` | 122 |
 | Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
@@ -52,6 +52,14 @@ Needs `analytics`, and `ASC_VENDOR_NUMBER` set. Two things trip this up:
 - **They arrive as gzipped TSV**, not JSON. Ask for `parse=true` and you get
   rows back; without it you get a base64 blob nobody can read. If the report is
   large the full copy is kept as an MCP resource and the reply links to it.
+
+---
+
+### Summarize TestFlight feedback
+
+> What are my TestFlight testers reporting for build 2026100412 this week?
+
+Needs `testflight`. Call `testflight__feedback_digest` with `app`, `build: "2026100412"`, and `days: 7`. It returns crashes and screenshot feedback grouped by build, top devices/OS, newest comments, and at most three short crash excerpts. Read `truncated` and `notes` before treating the totals as complete. Read-only; default window 14 days, maximum 90.
 
 ---
 
@@ -187,7 +195,7 @@ gösterebilir.
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 121 |
+| QA / TestFlight | `testflight` + `access` | 122 |
 | Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
@@ -217,6 +225,14 @@ yüklü olsun olmasın katalogdaki her işleme ulaşır.
 - **Gzip'li TSV olarak gelirler**, JSON değil. `parse=true` isterseniz satır
   alırsınız; istemezseniz kimsenin okuyamayacağı bir base64 blob. Rapor büyükse
   tam kopyası MCP kaynağı olarak saklanır ve cevap ona bağlanır.
+
+---
+
+### TestFlight geri bildirimlerini özetle
+
+> TestFlight testçileri bu hafta 2026100412 build'i için ne bildiriyor?
+
+`testflight` gerekir. `testflight__feedback_digest` aracını `app`, `build: "2026100412"` ve `days: 7` ile çağırın. Kilitlenmeleri ve ekran görüntüsü geri bildirimlerini build bazında, ilk cihaz/OS değerleri, yeni yorumlar ve en fazla üç kısa crash log alıntısıyla döndürür. Toplamları eksiksiz saymadan önce `truncated` ve `notes` alanlarını okuyun. Salt okunur; varsayılan pencere 14, en fazla 90 gündür.
 
 ---
 

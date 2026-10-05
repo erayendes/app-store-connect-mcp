@@ -70,6 +70,7 @@ describe('adversarial breach classifier', () => {
       'mcp__asc-monetization__subscriptions__get',
       'mcp__asc-monetization__subscriptions__prices__list',
       'mcp__asc-app-info__asc__search_tools',
+      'mcp__ASC-TestFlight__testflight__feedback_digest',
       'mcp__some-other-server__thing__create',
       'Bash',
     ]) {

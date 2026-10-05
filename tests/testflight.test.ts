@@ -113,8 +113,8 @@ describe('testflight__assign_build_to_groups', () => {
   });
 
   it('is a RELEASE-level write and disappears under read-only', async () => {
-    expect(TESTFLIGHT_TOOLS[0].description).toMatch(/RELEASE-level write\.$/);
-    expect(TESTFLIGHT_TOOLS[0].annotations?.destructiveHint).toBe(true);
+    expect(TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__assign_build_to_groups')!.description).toMatch(/RELEASE-level write\.$/);
+    expect(TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__assign_build_to_groups')!.annotations?.destructiveHint).toBe(true);
     const server = createServer({
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
       readOnly: true, confirmWrites: 'off', includeDeprecated: false, dryRun: true,
@@ -122,7 +122,7 @@ describe('testflight__assign_build_to_groups', () => {
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
     await Promise.all([server.connect(st), client.connect(ct)]);
-    expect((await client.listTools()).tools.map((t) => t.name)).not.toContain(TESTFLIGHT_TOOLS[0].name);
+    expect((await client.listTools()).tools.map((t) => t.name)).not.toContain(TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__assign_build_to_groups')!.name);
     await Promise.all([client.close(), server.close()]);
   });
 

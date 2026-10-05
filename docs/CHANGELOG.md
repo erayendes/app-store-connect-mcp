@@ -16,6 +16,8 @@ All notable changes to this project are documented here. The format is based on 
 
 **Assign a TestFlight build to beta groups in one call.** `testflight__assign_build_to_groups` in `access:beta-groups` requires an explicit build number or ID, refuses builds that are not processed and valid or are expired, and checks every group before writing. It skips existing assignments, supports `--dry-run`, reports per-group failures, and notes when an external group may need beta app review. This is a RELEASE-level write and is absent under `--read-only`.
 
+**TestFlight feedback in one read-only call.** `testflight__feedback_digest` answers what testers are reporting: crashes and screenshot feedback grouped by build, top devices and OS versions, newest comments, and short excerpts from at most three crash logs. Accepts an app name, bundle ID or Apple ID, optional build number or UUID, and a 14-day window by default (maximum 90). Paging stops at the cutoff, every read is bounded, and omitted data is flagged. Available in `testflight` and under `--read-only`. 896 tools overall; the TestFlight profile now serves 56.
+
 **Xcode Cloud failure diagnosis.** `ci__diagnose_run` on `xcode-cloud` reads the newest failed or errored build run among the newest 40 by default, or a requested run ID/number and workflow. It reports failing actions, issues and failed tests in bounded lists with truncation notes. It is available in read-only mode and makes no changes.
 
 ### [2.5.0] — 2026-10-01
@@ -207,6 +209,8 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 **Makroların profil ayrımı.** Makrolar artık tam araç üyeliğine göre yüklenir; abonelik ön denetimi monetization, sürüm ön denetimi distribution içinde kalır.
 
 **TestFlight build'ini beta gruplarına tek çağrıda ata.** `access:beta-groups` içindeki `testflight__assign_build_to_groups` açık bir build numarası veya ID ister; işlenmemiş, geçerli olmayan veya süresi dolmuş build'leri reddeder ve yazmadan önce bütün grupları denetler. Mevcut atamaları atlar, `--dry-run` destekler, grup bazında hataları bildirir ve harici gruplarda beta uygulama incelemesi gerekebileceğini belirtir. RELEASE düzeyinde yazmadır; `--read-only` altında sunulmaz.
+
+**TestFlight geri bildirimleri tek salt okunur çağrıda.** `testflight__feedback_digest` testçilerin ne bildirdiğini yanıtlar: build bazında kilitlenmeler ve ekran görüntüsü geri bildirimleri, ilk cihaz ve OS sürümleri, yeni yorumlar ve en fazla üç crash logdan kısa alıntılar. Uygulama adı, bundle ID veya Apple ID, isteğe bağlı build numarası veya UUID ve varsayılan 14 günlük pencere (en fazla 90) alır. Tarih sınırında sayfalama durur, her okuma sınırlıdır ve eksik veri belirtilir. `testflight` profilinde ve `--read-only` ile kullanılabilir. Toplam 896 araç; TestFlight profili artık 56 araç sunuyor.
 
 **Xcode Cloud hata tanısı.** `xcode-cloud` profilindeki `ci__diagnose_run`, varsayılan olarak en yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) derlemeyi ya da belirtilen koşu ID/numarasını ve iş akışını okur. Başarısız adımları, sorunları ve başarısız testleri sınırlandırılmış listeler ve kesilme notlarıyla döndürür. Salt okunur modda kullanılabilir; değişiklik yapmaz.
 
