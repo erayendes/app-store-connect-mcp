@@ -148,6 +148,7 @@ right choice for anything the macro does not cover.
 | checking a version by hand before submitting it | `preflight__check_version` |
 | checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription-catalog`, read-only, capped, no approval prediction |
 | open a submission, add the version, hand it over | `release__submit` |
+| resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`access:beta-groups`); give the build number or ID |
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` |
 | pasting a translation into each locale | `metadata_ai__apply_localizations` |
 

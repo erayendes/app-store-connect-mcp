@@ -14,6 +14,8 @@ All notable changes to this project are documented here. The format is based on 
 
 **Macro profile isolation.** Macros now load by exact tool membership, so subscription preflight stays in monetization and version preflight stays in distribution.
 
+**Assign a TestFlight build to beta groups in one call.** `testflight__assign_build_to_groups` in `access:beta-groups` requires an explicit build number or ID, refuses builds that are not processed and valid or are expired, and checks every group before writing. It skips existing assignments, supports `--dry-run`, reports per-group failures, and notes when an external group may need beta app review. This is a RELEASE-level write and is absent under `--read-only`.
+
 ### [2.5.0] — 2026-10-01
 
 **Server names updated.** Run `setup` again after upgrading.
@@ -201,6 +203,8 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 **Abonelik katalog ön denetimi.** `preflight__check_subscription`, inceleme öncesinde tek aboneliği veya gruptaki en fazla 20 aboneliği denetler; yerelleştirme, fiyat, kullanılabilirlik, ekran görüntüsü ve alan eksiklerini ham düzeltme araçlarıyla bildirir. Salt okunur, sınırlı okumaları belirtir; `ready`, Apple onayını tahmin etmez. Güncel v1 katalog yerelleştirmelerini ve plan kullanılabilirliklerini kullanır; v2 sürüm taslakları kapsam dışındadır. `monetization:subscription-catalog` içinde ve araç aramasında bulunabilir. Toplam 898 araç, monetization içinde 210.
 
 **Makroların profil ayrımı.** Makrolar artık tam araç üyeliğine göre yüklenir; abonelik ön denetimi monetization, sürüm ön denetimi distribution içinde kalır.
+
+**TestFlight build'ini beta gruplarına tek çağrıda ata.** `access:beta-groups` içindeki `testflight__assign_build_to_groups` açık bir build numarası veya ID ister; işlenmemiş, geçerli olmayan veya süresi dolmuş build'leri reddeder ve yazmadan önce bütün grupları denetler. Mevcut atamaları atlar, `--dry-run` destekler, grup bazında hataları bildirir ve harici gruplarda beta uygulama incelemesi gerekebileceğini belirtir. RELEASE düzeyinde yazmadır; `--read-only` altında sunulmaz.
 
 ### [2.5.0] — 2026-10-01
 

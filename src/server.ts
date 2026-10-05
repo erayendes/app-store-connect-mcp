@@ -48,6 +48,7 @@ import { METADATA_TOOLS, METADATA_TOOL_NAMES, executeMetadataTool } from './tool
 import { ACCOUNT_TOOLS, ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
 import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool } from './tools/release.js';
+import { TESTFLIGHT_TOOLS, TESTFLIGHT_TOOL_NAMES, executeTestflightTool } from './tools/testflight.js';
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
@@ -261,7 +262,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * this cost" on a server built to answer questions would be the wrong kind of
    * safe.
    */
-  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].filter(
+  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].filter(
     (t) =>
       (!manualTools || manualTools.has(t.name)) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
@@ -320,7 +321,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].find((t) => t.name === name);
+    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].find((t) => t.name === name);
     if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
@@ -599,9 +600,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         // never going to show.
         const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
-          : RELEASE_TOOL_NAMES.has(name)
-            ? // Handing a version to Apple is the `release` level its three raw
-              // calls carry; doing them in one go does not make it lighter.
+          : RELEASE_TOOL_NAMES.has(name) || TESTFLIGHT_TOOL_NAMES.has(name)
+            ? // A macro that moves a build or version toward users carries
+              // the same release risk as its raw calls.
               'release'
             : METADATA_I18N_WRITE_TOOLS.has(name)
             ? // One call rewrites the store listing in every language it names.
@@ -767,6 +768,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
           : RELEASE_TOOL_NAMES.has(name)
           ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun })
+          : TESTFLIGHT_TOOL_NAMES.has(name)
+          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
