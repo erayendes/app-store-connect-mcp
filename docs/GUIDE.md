@@ -107,7 +107,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 | `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 210 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 66 | beta-testers, beta-groups, users |
-| `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 55 | — |
+| `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 56 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Default and advanced experiences, header images, beta invocations | 52 | — |
 | `xcode-cloud` | CI workflows, build runs, artifacts | 52 | — |
@@ -126,7 +126,7 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 121 |
+| QA / TestFlight | `testflight` + `access` | 122 |
 | Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
@@ -246,7 +246,7 @@ The proxy exists because MCP lets a server revise its tool list but says nothing
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode's Add Plug-in sheet with the repository URL entered" width="560">
 
-3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per plug-in. Tick **Heimdall | ASC Skill** and the areas you need; all thirteen is 987 tools in one context window. Need another area later? Add from URL again with the same address: the sheet greys out what is already in as "Already imported", so tick the new one and Import. To drop an area, open its plug-in from the list and Delete Plug-in.
+3. Xcode shows a "Choose Plug-ins" sheet with a checkbox per plug-in. Tick **Heimdall | ASC Skill** and the areas you need; all thirteen cover 896 distinct tools in one context window. Need another area later? Add from URL again with the same address: the sheet greys out what is already in as "Already imported", so tick the new one and Import. To drop an area, open its plug-in from the list and Delete Plug-in.
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode's Choose Plug-ins sheet listing Heimdall | ASC Access, Analytics, App Clips, App Info, Background Assets, each with a checkbox" width="560">
 
@@ -374,12 +374,15 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | request → report → instance → segment → a signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
+| app → crash and screenshot submissions → crash logs | `testflight__feedback_digest` — build counts, devices/OS, comments and short crash excerpts | `testflight` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 | listing apps, then a versions call each, then reading App Store states | `asc__account_status` — every app, what is live, what is in flight, and whether the next move is yours or Apple's | core, so every profile |
 
 `preflight__check_subscription` takes `app` and exactly one of `subscription` (exact product ID, name or ID) or `group` (exact reference name or ID). Each subscription returns its state, `ready`, and findings with `blocking` / `warning`, a fact and `fixWith`; group mode adds a group summary. Missing review notes, unset family sharing and group locales absent from the subscription are warnings. `ready` means no observed blocking catalog gaps, not submission eligibility or Apple approval.
 
 All reads stop after one page: catalog lookup 20 groups and 50 subscriptions per group; group checking 20 subscriptions; localizations 50; plan availabilities 5; prices and territories 1 each (presence only). `truncated` notes identify omitted rows; a capped name search cannot establish uniqueness. This uses current v1 catalog localizations, matching the existing catalog/pricing flow. The spec also exposes current v2 localizations attached to versions; version drafts are outside this check. Plan availabilities replace the deprecated subscription availability endpoint. Prices may be scheduled; this does not verify a current price for every territory.
+
+Use `testflight__feedback_digest` with `app` (name, bundle ID or Apple ID), optional `build` (number or UUID), and `days` (default 14, 1–90). Numeric timestamp builds remain build numbers. It reads at most five 50-item pages per feedback type, stops at the window cutoff, and returns ten comments per type per build (1,000 characters each), the top five devices/OS versions, and at most three crash excerpts (40 lines or 4 KB). `truncated` and `notes` identify omissions; capped feed totals are lower bounds. Tester email appears only when Apple returns it. Available with `--read-only`.
 
 ### Prompts
 
@@ -561,7 +564,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 210 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 66 | beta-testers, beta-groups, users |
-| `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 55 | — |
+| `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 56 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 183 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
 | `app-clips` | Varsayılan ve gelişmiş deneyimler, başlık görselleri, beta çağrıları | 52 | — |
 | `xcode-cloud` | CI iş akışları, build çalıştırmaları, artifact'lar | 52 | — |
@@ -580,7 +583,7 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 121 |
+| QA / TestFlight | `testflight` + `access` | 122 |
 | Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
@@ -700,7 +703,7 @@ Proxy'nin var olma sebebi şu: MCP bir sunucunun araç listesini güncellemesine
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo URL'si girilmiş" width="560">
 
-3. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin; on üçü birden tek bağlam penceresine 987 araç demek. Sonradan başka bir alan mı gerekti? Aynı adresle yeniden Add from URL: ekran kurulu olanları "Already imported" diye gri gösterir; yenisini tikleyip Import deyin. Bir alanı atmak için listeden eklentisini açıp Delete Plug-in.
+3. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin; on üçü birden 896 farklı aracı kapsar. Sonradan başka bir alan mı gerekti? Aynı adresle yeniden Add from URL: ekran kurulu olanları "Already imported" diye gri gösterir; yenisini tikleyip Import deyin. Bir alanı atmak için listeden eklentisini açıp Delete Plug-in.
 
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall | ASC Access, Analytics, App Clips, App Info, Background Assets, her biri onay kutulu" width="560">
 
@@ -821,12 +824,15 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
+| uygulama → kilitlenme ve ekran görüntüsü bildirimleri → crash loglar | `testflight__feedback_digest` — build sayıları, cihaz/OS, yorumlar ve kısa crash log alıntıları | `testflight` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 | uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | çekirdek, yani her profilde |
 
 `preflight__check_subscription`, `app` ile birlikte ya `subscription` (tam ürün kimliği, ad veya ID) ya da `group` (tam referans adı veya ID) alır. Her abonelik için durum, `ready` ve `blocking` / `warning` düzeyi, olgu ve `fixWith` içeren bulgular döner; grup modu grup özetini de ekler. Boş inceleme notu, ayarlanmamış aile paylaşımı ve abonelikte bulunmayan grup dilleri uyarıdır. `ready`, gözlenen engelleyici katalog eksiği olmadığı anlamına gelir; gönderim uygunluğunu veya Apple onayını bildirmez.
 
 Her okuma tek sayfada durur: katalog araması 20 grup ve grup başına 50 abonelik; grup denetimi 20 abonelik; yerelleştirmeler 50; plan kullanılabilirlikleri 5; fiyatlar ve ülkeler birer kayıt (yalnızca varlık kontrolü). `truncated` notları okunmayan satırları belirtir; sınırlı ad araması tekilliği doğrulayamaz. Mevcut katalog/fiyat akışına uygun olarak güncel v1 katalog yerelleştirmeleri kullanılır. Spec, sürümlere bağlı güncel v2 yerelleştirmelerini de sunar; sürüm taslakları bu denetimin dışındadır. Plan kullanılabilirlikleri, kullanımdan kaldırılan subscription availability uç noktasının yerini alır. Fiyatlar ileri tarihli olabilir; her ülkede geçerli fiyat denetlenmez.
+
+`testflight__feedback_digest`, `app` (ad, bundle ID veya Apple ID), isteğe bağlı `build` (numara veya UUID) ve `days` (varsayılan 14, 1–90) alır. Sayısal zaman damgası build numarası sayılır. Tür başına en fazla 50 kayıtlık beş sayfa okur, tarih sınırında durur; build ve tür başına on yorum (her biri 1.000 karakter), ilk beş cihaz/OS değeri ve en fazla üç crash log alıntısı (40 satır veya 4 KB) döndürür. `truncated` ve `notes` eksikleri belirtir; sayfa sınırına takılan toplamlar alt sınırdır. Testçi e-postası yalnızca Apple döndürürse görünür. `--read-only` ile kullanılabilir.
 
 ### Prompt'lar
 

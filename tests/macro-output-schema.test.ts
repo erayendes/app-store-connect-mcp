@@ -15,7 +15,7 @@ import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { PREFLIGHT_TOOLS, executePreflightTool } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOLS } from '../src/tools/account.js';
-import { TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
+import { TESTFLIGHT_TOOLS, executeTestflightTool } from '../src/tools/testflight.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
@@ -112,6 +112,22 @@ describe('the schema matches what the macro actually returns', () => {
     expect(result.subscriptions[0].findings.length).toBeGreaterThan(0);
     expect(result.group.truncated).toHaveLength(1);
     const declared = declaredPaths(byName('preflight__check_subscription')!.outputSchema);
+    expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
+  });
+
+  it('testflight__feedback_digest: every returned key is declared', async () => {
+    const ctx = { http: { get: async (path: string) => {
+      if (path === '/v1/apps/123') return { data: { id: '123', attributes: { name: 'Example' } } };
+      if (path.endsWith('/crashLog')) return { data: { attributes: { logText: 'Crash details' } } };
+      return {
+        data: [{ id: 'feedback-1', attributes: { createdDate: new Date(Date.now() - 1000).toISOString(), comment: 'Feedback', deviceModel: 'iPhone', osVersion: '26' }, relationships: { build: { data: { id: 'b1' } }, tester: { data: { id: 't1' } } } }],
+        included: [{ id: 'b1', type: 'builds', attributes: { version: '42' } }, { id: 't1', type: 'betaTesters', attributes: { email: 'test@example.com' } }],
+      };
+    } } } as any;
+    const result: any = await executeTestflightTool('testflight__feedback_digest', { app: '123' }, ctx);
+    expect(result.builds).toHaveLength(1);
+    expect(result.crashExcerpts).toHaveLength(1);
+    const declared = declaredPaths(byName('testflight__feedback_digest')!.outputSchema);
     expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
   });
 

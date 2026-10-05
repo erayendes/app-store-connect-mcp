@@ -271,7 +271,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /** The macros that declare an outputSchema, so their result can be sent structured. */
   const READ_MACRO_NAMES = new Set(
-    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
   );
 
   const server = new Server(
