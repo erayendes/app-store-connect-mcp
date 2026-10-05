@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Unreleased
 
+**App names past the first 200.** Finding an app by name read only the first 200 apps, so in a larger account the right app could be missed, or a second one with a similar name could go unnoticed. Name lookup now reads up to 1,000 apps, and refuses past that with a request for the bundle ID or Apple ID.
+
 **IAP and app price reads.** `pricing__get_iap_price` and `pricing__get_app_price` return current and scheduled prices by territory, including currency, customer price, proceeds, dates and manual or automatic source. They are read-only and live under `monetization:iap-pricing` and `monetization:app-price`.
 
 ### [2.5.0] — 2026-10-01
@@ -191,6 +193,8 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 ## Türkçe
 
 ### Yayımlanmamış
+
+**İlk 200'ün ötesindeki uygulama adları.** Uygulamayı adıyla bulmak yalnızca ilk 200 uygulamayı okuyordu; büyük bir hesapta doğru uygulama gözden kaçabiliyor ya da benzer adlı ikinci bir uygulama fark edilmeyebiliyordu. Ad araması artık 1.000 uygulamaya kadar okuyor; daha fazlasında bundle ID ya da Apple ID istiyor.
 
 **IAP ve uygulama fiyatlarını okuma.** `pricing__get_iap_price` ve `pricing__get_app_price`, ülkeye göre güncel ve planlanmış fiyatları para birimi, müşteri fiyatı, gelir, tarihler ve elle/otomatik kaynağıyla döndürür. Salt okunurdur; `monetization:iap-pricing` ve `monetization:app-price` altında bulunur.
 
