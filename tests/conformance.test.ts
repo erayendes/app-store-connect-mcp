@@ -84,6 +84,16 @@ describe('what a client receives', () => {
     expect(mutating.map((t) => t.name)).toEqual([]);
   });
 
+  it.each([
+    ['iap-pricing', 'pricing__get_iap_price'],
+    ['app-price', 'pricing__get_app_price'],
+  ])('offers only %s pricing reads in its read-only sub-profile', async (sub, expected) => {
+    const client = await connect(`monetization:${sub}`, { readOnly: true });
+    const tools = (await client.listTools()).tools.filter((t) => t.name.startsWith('pricing__'));
+    expect(tools.map((t) => t.name)).toEqual([expected]);
+    expect(tools[0].annotations?.readOnlyHint).toBe(true);
+  });
+
   it('serves the same list twice — nothing is consumed by being listed', async () => {
     const client = await connect('app-info');
     const first = (await client.listTools()).tools.map((t) => t.name).sort();

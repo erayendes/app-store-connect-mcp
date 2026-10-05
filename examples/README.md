@@ -21,7 +21,7 @@ one you install can find an app ID and point you at a tool it does not have.
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
-| Monetization | `monetization` | 207 |
+| Monetization | `monetization` | 209 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
 | Build & signing | `provisioning` + `xcode-cloud` | 102 |
@@ -31,7 +31,7 @@ npx -y @erayendes/asc-mcp register distribution app-info
 ```
 
 Narrower is better than broader: `monetization:subscription-pricing` is 27
-tools where `monetization` is 207, and everything you skipped is one
+tools where `monetization` is 209, and everything you skipped is one
 `asc__call` away — the proxy reaches any operation in the catalogue, loaded or
 not.
 
@@ -168,7 +168,7 @@ gösterebilir.
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
-| Monetizasyon | `monetization` | 207 |
+| Monetizasyon | `monetization` | 209 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
@@ -178,7 +178,7 @@ npx -y @erayendes/asc-mcp register distribution app-info
 ```
 
 Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
-`monetization` 207. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
+`monetization` 209. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
 yüklü olsun olmasın katalogdaki her işleme ulaşır.
 
 ---

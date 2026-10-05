@@ -73,6 +73,31 @@ describe('read macros declare an outputSchema', () => {
 });
 
 describe('the schema matches what the macro actually returns', () => {
+  it.each(['pricing__get_iap_price', 'pricing__get_app_price'])('%s: every returned key is declared', async (name) => {
+    const isApp = name === 'pricing__get_app_price';
+    const point = isApp ? 'appPricePoint' : 'inAppPurchasePricePoint';
+    const pointType = isApp ? 'appPricePoints' : 'inAppPurchasePricePoints';
+    const ctx = { http: {
+      get: async (path: string) => {
+        if (path === '/v1/apps/1') return { data: { id: '1', attributes: { name: 'Example' } } };
+        if (path === '/v2/inAppPurchases/2') return { data: { id: '2', attributes: { productId: 'coins.100' } } };
+        if (path.endsWith('PriceSchedule')) return { data: { id: 's1' } };
+        if (path.endsWith('/manualPrices')) return { data: [{
+          attributes: { startDate: null, endDate: null },
+          relationships: { territory: { data: { id: 'USA' } }, [point]: { data: { id: 'p1' } } },
+        }], included: [
+          { type: pointType, id: 'p1', attributes: { customerPrice: '4.99', proceeds: '3.49' } },
+          { type: 'territories', id: 'USA', attributes: { currency: 'USD' } },
+        ] };
+        return { data: [] };
+      },
+    } } as unknown as PricingContext;
+    const result = await executePricingTool(name, isApp ? { app: '1' } : { iap: '2' }, ctx);
+    expect((result as any).prices).toHaveLength(1);
+    const declared = declaredPaths(byName(name)!.outputSchema);
+    expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
+  });
+
   it('pricing__get_subscription_price: every returned key is declared', async () => {
     // Minimal chain: one app, one group, one subscription, one price with a
     // point included. Enough to exercise the shape, not the resolution logic

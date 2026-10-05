@@ -241,8 +241,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "app-price",
       operations: ["app_price_points_v3.equalizations.list","app_price_points_v3.get","app_price_schedules.automatic_prices.list","app_price_schedules.base_territory.get","app_price_schedules.create","app_price_schedules.get","app_price_schedules.manual_prices.list","apps.app_price_points.list","apps.app_price_schedule.get"],
-      manualTools: [],
-      rootResources: ["app_price_points_v3","app_price_schedules","apps"],
+      manualTools: ["pricing__get_app_price"],
+      rootResources: ["(makro)","app_price_points_v3","app_price_schedules","apps"],
     },
     {
       name: "iap-catalog",
@@ -259,8 +259,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "iap-pricing",
       operations: ["apps.in_app_purchases_v2.list","in_app_purchase_price_points.equalizations.list","in_app_purchase_price_schedules.automatic_prices.list","in_app_purchase_price_schedules.base_territory.get","in_app_purchase_price_schedules.create","in_app_purchase_price_schedules.get","in_app_purchase_price_schedules.manual_prices.list","in_app_purchases_v2.get","in_app_purchases_v2.iap_price_schedule.get","in_app_purchases_v2.price_points.list"],
-      manualTools: [],
-      rootResources: ["apps","in_app_purchase_price_points","in_app_purchase_price_schedules","in_app_purchases_v2"],
+      manualTools: ["pricing__get_iap_price"],
+      rootResources: ["(makro)","apps","in_app_purchase_price_points","in_app_purchase_price_schedules","in_app_purchases_v2"],
     },
     {
       name: "storekit",
