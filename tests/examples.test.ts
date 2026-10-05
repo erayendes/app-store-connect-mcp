@@ -71,7 +71,7 @@ describe('everything the examples name exists', () => {
       'listing__upload_screenshot', 'analytics__get_report', 'reviews_ai__triage',
       'reviews_ai__daily_briefing', 'reviews_ai__draft_response',
       'pricing__get_subscription_price', 'pricing__set_subscription_price',
-      'pricing__equalize_price',
+      'pricing__equalize_price', 'testflight__feedback_digest',
     ]);
     const named = [...readme.matchAll(/`([a-z_]+__[a-z_]+)`/g)].map((m) => m[1]);
     expect(named.length).toBeGreaterThan(5);

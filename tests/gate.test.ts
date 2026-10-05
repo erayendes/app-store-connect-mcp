@@ -31,6 +31,7 @@ import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 import { PRICING_TOOLS } from '../src/tools/pricing.js';
 import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
+import { TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
 import { STRONG_CONFIRM_LEVELS, type RiskLevel } from '../src/core/risk.js';
@@ -103,6 +104,7 @@ describe('write-gate annotations (offline)', () => {
       ...META_TOOLS,
       ...SCREENSHOT_TOOLS,
       ...ANALYTICS_TOOLS,
+      ...TESTFLIGHT_TOOLS,
     ]
       .filter((t) => shouldWrite.has(t.name) === (t.annotations?.readOnlyHint === true))
       .map((t) => t.name);

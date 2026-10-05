@@ -8,6 +8,7 @@ import { ANALYTICS_TOOL_NAMES } from '../src/tools/analytics.js';
 import { PREFLIGHT_TOOL_NAMES } from '../src/tools/preflight.js';
 import { METADATA_TOOL_NAMES } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES } from '../src/tools/account.js';
+import { TESTFLIGHT_TOOL_NAMES } from '../src/tools/testflight.js';
 import { INTENTS } from './eval/intents.js';
 
 const operationNames = new Set(OPERATIONS.map((operation) => operation.name));
@@ -20,6 +21,7 @@ const macroNames = new Set([
   ...PREFLIGHT_TOOL_NAMES,
   ...METADATA_TOOL_NAMES,
   ...ACCOUNT_TOOL_NAMES,
+  ...TESTFLIGHT_TOOL_NAMES,
 ]);
 const SHARED_NORMAL_ADVERSARIAL_TOOLS = [
   'app_store_version_release_requests.create',
@@ -86,7 +88,7 @@ describe('AX evaluation intent corpus', () => {
   it('has the frozen core, adversarial, and corpus sizes', () => {
     expect(INTENTS.filter((intent) => intent.core).length).toBe(15);
     expect(INTENTS.filter((intent) => intent.adversarial).length).toBe(8);
-    expect(INTENTS).toHaveLength(50);
+    expect(INTENTS).toHaveLength(51);
   });
 
   it('does not repeat every expected-tool token in a search query', () => {

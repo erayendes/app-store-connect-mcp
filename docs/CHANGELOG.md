@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
+### [Unreleased]
+
+**TestFlight feedback in one read-only call.** `testflight__feedback_digest` answers what testers are reporting: crashes and screenshot feedback grouped by build, top devices and OS versions, newest comments, and short excerpts from at most three crash logs. Accepts an app name, bundle ID or Apple ID, optional build number or UUID, and a 14-day window by default (maximum 90). Paging stops at the cutoff, every read is bounded, and omitted data is flagged. Available in `testflight` and under `--read-only`. 896 tools overall; the TestFlight profile now serves 56.
+
 ### [2.5.0] — 2026-10-01
 
 **Server names updated.** Run `setup` again after upgrading.
@@ -185,6 +189,10 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 - AI-assisted review tools.
 
 ## Türkçe
+
+### [Unreleased]
+
+**TestFlight geri bildirimleri tek salt okunur çağrıda.** `testflight__feedback_digest` testçilerin ne bildirdiğini yanıtlar: build bazında kilitlenmeler ve ekran görüntüsü geri bildirimleri, ilk cihaz ve OS sürümleri, yeni yorumlar ve en fazla üç crash logdan kısa alıntılar. Uygulama adı, bundle ID veya Apple ID, isteğe bağlı build numarası veya UUID ve varsayılan 14 günlük pencere (en fazla 90) alır. Tarih sınırında sayfalama durur, her okuma sınırlıdır ve eksik veri belirtilir. `testflight` profilinde ve `--read-only` ile kullanılabilir. Toplam 896 araç; TestFlight profili artık 56 araç sunuyor.
 
 ### [2.5.0] — 2026-10-01
 

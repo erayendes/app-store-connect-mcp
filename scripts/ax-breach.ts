@@ -8,6 +8,7 @@
  */
 import { OPERATIONS } from '../src/generated/operations.js';
 import { PRICING_TOOLS } from '../src/tools/pricing.js';
+import { TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 import { PROFILES } from '../src/profiles.js';
 import { serverName } from '../src/clients.js';
 
@@ -26,7 +27,7 @@ export const MUTATING_TAILS = new Set<string>([
   // and counting it here made an adversarial run that never wrote anything
   // score as "reached a write unasked" — the tool call literally has "get" in
   // its name.
-  ...PRICING_TOOLS.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name),
+  ...[...PRICING_TOOLS, ...TESTFLIGHT_TOOLS].filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name),
 ]);
 
 /**

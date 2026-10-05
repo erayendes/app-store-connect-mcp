@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio.
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. There are 896 distinct tools across 13 profiles (987 Apple operations, 123 deprecated and unloaded by default, plus 32 hand-written tools).
 
 ## If a user asks you to install it
 
@@ -51,7 +51,7 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 - **Finding a tool that isn't loaded:** call `asc__search_tools` (searches all 987 operations plus StoreKit) or `asc__discover_domains`. They name the sibling profile that owns a tool and print the exact command to add it.
 - **StoreKit / customer transactions** need a bundle ID (set during `setup` or via `ASC_BUNDLE_ID`) and live on the `monetization` profile. Each StoreKit tool takes an optional `environment` argument (`Production`/`Sandbox`).
 - **Safety:** `--read-only` mode blocks every mutating tool. `destructiveHint` no longer means "this is a DELETE" — it now covers every write whose consequence the HTTP method cannot show, so a description ending in `REVENUE-`, `RELEASE-`, `INFRASTRUCTURE-` or `ACCESS-level write.` is flagged too. Those change live data: say what will happen and get a yes before calling one.
-- **Prefer the macro over the chain.** `pricing__*` answers or changes a price without walking app → group → subscription → price points; `listing__*` reads and uploads store screenshots; `analytics__get_report` returns report rows rather than a link; `reviews_ai__*` triages reviews. Two of them do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
+- **Prefer the macro over the chain.** `pricing__*` answers or changes a price without walking app → group → subscription → price points; `listing__*` reads and uploads store screenshots; `analytics__get_report` returns report rows rather than a link; `reviews_ai__*` triages reviews; `testflight__feedback_digest` summarizes recent tester crashes and screenshot feedback by build, with bounded comments and crash excerpts (`testflight`, 56 tools). Two of them do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
 
 ## If you are working ON this repository
 

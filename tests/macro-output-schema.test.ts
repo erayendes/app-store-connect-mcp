@@ -15,10 +15,11 @@ import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOLS } from '../src/tools/account.js';
+import { TESTFLIGHT_TOOLS, executeTestflightTool } from '../src/tools/testflight.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
-const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS];
+const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS];
 const byName = (name: string) => macros.find((t) => t.name === name);
 
 /** Every property a schema declares, at any depth, as dotted paths. */
@@ -73,6 +74,22 @@ describe('read macros declare an outputSchema', () => {
 });
 
 describe('the schema matches what the macro actually returns', () => {
+  it('testflight__feedback_digest: every returned key is declared', async () => {
+    const ctx = { http: { get: async (path: string) => {
+      if (path === '/v1/apps/123') return { data: { id: '123', attributes: { name: 'Example' } } };
+      if (path.endsWith('/crashLog')) return { data: { attributes: { logText: 'Crash details' } } };
+      return {
+        data: [{ id: 'feedback-1', attributes: { createdDate: new Date(Date.now() - 1000).toISOString(), comment: 'Feedback', deviceModel: 'iPhone', osVersion: '26' }, relationships: { build: { data: { id: 'b1' } }, tester: { data: { id: 't1' } } } }],
+        included: [{ id: 'b1', type: 'builds', attributes: { version: '42' } }, { id: 't1', type: 'betaTesters', attributes: { email: 'test@example.com' } }],
+      };
+    } } } as any;
+    const result: any = await executeTestflightTool('testflight__feedback_digest', { app: '123' }, ctx);
+    expect(result.builds).toHaveLength(1);
+    expect(result.crashExcerpts).toHaveLength(1);
+    const declared = declaredPaths(byName('testflight__feedback_digest')!.outputSchema);
+    expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
+  });
+
   it('pricing__get_subscription_price: every returned key is declared', async () => {
     // Minimal chain: one app, one group, one subscription, one price with a
     // point included. Enough to exercise the shape, not the resolution logic
