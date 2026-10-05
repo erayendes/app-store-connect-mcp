@@ -259,7 +259,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "iap-pricing",
       operations: ["apps.in_app_purchases_v2.list","in_app_purchase_price_points.equalizations.list","in_app_purchase_price_schedules.automatic_prices.list","in_app_purchase_price_schedules.base_territory.get","in_app_purchase_price_schedules.create","in_app_purchase_price_schedules.get","in_app_purchase_price_schedules.manual_prices.list","in_app_purchases_v2.get","in_app_purchases_v2.iap_price_schedule.get","in_app_purchases_v2.price_points.list"],
-      manualTools: ["pricing__get_iap_price"],
+      manualTools: ["pricing__get_iap_price","pricing__set_iap_price"],
       rootResources: ["(makro)","apps","in_app_purchase_price_points","in_app_purchase_price_schedules","in_app_purchases_v2"],
     },
     {

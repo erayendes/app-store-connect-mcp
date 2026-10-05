@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format is based on 
 
 **App names past the first 200.** Finding an app by name read only the first 200 apps, so in a larger account the right app could be missed, or a second one with a similar name could go unnoticed. Name lookup now reads up to 1,000 apps, and refuses past that with a request for the bundle ID or Apple ID.
 
+**One IAP price, nothing else lost.** `pricing__set_iap_price` changes an in-app purchase's price in one territory, now or from a start date. Apple replaces an IAP price schedule as a whole, so it reads the current schedule and re-sends every other manual price and scheduled change unchanged, and refuses to write when that schedule could not be read completely. A REVENUE-level write behind the confirmation gate; `--dry-run` returns the before/after diff and warns when the base territory's change moves Apple's automatic prices. In `monetization:iap-pricing`, removed under `--read-only`. 899 tools in total, 211 in monetization.
+
 **IAP and app price reads.** `pricing__get_iap_price` and `pricing__get_app_price` return current and scheduled prices by territory, including currency, customer price, proceeds, dates and manual or automatic source. They are read-only and live under `monetization:iap-pricing` and `monetization:app-price`.
 
 **Subscription catalog preflight.** `preflight__check_subscription` checks one subscription or up to 20 in a group before review, reporting factual localization, price, availability, screenshot and attribute gaps with exact raw fix tools. Read-only, bounded reads with truncation notes; `ready` does not predict Apple approval. It uses current v1 catalog localizations and plan availabilities; v2 version drafts are outside its scope. Available in `monetization:subscription-catalog` and tool search. 898 tools in total, 210 in monetization.
@@ -205,6 +207,8 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 ### Yayımlanmamış
 
 **İlk 200'ün ötesindeki uygulama adları.** Uygulamayı adıyla bulmak yalnızca ilk 200 uygulamayı okuyordu; büyük bir hesapta doğru uygulama gözden kaçabiliyor ya da benzer adlı ikinci bir uygulama fark edilmeyebiliyordu. Ad araması artık 1.000 uygulamaya kadar okuyor; daha fazlasında bundle ID ya da Apple ID istiyor.
+
+**Tek IAP fiyatı, başka hiçbir şey kaybolmadan.** `pricing__set_iap_price`, bir uygulama içi satın almanın tek ülkedeki fiyatını hemen ya da bir başlangıç tarihinden itibaren değiştirir. Apple bir IAP fiyat takvimini bütün olarak değiştirdiği için mevcut takvimi okur, diğer elle girilmiş fiyatları ve planlanmış değişiklikleri aynen yeniden gönderir; takvim eksiksiz okunamazsa yazmayı reddeder. Onay kapısından geçen REVENUE seviyesinde bir yazma; `--dry-run` önce/sonra farkını döndürür ve temel ülkedeki değişiklik Apple'ın otomatik fiyatlarını da kaydıracaksa uyarır. `monetization:iap-pricing` içinde; `--read-only` altında kaldırılır. Toplam 899 araç, monetization içinde 211.
 
 **IAP ve uygulama fiyatlarını okuma.** `pricing__get_iap_price` ve `pricing__get_app_price`, ülkeye göre güncel ve planlanmış fiyatları para birimi, müşteri fiyatı, gelir, tarihler ve elle/otomatik kaynağıyla döndürür. Salt okunurdur; `monetization:iap-pricing` ve `monetization:app-price` altında bulunur.
 

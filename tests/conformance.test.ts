@@ -137,6 +137,16 @@ describe('what a client receives', () => {
     expect(tools[0].annotations?.readOnlyHint).toBe(true);
   });
 
+  it('offers the IAP price write only when the server can write', async () => {
+    const names = async (readOnly: boolean) =>
+      (await (await connect('monetization:iap-pricing', { readOnly })).listTools()).tools
+        .filter((t) => t.name.startsWith('pricing__'))
+        .map((t) => t.name)
+        .sort();
+    expect(await names(false)).toEqual(['pricing__get_iap_price', 'pricing__set_iap_price']);
+    expect(await names(true)).toEqual(['pricing__get_iap_price']);
+  });
+
   it('serves the same list twice — nothing is consumed by being listed', async () => {
     const client = await connect('app-info');
     const first = (await client.listTools()).tools.map((t) => t.name).sort();

@@ -285,6 +285,36 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
     annotations: { readOnlyHint: true, idempotentHint: true },
   },
   {
+    name: 'pricing__set_iap_price',
+    description:
+      'Change or set an in-app purchase (IAP) price in one territory (country) without ' +
+      'assembling a price schedule. Give an IAP ID, or the app and IAP product ID, plus the ' +
+      'territory (e.g. TUR) and the price (e.g. "99.99"). Apple replaces an IAP price ' +
+      'schedule as a whole, so every other manual price and scheduled change is read and ' +
+      're-sent unchanged. Pricing the base territory also moves Apple\'s automatic prices ' +
+      'elsewhere. REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'App name, bundle ID or Apple ID; required with a product ID.' },
+        iap: { type: 'string', description: 'In-app purchase ID (without app) or product ID (with app).' },
+        territory: { type: 'string', description: 'Three-letter country code, e.g. TUR, USA.' },
+        price: {
+          type: 'string',
+          description:
+            'Customer price in the territory\'s currency, e.g. "99.99". Must match an Apple ' +
+            'price point exactly; the nearest available are suggested if it does not.',
+        },
+        start_date: {
+          type: 'string',
+          description: 'Optional start date (YYYY-MM-DD). Omit to apply as soon as possible.',
+        },
+      },
+      required: ['iap', 'territory', 'price'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
+  {
     name: 'pricing__get_app_price',
     description:
       'Read current and scheduled app purchase prices by territory, including currency, ' +
@@ -315,7 +345,9 @@ async function readSchedulePrices(
   http: AscHttpClient,
   kind: 'app' | 'iap',
   scheduleId: string,
-  territory?: string
+  territory?: string,
+  /** The write path needs each row's price point to re-send it; reads never show it. */
+  withPointIds = false
 ): Promise<{ prices: Record<string, unknown>[]; truncated?: string }> {
   const root = kind === 'app' ? 'appPriceSchedules' : 'inAppPurchasePriceSchedules';
   const pointType = kind === 'app' ? 'appPricePoints' : 'inAppPurchasePricePoints';
@@ -355,6 +387,7 @@ async function readSchedulePrices(
           endDate,
           source,
           status: startDate && startDate > today ? 'scheduled' : 'current',
+          ...(withPointIds ? { pricePointId: String(pointId) } : {}),
         });
       }
       next = res?.links?.next;
@@ -522,6 +555,27 @@ export function buildPricingPreview(args: Record<string, unknown>, toolName?: st
               : `Subscribers:  ⚠ existing subscribers WILL be moved to the new price, worldwide.`,
           ]
         : []),
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n');
+  }
+
+  if (toolName === 'pricing__set_iap_price') {
+    const territory = String(args.territory ?? '?').toUpperCase();
+    return [
+      `Heimdall is about to change an in-app purchase price — a REVENUE-level write.`,
+      '',
+      ...(args.app ? [`App:          ${String(args.app)}`] : []),
+      `IAP:          ${String(args.iap ?? '?')}`,
+      `New price:    ${normalizePrice(String(args.price ?? '?'))} (${territory})`,
+      `Starts:       ${args.start_date ? String(args.start_date) : 'as soon as possible'}`,
+      // Apple has no "change one price" call for an IAP; the whole schedule is
+      // re-sent, and that is what someone approving this has to know.
+      `Other prices: the whole schedule is replaced; every other manual price and`,
+      `              scheduled change is re-sent unchanged.`,
+      `Base:         if ${territory} is this IAP's base territory, Apple also re-derives`,
+      `              the automatic price in every country without a manual one.`,
+      `              Run under --dry-run to see the full before/after.`,
       '',
       'Type CONFIRM in the field below to proceed.',
     ].join('\n');
@@ -722,17 +776,9 @@ export async function executePricingTool(
     let product: string | undefined;
     let productId = app?.id ?? '';
     if (!isApp) {
-      const iap = String(args.iap).trim();
-      if (!app) {
-        const res: any = await ctx.http.get(`/v2/inAppPurchases/${encodeURIComponent(iap)}`);
-        if (!res?.data) throw new AscApiError(`No in-app purchase with ID ${iap}. For a product ID, provide "app" too.`, 0);
-        productId = String(res.data.id);
-        product = String(res.data.attributes?.productId ?? res.data.attributes?.name ?? iap);
-      } else {
-        const resolved = await resolveIap(ctx.http, app.id, iap);
-        productId = resolved.id;
-        product = resolved.productId || resolved.name;
-      }
+      const target = await resolveIapTarget(ctx.http, String(args.iap), app);
+      productId = target.id;
+      product = target.product;
     }
     const schedulePath = isApp
       ? `/v1/apps/${encodeURIComponent(productId)}/appPriceSchedule`
@@ -810,6 +856,7 @@ export async function executePricingTool(
   }
 
   if (name === 'pricing__equalize_price') return equalizePrice(args, ctx);
+  if (name === 'pricing__set_iap_price') return setIapPrice(args, ctx);
 
   if (name !== 'pricing__set_subscription_price') {
     throw new Error(`Unknown pricing tool: ${name}`);
@@ -970,6 +1017,25 @@ async function resolveIap(
     );
   }
   return match;
+}
+
+/** `iap` alone is an IAP ID; with an app it is a product ID or name inside it. */
+async function resolveIapTarget(
+  http: AscHttpClient,
+  iap: string,
+  app?: { id: string }
+): Promise<{ id: string; product: string }> {
+  const wanted = iap.trim();
+  if (app) {
+    const resolved = await resolveIap(http, app.id, wanted);
+    return { id: resolved.id, product: resolved.productId || resolved.name };
+  }
+  const res: any = await http.get(`/v2/inAppPurchases/${encodeURIComponent(wanted)}`);
+  if (!res?.data) throw new AscApiError(`No in-app purchase with ID ${wanted}. For a product ID, provide "app" too.`, 0);
+  return {
+    id: String(res.data.id),
+    product: String(res.data.attributes?.productId ?? res.data.attributes?.name ?? wanted),
+  };
 }
 
 /**
@@ -1203,5 +1269,238 @@ async function equalizePrice(
     note:
       'Apple applies each change on its own schedule; check with ' +
       'pricing__get_subscription_price (omit the territory) to see them worldwide.',
+  };
+}
+
+/**
+ * One IAP price in one territory, without losing the rest of the schedule.
+ *
+ * Apple has no call that changes a single IAP price: `inAppPurchasePriceSchedules`
+ * is created whole, and whatever the new schedule leaves out is gone. So the
+ * current schedule is read in full first and every manual entry is carried into
+ * the new one; only the named territory's entries are touched, by date:
+ *
+ *   starts on the new date       replaced by the new price
+ *   starts after the new date    kept; the new price ends where it begins
+ *   starts before and runs past  kept, ending on the new date
+ *
+ * A price already in effect is re-sent with no start date, which is how Apple
+ * writes "from now". Anything that cannot be carried over exactly — a page the
+ * reader could not reach, two prices in effect at once in one country — stops
+ * the write, because sending the schedule anyway would delete what was missed.
+ */
+async function setIapPrice(args: Record<string, unknown>, ctx: PricingContext): Promise<unknown> {
+  for (const field of ['iap', 'territory', 'price'] as const) {
+    if (typeof args[field] !== 'string' || !String(args[field]).trim()) {
+      throw new AscApiError(`"${field}" is required.`, 0);
+    }
+  }
+  const territory = String(args.territory).trim().toUpperCase();
+  if (!/^[A-Z]{3}$/.test(territory)) {
+    throw new AscApiError('"territory" must be a three-letter country code such as TUR or USA.', 0);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  let start: string | null = null;
+  if (args.start_date !== undefined && args.start_date !== null && args.start_date !== '') {
+    const wanted = String(args.start_date).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(wanted) || Number.isNaN(Date.parse(wanted))) {
+      throw new AscApiError('"start_date" must be a date in YYYY-MM-DD form.', 0);
+    }
+    if (wanted < today) throw new AscApiError(`"start_date" ${wanted} is in the past.`, 0);
+    start = wanted > today ? wanted : null;
+  }
+
+  const app = args.app ? await resolveApp(ctx.http, String(args.app)) : undefined;
+  const iap = await resolveIapTarget(ctx.http, String(args.iap), app);
+
+  let schedule: any;
+  try {
+    schedule = await ctx.http.get(`/v2/inAppPurchases/${encodeURIComponent(iap.id)}/iapPriceSchedule`, {
+      include: 'baseTerritory',
+    });
+  } catch (err) {
+    if (!(err instanceof AscApiError && err.status === 404)) throw err;
+  }
+  const read = schedule?.data?.id
+    ? await readSchedulePrices(ctx.http, 'iap', String(schedule.data.id), undefined, true)
+    : { prices: [] as Record<string, unknown>[] };
+  if (read.truncated) {
+    throw new AscApiError(
+      `Refusing to write: the current price schedule could not be read completely (${read.truncated}) ` +
+        'and Apple replaces the whole schedule, so the unread prices would be deleted. Nothing was changed.',
+      0
+    );
+  }
+
+  type Entry = { territory: string; customerPrice: string; pricePointId: string; startDate: string | null; endDate: string | null };
+  // An entry that ended by today is history, not a price anyone pays.
+  const manual: Entry[] = read.prices
+    .filter((p) => p.source === 'manual' && !(p.endDate && String(p.endDate) <= today))
+    .map((p) => ({
+      territory: String(p.territory),
+      customerPrice: String(p.customerPrice),
+      pricePointId: String(p.pricePointId),
+      // In effect already: Apple's way of saying so in a new schedule is no date.
+      startDate: p.startDate && String(p.startDate) > today ? String(p.startDate) : null,
+      endDate: p.endDate ? String(p.endDate) : null,
+    }));
+  const inEffect = new Map<string, number>();
+  for (const e of manual.filter((m) => m.startDate === null)) {
+    inEffect.set(e.territory, (inEffect.get(e.territory) ?? 0) + 1);
+  }
+  const clashing = [...inEffect].filter(([, n]) => n > 1).map(([t]) => t);
+  if (clashing.length) {
+    throw new AscApiError(
+      `Refusing to write: ${clashing.join(', ')} has more than one manual price in effect today, ` +
+        'which a new schedule cannot carry over exactly. Nothing was changed.',
+      0
+    );
+  }
+
+  const readBase = schedule?.data?.relationships?.baseTerritory?.data?.id;
+  if (manual.length && !readBase) {
+    throw new AscApiError(
+      'Refusing to write: Apple did not return this schedule\'s base territory, and a new ' +
+        'schedule has to name it. Nothing was changed.',
+      0
+    );
+  }
+  if (!manual.length && start) {
+    throw new AscApiError(
+      'This in-app purchase has no manual price yet, so its first price has to start now. ' +
+        'Omit "start_date".',
+      0
+    );
+  }
+  const baseTerritory = String(readBase ?? territory);
+
+  const point = await findPricePoint(
+    ctx.http,
+    `/v2/inAppPurchases/${encodeURIComponent(iap.id)}/pricePoints`,
+    territory,
+    String(args.price),
+    `"${iap.product}"`
+  );
+
+  const after: Entry[] = [];
+  const row = (e: Entry, oldPrice: string | null, change: string) => ({
+    territory: e.territory,
+    country: TERRITORY_NAMES[e.territory] ?? null,
+    oldPrice,
+    newPrice: e.customerPrice,
+    startDate: e.startDate,
+    endDate: e.endDate,
+    change,
+  });
+  const diff: ReturnType<typeof row>[] = [];
+  let replaced: Entry | undefined;
+  let cut: Entry | undefined;
+  let nextStart: string | null = null;
+  for (const e of manual) {
+    if (e.territory !== territory) {
+      after.push(e);
+      diff.push(row(e, e.customerPrice, 'unchanged'));
+    } else if (e.startDate === start) {
+      replaced = e;
+    } else if (e.startDate !== null && (start === null || e.startDate > start)) {
+      after.push(e);
+      diff.push(row(e, e.customerPrice, 'unchanged'));
+      if (nextStart === null || e.startDate < nextStart) nextStart = e.startDate;
+    } else if (start !== null && (e.endDate === null || e.endDate > start)) {
+      cut = e;
+      const ended = { ...e, endDate: start };
+      after.push(ended);
+      diff.push(row(ended, e.customerPrice, `now ends ${start} (was ${e.endDate ?? 'open-ended'})`));
+    } else {
+      after.push(e);
+      diff.push(row(e, e.customerPrice, 'unchanged'));
+    }
+  }
+  const automaticNow = read.prices.find(
+    (p) => p.source === 'automatic' && p.territory === territory && p.status === 'current'
+  );
+  const added: Entry = {
+    territory,
+    customerPrice: point.customerPrice,
+    pricePointId: point.id,
+    startDate: start,
+    // Takes over the slot of what it overrides, and stops where the next
+    // scheduled change in this territory begins.
+    endDate: nextStart ?? (replaced ?? cut)?.endDate ?? null,
+  };
+  after.push(added);
+  diff.push(row(
+    added,
+    replaced?.customerPrice ?? cut?.customerPrice ?? (automaticNow ? String(automaticNow.customerPrice) : null),
+    replaced ? 'replaced' : 'added'
+  ));
+  const order = (a: { territory: string; startDate: string | null }, b: { territory: string; startDate: string | null }) =>
+    a.territory.localeCompare(b.territory) || (a.startDate ?? '').localeCompare(b.startDate ?? '');
+  after.sort(order);
+  diff.sort(order);
+
+  const refs = after.map((_, i) => `\${price-${i + 1}}`);
+  const body = {
+    data: {
+      type: 'inAppPurchasePriceSchedules',
+      relationships: {
+        inAppPurchase: { data: { type: 'inAppPurchases', id: iap.id } },
+        baseTerritory: { data: { type: 'territories', id: baseTerritory } },
+        manualPrices: { data: refs.map((id) => ({ type: 'inAppPurchasePrices', id })) },
+      },
+    },
+    included: after.map((e, i) => ({
+      type: 'inAppPurchasePrices',
+      id: refs[i],
+      attributes: { startDate: e.startDate, endDate: e.endDate },
+      relationships: {
+        inAppPurchaseV2: { data: { type: 'inAppPurchases', id: iap.id } },
+        inAppPurchasePricePoint: { data: { type: 'inAppPurchasePricePoints', id: e.pricePointId } },
+      },
+    })),
+  };
+
+  const automaticCountries = new Set(
+    read.prices.filter((p) => p.source === 'automatic').map((p) => String(p.territory))
+  ).size;
+  const warning = !manual.length
+    ? `This in-app purchase has no manual price yet: ${territory} becomes its base territory, and ` +
+      'Apple derives the price in every other country from it.'
+    : territory === baseTerritory
+      ? `${territory} is this in-app purchase's base territory. Apple derives the automatic price ` +
+        `in every country without a manual price from it, so those change too ` +
+        `(${automaticCountries} countr${automaticCountries === 1 ? 'y' : 'ies'} automatic today).`
+      : undefined;
+
+  const resolved = {
+    ...(app ? { app: `${app.name} (${app.id})` } : {}),
+    iap: `${iap.product} (${iap.id})`,
+    price: `${point.customerPrice} (${territory})`,
+    startDate: start ?? 'as soon as possible',
+    baseTerritory,
+    manualPrices: after.length,
+  };
+
+  if (ctx.dryRun) {
+    return {
+      dryRun: true,
+      note:
+        'Dry-run mode: the new schedule was fully resolved but NOT sent to Apple. Apple ' +
+        'replaces the whole schedule, so every manual price below is part of the write.',
+      resolved,
+      diff,
+      ...(warning ? { warning } : {}),
+      wouldSend: { method: 'POST', path: '/v1/inAppPurchasePriceSchedules', body },
+      risk: 'revenue',
+    };
+  }
+
+  await ctx.http.post('/v1/inAppPurchasePriceSchedules', body);
+  return {
+    ok: true,
+    changed: resolved,
+    diff,
+    ...(warning ? { warning } : {}),
+    note: 'Price schedule replaced. Check pricing__get_iap_price to see current and scheduled prices.',
   };
 }
