@@ -20,7 +20,7 @@ one you install can find an app ID and point you at a tool it does not have.
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 120 |
+| QA / TestFlight | `testflight` + `access` | 121 |
 | Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
@@ -63,6 +63,11 @@ Needs `access` (groups, testers) and `testflight` (build localizations, review
 details). Order matters and the API will not tell you: a tester belongs to the
 account first, then to a group, then a build is served to the group. Adding an
 email to a group creates the tester if they do not exist yet.
+
+To serve a specific processed build to several groups, call
+`testflight__assign_build_to_groups` on `access:beta-groups` with the app, exact
+build number or ID, and group names or IDs. It skips existing links and reports
+each result; `--dry-run` shows the planned assignments.
 
 An **external** group needs Apple to review the build before it reaches anyone.
 An internal group does not. If testers report seeing nothing, that is usually
@@ -182,7 +187,7 @@ gösterebilir.
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
-| QA / TestFlight | `testflight` + `access` | 120 |
+| QA / TestFlight | `testflight` + `access` | 121 |
 | Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
@@ -223,6 +228,11 @@ yüklü olsun olmasın katalogdaki her işleme ulaşır.
 inceleme detayları) gerekir. Sıra önemli ve API bunu söylemiyor: testçi önce
 hesaba, sonra gruba ait olur, build ise gruba sunulur. Bir e-postayı gruba
 eklemek, testçi yoksa onu oluşturur.
+
+Belirli bir işlenmiş build'i birden çok gruba sunmak için `access:beta-groups`
+üzerindeki `testflight__assign_build_to_groups` aracına uygulamayı, tam build
+numarasını veya ID'sini ve grup adlarını veya ID'lerini verin. Mevcut bağlantıları
+atlar, her grubun sonucunu bildirir; `--dry-run` planı gösterir.
 
 **Harici** bir grup için Apple'ın build'i incelemesi gerekir; dahili grup için
 gerekmez. Testçiler "hiçbir şey görünmüyor" diyorsa sebep genelde budur.

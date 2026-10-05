@@ -12,6 +12,7 @@ import { SCREENSHOT_TOOLS } from './screenshots.js';
 import { CI_TOOLS } from './ci.js';
 import { PREFLIGHT_TOOLS } from './preflight.js';
 import { PROFILES } from '../profiles.js';
+import { TESTFLIGHT_TOOLS } from './testflight.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import type { TokenProvider } from '../core/jwt.js';
@@ -513,7 +514,7 @@ export async function executeMetaTool(
       // macro written to replace a five-call chain lost to the five calls. A
       // macro that matches the query is the answer to it.
       const matches = [
-        ...extras([...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...PREFLIGHT_TOOLS, ...CI_TOOLS], 'macro', 'Heimdall macro', (name) =>
+        ...extras([...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...PREFLIGHT_TOOLS, ...TESTFLIGHT_TOOLS, ...CI_TOOLS], 'macro', 'Heimdall macro', (name) =>
           Boolean(ctx.macroOffered?.(name))
         ),
         ...extras(STOREKIT_TOOLS, 'storekit', 'App Store Server API', () =>

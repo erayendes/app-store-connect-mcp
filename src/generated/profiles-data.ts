@@ -33,8 +33,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "beta-groups",
       operations: ["beta_groups.beta_recruitment_criteria.get","beta_groups.beta_recruitment_criterion_compatible_build_check.get","beta_groups.beta_tester_usages.metrics","beta_groups.beta_testers.add","beta_groups.beta_testers.list","beta_groups.beta_testers.remove","beta_groups.builds.add","beta_groups.builds.list","beta_groups.builds.remove","beta_groups.create","beta_groups.delete","beta_groups.get","beta_groups.list","beta_groups.public_link_usages.metrics","beta_groups.update","beta_recruitment_criteria.create","beta_recruitment_criteria.delete","beta_recruitment_criteria.update","beta_recruitment_criterion_options.list"],
-      manualTools: [],
-      rootResources: ["beta_groups","beta_recruitment_criteria","beta_recruitment_criterion_options"],
+      manualTools: ["testflight__assign_build_to_groups"],
+      rootResources: ["(makro)","beta_groups","beta_recruitment_criteria","beta_recruitment_criterion_options"],
     },
     {
       name: "beta-testers",
