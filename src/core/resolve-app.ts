@@ -39,9 +39,23 @@ export async function resolveApp(http: AscHttpClient, app: string): Promise<Reso
     'fields[apps]': 'name,bundleId',
   });
 
+  // A name is matched against every app, so an unread page could hold the
+  // real match or a second one. Read up to five pages (1,000 apps); past that,
+  // refuse rather than answer from part of the catalogue.
+  const apps: any[] = [...(res?.data ?? [])];
+  let next: string | undefined = byBundleId ? undefined : res?.links?.next;
+  for (let page = 1; next && page < 5; page++) {
+    const more: any = await http.get(next);
+    apps.push(...(more?.data ?? []));
+    next = more?.links?.next;
+  }
+  if (next) {
+    throw new AscApiError('This account has more than 1,000 apps, too many to match by name. Use the bundle ID or Apple ID.', 0);
+  }
+
   const hits = byBundleId
-    ? (res?.data ?? [])
-    : (res?.data ?? []).filter((a: any) =>
+    ? apps
+    : apps.filter((a: any) =>
         String(a.attributes?.name ?? '')
           .toLowerCase()
           .includes(wanted.toLowerCase())
