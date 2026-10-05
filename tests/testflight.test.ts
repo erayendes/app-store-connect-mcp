@@ -6,7 +6,7 @@ import { createServer } from '../src/server.js';
 import { resolveSelection } from '../src/profiles.js';
 import { executeTestflightTool, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 
-function fakeHttp(options: { state?: string; expired?: boolean; assigned?: string[]; fail?: string; assignedHasMore?: boolean } = {}) {
+function fakeHttp(options: { state?: string; expired?: boolean; assigned?: string[]; fail?: string; assignedHasMore?: boolean; duplicate?: boolean } = {}) {
   const posts: Array<{ path: string; body: unknown }> = [];
   const reads: Array<{ path: string; query: Record<string, unknown> | undefined; maxPages: number | undefined }> = [];
   const groups = [
@@ -14,12 +14,15 @@ function fakeHttp(options: { state?: string; expired?: boolean; assigned?: strin
     { id: 'g2', attributes: { name: 'External', isInternalGroup: false } },
   ];
   const http = {
-    get: async () => ({ data: { id: '123', attributes: { name: 'Demo' } } }),
+    get: async (path: string) => path.endsWith('/preReleaseVersion')
+      ? { data: { attributes: path.includes('/b1/') ? { version: '1.6.1', platform: 'IOS' } : { version: '1.6', platform: 'TV_OS' } } }
+      : { data: { id: '123', attributes: { name: 'Demo' } } },
     collect: async (path: string, query?: Record<string, unknown>, maxPages?: number) => {
       reads.push({ path, query, maxPages });
       return ({
       items: path === '/v1/builds'
-        ? [{ id: 'b1', attributes: { version: '42', processingState: options.state ?? 'VALID', expired: options.expired ?? false } }]
+        ? [{ id: 'b1', attributes: { version: '42', processingState: options.state ?? 'VALID', expired: options.expired ?? false } },
+          ...(options.duplicate ? [{ id: 'b2', attributes: { version: '42', processingState: 'VALID', expired: false } }] : [])]
         : path === '/v1/betaGroups' ? groups.filter((g) => (options.assigned ?? []).includes(g.id))
         : path.endsWith('/betaGroups') ? groups : [],
       hasMore: path === '/v1/betaGroups' && options.assignedHasMore === true,
@@ -52,8 +55,25 @@ describe('testflight__assign_build_to_groups', () => {
     expect(reads).toEqual([
       { path: '/v1/builds', query: { 'filter[app]': '123', 'filter[version]': '42', 'fields[builds]': 'version,processingState,expired,expirationDate', limit: 200 }, maxPages: 2 },
       { path: '/v1/apps/123/betaGroups', query: { 'fields[betaGroups]': 'name,isInternalGroup', limit: 200 }, maxPages: 5 },
-      { path: '/v1/betaGroups', query: { 'filter[app]': '123', 'filter[builds]': 'b1', limit: 200 }, maxPages: 1 },
+      { path: '/v1/betaGroups', query: { 'filter[builds]': 'b1', limit: 200 }, maxPages: 1 },
     ]);
+  });
+
+  it('sends at most one relationship filter per request, which is all Apple accepts', async () => {
+    // Live Apple rejects filter[app] together with filter[builds]:
+    // "Only one relationship filter can be applied."
+    const relationshipFilters = ['filter[app]', 'filter[builds]', 'filter[betaGroups]', 'filter[preReleaseVersion]'];
+    const { http, reads } = fakeHttp();
+    await run(http);
+    for (const read of reads) {
+      expect(Object.keys(read.query ?? {}).filter((k) => relationshipFilters.includes(k)).length, read.path).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('names every matching build with its platform and version when a build number repeats', async () => {
+    const { http, posts } = fakeHttp({ duplicate: true });
+    await expect(run(http)).rejects.toThrow(/matches 2 builds.*b1 \(IOS 1\.6\.1\).*b2 \(TV_OS 1\.6\)/);
+    expect(posts).toEqual([]);
   });
 
   it('looks up an opaque build ID with filter[id]', async () => {
