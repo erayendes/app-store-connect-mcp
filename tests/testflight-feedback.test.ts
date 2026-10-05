@@ -53,6 +53,25 @@ beforeEach(() => { vi.spyOn(Date, 'now').mockReturnValue(NOW); });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 describe(NAME, () => {
+  it('keeps two builds that share a build number apart', async () => {
+    const twin = [
+      { type: 'builds', id: 'b-ios', attributes: { version: '42' } },
+      { type: 'builds', id: 'b-tv', attributes: { version: '42' } },
+    ];
+    const http = fakeHttp({
+      [CRASHES]: page([submission('c-ios', 'b-ios'), submission('c-tv', 'b-tv')], undefined, twin),
+      [SHOTS]: page([], undefined, twin),
+    });
+    const result = await run(http);
+    expect(result.builds.map((b: any) => [b.buildId, b.version, b.counts.crashes]).sort()).toEqual([
+      ['b-ios', '42', 1], ['b-tv', '42', 1],
+    ]);
+  });
+
+  it('puts the trust warning first, so cutting the response to size cannot drop it', async () => {
+    expect(Object.keys(await run())[0]).toBe('untrustedContent');
+  });
+
   it('groups both feeds by build version with counts, top devices/OS and newest comments', async () => {
     const http = fakeHttp({
       [CRASHES]: page([submission('c-new'), submission('c-old', 'b-1', { createdDate: '2026-10-03T12:00:00Z' }), submission('c-43', 'b-2')]),

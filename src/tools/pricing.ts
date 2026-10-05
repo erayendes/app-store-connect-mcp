@@ -347,7 +347,9 @@ async function readSchedulePrices(
   scheduleId: string,
   territory?: string,
   /** The write path needs each row's price point to re-send it; reads never show it. */
-  withPointIds = false
+  withPointIds = false,
+  /** The write path must see a change landing today to refuse it (see setIapPrice). */
+  keepEndingToday = false
 ): Promise<{ prices: Record<string, unknown>[]; truncated?: string }> {
   const root = kind === 'app' ? 'appPriceSchedules' : 'inAppPurchasePriceSchedules';
   const pointType = kind === 'app' ? 'appPricePoints' : 'inAppPurchasePricePoints';
@@ -368,7 +370,8 @@ async function readSchedulePrices(
       for (const row of res?.data ?? []) {
         const startDate = row.attributes?.startDate ?? null;
         const endDate = row.attributes?.endDate ?? null;
-        if (endDate && endDate < today) continue;
+        // Apple's end date is the first day a price is no longer in effect.
+        if (endDate && endDate <= today && !keepEndingToday) continue;
         const code = String(row.relationships?.territory?.data?.id ?? '');
         if (territory && code !== territory) continue;
         const pointId = row.relationships?.[pointRelationship]?.data?.id;
@@ -988,7 +991,9 @@ async function findPricePoint(
 async function resolveIap(
   http: AscHttpClient,
   appId: string,
-  wanted: string
+  wanted: string,
+  /** A price write must not land on a near-miss: no substring fallback, and a name two IAPs share is refused. */
+  exactOnly = false
 ): Promise<{ id: string; name: string; productId: string }> {
   const { items, hasMore } = await http.collect<any>(
     `/v1/apps/${encodeURIComponent(appId)}/inAppPurchasesV2`,
@@ -1005,6 +1010,24 @@ async function resolveIap(
     iaps.find((i) => i.name.toLowerCase() === needle);
   if (hasMore && !exact) {
     throw new AscApiError('IAP lookup reached its 5-page limit; use the IAP ID or exact product ID.', 0);
+  }
+  if (exactOnly) {
+    const byProduct = iaps.filter((i) => i.productId.toLowerCase() === needle);
+    const hits = byProduct.length ? byProduct : iaps.filter((i) => i.name.toLowerCase() === needle);
+    if (hits.length > 1) {
+      throw new AscApiError(
+        `"${wanted}" names ${hits.length} in-app purchases (${hits.map((i) => i.productId).join(', ')}); use the exact product ID.`,
+        0
+      );
+    }
+    if (!hits.length) {
+      throw new AscApiError(
+        `No in-app purchase with product ID or name exactly "${wanted}" in this app. Available: ` +
+          `${iaps.map((i) => `${i.productId} ("${i.name}")`).join(', ') || 'none'}.`,
+        0
+      );
+    }
+    return hits[0];
   }
   const match = exact ??
     iaps.find((i) => i.productId.toLowerCase().includes(needle)) ??
@@ -1023,11 +1046,12 @@ async function resolveIap(
 async function resolveIapTarget(
   http: AscHttpClient,
   iap: string,
-  app?: { id: string }
+  app?: { id: string },
+  exactOnly = false
 ): Promise<{ id: string; product: string }> {
   const wanted = iap.trim();
   if (app) {
-    const resolved = await resolveIap(http, app.id, wanted);
+    const resolved = await resolveIap(http, app.id, wanted, exactOnly);
     return { id: resolved.id, product: resolved.productId || resolved.name };
   }
   const res: any = await http.get(`/v2/inAppPurchases/${encodeURIComponent(wanted)}`);
@@ -1311,7 +1335,7 @@ async function setIapPrice(args: Record<string, unknown>, ctx: PricingContext): 
   }
 
   const app = args.app ? await resolveApp(ctx.http, String(args.app)) : undefined;
-  const iap = await resolveIapTarget(ctx.http, String(args.iap), app);
+  const iap = await resolveIapTarget(ctx.http, String(args.iap), app, true);
 
   let schedule: any;
   try {
@@ -1322,12 +1346,29 @@ async function setIapPrice(args: Record<string, unknown>, ctx: PricingContext): 
     if (!(err instanceof AscApiError && err.status === 404)) throw err;
   }
   const read = schedule?.data?.id
-    ? await readSchedulePrices(ctx.http, 'iap', String(schedule.data.id), undefined, true)
+    ? await readSchedulePrices(ctx.http, 'iap', String(schedule.data.id), undefined, true, true)
     : { prices: [] as Record<string, unknown>[] };
   if (read.truncated) {
     throw new AscApiError(
       `Refusing to write: the current price schedule could not be read completely (${read.truncated}) ` +
         'and Apple replaces the whole schedule, so the unread prices would be deleted. Nothing was changed.',
+      0
+    );
+  }
+  // Apple switches prices at each country's own midnight, not UTC's, so on the
+  // day a manual price starts or ends some countries have crossed it and some
+  // have not. Rewriting the schedule then would end or advance a price early
+  // somewhere. A day either side of UTC covers every time zone.
+  // ponytail: refuses for up to two days around each change; a per-territory clock would narrow it.
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  const landing = read.prices.filter((p) =>
+    p.source === 'manual' && [p.startDate, p.endDate].some((d) => d === today || d === tomorrow));
+  if (landing.length) {
+    throw new AscApiError(
+      `Refusing to write: a manual price changes today or tomorrow in ` +
+        `${[...new Set(landing.map((p) => String(p.territory)))].join(', ')}, and Apple applies that change ` +
+        "at each country's own midnight. Rewriting the schedule now could end or start it early somewhere. " +
+        'Try again after the change has taken effect everywhere. Nothing was changed.',
       0
     );
   }
@@ -1426,7 +1467,9 @@ async function setIapPrice(args: Record<string, unknown>, ctx: PricingContext): 
     startDate: start,
     // Takes over the slot of what it overrides, and stops where the next
     // scheduled change in this territory begins.
-    endDate: nextStart ?? (replaced ?? cut)?.endDate ?? null,
+    endDate: [nextStart, (replaced ?? cut)?.endDate ?? null]
+      .filter((d): d is string => d !== null)
+      .sort()[0] ?? null,
   };
   after.push(added);
   diff.push(row(

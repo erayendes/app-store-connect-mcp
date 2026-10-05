@@ -761,7 +761,11 @@ describe('equalize bodies match Apple’s schema', () => {
  * Setting one IAP price. Apple replaces the whole schedule on every write, so
  * the tests are mostly about what else survives it.
  */
-function iapScheduleHttp(opts: { base?: string; truncated?: boolean; noSchedule?: boolean } = {}) {
+type ManualRow = [string, string, string, string | null, string | null];
+function iapScheduleHttp(opts: {
+  base?: string; truncated?: boolean; noSchedule?: boolean;
+  extra?: ManualRow[]; iaps?: Array<{ id: string; productId: string; name: string }>;
+} = {}) {
   const manual: Array<[string, string, string, string | null, string | null]> = [
     // [territory, price point, price, startDate, endDate]
     ['USA', 'pp-usa-499', '4.99', null, null],
@@ -770,8 +774,9 @@ function iapScheduleHttp(opts: { base?: string; truncated?: boolean; noSchedule?
     ['DEU', 'pp-deu-599', '5.99', '2099-01-01', null],
     // Ended long ago: history, not a price anyone pays.
     ['FRA', 'pp-fra-old', '3.99', null, '2020-01-01'],
+    ...(opts.extra ?? []),
   ];
-  const currency: Record<string, string> = { USA: 'USD', TUR: 'TRY', DEU: 'EUR', FRA: 'EUR', GBR: 'GBP' };
+  const currency: Record<string, string> = { USA: 'USD', TUR: 'TRY', DEU: 'EUR', FRA: 'EUR', GBR: 'GBP', ITA: 'EUR' };
   const page = (rows: typeof manual) => ({
     data: rows.map(([territory, point, , startDate, endDate], i) => ({
       id: `row-${territory}-${i}`,
@@ -807,13 +812,15 @@ function iapScheduleHttp(opts: { base?: string; truncated?: boolean; noSchedule?
     request: vi.fn(async () => page(manual)),
     collect: vi.fn(async (path: string, query?: any) => {
       if (path === '/v1/apps/1/inAppPurchasesV2') {
-        return { items: [{ id: 'iap-1', attributes: { productId: 'coins.100', name: '100 coins' } }], hasMore: false };
+        const iaps = opts.iaps ?? [{ id: 'iap-1', productId: 'coins.100', name: '100 coins' }];
+        return { items: iaps.map((i) => ({ id: i.id, attributes: { productId: i.productId, name: i.name } })), hasMore: false };
       }
       const points: Record<string, Array<[string, string]>> = {
         TUR: [['pp-tur-8999', '89.99'], ['pp-tur-9999', '99.99'], ['pp-tur-12999', '129.99']],
         DEU: [['pp-deu-499', '4.99'], ['pp-deu-549', '5.49']],
         USA: [['pp-usa-599', '5.99']],
         GBR: [['pp-gbr-499', '4.99']],
+        ITA: [['pp-ita-349', '3.49']],
       };
       return {
         items: (points[query?.['filter[territory]']] ?? []).map(([id, customerPrice]) => ({ id, attributes: { customerPrice } })),
@@ -890,6 +897,54 @@ describe('pricing__set_iap_price', () => {
     expect(result.diff).toContainEqual(expect.objectContaining({
       territory: 'DEU', oldPrice: '5.49', newPrice: '4.99', startDate: '2098-06-01', change: 'added',
     }));
+  });
+
+  it('pricing__get_iap_price drops a price on its end date, which Apple treats as the first day it is gone', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { http } = iapScheduleHttp({ extra: [['GBR', 'pp-gbr-499', '4.99', null, today]] });
+    const result: any = await executePricingTool('pricing__get_iap_price', { iap: 'iap-1' }, { http } as unknown as PricingContext);
+    expect(result.prices.filter((p: any) => p.territory === 'GBR' && p.source === 'manual')).toEqual([]);
+  });
+
+  it('ends a replaced promotion on its own end date, not at a later scheduled change', async () => {
+    // 10–15 Oct promotion, then back to the standing price, then a rise on 1 Nov.
+    const { http, posts } = iapScheduleHttp({ extra: [
+      ['ITA', 'pp-ita-499', '4.99', null, '2098-10-10'],
+      ['ITA', 'pp-ita-299', '2.99', '2098-10-10', '2098-10-15'],
+      ['ITA', 'pp-ita-599', '5.99', '2098-11-01', null],
+    ] });
+    await run({ iap: 'iap-1', territory: 'ITA', price: '3.49', start_date: '2098-10-10' }, http);
+    expect(scheduleRows(posts[0].body).filter(([p]: string[]) => p.startsWith('pp-ita'))).toEqual([
+      ['pp-ita-499', null, '2098-10-10'],
+      ['pp-ita-349', '2098-10-10', '2098-10-15'],
+      ['pp-ita-599', '2098-11-01', null],
+    ]);
+  });
+
+  it('refuses while a manual price changes today or tomorrow somewhere', async () => {
+    // Apple switches at each country's midnight, so around a change some
+    // countries have crossed it and some have not.
+    const today = new Date().toISOString().slice(0, 10);
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    for (const extra of [
+      [['GBR', 'pp-gbr-499', '4.99', null, today]],
+      [['GBR', 'pp-gbr-499', '4.99', tomorrow, null]],
+    ] as ManualRow[][]) {
+      const { http, posts } = iapScheduleHttp({ extra });
+      await expect(run({ iap: 'iap-1', territory: 'TUR', price: '99.99' }, http)).rejects.toThrow(/today or tomorrow in GBR/);
+      expect(posts).toEqual([]);
+    }
+  });
+
+  it('never writes to an IAP that only partly matches the name given', async () => {
+    const iaps = [
+      { id: 'iap-1', productId: 'coins.100', name: 'Coins' },
+      { id: 'iap-2', productId: 'coins.1000', name: 'Coins' },
+    ];
+    const { http, posts } = iapScheduleHttp({ iaps });
+    await expect(run({ app: '1', iap: 'coins.10', territory: 'TUR', price: '99.99' }, http)).rejects.toThrow(/exactly "coins.10"/);
+    await expect(run({ app: '1', iap: 'Coins', territory: 'TUR', price: '99.99' }, http)).rejects.toThrow(/names 2 in-app purchases/);
+    expect(posts).toEqual([]);
   });
 
   it('resolves a product ID inside its app', async () => {
