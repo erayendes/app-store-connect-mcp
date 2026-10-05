@@ -48,7 +48,7 @@ import { METADATA_TOOLS, METADATA_TOOL_NAMES, executeMetadataTool } from './tool
 import { ACCOUNT_TOOLS, ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
 import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool } from './tools/release.js';
-import { TESTFLIGHT_TOOLS, TESTFLIGHT_TOOL_NAMES, executeTestflightTool } from './tools/testflight.js';
+import { TESTFLIGHT_TOOLS, TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOLS, CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
@@ -615,6 +615,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         const preview = PRICING_TOOL_NAMES.has(name)
           ? // Macro parameters are already human language — no lookups needed.
             { message: buildPricingPreview(args, name), strong: true }
+          : TESTFLIGHT_TOOL_NAMES.has(name)
+          ? // The generic macro preview drops the group list and calls this PUBLIC.
+            { message: buildTestflightPreview(args), strong: true }
           : op
           ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
           : macroOffered(name)

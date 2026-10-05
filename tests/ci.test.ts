@@ -53,6 +53,11 @@ describe('ci__diagnose_run', () => {
     expect(f.collect.mock.calls.filter(([path]) => String(path).includes('/ciBuildActions/'))).toHaveLength(2);
   });
 
+  it('puts the trust warning first, so cutting the response to size cannot drop it', async () => {
+    const out = await diagnose({ app: 'Demo' }, fixture().http);
+    expect(Object.keys(out)[0]).toBe('untrustedContent');
+  });
+
   it('passes over canceled and skipped runs to the newest failed or errored one', async () => {
     const f = fixture({ runs: [run('r4', 4, 'CANCELED'), run('r3', 3, 'SKIPPED'), run('r2', 2, 'ERRORED'), run('r1', 1, 'FAILED')] });
     expect((await diagnose({ app: 'Demo' }, f.http)).run).toMatchObject({ id: 'r2', completionStatus: 'ERRORED' });

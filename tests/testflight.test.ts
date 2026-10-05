@@ -4,7 +4,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { AscApiError } from '../src/core/errors.js';
 import { createServer } from '../src/server.js';
 import { resolveSelection } from '../src/profiles.js';
-import { executeTestflightTool, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
+import { executeTestflightTool, TESTFLIGHT_TOOLS, buildTestflightPreview } from '../src/tools/testflight.js';
 
 function fakeHttp(options: { state?: string; expired?: boolean; assigned?: string[]; fail?: string; assignedHasMore?: boolean; duplicate?: boolean } = {}) {
   const posts: Array<{ path: string; body: unknown }> = [];
@@ -43,6 +43,13 @@ const run = (http: never, options: Record<string, unknown> = args, dryRun = fals
   executeTestflightTool('testflight__assign_build_to_groups', options, { http, dryRun }) as Promise<any>;
 
 describe('testflight__assign_build_to_groups', () => {
+  it('names every destination group and the release risk in its confirmation prompt', () => {
+    const preview = buildTestflightPreview({ app: 'Demo', build: '42', groups: ['Internal', 'External QA'] });
+    expect(preview).toContain('RELEASE-level');
+    expect(preview).toContain('Internal, External QA');
+    expect(preview).not.toContain('PUBLIC');
+  });
+
   it('assigns every selected group and warns about external review', async () => {
     const { http, posts, reads } = fakeHttp();
     const result = await run(http);
