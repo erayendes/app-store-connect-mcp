@@ -92,6 +92,7 @@ describe('write-gate annotations (offline)', () => {
       'storekit__request_test_notification',
       'pricing__set_subscription_price',
       'pricing__equalize_price',
+      'pricing__set_iap_price',
       'listing__upload_screenshot',
       'testflight__assign_build_to_groups',
     ]);

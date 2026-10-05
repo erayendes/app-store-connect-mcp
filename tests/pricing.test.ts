@@ -6,6 +6,7 @@ import {
   normalizePrice,
   type PricingContext,
 } from '../src/tools/pricing.js';
+import { AscApiError } from '../src/core/errors.js';
 import { validateBody } from '../src/core/validate.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
@@ -753,5 +754,213 @@ describe('equalize bodies match Apple’s schema', () => {
     for (const p of posts) {
       expect(validateBody(schemaFor('subscription_prices.create'), p.body)).toEqual([]);
     }
+  });
+});
+
+/**
+ * Setting one IAP price. Apple replaces the whole schedule on every write, so
+ * the tests are mostly about what else survives it.
+ */
+function iapScheduleHttp(opts: { base?: string; truncated?: boolean; noSchedule?: boolean } = {}) {
+  const manual: Array<[string, string, string, string | null, string | null]> = [
+    // [territory, price point, price, startDate, endDate]
+    ['USA', 'pp-usa-499', '4.99', null, null],
+    ['TUR', 'pp-tur-12999', '129.99', '2024-01-01', null],
+    ['DEU', 'pp-deu-549', '5.49', null, '2099-01-01'],
+    ['DEU', 'pp-deu-599', '5.99', '2099-01-01', null],
+    // Ended long ago: history, not a price anyone pays.
+    ['FRA', 'pp-fra-old', '3.99', null, '2020-01-01'],
+  ];
+  const currency: Record<string, string> = { USA: 'USD', TUR: 'TRY', DEU: 'EUR', FRA: 'EUR', GBR: 'GBP' };
+  const page = (rows: typeof manual) => ({
+    data: rows.map(([territory, point, , startDate, endDate], i) => ({
+      id: `row-${territory}-${i}`,
+      attributes: { startDate, endDate },
+      relationships: { territory: { data: { id: territory } }, inAppPurchasePricePoint: { data: { id: point } } },
+    })),
+    included: [
+      ...rows.map(([, point, price]) => ({ type: 'inAppPurchasePricePoints', id: point, attributes: { customerPrice: price, proceeds: '1.00' } })),
+      ...rows.map(([territory]) => ({ type: 'territories', id: territory, attributes: { currency: currency[territory] } })),
+    ],
+    ...(opts.truncated ? { links: { next: 'https://api.appstoreconnect.apple.com/next-manual' } } : {}),
+  });
+  const posts: Array<{ path: string; body: any }> = [];
+  const http = {
+    get: vi.fn(async (path: string): Promise<any> => {
+      if (path === '/v1/apps/1') return { data: { id: '1', attributes: { name: 'Example' } } };
+      if (path === '/v2/inAppPurchases/iap-1') return { data: { id: 'iap-1', attributes: { productId: 'coins.100', name: '100 coins' } } };
+      if (path === '/v2/inAppPurchases/iap-1/iapPriceSchedule') {
+        if (opts.noSchedule) throw new AscApiError('Not found', 404);
+        return { data: { id: 'sch-1', relationships: { baseTerritory: { data: { type: 'territories', id: opts.base ?? 'USA' } } } } };
+      }
+      if (path === '/v1/inAppPurchasePriceSchedules/sch-1/manualPrices') return page(manual);
+      if (path === '/v1/inAppPurchasePriceSchedules/sch-1/automaticPrices') {
+        return { data: [{ id: 'auto-gbr', attributes: { startDate: null, endDate: null }, relationships: {
+          territory: { data: { id: 'GBR' } }, inAppPurchasePricePoint: { data: { id: 'pp-gbr-449' } } } }],
+        included: [
+          { type: 'inAppPurchasePricePoints', id: 'pp-gbr-449', attributes: { customerPrice: '4.49', proceeds: '3.00' } },
+          { type: 'territories', id: 'GBR', attributes: { currency: 'GBP' } },
+        ] };
+      }
+      return { data: [] };
+    }),
+    request: vi.fn(async () => page(manual)),
+    collect: vi.fn(async (path: string, query?: any) => {
+      if (path === '/v1/apps/1/inAppPurchasesV2') {
+        return { items: [{ id: 'iap-1', attributes: { productId: 'coins.100', name: '100 coins' } }], hasMore: false };
+      }
+      const points: Record<string, Array<[string, string]>> = {
+        TUR: [['pp-tur-8999', '89.99'], ['pp-tur-9999', '99.99'], ['pp-tur-12999', '129.99']],
+        DEU: [['pp-deu-499', '4.99'], ['pp-deu-549', '5.49']],
+        USA: [['pp-usa-599', '5.99']],
+        GBR: [['pp-gbr-499', '4.99']],
+      };
+      return {
+        items: (points[query?.['filter[territory]']] ?? []).map(([id, customerPrice]) => ({ id, attributes: { customerPrice } })),
+        hasMore: false,
+      };
+    }),
+    post: vi.fn(async (path: string, body: any) => {
+      posts.push({ path, body });
+      return { data: { id: 'sch-2' } };
+    }),
+  };
+  return { http, posts };
+}
+
+/** The new schedule as territory/point/start/end rows, in the order Apple gets them. */
+function scheduleRows(body: any) {
+  const byRef = new Map(body.included.map((i: any) => [i.id, i]));
+  return body.data.relationships.manualPrices.data.map((ref: any) => {
+    const price: any = byRef.get(ref.id);
+    return [price.relationships.inAppPurchasePricePoint.data.id, price.attributes.startDate, price.attributes.endDate];
+  });
+}
+
+describe('pricing__set_iap_price', () => {
+  const run = (args: Record<string, unknown>, http: unknown, dryRun = false) =>
+    executePricingTool('pricing__set_iap_price', args, { http, dryRun } as unknown as PricingContext);
+  const schema = () => BODY_SCHEMAS[OPERATIONS.find((o) => o.name === 'in_app_purchase_price_schedules.create')!.bodyRef!];
+
+  it('re-sends every other price unchanged and swaps only the named territory', async () => {
+    const { http, posts } = iapScheduleHttp();
+    const result: any = await run({ iap: 'iap-1', territory: 'tur', price: '99,99' }, http);
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0].path).toBe('/v1/inAppPurchasePriceSchedules');
+    const body = posts[0].body;
+    expect(validateBody(schema(), body)).toEqual([]);
+    expect(body.data.relationships.inAppPurchase.data.id).toBe('iap-1');
+    expect(body.data.relationships.baseTerritory.data.id).toBe('USA');
+    expect(scheduleRows(body)).toEqual([
+      ['pp-deu-549', null, '2099-01-01'],
+      ['pp-deu-599', '2099-01-01', null],
+      // In effect since 2024: replaced, and the new price starts now.
+      ['pp-tur-9999', null, null],
+      ['pp-usa-499', null, null],
+    ]);
+    // Every placeholder in the relationship has its resource in `included`.
+    expect(new Set(body.included.map((i: any) => i.id)).size).toBe(4);
+    expect(result.ok).toBe(true);
+    expect(result.diff).toContainEqual(expect.objectContaining({
+      territory: 'TUR', oldPrice: '129.99', newPrice: '99.99', startDate: null, change: 'replaced',
+    }));
+    expect(result.diff.filter((d: any) => d.change === 'unchanged')).toHaveLength(3);
+    expect(result.warning).toBeUndefined();
+  });
+
+  it('keeps a scheduled change in the same territory and stops the new price where it begins', async () => {
+    const { http, posts } = iapScheduleHttp();
+    await run({ iap: 'iap-1', territory: 'DEU', price: '4.99' }, http);
+    expect(scheduleRows(posts[0].body).slice(0, 2)).toEqual([
+      ['pp-deu-499', null, '2099-01-01'],
+      ['pp-deu-599', '2099-01-01', null],
+    ]);
+  });
+
+  it('closes the price in effect on a future start date instead of overlapping it', async () => {
+    const { http, posts } = iapScheduleHttp();
+    const result: any = await run({ iap: 'iap-1', territory: 'DEU', price: '4.99', start_date: '2098-06-01' }, http);
+    expect(scheduleRows(posts[0].body).slice(0, 3)).toEqual([
+      ['pp-deu-549', null, '2098-06-01'],
+      ['pp-deu-499', '2098-06-01', '2099-01-01'],
+      ['pp-deu-599', '2099-01-01', null],
+    ]);
+    expect(validateBody(schema(), posts[0].body)).toEqual([]);
+    expect(result.diff).toContainEqual(expect.objectContaining({
+      territory: 'DEU', oldPrice: '5.49', newPrice: '4.99', startDate: '2098-06-01', change: 'added',
+    }));
+  });
+
+  it('resolves a product ID inside its app', async () => {
+    const { http, posts } = iapScheduleHttp();
+    const result: any = await run({ app: '1', iap: 'coins.100', territory: 'TUR', price: '89.99' }, http);
+    expect(posts[0].body.data.relationships.inAppPurchase.data.id).toBe('iap-1');
+    expect(result.changed).toMatchObject({ app: 'Example (1)', iap: 'coins.100 (iap-1)', price: '89.99 (TUR)' });
+  });
+
+  it('refuses a price Apple does not offer, names the nearest tiers and writes nothing', async () => {
+    const { http, posts } = iapScheduleHttp();
+    await expect(run({ iap: 'iap-1', territory: 'TUR', price: '95' }, http))
+      .rejects.toThrow(/nearest available: 89.99, 99.99/);
+    expect(posts).toEqual([]);
+  });
+
+  it('refuses when the current schedule could not be read completely', async () => {
+    const { http, posts } = iapScheduleHttp({ truncated: true });
+    await expect(run({ iap: 'iap-1', territory: 'TUR', price: '99.99' }, http))
+      .rejects.toThrow(/could not be read completely[\s\S]*Nothing was changed/);
+    expect(posts).toEqual([]);
+    expect(http.collect).not.toHaveBeenCalled();
+  });
+
+  it('dry-run shows the before/after diff and the body, and never POSTs', async () => {
+    const { http } = iapScheduleHttp();
+    const result: any = await run({ iap: 'iap-1', territory: 'TUR', price: '99.99' }, http, true);
+    expect(http.post).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ dryRun: true, risk: 'revenue', wouldSend: { method: 'POST', path: '/v1/inAppPurchasePriceSchedules' } });
+    expect(result.diff.map((d: any) => [d.territory, d.oldPrice, d.newPrice, d.startDate])).toEqual([
+      ['DEU', '5.49', '5.49', null],
+      ['DEU', '5.99', '5.99', '2099-01-01'],
+      ['TUR', '129.99', '99.99', null],
+      ['USA', '4.99', '4.99', null],
+    ]);
+    expect(validateBody(schema(), result.wouldSend.body)).toEqual([]);
+  });
+
+  it('warns that pricing the base territory moves the automatic prices', async () => {
+    const { http } = iapScheduleHttp();
+    const result: any = await run({ iap: 'iap-1', territory: 'USA', price: '5.99' }, http, true);
+    expect(result.warning).toMatch(/USA is this in-app purchase's base territory[\s\S]*1 country automatic/);
+    expect(result.resolved.baseTerritory).toBe('USA');
+  });
+
+  it('starts a schedule from scratch when there is none, with this territory as its base', async () => {
+    const { http, posts } = iapScheduleHttp({ noSchedule: true });
+    const result: any = await run({ iap: 'iap-1', territory: 'TUR', price: '99.99' }, http);
+    expect(posts[0].body.data.relationships.baseTerritory.data.id).toBe('TUR');
+    expect(scheduleRows(posts[0].body)).toEqual([['pp-tur-9999', null, null]]);
+    expect(result.warning).toMatch(/becomes its base territory/);
+    await expect(run({ iap: 'iap-1', territory: 'TUR', price: '99.99', start_date: '2099-01-01' }, http))
+      .rejects.toThrow(/first price has to start now/);
+  });
+
+  it('rejects a past start date and a two-letter territory before reading anything', async () => {
+    const { http } = iapScheduleHttp();
+    await expect(run({ iap: 'iap-1', territory: 'TUR', price: '99.99', start_date: '2020-01-01' }, http))
+      .rejects.toThrow(/in the past/);
+    await expect(run({ iap: 'iap-1', territory: 'TR', price: '99.99' }, http)).rejects.toThrow(/three-letter/);
+    expect(http.get).not.toHaveBeenCalled();
+  });
+
+  it('is a REVENUE-level write that the confirmation preview explains', () => {
+    const tool = PRICING_TOOLS.find((t) => t.name === 'pricing__set_iap_price')!;
+    expect(tool.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.description).toMatch(/REVENUE-level write\.$/);
+    const preview = buildPricingPreview({ iap: 'coins.100', territory: 'tur', price: '99,99' }, 'pricing__set_iap_price');
+    expect(preview).toMatch(/in-app purchase price — a REVENUE-level write/);
+    expect(preview).toMatch(/99\.99 \(TUR\)/);
+    expect(preview).toMatch(/whole schedule is replaced/);
+    expect(preview).toMatch(/base territory/);
   });
 });

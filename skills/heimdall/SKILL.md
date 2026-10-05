@@ -127,7 +127,7 @@ default.
 
 A large profile takes a colon and a list of sub-profiles —
 `monetization:subscription-pricing,subscription-offers` is 55 tools where
-`monetization` is 210. Worth suggesting for `monetization`, `game-center`,
+`monetization` is 211. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
 Heimdall serves 896 distinct tools across 13 profiles: 864 reachable Apple operations plus 32 hand-written tools. The `testflight` profile serves 56 tools including core.
@@ -142,6 +142,7 @@ right choice for anything the macro does not cover.
 |---|---|
 | app → group → subscription → price points | `pricing__get_subscription_price` / `pricing__set_subscription_price` |
 | app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:iap-pricing`) |
+| rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:iap-pricing`) — keeps every other price |
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
