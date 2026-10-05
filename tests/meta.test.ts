@@ -101,6 +101,10 @@ describe('asc__search_tools finds the macros', () => {
     expect(JSON.stringify(result)).toContain('subscription-catalog');
   });
 
+  it('finds the Xcode Cloud diagnosis macro from a failure question', async () => {
+    expect(await search('why did my Xcode Cloud build fail', 5)).toContain('ci__diagnose_run');
+  });
+
   // Multi-word queries used to miss every non-spec tool: matching was a
   // whole-phrase includes, and no description contains a whole question.
   it('matches a StoreKit tool word by word', async () => {

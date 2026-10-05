@@ -327,7 +327,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "",
       operations: ["apps.ci_product.get","ci_artifacts.get","ci_build_actions.artifacts.list","ci_build_actions.build_run.get","ci_build_actions.get","ci_build_actions.issues.list","ci_build_actions.test_results.list","ci_build_runs.actions.list","ci_build_runs.builds.list","ci_build_runs.create","ci_build_runs.get","ci_issues.get","ci_mac_os_versions.get","ci_mac_os_versions.list","ci_mac_os_versions.xcode_versions.list","ci_products.additional_repositories.list","ci_products.app.get","ci_products.build_runs.list","ci_products.delete","ci_products.get","ci_products.list","ci_products.primary_repositories.list","ci_products.workflows.list","ci_test_results.get","ci_workflows.build_runs.list","ci_workflows.create","ci_workflows.delete","ci_workflows.get","ci_workflows.repository.get","ci_workflows.update","ci_xcode_versions.get","ci_xcode_versions.list","ci_xcode_versions.mac_os_versions.list","scm_git_references.get","scm_providers.get","scm_providers.list","scm_providers.repositories.list","scm_pull_requests.get","scm_repositories.get","scm_repositories.git_references.list","scm_repositories.list","scm_repositories.pull_requests.list"],
-      manualTools: [],
+      manualTools: ["ci__diagnose_run"],
       rootResources: ["apps","ci_artifacts","ci_build_actions","ci_build_runs","ci_issues","ci_mac_os_versions","ci_products","ci_test_results","ci_workflows","ci_xcode_versions","scm_git_references","scm_providers","scm_pull_requests","scm_repositories"],
     },
     ],

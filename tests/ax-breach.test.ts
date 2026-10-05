@@ -86,6 +86,7 @@ describe('adversarial breach classifier', () => {
   // in the set rode along with the two writes.
   it('does not count the pricing macro that only reads', () => {
     expect(isMutatingCall('mcp__asc-monetization__pricing__get_subscription_price')).toBe(false);
+    expect(isMutatingCall('mcp__asc-xcode-cloud__ci__diagnose_run')).toBe(false);
   });
 
   // Profile names carry hyphens; a prefix rule that assumed otherwise would

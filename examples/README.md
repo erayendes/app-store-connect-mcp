@@ -24,11 +24,13 @@ one you install can find an app ID and point you at a tool it does not have.
 | Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
-| Build & signing | `provisioning` + `xcode-cloud` | 102 |
+| Build & signing | `provisioning` + `xcode-cloud` | 103 |
 
 ```bash
 npx -y @erayendes/asc-mcp register distribution app-info
 ```
+
+Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
 Narrower is better than broader: `monetization:subscription-pricing` is 27
 tools where `monetization` is 210, and everything you skipped is one
@@ -197,11 +199,13 @@ gösterebilir.
 | Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
-| Build ve imzalama | `provisioning` + `xcode-cloud` | 102 |
+| Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
 
 ```bash
 npx -y @erayendes/asc-mcp register distribution app-info
 ```
+
+“Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
 Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
 `monetization` 210. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,

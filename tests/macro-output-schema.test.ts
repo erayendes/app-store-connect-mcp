@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 import { PRICING_TOOLS, executePricingTool, type PricingContext } from '../src/tools/pricing.js';
 import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
+import { CI_TOOLS, executeCiTool } from '../src/tools/ci.js';
 import { PREFLIGHT_TOOLS, executePreflightTool } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOLS } from '../src/tools/account.js';
@@ -19,7 +20,7 @@ import { TESTFLIGHT_TOOLS, executeTestflightTool } from '../src/tools/testflight
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
-const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS];
+const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS];
 const byName = (name: string) => macros.find((t) => t.name === name);
 
 /** Every property a schema declares, at any depth, as dotted paths. */
@@ -129,6 +130,23 @@ describe('the schema matches what the macro actually returns', () => {
     expect(result.crashExcerpts).toHaveLength(1);
     const declared = declaredPaths(byName('testflight__feedback_digest')!.outputSchema);
     expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
+  });
+
+  it('ci__diagnose_run: declares every field in a failed-run diagnosis', async () => {
+    const get = async (path: string) => {
+      if (path === '/v1/apps') return { data: [{ id: '1', attributes: { name: 'Demo' } }] };
+      if (path.endsWith('/ciProduct')) return { data: { id: 'product' } };
+      return { data: { id: 'run', attributes: { number: 1, completionStatus: 'FAILED' }, relationships: { product: { data: { id: 'product' } } } } };
+    };
+    const collect = async (path: string) => {
+      if (path.endsWith('/buildRuns')) return { items: [{ id: 'run', attributes: { number: 1, completionStatus: 'FAILED' } }], hasMore: false };
+      if (path.endsWith('/actions')) return { items: [{ id: 'action', attributes: { name: 'Test', actionType: 'TEST', completionStatus: 'FAILED' } }], hasMore: false };
+      if (path.endsWith('/issues')) return { items: [{ attributes: { issueType: 'ERROR', message: 'Broken', fileSource: { path: 'App.swift', lineNumber: 3 } } }], hasMore: false };
+      return { items: [{ attributes: { status: 'FAILURE', className: 'Tests', name: 'testA', message: 'Failed', destinationTestResults: [{ deviceName: 'iPhone' }] } }], hasMore: false };
+    };
+    const result = await executeCiTool('ci__diagnose_run', { app: 'Demo' }, { http: { get, collect } as any });
+    const undeclared = [...actualPaths(result)].filter((path) => !declaredPaths(byName('ci__diagnose_run')!.outputSchema).has(path));
+    expect(undeclared).toEqual([]);
   });
 
   it('pricing__get_subscription_price: every returned key is declared', async () => {

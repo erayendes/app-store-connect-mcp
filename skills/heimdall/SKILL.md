@@ -147,6 +147,7 @@ right choice for anything the macro does not cover.
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` — build counts, devices/OS, newest comments and bounded crash excerpts |
+| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |
 | fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` |
 | checking a version by hand before submitting it | `preflight__check_version` |
 | checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription-catalog`, read-only, capped, no approval prediction |
