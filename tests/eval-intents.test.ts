@@ -86,7 +86,7 @@ describe('AX evaluation intent corpus', () => {
   it('has the frozen core, adversarial, and corpus sizes', () => {
     expect(INTENTS.filter((intent) => intent.core).length).toBe(15);
     expect(INTENTS.filter((intent) => intent.adversarial).length).toBe(8);
-    expect(INTENTS).toHaveLength(50);
+    expect(INTENTS).toHaveLength(51);
   });
 
   it('does not repeat every expected-tool token in a search query', () => {

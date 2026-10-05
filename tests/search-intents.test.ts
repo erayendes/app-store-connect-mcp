@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { searchOperations } from '../src/tools/meta.js';
+import { searchOperations, executeMetaTool } from '../src/tools/meta.js';
 import { INTENTS, FILTER_PROBES } from './eval/intents.js';
 
 /**
@@ -14,11 +14,11 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  * first version sat at 11 against 92 passing, and a query broken on purpose
  * sailed straight through.
  *
- * Measured on the 50-intent corpus, 265 query phrasings:
+ * Measured on the 51-intent corpus, 270 query phrasings:
  *
  *   passing in top-3   143   ← FLOOR
- *   ranked too low      15   the tool is found, below third
- *   no results at all  107   nothing matched — almost all of them Turkish
+ *   ranked too low      17   the tool is found, below third
+ *   no results at all  110   nothing matched — almost all of them Turkish
  *
  * It has moved three times, and every move was the point:
  *   92 → 81   lane B stopped queries from naming their own target, so the
@@ -47,7 +47,7 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  * ranked list of operations that shared two letters with a Turkish suffix.
  * Passing stayed at 83, which is the number that matters.
  *
- * Ceiling today is 147 (265 minus the 118 that find nothing).
+ * Ceiling today is 160 (270 minus the 110 that find nothing).
  */
 const FLOOR = 143;
 
@@ -107,6 +107,13 @@ const FAILING = EVALUATION.filter((e) => !e.pass);
  * rank the English phrasings honestly.
  */
 const KNOWN_FAILING_QUERIES: string[] = [
+  // The new catalog-preflight intent has no single raw-operation equivalent.
+  // The actual search finds the macro (tested below); this ratchet measures raw tools.
+  'subscription review readiness',
+  'Aboneliği inceleme öncesi kontrol et',
+  'Abonelik grubundaki eksikleri bul',
+  'Check subscription readiness before review',
+  'Find missing subscription catalog metadata',
 // --- zero-result queries: the catalogue is English and these are not ---
   'Türkiye’de haftalık aboneliği 99,99 TL yap',
   'TR fiyatını güncelle',
@@ -235,6 +242,17 @@ const KNOWN_FAILING_QUERIES: string[] = [
 ];
 
 describe('search intent coverage ratchet (asc__search_tools top-3)', () => {
+  it('routes the subscription preflight intent to its macro in the actual search', async () => {
+    const intent = INTENTS.find((i) => i.macro === 'preflight__check_subscription')!;
+    const ctx: any = {
+      registry: { get: () => undefined }, macroOffered: () => true,
+      readOnly: true, loadedDomains: [],
+    };
+    for (const query of [intent.searchQuery, ...intent.phrasings!.slice(2)]) {
+      const result: any = await executeMetaTool('asc__search_tools', { query, limit: 3 }, ctx);
+      expect(result.matches.map((m: any) => m.tool), query).toContain(intent.macro);
+    }
+  });
   it('meets or exceeds the top-3 search intent floor (ratchet)', () => {
     const actualPassing = PASSING.length;
     expect(
@@ -344,11 +362,11 @@ describe('historical regression freeze cases', () => {
  *
  * So this block names the competition instead of counting it. A query is
  * "contested" when the expected tool is in the top 3 but something else ranks
- * first. Measured on the same 265 phrasings:
+ * first. Measured on the same 270 phrasings:
  *
  *  115   expected tool ranks first — uncontested
  *   28   expected tool is in the top 3, another tool leads — contested
- *  122   expected tool is not in the top 3 at all (107 find nothing, 15 rank low)
+ *  127   expected tool is not in the top 3 at all (110 find nothing, 17 rank low)
  *
  * 115 + 28 = 143, the FLOOR. Same corpus, split by who won rather than by pass
  * and fail.

@@ -40,7 +40,7 @@ const versionChain: EvalStep[] = [
 ];
 
 export const INTENTS: EvalIntent[] = [
-  // monetization (8)
+  // monetization (9)
   { intent: 'Set the Turkish price of the weekly subscription to 99.99 TRY', searchQuery: 'change subscription price territory', expectedTool: 'subscription_prices.create', macro: 'pricing__set_subscription_price', core: true, chain: [...subscriptionChain, { op: 'subscriptions.price_points.list', path: '/v1/subscriptions/{id}/pricePoints', idFrom: '1:data[0].id', params: { 'filter[territory]': 'TUR' } }], phrasings: ['Türkiye’de haftalık aboneliği 99,99 TL yap', 'TR fiyatını güncelle', 'Türk kullanıcılar için zam yapmam lazım', 'raise the weekly sub price for Turkey', 'Set the Turkey price for our weekly plan'] },
   // The intent that exposed the gap: a live session called
   // pricing__get_subscription_price, found it answers one country at a time,
@@ -53,6 +53,8 @@ export const INTENTS: EvalIntent[] = [
   { intent: 'Make a subscription available in another country', searchQuery: 'subscription availability territory', expectedTool: 'subscription_plan_availabilities.create', phrasings: ['Aylık aboneliği Almanya’da da satışa aç', 'DE satışını aç', 'Alman kullanıcılar artık abone olabilsin', 'Make the subscription available in Germany', 'Add a territory to subscription availability'] },
   { intent: 'Give this subscription a billing grace period', searchQuery: 'subscription billing grace period', expectedTool: 'subscription_grace_periods.update', phrasings: ['Aylık aboneliğe 16 günlük ödeme ek süresi tanımla', 'Ek süreyi aç', 'Kartı reddedilen müşteriyi hemen kaybetmeyelim', 'Enable a billing grace period', 'Update the subscription grace period'] },
   { intent: 'See the win-back offers for this subscription', searchQuery: 'subscription win back offers', expectedTool: 'subscriptions.win_back_offers.list', phrasings: ['Aylık aboneliğin etkin geri kazanım tekliflerini göster', 'Win-back teklifleri ne?', 'Ayrılan müşterilere hangi kampanyaları sunduğumuzu görmeliyim', 'Show subscription win-back offers', 'List offers for lapsed subscribers'] },
+
+  { intent: 'Check subscription catalog gaps before review', searchQuery: 'subscription review readiness', expectedTool: 'subscriptions.get', macro: 'preflight__check_subscription', chain: [...subscriptionChain, { op: 'subscriptions.get', path: '/v1/subscriptions/{id}', idFrom: '1:data[0].id' }], phrasings: ['Aboneliği inceleme öncesi kontrol et', 'Abonelik grubundaki eksikleri bul', 'Check subscription readiness before review', 'Find missing subscription catalog metadata'] },
 
   // app-info / metadata (5)
   { intent: 'Update the description and what’s new text', searchQuery: 'update app description whats new', expectedTool: 'app_store_version_localizations.update', core: true, chain: [...versionChain, { op: 'app_store_versions.app_store_version_localizations.list', path: '/v1/appStoreVersions/{id}/appStoreVersionLocalizations', idFrom: '0:data[0].id' }], phrasings: ['Türkçe açıklamayı ve 2.4 sürümünün Yenilikler metnini güncelle', 'Mağaza metnini değiştir', 'Yeni özellikler mağaza sayfasında doğru görünsün', 'Update the description and What’s New', 'Edit the store listing copy'] },

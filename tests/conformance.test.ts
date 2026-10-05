@@ -9,12 +9,13 @@
  * error instead of a tool error. None of it fails loudly in development,
  * because our own client is forgiving.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../src/server.js';
 import { resolveSelection } from '../src/profiles.js';
 import type { ServerConfig } from '../src/core/config.js';
+import { AscHttpClient } from '../src/core/http.js';
 
 const config: ServerConfig = {
   credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'not-used-here' },
@@ -33,6 +34,48 @@ async function connect(spec?: string, overrides: Partial<ServerConfig> = {}) {
 }
 
 describe('what a client receives', () => {
+  it('calls subscription preflight under --read-only and validates its structured result', async () => {
+    const get = vi.spyOn(AscHttpClient.prototype, 'get').mockImplementation(async (path) => {
+      if (path === '/v1/apps/1') return { data: { id: '1', attributes: { name: 'Example' } } } as any;
+      if (path.endsWith('/subscriptionGroups')) return { data: [{ id: 'g1' }] } as any;
+      if (path.endsWith('/subscriptions')) return { data: [{ id: 's1', attributes: { productId: 'monthly', name: 'Monthly' } }] } as any;
+      return { data: path.endsWith('/appStoreReviewScreenshot') ? null : [] } as any;
+    });
+    const client = await connect('monetization:subscription-catalog', { readOnly: true });
+    try {
+      // listTools registers output-schema validators in the SDK client.
+      const tool = (await client.listTools()).tools.find((t) => t.name === 'preflight__check_subscription')!;
+      // No top-level oneOf: several client APIs reject it in a tool schema.
+      // The handler enforces exactly one of subscription or group instead.
+      expect(tool.inputSchema).not.toHaveProperty('oneOf');
+      const result = await client.callTool({ name: 'preflight__check_subscription', arguments: { app: '1', group: 'g1' } });
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({ group: { id: 'g1', ready: false }, subscriptions: [{ id: 's1', ready: false }] });
+    } finally {
+      await client.close();
+      get.mockRestore();
+    }
+  });
+  it.each([false, true])('isolates the two preflight macros by exact profile membership (readOnly=%s)', async (readOnly) => {
+    for (const [profile, offered, hidden] of [
+      ['monetization:subscription-catalog', 'preflight__check_subscription', 'preflight__check_version'],
+      ['distribution:version', 'preflight__check_version', 'preflight__check_subscription'],
+    ]) {
+      const client = await connect(profile, { readOnly });
+      try {
+        const tools = (await client.listTools()).tools;
+        expect(tools.map((t) => t.name)).toContain(offered);
+        expect(tools.map((t) => t.name)).not.toContain(hidden);
+        const tool = tools.find((t) => t.name === offered)!;
+        expect(tool.annotations?.readOnlyHint).toBe(true);
+        expect(tool.outputSchema).toBeTruthy();
+        const res = await client.callTool({ name: hidden, arguments: { app: '1', subscription: 's1' } });
+        expect(res.isError).toBe(true);
+      } finally {
+        await client.close();
+      }
+    }
+  });
   it('advertises the tools capability and identifies itself', async () => {
     const client = await connect('app-info');
     expect(client.getServerCapabilities()?.tools).toBeDefined();
