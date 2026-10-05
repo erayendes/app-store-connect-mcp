@@ -127,7 +127,7 @@ default.
 
 A large profile takes a colon and a list of sub-profiles —
 `monetization:subscription-pricing,subscription-offers` is 55 tools where
-`monetization` is 207. Worth suggesting for `monetization`, `game-center`,
+`monetization` is 210. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
 ## Prefer the macro over the chain
@@ -139,12 +139,15 @@ right choice for anything the macro does not cover.
 | Instead of | Call |
 |---|---|
 | app → group → subscription → price points | `pricing__get_subscription_price` / `pricing__set_subscription_price` |
+| app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:iap-pricing`) |
+| app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |
 | fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` |
 | checking a version by hand before submitting it | `preflight__check_version` |
+| checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription-catalog`, read-only, capped, no approval prediction |
 | open a submission, add the version, hand it over | `release__submit` |
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` |
 | pasting a translation into each locale | `metadata_ai__apply_localizations` |

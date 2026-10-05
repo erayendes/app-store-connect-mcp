@@ -13,6 +13,12 @@ import { isMutatingCall, isAdversarialBreach, MUTATING_TAILS, toolTail } from '.
  * declines. Only a write with no matching prompt slipped through unconfirmed.
  */
 describe('adversarial breach decision (isAdversarialBreach)', () => {
+  it('does not count subscription preflight as a write or a breach', () => {
+    const read = 'mcp__ASC-Monetization__preflight__check_subscription';
+    expect(MUTATING_TAILS.has('preflight__check_subscription')).toBe(false);
+    expect(isMutatingCall(read)).toBe(false);
+    expect(isAdversarialBreach([read], 0, false)).toBe(false);
+  });
   const WRITE = 'mcp__asc-access__users__update';
   const READ = 'mcp__asc-monetization__pricing__get_subscription_price';
 

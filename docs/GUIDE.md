@@ -104,7 +104,7 @@ One install backs thirteen small, purpose-built MCP servers. Pass a profile name
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, availability, age ratings, accessibility labels, EULA | 58 | — |
 | `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 207 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `monetization` | Subscriptions, IAP, pricing, offers, StoreKit 2, sandbox testers | 210 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Screenshots, product pages, in-app events, customer reviews | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, individual testers, invitations, team members | 65 | beta-testers, beta-groups, users |
 | `testflight` | Beta app localizations, beta review details, crash feedback, beta license agreement | 55 | — |
@@ -127,7 +127,7 @@ Every profile also carries the **core set** — `apps__list`, `apps__get`, the f
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
-| Monetization | `monetization` | 207 |
+| Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
 | Build & signing | `provisioning` + `xcode-cloud` | 103 |
@@ -148,7 +148,7 @@ MCP connects every configured server at session start — there's no "load the r
 
 These narrow a large profile. Check a profile in the setup picker; move the cursor onto it and its sub-profiles unfold underneath, all on — uncheck what you don't need.
 
-`monetization` is 207 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 27. The server is called `ASC-Monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
+`monetization` is 210 tools, for instance; if you only change subscription prices, `monetization:subscription-pricing` is 27. The server is called `ASC-Monetization` either way. Ask `asc__status` at any time and it reports which sub-profiles are loaded and roughly what they cost.
 
 Writing the config by hand, the syntax is:
 
@@ -360,12 +360,15 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | Instead of | Call | Needs |
 |:--|:--|:--|
 | app → group → subscription → price points | `pricing__get_subscription_price` — one country or, with the territory omitted, all ~175 grouped by price | `monetization:subscription-pricing` |
+| app → IAP → price schedule → prices | `pricing__get_iap_price` — current and scheduled prices by territory | `monetization:iap-pricing` |
+| app → app price schedule → prices | `pricing__get_app_price` — current and scheduled prices by territory | `monetization:app-price` |
 | the same chain plus the write | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | setting a price country by country | `pricing__equalize_price` — one anchor price, every other market derived by Apple, for an app, an IAP or a subscription | `monetization:subscription-pricing` |
 | open a submission, add the version, hand it over — three calls in that order | `release__submit` — refuses what the pre-flight blocks | `distribution:submission` |
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
 | pasting a translation into each locale by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review detail + localizations + screenshots, to answer "can this be submitted" | `preflight__check_version` | `distribution:version` |
+| subscription + group localizations + prices + availability + review screenshot | `preflight__check_subscription` — factual catalog gaps before review | `monetization:subscription-catalog` |
 | two versions × every locale, compared by hand | `listing__diff_metadata` — only the fields that differ, plus locales added or dropped | `distribution:version` |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot, then moving the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
@@ -373,6 +376,10 @@ A handful of hand-written tools collapse a multi-step flow into one call. The ra
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` — defaults to the newest failed or errored run among the newest 40; accepts a run ID/number and workflow name/ID; caps all reads | `xcode-cloud` |
 | fetching reviews and grouping them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 | listing apps, then a versions call each, then reading App Store states | `asc__account_status` — every app, what is live, what is in flight, and whether the next move is yours or Apple's | core, so every profile |
+
+`preflight__check_subscription` takes `app` and exactly one of `subscription` (exact product ID, name or ID) or `group` (exact reference name or ID). Each subscription returns its state, `ready`, and findings with `blocking` / `warning`, a fact and `fixWith`; group mode adds a group summary. Missing review notes, unset family sharing and group locales absent from the subscription are warnings. `ready` means no observed blocking catalog gaps, not submission eligibility or Apple approval.
+
+All reads stop after one page: catalog lookup 20 groups and 50 subscriptions per group; group checking 20 subscriptions; localizations 50; plan availabilities 5; prices and territories 1 each (presence only). `truncated` notes identify omitted rows; a capped name search cannot establish uniqueness. This uses current v1 catalog localizations, matching the existing catalog/pricing flow. The spec also exposes current v2 localizations attached to versions; version drafts are outside this check. Plan availabilities replace the deprecated subscription availability endpoint. Prices may be scheduled; this does not verify a current price for every territory.
 
 ### Prompts
 
@@ -551,7 +558,7 @@ Tek kurulum, on üç küçük, amaca özel MCP sunucusu sunar. Profil adını ve
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 58 | — |
 | `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 207 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 210 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 65 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 55 | — |
@@ -574,7 +581,7 @@ Her profil ayrıca **çekirdek kümeyi** taşır — `apps__list`, `apps__get`, 
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
-| Monetizasyon | `monetization` | 207 |
+| Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
@@ -595,7 +602,7 @@ MCP, config'deki her sunucuyu oturum başında bağlar — "konuya göre doğru 
 
 Büyük bir profili daraltır. Setup seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profilleri hepsi işaretli olarak açılır, istemediğinizi kaldırın.
 
-Örneğin `monetization` 207 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 27 araç. Sunucunun adı iki durumda da `ASC-Monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
+Örneğin `monetization` 210 araç; ama sadece abonelik fiyatı değiştiriyorsanız `monetization:subscription-pricing` 27 araç. Sunucunun adı iki durumda da `ASC-Monetization` kalır. `asc__status` hangi alt profillerin yüklü olduğunu ve yaklaşık maliyetini raporlar.
 
 Config'i elle yazacaksanız sözdizimi:
 
@@ -800,12 +807,15 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | Şunun yerine | Bunu çağır | Gereken |
 |:--|:--|:--|
 | app → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da territory verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
+| app → IAP → fiyat takvimi → fiyatlar | `pricing__get_iap_price` — ülkeye göre güncel ve planlanmış fiyatlar | `monetization:iap-pricing` |
+| app → uygulama fiyat takvimi → fiyatlar | `pricing__get_app_price` — ülkeye göre güncel ve planlanmış fiyatlar | `monetization:app-price` |
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
 | submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` — ön denetimin blokladığını reddeder | `distribution:submission` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
+| abonelik + grup yerelleştirmeleri + fiyatlar + kullanılabilirlik + inceleme ekran görüntüsü | `preflight__check_subscription` — inceleme öncesi katalog eksikleri | `monetization:subscription-catalog` |
 | iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
@@ -813,6 +823,10 @@ Elle yazılmış birkaç araç, çok adımlı bir akışı tek çağrıya indiri
 | uygulama → Xcode Cloud ürünü → koşu → adımlar → sorunlar ve testler | `ci__diagnose_run` — en yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer; koşu ID/numarası ve iş akışı adı/ID alır; tüm okumaları sınırlar | `xcode-cloud` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
 | uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | çekirdek, yani her profilde |
+
+`preflight__check_subscription`, `app` ile birlikte ya `subscription` (tam ürün kimliği, ad veya ID) ya da `group` (tam referans adı veya ID) alır. Her abonelik için durum, `ready` ve `blocking` / `warning` düzeyi, olgu ve `fixWith` içeren bulgular döner; grup modu grup özetini de ekler. Boş inceleme notu, ayarlanmamış aile paylaşımı ve abonelikte bulunmayan grup dilleri uyarıdır. `ready`, gözlenen engelleyici katalog eksiği olmadığı anlamına gelir; gönderim uygunluğunu veya Apple onayını bildirmez.
+
+Her okuma tek sayfada durur: katalog araması 20 grup ve grup başına 50 abonelik; grup denetimi 20 abonelik; yerelleştirmeler 50; plan kullanılabilirlikleri 5; fiyatlar ve ülkeler birer kayıt (yalnızca varlık kontrolü). `truncated` notları okunmayan satırları belirtir; sınırlı ad araması tekilliği doğrulayamaz. Mevcut katalog/fiyat akışına uygun olarak güncel v1 katalog yerelleştirmeleri kullanılır. Spec, sürümlere bağlı güncel v2 yerelleştirmelerini de sunar; sürüm taslakları bu denetimin dışındadır. Plan kullanılabilirlikleri, kullanımdan kaldırılan subscription availability uç noktasının yerini alır. Fiyatlar ileri tarihli olabilir; her ülkede geçerli fiyat denetlenmez.
 
 ### Prompt'lar
 

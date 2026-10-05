@@ -20,7 +20,7 @@
 
 **Heimdall.** One tool for your entire App Store Connect account.
 
-An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 896 tools.**
+An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 899 tools.**
 
 Apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
 
@@ -28,6 +28,9 @@ Apps and metadata, versions and phased releases, TestFlight, subscriptions and i
 > - *"Summarise this week's 1-star reviews and draft replies."*
 > - *"Which builds are stuck in review?"*
 > - *"Raise this subscription's price in every territory."*
+> - *"Show current and scheduled IAP or app prices in each country."*
+
+`pricing__get_iap_price` (`monetization:iap-pricing`) and `pricing__get_app_price` (`monetization:app-price`) read these prices without changing them.
 
 ### What the one call saves
 
@@ -68,12 +71,14 @@ Most App Store Connect MCP servers offer a hand-picked slice of the API. That wo
 
 | | |
 | :--- | :--- |
-| **Complete** | Apple's OpenAPI spec v4.5, all 973 paths, 987 operations — 283 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 864 reachable operations plus 32 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
-| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 207. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
+| **Complete** | Apple's OpenAPI spec v4.5, all 973 paths, 987 operations — 283 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 864 reachable operations plus 35 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
+| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 210. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
 | **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
 | **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
 | **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
 | **Private** | The `.p8` lives in the macOS Keychain, never in a plain-text config. |
+
+**Subscription preflight.** `preflight__check_subscription` checks one subscription or up to 20 in a group for catalog gaps before review. Available in `monetization:subscription-catalog`, including `--read-only`; each finding names a raw fix tool. It reports capped reads and does not predict Apple approval.
 
 #### Profiles
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
@@ -136,7 +141,7 @@ Tool definitions in `src/generated/` are produced from Apple Inc.'s published Ap
 
 **Heimdall.** Tüm App Store Connect hesabınız için tek bir araç.
 
-**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 896 araç.**
+**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 899 araç.**
 
 Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
 
@@ -144,6 +149,9 @@ Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikl
 > - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
 > - *"Hangi build'ler incelemede takıldı?"*
 > - *"Bu aboneliğin fiyatını her ülkede artır."*
+> - *"IAP veya uygulamanın güncel ve planlanmış fiyatlarını ülke ülke göster."*
+
+`pricing__get_iap_price` (`monetization:iap-pricing`) ve `pricing__get_app_price` (`monetization:app-price`) bu fiyatları değiştirmeden okur.
 
 ### Tek çağrının kazandırdığı
 
@@ -183,12 +191,14 @@ Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
 
 | | |
 | :--- | :--- |
-| **Eksiksiz** | Apple'ın OpenAPI spec v4.5'i, tüm 973 path, 987 işlem — 283 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 864 işlem artı elle yazılmış 32 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
-| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 207 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
+| **Eksiksiz** | Apple'ın OpenAPI spec v4.5'i, tüm 973 path, 987 işlem — 283 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 864 işlem artı elle yazılmış 35 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
+| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 210 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
 | **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
 | **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
 | **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
 | **Gizli** | `.p8` macOS Keychain'de durur, düz metin config'de değil. |
+
+**Abonelik ön denetimi.** `preflight__check_subscription`, inceleme öncesinde tek aboneliğin veya gruptaki en fazla 20 aboneliğin katalog eksiklerini denetler. `monetization:subscription-catalog` içinde, `--read-only` ile de kullanılabilir; her bulgu düzeltme aracını adlandırır. Sınırlı okumaları belirtir, Apple onayını tahmin etmez.
 
 #### Profiller
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->

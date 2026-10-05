@@ -13,7 +13,7 @@ import { PRICING_TOOLS, executePricingTool, type PricingContext } from '../src/t
 import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { CI_TOOLS, executeCiTool } from '../src/tools/ci.js';
-import { PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
+import { PREFLIGHT_TOOLS, executePreflightTool } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOLS } from '../src/tools/account.js';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -74,6 +74,47 @@ describe('read macros declare an outputSchema', () => {
 });
 
 describe('the schema matches what the macro actually returns', () => {
+  it.each(['pricing__get_iap_price', 'pricing__get_app_price'])('%s: every returned key is declared', async (name) => {
+    const isApp = name === 'pricing__get_app_price';
+    const point = isApp ? 'appPricePoint' : 'inAppPurchasePricePoint';
+    const pointType = isApp ? 'appPricePoints' : 'inAppPurchasePricePoints';
+    const ctx = { http: {
+      get: async (path: string) => {
+        if (path === '/v1/apps/1') return { data: { id: '1', attributes: { name: 'Example' } } };
+        if (path === '/v2/inAppPurchases/2') return { data: { id: '2', attributes: { productId: 'coins.100' } } };
+        if (path.endsWith('PriceSchedule')) return { data: { id: 's1' } };
+        if (path.endsWith('/manualPrices')) return { data: [{
+          attributes: { startDate: null, endDate: null },
+          relationships: { territory: { data: { id: 'USA' } }, [point]: { data: { id: 'p1' } } },
+        }], included: [
+          { type: pointType, id: 'p1', attributes: { customerPrice: '4.99', proceeds: '3.49' } },
+          { type: 'territories', id: 'USA', attributes: { currency: 'USD' } },
+        ] };
+        return { data: [] };
+      },
+    } } as unknown as PricingContext;
+    const result = await executePricingTool(name, isApp ? { app: '1' } : { iap: '2' }, ctx);
+    expect((result as any).prices).toHaveLength(1);
+    const declared = declaredPaths(byName(name)!.outputSchema);
+    expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
+  });
+
+  it('preflight__check_subscription: group, subscriptions, findings and truncation are declared', async () => {
+    const http: any = { get: async (path: string) => {
+      if (path === '/v1/apps/1') return { data: { id: '1', attributes: { name: 'Example' } } };
+      if (path.endsWith('/subscriptionGroups')) return { data: [{ id: 'g1', attributes: { referenceName: 'Premium' } }] };
+      if (path.endsWith('/subscriptions')) return { data: [{ id: 's1', attributes: { productId: 'monthly', name: 'Monthly', state: 'MISSING_METADATA' } }], links: { next: '/unread' } };
+      if (path.endsWith('/appStoreReviewScreenshot')) return { data: null };
+      return { data: [] };
+    } };
+    const result: any = await executePreflightTool('preflight__check_subscription', { app: '1', group: 'g1' }, { http });
+    expect(result.subscriptions).toHaveLength(1);
+    expect(result.subscriptions[0].findings.length).toBeGreaterThan(0);
+    expect(result.group.truncated).toHaveLength(1);
+    const declared = declaredPaths(byName('preflight__check_subscription')!.outputSchema);
+    expect([...actualPaths(result)].filter((p) => !declared.has(p))).toEqual([]);
+  });
+
   it('ci__diagnose_run: declares every field in a failed-run diagnosis', async () => {
     const get = async (path: string) => {
       if (path === '/v1/apps') return { data: [{ id: '1', attributes: { name: 'Demo' } }] };

@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Unreleased
 
+**IAP and app price reads.** `pricing__get_iap_price` and `pricing__get_app_price` return current and scheduled prices by territory, including currency, customer price, proceeds, dates and manual or automatic source. They are read-only and live under `monetization:iap-pricing` and `monetization:app-price`.
+
+**Subscription catalog preflight.** `preflight__check_subscription` checks one subscription or up to 20 in a group before review, reporting factual localization, price, availability, screenshot and attribute gaps with exact raw fix tools. Read-only, bounded reads with truncation notes; `ready` does not predict Apple approval. It uses current v1 catalog localizations and plan availabilities; v2 version drafts are outside its scope. Available in `monetization:subscription-catalog` and tool search. 898 tools in total, 210 in monetization.
+
+**Macro profile isolation.** Macros now load by exact tool membership, so subscription preflight stays in monetization and version preflight stays in distribution.
+
 **Xcode Cloud failure diagnosis.** `ci__diagnose_run` on `xcode-cloud` reads the newest failed or errored build run among the newest 40 by default, or a requested run ID/number and workflow. It reports failing actions, issues and failed tests in bounded lists with truncation notes. It is available in read-only mode and makes no changes.
 
 ### [2.5.0] — 2026-10-01
@@ -190,7 +196,13 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 
 ## Türkçe
 
-### Yayınlanmamış
+### Yayımlanmamış
+
+**IAP ve uygulama fiyatlarını okuma.** `pricing__get_iap_price` ve `pricing__get_app_price`, ülkeye göre güncel ve planlanmış fiyatları para birimi, müşteri fiyatı, gelir, tarihler ve elle/otomatik kaynağıyla döndürür. Salt okunurdur; `monetization:iap-pricing` ve `monetization:app-price` altında bulunur.
+
+**Abonelik katalog ön denetimi.** `preflight__check_subscription`, inceleme öncesinde tek aboneliği veya gruptaki en fazla 20 aboneliği denetler; yerelleştirme, fiyat, kullanılabilirlik, ekran görüntüsü ve alan eksiklerini ham düzeltme araçlarıyla bildirir. Salt okunur, sınırlı okumaları belirtir; `ready`, Apple onayını tahmin etmez. Güncel v1 katalog yerelleştirmelerini ve plan kullanılabilirliklerini kullanır; v2 sürüm taslakları kapsam dışındadır. `monetization:subscription-catalog` içinde ve araç aramasında bulunabilir. Toplam 898 araç, monetization içinde 210.
+
+**Makroların profil ayrımı.** Makrolar artık tam araç üyeliğine göre yüklenir; abonelik ön denetimi monetization, sürüm ön denetimi distribution içinde kalır.
 
 **Xcode Cloud hata tanısı.** `xcode-cloud` profilindeki `ci__diagnose_run`, varsayılan olarak en yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) derlemeyi ya da belirtilen koşu ID/numarasını ve iş akışını okur. Başarısız adımları, sorunları ve başarısız testleri sınırlandırılmış listeler ve kesilme notlarıyla döndürür. Salt okunur modda kullanılabilir; değişiklik yapmaz.
 

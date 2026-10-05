@@ -16,7 +16,7 @@ The install is two steps and they are not both yours. **You register. The user h
 
 Ask what the user works on. If they have not said, `analytics`, `marketing` and `app-info` are a sensible default. Each profile is a small scoped server; the table is in [GUIDE.md](docs/GUIDE.md#register-profiles).
 
-A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 55 tools where `monetization` is 207. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `ASC-Monetization`.
+A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 55 tools where `monetization` is 210. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `ASC-Monetization`.
 
 **Say what you are about to do and wait for a yes**, then run:
 
@@ -51,7 +51,7 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 - **Finding a tool that isn't loaded:** call `asc__search_tools` (searches all 987 operations plus StoreKit) or `asc__discover_domains`. They name the sibling profile that owns a tool and print the exact command to add it.
 - **StoreKit / customer transactions** need a bundle ID (set during `setup` or via `ASC_BUNDLE_ID`) and live on the `monetization` profile. Each StoreKit tool takes an optional `environment` argument (`Production`/`Sandbox`).
 - **Safety:** `--read-only` mode blocks every mutating tool. `destructiveHint` no longer means "this is a DELETE" — it now covers every write whose consequence the HTTP method cannot show, so a description ending in `REVENUE-`, `RELEASE-`, `INFRASTRUCTURE-` or `ACCESS-level write.` is flagged too. Those change live data: say what will happen and get a yes before calling one.
-- **Prefer the macro over the chain.** `pricing__*` answers or changes a price without walking app → group → subscription → price points; `listing__*` reads and uploads store screenshots; `analytics__get_report` returns report rows rather than a link; `ci__diagnose_run` diagnoses Xcode Cloud failures in one bounded read on the 53-tool `xcode-cloud` profile; `reviews_ai__*` triages reviews. Two of them do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
+- **Prefer the macro over the chain.** `preflight__check_subscription` checks subscription catalog gaps before review (one subscription or up to 20 in a group; read-only, capped, no approval prediction). `pricing__*` answers or changes a price without walking app → group → subscription → price points; `listing__*` reads and uploads store screenshots; `analytics__get_report` returns report rows rather than a link; `ci__diagnose_run` diagnoses Xcode Cloud failures in one bounded read on the 53-tool `xcode-cloud` profile; `reviews_ai__*` triages reviews. Two of them do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
 
 ## If you are working ON this repository
 

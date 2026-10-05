@@ -91,6 +91,16 @@ describe('asc__search_tools finds the macros', () => {
     );
   });
 
+  it('finds subscription preflight and routes an unloaded match to subscription-catalog', async () => {
+    expect(await search('subscription review readiness')).toContain('preflight__check_subscription');
+    const result: any = await executeMetaTool('asc__search_tools',
+      { query: 'subscription review readiness', limit: 3 }, { ...ctx(), macroOffered: () => false });
+    const hit = result.matches.find((m: any) => m.tool === 'preflight__check_subscription');
+    expect(hit.loaded).toBe(false);
+    expect(JSON.stringify(result)).toContain('monetization');
+    expect(JSON.stringify(result)).toContain('subscription-catalog');
+  });
+
   it('finds the Xcode Cloud diagnosis macro from a failure question', async () => {
     expect(await search('why did my Xcode Cloud build fail', 5)).toContain('ci__diagnose_run');
   });

@@ -18,6 +18,36 @@ import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 import { TERRITORY_NAMES } from '../core/territory-names.js';
 
+const scheduleOutputSchema: NonNullable<McpToolDefinition['outputSchema']> = {
+  type: 'object',
+  properties: {
+    app: { type: 'string' },
+    product: { type: 'string' },
+    territory: { type: 'string', description: 'Requested territory, or worldwide.' },
+    prices: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          territory: { type: 'string' },
+          country: { type: ['string', 'null'] },
+          currency: { type: 'string' },
+          customerPrice: { type: 'string' },
+          proceeds: { type: 'string' },
+          startDate: { type: ['string', 'null'] },
+          endDate: { type: ['string', 'null'] },
+          source: { type: 'string', enum: ['manual', 'automatic'] },
+          status: { type: 'string', enum: ['current', 'scheduled'] },
+        },
+        required: ['territory', 'currency', 'customerPrice', 'proceeds', 'startDate', 'endDate', 'source', 'status'],
+      },
+    },
+    note: { type: 'string' },
+    truncated: { type: 'string' },
+  },
+  required: ['territory', 'prices'],
+};
+
 export const PRICING_TOOLS: McpToolDefinition[] = [
   {
     name: 'pricing__set_subscription_price',
@@ -236,6 +266,40 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
     },
     annotations: { readOnlyHint: true, idempotentHint: true },
   },
+  {
+    name: 'pricing__get_iap_price',
+    description:
+      'Read current and scheduled in-app purchase prices by territory, including currency, ' +
+      'customer price, proceeds, dates, and manual or automatic source. Give an IAP ID, or ' +
+      'give the app and IAP product ID. Omit territory for all countries.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'App name, bundle ID or Apple ID; required with a product ID.' },
+        iap: { type: 'string', description: 'In-app purchase ID (without app) or product ID (with app).' },
+        territory: { type: 'string', description: 'Optional three-letter country code, e.g. TUR, USA.' },
+      },
+      required: ['iap'],
+    },
+    outputSchema: scheduleOutputSchema,
+    annotations: { readOnlyHint: true, idempotentHint: true },
+  },
+  {
+    name: 'pricing__get_app_price',
+    description:
+      'Read current and scheduled app purchase prices by territory, including currency, ' +
+      'customer price, proceeds, dates, and manual or automatic source. Omit territory for all countries.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'App name, bundle ID or Apple ID.' },
+        territory: { type: 'string', description: 'Optional three-letter country code, e.g. TUR, USA.' },
+      },
+      required: ['app'],
+    },
+    outputSchema: scheduleOutputSchema,
+    annotations: { readOnlyHint: true, idempotentHint: true },
+  },
 ];
 
 export const PRICING_TOOL_NAMES = new Set(PRICING_TOOLS.map((t) => t.name));
@@ -244,6 +308,64 @@ export interface PricingContext {
   http: AscHttpClient;
   /** Mirrors --dry-run: resolve everything, write nothing. */
   dryRun?: boolean;
+}
+
+/** Both schedule types expose the same two collections and included price data. */
+async function readSchedulePrices(
+  http: AscHttpClient,
+  kind: 'app' | 'iap',
+  scheduleId: string,
+  territory?: string
+): Promise<{ prices: Record<string, unknown>[]; truncated?: string }> {
+  const root = kind === 'app' ? 'appPriceSchedules' : 'inAppPurchasePriceSchedules';
+  const pointType = kind === 'app' ? 'appPricePoints' : 'inAppPurchasePricePoints';
+  const pointRelationship = kind === 'app' ? 'appPricePoint' : 'inAppPurchasePricePoint';
+  const today = new Date().toISOString().slice(0, 10);
+  const prices: Record<string, unknown>[] = [];
+  const capped: string[] = [];
+
+  for (const source of ['manual', 'automatic'] as const) {
+    let next: string | undefined;
+    const path = `/v1/${root}/${encodeURIComponent(scheduleId)}/${source}Prices`;
+    for (let page = 0; page < 10; page++) {
+      const res: any = next
+        ? await http.request('GET', next)
+        : await http.get(path, { include: `${pointRelationship},territory`, limit: 200,
+            ...(territory ? { 'filter[territory]': territory } : {}) });
+      const included = new Map<string, any>((res?.included ?? []).map((item: any) => [`${item.type}:${item.id}`, item]));
+      for (const row of res?.data ?? []) {
+        const startDate = row.attributes?.startDate ?? null;
+        const endDate = row.attributes?.endDate ?? null;
+        if (endDate && endDate < today) continue;
+        const code = String(row.relationships?.territory?.data?.id ?? '');
+        if (territory && code !== territory) continue;
+        const pointId = row.relationships?.[pointRelationship]?.data?.id;
+        const point = included.get(`${pointType}:${pointId}`);
+        const country = included.get(`territories:${code}`);
+        if (!code || !point?.attributes?.customerPrice || !point?.attributes?.proceeds || !country?.attributes?.currency) {
+          throw new AscApiError(`Apple omitted a territory, currency or price point from ${source} prices.`, 0);
+        }
+        prices.push({
+          territory: code,
+          country: TERRITORY_NAMES[code] ?? null,
+          currency: country.attributes.currency,
+          customerPrice: point.attributes.customerPrice,
+          proceeds: point.attributes.proceeds,
+          startDate,
+          endDate,
+          source,
+          status: startDate && startDate > today ? 'scheduled' : 'current',
+        });
+      }
+      next = res?.links?.next;
+      if (!next) break;
+    }
+    if (next) capped.push(source);
+  }
+  prices.sort((a, b) => String(a.territory).localeCompare(String(b.territory)) ||
+    String(a.startDate ?? '').localeCompare(String(b.startDate ?? '')) ||
+    String(a.source).localeCompare(String(b.source)));
+  return { prices, ...(capped.length ? { truncated: `Apple has more ${capped.join(' and ')} price pages beyond the 10-page limit; these results are incomplete.` } : {}) };
 }
 
 /** Normalises "99,99" / " 99.99 " to a canonical dotted string. */
@@ -585,6 +707,55 @@ export async function executePricingTool(
   args: Record<string, unknown>,
   ctx: PricingContext
 ): Promise<unknown> {
+  if (name === 'pricing__get_iap_price' || name === 'pricing__get_app_price') {
+    const isApp = name === 'pricing__get_app_price';
+    if (typeof args[isApp ? 'app' : 'iap'] !== 'string' || !String(args[isApp ? 'app' : 'iap']).trim()) {
+      throw new AscApiError(`"${isApp ? 'app' : 'iap'}" is required.`, 0);
+    }
+    const territory = args.territory === undefined || args.territory === ''
+      ? undefined : String(args.territory).trim().toUpperCase();
+    if (territory && !/^[A-Z]{3}$/.test(territory)) {
+      throw new AscApiError('"territory" must be a three-letter country code such as TUR or USA.', 0);
+    }
+    const app = args.app ? await resolveApp(ctx.http, String(args.app)) : undefined;
+    if (isApp && !app) throw new AscApiError('"app" is required.', 0);
+    let product: string | undefined;
+    let productId = app?.id ?? '';
+    if (!isApp) {
+      const iap = String(args.iap).trim();
+      if (!app) {
+        const res: any = await ctx.http.get(`/v2/inAppPurchases/${encodeURIComponent(iap)}`);
+        if (!res?.data) throw new AscApiError(`No in-app purchase with ID ${iap}. For a product ID, provide "app" too.`, 0);
+        productId = String(res.data.id);
+        product = String(res.data.attributes?.productId ?? res.data.attributes?.name ?? iap);
+      } else {
+        const resolved = await resolveIap(ctx.http, app.id, iap);
+        productId = resolved.id;
+        product = resolved.productId || resolved.name;
+      }
+    }
+    const schedulePath = isApp
+      ? `/v1/apps/${encodeURIComponent(productId)}/appPriceSchedule`
+      : `/v2/inAppPurchases/${encodeURIComponent(productId)}/iapPriceSchedule`;
+    const scope = territory ?? 'worldwide';
+    const identity = { ...(app ? { app: `${app.name} (${app.id})` } : {}),
+      ...(product ? { product } : {}), territory: scope };
+    let schedule: any;
+    try {
+      schedule = await ctx.http.get(schedulePath);
+    } catch (err) {
+      if (err instanceof AscApiError && err.status === 404) {
+        return { ...identity, prices: [], note: 'No price schedule exists.' };
+      }
+      throw err;
+    }
+    if (!schedule?.data?.id) {
+      return { ...identity, prices: [], note: 'No price schedule exists.' };
+    }
+    const result = await readSchedulePrices(ctx.http, isApp ? 'app' : 'iap', String(schedule.data.id), territory);
+    return { ...identity, ...result };
+  }
+
   if (name === 'pricing__get_subscription_price') {
     if (!args.app || typeof args.app !== 'string') {
       throw new AscApiError('"app" is required.', 0);
@@ -772,7 +943,7 @@ async function resolveIap(
   appId: string,
   wanted: string
 ): Promise<{ id: string; name: string; productId: string }> {
-  const { items } = await http.collect<any>(
+  const { items, hasMore } = await http.collect<any>(
     `/v1/apps/${encodeURIComponent(appId)}/inAppPurchasesV2`,
     { limit: 200 },
     5
@@ -783,9 +954,12 @@ async function resolveIap(
     productId: String(i.attributes?.productId ?? ''),
   }));
   const needle = wanted.trim().toLowerCase();
-  const match =
-    iaps.find((i) => i.productId.toLowerCase() === needle) ??
-    iaps.find((i) => i.name.toLowerCase() === needle) ??
+  const exact = iaps.find((i) => i.productId.toLowerCase() === needle) ??
+    iaps.find((i) => i.name.toLowerCase() === needle);
+  if (hasMore && !exact) {
+    throw new AscApiError('IAP lookup reached its 5-page limit; use the IAP ID or exact product ID.', 0);
+  }
+  const match = exact ??
     iaps.find((i) => i.productId.toLowerCase().includes(needle)) ??
     iaps.find((i) => i.name.toLowerCase().includes(needle));
   if (!match) {

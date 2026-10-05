@@ -21,7 +21,7 @@ one you install can find an app ID and point you at a tool it does not have.
 | Release manager | `distribution` + `app-info` | 194 |
 | ASO / marketing | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
-| Monetization | `monetization` | 207 |
+| Monetization | `monetization` | 210 |
 | Game developer | `game-center` + `distribution` | 323 |
 | Customer support | `monetization:storekit` | 19 |
 | Build & signing | `provisioning` + `xcode-cloud` | 103 |
@@ -33,7 +33,7 @@ npx -y @erayendes/asc-mcp register distribution app-info
 Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
 Narrower is better than broader: `monetization:subscription-pricing` is 27
-tools where `monetization` is 207, and everything you skipped is one
+tools where `monetization` is 210, and everything you skipped is one
 `asc__call` away — the proxy reaches any operation in the catalogue, loaded or
 not.
 
@@ -67,6 +67,19 @@ email to a group creates the tester if they do not exist yet.
 An **external** group needs Apple to review the build before it reaches anyone.
 An internal group does not. If testers report seeing nothing, that is usually
 the reason.
+
+---
+
+### Check a subscription before review
+
+> For Example, check the Monthly subscription before review and list the catalog gaps.
+> Then check every subscription in the Premium group.
+
+Needs `monetization:subscription-catalog`. Call `preflight__check_subscription` with
+`{"app":"Example","subscription":"Monthly"}` or `{"app":"Example","group":"Premium"}`.
+It reads at most 20 subscriptions in group mode, reports `truncated` reads and
+names a raw fix tool for each blocking gap or warning. `ready` means no observed
+blocking catalog gaps; it does not predict Apple approval. Available under `--read-only`.
 
 ---
 
@@ -170,7 +183,7 @@ gösterebilir.
 | Yayın yöneticisi | `distribution` + `app-info` | 194 |
 | ASO / pazarlama | `marketing` + `analytics` | 126 |
 | QA / TestFlight | `testflight` + `access` | 120 |
-| Monetizasyon | `monetization` | 207 |
+| Monetizasyon | `monetization` | 210 |
 | Oyun geliştirici | `game-center` + `distribution` | 323 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
@@ -182,7 +195,7 @@ npx -y @erayendes/asc-mcp register distribution app-info
 “Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
 Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
-`monetization` 207. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
+`monetization` 210. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
 yüklü olsun olmasın katalogdaki her işleme ulaşır.
 
 ---
@@ -213,6 +226,19 @@ eklemek, testçi yoksa onu oluşturur.
 
 **Harici** bir grup için Apple'ın build'i incelemesi gerekir; dahili grup için
 gerekmez. Testçiler "hiçbir şey görünmüyor" diyorsa sebep genelde budur.
+
+---
+
+### İnceleme öncesi aboneliği denetleyin
+
+> Example uygulamasının Monthly aboneliğini inceleme öncesi kontrol et, katalog eksiklerini listele.
+> Ardından Premium grubundaki bütün abonelikleri denetle.
+
+`monetization:subscription-catalog` gerekir. `preflight__check_subscription` aracını
+`{"app":"Example","subscription":"Monthly"}` veya `{"app":"Example","group":"Premium"}` ile çağırın.
+Grup modunda en fazla 20 abonelik okur, `truncated` okumaları belirtir ve her engelleyici
+bulgu veya uyarı için ham düzeltme aracını adlandırır. `ready`, gözlenen engelleyici
+katalog eksiği olmadığı anlamına gelir; Apple onayını tahmin etmez. `--read-only` ile kullanılabilir.
 
 ---
 
