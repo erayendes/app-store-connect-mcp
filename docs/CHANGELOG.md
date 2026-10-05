@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
-### Unreleased
+### [2.6.0] — 2026-10-05
 
 **Review fixes for the new macros.** `pricing__set_iap_price` now writes only to an IAP whose product ID or name matches exactly (a name two IAPs share is refused); ends a replaced price at the earlier of its own end date and the next scheduled change, so a short promotion is not stretched; and refuses while a manual price changes today or tomorrow anywhere, because Apple switches at each country's own midnight. Both price readers treat a price's end date as the first day it is gone. `testflight__feedback_digest` groups by build rather than build number, so iOS and tvOS builds numbered alike stay apart. `testflight__assign_build_to_groups` names every destination group in its confirmation prompt. The feedback digest and `ci__diagnose_run` now put their untrusted-content warning first, where trimming a long response cannot remove it.
 
@@ -208,7 +208,7 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.6.0] — 2026-10-05
 
 **Yeni makrolar için inceleme düzeltmeleri.** `pricing__set_iap_price` artık yalnızca ürün kimliği ya da adı birebir eşleşen IAP'ye yazıyor (iki IAP'nin paylaştığı bir ad reddediliyor); değiştirilen bir fiyatı kendi bitiş tarihiyle sonraki planlı değişiklikten hangisi önceyse orada bitiriyor, böylece kısa bir kampanya uzamıyor; ve bir yerde elle girilmiş bir fiyat bugün ya da yarın değişiyorsa yazmayı reddediyor, çünkü Apple değişikliği her ülkenin kendi gece yarısında uyguluyor. İki fiyat okuyucu da bitiş tarihini fiyatın artık geçerli olmadığı ilk gün sayıyor. `testflight__feedback_digest` build numarasına göre değil build'e göre grupluyor; aynı numaralı iOS ve tvOS build'leri ayrı kalıyor. `testflight__assign_build_to_groups` onay ekranında hedef grupların hepsini gösteriyor. Geri bildirim özeti ve `ci__diagnose_run` güvenilmez içerik uyarısını artık en başa koyuyor; uzun bir yanıt kırpıldığında uyarı kaybolmuyor.
 
