@@ -22,6 +22,24 @@ import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 
+const subscriptionFindingsSchema = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      check: { type: 'string' },
+      severity: { type: 'string', enum: ['blocking', 'warning'] },
+      problem: { type: 'string' },
+      fixWith: { type: 'string', description: 'Exact generated raw tool name.' },
+    },
+    required: ['check', 'severity', 'problem', 'fixWith'],
+  },
+};
+const truncatedSchema = {
+  type: 'array', items: { type: 'string' },
+  description: 'Reads stopped at a cap; these notes identify data not inspected.',
+};
+
 export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
   {
     name: 'preflight__check_version',
@@ -79,6 +97,57 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
     },
     annotations: { readOnlyHint: true },
   },
+  {
+    name: 'preflight__check_subscription',
+    description:
+      'Check subscription catalog readiness before submitting for review. Give the app ' +
+      'and either a subscription (product ID, name or ID) or a group (reference name or ID). ' +
+      'Checks localizations, group locales, prices, plan availability, review screenshot, ' +
+      'review note and required attributes; reports state and blocking or warning findings ' +
+      'with the raw tool that fixes each gap. Group mode checks at most 20 subscriptions. ' +
+      'All reads are capped and truncation is reported. Read-only; ready means no observed ' +
+      'blocking catalog gaps, not a prediction of Apple approval or permission to submit.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', minLength: 1, description: 'App name, bundle ID or numeric Apple ID.' },
+        subscription: { type: 'string', minLength: 1, description: 'Exact product ID, name or subscription ID. Cannot be combined with group.' },
+        group: { type: 'string', minLength: 1, description: 'Exact reference name or group ID. Check up to 20 subscriptions in this group.' },
+      },
+      required: ['app'],
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string' },
+        subscriptions: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' }, productId: { type: 'string' }, name: { type: 'string' },
+              state: { type: 'string' }, ready: { type: 'boolean' },
+              findings: subscriptionFindingsSchema, truncated: truncatedSchema,
+            },
+            required: ['id', 'productId', 'name', 'state', 'ready', 'findings', 'truncated'],
+          },
+        },
+        group: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' }, referenceName: { type: 'string' }, ready: { type: 'boolean' },
+            checkedSubscriptions: { type: 'integer' },
+            findings: subscriptionFindingsSchema, truncated: truncatedSchema,
+          },
+          required: ['id', 'referenceName', 'ready', 'checkedSubscriptions', 'findings', 'truncated'],
+        },
+        truncated: truncatedSchema,
+        note: { type: 'string' },
+      },
+      required: ['app', 'subscriptions', 'truncated', 'note'],
+    },
+    annotations: { readOnlyHint: true, idempotentHint: true },
+  },
 ];
 
 export const PREFLIGHT_TOOL_NAMES: ReadonlySet<string> = new Set(
@@ -110,6 +179,7 @@ export async function executePreflightTool(
   args: Record<string, unknown>,
   ctx: { http: AscHttpClient }
 ): Promise<unknown> {
+  if (name === 'preflight__check_subscription') return checkSubscription(args, ctx.http);
   if (name !== 'preflight__check_version') {
     throw new Error(`Unknown preflight tool: ${name}`);
   }
@@ -376,5 +446,184 @@ export async function executePreflightTool(
     blocking,
     warnings,
     checked,
+  };
+}
+
+interface SubscriptionFinding extends Gap {
+  severity: 'blocking' | 'warning';
+}
+
+async function checkSubscription(args: Record<string, unknown>, http: AscHttpClient) {
+  if (typeof args.app !== 'string' || !args.app.trim()) {
+    throw new AscApiError('"app" is required.', 0);
+  }
+  if ((args.subscription !== undefined) === (args.group !== undefined)) {
+    throw new AscApiError('Provide exactly one of "subscription" or "group".', 0);
+  }
+  const selector = args.subscription ?? args.group;
+  if (typeof selector !== 'string' || !selector.trim()) {
+    throw new AscApiError('The subscription or group must be a non-empty string.', 0);
+  }
+  const wanted = selector.trim();
+  const groupMode = args.group !== undefined;
+  const app = await resolveApp(http, args.app);
+  const truncated: string[] = [];
+
+  // One page per read, with explicit caps even for existence checks. Retain
+  // next/total before response shaping so an unseen row never becomes "missing".
+  const page = async (path: string, limit: number, notes: string[], params: Record<string, string> = {}) => {
+    const res: any = await http.get(path, { ...params, limit });
+    const rows: any[] = (res?.data ?? []).slice(0, limit);
+    const more = Boolean(res?.links?.next) || Number(res?.meta?.paging?.total ?? 0) > rows.length ||
+      (res?.data ?? []).length > limit;
+    if (more) notes.push(`${path}: truncated at one page (${limit} rows); additional rows were not inspected.`);
+    return { rows, more };
+  };
+  const groups = await page(`/v1/apps/${encodeURIComponent(app.id)}/subscriptionGroups`, 20, truncated, {
+    'fields[subscriptionGroups]': 'referenceName',
+  });
+  const same = (value: unknown) => String(value ?? '').toLowerCase() === wanted.toLowerCase();
+  const choose = (hits: any[], kind: string, incomplete: boolean) => {
+    if (hits.length > 1) {
+      throw new AscApiError(`"${wanted}" is ambiguous: ${hits.map((h) => h.id).join(', ')}. Use the ${kind} ID.`, 0);
+    }
+    if (!hits.length) {
+      throw new AscApiError(`No ${kind} matching "${wanted}" in ${app.name}.${incomplete ? ' Search truncated at the catalog caps; the match may be outside the inspected rows.' : ''}`, 0);
+    }
+    // IDs and product IDs are unique. A name in a partial catalog might have
+    // an unseen twin, so do not silently choose it.
+    if (incomplete && hits[0].id !== wanted && hits[0].attributes?.productId !== wanted) {
+      throw new AscApiError(`Search truncated; cannot establish whether "${wanted}" is ambiguous. Use the ${kind} ID.`, 0);
+    }
+    return hits[0];
+  };
+  const fields = 'name,productId,state,subscriptionPeriod,familySharable,reviewNote';
+  let group: any;
+  let selected: any[];
+  let subscriptionsTruncated = false;
+  const groupTruncated: string[] = [];
+  if (groupMode) {
+    group = choose(groups.rows.filter((g) => g.id === wanted || same(g.attributes?.referenceName)), 'group', groups.more);
+    const subs = await page(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptions`, 20, groupTruncated, {
+      'fields[subscriptions]': fields,
+    });
+    selected = subs.rows;
+    subscriptionsTruncated = subs.more;
+  } else {
+    const matches: any[] = [];
+    for (const g of groups.rows) {
+      const subs = await page(`/v1/subscriptionGroups/${encodeURIComponent(g.id)}/subscriptions`, 50, truncated, {
+        'fields[subscriptions]': fields,
+      });
+      for (const sub of subs.rows) {
+        if (sub.id === wanted || sub.attributes?.productId === wanted || same(sub.attributes?.name)) {
+          matches.push({ ...sub, catalogGroup: g });
+        }
+      }
+    }
+    const sub = choose(matches, 'subscription', truncated.length > 0);
+    group = sub.catalogGroup;
+    selected = [sub];
+  }
+
+  // Both v1 catalog and v2 version-localization operations are current in the
+  // checked-in spec. Prefer v1 here: this macro audits the catalog, as pricing
+  // does, and takes no version selector. It does not grade a v2 version draft.
+  const groupLocs = await page(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptionGroupLocalizations`, 50, groupTruncated, {
+    'fields[subscriptionGroupLocalizations]': 'locale,name',
+  });
+  const groupFindings: SubscriptionFinding[] = [];
+  if (!groupLocs.rows.length && !groupLocs.more) {
+    groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: 'The subscription group has no localization.', fixWith: 'subscription_group_localizations__create' });
+  }
+  for (const loc of groupLocs.rows) {
+    if (!String(loc.attributes?.name ?? '').trim()) {
+      groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: `Group localization ${loc.attributes?.locale ?? loc.id} has no display name.`, fixWith: 'subscription_group_localizations__update' });
+    }
+  }
+  if (groupMode && !selected.length && !subscriptionsTruncated) {
+    groupFindings.push({ check: 'subscriptions', severity: 'blocking', problem: 'The subscription group has no subscriptions.', fixWith: 'subscriptions__create' });
+  }
+
+  const subscriptions = [];
+  for (const sub of selected) {
+    const findings: SubscriptionFinding[] = [...groupFindings];
+    const notes: string[] = [...groupTruncated];
+    const add = (check: string, severity: SubscriptionFinding['severity'], problem: string, fixWith: string) =>
+      findings.push({ check, severity, problem, fixWith });
+    const base = `/v1/subscriptions/${encodeURIComponent(sub.id)}`;
+    const a = sub.attributes ?? {};
+    for (const field of ['name', 'productId', 'subscriptionPeriod']) {
+      if (!String(a[field] ?? '').trim()) {
+        add(field, 'blocking', `Subscription ${field} is missing.`, field === 'productId' ? 'subscriptions__create' : 'subscriptions__update');
+      }
+    }
+    // False is a valid answer. Neither family sharing nor review notes is
+    // required by the create schema, so absence alone is only a warning.
+    if (a.familySharable == null) add('family sharing', 'warning', 'Subscription familySharable is unset.', 'subscriptions__update');
+    if (!String(a.reviewNote ?? '').trim()) add('review note', 'warning', 'Subscription reviewNote is empty.', 'subscriptions__update');
+
+    const locs = await page(`${base}/subscriptionLocalizations`, 50, notes, {
+      'fields[subscriptionLocalizations]': 'locale,name,description',
+    });
+    if (!locs.rows.length && !locs.more) {
+      add('localizations', 'blocking', 'The subscription has no localization with a display name and description.', 'subscription_localizations__create');
+    }
+    for (const loc of locs.rows) {
+      const missing = ['name', 'description'].filter((f) => !String(loc.attributes?.[f] ?? '').trim());
+      if (missing.length) add('localizations', 'blocking', `Localization ${loc.attributes?.locale ?? loc.id} is missing ${missing.join(' and ')}.`, 'subscription_localizations__update');
+    }
+    if (!locs.more) {
+      const locales = new Set(locs.rows.map((l) => l.attributes?.locale));
+      const missing = groupLocs.rows.map((l) => l.attributes?.locale).filter((l) => l && !locales.has(l));
+      if (missing.length) add('locale coverage', 'warning', `Group locales missing on the subscription: ${missing.join(', ')}.`, 'subscription_localizations__create');
+    }
+
+    const prices = await page(`${base}/prices`, 1, notes, { 'fields[subscriptionPrices]': 'startDate' });
+    if (!prices.rows.length && !prices.more) add('price', 'blocking', 'The subscription has no price in any territory.', 'subscription_prices__create');
+
+    const plans = await page(`${base}/planAvailabilities`, 5, notes, { 'fields[subscriptionPlanAvailabilities]': 'planType' });
+    if (!plans.rows.length && !plans.more) {
+      add('availability', 'blocking', 'The subscription has no plan availability.', 'subscription_plan_availabilities__create');
+    } else if (plans.rows.length) {
+      let hasTerritory = false;
+      let incomplete = plans.more;
+      for (const plan of plans.rows) {
+        const territories = await page(`/v1/subscriptionPlanAvailabilities/${encodeURIComponent(plan.id)}/availableTerritories`, 1, notes);
+        hasTerritory ||= territories.rows.length > 0;
+        incomplete ||= territories.more;
+      }
+      if (!hasTerritory && !incomplete) add('territories', 'blocking', 'No subscription plan availability has an available territory.', 'subscription_plan_availabilities__available_territories__replace');
+    }
+
+    let screenshot: any;
+    try {
+      screenshot = await http.get(`${base}/appStoreReviewScreenshot`, {
+        'fields[subscriptionAppStoreReviewScreenshots]': 'assetDeliveryState',
+      });
+    } catch (err) {
+      // Apple can represent an absent to-one relation with 404 or data:null.
+      // Permission, network and server failures must remain errors, not gaps.
+      if (!(err instanceof AscApiError) || err.status !== 404) throw err;
+    }
+    if (!screenshot?.data) add('review screenshot', 'blocking', 'The subscription has no App Store review screenshot.', 'subscription_app_store_review_screenshots__create');
+    else if (screenshot.data.attributes?.assetDeliveryState?.state === 'FAILED') {
+      add('review screenshot', 'blocking', 'The App Store review screenshot failed asset delivery.', 'subscription_app_store_review_screenshots__create');
+    }
+    subscriptions.push({
+      id: String(sub.id), productId: String(a.productId ?? ''), name: String(a.name ?? ''),
+      state: String(a.state ?? 'UNKNOWN'), ready: !findings.some((f) => f.severity === 'blocking'),
+      findings, truncated: notes,
+    });
+  }
+  return {
+    app: `${app.name} (${app.id})`, subscriptions,
+    ...(groupMode ? { group: {
+      id: String(group.id), referenceName: String(group.attributes?.referenceName ?? ''),
+      ready: !groupFindings.some((f) => f.severity === 'blocking') && subscriptions.every((s) => s.ready),
+      checkedSubscriptions: subscriptions.length, findings: groupFindings, truncated: groupTruncated,
+    } } : {}),
+    truncated,
+    note: 'Catalog check using current v1 localizations, not v2 version drafts. ready means no observed blocking gaps in the inspected data; read truncated notes for omitted data. State is reported, not a submission eligibility verdict. Price and territory reads establish presence only, not an active price in every storefront. Apple approval is not predicted.',
   };
 }

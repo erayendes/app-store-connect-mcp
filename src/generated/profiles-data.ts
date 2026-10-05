@@ -33,8 +33,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "beta-groups",
       operations: ["beta_groups.beta_recruitment_criteria.get","beta_groups.beta_recruitment_criterion_compatible_build_check.get","beta_groups.beta_tester_usages.metrics","beta_groups.beta_testers.add","beta_groups.beta_testers.list","beta_groups.beta_testers.remove","beta_groups.builds.add","beta_groups.builds.list","beta_groups.builds.remove","beta_groups.create","beta_groups.delete","beta_groups.get","beta_groups.list","beta_groups.public_link_usages.metrics","beta_groups.update","beta_recruitment_criteria.create","beta_recruitment_criteria.delete","beta_recruitment_criteria.update","beta_recruitment_criterion_options.list"],
-      manualTools: [],
-      rootResources: ["beta_groups","beta_recruitment_criteria","beta_recruitment_criterion_options"],
+      manualTools: ["testflight__assign_build_to_groups"],
+      rootResources: ["(makro)","beta_groups","beta_recruitment_criteria","beta_recruitment_criterion_options"],
     },
     {
       name: "beta-testers",
@@ -241,8 +241,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "app-price",
       operations: ["app_price_points_v3.equalizations.list","app_price_points_v3.get","app_price_schedules.automatic_prices.list","app_price_schedules.base_territory.get","app_price_schedules.create","app_price_schedules.get","app_price_schedules.manual_prices.list","apps.app_price_points.list","apps.app_price_schedule.get"],
-      manualTools: [],
-      rootResources: ["app_price_points_v3","app_price_schedules","apps"],
+      manualTools: ["pricing__get_app_price"],
+      rootResources: ["(makro)","app_price_points_v3","app_price_schedules","apps"],
     },
     {
       name: "iap-catalog",
@@ -259,8 +259,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "iap-pricing",
       operations: ["apps.in_app_purchases_v2.list","in_app_purchase_price_points.equalizations.list","in_app_purchase_price_schedules.automatic_prices.list","in_app_purchase_price_schedules.base_territory.get","in_app_purchase_price_schedules.create","in_app_purchase_price_schedules.get","in_app_purchase_price_schedules.manual_prices.list","in_app_purchases_v2.get","in_app_purchases_v2.iap_price_schedule.get","in_app_purchases_v2.price_points.list"],
-      manualTools: [],
-      rootResources: ["apps","in_app_purchase_price_points","in_app_purchase_price_schedules","in_app_purchases_v2"],
+      manualTools: ["pricing__get_iap_price"],
+      rootResources: ["(makro)","apps","in_app_purchase_price_points","in_app_purchase_price_schedules","in_app_purchases_v2"],
     },
     {
       name: "storekit",
@@ -271,8 +271,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "subscription-catalog",
       operations: ["apps.subscription_grace_period.get","apps.subscription_groups.list","subscription_app_store_review_screenshots.create","subscription_app_store_review_screenshots.delete","subscription_app_store_review_screenshots.get","subscription_app_store_review_screenshots.update","subscription_grace_periods.get","subscription_grace_periods.update","subscription_group_localizations.create","subscription_group_localizations.delete","subscription_group_localizations.get","subscription_group_localizations.update","subscription_group_localizations_v2.create","subscription_group_localizations_v2.delete","subscription_group_localizations_v2.get","subscription_group_localizations_v2.update","subscription_group_submissions.create","subscription_group_versions.create","subscription_group_versions.get","subscription_group_versions.localizations.list","subscription_groups.create","subscription_groups.delete","subscription_groups.get","subscription_groups.subscription_group_localizations.list","subscription_groups.subscriptions.list","subscription_groups.update","subscription_groups.versions.list","subscription_images.create","subscription_images.delete","subscription_images.get","subscription_images.update","subscription_images_v2.create","subscription_images_v2.delete","subscription_images_v2.get","subscription_images_v2.update","subscription_localizations.create","subscription_localizations.delete","subscription_localizations.get","subscription_localizations.update","subscription_localizations_v2.create","subscription_localizations_v2.delete","subscription_localizations_v2.get","subscription_localizations_v2.update","subscription_plan_availabilities.available_territories.list","subscription_plan_availabilities.available_territories.replace","subscription_plan_availabilities.create","subscription_plan_availabilities.get","subscription_plan_availabilities.update","subscription_submissions.create","subscription_versions.create","subscription_versions.get","subscription_versions.image.get","subscription_versions.images.list","subscription_versions.localizations.list","subscriptions.app_store_review_screenshot.get","subscriptions.create","subscriptions.delete","subscriptions.get","subscriptions.images.list","subscriptions.plan_availabilities.list","subscriptions.promoted_purchase.get","subscriptions.subscription_localizations.list","subscriptions.update","subscriptions.versions.list"],
-      manualTools: [],
-      rootResources: ["apps","subscription_app_store_review_screenshots","subscription_grace_periods","subscription_group_localizations","subscription_group_localizations_v2","subscription_group_submissions","subscription_group_versions","subscription_groups","subscription_images","subscription_images_v2","subscription_localizations","subscription_localizations_v2","subscription_plan_availabilities","subscription_submissions","subscription_versions","subscriptions"],
+      manualTools: ["preflight__check_subscription"],
+      rootResources: ["(makro)","apps","subscription_app_store_review_screenshots","subscription_grace_periods","subscription_group_localizations","subscription_group_localizations_v2","subscription_group_submissions","subscription_group_versions","subscription_groups","subscription_images","subscription_images_v2","subscription_localizations","subscription_localizations_v2","subscription_plan_availabilities","subscription_submissions","subscription_versions","subscriptions"],
     },
     {
       name: "subscription-offers",

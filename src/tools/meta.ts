@@ -9,6 +9,8 @@ import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
 import { PRICING_TOOLS } from './pricing.js';
 import { SCREENSHOT_TOOLS } from './screenshots.js';
+import { PREFLIGHT_TOOLS } from './preflight.js';
+import { PROFILES } from '../profiles.js';
 import { TESTFLIGHT_TOOLS } from './testflight.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
@@ -511,7 +513,7 @@ export async function executeMetaTool(
       // macro written to replace a five-call chain lost to the five calls. A
       // macro that matches the query is the answer to it.
       const matches = [
-        ...extras([...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...TESTFLIGHT_TOOLS], 'macro', 'Heimdall macro', (name) =>
+        ...extras([...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...PREFLIGHT_TOOLS, ...TESTFLIGHT_TOOLS], 'macro', 'Heimdall macro', (name) =>
           Boolean(ctx.macroOffered?.(name))
         ),
         ...extras(STOREKIT_TOOLS, 'storekit', 'App Store Server API', () =>
@@ -543,11 +545,11 @@ export async function executeMetaTool(
       const storekitUnloaded = unloaded.some((m) => m.domain === 'storekit');
 
       const hints: string[] = [];
-      if (unloaded.some((m) => m.tool.startsWith('testflight__'))) {
-        hints.push(
-          'The feedback digest belongs to ASC-TestFlight. Register it with ' +
-            '`npx -y @erayendes/asc-mcp register testflight`, then restart your client.'
-        );
+      for (const macro of unloaded.filter((m) => m.domain === 'macro')) {
+        const homes = PROFILES.flatMap((p) => p.subProfiles
+          .filter((s) => s.manualTools.includes(macro.tool))
+          .map((s) => s.name ? `${p.name}:${s.name}` : p.name));
+        if (homes.length) hints.push(`${macro.tool}: register with \`npx -y @erayendes/asc-mcp register ${homes.join(' ')}\`, then restart the client.`);
       }
       if (unloadedApiDomains.length) {
         const unloadedOps = apiHits.filter(

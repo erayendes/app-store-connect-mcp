@@ -6,7 +6,15 @@ All notable changes to this project are documented here. The format is based on 
 
 ## English
 
-### [Unreleased]
+### Unreleased
+
+**IAP and app price reads.** `pricing__get_iap_price` and `pricing__get_app_price` return current and scheduled prices by territory, including currency, customer price, proceeds, dates and manual or automatic source. They are read-only and live under `monetization:iap-pricing` and `monetization:app-price`.
+
+**Subscription catalog preflight.** `preflight__check_subscription` checks one subscription or up to 20 in a group before review, reporting factual localization, price, availability, screenshot and attribute gaps with exact raw fix tools. Read-only, bounded reads with truncation notes; `ready` does not predict Apple approval. It uses current v1 catalog localizations and plan availabilities; v2 version drafts are outside its scope. Available in `monetization:subscription-catalog` and tool search. 898 tools in total, 210 in monetization.
+
+**Macro profile isolation.** Macros now load by exact tool membership, so subscription preflight stays in monetization and version preflight stays in distribution.
+
+**Assign a TestFlight build to beta groups in one call.** `testflight__assign_build_to_groups` in `access:beta-groups` requires an explicit build number or ID, refuses builds that are not processed and valid or are expired, and checks every group before writing. It skips existing assignments, supports `--dry-run`, reports per-group failures, and notes when an external group may need beta app review. This is a RELEASE-level write and is absent under `--read-only`.
 
 **TestFlight feedback in one read-only call.** `testflight__feedback_digest` answers what testers are reporting: crashes and screenshot feedback grouped by build, top devices and OS versions, newest comments, and short excerpts from at most three crash logs. Accepts an app name, bundle ID or Apple ID, optional build number or UUID, and a 14-day window by default (maximum 90). Paging stops at the cutoff, every read is bounded, and omitted data is flagged. Available in `testflight` and under `--read-only`. 896 tools overall; the TestFlight profile now serves 56.
 
@@ -190,7 +198,15 @@ Safety release. Every write is now schema-checked locally, previewed before conf
 
 ## Türkçe
 
-### [Unreleased]
+### Yayımlanmamış
+
+**IAP ve uygulama fiyatlarını okuma.** `pricing__get_iap_price` ve `pricing__get_app_price`, ülkeye göre güncel ve planlanmış fiyatları para birimi, müşteri fiyatı, gelir, tarihler ve elle/otomatik kaynağıyla döndürür. Salt okunurdur; `monetization:iap-pricing` ve `monetization:app-price` altında bulunur.
+
+**Abonelik katalog ön denetimi.** `preflight__check_subscription`, inceleme öncesinde tek aboneliği veya gruptaki en fazla 20 aboneliği denetler; yerelleştirme, fiyat, kullanılabilirlik, ekran görüntüsü ve alan eksiklerini ham düzeltme araçlarıyla bildirir. Salt okunur, sınırlı okumaları belirtir; `ready`, Apple onayını tahmin etmez. Güncel v1 katalog yerelleştirmelerini ve plan kullanılabilirliklerini kullanır; v2 sürüm taslakları kapsam dışındadır. `monetization:subscription-catalog` içinde ve araç aramasında bulunabilir. Toplam 898 araç, monetization içinde 210.
+
+**Makroların profil ayrımı.** Makrolar artık tam araç üyeliğine göre yüklenir; abonelik ön denetimi monetization, sürüm ön denetimi distribution içinde kalır.
+
+**TestFlight build'ini beta gruplarına tek çağrıda ata.** `access:beta-groups` içindeki `testflight__assign_build_to_groups` açık bir build numarası veya ID ister; işlenmemiş, geçerli olmayan veya süresi dolmuş build'leri reddeder ve yazmadan önce bütün grupları denetler. Mevcut atamaları atlar, `--dry-run` destekler, grup bazında hataları bildirir ve harici gruplarda beta uygulama incelemesi gerekebileceğini belirtir. RELEASE düzeyinde yazmadır; `--read-only` altında sunulmaz.
 
 **TestFlight geri bildirimleri tek salt okunur çağrıda.** `testflight__feedback_digest` testçilerin ne bildirdiğini yanıtlar: build bazında kilitlenmeler ve ekran görüntüsü geri bildirimleri, ilk cihaz ve OS sürümleri, yeni yorumlar ve en fazla üç crash logdan kısa alıntılar. Uygulama adı, bundle ID veya Apple ID, isteğe bağlı build numarası veya UUID ve varsayılan 14 günlük pencere (en fazla 90) alır. Tarih sınırında sayfalama durur, her okuma sınırlıdır ve eksik veri belirtilir. `testflight` profilinde ve `--read-only` ile kullanılabilir. Toplam 896 araç; TestFlight profili artık 56 araç sunuyor.
 

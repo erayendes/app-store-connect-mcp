@@ -93,6 +93,7 @@ describe('write-gate annotations (offline)', () => {
       'pricing__set_subscription_price',
       'pricing__equalize_price',
       'listing__upload_screenshot',
+      'testflight__assign_build_to_groups',
     ]);
     // The listing and analytics families were outside this check until the
     // upload macro made one of them a write — an unchecked family is exactly

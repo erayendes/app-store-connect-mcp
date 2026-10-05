@@ -264,7 +264,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    */
   const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].filter(
     (t) =>
-      wantsFamily(`${t.name.split('__')[0]}__`) &&
+      (!manualTools || manualTools.has(t.name)) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
   );
   const macroOffered = (name: string): boolean => macroTools.some((t) => t.name === name);
@@ -600,9 +600,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         // never going to show.
         const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
-          : RELEASE_TOOL_NAMES.has(name)
-            ? // Handing a version to Apple is the `release` level its three raw
-              // calls carry; doing them in one go does not make it lighter.
+          : RELEASE_TOOL_NAMES.has(name) || TESTFLIGHT_TOOL_NAMES.has(name)
+            ? // A macro that moves a build or version toward users carries
+              // the same release risk as its raw calls.
               'release'
             : METADATA_I18N_WRITE_TOOLS.has(name)
             ? // One call rewrites the store listing in every language it names.
@@ -756,8 +756,6 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       } else if (macroOffered(name)) {
         result = PRICING_TOOL_NAMES.has(name)
           ? await executePricingTool(name, args, { http, dryRun: config.dryRun })
-          : TESTFLIGHT_TOOL_NAMES.has(name)
-          ? await executeTestflightTool(name, args, { http })
           : ANALYTICS_TOOL_NAMES.has(name)
           ? await executeAnalyticsTool(name, args, { http })
           : PREFLIGHT_TOOL_NAMES.has(name)
@@ -770,6 +768,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
           : RELEASE_TOOL_NAMES.has(name)
           ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun })
+          : TESTFLIGHT_TOOL_NAMES.has(name)
+          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
