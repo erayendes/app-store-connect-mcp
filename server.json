@@ -3,7 +3,7 @@
   "name": "io.github.erayendes/asc-mcp",
   "title": "Heimdall",
   "description": "Every App Store Connect + StoreKit 2 endpoint. 902 tools in 13 profiles, narrow to 27.",
-  "websiteUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE.md",
+  "websiteUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE_en.md",
   "repository": {
     "url": "https://github.com/erayendes/app-store-connect-mcp",
     "source": "github"

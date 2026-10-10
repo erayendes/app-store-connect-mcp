@@ -1,0 +1,134 @@
+# Kurulum
+
+🇬🇧 [English](SETUP_en.md) · 🇹🇷 Türkçe
+
+Heimdall, Node.js **20.19+**'in çalıştığı her yerde çalışır — macOS, Linux ve Windows. Yalnızca bir özellik macOS'a özgüdür: `.p8` anahtarını **macOS Keychain**'de saklamak. Linux ve Windows'ta anahtar dosyasının yolu kaydedilir. Bir fark daha var: Claude masaüstü uygulamasına otomatik kayıt şimdilik yalnızca macOS'ta yapılıyor.
+
+## API anahtarı oluşturun
+App Store Connect [Users and Access → Integrations → Keys](https://appstoreconnect.apple.com/access/integrations/api) sayfasına gidin ve bir anahtar oluşturup, `.p8` dosyasını indirin. Aynı sayfadan `Key ID` ve `Issuer ID` değerlerini not alın.
+Hesapta ilk kez API anahtarı oluşturuluyorsa API erişimini önce Account Holder'ın açması gerekir. Takım anahtarını (Team Keys) yalnızca Account Holder ya da Admin oluşturabilir.
+Müşteri satın alımlarını da (StoreKit 2) soracaksanız uygulamanızın `Bundle ID`'sini de hazır tutun. Sihirbaz bunu yalnızca seçiminizde müşteri işlemleri araçları varsa sorar: `monetization` profilinin tamamı ya da `monetization:storekit`. Bundle ID tek bir uygulamaya bağlanır.
+
+> [!WARNING]
+> `.p8` dosyasını yalnızca bir kez indirebilirsiniz. `setup`'ı çalıştırana kadar güvenli bir yerde saklayın.
+> Anahtara verdiğiniz rol, yapay zekânın hangi yetkilere sahip olacağını belirler. Kullanım amacınızı karşılayan en dar [rolü seçin](ROLES_tr.md).
+
+## Kurulumu başlatın
+
+**Daha önce görmediğiniz bir MCP kurulum deneyimi yaşamaya hazır olun.**
+
+Terminali açın.
+```bash
+npx -y @erayendes/asc-mcp setup
+```
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, Issuer ID, Apple doğrulaması, profil ve alt profil seçimi, anahtarın Keychain'e kaydı" width="720">
+
+### Kimlik bilgisini bir kez kaydedin — Setup sihirbazı
+
+Setup sihirbazı App Store Connect hesabına erişmek için bazı bilgiler ve anahtarlar ister.
+
+- Yazarken `Key ID` ve `Issuer ID` formatları kontrol edilir.
+- `.p8` yolunu girersiniz. Sürükle-bırak da kabul eder.
+- Kaydetmeden önce bilgileri Apple'a doğrulatır. Apple reddederse yeniden girersiniz.
+- Satış/finans raporlarına ulaşmak için opsiyonel olarak `Vendor number` sorulur.
+- Cihazınızda kurulu olan yapay zekâ uygulamalarını tespit eder ve profilleri hangilerine kurmak istediğinizi sorar. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır.
+- [Profil](PROFILES_tr.md) seçicinin her satırı, araç sayısını ve kabaca token maliyetini gösterir.
+- Seçiminizde müşteri işlemleri araçları varsa **Bundle ID**'yi ve StoreKit ortamını (`Sandbox` / `Production`) sorar. Yoksa hiç sorulmaz.
+
+Anahtar bilgileri Apple'a doğrulandıktan sonra kaydedilir. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
+
+Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantısını kontrol et"* deyin.
+
+> - Anahtar **macOS Keychain**'de saklanır. macOS dışında dosya yoluyla referanslanır.
+> - **Gizli olmayan her şey** `~/.config/asc-mcp/config.json`'a yazılır. Her profil bu ortak yapılandırmayı okur.
+> - **`setup`'ı daha önce çalıştırdıysanız**, kayıtlı `Key/Issuer`'ınızı bulur ve bunları yeniden kullanıp yalnızca profilleri yeniden seçmeyi önerir.
+> - **Xcode 27** eklentileri Git URL'sinden kurduğu için bir config dosyası yoktur. Bu yüzden setup sihirbazından kurulamıyor; [kendi bölümü](#xcode-27de-heimdall-kullanmak) var.
+> - **Heimdall'ı yapay zekânıza kurduracaksanız** o yalnızca profilleri `register` ile ekleyebilir. Anahtar için `setup`'ı siz çalıştırırsınız; kurulum sırasında anahtarınız yapay zekâya hiç gösterilmez. Kurallar [AGENTS.md](../AGENTS.md)'de.
+
+### Nereye kaydedilir
+
+Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`, profillerinizi bulduğu her uygulamaya kaydeder. Böylece her defasında ayrı ayrı işlem yapmanıza gerek kalmaz.
+
+| Uygulama | Nereye | Nasıl yazılır |
+|:--|:--|:--|
+| Claude Code | `~/.claude.json` | `claude mcp add` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | doğrudan düzenlenir |
+| Codex | `~/.codex/config.toml` | `codex mcp add` |
+| Antigravity | `~/.gemini/config/mcp_config.json` | doğrudan düzenlenir |
+| Cursor | `~/.cursor/mcp.json` | doğrudan düzenlenir |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | doğrudan düzenlenir |
+| VS Code | kullanıcı MCP config'i | `code --add-mcp` |
+
+## Profil ekleme ve çıkarma
+
+Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birkaç profille başlayın, proje ihtiyaç duydukça daha fazlasını ekleyin.
+
+- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`.
+- Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
+- Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler.
+
+## Yüklü olmayan bir araç gerekirse
+
+Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini söyler. Bu yüzden az profille kurmaktan çekinmeyin; eksik olan bir şey size zaten söylenecek.
+
+## Xcode 27'de Heimdall kullanmak
+
+1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir.
+2. Xcode → Settings → Intelligence → Plug-ins → **Add Plug-in…**
+3. **Add from URL** seçin, `https://github.com/erayendes/app-store-connect-mcp` yapıştırın.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo adresi girilmiş" width="560">
+
+4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall profilleri, her biri onay kutulu" width="560">
+
+5. İlk App Store Connect çağrısı, yapay zekânın kullandığı her araç gibi izin sorar.
+6. **Bundan sonrası bildiğiniz Heimdall.**
+7. Daha sonra da başka bir alan eklemek için 2. adımdan tekrar başlayın.
+
+> [!NOTE]
+> Eklentiler Xcode'un kendi sohbetine değil, ajanlara gider. Xcode'un model menüsünden yerleşik bir model değil, bir **ajan** seçin: Claude Agent, Codex ya da Gemini. Seçtiğiniz ajan Heimdall'ı başlatır.
+
+## Gelişmiş ayarlar
+
+Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect hesabı, setup olmadan çalıştırmak: hepsi [Yapılandırma](CONFIGURATION_tr.md) sayfasında.
+
+## Sorun giderme
+
+| Belirti | Ne oluyor | Çözüm |
+|:--|:--|:--|
+| **Kurdum ama Claude'da görünmüyor** | Claude, profilleri yalnızca açılışta yükler. Setup, **Claude (Code & Desktop)** seçeneğiyle iki uygulamaya birlikte yazar; biri başarısız olursa bunu sonundaki özette söyler. | Claude'u tamamen kapatıp yeniden açın. Özette hata varsa `setup`'ı yeniden çalıştırın. Windows ve Linux'ta Claude masaüstü uygulamasına otomatik kayıt henüz yok. |
+| **`401 Unauthorized`** | Key ID, Issuer ID ve `.p8` aynı anahtara ait değil ya da anahtar iptal edilmiş. | `setup`'ı yeniden çalıştırın ve kayıtlı bilgileri yeniden kullanmak isteyip istemediğinizi sorduğunda **n** deyin. Anahtarı yeniden girin; setup kaydetmeden önce Apple'a doğrular. |
+| **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli değil. | Yapay zekâya *"Anahtarımın yetkilerini kontrol et"* deyin. Hangi rolün gerektiği [Roller](ROLES_tr.md)'de. |
+| **Sürüm güncellemesinde `409 Conflict`** | App Store Connect düzenlemelere yalnızca belirli sürüm durumlarında izin verir. | İncelemede olan veya yayınlanmış bir sürüm kilitlidir. |
+| **İhtiyacım olan araç listede yok** | Başka bir profilde. | Yapay zekâya sorun: *"X için bir araç var mı?"* |
+| **`429 Too Many Requests`** | Apple her anahtar için saatlik bir istek sınırı uygular (şu an 3.600); bu sınır dolmuş. | Heimdall kısa bir süre bekleyip kendisi tekrar dener. Sık görüyorsanız aynı anahtarı başka bir araç da kullanıyordur (ör. CI'daki Fastlane); ona ayrı bir anahtar oluşturun. |
+| **StoreKit araçları eksik** | App Store Server API bir Bundle ID ister. | `setup`'ı yeniden çalıştırın, kayıtlı bilgileri yeniden kullanma sorusuna **n** deyin ve `monetization`'ı seçince Bundle ID'yi girin. |
+| **Yeni uygulama oluşturulamıyor** | Apple'ın API'si yeni uygulama oluşturmaya izin vermez. | Uygulamayı bir kez App Store Connect web sayfasından oluşturun; sonrasını Heimdall'la yönetebilirsiniz. |
+
+## Kaldırma
+
+`setup`'ı yeniden çalıştırın, profil seçicisinde her şeyin işaretini kaldırın; seçtiğiniz uygulamalardan profilleri siler.
+
+İki istisna var: VS Code'da kaldırma komutu olmadığı için Heimdall satırlarını VS Code'un MCP ayarlarından elle silin. Xcode eklentilerini de Xcode → Settings → Intelligence → Plug-ins'ten **Delete Plug-in** ile kaldırın.
+
+Sonra:
+
+```bash
+# Ortak ayarlar
+rm -rf ~/.config/asc-mcp
+
+# Kullandıysanız, macOS Keychain'deki anahtar
+security delete-generic-password -s asc-mcp -a AuthKey_XXXXXXXXXX
+
+# Paket, yalnızca global kurduysanız
+npm uninstall -g @erayendes/asc-mcp
+```
+
+> [!WARNING]
+> API anahtarının kendisini iptal etmek App Store Connect üzerinden yapılır. Yerel kopyayı silmek onu iptal etmez.

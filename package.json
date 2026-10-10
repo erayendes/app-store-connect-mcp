@@ -32,7 +32,8 @@
     "skills",
     "README.md",
     "AGENTS.md",
-    "docs/GUIDE.md",
+    "docs/*_en.md",
+    "docs/*_tr.md",
     "docs/CHANGELOG.md",
     "LICENSE"
   ],
