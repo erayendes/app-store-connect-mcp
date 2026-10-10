@@ -19,7 +19,7 @@
 
 - **Bir şey çalışmıyor mu?** Önce [Sorun giderme](../docs/SETUP_tr.md#sorun-giderme) bölümüne bakın; en sık karşılaşılan sorunlar çözümleriyle orada.
 - **Bir hata mı buldunuz?** Bir [issue](https://github.com/erayendes/app-store-connect-mcp/issues) açın. Yapay zekâdan ne istediğinizi, ne beklediğinizi, ne olduğunu ve hangi profilleri kurduğunuzu yazın. Key ID, Issuer ID ya da `.p8` dosyanızın içeriğini asla paylaşmayın.
-- **Bir güvenlik açığı mı buldunuz?** Herkese açık bir issue açmayın. [SECURITY.md](SECURITY.md)'ye bakın.
+- **Bir güvenlik açığı mı buldunuz?** Herkese açık bir issue açmayın. [SECURITY.md](SECURITY.md#türkçe)'ye bakın.
 - **Apple'ın API'si böyle mi çalışıyor?** "Bu bir hata mı?" sorularının çoğu, Apple'ın API'sinin zaten böyle tasarlanmış olmasından çıkıyor. Cevap [Apple'ın belgelerinde](https://developer.apple.com/documentation/appstoreconnectapi).
 - **Bir özellik mi eksik?** Önce yapay zekâya sorun: *"X için bir araç var mı?"* Heimdall, kurmadığınızlar dahil bütün araçları arar. Gerçekten yoksa bir issue açın.
 - **Başka bir şey mi?** [Bana ulaşabilirsiniz](CODEOWNERS).

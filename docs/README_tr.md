@@ -55,7 +55,7 @@ MCP rehberleri genelde uzak HTTP sunucularını önerir.
 
 Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğinizde önce onay ister ve neyin değişeceğini gösterir. Bu kural gelir, silme, altyapı ve erişim gibi geri alması zor değişikliklerde varsayılan olarak açık gelir. Geri kalan her şeyde kullandığınız uygulamanın kendi onay sistemi devrededir.
 
-Detaylar için → [Güvenlik](../.github/SECURITY.md).
+Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 
 ### Fastlane'in yerine değil, yanında
 Heimdall, [Fastlane](https://fastlane.tools/)'in alternatifi değil, tamamlayıcısıdır. **Pipeline için Fastlane, elle yaptığınız her şey için Heimdall**.
@@ -85,6 +85,6 @@ Heimdall sizi App Store Connect panelinden kurtardıysa tam işlevini yerine get
 
 [MIT](../LICENSE) © Eray Endes
 
-[SECURITY.md](../.github/SECURITY.md) | [SUPPORT.md](../.github/SUPPORT.md) | [CHANGELOG.md](CHANGELOG.md) | [CONTRIBUTING.md](../.github/CONTRIBUTING.md) | [CODE_OF_CONDUCT.md](../.github/CODE_OF_CONDUCT.md) | [GOVERNANCE.md](../.github/GOVERNANCE.md)
+[SECURITY.md](../.github/SECURITY.md#türkçe) | [SUPPORT.md](../.github/SUPPORT.md#türkçe) | [CHANGELOG.md](CHANGELOG.md#türkçe) | [CONTRIBUTING.md](../.github/CONTRIBUTING.md#türkçe) | [CODE_OF_CONDUCT.md](../.github/CODE_OF_CONDUCT.md#türkçe) | [GOVERNANCE.md](../.github/GOVERNANCE.md#türkçe)
 
 Heimdall, Apple Inc.'in yayımladığı App Store Connect OpenAPI spesifikasyonundan üretilir. App Store Connect, TestFlight, StoreKit, Xcode ve Game Center, Apple Inc.'in ticari markalarıdır. Bu proje Apple Inc. ile bağlantılı değildir.

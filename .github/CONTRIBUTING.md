@@ -57,7 +57,7 @@ Projeye katkı sağlamak istediğinize sevindim. Bu ve benzeri birçok projeyi t
   - Gerekiyorsa **dokümantasyonu** güncelleyin.
 - **Kod stiline** dikkat edin. Düzenlediğiniz dosyadaki mevcut stile uyun.
 - **Commit**'lerinize kısa ve net mesajlar yazın.
-- **Güvenlik açığı** gördüyseniz lütfen bunu herkese açık paylaşmayın. [Normal akışın dışında özel olarak ele alırım.](SECURITY.md)
+- **Güvenlik açığı** gördüyseniz lütfen bunu herkese açık paylaşmayın. [Normal akışın dışında özel olarak ele alırım.](SECURITY.md#türkçe)
 
 ### Kendi makinenizde çalıştırmak
 
@@ -86,4 +86,4 @@ PR ve issue'ları zaman buldukça inceliyorum. Net bir yanıt süresi yok ama:
 - **Küçük değişiklikleri** (düzeltmeler, daha net dokümantasyon, küçük iyileştirmeler) daha hızlı gözden geçirir, genellikle birkaç gün içinde merge ederim.
 - **Büyük değişiklikler** (yeni özellikler, geriye uyumsuz değişiklikler) daha fazla inceleme ister; mevcut plana alınmaları genelde iki haftayı bulur.
 
-Katkıda bulunarak [Davranış Kuralları](CODE_OF_CONDUCT.md)'na uymayı kabul etmiş olursunuz.
+Katkıda bulunarak [Davranış Kuralları](CODE_OF_CONDUCT.md#türkçe)'na uymayı kabul etmiş olursunuz.
