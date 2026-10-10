@@ -23,7 +23,7 @@ This Code of Conduct is inspired by the [Contributor Covenant](https://www.contr
 
 ## Türkçe
 
-Bu ve bunun gibi birçok [projeyi tek başıma yürütüyorum](GOVERNANCE.md). Herhangi bir ayrımcılık yapmaksızın [katkı vermek isteyen herkese](CONTRIBUTING.md) kapım açık.
+Bu ve bunun gibi birçok [projeyi tek başıma yürütüyorum](GOVERNANCE.md#türkçe). Herhangi bir ayrımcılık yapmaksızın [katkı vermek isteyen herkese](CONTRIBUTING.md#türkçe) kapım açık.
 
 Sadece:
 

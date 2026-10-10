@@ -40,7 +40,7 @@ Ama öncelikler zamanıma, ihtiyaca ve projenin en çok neye ihtiyacı olduğuna
 Yol haritasını [issue'larda](https://github.com/erayendes/app-store-connect-mcp/issues?q=is%3Aopen+label%3Aenhancement) takip edebilirsiniz.
 
 Geri bildirimi ciddiye alırım; fakat tek geliştiricisi olduğum sürece yol haritası, özellikler ve neyin merge edilip ne zaman yayınlanacağı konusunda son kararı ben veririm.
-[Düzenli katkı sağlarsanız](CONTRIBUTING.md) ve size güvenirsem sizi projeye bakımcı (maintainer) olarak ekleyebilirim. Ama bunun belirli bir kuralı yok.
+[Düzenli katkı sağlarsanız](CONTRIBUTING.md#türkçe) ve size güvenirsem sizi projeye bakımcı (maintainer) olarak ekleyebilirim. Ama bunun belirli bir kuralı yok.
 
 Uzun süre ulaşılamaz olursam projeyi fork'layıp kendiniz geliştirmeye devam edebilirsiniz.
 
