@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and any other MCP client). Human-facing docs live in [README.md](README.md) and [GUIDE.md](docs/GUIDE.md).
+Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and any other MCP client). Human-facing docs live in [README.md](README.md) and [docs/](docs/).
 
 > The same guidance ships as a skill at [`skills/heimdall/SKILL.md`](skills/heimdall/SKILL.md), which `register` installs for the clients that read skills. That file exists because this one cannot be reached: Heimdall runs through `npx`, so a user installing it has no checkout and never sees AGENTS.md. **Keep the two in step** — if you change how install or safety works here, change it there too.
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. There are 896 distinct tools across 13 profiles (987 Apple operations, 123 deprecated and unloaded by default, plus 32 hand-written tools).
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 902 tools across 13 profiles: 864 generated from Apple's 987 operations (the 123 deprecated ones stay unloaded unless asked for) and 38 hand-written.
 
 ## If a user asks you to install it
 
@@ -14,7 +14,7 @@ The install is two steps and they are not both yours. **You register. The user h
 
 ### 1. Agree on the profiles, then register them
 
-Ask what the user works on. If they have not said, `analytics`, `marketing` and `app-info` are a sensible default. Each profile is a small scoped server; the table is in [GUIDE.md](docs/GUIDE.md#register-profiles).
+Ask what the user works on. If they have not said, `analytics`, `marketing` and `app-info` are a sensible default. Each profile is a small scoped server; the table is in [PROFILES_en.md](docs/PROFILES_en.md).
 
 A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 55 tools where `monetization` is 211. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `ASC-Monetization`.
 
@@ -51,7 +51,7 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 - **Finding a tool that isn't loaded:** call `asc__search_tools` (searches all 987 operations plus StoreKit) or `asc__discover_domains`. They name the sibling profile that owns a tool and print the exact command to add it.
 - **StoreKit / customer transactions** need a bundle ID (set during `setup` or via `ASC_BUNDLE_ID`) and live on the `monetization` profile. Each StoreKit tool takes an optional `environment` argument (`Production`/`Sandbox`).
 - **Safety:** `--read-only` mode blocks every mutating tool. `destructiveHint` no longer means "this is a DELETE" — it now covers every write whose consequence the HTTP method cannot show, so a description ending in `REVENUE-`, `RELEASE-`, `INFRASTRUCTURE-` or `ACCESS-level write.` is flagged too. Those change live data: say what will happen and get a yes before calling one.
-- **Prefer the macro over the chain.** `preflight__check_subscription` checks subscription catalog gaps before review (one subscription or up to 20 in a group; read-only, capped, no approval prediction). `pricing__*` answers or changes a price without walking app → group → subscription → price points; `listing__*` reads and uploads store screenshots; `analytics__get_report` returns report rows rather than a link; `ci__diagnose_run` diagnoses Xcode Cloud failures in one bounded read on the 53-tool `xcode-cloud` profile; `reviews_ai__*` triages reviews. `testflight__assign_build_to_groups` (in `access:beta-groups`) assigns one named build to groups and skips existing links; give an explicit build number or ID. `testflight__feedback_digest` summarizes recent tester crashes and screenshot feedback by build, with bounded comments and crash excerpts (`testflight`, 56 tools). Two macros do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
+- **Prefer the macro over the chain.** Hand-written tools (`pricing__*`, `listing__*`, `preflight__*`, `release__submit`, `testflight__*`, `ci__diagnose_run`, `analytics__get_report`, `reviews_ai__*`) answer in one call what the raw tools need a chain for; the table is in [GUIDE_en.md](docs/GUIDE_en.md#one-call-instead-of-a-chain). Two do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
 
 ## If you are working ON this repository
 

@@ -1,36 +1,35 @@
-name: Feature request
-description: Suggest a capability, a better description, or an Apple operation that seems missing.
+name: Feature request / Özellik önerisi
+description: Suggest something Heimdall should do. / Heimdall'ın yapması gereken bir şey önerin.
 labels: ['enhancement']
 body:
   - type: markdown
     attributes:
       value: |
-        **Looking for an Apple operation that isn't in your tool list?** Ask your agent to run
-        `asc__search_tools` first — it searches all 987 operations, including the ones your
-        current profile hasn't loaded, and prints the command to register the profile that has it.
+        **Looking for something Heimdall can't seem to do?** First ask the AI: *"Is there a tool for X?"* Heimdall searches every tool, including the ones you haven't installed.
+        **Heimdall'ın yapamadığı bir şey mi arıyorsunuz?** Önce yapay zekâya sorun: *"X için bir araç var mı?"* Heimdall, kurmadığınızlar dahil bütün araçları arar.
 
-        Türkçe yazabilirsiniz.
+        You can write in English or Turkish. / İngilizce ya da Türkçe yazabilirsiniz.
 
   - type: textarea
     id: problem
     attributes:
-      label: What are you trying to do
-      description: The task you're stuck on, not the solution you have in mind. It often turns out an existing tool covers it.
+      label: What are you trying to do? / Ne yapmaya çalışıyorsunuz?
+      description: Describe the task, not the solution you have in mind. An existing tool often covers it. / Aklınızdaki çözümü değil, yapmak istediğiniz işi anlatın. Çoğu zaman mevcut bir araç bunu karşılıyor.
     validations:
       required: true
 
   - type: textarea
     id: proposal
     attributes:
-      label: What you'd like instead
-      description: If it maps to a specific Apple endpoint, include the `METHOD /path` from [Apple's documentation](https://developer.apple.com/documentation/appstoreconnectapi).
+      label: What would help? / Ne işinize yarardı?
+      description: How you'd like it to work. / Nasıl çalışmasını isterdiniz?
     validations:
       required: true
 
   - type: checkboxes
     id: checked
     attributes:
-      label: Checks
+      label: Checks / Kontroller
       options:
-        - label: I searched with `asc__search_tools` and the operation isn't there under another profile.
-        - label: This is about Heimdall, not about how Apple's own API behaves.
+        - label: I asked the AI "Is there a tool for X?" and it's not there. / Yapay zekâya "X için bir araç var mı?" diye sordum, yok.
+        - label: This is about Heimdall, not about how Apple's own API works. / Bu, Apple'ın API'sinin nasıl çalıştığıyla değil, Heimdall'la ilgili.

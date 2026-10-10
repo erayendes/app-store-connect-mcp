@@ -1,64 +1,66 @@
-name: Bug report
-description: Something behaves differently than documented.
+name: Bug report / Hata bildirimi
+description: Something doesn't work the way the docs say. / Bir şey belgelerde anlatıldığı gibi çalışmıyor.
 labels: ['bug']
 body:
   - type: markdown
     attributes:
       value: |
-        **Before you post:** redact your Key ID, Issuer ID and any `.p8` contents — they are secrets.
+        **Before you post:** never paste your Key ID, Issuer ID or the contents of your `.p8` file.
+        **Göndermeden önce:** Key ID, Issuer ID ya da `.p8` dosyanızın içeriğini asla paylaşmayın.
 
-        If the tool returned an Apple API error (401, 403, 409, 429), check the
-        [troubleshooting table](https://github.com/erayendes/app-store-connect-mcp/blob/main/.github/SUPPORT.md#troubleshooting)
-        first — most of them have a known cause.
+        Seeing 401, 403, 409 or 429? Most of these have a known fix in [Troubleshooting](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/SETUP_en.md#troubleshooting).
+        401, 403, 409 ya da 429 mu görüyorsunuz? Çoğunun bilinen bir çözümü [Sorun giderme](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/SETUP_tr.md#sorun-giderme) bölümünde.
 
-        Türkçe yazabilirsiniz.
+        You can write in English or Turkish. / İngilizce ya da Türkçe yazabilirsiniz.
 
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened
-      description: What you asked for, what the server did, and what you expected instead.
+      label: What happened / Ne oldu
+      description: What you asked the AI, what happened and what you expected. / Yapay zekâdan ne istediniz, ne oldu, ne bekliyordunuz?
       placeholder: |
-        I asked the agent to update the subtitle for app 123456. It returned 409 Conflict,
-        but the version is still in "Prepare for Submission".
+        I asked it to update the subtitle of my app. It returned 409 Conflict, but the version is still in "Prepare for Submission".
     validations:
       required: true
 
   - type: input
     id: tool
     attributes:
-      label: Tool involved
-      description: The tool name, e.g. `app_store_version_localizations__update`. Leave blank if it failed before any tool ran.
+      label: Tool involved / İlgili araç
+      description: The tool name, e.g. `app_store_version_localizations__update`. Leave blank if it failed before any tool ran. / Araç adı, ör. `app_store_version_localizations__update`. Hiçbir araç çalışmadan hata verdiyse boş bırakın.
       placeholder: apps__customer_reviews__list
 
   - type: input
     id: version
     attributes:
-      label: Heimdall version
-      description: Run `npx -y @erayendes/asc-mcp --version`, or check the version in your MCP client config.
-      placeholder: 1.2.0
+      label: Heimdall version / Heimdall sürümü
+      description: Run `npx -y @erayendes/asc-mcp --version`. / `npx -y @erayendes/asc-mcp --version` komutunu çalıştırın.
+      placeholder: 2.5.0
     validations:
       required: true
 
   - type: dropdown
-    id: client
+    id: app
     attributes:
-      label: MCP client
-      description: Elicitation and sampling support differ per client, and several behaviours depend on it.
+      label: App / Uygulama
+      description: Which app you use Heimdall in. / Heimdall'ı hangi uygulamada kullanıyorsunuz?
       options:
         - Claude Code
         - Claude Desktop
-        - Cursor
         - Codex
-        - Other (name it below)
+        - Cursor
+        - Antigravity
+        - Windsurf
+        - VS Code
+        - Xcode
+        - Other (write it below) / Diğer (aşağıya yazın)
     validations:
       required: true
 
   - type: dropdown
     id: os
     attributes:
-      label: Operating system
-      description: Key storage differs — Keychain is macOS-only.
+      label: Operating system / İşletim sistemi
       options:
         - macOS
         - Windows
@@ -67,17 +69,17 @@ body:
       required: true
 
   - type: input
-    id: server
+    id: profiles
     attributes:
-      label: Profile or flags
-      description: Which server you registered, plus any `--domains`, `--read-only` or `--no-confirm` flags.
-      placeholder: ASC-Marketing, no extra flags
+      label: Installed profiles / Kurulu profiller
+      description: Which profiles you installed with setup. / Setup ile hangi profilleri kurdunuz?
+      placeholder: marketing, analytics
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Error output
-      description: The full error the tool returned, including the Apple request ID if present. Rendered as a code block — no backticks needed.
+      label: Error message / Hata mesajı
+      description: The full error, if there was one. / Varsa hatanın tamamı.
       render: text

@@ -4,62 +4,44 @@
 
 ## English
 
-### Hi, I'm Eray
+Hi,
 
-I'm Eray Endeş, a product manager, and I genuinely love this craft. There's a particular joy in taking something tangled, understanding it, and making it work — solving a problem, fixing what's broken, watching the rough edge disappear. Heimdall started from exactly that feeling.
+I'm Eray, a product manager.
+I look for ideas that make life a little easier and turn them into real things.
 
-### Why I built it
+Building a good product usually depends on having the right tools.
+Sometimes the tool I need doesn't exist, or the ones that do aren't good enough, so I build it myself.
+When I do, I share it as open source instead of keeping it to myself. This is one of those projects, and I run it on my own.
 
-I build several apps, and the more of them I run, the more I needed real automation around the App Store — not click-through-the-dashboard automation, but something I could drive from an AI client and trust.
+I always keep a roadmap while I work on a project.
+But priorities shift with my time, with demand, and with what the project needs most.
+You can follow the roadmap in the [issues](https://github.com/erayendes/app-store-connect-mcp/issues?q=is%3Aopen+label%3Aenhancement).
 
-The tools that already existed were piecemeal. Each wrapped a different slice of App Store Connect, each made its own choices, and none covered the whole surface. The moment I needed the one endpoint a tool hadn't wrapped, I was stuck.
+I take feedback seriously. Still, as long as I'm the only developer, I make the final call on the roadmap, the features, and what gets merged and released.
+If you [contribute regularly](CONTRIBUTING.md) and I come to trust your work, I may add you as a maintainer. There's no fixed rule for that.
 
-So I wanted something built to a standard and comprehensive by construction: every tool generated from Apple's own OpenAPI specification, so coverage is complete and staying current means regenerating rather than hand-writing. Once it worked for me, sharing it openly was the natural next step — if it saves me time across my apps, it can save someone else's too.
+If I become unreachable for a long time, you can fork the project and keep it going yourselves.
 
-### How it's run
-
-For now this is a single-maintainer project: I have the final say on what gets merged and released, on scope and roadmap, and on versioning. That reflects the project's size today, not a permanent design — if a contributor community grows around it, this document will grow with it.
-
-- **Small changes** (bug fixes, clearer descriptions, curated overrides) — reviewed and merged directly, usually within a few days.
-- **Larger changes** (new domains, architectural or breaking changes) — best discussed in an issue first, so we agree on direction before the work is done.
-- **Security issues** — handled privately per [SECURITY.md](SECURITY.md), outside the normal issue flow.
-
-### Reaching me
-
-- Questions, ideas, bug reports: open an issue, or email **erayendes@gmail.com**.
-- If Heimdall saves you time and you'd like to support it, you can [buy me a coffee](https://buymeacoffee.com/erayendes) ☕. Entirely optional — the project is and stays free.
-
-### Independence
-
-Heimdall is not affiliated with, endorsed by, or sponsored by Apple Inc. (see the [licence note](../README.md#license)). Its direction is set by me and the people who use it, not by any corporate roadmap.
+_This may change if the project grows or gains other maintainers._
 
 ## Türkçe
 
-### Merhaba, ben Eray
+Merhaba,
 
-Ben Eray Endeş, bir product manager'ım ve bu işi gerçekten seviyorum. Karışık bir şeyi alıp anlamanın, çalışır hâle getirmenin — bir problemi çözmenin, bozuk olanı fikslemenin, o pürüzün kaybolmasını izlemenin — kendine özgü bir keyfi var. Heimdall tam da bu histen doğdu.
+Ben Eray, bir ürün yöneticisiyim.
+Hayatınızı biraz daha kolaylaştıracak, işe yarar fikirler bulup gerçeğe dönüştürüyorum.
 
-### Neden yaptım
+İyi bir ürünü hayata geçirmek genellikle doğru araçlara sahip olmaya bağlıdır.
+Bazen o araç mevcut olmadığında ya da iyi olmadığını düşündüğümde kendim geliştiririm.
+Bir aracı geliştirdiğimde onu kendime saklamak yerine açık kaynak olarak herkesle paylaşırım. Bu da tek başıma yürüttüğüm projelerden biri.
 
-Birden çok uygulama geliştiriyorum ve ne kadar çoğaldılarsa App Store çevresinde o kadar çok gerçek otomasyona ihtiyaç duydum — panele tıklaya tıklaya değil, bir yapay zekâ istemcisinden yönetebileceğim ve güvenebileceğim bir otomasyon.
+Projeyi geliştirirken hazırladığım bir yol haritası mutlaka oluyor.
+Ama öncelikler zamanıma, ihtiyaca ve projenin en çok neye ihtiyacı olduğuna göre değişebilir.
+Yol haritasını [issue'larda](https://github.com/erayendes/app-store-connect-mcp/issues?q=is%3Aopen+label%3Aenhancement) takip edebilirsiniz.
 
-Zaten var olan çözümler parça parçaydı. Her biri App Store Connect'in farklı bir dilimini sarıyor, her biri kendi tercihlerini yapıyor ve hiçbiri tüm yüzeyi kapsamıyordu. Bir aracın sarmadığı o tek uç noktaya ihtiyaç duyduğum anda tıkanıp kalıyordum.
+Geri bildirimi ciddiye alırım; fakat tek geliştiricisi olduğum sürece yol haritası, özellikler ve neyin merge edilip ne zaman yayınlanacağı konusunda son kararı ben veririm.
+[Düzenli katkı sağlarsanız](CONTRIBUTING.md) ve size güvenirsem sizi projeye bakımcı (maintainer) olarak ekleyebilirim. Ama bunun belirli bir kuralı yok.
 
-Bu yüzden standartlara uygun ve yapısı gereği kapsamlı bir şey istedim: her araç Apple'ın kendi OpenAPI spesifikasyonundan üretilsin ki kapsam eksiksiz olsun ve güncel kalmak elle yazmak değil yeniden üretmek anlamına gelsin. Bende çalışır hâle geldikten sonra açıkça paylaşmak doğal bir sonraki adımdı — benim uygulamalarımda zaman kazandırıyorsa, başkasının işine de yarar.
+Uzun süre ulaşılamaz olursam projeyi fork'layıp kendiniz geliştirmeye devam edebilirsiniz.
 
-### Nasıl yürütülüyor
-
-Şimdilik bu tek maintainer'lı bir proje: neyin merge edilip yayınlanacağına, kapsam ve roadmap'e, versiyonlamaya son sözü ben veriyorum. Bu, projenin bugünkü büyüklüğünü yansıtır, kalıcı bir tasarım değil — etrafında bir katkıcı topluluğu büyürse, bu doküman da onunla birlikte büyür.
-
-- **Küçük değişiklikler** (bug fix'ler, daha net açıklamalar, curated override'lar) — doğrudan gözden geçirilir ve genellikle birkaç gün içinde merge edilir.
-- **Büyük değişiklikler** (yeni domainler, mimari ya da breaking değişiklikler) — önce bir issue'da konuşmak en iyisi; böylece iş yapılmadan yön üzerinde anlaşırız.
-- **Güvenlik sorunları** — [SECURITY.md](SECURITY.md)'ye göre, normal issue akışının dışında özel olarak ele alınır.
-
-### Bana ulaşmak
-
-- Soru, fikir, hata bildirimi: bir issue açın ya da **erayendes@gmail.com** adresine yazın.
-- Heimdall zamanınızı kurtarıyorsa ve desteklemek isterseniz [bana bir kahve ısmarlayabilirsiniz](https://buymeacoffee.com/erayendes) ☕. Tamamen isteğe bağlı — proje ücretsiz ve öyle kalıyor.
-
-### Bağımsızlık
-
-Heimdall, Apple Inc. ile bağlantılı değildir, onaylanmamıştır veya sponsor edilmemiştir (bkz. [lisans notu](../README.md#lisans)). Yönü, herhangi bir kurumsal roadmap tarafından değil, benim ve onu kullananlar tarafından belirlenir.
+_Proje büyürse ya da başka bakımcılar katılırsa bu metin değişebilir._

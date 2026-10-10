@@ -1,5 +1,7 @@
 # Heimdall — App Store Connect MCP
 
+**Your whole App Store Connect account, in one tool.**
+
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
 
@@ -9,42 +11,57 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Yerli üretim](https://img.shields.io/badge/YERL%C4%B0%20%C3%9CRET%C4%B0M-red?style=flat&label=%F0%9F%A4%9D&color=red&link=https%3A%2F%2Fmilowda.com)](https://milowda.com)
 
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Asking an agent what a subscription costs worldwide; Heimdall answers in one tool call" width="720">
+🇬🇧 English · 🇹🇷 [Türkçe](docs/README_tr.md)
 
-<sub>A real agent session over MCP, sped up. The App Store Connect account is a stand-in so the recording can be public — regenerate with `vhs assets/demo/demo.tape`.</sub>
+**Ask, and it answers. Tell it, and it's done.**
 
-🇬🇧 [English](#english) · 🇹🇷 [Türkçe](#türkçe)
-
-## English
-
-**Heimdall.** One tool for your entire App Store Connect account.
-
-An MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, with every tool generated from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 902 tools.**
-
-Apps and metadata, versions and phased releases, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, and sales and finance reports.
-
-### Ask and it answers. Tell it and it's done.
-> - *"Summarise this week's 1-star reviews and draft replies."*
+> - *"Summarize this week's 1-star reviews and draft replies."*
 > - *"Which builds are stuck in review?"*
-> - *"Raise this subscription's price in every territory."*
-> - *"Show current and scheduled IAP or app prices in each country."*
+> - *"Raise this subscription's price in every country."*
+> - *"What does this subscription cost in each country?"*
+> - *"Which screenshots are on the store listing?"*
+> - *"Add build 42 to the Internal and External groups."*
+> - *"Why did my Xcode Cloud build fail?"*
 
-`pricing__get_iap_price` (`monetization:iap-pricing`) and `pricing__get_app_price` (`monetization:app-price`) read these prices without changing them. `pricing__set_iap_price` changes one IAP price in one country and carries every other manual and scheduled price into the new schedule.
+Almost anything you'd click through App Store Connect to do, you can now just ask your AI to do. More examples in the [Guide](docs/GUIDE_en.md#examples).
 
-### What the one call saves
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Asking an AI what a subscription costs worldwide; Heimdall answers in one tool call" width="720">
 
-| The question | Through the raw tools | Heimdall |
-|:--|:--|:--|
-| *"What does this subscription cost in every country?"* | one measured agent session: 1.02M tokens, $3 | ~1.3k tokens, 2.1s |
-| *"What screenshots are on the listing?"* | 53 HTTP calls, 264 KB | 4 calls, ~1 KB |
-| *"Change this subscription's price."* | 4 reads, then a choice among 842 price points | one call |
-| *"Assign build 42 to Internal and External beta groups."* | resolve app, build and groups, check each link, then add missing links | `testflight__assign_build_to_groups` in `access:beta-groups` |
-| *"Why did my Xcode Cloud build fail?"* | product → run → actions → issues and tests | `ci__diagnose_run` on `xcode-cloud` |
+<sub>A real AI session, sped up. The App Store Connect account is a stand-in so the recording can be public.</sub>
 
-The first row is a real session, not a projection: the agent walked the chain, could not fit the answer, wrote it to a CSV and hand-built a country-name dictionary in Python to finish. The other two are call counts against a live account.
+### Heimdall
 
-### Quick start
+One MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 902 tools.**
+
+Most App Store Connect MCP servers give you a hand-picked slice of the API. That works until you need the one endpoint they left out, and then **you're off hunting for yet another tool.**
+
+**Heimdall does the opposite: it gives you the whole API, organized into profiles.** Apps and metadata, versions, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, sales and finance reports — all of it. **You pick what you need**, and add or remove profiles whenever you like.
+
+[Profiles](docs/PROFILES_en.md) shows what each one covers. You don't have to memorize any of it, though: ask *"Is there a tool for in-app events?"* and Heimdall tells you which profile has it.
+
+**Not sure which profiles you need?** The [starter packs](docs/PROFILES_en.md#starter-packs) suggest a set for your role.
+
+### Runs on your machine
+
+Most MCP guides recommend remote HTTP servers.
+**Heimdall runs locally instead.** It reads your App Store Connect key from the Keychain, signs a short-lived token and talks to Apple directly. Nothing sits in between, so your key stays with you.
+
+> [!NOTE]
+> Give your key the narrowest role that does the job. [Roles](docs/ROLES_en.md) explains what each App Store Connect role can do.
+
+### Asks before risky changes
+
+Before changing a price, giving someone Admin access or deleting something, Heimdall asks you to confirm and shows what will change. This is on by default for changes that are hard to undo: revenue, deletions, infrastructure and access. Everything else goes through your app's own approval.
+
+More in [Security](.github/SECURITY.md).
+
+### Works alongside Fastlane
+Heimdall doesn't replace [Fastlane](https://fastlane.tools/); it complements it. **Fastlane for the pipeline, Heimdall for everything you'd otherwise do by hand.**
+
+### Setup
+
+One command:
 
 ```bash
 npx -y @erayendes/asc-mcp setup
@@ -53,210 +70,20 @@ npx -y @erayendes/asc-mcp setup
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
 
-<sub>One pass, and safe throughout: the access details it needs, then a live credential check. Then your choices — the profiles and sub-profiles you want, and the key ends up in the Keychain, not in a config file.</sub>
+Before you run it, [create an API key](docs/SETUP_en.md#create-an-api-key) in App Store Connect and make sure Node.js 20.19 or later is installed.
 
-The setup wizard asks for your API key once, stores it safely, and registers the profiles you choose with **every MCP client on your machine** — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. None of them share a config file, so **this is the step you would otherwise repeat once per client, in a different format each time.** Time thrown away.
-Full walkthrough in the [Guide](docs/GUIDE.md).
+Want your AI to install it for you, or to use it in [Xcode 27](docs/SETUP_en.md#using-heimdall-in-xcode-27)? Everything else is in [Setup](docs/SETUP_en.md).
 
-**Cursor**, one click per profile — `analytics`, `marketing`, `app-info`. The links only register the servers; run `setup` once for the key.
+### About the name and the project
+In Norse mythology, **Heimdall** keeps watch over Bifröst, **the rainbow bridge that links Asgard to the nine realms**. Here, his job is to guard the road between your App Store Connect account and your machine. That's where the name comes from.
 
-[![ASC-Analytics](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=ASC-Analytics&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFuYWx5dGljcyJdfQ%3D%3D) [![ASC-Marketing](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=ASC-Marketing&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsIm1hcmtldGluZyJdfQ%3D%3D) [![ASC-AppInfo](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=ASC-AppInfo&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFwcC1pbmZvIl19)
-
-**Xcode 27** is not on that list because Xcode has no config file to write — it installs plug-ins from a Git URL. After `setup`, open Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL**, paste `https://github.com/erayendes/app-store-connect-mcp`, and tick **Heimdall | ASC Skill** plus the areas you need. Then pick an **agent** in the conversation's model menu — Claude Agent, Codex or Gemini — rather than a built-in model: plug-ins reach the agents, not Xcode's own chat. The agent launches the same servers, and they read the key `setup` stored.
-> **Is an AI agent installing Heimdall for you?**
-> See [AGENTS.md](AGENTS.md) for the handoff protocol: the agent adds the profiles with `register`, you run `setup` yourself for the key — your private key is for your eyes only, and the agent never sees it.
-
-### What sets Heimdall apart
-
-Most App Store Connect MCP servers offer a hand-picked slice of the API. That works right up until you need the one endpoint none of them covered. Heimdall does the opposite: it gives you all of the tools and lets you choose which ones you want — and change your mind whenever you like.
-
-| | |
-| :--- | :--- |
-| **Complete** | Apple's OpenAPI spec v4.5, all 973 paths, 987 operations — 283 id-only duplicates already collapsed, and the 123 Apple has deprecated stay unloaded unless you ask for them, which leaves the 864 reachable operations plus 38 hand-written tools. `npm run spec:update` brings Apple's changes in as a reviewable diff. |
-| **Narrowable** | 13 purpose-built profiles, each narrowing further — `monetization:subscription-pricing` is 27 tools instead of 211. The whole surface would cost over 100k tokens of tool definitions; one profile costs a fraction of that. |
-| **StoreKit 2** | The App Store Server API too — customer transactions, entitlements, refunds. **Rare among ASC MCP servers.** |
-| **TestFlight feedback** | `testflight__feedback_digest` groups recent crashes and screenshot feedback by build, with tester comments and short crash excerpts, in one read-only call. |
-| **No second API key** | Review triage, daily briefings and draft replies return the review data — your own model writes the text. |
-| **Safe** | Confirm-before-write, `--read-only`, destructive-action annotations, host-pinned requests, no telemetry. |
-| **Private** | The `.p8` lives in the macOS Keychain, never in a plain-text config. |
-
-**Subscription preflight.** `preflight__check_subscription` checks one subscription or up to 20 in a group for catalog gaps before review. Available in `monetization:subscription-catalog`, including `--read-only`; each finding names a raw fix tool. It reports capped reads and does not predict Apple approval.
-
-#### Profiles
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: checking monetization unfolds its sub-profiles, each with its tool count and token estimate" width="720">
-
-Register only the profiles your project uses. What each one covers is in the [profile table](docs/GUIDE.md#register-profiles); adding and removing them later is [here](docs/GUIDE.md#adding-and-removing-later).
-
-Not sure which? [Starter packs](docs/GUIDE.md#starter-packs) answers it by role — a release manager installs `distribution` + `app-info`, an ASO team `marketing` + `analytics` — and [examples/](examples/README.md) works each one through, including the part that usually goes wrong.
-
-There is nothing to memorise — ask *"is there a tool for in-app events?"* and `asc__search_tools` searches everything, including what isn't loaded, and tells you which profile it lives in.
-
-#### Risky writes ask first
-
-Changing a price, handing out Admin or deleting something asks for confirmation before it runs, showing what would change, so a misread instruction cannot execute unchecked. This is the default for the four risk levels that are hard to undo — revenue, destructive, infrastructure, access — and everything else runs on your client's own tool approval. `--confirm` asks before every write instead; `--no-confirm` asks before none; `--read-only` drops mutating tools entirely. See [Security](.github/SECURITY.md).
-
-#### Least privilege, and a way to check it
-
-Apple never returns a key's role from any endpoint, so **App Manager** — not Admin — is the right default for day-to-day release work; Admin only earns its place for user management and for the one-time first request of a new analytics report type, which has no path in the App Store Connect UI at all. Contracts, tax and banking sit behind the Account Holder alone, reachable by no API key regardless of role. Call `asc__status` with `check_capabilities: true` to see what a key actually has rather than guessing from a 403 mid-task. Full breakdown in the [Guide](docs/GUIDE.md#least-privilege-in-practice).
-
-#### Local by design, not by default
-
-MCP guidance recommends remote HTTP servers: one URL, no install, updates you control. Heimdall runs locally over stdio instead, and that is a deliberate trade. Running locally, the key never leaves your machine: Heimdall reads it from the Keychain, signs a short-lived token, and talks to Apple directly. Nothing sits in between.
-
-The cost is real and worth naming: you need Node installed, and you update by version rather than by us pushing one. That is the price of the key staying yours.
-
-#### Works alongside Fastlane
-
-Heimdall is not a Fastlane alternative — it is the interactive half. Keep [Fastlane](https://fastlane.tools/) for repeatable, scripted CI work (code signing, build upload, metadata pushes). Fastlane for the pipeline, Heimdall for exploration and one-off changes.
-
-### Documentation
-
-- [Guide](docs/GUIDE.md) — API key, install, setup wizard, profiles, configuration, examples
-- [Examples](examples/README.md) — starter packs by role, seven worked scenarios, and a GitHub Actions workflow
-- [Security](.github/SECURITY.md) — credential handling, safety modes, pre-install audit, vulnerability reporting
-- [Support](.github/SUPPORT.md) — getting help, troubleshooting
-- [Changelog](docs/CHANGELOG.md) — release history
-- [Contributing](.github/CONTRIBUTING.md) — how to contribute, local dev setup
-- [Code of Conduct](.github/CODE_OF_CONDUCT.md)
-- [Governance](.github/GOVERNANCE.md) — who maintains this and why
-
-### Support the project
-
-Heimdall is free and open. If it saves you time, you can [become a member or buy me a coffee](https://buymeacoffee.com/erayendes) ☕.
-
-### About the name
-
-**Heimdall** is the guardian of Asgard in Norse mythology and one of Odin's sons. He keeps watch over **Bifröst**, the rainbow bridge linking Asgard to the nine realms. His gift for sensing events before they happen lets him guard Asgard against giants and other enemies, and warn the gods of danger on its way.
-
-**This project stands watch over your App Store Connect account; that's where it gets its name.** :)
+I build Heimdall on my own, in the evenings, and release it free and open source under the MIT license.
+If it gets you out of the App Store Connect dashboard, it has done its job.
 
 ### License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE) © Eray Endes
 
-Tool definitions in `src/generated/` are produced from Apple Inc.'s published App Store Connect OpenAPI specification (`spec/openapi.json`), redistributed here so the generator is reproducible without network access. App Store Connect, TestFlight, StoreKit, Xcode and Game Center are trademarks of Apple Inc. This project is not affiliated with, endorsed by, or sponsored by Apple Inc.
+[SECURITY.md](.github/SECURITY.md) | [SUPPORT.md](.github/SUPPORT.md) | [CHANGELOG.md](docs/CHANGELOG.md) | [CONTRIBUTING.md](.github/CONTRIBUTING.md) | [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md) | [GOVERNANCE.md](.github/GOVERNANCE.md)
 
----
-
-## Türkçe
-
-**Heimdall.** Tüm App Store Connect hesabınız için tek bir araç.
-
-**App Store Connect API** ve **App Store Server API (StoreKit 2)** için bir MCP sunucusu; her aracı Apple'ın kendi OpenAPI spesifikasyonundan üretiliyor. **13 profil, 32 alt profil, 902 araç.**
-
-Uygulamalar ve metadata, sürümler ve kademeli yayınlar, TestFlight, abonelikler ve uygulama içi satın almalar, fiyatlandırma, yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları.
-
-### Sorun yanıtlasın. İsteyin yapsın.
-> - *"Bu haftanın 1 yıldızlı yorumlarını özetle ve cevap taslakları hazırla."*
-> - *"Hangi build'ler incelemede takıldı?"*
-> - *"Bu aboneliğin fiyatını her ülkede artır."*
-> - *"IAP veya uygulamanın güncel ve planlanmış fiyatlarını ülke ülke göster."*
-
-`pricing__get_iap_price` (`monetization:iap-pricing`) ve `pricing__get_app_price` (`monetization:app-price`) bu fiyatları değiştirmeden okur. `pricing__set_iap_price` bir IAP'nin tek ülkedeki fiyatını değiştirir; diğer elle girilmiş ve planlanmış fiyatları yeni takvime taşır.
-
-### Tek çağrının kazandırdığı
-
-| Soru | Ham araçlarla | Heimdall |
-|:--|:--|:--|
-| *"Bu abonelik her ülkede kaça?"* | ölçülen bir ajan oturumu: 1,02M token, 3 $ | ~1,3k token, 2,1 sn |
-| *"Mağaza sayfasında hangi ekran görüntüleri var?"* | 53 HTTP çağrısı, 264 KB | 4 çağrı, ~1 KB |
-| *"Bu aboneliğin fiyatını değiştir."* | 4 okuma, sonra 842 fiyat noktası içinden seçim | tek çağrı |
-| *"42 numaralı build'i Internal ve External beta gruplarına ata."* | uygulamayı, build'i, grupları çözümle; bağlantıları denetle; eksikleri ekle | `access:beta-groups` içindeki `testflight__assign_build_to_groups` |
-
-İlk satır tahmin değil, gerçek bir oturum: ajan zinciri yürüdü, cevap sığmayınca bir CSV'ye yazdı ve bitirebilmek için Python'da elle ülke adı sözlüğü kurdu. Diğer ikisi canlı bir hesapta çağrı sayımı.
-
-### Hızlı başlangıç
-
-```bash
-npx -y @erayendes/asc-mcp setup
-```
-
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, issuer ID, istemci seçimi, profil seçimi ve yazmadan önce onay" width="720">
-
-<sub>Tek geçiş ve şahane güvenlik: Gerekli erişim bilgileri, sonra canlı kimlik doğrulama. Ardından seçimleriniz; istediğiniz profiller ve alt profiller — anahtar da config dosyasına değil Keychain'e gidiyor.</sub>
-
-Setup sihirbazı API anahtarınızı bir kez ister, güvenle saklar ve seçtiğiniz profilleri **makinenizdeki bütün MCP istemcilerine** kaydeder — Claude, Codex, Antigravity, Cursor, Windsurf, VS Code. Hiçbiri config dosyasını paylaşmaz; **yani bu adım olmasa her istemci için ayrı ayrı, her seferinde farklı biçimde tekrarlanırdı.** Boşa vakit kaybı. 
-Adım adım anlatım [Rehber](docs/GUIDE.md)’de.
-
-**Cursor** için profil başına tek tık — `analytics`, `marketing`, `app-info`. Linkler yalnızca sunucuları kaydeder; anahtar için `setup`'ı bir kez çalıştırın.
-
-[![ASC-Analytics](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=ASC-Analytics&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFuYWx5dGljcyJdfQ%3D%3D) [![ASC-Marketing](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=ASC-Marketing&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsIm1hcmtldGluZyJdfQ%3D%3D) [![ASC-AppInfo](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=ASC-AppInfo&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImFwcC1pbmZvIl19)
-
-**Xcode 27** bu listede yok, çünkü Xcode'un yazılacak bir config dosyası yok — eklentileri Git URL'sinden kurar. `setup`'tan sonra Xcode → Settings → Intelligence → Plug-ins → Add Plug-in → **Add from URL** deyin, `https://github.com/erayendes/app-store-connect-mcp` yapıştırın; **Heimdall | ASC Skill**'i ve gereken alanları tikleyin. Sonra sohbetin model menüsünden yerleşik bir model değil, bir **agent** seçin — Claude Agent, Codex veya Gemini: eklentiler Xcode'un kendi chat'ine değil, agent'lara gider. Agent aynı sunucuları başlatır; onlar da `setup`'ın sakladığı anahtarı okur.
-> **Heimdall'ı bir AI agent mı kuracak?**
-> Devir protokolü için [AGENTS.md](AGENTS.md)'ye bakın: agent profilleri `register` ile ekler, anahtar için `setup`'ı siz çalıştırırsınız — özel anahtarınız sadece sizin gözleriniz için, AI agent göremez.
-
-### Heimdall'ı diğerlerinden ayıran
-
-Çoğu App Store Connect MCP sunucusu API'nin elle seçilmiş bir araç dilimini sunar. Hiçbirinin kapsamadığı o bir uç noktaya ihtiyaç duyana kadar bu işe yarar. Heimdall tam tersini yapar: araçların tamamını verir, istediklerinizi siz seçersiniz — ve istediğiniz zaman ekleyip çıkarırsınız.
-
-| | |
-| :--- | :--- |
-| **Eksiksiz** | Apple'ın OpenAPI spec v4.5'i, tüm 973 path, 987 işlem — 283 id-only tekrar zaten birleştirilmiş durumda, Apple'ın kullanımdan kaldırdığı 123 işlem de siz istemedikçe yüklenmiyor; geriye erişilebilir 864 işlem artı elle yazılmış 38 araç kalıyor. `npm run spec:update` Apple'ın değişikliklerini gözden geçirilebilir bir diff olarak getirir. |
-| **Daraltılabilir** | 13 amaca özel profil, her biri daha da daralabilir — `monetization:subscription-pricing` 211 yerine 27 araç. Tüm yüzey araç tanımları için 100 bin token'ı aşar; bir profil bunun küçük bir kısmı. |
-| **StoreKit 2** | App Store Server API de var — tüm müşteri işlemleri, haklar, iadeler. **ASC MCP sunucuları arasında nadir bir özellik.** |
-| **TestFlight geri bildirimi** | `testflight__feedback_digest` son kilitlenmeleri ve ekran görüntüsü geri bildirimlerini build bazında gruplar; testçi yorumları ve kısa crash log alıntılarıyla tek salt okunur çağrıda döndürür. |
-| **İkinci API anahtarı yok** | Yorum tasnifi, günlük brifing ve cevap taslakları yorum verisini döndürür — metni kendi modeliniz yazar. |
-| **Güvenli** | Yazmadan-önce onay, `--read-only`, yıkıcı işlem etiketleri, host'a sabitlenmiş istekler, telemetri yok. |
-| **Gizli** | `.p8` macOS Keychain'de durur, düz metin config'de değil. |
-
-**Abonelik ön denetimi.** `preflight__check_subscription`, inceleme öncesinde tek aboneliğin veya gruptaki en fazla 20 aboneliğin katalog eksiklerini denetler. `monetization:subscription-catalog` içinde, `--read-only` ile de kullanılabilir; her bulgu düzeltme aracını adlandırır. Sınırlı okumaları belirtir, Apple onayını tahmin etmez.
-
-#### Profiller
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri araç sayısı ve token tahminiyle açılıyor" width="720">
-
-Sadece projenizin kullandığı profilleri kaydedin. Hangisinin neyi kapsadığı [profil tablosunda](docs/GUIDE.md#profilleri-kaydedin), sonradan ekleme ve çıkarma [burada](docs/GUIDE.md#sonradan-ekleme-ve-çıkarma).
-
-Hangisi olduğundan emin değil misiniz? [Başlangıç paketleri](docs/GUIDE.md#başlangıç-paketleri) bunu role göre cevaplıyor — yayın yöneticisi `distribution` + `app-info` kurar, ASO ekibi `marketing` + `analytics` — ve [examples/](examples/README.md) her birini, genelde nerede ters gittiğiyle birlikte, baştan sona işliyor.
-
-Hiçbir şeyi ezberlemeniz gerekmez — *"uygulama içi etkinlikler için bir araç var mı?"* diye sorun; `asc__search_tools` o an yüklü olmayanlar dahil hepsini arar ve hangi profilde olduğunu söyler.
-
-#### Riskli yazmalar önce sorar
-
-Fiyat değiştirme, Admin yetkisi verme ya da bir şeyi silme çalışmadan önce onay ister ve neyin değişeceğini gösterir; böylece yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Bu, geri alması zor dört risk seviyesinde varsayılandır — revenue, destructive, infrastructure, access — geri kalan her şey client'ınızın kendi araç onayıyla çalışır. `--confirm` her yazmadan önce sorar, `--no-confirm` hiç sormaz, `--read-only` mutasyon araçlarını tamamen kaldırır. Bkz. [Güvenlik](.github/SECURITY.md).
-
-#### En az yetki, ve onu kontrol etmenin yolu
-
-Apple hiçbir endpoint'ten anahtarın rolünü döndürmüyor, bu yüzden günlük release işi için doğru varsayılan Admin değil **App Manager** — Admin yalnızca kullanıcı yönetimi ve yeni bir analytics rapor tipinin bir kereye mahsus ilk isteği için gerekli, ki bunun App Store Connect arayüzünde hiçbir yolu yok. Sözleşme, vergi ve banka bilgileri yalnızca Account Holder'a açık, role bakılmaksızın hiçbir API anahtarı oraya ulaşamıyor. Bir anahtarın gerçekte neye sahip olduğunu görmek için `asc__status`'u `check_capabilities: true` ile çağırın — görev ortasında gelen bir 403'ten tahmin etmek yerine. Tam döküm [Rehber](docs/GUIDE.md#pratikte-en-az-yetki)'de.
-
-#### Yerelde çalışması tercih, eksiklik değil
-
-MCP rehberleri uzak HTTP sunucularını önerir: tek URL, kurulum yok, güncellemeyi siz yönetirsiniz. Heimdall bunun yerine yerelde stdio üzerinden çalışır ve bu bilinçli bir tercihtir. Yerelde çalışınca anahtar makinenizden hiç çıkmaz: Heimdall onu Keychain'den okur, kısa ömürlü bir token imzalar ve doğrudan Apple ile konuşur. Arada hiçbir şey durmaz.
-
-Bedeli gerçek ve söylenmeye değer: Node kurulu olmalı ve güncelleme biz gönderdiğimiz için değil, siz sürüm seçtiğiniz için gelir. Anahtarın sizde kalmasının bedeli bu.
-
-#### Fastlane ile birlikte çalışır
-
-`xcode-cloud` profilindeki `ci__diagnose_run`, bir Xcode Cloud derlemesinin neden başarısız olduğunu tek çağrıda; sorunları ve başarısız testleri sınırlandırılmış listelerle gösterir. Varsayılan olarak en yeni başarısız ya da hata veren koşuyu arar.
-
-Heimdall bir Fastlane alternatifi değil, interaktif yarısıdır. Tekrarlanabilir, scriptli CI işleri (kod imzalama, build yükleme, metadata gönderimi) için [Fastlane](https://fastlane.tools/)'i kullanmaya devam edin. Pipeline için Fastlane, keşif ve tek seferlik değişiklikler için Heimdall.
-
-### Dokümantasyon
-
-- [Rehber](docs/GUIDE.md) — API anahtarı, kurulum, setup sihirbazı, profiller, yapılandırma, örnekler
-- [Örnekler](examples/README.md) — role göre başlangıç paketleri, yedi işlenmiş senaryo ve bir GitHub Actions workflow'u
-- [Güvenlik](.github/SECURITY.md) — kimlik bilgisi yönetimi, güvenlik modları, kurulum öncesi denetim, açık bildirimi
-- [Destek](.github/SUPPORT.md) — yardım alma, sorun giderme
-- [Değişiklik günlüğü](docs/CHANGELOG.md) — sürüm geçmişi
-- [Katkıda bulunma](.github/CONTRIBUTING.md) — nasıl katkı sağlanır, yerel geliştirme kurulumu
-- [Davranış kuralları](.github/CODE_OF_CONDUCT.md)
-- [Yönetişim](.github/GOVERNANCE.md) — bunu kim, neden sürdürüyor
-
-### Projeye destek
-
-Heimdall ücretsiz ve açık. Zamanınızı kurtardıysa [üye olabilir ya da kahve ısmarlayabilirsiniz](https://buymeacoffee.com/erayendes) ☕.
-
-### İsim hakkında
-
-**Heimdall**, İskandinav mitolojisinde Asgard'ın koruyucusu ve tanrı Odin'in oğullarından biridir. Asgard ile dokuz diyarı birbirine bağlayan gökkuşağı köprüsü **Bifröst'ün bekçisidir**. Olayları önceden hissetme yeteneği sayesinde Asgard'ı devlerin ve düşmanların olası saldırılarına karşı korur, yaklaşan tehlikeleri diğer tanrılara haber verir.
-
-**Bu proje de sizin App Store Connect hesabınızın başında nöbet tutmak için var; adını oradan alıyor.** :)
-
-### Lisans
-
-MIT — bkz. [LICENSE](LICENSE).
-
-`src/generated/` içindeki araç tanımları, Apple Inc.'in yayımladığı App Store Connect OpenAPI spesifikasyonundan (`spec/openapi.json`) üretilir; jeneratör ağ erişimi olmadan da yeniden üretilebilsin diye spesifikasyon burada yeniden dağıtılmaktadır. App Store Connect, TestFlight, StoreKit, Xcode ve Game Center, Apple Inc.'in ticari markalarıdır. Bu proje Apple Inc. ile bağlantılı değildir, Apple tarafından onaylanmamış veya desteklenmemektedir.
+Heimdall is generated from the App Store Connect OpenAPI specification published by Apple Inc. App Store Connect, TestFlight, StoreKit, Xcode and Game Center are trademarks of Apple Inc. This project is not affiliated with Apple Inc.

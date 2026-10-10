@@ -1,11 +1,17 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Security vulnerability
+  - name: Security vulnerability / Güvenlik açığı
     url: https://github.com/erayendes/app-store-connect-mcp/security/advisories/new
-    about: Report privately, never as a public issue. See SECURITY.md.
-  - name: Setup, credentials and common API errors
+    about: Report it privately, never as a public issue. / Herkese açık issue olarak değil, özel olarak bildirin.
+  - name: Something isn't working / Bir şey çalışmıyor
     url: https://github.com/erayendes/app-store-connect-mcp/blob/main/.github/SUPPORT.md
-    about: 401, 403, 409, missing tools, base64 sales reports — start with the troubleshooting table.
-  - name: Usage guide
-    url: https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE.md
-    about: Profiles, Apple key roles, adding or removing tools later, StoreKit setup.
+    about: Common errors and their fixes. / Sık karşılaşılan hatalar ve çözümleri.
+  - name: Profiles / Profiller
+    url: https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md
+    about: What each profile covers, sub-profiles, starter packs. / Her profilin kapsamı, alt profiller, başlangıç paketleri.
+  - name: Key roles / Anahtar rolleri
+    url: https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/ROLES_en.md
+    about: Which App Store Connect role your key needs. / Anahtarınızın hangi App Store Connect rolüne ihtiyacı var.
+  - name: Guide / Rehber
+    url: https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE_en.md
+    about: Workflows, prompts and examples. / İş akışları, prompt'lar ve örnekler.

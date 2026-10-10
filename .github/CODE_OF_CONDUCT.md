@@ -4,64 +4,38 @@
 
 ## English
 
-### Our pledge
+I run this and many other [projects on my own](GOVERNANCE.md). My door is open to [anyone who wants to contribute](CONTRIBUTING.md), without discrimination.
 
-We as contributors and maintainers pledge to make participation in this project a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation.
+Just:
 
-### Our standards
+- Don't share anyone's private information without consent.
+- No trolling. Stay on topic in issues and PRs.
+- Respect copyright.
+- Keep the tone polite.
 
-Examples of behavior that contributes to a positive environment:
+If these aren't followed, I may remove comments, lock discussions or block the person from the project.
 
-- Using welcoming and inclusive language
-- Being respectful of differing viewpoints and experiences
-- Gracefully accepting constructive criticism
-- Focusing on what is best for the project and its users
-
-Examples of unacceptable behavior:
-
-- Trolling, insulting or derogatory comments, and personal or political attacks
-- Public or private harassment
-- Publishing others' private information (such as an API key, `.p8` file, or physical/email address) without explicit permission
-- Other conduct which could reasonably be considered inappropriate in a professional setting
-
-### Enforcement
-
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to **erayendes@gmail.com**. All complaints will be reviewed and investigated promptly and fairly. The maintainer is obligated to respect the privacy and security of the reporter.
-
-Maintainers who violate or fail to enforce this Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.
+You can [reach out to me](CODEOWNERS) about anything. I'll look into it and get back to you as quickly as I can.
 
 ### Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1.
+This Code of Conduct is inspired by the [Contributor Covenant](https://www.contributor-covenant.org/).
 
 ## Türkçe
 
-### Taahhüdümüz
+Bu ve bunun gibi birçok [projeyi tek başıma yürütüyorum](GOVERNANCE.md). Herhangi bir ayrımcılık yapmaksızın [katkı vermek isteyen herkese](CONTRIBUTING.md) kapım açık.
 
-Katkıda bulunanlar ve maintainer'lar olarak, bu projeye katılımı yaş, beden ölçüsü, engellilik, etnik köken, cinsiyet kimliği ve ifadesi, deneyim seviyesi, milliyet, kişisel görünüm, ırk, din veya cinsel kimlik ve yönelim gözetmeksizin herkes için taciz içermeyen bir deneyim haline getirmeyi taahhüt ediyoruz.
+Sadece:
 
-### Standartlarımız
+- Kimsenin özel bilgisini izinsiz paylaşmayın.
+- Trollemeyin. Issue ve PR'larda konuya odaklanın.
+- Telif haklarını gözetin.
+- Nazik bir üslup kullanın.
 
-Olumlu bir ortama katkı sağlayan davranış örnekleri:
+Bu kurallara uyulmazsa yorumları silebilir, tartışmaları kilitleyebilir ya da kişiyi projeden engelleyebilirim.
 
-- Kapsayıcı ve hoşgörülü bir dil kullanmak
-- Farklı bakış açılarına ve deneyimlere saygı göstermek
-- Yapıcı eleştiriyi zarafetle kabul etmek
-- Proje ve kullanıcıları için en iyisine odaklanmak
-
-Kabul edilemez davranış örnekleri:
-
-- Trolleme, hakaret veya aşağılayıcı yorumlar, kişisel veya politik saldırılar
-- Açık veya özel taciz
-- Başkalarının özel bilgilerini (API anahtarı, `.p8` dosyası, fiziksel/e-posta adresi gibi) açık izin olmadan yayınlamak
-- Profesyonel bir ortamda makul şekilde uygunsuz sayılabilecek diğer davranışlar
-
-### Uygulama
-
-Kötüye kullanım, taciz veya başka türlü kabul edilemez davranış örnekleri **erayendes@gmail.com** adresine bildirilebilir. Tüm şikayetler hızlı ve adil şekilde incelenecektir. Maintainer, bildirimde bulunanın gizliliğine ve güvenliğine saygı göstermekle yükümlüdür.
-
-Bu Davranış Kuralları'nı ihlal eden veya iyi niyetle uygulamayan maintainer'lar, proje liderliğinin diğer üyelerince belirlenecek geçici veya kalıcı yaptırımlarla karşılaşabilir.
+Herhangi bir konuda [bana ulaşabilirsiniz](CODEOWNERS). Konuyu elimden geldiğince hızlı inceler ve geri dönerim.
 
 ### Atıf
 
-Bu Davranış Kuralları, [Contributor Covenant](https://www.contributor-covenant.org/) sürüm 2.1'den uyarlanmıştır.
+Bu Davranış Kuralları, [Contributor Covenant](https://www.contributor-covenant.org/)'tan esinlenmiştir.
