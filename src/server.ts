@@ -1,14 +1,5 @@
 import { createRequire } from 'node:module';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import {
-  CallToolRequestSchema,
-  GetPromptRequestSchema,
-  ListPromptsRequestSchema,
-  ListResourcesRequestSchema,
-  ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { Server, type CallToolResult } from '@modelcontextprotocol/server';
 import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient, STATUS_HINTS } from './core/http.js';
 import {
@@ -293,7 +284,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   // than lazily so a client that lists resources at startup gets an empty
   // list instead of "method not found".
   const resources = new ResourceStore();
-  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+  server.setRequestHandler('resources/list', async () => ({
     resources: resources.list().map(({ uri, name, mimeType }) => ({
       uri,
       name,
@@ -301,7 +292,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       description: 'The complete response of an earlier call, kept because it exceeded the size cap.',
     })),
   }));
-  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  server.setRequestHandler('resources/read', async (request) => {
     const found = resources.read(request.params.uri);
     if (!found) {
       // Eviction is the usual reason, and it is worth saying so: the caller
@@ -495,7 +486,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    */
   const promptsFor = () => availablePrompts(new Set(servedTools().map((t) => t.name)));
 
-  server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+  server.setRequestHandler('prompts/list', async () => ({
     prompts: promptsFor().map(({ name, description, arguments: args }) => ({
       name,
       description,
@@ -503,7 +494,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     })),
   }));
 
-  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  server.setRequestHandler('prompts/get', async (request) => {
     const wanted = request.params.name;
     const prompt = promptsFor().find((p) => p.name === wanted);
     if (!prompt) {
@@ -525,9 +516,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     };
   });
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: servedTools() }));
+  server.setRequestHandler('tools/list', async () => ({ tools: servedTools() }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler('tools/call', async (request) => {
     let name = request.params.name;
     let args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
@@ -906,8 +897,8 @@ export function createRemovedProfileServer(name: string): Server {
     annotations: { readOnlyHint: true },
   };
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [tool] }));
-  server.setRequestHandler(CallToolRequestSchema, async () => ({
+  server.setRequestHandler('tools/list', async () => ({ tools: [tool] }));
+  server.setRequestHandler('tools/call', async () => ({
     content: [{ type: 'text' as const, text: message }],
   }));
 

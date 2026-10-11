@@ -13,8 +13,7 @@
  * touches the network.
  */
 import { describe, it, expect } from 'vitest';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { createServer, formatError, servedToolCount } from '../src/server.js';
 import { AscApiError } from '../src/core/errors.js';
 import { resolveSelection, toolCountFor } from '../src/profiles.js';

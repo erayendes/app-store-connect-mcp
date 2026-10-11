@@ -1,6 +1,7 @@
 /**
  * Turns generated operations into MCP tool definitions and executes them.
  */
+import type { JSONValue } from '@modelcontextprotocol/server';
 import type { Operation } from './types.js';
 import type { AscHttpClient, Query } from './http.js';
 import { OPERATIONS } from '../generated/operations.js';
@@ -75,7 +76,7 @@ export interface McpToolDefinition {
   description: string;
   inputSchema: {
     type: 'object';
-    properties: Record<string, unknown>;
+    properties: Record<string, JSONValue>;
     required?: string[];
   };
   /**
@@ -85,7 +86,7 @@ export interface McpToolDefinition {
    */
   outputSchema?: {
     type: 'object';
-    properties: Record<string, unknown>;
+    properties: Record<string, JSONValue>;
     required?: string[];
   };
   annotations?: {
@@ -292,7 +293,8 @@ export function toMcpTool(
     description: describeOperation(op),
     inputSchema: {
       type: 'object',
-      properties,
+      // Every value above is a JSON literal or a generated JSON schema.
+      properties: properties as Record<string, JSONValue>,
       ...(required.length ? { required } : {}),
     },
     annotations: {
