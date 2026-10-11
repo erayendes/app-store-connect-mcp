@@ -85,10 +85,12 @@
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
-    "@modelcontextprotocol/sdk": "^1.32.0"
+    "@modelcontextprotocol/server": "^2.3.1"
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.288",
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@modelcontextprotocol/core": "^2.3.1",
     "@types/node": "^26.6.4",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ListToolsResultSchema, ToolSchema } from '@modelcontextprotocol/sdk/types.js';
+import { ListToolsResultSchema, ToolSchema } from '@modelcontextprotocol/core';
 import {
   hoistDefs,
   expandDefs,

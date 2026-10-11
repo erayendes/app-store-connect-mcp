@@ -18,7 +18,7 @@
  *  - Truncation is visible: results carry fetched/analyzed counts instead of
  *    pretending everything was read.
  */
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient } from '../core/http.js';
 

@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { executeTestflightTool, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 import { AscHttpClient } from '../src/core/http.js';
 import { AscApiError } from '../src/core/errors.js';
