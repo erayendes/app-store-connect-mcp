@@ -56,7 +56,11 @@ function stubApple() {
 }
 
 /** A client that answers every prompt with `answer` and records what it was shown. */
-async function connect(era: 'legacy' | 'modern', answer: Answer, options: { autoFulfill?: boolean } = {}) {
+async function connect(
+  era: 'legacy' | 'modern',
+  answer: Answer,
+  options: { autoFulfill?: boolean; noElicitation?: boolean } = {}
+) {
   const [ct, st] = InMemoryTransport.createLinkedPair();
   if (era === 'modern') {
     serveStdio(() => createServer(config, resolveSelection('access')), { transport: st });
@@ -66,16 +70,18 @@ async function connect(era: 'legacy' | 'modern', answer: Answer, options: { auto
   const client = new Client(
     { name: 'gate-eras', version: '0' },
     {
-      capabilities: { elicitation: { form: {} } },
+      capabilities: options.noElicitation ? {} : { elicitation: { form: {} } },
       ...(era === 'modern' ? { versionNegotiation: { mode: { pin: '2026-07-28' } } } : {}),
       ...(options.autoFulfill === false ? { inputRequired: { autoFulfill: false } } : {}),
     }
   );
   const prompts: string[] = [];
-  client.setRequestHandler('elicitation/create', async (req) => {
-    prompts.push(String(req.params.message));
-    return answer;
-  });
+  if (!options.noElicitation) {
+    client.setRequestHandler('elicitation/create', async (req) => {
+      prompts.push(String(req.params.message));
+      return answer;
+    });
+  }
   await client.connect(ct);
   return { client, prompts };
 }
@@ -106,6 +112,16 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
     expect(prompts).toHaveLength(1);
     expect(res.isError).toBe(true);
     expect(textOf(res)).toContain(`not confirmed (${action})`);
+    expect(apple.deletes()).toEqual([]);
+  });
+
+  it('fails closed, without asking, when the client cannot show a prompt', async () => {
+    const apple = stubApple();
+    const { client } = await connect(era, CONFIRM, { noElicitation: true });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(textOf(res)).toContain('no elicitation support');
     expect(apple.deletes()).toEqual([]);
   });
 
@@ -162,6 +178,20 @@ describe('a hand-built retry on a 2026-07-28 connection', () => {
     const second = await retry(client, CALL.arguments, requestState);
 
     expect(textOf(second)).toMatch(/already used or has expired/);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
+  });
+
+  it('runs once when the same answer is sent twice at the same moment', async () => {
+    const apple = stubApple();
+    const { client } = await connect('modern', CONFIRM, { autoFulfill: false });
+    const { requestState } = await promptFor(client);
+
+    const results = await Promise.all([
+      retry(client, CALL.arguments, requestState),
+      retry(client, CALL.arguments, requestState),
+    ]);
+
+    expect(results.filter((r) => /already used/.test(textOf(r)))).toHaveLength(1);
     expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
   });
 
