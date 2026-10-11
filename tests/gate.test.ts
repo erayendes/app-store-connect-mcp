@@ -1,7 +1,7 @@
 /**
  * The write gate, end to end.
  *
- * `tests/confirm.test.ts` proves confirmWrite() decides correctly when it is
+ * `tests/confirm.test.ts` proves the write gate decides correctly when it is
  * called. Nothing proved the server ever calls it. That gap is exactly where a
  * silent bypass would live: writeToolNames is built from `readOnlyHint`, so one
  * wrong annotation removes a mutating tool from the gate and every test still

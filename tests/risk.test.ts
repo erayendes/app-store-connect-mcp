@@ -1,12 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
-import {
-  buildWritePreview,
-  confirmWrite,
-  resolveBodyRefs,
-  type WriteConfirmer,
-} from '../src/core/confirm.js';
+import { buildWritePreview, resolveBodyRefs } from '../src/core/confirm.js';
 import { ToolRegistry, toMcpTool } from '../src/core/registry.js';
 import { AscHttpClient } from '../src/core/http.js';
 import { TokenProvider } from '../src/core/jwt.js';
@@ -332,32 +327,8 @@ describe('preview reference resolution (AI-202)', () => {
   });
 });
 
-describe('confirmWrite with typed confirmation', () => {
-  function confirmer(reply: { action: string; content?: Record<string, unknown> }) {
-    const elicit = vi.fn().mockResolvedValue(reply);
-    const c: WriteConfirmer = {
-      getClientCapabilities: () => ({ elicitation: { form: true } }),
-      elicitInput: elicit,
-    };
-    return { c, elicit };
-  }
-  const strongPreview = { message: 'preview', strong: true };
-
-  it('allows when the user types CONFIRM (any case, padded)', async () => {
-    const { c, elicit } = confirmer({ action: 'accept', content: { confirmation: '  confirm ' } });
-    const decision = await confirmWrite(c, 'x', strongPreview);
-    expect(decision.allowed).toBe(true);
-    // The strong flow asked for a typed string, not a checkbox.
-    const schema = (elicit.mock.calls[0][0] as any).requestedSchema;
-    expect(schema.properties.confirmation.type).toBe('string');
-  });
-
-  it('blocks when the user types anything else', async () => {
-    const { c } = confirmer({ action: 'accept', content: { confirmation: 'yes' } });
-    const decision = await confirmWrite(c, 'x', strongPreview);
-    expect(decision).toEqual({ allowed: false, reason: 'not confirmed' });
-  });
-
+describe('typed confirmation', () => {
+  // The typed-versus-checkbox behaviour itself is in tests/confirm.test.ts.
   it('strong levels line up with the manifest', () => {
     expect([...STRONG_CONFIRM_LEVELS].sort()).toEqual([
       'access',

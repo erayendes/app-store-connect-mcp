@@ -1,5 +1,10 @@
 import { createRequire } from 'node:module';
-import { Server, type CallToolResult } from '@modelcontextprotocol/server';
+import {
+  CLIENT_CAPABILITIES_META_KEY,
+  Server,
+  type CallToolResult,
+  type ClientCapabilities,
+} from '@modelcontextprotocol/server';
 import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient, STATUS_HINTS } from './core/http.js';
 import {
@@ -11,12 +16,7 @@ import {
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import {
-  confirmWrite,
-  buildWritePreview,
-  resolveBodyRefs,
-  type WriteConfirmer,
-} from './core/confirm.js';
+import { buildWritePreview, createWriteGate, resolveBodyRefs } from './core/confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -266,6 +266,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
   );
 
+  const gate = createWriteGate();
+
   const server = new Server(
     { name: selection ? serverName(selection.profile.name) : 'app-store-connect-mcp', version: VERSION },
     {
@@ -277,6 +279,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         prompts: {},
       },
       instructions: SERVER_INSTRUCTIONS,
+      // A confirmation's state comes back through the client: forged, expired
+      // or tampered state is refused before the handler ever sees it.
+      requestState: { verify: gate.verify },
     }
   );
 
@@ -319,12 +324,6 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
     }
     return false;
-  };
-
-  const confirmer: WriteConfirmer = {
-    getClientCapabilities: () => server.getClientCapabilities(),
-    elicitInput: (params) =>
-      server.elicitInput(params as Parameters<typeof server.elicitInput>[0]),
   };
 
   /**
@@ -518,7 +517,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   server.setRequestHandler('tools/list', async () => ({ tools: servedTools() }));
 
-  server.setRequestHandler('tools/call', async (request) => {
+  server.setRequestHandler('tools/call', async (request, ctx) => {
     let name = request.params.name;
     let args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
@@ -603,49 +602,75 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               'public'
             : ((op?.risk ?? (name.includes('extend_renewal_date') ? 'revenue' : 'low')) as RiskLevel);
         if (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk)) {
-        const preview = PRICING_TOOL_NAMES.has(name)
-          ? // Macro parameters are already human language — no lookups needed.
-            { message: buildPricingPreview(args, name), strong: true }
-          : TESTFLIGHT_TOOL_NAMES.has(name)
-          ? // The generic macro preview drops the group list and calls this PUBLIC.
-            { message: buildTestflightPreview(args), strong: true }
-          : op
-          ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
-          : macroOffered(name)
-          ? // Other write macros: no spec operation behind them, but their
-            // arguments are already the human-readable facts, so the generic
-            // preview renders them without any lookups.
-            await buildWritePreview(
-              name,
-              { method: 'POST', path: `${name} (macro)`, risk: 'public' },
-              args,
-              config.credentials.keyId
-            )
-          : await buildWritePreview(
-              name,
-              // StoreKit tools live outside the spec; renewal-date extension is
-              // the one that moves money.
-              {
-                method: 'POST',
-                path: 'App Store Server API',
-                risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
-              },
-              args
-            );
-        const decision = await confirmWrite(confirmer, name, preview);
+        // Fingerprinted from the request as sent: that is what the client
+        // repeats on the retry, and what the user's answer has to match.
+        const decision = gate.settle(ctx, request.params.name, request.params.arguments);
+        if (!decision) {
+          // A 2026-07-28 client declares its capabilities on every request, a
+          // 2025 client once at initialize. (The SDK types the envelope as `{}`.)
+          const envelope = ctx.mcpReq.envelope as Record<string, ClientCapabilities | undefined> | undefined;
+          const caps = envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? server.getClientCapabilities();
+          if (!caps?.elicitation?.form) {
+            // No way to ask. The user asked for a guard, so say it can't run
+            // here rather than proceed under a guard that stopped guarding.
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text:
+                    `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and this ` +
+                    `client cannot show a confirmation prompt (no elicitation support). ` +
+                    `Nothing was changed. Set ASC_CONFIRM_WRITES=0 (or --no-confirm) to rely on ` +
+                    `the client's own tool approval instead, or use --read-only.`,
+                },
+              ],
+              isError: true,
+            };
+          }
+          const preview = PRICING_TOOL_NAMES.has(name)
+            ? // Macro parameters are already human language — no lookups needed.
+              { message: buildPricingPreview(args, name), strong: true }
+            : TESTFLIGHT_TOOL_NAMES.has(name)
+            ? // The generic macro preview drops the group list and calls this PUBLIC.
+              { message: buildTestflightPreview(args), strong: true }
+            : op
+            ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
+            : macroOffered(name)
+            ? // Other write macros: no spec operation behind them, but their
+              // arguments are already the human-readable facts, so the generic
+              // preview renders them without any lookups.
+              await buildWritePreview(
+                name,
+                { method: 'POST', path: `${name} (macro)`, risk: 'public' },
+                args,
+                config.credentials.keyId
+              )
+            : await buildWritePreview(
+                name,
+                // StoreKit tools live outside the spec; renewal-date extension is
+                // the one that moves money.
+                {
+                  method: 'POST',
+                  path: 'App Store Server API',
+                  risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
+                },
+                args
+              );
+          return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+        }
         if (!decision.allowed) {
-          const text =
-            decision.reason === 'no-elicitation'
-              ? `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and this ` +
-                `client cannot show a confirmation prompt (no elicitation support). ` +
-                `Nothing was changed. Set ASC_CONFIRM_WRITES=0 (or --no-confirm) to rely on ` +
-                `the client's own tool approval instead, or use --read-only.`
-              : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +
-                `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
-                `this client declared elicitation support but cannot actually show the ` +
-                `form, and answered for you — the protocol reports that identically to a ` +
-                `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
-                `let the client's own tool approval be the gate.`;
+          // Not "nothing was changed": an answer already used may have run
+          // the write the first time, and a second prompt would repeat it.
+          const text = decision.stale
+            ? `"${name}" was refused: ${decision.reason}. This attempt changed nothing, but an ` +
+              `earlier attempt with the same confirmation may already have run — check before ` +
+              `calling it again for a fresh prompt.`
+            : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +
+              `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
+              `this client declared elicitation support but cannot actually show the ` +
+              `form, and answered for you — the protocol reports that identically to a ` +
+              `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
+              `let the client's own tool approval be the gate.`;
           return {
             content: [{ type: 'text' as const, text }],
             isError: true,

@@ -12,8 +12,9 @@
  * list and the dispatch are the ones a client actually sees. Nothing here
  * touches the network.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createServer, formatError, servedToolCount } from '../src/server.js';
 import { AscApiError } from '../src/core/errors.js';
 import { resolveSelection, toolCountFor } from '../src/profiles.js';
@@ -183,5 +184,35 @@ describe('the count a client sees', () => {
     // And it is genuinely a different number from the mapped one — otherwise
     // this test would pass with the bug still in place.
     expect(listed).not.toBe(toolCountFor(selection));
+  });
+});
+
+/**
+ * A 2026-07-28 client gets no unsolicited notifications: list changes arrive
+ * only on a `subscriptions/listen` stream it opened. serveStdio routes the
+ * server's tools/list_changed onto that stream; this pins that asc__load's
+ * announcement still reaches such a client.
+ */
+describe('asc__load on a 2026-07-28 connection', () => {
+  it('still announces the tools it added', async () => {
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    serveStdio(() => createServer(config, resolveSelection('monetization:subscription-catalog')), { transport: st });
+    let announced: string[] | undefined;
+    const client = new Client(
+      { name: 'test', version: '0' },
+      {
+        capabilities: {},
+        versionNegotiation: { mode: { pin: '2026-07-28' } },
+        listChanged: { tools: { onChanged: (_err, tools) => (announced = tools?.map((t) => t.name)) } },
+      }
+    );
+    await client.connect(ct);
+    const before = (await client.listTools()).tools.map((t) => t.name);
+    expect(before).not.toContain('subscription_prices__create');
+
+    await client.callTool({ name: 'asc__load', arguments: { sub_profile: 'subscription-pricing' } });
+    await vi.waitFor(() => expect(announced).toBeDefined());
+
+    expect(announced).toContain('subscription_prices__create');
   });
 });

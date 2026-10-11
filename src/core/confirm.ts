@@ -23,21 +23,24 @@
  * price. A client that never declared elicitation can't be asked at all, so
  * there the guard fails closed rather than pretending to be on.
  */
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import {
+  acceptedContent,
+  createRequestStateCodec,
+  inputRequired,
+  type ElicitRequestFormParams,
+  type InputRequiredResult,
+  type ServerContext,
+} from '@modelcontextprotocol/server';
 import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, type RiskLevel } from './risk.js';
 import { OPERATIONS } from '../generated/operations.js';
 
-/** The slice of the MCP Server we need — kept tiny so the logic is unit-testable. */
-export interface WriteConfirmer {
-  // `form` is only checked for truthiness — the SDK types it as an object, so
-  // `unknown` keeps this compatible with the real ClientCapabilities shape.
-  getClientCapabilities(): { elicitation?: { form?: unknown } } | undefined;
-  elicitInput(params: unknown): Promise<{ action: string; content?: Record<string, unknown> }>;
-}
-
 export interface ConfirmDecision {
   allowed: boolean;
-  /** Present when blocked: 'decline' | 'cancel' | 'not confirmed' | 'no-elicitation'. */
+  /** Present when blocked: 'decline' | 'cancel' | 'not confirmed', or why a stale answer was refused. */
   reason?: string;
+  /** The answer was for another call, or already spent: ask again rather than blame the user. */
+  stale?: true;
 }
 
 /** What the user sees before approving a write. */
@@ -432,68 +435,124 @@ export async function buildWritePreview(
   return { message: lines.join('\n'), strong };
 }
 
-/**
- * Decides whether a write may proceed. Only reached when confirmation is on.
- * Pure but for the injected confirmer, so tests drive it with a fake.
- */
-export async function confirmWrite(
-  confirmer: WriteConfirmer,
-  toolName: string,
-  preview?: WritePreview
-): Promise<ConfirmDecision> {
-  if (!confirmer.getClientCapabilities()?.elicitation?.form) {
-    // No way to ask. The user asked for a guard, so say it can't run here
-    // rather than proceeding under a guard that silently stopped guarding.
-    return { allowed: false, reason: 'no-elicitation' };
-  }
-
-  const message =
-    preview?.message ??
-    `Heimdall is about to run "${toolName}", which changes your App Store Connect data. Allow it?`;
-
-  if (preview?.strong) {
-    const result = await confirmer.elicitInput({
-      mode: 'form',
-      message,
-      requestedSchema: {
-        type: 'object',
-        properties: {
-          confirmation: {
-            type: 'string',
-            title: 'Type CONFIRM to proceed',
-            description: `Required for a high-stakes write like "${toolName}". Anything else cancels.`,
-          },
-        },
-        required: ['confirmation'],
-      },
-    });
-    if (
-      result.action === 'accept' &&
-      String(result.content?.confirmation ?? '').trim().toUpperCase() === 'CONFIRM'
-    ) {
-      return { allowed: true };
-    }
-    return { allowed: false, reason: result.action === 'accept' ? 'not confirmed' : result.action };
-  }
-
-  const result = await confirmer.elicitInput({
-    mode: 'form',
-    message,
-    requestedSchema: {
-      type: 'object',
-      properties: {
-        confirm: {
-          type: 'boolean',
-          title: `Allow "${toolName}"?`,
-          description: 'Leave unchecked to cancel this write.',
-        },
-      },
-      required: ['confirm'],
-    },
-  });
-
-  if (result.action === 'accept' && result.content?.confirm === true) {
-    return { allowed: true };
-  }
-  return { allowed: false, reason: result.action === 'accept' ? 'not confirmed' : result.action };
+/** What the signed `requestState` carries from the prompt to the retry. */
+interface PendingWrite {
+  /** The call the user was shown: tool name and a hash of its arguments. */
+  call: string;
+  nonce: string;
+  strong: boolean;
 }
+
+/** Key order is not meaning: a client that re-serializes the arguments still matches. */
+const canonical = (v: unknown): unknown =>
+  Array.isArray(v)
+    ? v.map(canonical)
+    : v && typeof v === 'object'
+      ? Object.fromEntries(
+          Object.keys(v)
+            .sort()
+            .map((k) => [k, canonical((v as Record<string, unknown>)[k])])
+        )
+      : v;
+
+const fingerprint = (name: string, args: unknown): string =>
+  createHash('sha256')
+    .update(JSON.stringify([name, canonical(args ?? {})]))
+    .digest('base64url');
+
+/** How long a prompt stays answerable — the codec's own default, mirrored for the nonce map. */
+const PROMPT_TTL_MS = 600_000;
+
+/**
+ * Asks before a write, the 2026-07-28 way: the handler returns the question
+ * (`inputRequired`) and the client calls again with the answer. On a 2025-era
+ * connection the SDK's legacy shim asks over `elicitation/create` and re-enters
+ * the handler itself, so this one path serves both eras.
+ *
+ * The answer travels through the client, so it is checked on the way back in,
+ * not trusted:
+ *  - It must answer the call that was previewed. `requestState` is signed and
+ *    carries a hash of the tool and its arguments, so a retry with another
+ *    price or id is refused rather than run under someone else's yes.
+ *  - Each yes is spent once. The nonce is forgotten on first use, so the same
+ *    state and the same CONFIRM cannot run the write twice.
+ *  - Answers that arrive without our state are ignored: a client cannot skip
+ *    the prompt by sending `inputResponses` on the first call.
+ *
+ * The state is signed, not encrypted — it holds a hash and a nonce, nothing
+ * the client should not see. The key is per process, which is enough on stdio:
+ * one process serves every round of a flow.
+ */
+export function createWriteGate(key: Uint8Array = randomBytes(32)) {
+  const codec = createRequestStateCodec<PendingWrite>({ key, bind: (ctx) => ctx.mcpReq.method });
+  /** Prompts not yet answered: nonce -> expiry. */
+  const open = new Map<string, number>();
+
+  return {
+    /** For `ServerOptions.requestState.verify`: rejects forged, expired or rebound state. */
+    verify: codec.verify,
+
+    /** The question, as a result the client answers by calling again. */
+    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview): Promise<InputRequiredResult> {
+      const now = Date.now();
+      for (const [n, expiry] of open) if (expiry < now) open.delete(n);
+      const nonce = randomUUID();
+      open.set(nonce, now + PROMPT_TTL_MS);
+
+      const field: ElicitRequestFormParams['requestedSchema']['properties'] = preview.strong
+        ? {
+            confirmation: {
+              type: 'string',
+              title: 'Type CONFIRM to proceed',
+              description: `Required for a high-stakes write like "${name}". Anything else cancels.`,
+            },
+          }
+        : {
+            confirm: {
+              type: 'boolean',
+              title: `Allow "${name}"?`,
+              description: 'Leave unchecked to cancel this write.',
+            },
+          };
+      return inputRequired({
+        inputRequests: {
+          confirm: inputRequired.elicit({
+            mode: 'form',
+            message: preview.message,
+            requestedSchema: { type: 'object', properties: field, required: Object.keys(field) },
+          }),
+        },
+        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong }, ctx),
+      });
+    },
+
+    /**
+     * The verdict on a retry that carries our state; `undefined` when this is
+     * not one yet, so the caller should ask.
+     */
+    settle(ctx: ServerContext, name: string, args: unknown): ConfirmDecision | undefined {
+      const state = ctx.mcpReq.requestState<PendingWrite>();
+      if (!state) return undefined;
+      // Spent before anything else is checked, so a refused retry cannot be retried.
+      const expiry = open.get(state.nonce);
+      open.delete(state.nonce);
+      if (expiry === undefined || expiry < Date.now()) {
+        return { allowed: false, reason: 'that confirmation was already used or has expired', stale: true };
+      }
+      if (state.call !== fingerprint(name, args)) {
+        return { allowed: false, reason: 'the arguments changed after the confirmation prompt', stale: true };
+      }
+      const content = acceptedContent(ctx.mcpReq.inputResponses, 'confirm');
+      // The schema is not enforced on the answer, so the type is checked here.
+      // A non-unicode /i keeps `ı` and `ſ` from folding into ASCII letters.
+      const confirmed = state.strong
+        ? typeof content?.confirmation === 'string' && /^confirm$/i.test(content.confirmation.trim())
+        : content?.confirm === true;
+      if (confirmed) return { allowed: true };
+      const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
+      return { allowed: false, reason: content ? 'not confirmed' : (action ?? 'no answer') };
+    },
+  };
+}
+
+export type WriteGate = ReturnType<typeof createWriteGate>;
