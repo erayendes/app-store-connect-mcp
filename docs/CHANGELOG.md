@@ -8,25 +8,25 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### Unreleased
+### [2.6.0] — 2026-10-11
 
-902 tools in total.
+Six new tools, each doing in one step what used to take several. 902 tools in total.
 
-**Change one in-app purchase price without losing the others.** Ask for a new price in one country, starting now or from a date, and only that price changes. Apple replaces the whole price schedule on every change, so Heimdall reads the current one first and sends every other price back as it was. If it can't read the schedule completely, it doesn't write anything. It asks for your approval before it runs, and a dry run shows the before and after, including when Apple's automatic prices in other countries will move too. It only touches an in-app purchase whose product ID or name matches exactly, never stretches a short promotion past its end date, and waits if a price is about to change somewhere today or tomorrow, because Apple switches prices at each country's own midnight. (`pricing__set_iap_price`)
+**Change one in-app purchase price.** Pick a country and a new price, and every other price stays as it was. If Heimdall can't read the current prices in full, it changes nothing. It asks you before it runs. (`pricing__set_iap_price`)
 
-**See in-app purchase and app prices by country.** Current and upcoming prices for every country: the currency, what the customer pays, what you receive, the dates, and whether you set the price or Apple worked it out. Read-only. (`pricing__get_iap_price`, `pricing__get_app_price`)
+**See in-app purchase and app prices by country.** What customers pay and what you receive, today and for any change already scheduled. (`pricing__get_iap_price`, `pricing__get_app_price`)
 
-**Check a subscription before you send it to review.** One subscription, or up to 20 in a group. It lists what's missing (a language, a price, a country, the review screenshot) and the tool that fixes each gap. "Ready" means nothing is missing, not that Apple will approve it. (`preflight__check_subscription`)
+**Check a subscription before review.** It lists what's missing and the tool that fixes each gap. (`preflight__check_subscription`)
 
-**Send a TestFlight build to beta groups in one step.** Name the build and the groups. Heimdall checks that the build is processed and hasn't expired, skips groups that already have it, lists every group in the approval prompt, and tells you when an external group may need Beta App Review. If the same build number exists on more than one platform or version, it lists them so you can pick the right one. (`testflight__assign_build_to_groups`)
+**Send a build to beta groups.** Name the build and the groups. Only builds that are ready go out, and groups that already have it are skipped. (`testflight__assign_build_to_groups`)
 
-**"What are testers saying?" in one question.** Crashes and screenshot feedback grouped by build, the most common devices and OS versions, the newest comments, and short excerpts from up to three crash logs. It covers the last 14 days unless you ask for more (up to 90). iOS and tvOS builds with the same number stay apart. Tester comments are marked as text from other people, not instructions for your AI. Read-only. (`testflight__feedback_digest`)
+**See what testers are saying.** Crashes, feedback and comments from the last two weeks, grouped by build. (`testflight__feedback_digest`)
 
-**"Why did my Xcode Cloud build fail?" in one question.** It finds the most recent failed run among the last 40, or the one you name, and lists the failing steps, the issues and the failed tests. Read-only. (`ci__diagnose_run`)
+**Find out why an Xcode Cloud build failed.** The failing steps and tests from the latest failed run. (`ci__diagnose_run`)
 
-**Finding an app by name works in large accounts.** It used to look at only the first 200 apps, so in a bigger account it could miss the right app, or not notice a second one with a similar name. It now looks through up to 1,000, and asks for the bundle ID or Apple ID beyond that.
+**Fixes.** Finding an app by name now works in accounts with more than 200 apps. A package Heimdall depends on (`proxy-addr`) had a security issue; Heimdall never used the affected part, but the fixed version is in.
 
-**The docs are easier to find your way around.** Setup, Guide, Profiles and Roles are now separate pages, each in English and Turkish, and the Turkish README lives at `docs/README_tr.md`.
+**Docs.** Setup, profiles, roles and settings each have their own page now, in English and Turkish. The new [Configuration](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/CONFIGURATION_en.md) page lists every setting, such as read-only mode.
 
 ### [2.5.0] — 2026-10-01
 
@@ -208,25 +208,25 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.6.0] — 2026-10-11
 
-Toplam 902 araç.
+Eskiden birkaç adım süren işleri tek adımda yapan altı yeni araç. Toplam 902 araç.
 
-**Bir uygulama içi satın almanın fiyatını, diğerlerini kaybetmeden değiştirin.** Tek bir ülke için yeni fiyat isteyin, hemen ya da bir tarihten itibaren geçerli olsun; yalnızca o fiyat değişir. Apple her değişiklikte fiyat takviminin tamamını yeniden yazdığı için Heimdall önce mevcut takvimi okur, diğer bütün fiyatları olduğu gibi geri gönderir. Takvimi eksiksiz okuyamazsa hiçbir şey yazmaz. Çalışmadan önce onayınızı ister; deneme modu (`--dry-run`) önceki ve sonraki hâli gösterir, Apple'ın diğer ülkelerdeki otomatik fiyatları da kayacaksa bunu söyler. Yalnızca ürün kimliği ya da adı birebir eşleşen satın almaya dokunur, kısa bir kampanyayı bitiş tarihinin ötesine uzatmaz ve bir ülkede bugün ya da yarın fiyat değişecekse bekler, çünkü Apple fiyatları her ülkenin kendi gece yarısında değiştirir. (`pricing__set_iap_price`)
+**Bir uygulama içi satın almanın fiyatını değiştirin.** Bir ülke ve yeni bir fiyat seçin; diğer bütün fiyatlar olduğu gibi kalır. Heimdall mevcut fiyatları eksiksiz okuyamazsa hiçbir şeyi değiştirmez. Çalışmadan önce size sorar. (`pricing__set_iap_price`)
 
-**Uygulama içi satın alma ve uygulama fiyatlarını ülke ülke görün.** Her ülke için güncel ve planlanmış fiyatlar: para birimi, müşterinin ödediği, size kalan, tarihler ve fiyatı sizin mi girdiğiniz yoksa Apple'ın mı hesapladığı. Yalnızca okur. (`pricing__get_iap_price`, `pricing__get_app_price`)
+**Uygulama içi satın alma ve uygulama fiyatlarını ülke ülke görün.** Müşterinin ne ödediği ve size ne kaldığı; bugün ve planlanmış değişikliklerde. (`pricing__get_iap_price`, `pricing__get_app_price`)
 
-**Aboneliği incelemeye göndermeden önce kontrol edin.** Tek bir abonelik ya da bir gruptaki en fazla 20 abonelik. Neyin eksik olduğunu (bir dil, bir fiyat, bir ülke, inceleme ekran görüntüsü) ve her eksiği hangi aracın düzelttiğini söyler. "Hazır" eksik yok demektir, Apple onaylayacak demek değildir. (`preflight__check_subscription`)
+**Aboneliği incelemeye göndermeden önce kontrol edin.** Neyin eksik olduğunu ve her eksiği hangi aracın düzelttiğini söyler. (`preflight__check_subscription`)
 
-**TestFlight build'ini beta gruplarına tek adımda gönderin.** Build'i ve grupları söyleyin. Heimdall build'in işlendiğini ve süresinin dolmadığını kontrol eder, build'i zaten alan grupları atlar, onay ekranında bütün grupları gösterir ve harici bir grubun Beta App Review gerektirebileceği durumda sizi uyarır. Aynı build numarası birden fazla platformda ya da sürümde varsa hepsini listeler, doğru olanı siz seçersiniz. (`testflight__assign_build_to_groups`)
+**Build'i beta gruplarına gönderin.** Build'i ve grupları söyleyin. Yalnızca hazır build'ler gönderilir, build'i zaten alan gruplar atlanır. (`testflight__assign_build_to_groups`)
 
-**"Testçiler ne diyor?" tek soruda.** Build'e göre gruplanmış kilitlenmeler ve ekran görüntülü geri bildirimler, en çok görülen cihazlar ve işletim sistemi sürümleri, en yeni yorumlar ve en fazla üç crash log'dan kısa alıntılar. Aksini söylemezseniz son 14 güne bakar (en fazla 90). Aynı numaralı iOS ve tvOS build'leri ayrı tutulur. Testçi yorumları, yapay zekâya talimat değil, başkalarının yazdığı metin olarak işaretlenir. Yalnızca okur. (`testflight__feedback_digest`)
+**Testçilerin ne dediğini görün.** Son iki haftanın kilitlenmeleri, geri bildirimleri ve yorumları, build'e göre gruplanmış. (`testflight__feedback_digest`)
 
-**"Xcode Cloud build'im neden patladı?" tek soruda.** Son 40 koşu içinde en son başarısız olanı ya da sizin söylediğinizi bulur; başarısız adımları, sorunları ve geçmeyen testleri listeler. Yalnızca okur. (`ci__diagnose_run`)
+**Xcode Cloud build'inin neden başarısız olduğunu öğrenin.** Son başarısız koşunun hatalı adımları ve geçmeyen testleri. (`ci__diagnose_run`)
 
-**Uygulamayı adıyla bulmak büyük hesaplarda da çalışıyor.** Eskiden yalnızca ilk 200 uygulamaya bakıyordu; büyük bir hesapta doğru uygulamayı kaçırabiliyor ya da benzer adlı ikinci bir uygulamayı fark etmeyebiliyordu. Artık 1.000 uygulamaya kadar bakıyor, daha fazlasında bundle ID ya da Apple ID istiyor.
+**Düzeltmeler.** Uygulamayı adıyla bulmak artık 200'den fazla uygulaması olan hesaplarda da çalışıyor. Heimdall'ın kullandığı bir pakette (`proxy-addr`) güvenlik açığı vardı; Heimdall o kısmı hiç kullanmıyordu, yine de düzeltilmiş sürüm eklendi.
 
-**Dokümanlarda yolunuzu bulmak daha kolay.** Kurulum, Rehber, Profiller ve Roller artık ayrı sayfalar, her biri İngilizce ve Türkçe. Türkçe README `docs/README_tr.md` adresinde.
+**Dokümanlar.** Kurulum, profiller, roller ve ayarların her birinin artık kendi sayfası var, İngilizce ve Türkçe. Yeni [Yapılandırma](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/CONFIGURATION_tr.md) sayfası, salt okunur mod gibi bütün ayarları listeliyor.
 
 ### [2.5.0] — 2026-10-01
 
