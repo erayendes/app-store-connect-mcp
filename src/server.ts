@@ -659,12 +659,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           return gate.ask(ctx, request.params.name, request.params.arguments, preview);
         }
         if (!decision.allowed) {
-          // Not "nothing was changed": an answer already used may have run
-          // the write the first time, and a second prompt would repeat it.
           const text = decision.stale
-            ? `"${name}" was refused: ${decision.reason}. This attempt changed nothing, but an ` +
-              `earlier attempt with the same confirmation may already have run — check before ` +
-              `calling it again for a fresh prompt.`
+            ? `"${name}" was refused: ${decision.reason}.`
             : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +
               `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
               `this client declared elicitation support but cannot actually show the ` +

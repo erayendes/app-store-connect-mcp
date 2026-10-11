@@ -37,7 +37,7 @@ import { OPERATIONS } from '../generated/operations.js';
 
 export interface ConfirmDecision {
   allowed: boolean;
-  /** Present when blocked: 'decline' | 'cancel' | 'not confirmed', or why a stale answer was refused. */
+  /** Present when blocked: the client's action ('decline', 'cancel'), what the answer lacked, or why a stale answer was refused. */
   reason?: string;
   /** The answer was for another call, or already spent: ask again rather than blame the user. */
   stale?: true;
@@ -537,10 +537,23 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
       const expiry = open.get(state.nonce);
       open.delete(state.nonce);
       if (expiry === undefined || expiry < Date.now()) {
-        return { allowed: false, reason: 'that confirmation was already used or has expired', stale: true };
+        return {
+          allowed: false,
+          reason:
+            'that confirmation was already used or has expired. This attempt changed nothing, but an ' +
+            'earlier attempt with the same confirmation may already have run — check before calling ' +
+            'it again for a fresh prompt',
+          stale: true,
+        };
       }
       if (state.call !== fingerprint(name, args)) {
-        return { allowed: false, reason: 'the arguments changed after the confirmation prompt', stale: true };
+        return {
+          allowed: false,
+          reason:
+            'the arguments changed after the confirmation prompt. Nothing was changed; call it again ' +
+            'to be asked about these arguments',
+          stale: true,
+        };
       }
       const content = acceptedContent(ctx.mcpReq.inputResponses, 'confirm');
       // The schema is not enforced on the answer, so the type is checked here.
@@ -550,7 +563,8 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
         : content?.confirm === true;
       if (confirmed) return { allowed: true };
       const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
-      return { allowed: false, reason: content ? 'not confirmed' : (action ?? 'no answer') };
+      const unconfirmed = state.strong ? 'the answer was not CONFIRM' : 'the box was left unticked';
+      return { allowed: false, reason: content ? unconfirmed : (action ?? 'no answer') };
     },
   };
 }

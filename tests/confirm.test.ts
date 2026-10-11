@@ -52,7 +52,7 @@ describe('the write gate', () => {
     const { gate, state } = await prompt();
     expect(gate.settle(ctx(state, accept({ confirm: false })), 'beta_groups__delete', { id: '1' })).toEqual({
       allowed: false,
-      reason: 'not confirmed',
+      reason: 'the box was left unticked',
     });
   });
 
@@ -71,7 +71,7 @@ describe('the write gate', () => {
     const no = await prompt(undefined, typed);
     expect(no.gate.settle(ctx(no.state, accept({ confirmation: 'yes' })), 'beta_groups__delete', { id: '1' })).toEqual({
       allowed: false,
-      reason: 'not confirmed',
+      reason: 'the answer was not CONFIRM',
     });
   });
 
