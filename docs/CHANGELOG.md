@@ -8,9 +8,13 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### Unreleased
+### [2.7.0] — 2026-10-12
 
-**Approve risky changes on a Mac, even where the app can't ask.** The Claude desktop app's Code tab can't show Heimdall's question, so submitting for review or changing a price there used to fail even after you said yes. Now a Mac dialog asks you instead, and only your click counts.
+**Confirmation works with the newest AI apps.** Apps such as Claude Code now speak a newer version of the protocol, and Heimdall's confirmation step speaks it too. Older apps see the same confirmation as before. Each confirmation now covers exactly the change you were shown, works only once, and expires after 10 minutes.
+
+**Release steps that reach users now ask first.** Sending a version to review, changing a phased release, and sending a build to external TestFlight review ask for your confirmation by default. Releasing a version to the App Store asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, still go through your app's own approval. If your app cannot show a confirmation, these steps are now blocked, as price changes and deletions already were; set `ASC_CONFIRM_WRITES=0` to rely on your app's approval instead.
+
+**Faster first install.** Heimdall moved to version 2 of the official MCP library, which no longer pulls in a web server it never used. The first `npx` run downloads about half as many packages.
 
 ### [2.6.0] — 2026-10-11
 
@@ -212,9 +216,13 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.7.0] — 2026-10-12
 
-**Riskli değişiklikleri, uygulama soramasa da Mac'te onaylayın.** Claude masaüstü uygulamasının Code sekmesi Heimdall'ın sorusunu gösteremiyor; incelemeye gönderme ya da fiyat değişikliği orada "evet" deseniz bile başarısız oluyordu. Artık Mac'te bir pencere size soruyor ve yalnızca sizin tıklamanız geçerli.
+**Onay, yeni nesil yapay zekâ uygulamalarıyla da çalışıyor.** Claude Code gibi uygulamalar artık protokolün yeni sürümünü kullanıyor; Heimdall'ın onay adımı da bu sürümü destekliyor. Eski uygulamalar onayı eskisi gibi görür. Her onay artık yalnızca size gösterilen değişiklik için geçerli, bir kez kullanılabiliyor ve 10 dakika sonra geçersiz oluyor.
+
+**Kullanıcıya ulaşan yayın adımları artık önce soruyor.** Sürümü incelemeye göndermek, kademeli yayını değiştirmek ve bir build'i dış TestFlight incelemesine göndermek varsayılan olarak onayınızı ister. Bir sürümü App Store'da yayınlamak için CONFIRM yazmanız gerekir. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımları yine uygulamanızın kendi onayına bırakılır. Uygulamanız onay ekranı gösteremiyorsa bu adımlar artık engellenir, tıpkı fiyat değişiklikleri ve silmelerin zaten engellendiği gibi; uygulamanızın onayına güvenmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
+
+**Daha hızlı ilk kurulum.** Heimdall resmî MCP kütüphanesinin 2. sürümüne geçti; bu sürüm Heimdall'ın hiç kullanmadığı bir web sunucusunu artık indirmiyor. İlk `npx` çalıştırması yaklaşık yarı yarıya daha az paket indiriyor.
 
 ### [2.6.0] — 2026-10-11
 
