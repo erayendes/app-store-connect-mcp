@@ -20,6 +20,10 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import type { AddressInfo } from 'node:net';
 import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
+import { loadConfig } from './core/config.js';
+import { TokenProvider, type JwtCredentials } from './core/jwt.js';
+import { AscHttpClient } from './core/http.js';
+import { AscApiError } from './core/errors.js';
 import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, serverName } from './clients.js';
 import { manualToolsFor, resolveSelection } from './profiles.js';
 import {
@@ -48,36 +52,43 @@ export interface WebSetupOptions {
 
 const IDLE_MS = 30 * 60_000;
 
-/** What each profile is for, in the words someone setting it up would use. */
-const FRIENDLY: Record<string, string> = {
-  access: 'Team and testers — invite people, manage TestFlight testers and groups',
-  analytics: 'Sales and reports — downloads, sales, finance and performance reports',
-  'app-clips': 'App Clips — the lightweight version of your app',
-  'app-info': 'App details — name, category, age rating, availability',
-  'background-assets': 'Background assets — content packs downloaded after install',
-  distribution: 'Releases — versions, builds, sending to review, phased release',
-  'game-center': 'Game Center — achievements, leaderboards, challenges',
-  marketing: 'Store page and reviews — screenshots, product pages, events, customer reviews',
-  monetization: 'Prices and subscriptions — subscriptions, in-app purchases, offers, prices',
-  provisioning: 'Certificates and devices — signing certificates, profiles, test devices',
-  testflight: 'TestFlight — beta builds and what testers report',
-  webhooks: 'Webhooks — App Store Connect notifications sent to your server',
-  'xcode-cloud': 'Xcode Cloud — build workflows and their runs',
+/** What each profile is for, in the words someone setting it up would use, and one thing to ask. */
+const FRIENDLY: Record<string, { title: string; does: string; example?: string }> = {
+  access: { title: 'Team and testers', does: 'Invite people to your team and manage TestFlight testers and groups.', example: 'Add ayse@example.com to the Beta group' },
+  analytics: { title: 'Sales and reports', does: 'Downloads, sales, proceeds and how the app performs.', example: 'How did downloads change last week?' },
+  'app-clips': { title: 'App Clips', does: 'The instant, lightweight version of your app.' },
+  'app-info': { title: 'App details', does: 'Name, category, age rating and the countries your app is sold in.', example: 'Make the app available in Germany' },
+  'background-assets': { title: 'Background assets', does: 'Content packs your app downloads after it is installed.' },
+  distribution: { title: 'Releases', does: 'New versions, builds, sending to review and phased release.', example: 'Submit version 3.2 for review' },
+  'game-center': { title: 'Game Center', does: 'Achievements, leaderboards and challenges.' },
+  marketing: { title: 'Store page and reviews', does: 'Screenshots, product pages, in-app events and customer reviews.', example: "Reply to yesterday's 1-star reviews" },
+  monetization: { title: 'Prices and subscriptions', does: 'Subscriptions, in-app purchases, offers and prices.', example: 'Change the yearly price in Turkey' },
+  provisioning: { title: 'Certificates and devices', does: 'Signing certificates, provisioning profiles and test devices.' },
+  testflight: { title: 'TestFlight', does: 'Beta build details and what testers report.', example: 'What are testers saying about build 412?' },
+  webhooks: { title: 'Webhooks', does: 'Let App Store Connect tell your own server when something happens.' },
+  'xcode-cloud': { title: 'Xcode Cloud', does: 'Build workflows and why a build failed.', example: 'Why did the last build fail?' },
 };
 
 /**
- * What a choice needs beyond the key itself. Roles are from docs/ROLES_en.md;
- * keep the two in step.
+ * The key roles each choice works with, from docs/ROLES_en.md — keep the two
+ * in step. The page intersects them over everything picked and recommends the
+ * narrowest role left; a key carries one role, so Admin is the fallback that
+ * covers any mix.
  */
-const NOTES: Record<string, string> = {
-  'access:users': 'Needs a key with the Admin role.',
-  provisioning: 'Needs a key with the Admin role.',
-  webhooks: 'Needs a key with the Admin role.',
-  analytics:
-    'Needs the Sales or Finance role and your vendor number (asked below). The very first request ' +
-    'for a new report type needs an Admin key, once.',
-  'monetization:storekit': "Customer purchase lookups need your app's bundle ID (asked below).",
+const APP_MANAGER = ['App Manager', 'Admin'];
+const ROLES: Record<string, string[]> = {
+  access: ['App Manager', 'Developer', 'Admin'],
+  'access:users': ['Admin'],
+  analytics: ['Sales', 'Finance', 'Admin'],
+  'distribution:builds': ['Developer', 'App Manager', 'Admin'],
+  marketing: ['Marketing', 'App Manager', 'Admin'],
+  'marketing:customer-review': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
+  provisioning: ['Admin'],
+  testflight: ['Developer', 'App Manager', 'Admin'],
+  webhooks: ['Admin'],
+  'xcode-cloud': ['Developer', 'App Manager', 'Admin'],
 };
+
 const MAX_BODY = 64 * 1024;
 
 class HttpError extends Error {
@@ -148,10 +159,11 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         })),
         rows: rows.map((r) => ({
           index: r.index,
-          label: r.item.label,
-          title: r.subProfile ? '' : (FRIENDLY[r.profile.name] ?? ''),
+          name: r.subProfile?.name ?? r.profile.name,
+          tools: Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0),
           hint: r.item.hint ?? '',
-          note: NOTES[specOf(r.index)] ?? '',
+          ...(r.subProfile ? {} : FRIENDLY[r.profile.name]),
+          roles: ROLES[specOf(r.index)] ?? ROLES[r.profile.name] ?? APP_MANAGER,
           parent: r.item.parent ?? null,
           storekit: storekitRows.has(r.index),
           vendor: r.profile.name === 'analytics',
@@ -170,6 +182,35 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       const verdict = dryRun ? 'skipped' : await verifyCredentials(keyId, issuerId, pem);
       verified = verdict === 'invalid' ? undefined : { keyId, issuerId, pem };
       return { verdict };
+    },
+
+    /**
+     * Whether the key can manage team members, which only Admin can: a cheap
+     * way to tell an Admin key from the rest before the user finds out from a
+     * tool that fails. null when it cannot tell (dry run, offline, no key).
+     */
+    async admin(body) {
+      if (dryRun) return { admin: null };
+      let credentials: JwtCredentials | undefined;
+      if (body.reuse === true) {
+        try {
+          credentials = loadConfig([]).credentials;
+        } catch {
+          return { admin: null };
+        }
+      } else if (verified) {
+        credentials = { keyId: verified.keyId, issuerId: verified.issuerId, privateKey: verified.pem };
+      }
+      if (!credentials) return { admin: null };
+      try {
+        await new AscHttpClient(new TokenProvider(credentials), { baseUrl: process.env.ASC_BASE_URL || undefined }).get(
+          '/v1/users',
+          { limit: 1 }
+        );
+        return { admin: true };
+      } catch (err) {
+        return { admin: err instanceof AscApiError && err.status === 403 ? false : null };
+      }
     },
 
     async plan(body) {

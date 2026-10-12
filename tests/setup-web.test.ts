@@ -93,7 +93,7 @@ describe('setup --web, a dry run', () => {
     });
     expect((await ok.json()).verdict).toBe('skipped');
 
-    const analytics = state.rows.find((r: any) => r.label.startsWith('analytics')).index;
+    const analytics = state.rows.find((r: any) => r.name === 'analytics').index;
     const applied = await (await post('apply', { clients: ['other'], picked: [analytics] })).json();
     expect(applied.lines[0]).toMatch(/Dry run/);
 
