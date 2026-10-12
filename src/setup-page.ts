@@ -473,7 +473,7 @@ a { color: var(--fg); }
     }
     $('clients').addEventListener('change', invalidatePlan);
     renderRows();
-  }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. Run setup again. (' + e.message + ')'; });
+  }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. To start again, run npx -y @erayendes/asc-mcp setup --web in your terminal. (' + e.message + ')'; });
 
   $('reuseYes').onclick = function () { reuse = true; $('reuseButtons').classList.add('hidden'); keyDone(); };
   $('reuseNo').onclick = function () {
@@ -530,7 +530,7 @@ a { color: var(--fg); }
   };
 
   $('cancel').onclick = function () {
-    call('cancel').finally(function () { document.querySelector('main').textContent = 'Setup cancelled. Nothing was changed. You can close this tab.'; });
+    call('cancel').finally(function () { document.querySelector('main').textContent = 'Setup cancelled. Nothing was changed. To start again, run npx -y @erayendes/asc-mcp setup --web in your terminal; it prints a new link.'; });
   };
   window.addEventListener('beforeunload', function (e) { if (!finished && state) e.preventDefault(); });
 })();
