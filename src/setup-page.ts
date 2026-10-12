@@ -34,7 +34,6 @@ section.locked { opacity: .5; pointer-events: none; }
 h2 { font-size: var(--fs-heading); font-weight: 600; margin: 0 0 var(--sp-1); display: flex; gap: var(--sp-2); align-items: baseline; }
 h2 .n { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); font-weight: 500; }
 h2 .n.done { color: var(--green); }
-h2 .help-link { margin-left: auto; }
 .lead { margin: 0 0 var(--sp-4); color: var(--fg-secondary); }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-2); }
 
@@ -129,7 +128,7 @@ a { color: var(--fg); }
   </section>
 
   <section id="s2">
-    <h2><span class="n" id="n2">2/4</span>Your App Store Connect key<button type="button" class="help-link hidden" id="backToSaved">← Use the saved key instead</button></h2>
+    <h2><span class="n" id="n2">2/4</span>Your App Store Connect key</h2>
     <div class="need">
       <div id="need"></div>
       <div id="reuseBox" class="saved hidden">
@@ -163,7 +162,7 @@ a { color: var(--fg); }
         <textarea class="input help hidden" id="pem" placeholder="Only if you can't use the file: -----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
         <div class="drop" id="drop" tabindex="0">Drop the .p8 file here, or click to choose it</div>
         <input type="file" id="file" accept=".p8" class="hidden">
-        <div class="row"><button class="btn btn-secondary" id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
+        <div class="row"><button class="btn btn-secondary" id="verify">Check with Apple</button><button class="btn btn-link-primary hidden" id="backToSaved">Use the saved key instead</button><span id="vmsg" class="msg"></span></div>
         <p id="fitMsg" class="msg"></p>
       </div>
     </div>
