@@ -436,9 +436,13 @@ a { color: var(--fg); }
     if (missing.length) {
       var more = el('div', 'hidden'); more.id = 'moreClients';
       missing.forEach(function (c) { option(more, c.id, c.label, c.hint, false, false); });
-      var toggle = el('button', 'help-link', 'Not found on this computer (' + missing.length + ')');
+      var label = 'Don\u2019t see your app? Show ' + missing.length + ' more';
+      var toggle = el('button', 'help-link', label);
       toggle.type = 'button'; toggle.style.marginTop = 'var(--sp-2)';
-      toggle.onclick = function () { more.classList.toggle('hidden'); };
+      toggle.onclick = function () {
+        var open = more.classList.toggle('hidden') === false;
+        toggle.textContent = open ? 'Show fewer' : label;
+      };
       $('clients').appendChild(toggle); $('clients').appendChild(more);
     }
     $('clients').addEventListener('change', invalidatePlan);
