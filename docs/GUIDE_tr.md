@@ -48,7 +48,7 @@ Bu kolaylık yalnızca uygulamalar için geçerli. Diğer kayıtlarda bu genel b
 ## StoreKit 2 — müşteri işlemleri
 
 App Store Server API mağaza sayfanızla değil, tek tek müşterilerle ilgili soruları yanıtlar: satın alma geçmişi, hak sahipliği, iadeler, abonelik durumu.
-Bir **Bundle ID** girildiğinde (`setup` sorar) açılır ve `monetization:storekit` ile gelir.
+`monetization:storekit` ile gelir. İsteğinizde uygulamanın adını söyleyin (*"Ask Quran'da bu işlemin iadeleri"*), bundle ID'sini Heimdall bulur. Hesapta tek uygulama varsa adını söylemenize de gerek yok.
 
 ## Prompt'lar
 

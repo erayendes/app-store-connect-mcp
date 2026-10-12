@@ -14,6 +14,7 @@ import type { AscHttpClient } from './http.js';
 export interface ResolvedApp {
   id: string;
   name: string;
+  bundleId: string;
 }
 
 /**
@@ -30,7 +31,7 @@ export async function resolveApp(http: AscHttpClient, app: string): Promise<Reso
       'fields[apps]': 'name,bundleId',
     });
     if (!res?.data) throw new AscApiError(`No app with Apple ID ${wanted}.`, 0);
-    return { id: res.data.id, name: res.data.attributes?.name ?? wanted };
+    return { id: res.data.id, name: res.data.attributes?.name ?? wanted, bundleId: res.data.attributes?.bundleId ?? '' };
   }
 
   const byBundleId = wanted.includes('.');
@@ -69,5 +70,5 @@ export async function resolveApp(http: AscHttpClient, app: string): Promise<Reso
       0
     );
   }
-  return { id: hits[0].id, name: hits[0].attributes?.name ?? wanted };
+  return { id: hits[0].id, name: hits[0].attributes?.name ?? wanted, bundleId: hits[0].attributes?.bundleId ?? '' };
 }

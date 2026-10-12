@@ -231,15 +231,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const wantsFamily = (prefix: string): boolean =>
     manualTools ? [...manualTools].some((t) => t.startsWith(prefix)) : true;
 
-  // StoreKit tools are only offered when a bundle ID is configured, since the
-  // App Store Server API is scoped to a single app. A profile additionally has
-  // to opt in (monetization's storekit sub-profile does).
+  // StoreKit tools come with the profile that opts in (monetization's storekit
+  // sub-profile). Apple scopes each call to one app, which the service looks
+  // up from the account's app list rather than needing configured.
   const storekitWanted = wantsFamily('storekit__');
   let storekit: StoreKitService | undefined;
   let storekitError: string | undefined;
-  if (config.storekit && storekitWanted) {
+  if (storekitWanted) {
     try {
-      storekit = new StoreKitService(config);
+      storekit = new StoreKitService(config, http);
     } catch (err) {
       storekitError = (err as Error).message;
     }
@@ -811,7 +811,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         if (!storekit) {
           throw new Error(
             storekitError ??
-              'App Store Server API tools are unavailable. Set ASC_BUNDLE_ID to enable them.'
+              'App Store Server API tools are unavailable: this profile does not include them.'
           );
         }
         if (config.readOnly) {

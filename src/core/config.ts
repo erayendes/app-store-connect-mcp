@@ -10,7 +10,8 @@ export interface ServerConfig {
   vendorNumber?: string;
   /** App Store Server API (StoreKit 2) settings. */
   storekit?: {
-    bundleId: string;
+    /** Optional: the app a StoreKit call goes to when it names none. */
+    bundleId?: string;
     appAppleId?: number;
     environment: 'Sandbox' | 'Production';
     /** Paths to Apple's DER root certificates; enables verified decoding. */
@@ -131,24 +132,26 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
       privateKey,
     },
     vendorNumber: env.ASC_VENDOR_NUMBER ?? shared?.vendorNumber,
-    storekit: bundleId
-      ? {
+    // Always present: the StoreKit tools look the app up per call, so a bundle
+    // ID is only a default now, not the switch that turns them on.
+    storekit: {
           bundleId,
           appAppleId: env.ASC_APP_APPLE_ID
             ? Number(env.ASC_APP_APPLE_ID)
             : shared?.appAppleId,
+          // Production unless asked otherwise: a transaction ID a customer
+          // sends is a Production one, and setup always defaulted to it.
           environment:
-            (env.ASC_ENVIRONMENT ?? shared?.environment) === 'Production'
-              ? 'Production'
-              : 'Sandbox',
+            (env.ASC_ENVIRONMENT ?? shared?.environment) === 'Sandbox'
+              ? 'Sandbox'
+              : 'Production',
           // Apple's DER root certificates, which the App Store Server Library
           // asks the caller for rather than shipping. Comma-separated paths, or
           // one directory. Unset means the StoreKit reads keep handing back the
           // signed envelope — the honest default, since decoding without
           // verifying would present unverified data as fact.
           appleRootCerts: parseList(env.ASC_APPLE_ROOT_CERTS),
-        }
-      : undefined,
+        },
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),
     readOnly: flag('read-only') || env.ASC_READ_ONLY === 'true',
     // `strong` by default: ask on the four levels the risk manifest calls
