@@ -8,11 +8,13 @@
  */
 import { createInterface } from 'node:readline/promises';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, realpathSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync, chmodSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { writeKeychainPassword } from './core/keychain.js';
 import {
   readSharedConfig,
   writeSharedConfig,
+  sharedConfigDir,
   sharedConfigPath,
   type SharedConfig,
 } from './core/shared-config.js';
@@ -114,7 +116,7 @@ export function buildRows(): Row[] {
  * Values keep the full argument (`monetization:iap`): dropping the colon would
  * silently widen a config the user had narrowed.
  */
-function registeredAcross(clients: McpClient[]): {
+export function registeredAcross(clients: McpClient[]): {
   perClient: Map<string, Map<string, string>>;
   union: Map<string, string>;
 } {
@@ -253,6 +255,46 @@ async function selectProfiles(
 
 const KEYCHAIN_SERVICE = 'asc-mcp';
 
+/** Where the Key ID, Issuer ID and .p8 come from. */
+export const KEYS_URL = 'https://appstoreconnect.apple.com/access/integrations/api';
+
+/**
+ * Store the private key and write the shared config. On macOS the key goes to
+ * the Keychain. Elsewhere the config points at the .p8: at the file the user
+ * named in the terminal, or, when only its contents arrived (the browser
+ * setup cannot see paths), at a copy only this user can read.
+ */
+export function saveCredentials(
+  fields: Omit<SharedConfig, 'privateKeyKeychain' | 'privateKeyPath'>,
+  pem: string,
+  resolvedPath: string | undefined,
+  log: (line: string) => void = console.log
+): string {
+  const shared: SharedConfig = { ...fields };
+  if (process.platform === 'darwin') {
+    const account = `AuthKey_${fields.keyId}`;
+    writeKeychainPassword(KEYCHAIN_SERVICE, account, pem);
+    shared.privateKeyKeychain = `${KEYCHAIN_SERVICE}/${account}`;
+    log(`\n✓ Private key stored in the macOS Keychain (${KEYCHAIN_SERVICE}/${account}).`);
+    log('  The .p8 file is no longer needed at runtime — archive it somewhere safe.');
+  } else if (resolvedPath) {
+    shared.privateKeyPath = resolvedPath;
+    log(`\n✓ Using the .p8 at ${resolvedPath} (keep the file in place).`);
+  } else {
+    const dir = sharedConfigDir();
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const copy = join(dir, `AuthKey_${fields.keyId}.p8`);
+    writeFileSync(copy, `${pem}\n`, { mode: 0o600 });
+    chmodSync(copy, 0o600);
+    shared.privateKeyPath = copy;
+    log(`\n✓ Private key saved to ${copy}, readable only by you.`);
+  }
+  const configPath = writeSharedConfig(shared);
+  log(`✓ Shared config written to ${configPath}.`);
+  log('  Every profile reads it automatically; env vars still win when set.');
+  return configPath;
+}
+
 /**
  * Normalise a path the way a human is likely to enter it: dragged from Finder
  * (macOS wraps it in quotes or backslash-escapes each space), pasted with
@@ -329,7 +371,7 @@ export function classifyVerifyError(err: unknown): 'invalid' | 'unreachable' {
   return 'invalid';
 }
 
-async function verifyCredentials(
+export async function verifyCredentials(
   keyId: string,
   issuerId: string,
   pem: string
@@ -368,8 +410,6 @@ export async function runSetup(): Promise<void> {
       console.log(`  ${hint}`);
     }
   };
-
-  const KEYS_URL = 'https://appstoreconnect.apple.com/access/integrations/api';
 
   try {
     // Credentials already stored? Offer to skip straight to the profile picker,
@@ -458,26 +498,11 @@ export async function runSetup(): Promise<void> {
     const { perClient, union } = registeredAcross(clients);
     const chosen = await selectProfiles(ask, rows, preselect(rows, union));
 
-    const shared: SharedConfig = {
-      keyId,
-      issuerId,
-      vendorNumber: vendorNumber || undefined,
-    };
-
-    if (process.platform === 'darwin') {
-      const account = `AuthKey_${keyId}`;
-      writeKeychainPassword(KEYCHAIN_SERVICE, account, pem);
-      shared.privateKeyKeychain = `${KEYCHAIN_SERVICE}/${account}`;
-      console.log(`\n✓ Private key stored in the macOS Keychain (${KEYCHAIN_SERVICE}/${account}).`);
-      console.log('  The .p8 file is no longer needed at runtime — archive it somewhere safe.');
-    } else {
-      shared.privateKeyPath = resolvedPath;
-      console.log(`\n✓ Using the .p8 at ${resolvedPath} (keep the file in place).`);
-    }
-
-    const configPath = writeSharedConfig(shared);
-    console.log(`✓ Shared config written to ${configPath}.`);
-    console.log('  Every profile reads it automatically; env vars still win when set.');
+    saveCredentials(
+      { keyId, issuerId, vendorNumber: vendorNumber || undefined },
+      pem,
+      resolvedPath
+    );
 
     // The picker drives registration directly — add what was checked, remove
     // what was unchecked. A cancelled picker leaves registration untouched.
@@ -495,7 +520,7 @@ export async function runSetup(): Promise<void> {
 }
 
 /** One client's share of a registration run. */
-interface ClientPlan {
+export interface ClientPlan {
   client: McpClient;
   toAdd: string[];
   toRemove: string[];
@@ -508,7 +533,7 @@ interface ClientPlan {
  * name, different argument. Comparing names alone would miss a profile that
  * stayed checked while its sub-profiles were trimmed.
  */
-function planChanges(
+export function planChanges(
   clients: McpClient[],
   chosen: string[],
   registeredPerClient: Map<string, Map<string, string>>,
@@ -558,18 +583,18 @@ function printPlan(plan: ClientPlan[]): void {
  * so a Cursor config full of comments cannot cost anyone a working Claude
  * setup.
  */
-function applyPlan(plan: ClientPlan[]): void {
+export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
   const restart: string[] = [];
   for (const { client, toAdd, toRemove } of plan) {
-    console.log(`\n${client.label}`);
+    log(`\n${client.label}`);
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
-      console.log('  add this to your client config:\n');
-      console.log(indent(manualBlock(client, toAdd)));
+      log('  add this to your client config:\n');
+      log(indent(manualBlock(client, toAdd)));
       continue;
     }
     const { results, needsManual } = applyToClient(client, toAdd, toRemove);
-    for (const r of results) console.log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
+    for (const r of results) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
     const stillRegistered = listRegistered(client).size > 0;
@@ -578,15 +603,15 @@ function applyPlan(plan: ClientPlan[]): void {
         ? installSkill(client.id)
         : removeSkill(client.id)
       : undefined;
-    if (skill) console.log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
+    if (skill) log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
     if (needsManual && toAdd.length) {
-      console.log('\n  add these by hand:\n');
-      console.log(indent(manualBlock(client, toAdd)));
+      log('\n  add these by hand:\n');
+      log(indent(manualBlock(client, toAdd)));
     }
     if (results.some((r) => r.ok)) restart.push(client.label);
   }
   if (restart.length) {
-    console.log(`\nDone. Restart ${list(restart)} for the change to take effect.`);
+    log(`\nDone. Restart ${list(restart)} for the change to take effect.`);
   }
 }
 

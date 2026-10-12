@@ -44,6 +44,9 @@ Commands:
   setup                  Interactive one-time credential setup shared by every
                          profile (writes ~/.config/asc-mcp, key to Keychain).
                          Also registers profiles with the MCP clients it finds.
+                         --web      answer it in your browser instead (a page
+                                    on 127.0.0.1 that only this computer sees)
+                         --dry-run  with --web: walk through it, save nothing
   register <profile...>  Register profiles without a terminal — for an AI agent
                          acting on your behalf. Asks for nothing, never touches
                          credentials, and only adds (setup is what removes).
@@ -114,8 +117,14 @@ async function main(): Promise<void> {
   }
 
   if (positional[0] === 'setup') {
-    const { runSetup } = await import('./setup.js');
     try {
+      if (argv.includes('--web')) {
+        const { runWebSetup } = await import('./setup-web.js');
+        const port = Number(argv.find((a) => a.startsWith('--port='))?.slice('--port='.length)) || undefined;
+        await runWebSetup({ dryRun: argv.includes('--dry-run'), open: !argv.includes('--no-open'), port });
+        return;
+      }
+      const { runSetup } = await import('./setup.js');
       await runSetup();
     } catch (err) {
       // Setup is user-facing: print the message on its own, not a raw stack.
