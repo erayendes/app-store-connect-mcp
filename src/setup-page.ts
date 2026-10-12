@@ -67,14 +67,13 @@ h2 .n.done { color: var(--green); }
 .part .h { color: var(--fg-muted); }
 .part { margin: 0 calc(-1 * var(--sp-2)); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-sm); transition: background var(--speed) var(--ease); }
 .part:hover { background: var(--bg-hover); }
-.saved { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-3); }
+.saved { border-top: 1px solid var(--border); margin-top: var(--sp-3); padding-top: var(--sp-3); }
 .saved .msg { margin: var(--sp-1) 0 var(--sp-2); }
 .role-tag { font-size: var(--fs-ui); color: var(--fg-muted); margin-left: var(--sp-2); }
 
 .need { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); }
 .need .role { font-size: var(--fs-doc); }
 .need .why { color: var(--fg-muted); font-size: var(--fs-ui); }
-.need ul { margin: var(--sp-1) 0 0; padding-left: var(--sp-5); }
 
 details.how { margin: 0 0 var(--sp-3); }
 details summary { cursor: pointer; color: var(--fg-secondary); font-size: var(--fs-ui); font-weight: 500; }
@@ -82,6 +81,11 @@ details summary:hover { color: var(--fg); }
 details.how ol { margin: var(--sp-2) 0 0; padding-left: var(--sp-5); color: var(--fg-secondary); }
 details.how li { margin: var(--sp-1) 0; }
 details.small { margin-top: var(--sp-1); color: var(--fg-muted); font-size: var(--fs-ui); }
+.field-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
+.field-row label.field { margin-bottom: var(--sp-1); }
+.help-link { background: none; border: 0; padding: 0; cursor: pointer; color: var(--fg-secondary); font: inherit; font-size: var(--fs-ui); font-weight: 500; white-space: nowrap; }
+.help-link:hover { color: var(--fg); }
+.help { margin: var(--sp-1) 0 0; color: var(--fg-muted); font-size: var(--fs-ui); }
 
 label.field { display: block; margin: var(--sp-3) 0 var(--sp-1); font-size: var(--fs-ui); font-weight: 500; }
 label.field .hint { font-weight: 400; color: var(--fg-muted); }
@@ -127,16 +131,17 @@ a { color: var(--fg); }
 
   <section id="s2">
     <h2><span class="n" id="n2">2/4</span>Your App Store Connect key</h2>
-    <div id="reuseBox" class="saved hidden">
-      <div>You already have a saved key: <span class="mono" id="savedKey"></span><span id="savedRole" class="role-tag"></span></div>
-      <p id="reuseMsg" class="msg"></p>
-      <div class="row" id="reuseButtons" style="margin-top:0">
-        <button class="btn btn-secondary" id="reuseYes">Use it</button>
-        <button class="btn btn-link-primary" id="reuseNo">Use a new key instead</button>
+    <div class="need">
+      <div id="need"></div>
+      <div id="reuseBox" class="saved hidden">
+        <div>You already have a saved key: <span class="mono" id="savedKey"></span><span id="savedRole" class="role-tag"></span></div>
+        <p id="reuseMsg" class="msg"></p>
+        <div class="row" id="reuseButtons" style="margin-top:0">
+          <button class="btn btn-secondary" id="reuseYes">Use it</button>
+          <button class="btn btn-link-primary" id="reuseNo">Use a new key instead</button>
+        </div>
       </div>
     </div>
-
-    <div class="need" id="need"></div>
 
     <div id="keyBox" class="hidden">
       <div class="row hidden" id="backRow" style="margin:0 0 var(--sp-3)">
@@ -167,19 +172,24 @@ a { color: var(--fg); }
     </div>
 
     <div id="vendorBox" class="hidden">
-      <label class="field" for="vendor">Vendor number <span class="hint">— for sales and finance reports</span></label>
+      <div class="field-row">
+        <label class="field" for="vendor">Vendor number <span class="hint">— for sales and finance reports</span></label>
+        <button type="button" class="help-link" data-help="vendorHelp">Where do I find it?</button>
+      </div>
       <input class="input mono" type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
-      <details class="small"><summary>Where do I find it?</summary>
+      <p class="help hidden" id="vendorHelp">
         In App Store Connect, open <a href="https://appstoreconnect.apple.com/itc/payments_and_financial_reports" target="_blank" rel="noreferrer">Payments and Financial Reports</a>.
         It is in the top left, under your company name. You can leave it empty and add it later.
-      </details>
+      </p>
+      <p class="help hidden" id="vendorAdmin">The very first request for a new report type needs an Admin key, once.</p>
     </div>
     <div id="bundleBox" class="hidden">
-      <label class="field" for="bundle">App bundle ID <span class="hint">— for customer purchase lookups</span></label>
+      <div class="field-row">
+        <label class="field" for="bundle">App bundle ID <span class="hint">— for customer purchase lookups</span></label>
+        <button type="button" class="help-link" data-help="bundleHelp">Where do I find it?</button>
+      </div>
       <input class="input mono" type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
-      <details class="small"><summary>Where do I find it?</summary>
-        In App Store Connect, open your app, then App Information. It is listed as Bundle ID.
-      </details>
+      <p class="help hidden" id="bundleHelp">In App Store Connect, open your app, then App Information. It is listed as Bundle ID.</p>
     </div>
   </section>
 
@@ -334,7 +344,7 @@ a { color: var(--fg); }
       var allowed = NARROW_FIRST.filter(function (name) { return picked.every(function (r) { return r.roles.indexOf(name) !== -1; }); });
       role = allowed[0] || 'Admin';
       need.appendChild(el('p', 'eyebrow', 'For what you picked'));
-      var line = el('div', 'role'); line.appendChild(document.createTextNode('Create a key with the '));
+      var line = el('div', 'role'); line.appendChild(document.createTextNode('You need a key with the '));
       line.appendChild(el('b', '', role)); line.appendChild(document.createTextNode(' role.'));
       need.appendChild(line);
       var forcing = picked.filter(function (r) { return r.roles.length === 1; }).map(function (r) {
@@ -347,19 +357,10 @@ a { color: var(--fg); }
                           : 'A key has one role, and no narrower role covers all of these together.')
         : 'That is the narrowest role that covers everything you picked. Narrower is safer.';
       need.appendChild(el('div', 'why', why));
-      var extras = [];
-      if (picked.some(function (r) { return r.vendor; })) extras.push('your vendor number, for sales reports');
-      if (picked.some(function (r) { return r.storekit; })) extras.push("your app's bundle ID, for customer purchase lookups");
-      if (extras.length) {
-        need.appendChild(el('div', '', 'You will also need:'));
-        var ul = el('ul'); extras.forEach(function (x) { ul.appendChild(el('li', '', x)); }); need.appendChild(ul);
-      }
-      if (picked.some(function (r) { return r.vendor; }) && role !== 'Admin') {
-        need.appendChild(el('div', 'why', 'The very first request for a new report type needs an Admin key, once.'));
-      }
     }
     Array.prototype.forEach.call(document.querySelectorAll('.roleName'), function (n) { n.textContent = role || 'right'; });
     $('vendorBox').classList.toggle('hidden', !picked.some(function (r) { return r.vendor; }));
+    $('vendorAdmin').classList.toggle('hidden', role === 'Admin');
     $('bundleBox').classList.toggle('hidden', !picked.some(function (r) { return r.storekit; }));
     showFit();
     invalidatePlan();
@@ -454,6 +455,10 @@ a { color: var(--fg); }
   $('backToSaved').onclick = function () {
     $('keyBox').classList.add('hidden'); $('reuseBox').classList.remove('hidden');
   };
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-help]'), function (b) {
+    b.onclick = function () { $(b.getAttribute('data-help')).classList.toggle('hidden'); };
+  });
 
   var drop = $('drop');
   drop.onclick = function () { $('file').click(); };
