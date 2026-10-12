@@ -179,14 +179,6 @@ a { color: var(--fg); }
       <input class="input mono" type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
       <p class="help hidden" id="vendorAdmin">The very first request for a new report type needs an Admin key, once.</p>
     </div>
-    <div id="bundleBox" class="hidden">
-      <div class="field-row">
-        <label class="field" for="bundle">App bundle ID <span class="hint">— for customer purchase lookups</span></label>
-        <button type="button" class="help-link" data-help="bundleHelp">Where do I find it?</button>
-      </div>
-      <p class="help hidden" id="bundleHelp">In App Store Connect, open your app, then App Information. It is listed as Bundle ID.</p>
-      <input class="input mono" type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
-    </div>
   </section>
 
   <section id="s3" class="locked">
@@ -251,7 +243,6 @@ a { color: var(--fg); }
     var wrap = el('span', 'pills');
     if (r.roles.length === 1) wrap.appendChild(el('span', 'need-pill', 'Admin key'));
     if (r.vendor && r.parent === null) wrap.appendChild(el('span', 'info-pill', 'Vendor no.'));
-    if (r.storekit && r.parent !== null) wrap.appendChild(el('span', 'info-pill', 'Bundle ID'));
     return wrap.childNodes.length ? wrap : null;
   }
 
@@ -357,7 +348,6 @@ a { color: var(--fg); }
     Array.prototype.forEach.call(document.querySelectorAll('.roleName'), function (n) { n.textContent = role || 'right'; });
     $('vendorBox').classList.toggle('hidden', !picked.some(function (r) { return r.vendor; }));
     $('vendorAdmin').classList.toggle('hidden', role === 'Admin');
-    $('bundleBox').classList.toggle('hidden', !picked.some(function (r) { return r.storekit; }));
     showFit();
     invalidatePlan();
   }
@@ -504,7 +494,7 @@ a { color: var(--fg); }
   $('apply').onclick = function () {
     this.disabled = true; $('cancel').disabled = true; $('review').disabled = true;
     var body = selection();
-    body.reuse = reuse; body.vendorNumber = $('vendor').value; body.bundleId = $('bundle').value;
+    body.reuse = reuse; body.vendorNumber = $('vendor').value;
     var out = $('out'); out.classList.remove('hidden'); out.textContent = 'Applying…';
     call('apply', body).then(function (r) {
       finished = true; mark(1); mark(3); mark(4);

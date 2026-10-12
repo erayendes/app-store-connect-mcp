@@ -137,9 +137,6 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
     const row = rows[i];
     return row.subProfile ? `${row.profile.name}:${row.subProfile.name}` : row.profile.name;
   };
-  const storekitRows = new Set(
-    rows.filter((r) => manualToolsFor(resolveSelection(specOf(r.index))).some((t) => t.startsWith('storekit__'))).map((r) => r.index)
-  );
 
   const chosenClients = (ids: unknown) => {
     if (!Array.isArray(ids)) throw new HttpError(400, 'clients must be a list');
@@ -183,7 +180,6 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           ...(r.subProfile ? {} : { title: profileLabel(r.profile.name), plain: PLAIN[r.profile.name], does: DOES[r.profile.name] }),
           roles: ROLES[specOf(r.index)] ?? ROLES[r.profile.name] ?? APP_MANAGER,
           parent: r.item.parent ?? null,
-          storekit: storekitRows.has(r.index),
           vendor: r.profile.name === 'analytics',
         })),
         preselected: preselect(rows, registeredAcross(present).union),
@@ -258,13 +254,11 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;
         const extras = {
           vendorNumber: text('vendorNumber'),
-          bundleId: text('bundleId'),
-          environment: text('bundleId') ? (body.environment === 'Sandbox' ? ('Sandbox' as const) : ('Production' as const)) : undefined,
         };
         if (!reuse && verified) {
           saveCredentials({ keyId: verified.keyId, issuerId: verified.issuerId, ...extras }, verified.pem, undefined, log);
           verified = undefined;
-        } else if (reuse && (extras.vendorNumber || extras.bundleId)) {
+        } else if (reuse && extras.vendorNumber) {
           // Keeping the saved key does not mean keeping it incomplete: what was
           // filled in now is added to it, and nothing else is touched.
           const saved = readSharedConfig()!;
