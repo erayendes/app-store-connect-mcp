@@ -59,6 +59,12 @@ export const SETUP_PAGE = `<!doctype html>
   .opt input { margin-top: 4px; }
   .opt .t { font-weight: 600; }
   .opt .h { color: var(--muted); font-size: 13px; }
+  .opt .code { color: var(--muted); font: 12px ui-monospace, Menlo, monospace; margin-left: 6px; font-weight: 400; }
+  .opt .note { color: var(--warn); font-size: 13px; margin-top: 2px; }
+  .help { background: var(--soft); border-radius: 10px; padding: 12px 16px; margin: 0 0 8px; font-size: 14px; }
+  .help ol { margin: 6px 0 0; padding-left: 20px; } .help li { margin: 3px 0; }
+  .field .hint { font-weight: 400; color: var(--muted); }
+  .below { font-size: 13px; color: var(--muted); margin-top: 4px; }
   .tag { font-size: 11px; color: var(--ok); margin-left: 6px; font-weight: 600; }
   .sub { margin-left: 28px; }
   .plan li { margin: 4px 0; }
@@ -74,7 +80,7 @@ export const SETUP_PAGE = `<!doctype html>
   <header><h1>Heimdall setup</h1><span id="dry" class="badge hidden">Dry run — nothing will be saved</span></header>
 
   <section id="s1">
-    <h2><span class="n" id="n1">1</span>App Store Connect key</h2>
+    <h2><span class="n" id="n1">1</span>Connect your App Store Connect account</h2>
     <div id="reuseBox" class="hidden">
       <p class="lead">Saved credentials found: Key ID <b id="savedKey"></b>.</p>
       <div class="row">
@@ -83,9 +89,20 @@ export const SETUP_PAGE = `<!doctype html>
       </div>
     </div>
     <div id="keyBox" class="hidden">
-      <p class="lead">Create a key in App Store Connect under
-        <a id="keysLink" target="_blank" rel="noreferrer">Users and Access → Integrations</a>,
-        then fill in the three fields. The key file stays on this computer.</p>
+      <p class="lead">Heimdall talks to Apple with an API key that you create once. It takes about two minutes,
+        and the key file never leaves this computer.</p>
+      <div class="help"><b>Where to find these</b>
+        <ol>
+          <li>Open <a id="keysLink" target="_blank" rel="noreferrer">App Store Connect → Users and Access → Integrations</a>.
+            You need to be the Account Holder or an Admin to see this page.</li>
+          <li>The <b>Issuer ID</b> is at the top of the page. Copy it.</li>
+          <li>Click <b>+</b> to create a key. Give it a name (say, "Heimdall") and pick a role:
+            <b>App Manager</b> covers most work; choose <b>Admin</b> only if you want Heimdall to manage team members,
+            certificates or webhooks.</li>
+          <li>The new key appears in the list with its <b>Key ID</b>. Click <b>Download</b> to get the <b>.p8</b> file —
+            Apple lets you download it only once, so keep it somewhere safe.</li>
+        </ol>
+      </div>
       <label class="field" for="keyId">Key ID</label>
       <input type="text" id="keyId" placeholder="ABC123XYZ9" autocomplete="off" spellcheck="false">
       <label class="field" for="issuerId">Issuer ID</label>
@@ -96,31 +113,38 @@ export const SETUP_PAGE = `<!doctype html>
       <details><summary>Or paste its contents</summary>
         <textarea id="pem" placeholder="-----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
       </details>
-      <label class="field" for="vendor">Vendor number <span style="font-weight:400;color:var(--muted)">(optional, for sales and finance reports)</span></label>
-      <input type="text" id="vendor" autocomplete="off">
       <div class="row"><button id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
     </div>
   </section>
 
   <section id="s2" class="locked">
-    <h2><span class="n" id="n2">2</span>Your AI apps</h2>
-    <p class="lead">Heimdall is added to the apps you tick. The ones found on this computer are ticked already.</p>
+    <h2><span class="n" id="n2">2</span>Which AI apps should get Heimdall?</h2>
+    <p class="lead">Tick the apps you talk to. We found the ticked ones on this computer.</p>
     <div id="clients"><p class="lead">Looking for AI apps on this computer…</p></div>
   </section>
 
   <section id="s3" class="locked">
-    <h2><span class="n" id="n3">3</span>What Heimdall should do</h2>
-    <p class="lead">Each profile is a set of tools. Ticked ones that are already set up stay; untick to remove.
-      Fewer tools make the AI faster.</p>
+    <h2><span class="n" id="n3">3</span>What should Heimdall be able to do?</h2>
+    <p class="lead">Pick only what you use: every extra tool is something the AI has to read through, so fewer
+      choices make it faster and sharper. What you set up before is already ticked; untick to remove it.</p>
     <div id="rows"></div>
+    <div id="vendorBox" class="hidden">
+      <label class="field" for="vendor">Vendor number <span class="hint">(for sales and finance reports)</span></label>
+      <input type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
+      <div class="below">In App Store Connect, open <a href="https://appstoreconnect.apple.com/itc/payments_and_financial_reports" target="_blank" rel="noreferrer">Payments and Financial Reports</a>;
+        the number is in the top left, under your company name. Leave it empty to add it later.</div>
+    </div>
     <div id="bundleBox" class="hidden">
-      <label class="field" for="bundle">App bundle ID <span style="font-weight:400;color:var(--muted)">(optional, for customer purchase lookups)</span></label>
+      <label class="field" for="bundle">App bundle ID <span class="hint">(for customer purchase lookups)</span></label>
       <input type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
+      <div class="below">In App Store Connect, open your app → App Information; it is listed as Bundle ID.
+        Leave it empty if you don't need to look up customer purchases.</div>
     </div>
   </section>
 
   <section id="s4" class="locked">
-    <h2><span class="n" id="n4">4</span>Review and finish</h2>
+    <h2><span class="n" id="n4">4</span>Check and finish</h2>
+    <p class="lead">See exactly what will change in each app before anything is written.</p>
     <div class="row"><button id="review" class="ghost">Show the changes</button></div>
     <ul id="plan" class="plan"></ul>
     <div class="row"><button id="apply" disabled>Apply</button><button id="cancel" class="ghost">Cancel</button></div>
@@ -150,12 +174,14 @@ export const SETUP_PAGE = `<!doctype html>
 
   function credentialsDone() { mark(1); unlock(2); unlock(3); unlock(4); }
 
-  function option(container, value, title, hint, checked, extraClass, tag) {
+  function option(container, value, title, hint, checked, extraClass, tag, code, note) {
     var row = el('label', 'opt' + (extraClass ? ' ' + extraClass : ''));
     var box = el('input'); box.type = 'checkbox'; box.value = value; box.checked = checked;
     var text = el('div'); var t = el('div', 't', title);
+    if (code) t.appendChild(el('span', 'code', code));
     if (tag) t.appendChild(el('span', 'tag', tag));
     text.appendChild(t); if (hint) text.appendChild(el('div', 'h', hint));
+    if (note) text.appendChild(el('div', 'note', note));
     row.appendChild(box); row.appendChild(text); container.appendChild(row);
     return box;
   }
@@ -165,18 +191,25 @@ export const SETUP_PAGE = `<!doctype html>
     var picked = new Set(state.preselected);
     var boxes = {};
     state.rows.forEach(function (r) {
-      var b = option(wrap, r.index, r.label.replace(/\\((\\d+)\\)$/, ' · $1 tools'), r.hint, picked.has(r.index), r.parent === null ? '' : 'sub');
+      var count = (r.label.match(/\\((\\d+)\\)$/) || [])[1];
+      var name = r.label.replace(/\\(\\d+\\)$/, '');
+      var b = r.title
+        ? option(wrap, r.index, r.title, '', picked.has(r.index), '', '', name + ' · ' + count + ' tools', r.note)
+        : option(wrap, r.index, name + ' · ' + count + ' tools', r.hint, picked.has(r.index), r.parent === null ? '' : 'sub', '', '', r.note);
       boxes[r.index] = { box: b, row: r, line: b.parentNode };
     });
     function sync() {
       state.rows.forEach(function (r) {
         if (r.parent !== null) boxes[r.index].line.classList.toggle('hidden', !boxes[r.parent].box.checked);
       });
-      var storekit = state.rows.some(function (r) {
-        var on = boxes[r.index].box.checked && (r.parent === null || boxes[r.parent].box.checked);
-        return on && r.storekit;
-      });
-      $('bundleBox').classList.toggle('hidden', !storekit || reuse);
+      function anyOn(flag) {
+        return state.rows.some(function (r) {
+          var on = boxes[r.index].box.checked && (r.parent === null || boxes[r.parent].box.checked);
+          return on && r[flag];
+        });
+      }
+      $('bundleBox').classList.toggle('hidden', !anyOn('storekit'));
+      $('vendorBox').classList.toggle('hidden', !anyOn('vendor'));
       $('apply').disabled = true; $('plan').innerHTML = '';
     }
     state.rows.forEach(function (r) {

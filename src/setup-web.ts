@@ -19,7 +19,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import type { AddressInfo } from 'node:net';
-import { readSharedConfig } from './core/shared-config.js';
+import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
 import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, serverName } from './clients.js';
 import { manualToolsFor, resolveSelection } from './profiles.js';
 import {
@@ -47,6 +47,37 @@ export interface WebSetupOptions {
 }
 
 const IDLE_MS = 30 * 60_000;
+
+/** What each profile is for, in the words someone setting it up would use. */
+const FRIENDLY: Record<string, string> = {
+  access: 'Team and testers — invite people, manage TestFlight testers and groups',
+  analytics: 'Sales and reports — downloads, sales, finance and performance reports',
+  'app-clips': 'App Clips — the lightweight version of your app',
+  'app-info': 'App details — name, category, age rating, availability',
+  'background-assets': 'Background assets — content packs downloaded after install',
+  distribution: 'Releases — versions, builds, sending to review, phased release',
+  'game-center': 'Game Center — achievements, leaderboards, challenges',
+  marketing: 'Store page and reviews — screenshots, product pages, events, customer reviews',
+  monetization: 'Prices and subscriptions — subscriptions, in-app purchases, offers, prices',
+  provisioning: 'Certificates and devices — signing certificates, profiles, test devices',
+  testflight: 'TestFlight — beta builds and what testers report',
+  webhooks: 'Webhooks — App Store Connect notifications sent to your server',
+  'xcode-cloud': 'Xcode Cloud — build workflows and their runs',
+};
+
+/**
+ * What a choice needs beyond the key itself. Roles are from docs/ROLES_en.md;
+ * keep the two in step.
+ */
+const NOTES: Record<string, string> = {
+  'access:users': 'Needs a key with the Admin role.',
+  provisioning: 'Needs a key with the Admin role.',
+  webhooks: 'Needs a key with the Admin role.',
+  analytics:
+    'Needs the Sales or Finance role and your vendor number (asked below). The very first request ' +
+    'for a new report type needs an Admin key, once.',
+  'monetization:storekit': "Customer purchase lookups need your app's bundle ID (asked below).",
+};
 const MAX_BODY = 64 * 1024;
 
 class HttpError extends Error {
@@ -118,9 +149,12 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         rows: rows.map((r) => ({
           index: r.index,
           label: r.item.label,
+          title: r.subProfile ? '' : (FRIENDLY[r.profile.name] ?? ''),
           hint: r.item.hint ?? '',
+          note: NOTES[specOf(r.index)] ?? '',
           parent: r.item.parent ?? null,
           storekit: storekitRows.has(r.index),
+          vendor: r.profile.name === 'analytics',
         })),
         preselected: preselect(rows, registeredAcross(present).union),
       };
@@ -162,21 +196,21 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
             (p.toRemove.length ? `, remove ${p.toRemove.join(', ')}` : ''));
         }
       } else {
+        const text = (k: string) => String(body[k] ?? '').trim() || undefined;
+        const extras = {
+          vendorNumber: text('vendorNumber'),
+          bundleId: text('bundleId'),
+          environment: text('bundleId') ? (body.environment === 'Sandbox' ? ('Sandbox' as const) : ('Production' as const)) : undefined,
+        };
         if (!reuse && verified) {
-          const text = (k: string) => String(body[k] ?? '').trim() || undefined;
-          saveCredentials(
-            {
-              keyId: verified.keyId,
-              issuerId: verified.issuerId,
-              vendorNumber: text('vendorNumber'),
-              bundleId: text('bundleId'),
-              environment: text('bundleId') ? (body.environment === 'Sandbox' ? 'Sandbox' : 'Production') : undefined,
-            },
-            verified.pem,
-            undefined,
-            log
-          );
+          saveCredentials({ keyId: verified.keyId, issuerId: verified.issuerId, ...extras }, verified.pem, undefined, log);
           verified = undefined;
+        } else if (reuse && (extras.vendorNumber || extras.bundleId)) {
+          // Keeping the saved key does not mean keeping it incomplete: what was
+          // filled in now is added to it, and nothing else is touched.
+          const saved = readSharedConfig()!;
+          const defined = Object.fromEntries(Object.entries(extras).filter(([, v]) => v !== undefined));
+          log(`✓ Shared config updated at ${writeSharedConfig({ ...saved, ...defined })}.`);
         }
         if (steps.length) applyPlan(steps, log);
         else log('No changes — every chosen client already matches your selection.');
