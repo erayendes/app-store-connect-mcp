@@ -65,6 +65,11 @@ h2 .n.done { color: var(--green); }
 .part .name { font-family: var(--font-mono); font-size: var(--fs-label); }
 .part .count { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); }
 .part .h { color: var(--fg-muted); }
+.part { margin: 0 calc(-1 * var(--sp-2)); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-sm); transition: background var(--speed) var(--ease); }
+.part:hover { background: var(--bg-hover); }
+.saved { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-3); }
+.saved .msg { margin: var(--sp-1) 0 var(--sp-2); }
+.role-tag { font-size: var(--fs-ui); color: var(--fg-muted); margin-left: var(--sp-2); }
 
 .need { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); }
 .need .role { font-size: var(--fs-doc); }
@@ -122,18 +127,21 @@ a { color: var(--fg); }
 
   <section id="s2">
     <h2><span class="n" id="n2">2/4</span>Your App Store Connect key</h2>
-    <div class="need" id="need"></div>
-
-    <div id="reuseBox" class="hidden">
-      <p class="lead" style="margin:0">You already have a saved key: <span class="mono" id="savedKey"></span>.</p>
-      <div class="row" id="reuseButtons">
+    <div id="reuseBox" class="saved hidden">
+      <div>You already have a saved key: <span class="mono" id="savedKey"></span><span id="savedRole" class="role-tag"></span></div>
+      <p id="reuseMsg" class="msg"></p>
+      <div class="row" id="reuseButtons" style="margin-top:0">
         <button class="btn btn-secondary" id="reuseYes">Use it</button>
         <button class="btn btn-link-primary" id="reuseNo">Use a new key instead</button>
       </div>
-      <p id="reuseMsg" class="msg"></p>
     </div>
 
+    <div class="need" id="need"></div>
+
     <div id="keyBox" class="hidden">
+      <div class="row hidden" id="backRow" style="margin:0 0 var(--sp-3)">
+        <button class="btn btn-link-primary" id="backToSaved">← Use the saved key instead</button>
+      </div>
       <details class="how" id="how"><summary>How do I create a key?</summary>
         <ol>
           <li>Open <a id="keysLink" target="_blank" rel="noreferrer">App Store Connect → Users and Access → Integrations</a>
@@ -151,10 +159,11 @@ a { color: var(--fg); }
       <label class="field">Key file (.p8) <span class="hint">— it stays on this computer</span></label>
       <div class="drop" id="drop" tabindex="0">Drop the .p8 file here, or click to choose it</div>
       <input type="file" id="file" accept=".p8" class="hidden">
-      <details class="small"><summary>Or paste its contents</summary>
+      <details class="small"><summary>Or paste its contents — only if you can't use the file</summary>
         <textarea class="input" id="pem" placeholder="-----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
       </details>
       <div class="row"><button class="btn btn-secondary" id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
+      <p id="fitMsg" class="msg"></p>
     </div>
 
     <div id="vendorBox" class="hidden">
@@ -352,27 +361,46 @@ a { color: var(--fg); }
     Array.prototype.forEach.call(document.querySelectorAll('.roleName'), function (n) { n.textContent = role || 'right'; });
     $('vendorBox').classList.toggle('hidden', !picked.some(function (r) { return r.vendor; }));
     $('bundleBox').classList.toggle('hidden', !picked.some(function (r) { return r.storekit; }));
-    if (keyReady) checkAdmin();
+    showFit();
     invalidatePlan();
   }
 
-  /** Only Admin can list team members: ask Apple once the key is known, when Admin is what the picks need. */
-  var adminAnswer = null;
-  function checkAdmin() {
-    var id = reuse ? 'reuseMsg' : 'vmsg';
-    if (role !== 'Admin') { if (reuse) setMsg(id, ''); return; }
-    var show = function () {
-      if (adminAnswer === true) setMsg(id, '✓ This key has the Admin role.', 'ok');
-      else if (adminAnswer === false) setMsg(id, "This key isn't Admin, so the parts marked “Admin key” won't work. Create an Admin key, or untick them.", 'warn');
-    };
-    if (adminAnswer !== null) return show();
-    call('admin', { reuse: reuse }).then(function (r) { adminAnswer = r.admin; show(); });
+  /**
+   * Whether a key is Admin is the one thing about its role Apple will tell us
+   * (only Admin can list team members); the finer role it will not. So the
+   * page compares that one fact with what the picks need.
+   */
+  var savedAdmin = null, newAdmin = null;
+  function fit(admin) {
+    if (!role || admin === null) return ['', ''];
+    if (admin === true) {
+      return role === 'Admin'
+        ? ['✓ It is an Admin key, which is what you need.', 'ok']
+        : ['It is an Admin key, so it can do more than you picked. It will work; a key with the ' + role + ' role would be safer.', 'warn'];
+    }
+    return role === 'Admin'
+      ? ["It isn't an Admin key, so the parts marked “Admin key” won't work. Create an Admin key, or untick them.", 'warn']
+      : ["It isn't an Admin key. It will work if its role is " + role + ' or one that covers it.', ''];
+  }
+  function showFit() {
+    var a = fit(savedAdmin); setMsg('reuseMsg', a[0], a[1]);
+    if (keyReady && !reuse) { var b = fit(newAdmin); setMsg('fitMsg', b[0], b[1]); }
+  }
+  function checkAdmin(saved) {
+    call('admin', { reuse: saved }).then(function (r) {
+      if (saved) {
+        savedAdmin = r.admin;
+        $('savedRole').textContent = r.admin === true ? '· Admin role' : r.admin === false ? '· not Admin' : state.dryRun ? '· role not checked in a dry run' : '';
+      } else newAdmin = r.admin;
+      showFit();
+    });
   }
 
   function keyDone() {
     keyReady = true; mark(2);
     $('s3').classList.remove('locked'); $('s4').classList.remove('locked');
-    checkAdmin();
+    if (!reuse) checkAdmin(false);
+    showFit();
   }
 
   /* ---- step 3: apps, step 4: review ------------------------------------- */
@@ -408,7 +436,10 @@ a { color: var(--fg); }
     state = s;
     if (s.dryRun) $('dry').classList.remove('hidden');
     $('keysLink').href = s.keysUrl;
-    if (s.existing) { $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden'); }
+    if (s.existing) {
+      $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden');
+      checkAdmin(true);
+    }
     else { $('keyBox').classList.remove('hidden'); $('how').open = true; }
     $('clients').innerHTML = '';
     s.clients.forEach(function (c) { option($('clients'), c.id, c.label, c.present ? '' : c.hint, c.present, c.present); });
@@ -416,8 +447,13 @@ a { color: var(--fg); }
     renderRows();
   }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. Run setup again. (' + e.message + ')'; });
 
-  $('reuseYes').onclick = function () { reuse = true; $('reuseButtons').remove(); keyDone(); };
-  $('reuseNo').onclick = function () { $('reuseBox').classList.add('hidden'); $('keyBox').classList.remove('hidden'); };
+  $('reuseYes').onclick = function () { reuse = true; $('reuseButtons').classList.add('hidden'); keyDone(); };
+  $('reuseNo').onclick = function () {
+    $('reuseBox').classList.add('hidden'); $('keyBox').classList.remove('hidden'); $('backRow').classList.remove('hidden');
+  };
+  $('backToSaved').onclick = function () {
+    $('keyBox').classList.add('hidden'); $('reuseBox').classList.remove('hidden');
+  };
 
   var drop = $('drop');
   drop.onclick = function () { $('file').click(); };
