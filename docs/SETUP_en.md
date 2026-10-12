@@ -59,6 +59,18 @@ No two AI apps share a settings file. Setup registers your profiles with every a
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` | edited directly |
 | VS Code | your user MCP settings | `code --add-mcp` |
 
+### Prefer a browser? `setup --web`
+
+```bash
+npx -y @erayendes/asc-mcp setup --web
+```
+
+The same wizard as a page in your browser. You pick what you need first, and the page tells you which key role that needs and whether your saved key fits. Then you add the key (drop the `.p8` file onto the page), tick your AI apps and see what will change in each before you press Apply.
+
+- The page runs on your own computer (`127.0.0.1`) behind a one-time link, and closes itself after Apply or 30 idle minutes.
+- The key is saved the same way as in the terminal wizard: in the macOS Keychain; elsewhere by the path of your `.p8`, or, if you pasted it, as a file only you can read next to the shared settings.
+- `--dry-run` shows the whole flow without saving anything or contacting Apple. `--no-open` prints the link instead of opening the browser, and `--port=N` picks the port.
+
 ## Adding and removing profiles
 
 You don't have to install everything up front. Start with the few profiles you need and add more as your project grows.
