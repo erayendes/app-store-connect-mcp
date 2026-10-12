@@ -183,7 +183,7 @@ a { color: var(--fg); }
 
   <section id="s3" class="locked">
     <h2><span class="n" id="n3">3/4</span>Which AI apps should get Heimdall?</h2>
-    <p class="lead">Tick the apps you talk to. We found the ticked ones on this computer.</p>
+    <p class="lead">Tick the apps you talk to. These are the ones we found on this computer.</p>
     <div id="clients"><p class="lead">Looking for AI apps on this computer…</p></div>
   </section>
 
@@ -429,7 +429,18 @@ a { color: var(--fg); }
     }
     else { $('keyBox').classList.remove('hidden'); $('how').classList.remove('hidden'); }
     $('clients').innerHTML = '';
-    s.clients.forEach(function (c) { option($('clients'), c.id, c.label, c.present ? '' : c.hint, c.present, c.present); });
+    // Apps not found stay folded away: they are rarely the answer, and a list
+    // of unticked rows reads as more to decide.
+    var missing = s.clients.filter(function (c) { return !c.present; });
+    s.clients.forEach(function (c) { if (c.present) option($('clients'), c.id, c.label, '', true, true); });
+    if (missing.length) {
+      var more = el('div', 'hidden'); more.id = 'moreClients';
+      missing.forEach(function (c) { option(more, c.id, c.label, c.hint, false, false); });
+      var toggle = el('button', 'help-link', 'Not found on this computer (' + missing.length + ')');
+      toggle.type = 'button'; toggle.style.marginTop = 'var(--sp-2)';
+      toggle.onclick = function () { more.classList.toggle('hidden'); };
+      $('clients').appendChild(toggle); $('clients').appendChild(more);
+    }
     $('clients').addEventListener('change', invalidatePlan);
     renderRows();
   }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. Run setup again. (' + e.message + ')'; });
