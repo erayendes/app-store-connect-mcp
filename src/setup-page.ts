@@ -181,7 +181,7 @@ a { color: var(--fg); }
     </div>
   </section>
 
-  <section id="s3" class="locked">
+  <section id="s3">
     <h2><span class="n" id="n3">3/4</span>Which AI apps should get Heimdall?</h2>
     <p class="lead">Tick the apps you talk to. These are the ones we found on this computer.</p>
     <div id="clients"><p class="lead">Looking for AI apps on this computer…</p></div>
@@ -189,8 +189,7 @@ a { color: var(--fg); }
 
   <section id="s4" class="locked">
     <h2><span class="n" id="n4">4/4</span>Check and finish</h2>
-    <p class="lead" style="margin:0">See exactly what will change in each app before anything is written.</p>
-    <div class="row"><button class="btn btn-secondary" id="review">Show the changes</button></div>
+    <p class="lead" style="margin:0">What will change in each app. Nothing is written until you press Apply.</p>
     <ul id="plan" class="plan"></ul>
     <div class="row">
       <button class="btn btn-primary" id="apply" disabled>Apply</button>
@@ -220,7 +219,33 @@ a { color: var(--fg); }
   function check() { var b = el('input', 'kx-req-check'); b.type = 'checkbox'; return b; }
   function mark(n) { $('n' + n).classList.add('done'); $('n' + n).textContent = '✓'; }
   function setMsg(id, text, kind) { var m = $(id); m.textContent = text; m.className = 'msg ' + (kind || ''); }
-  function invalidatePlan() { $('apply').disabled = true; $('plan').innerHTML = ''; }
+  /**
+   * The plan follows the picks: any change in steps 1–3 re-reads it, after a
+   * short pause so a run of clicks costs one request, and a slow answer to an
+   * older selection never overwrites a newer one.
+   */
+  var planTimer = 0, planSeq = 0;
+  function invalidatePlan() {
+    $('apply').disabled = true;
+    clearTimeout(planTimer);
+    if (keyReady) planTimer = setTimeout(refreshPlan, 250);
+  }
+  function refreshPlan() {
+    var sel = selection(), seq = ++planSeq, list = $('plan');
+    if (!sel.clients.length) { list.innerHTML = ''; list.appendChild(el('li', '', 'Tick at least one app in step 3.')); return; }
+    call('plan', sel).then(function (r) {
+      if (seq !== planSeq) return;
+      list.innerHTML = '';
+      if (!r.plan.length) list.appendChild(el('li', '', 'No changes — your apps already match this selection.'));
+      r.plan.forEach(function (p) {
+        var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
+        if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
+        if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ')));
+        list.appendChild(li);
+      });
+      $('apply').disabled = false;
+    }).catch(function (e) { if (seq === planSeq) list.textContent = e.message; });
+  }
 
   /* ---- step 1: needs ---------------------------------------------------- */
 
@@ -385,9 +410,10 @@ a { color: var(--fg); }
 
   function keyDone() {
     keyReady = true; mark(2);
-    $('s3').classList.remove('locked'); $('s4').classList.remove('locked');
+    $('s4').classList.remove('locked');
     if (!reuse) checkAdmin(false);
     showFit();
+    invalidatePlan();
   }
 
   /* ---- step 3: apps, step 4: review ------------------------------------- */
@@ -491,23 +517,9 @@ a { color: var(--fg); }
       .catch(function (e) { setMsg('vmsg', e.message, 'bad'); btn.disabled = false; });
   };
 
-  $('review').onclick = function () {
-    $('plan').innerHTML = '<li>Reading your apps\\u2019 current setup…</li>';
-    call('plan', selection()).then(function (r) {
-      var list = $('plan'); list.innerHTML = '';
-      if (!r.plan.length) list.appendChild(el('li', '', 'No changes — your apps already match this selection.'));
-      r.plan.forEach(function (p) {
-        var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
-        if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
-        if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ')));
-        list.appendChild(li);
-      });
-      $('apply').disabled = false;
-    }).catch(function (e) { $('plan').textContent = e.message; });
-  };
 
   $('apply').onclick = function () {
-    this.disabled = true; $('cancel').disabled = true; $('review').disabled = true;
+    this.disabled = true; $('cancel').disabled = true;
     var body = selection();
     body.reuse = reuse; body.vendorNumber = $('vendor').value;
     var out = $('out'); out.classList.remove('hidden'); out.textContent = 'Applying…';
