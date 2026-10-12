@@ -25,7 +25,7 @@ import { TokenProvider, type JwtCredentials } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
 import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, serverName } from './clients.js';
-import { manualToolsFor, resolveSelection } from './profiles.js';
+import { TOKENS_PER_TOOL, manualToolsFor, resolveSelection } from './profiles.js';
 import {
   KEYS_URL,
   applyPlan,
@@ -161,6 +161,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           index: r.index,
           name: r.subProfile?.name ?? r.profile.name,
           tools: Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0),
+          ktokens: Math.max(1, Math.round((Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0) * TOKENS_PER_TOOL) / 1000)),
           hint: r.item.hint ?? '',
           ...(r.subProfile ? {} : FRIENDLY[r.profile.name]),
           roles: ROLES[specOf(r.index)] ?? ROLES[r.profile.name] ?? APP_MANAGER,

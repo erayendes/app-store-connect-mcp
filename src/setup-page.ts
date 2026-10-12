@@ -38,25 +38,32 @@ h2 .n.done { color: var(--green); }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-2); }
 
 .list { border-top: 1px solid var(--border); }
+.item .eg { font-size: var(--fs-ui); color: var(--fg-secondary); margin-top: var(--sp-1); }
+.info-pill { font-size: var(--fs-micro); font-weight: 500; color: var(--blue); background: var(--blue-bg); border: 1px solid var(--blue-border);
+  border-radius: var(--r-pill); padding: 0 var(--sp-2); white-space: nowrap; }
+.pills { display: inline-flex; gap: var(--sp-1); margin-left: var(--sp-2); vertical-align: 1px; }
+.parts-head { font-size: var(--fs-ui); font-weight: 500; color: var(--fg-secondary); margin: 0 0 var(--sp-1); }
 .item { border-bottom: 1px solid var(--border); }
-.item-head { display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-2); cursor: pointer;
+.item:last-child { border-bottom: 0; }
+.item-head { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-2) var(--sp-2); cursor: pointer;
   border-radius: var(--r-sm); transition: background var(--speed) var(--ease); }
 .item-head:hover { background: var(--bg-hover); }
 .item-text { flex: 1; min-width: 0; }
 .item .title { font-weight: 500; }
 .item .does { font-size: var(--fs-ui); color: var(--fg-muted); }
-.item .meta { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-faint); white-space: nowrap; }
-.chev { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); width: var(--sp-4); text-align: center;
+.item .meta { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); white-space: nowrap; margin-top: 2px; }
+.item-head .kx-req-check { top: 3px; }
+.chev.blank { visibility: hidden; }
+.chev { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); width: var(--sp-4); text-align: center; flex: none;
   transition: transform var(--speed) var(--ease); }
 .item.open .chev { transform: rotate(90deg); }
 .item-body { padding: 0 var(--sp-2) var(--sp-3) calc(16px + var(--sp-3) + var(--sp-2)); display: grid; gap: var(--sp-2); }
-.item .eg { font-size: var(--fs-ui); color: var(--fg-secondary); }
 .need-pill { font-size: var(--fs-micro); font-weight: 500; color: var(--amber); background: var(--amber-bg); border: 1px solid var(--amber-border);
   border-radius: var(--r-pill); padding: 0 var(--sp-2); white-space: nowrap; }
 .parts { display: grid; gap: var(--sp-1); }
-.parts .eyebrow { margin: 0; }
 .part { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-ui); cursor: pointer; padding: var(--sp-1) 0; }
 .part .name { font-family: var(--font-mono); font-size: var(--fs-label); }
+.part .count { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); }
 .part .h { color: var(--fg-muted); }
 
 .need { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); }
@@ -104,7 +111,6 @@ a { color: var(--fg); }
   <header>
     <h1>Heimdall setup</h1>
     <span id="dry" class="dry hidden">Dry run — nothing will be saved</span>
-    <button class="btn btn-secondary" id="theme">Theme: auto</button>
   </header>
 
   <section id="s1">
@@ -188,20 +194,6 @@ a { color: var(--fg); }
 </main>
 <script>
 (function () {
-  /* Theme: auto, then light, then dark; no attribute follows the OS. */
-  var themeBtn = document.getElementById('theme');
-  function stored() { try { return localStorage.getItem('heimdall-theme') || ''; } catch (e) { return ''; } }
-  function applyTheme(v) {
-    if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme;
-    themeBtn.textContent = 'Theme: ' + (v || 'auto');
-  }
-  applyTheme(stored());
-  themeBtn.onclick = function () {
-    var cur = stored(), next = cur === '' ? 'light' : cur === 'light' ? 'dark' : '';
-    try { next ? localStorage.setItem('heimdall-theme', next) : localStorage.removeItem('heimdall-theme'); } catch (e) {}
-    applyTheme(next);
-  };
-
   var token = new URLSearchParams(location.search).get('t') || '';
   history.replaceState(null, '', '/');
   var $ = function (id) { return document.getElementById(id); };
@@ -238,6 +230,16 @@ a { color: var(--fg); }
     return out;
   }
 
+  function size(r) { return r.tools + ' tools · ~' + r.ktokens + 'k tokens'; }
+  /** What a choice asks for beyond the key: amber for the role, blue for a value to look up. */
+  function pills(r) {
+    var wrap = el('span', 'pills');
+    if (r.roles.length === 1) wrap.appendChild(el('span', 'need-pill', 'Admin key'));
+    if (r.vendor && r.parent === null) wrap.appendChild(el('span', 'info-pill', 'Vendor no.'));
+    if (r.storekit && r.parent !== null) wrap.appendChild(el('span', 'info-pill', 'Bundle ID'));
+    return wrap.childNodes.length ? wrap : null;
+  }
+
   function renderRows() {
     var wrap = $('rows'); wrap.innerHTML = '';
     var picked = new Set(state.preselected);
@@ -248,51 +250,61 @@ a { color: var(--fg); }
       var box = check(); box.checked = picked.has(r.index); box.value = r.index;
       boxes[r.index] = box;
       var text = el('div', 'item-text');
-      text.appendChild(el('div', 'title', r.title || r.name));
+      var title = el('div', 'title', r.title || r.name);
+      var p = pills(r); if (p) title.appendChild(p);
+      text.appendChild(title);
       text.appendChild(el('div', 'does', r.does || r.hint));
+      if (r.example) text.appendChild(el('div', 'eg', 'Try: “' + r.example + '”'));
       head.appendChild(box); head.appendChild(text);
-      if (r.roles.length === 1) head.appendChild(el('span', 'need-pill', 'Admin key'));
-      head.appendChild(el('span', 'meta', r.name + ' · ' + r.tools));
-      var chev = el('span', 'chev', '›');
+      head.appendChild(el('span', 'meta', size(r)));
+      // Only a profile with parts opens; the others have nothing more to show.
+      var chev = el('span', 'chev' + (parts.length ? '' : ' blank'), '›');
       head.appendChild(chev);
       item.appendChild(head);
 
-      // The body opens on a click on the row: an example of what to ask, and the parts to trim.
-      var body = el('div', 'item-body hidden');
-      if (r.example) body.appendChild(el('div', 'eg', 'Try: “' + r.example + '”'));
+      var body = null;
+      function setOpen(open) {
+        if (!body) return;
+        item.classList.toggle('open', open);
+        body.classList.toggle('hidden', !open);
+      }
       if (parts.length) {
+        body = el('div', 'item-body hidden');
         var list = el('div', 'parts');
-        list.appendChild(el('p', 'eyebrow', 'Parts — untick what you don\u2019t need'));
+        list.appendChild(el('p', 'parts-head', 'Parts of ' + (r.title || r.name) + ' — untick what you don\u2019t need'));
         parts.forEach(function (c) {
           var line = el('label', 'part');
           var cb = check(); cb.value = c.index;
           cb.checked = picked.has(c.index);
           boxes[c.index] = cb;
           var txt = el('div');
-          var t = el('div'); t.appendChild(el('span', 'name', c.name)); t.appendChild(document.createTextNode(' · ' + c.tools + ' tools '));
-          if (c.roles.length === 1) t.appendChild(el('span', 'need-pill', 'Admin key'));
+          var t = el('div'); t.appendChild(el('span', 'name', c.name));
+          t.appendChild(document.createTextNode(' '));
+          t.appendChild(el('span', 'count', size(c)));
+          var cp = pills(c); if (cp) t.appendChild(cp);
           txt.appendChild(t); txt.appendChild(el('div', 'h', c.hint.replace(/^~[0-9]+k · /, '')));
           line.appendChild(cb); line.appendChild(txt); list.appendChild(line);
           cb.addEventListener('change', function () {
             // Ticking a part picks its profile; unticking the last one drops it.
             if (cb.checked) box.checked = true;
-            else if (!parts.some(function (p) { return boxes[p.index].checked; })) box.checked = false;
+            else if (!parts.some(function (q) { return boxes[q.index].checked; })) { box.checked = false; setOpen(false); }
             update();
           });
         });
         body.appendChild(list);
+        item.appendChild(body);
+        if (box.checked) setOpen(true);
       }
-      if (!body.childNodes.length) chev.classList.add('hidden');
-      item.appendChild(body);
 
       head.addEventListener('click', function (e) {
         if (e.target === box) return;
-        if (body.childNodes.length) { item.classList.toggle('open'); body.classList.toggle('hidden'); }
+        if (body) setOpen(!item.classList.contains('open'));
         else { box.checked = !box.checked; update(); }
       });
       box.addEventListener('change', function () {
-        if (box.checked) parts.forEach(function (c) { boxes[c.index].checked = true; });
-        else parts.forEach(function (c) { boxes[c.index].checked = false; });
+        parts.forEach(function (c) { boxes[c.index].checked = box.checked; });
+        // Picking a profile opens its parts at once; dropping it folds them away.
+        setOpen(box.checked);
         update();
       });
       wrap.appendChild(item);
