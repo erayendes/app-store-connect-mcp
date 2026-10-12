@@ -24,7 +24,7 @@ import { loadConfig } from './core/config.js';
 import { TokenProvider, type JwtCredentials } from './core/jwt.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
-import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, serverName } from './clients.js';
+import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName } from './clients.js';
 import { TOKENS_PER_TOOL, manualToolsFor, resolveSelection } from './profiles.js';
 import {
   KEYS_URL,
@@ -52,21 +52,21 @@ export interface WebSetupOptions {
 
 const IDLE_MS = 30 * 60_000;
 
-/** What each profile is for, in the words someone setting it up would use, and one thing to ask. */
-const FRIENDLY: Record<string, { title: string; does: string; example?: string }> = {
-  access: { title: 'Team and testers', does: 'Invite people to your team and manage TestFlight testers and groups.', example: 'Add ayse@example.com to the Beta group' },
-  analytics: { title: 'Sales and reports', does: 'Downloads, sales, proceeds and how the app performs.', example: 'How did downloads change last week?' },
-  'app-clips': { title: 'App Clips', does: 'The instant, lightweight version of your app.' },
-  'app-info': { title: 'App details', does: 'Name, category, age rating and the countries your app is sold in.', example: 'Make the app available in Germany' },
-  'background-assets': { title: 'Background assets', does: 'Content packs your app downloads after it is installed.' },
-  distribution: { title: 'Releases', does: 'New versions, builds, sending to review and phased release.', example: 'Submit version 3.2 for review' },
-  'game-center': { title: 'Game Center', does: 'Achievements, leaderboards and challenges.' },
-  marketing: { title: 'Store page and reviews', does: 'Screenshots, product pages, in-app events and customer reviews.', example: "Reply to yesterday's 1-star reviews" },
-  monetization: { title: 'Prices and subscriptions', does: 'Subscriptions, in-app purchases, offers and prices.', example: 'Change the yearly price in Turkey' },
-  provisioning: { title: 'Certificates and devices', does: 'Signing certificates, provisioning profiles and test devices.' },
-  testflight: { title: 'TestFlight', does: 'Beta build details and what testers report.', example: 'What are testers saying about build 412?' },
-  webhooks: { title: 'Webhooks', does: 'Let App Store Connect tell your own server when something happens.' },
-  'xcode-cloud': { title: 'Xcode Cloud', does: 'Build workflows and why a build failed.', example: 'Why did the last build fail?' },
+/** What each profile is for, in the words someone setting it up would use. */
+const DOES: Record<string, string> = {
+  access: 'Invite people to your team and manage TestFlight testers and groups.',
+  analytics: 'Downloads, sales, proceeds and how the app performs.',
+  'app-clips': 'The instant, lightweight version of your app.',
+  'app-info': 'Name, category, age rating and the countries your app is sold in.',
+  'background-assets': 'Content packs your app downloads after it is installed.',
+  distribution: 'New versions, builds, sending to review and phased release.',
+  'game-center': 'Achievements, leaderboards and challenges.',
+  marketing: 'Screenshots, product pages, in-app events and customer reviews.',
+  monetization: 'Subscriptions, in-app purchases, offers and prices.',
+  provisioning: 'Signing certificates, provisioning profiles and test devices.',
+  testflight: 'Beta build details and what testers report.',
+  webhooks: 'Let App Store Connect tell your own server when something happens.',
+  'xcode-cloud': 'Build workflows and why a build failed.',
 };
 
 /**
@@ -163,7 +163,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           tools: Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0),
           ktokens: Math.max(1, Math.round((Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0) * TOKENS_PER_TOOL) / 1000)),
           hint: r.item.hint ?? '',
-          ...(r.subProfile ? {} : FRIENDLY[r.profile.name]),
+          ...(r.subProfile ? {} : { title: profileLabel(r.profile.name), does: DOES[r.profile.name] }),
           roles: ROLES[specOf(r.index)] ?? ROLES[r.profile.name] ?? APP_MANAGER,
           parent: r.item.parent ?? null,
           storekit: storekitRows.has(r.index),

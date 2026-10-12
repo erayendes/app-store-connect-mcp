@@ -38,7 +38,6 @@ h2 .n.done { color: var(--green); }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-2); }
 
 .list { border-top: 1px solid var(--border); }
-.item .eg { font-size: var(--fs-ui); color: var(--fg-secondary); margin-top: var(--sp-1); }
 .info-pill { font-size: var(--fs-micro); font-weight: 500; color: var(--blue); background: var(--blue-bg); border: 1px solid var(--blue-border);
   border-radius: var(--r-pill); padding: 0 var(--sp-2); white-space: nowrap; }
 .pills { display: inline-flex; gap: var(--sp-1); margin-left: var(--sp-2); vertical-align: 1px; }
@@ -254,7 +253,6 @@ a { color: var(--fg); }
       var p = pills(r); if (p) title.appendChild(p);
       text.appendChild(title);
       text.appendChild(el('div', 'does', r.does || r.hint));
-      if (r.example) text.appendChild(el('div', 'eg', 'Try: “' + r.example + '”'));
       head.appendChild(box); head.appendChild(text);
       head.appendChild(el('span', 'meta', size(r)));
       // Only a profile with parts opens; the others have nothing more to show.
