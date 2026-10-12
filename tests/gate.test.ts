@@ -32,9 +32,10 @@ import { PRICING_TOOLS } from '../src/tools/pricing.js';
 import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
+import { RELEASE_TOOLS } from '../src/tools/release.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
-import { STRONG_CONFIRM_LEVELS, type RiskLevel } from '../src/core/risk.js';
+import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, TYPED_BY_NAME, type RiskLevel } from '../src/core/risk.js';
 import { loadConfig } from '../src/core/config.js';
 import { SERVER_INSTRUCTIONS } from '../src/server.js';
 
@@ -111,6 +112,17 @@ describe('write-gate annotations (offline)', () => {
       .filter((t) => shouldWrite.has(t.name) === (t.annotations?.readOnlyHint === true))
       .map((t) => t.name);
     expect(wrong, 'hand-written tools whose readOnlyHint contradicts what they do').toEqual([]);
+  });
+
+  it('names only real tools in the default-mode release list', () => {
+    // A typo here does not fail loudly: the step would just stop asking.
+    const real = new Set([
+      ...OPERATIONS.map((op) => op.name.replace(/\./g, '__')),
+      ...RELEASE_TOOLS.map((t) => t.name),
+      ...TESTFLIGHT_TOOLS.map((t) => t.name),
+    ]);
+    expect([...ASK_BY_DEFAULT].filter((n) => !real.has(n))).toEqual([]);
+    expect([...TYPED_BY_NAME].filter((n) => !ASK_BY_DEFAULT.has(n))).toEqual([]);
   });
 
   it('puts every irreversible operation behind a typed confirmation', () => {

@@ -10,7 +10,8 @@
  * high-stakes levels (revenue/destructive/infrastructure/access) require the
  * user to TYPE the confirmation instead of ticking a box.
  *
- * On by default for those four levels only, and that split was paid for twice.
+ * On by default for those four levels, plus the handful of release steps that
+ * reach users (risk.ts, ASK_BY_DEFAULT), and that split was paid for twice.
  * Asking on every write fired constantly, and a client that declares
  * elicitation support but can't render the form answers `decline` — the one
  * thing the protocol gives us no way to tell apart from a real refusal — so
@@ -32,7 +33,7 @@ import {
   type InputRequiredResult,
   type ServerContext,
 } from '@modelcontextprotocol/server';
-import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, type RiskLevel } from './risk.js';
+import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, TYPED_BY_NAME, type RiskLevel } from './risk.js';
 import { OPERATIONS } from '../generated/operations.js';
 
 export interface ConfirmDecision {
@@ -372,7 +373,7 @@ export async function buildWritePreview(
   http?: RefReader
 ): Promise<WritePreview> {
   const risk = (op.risk ?? 'low') as RiskLevel;
-  const strong = STRONG_CONFIRM_LEVELS.has(risk);
+  const strong = STRONG_CONFIRM_LEVELS.has(risk) || TYPED_BY_NAME.has(toolName);
 
   const lines: string[] = [
     `Heimdall is about to run "${toolName}" — a ${risk.toUpperCase()}-level write.`,

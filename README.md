@@ -52,7 +52,7 @@ Most MCP guides recommend remote HTTP servers.
 
 ### Asks before risky changes
 
-Before changing a price, giving someone Admin access or deleting something, Heimdall asks you to confirm and shows what will change. This is on by default for changes that are hard to undo: revenue, deletions, infrastructure and access. Everything else goes through your app's own approval.
+Before changing a price, giving someone Admin access or deleting something, Heimdall asks you to confirm and shows what will change. This is on by default for changes that are hard to undo: revenue, deletions, infrastructure and access, and for the release steps that reach users: sending a version to review, releasing it, changing a phased rollout, and opening a build to external testers. Everything else goes through your app's own approval.
 
 More in [Security](.github/SECURITY.md).
 

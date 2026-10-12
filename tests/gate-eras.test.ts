@@ -59,10 +59,19 @@ function stubApple() {
 async function connect(
   era: 'legacy' | 'modern',
   answer: Answer,
-  options: { autoFulfill?: boolean; noElicitation?: boolean; confirmWrites?: ServerConfig['confirmWrites'] } = {}
+  options: {
+    autoFulfill?: boolean;
+    noElicitation?: boolean;
+    confirmWrites?: ServerConfig['confirmWrites'];
+    profile?: string;
+  } = {}
 ) {
   const [ct, st] = InMemoryTransport.createLinkedPair();
-  const build = () => createServer({ ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites }, resolveSelection('access'));
+  const build = () =>
+    createServer(
+      { ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites },
+      resolveSelection(options.profile ?? 'access')
+    );
   if (era === 'modern') {
     serveStdio(build, { transport: st });
   } else {
@@ -238,5 +247,74 @@ describe('a hand-built retry on a 2026-07-28 connection', () => {
 
     await expect(retry(client, CALL.arguments, `${requestState.slice(0, -4)}AAAA`)).rejects.toThrow(/requestState/);
     expect(apple.deletes()).toEqual([]);
+  });
+});
+
+/**
+ * The default mode asks on the strong levels plus the release steps that
+ * reach users (risk.ts, ASK_BY_DEFAULT). Preparation steps stay unasked.
+ */
+describe.each(['legacy', 'modern'] as const)('release steps in the default mode, %s connection', (era) => {
+  const sent: string[] = [];
+  const stubOk = () => {
+    sent.length = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL, init?: RequestInit) => {
+        sent.push(`${init?.method ?? 'GET'} ${new URL(String(url)).pathname}`);
+        return new Response(JSON.stringify({ data: { type: 'x', id: 'v-1', attributes: {} } }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      })
+    );
+  };
+
+  it('asks with a checkbox before sending a version to review', async () => {
+    stubOk();
+    const { client, prompts } = await connect(era, { action: 'cancel' }, { profile: 'distribution' });
+
+    await client.callTool({
+      name: 'review_submissions__update',
+      arguments: { id: 'sub-1', body: { data: { type: 'reviewSubmissions', id: 'sub-1', attributes: { submitted: true } } } },
+    });
+
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).not.toMatch(/Type CONFIRM/);
+    expect(sent.filter((r) => r.startsWith('PATCH'))).toEqual([]);
+  });
+
+  it('asks for a typed CONFIRM before putting a version on the store', async () => {
+    stubOk();
+    const { client, prompts } = await connect(era, { action: 'cancel' }, { profile: 'distribution' });
+
+    await client.callTool({
+      name: 'app_store_version_release_requests__create',
+      arguments: {
+        body: {
+          data: {
+            type: 'appStoreVersionReleaseRequests',
+            relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: 'v-1' } } },
+          },
+        },
+      },
+    });
+
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).toMatch(/Type CONFIRM/);
+    expect(sent.filter((r) => r.startsWith('POST'))).toEqual([]);
+  });
+
+  it('does not ask before editing a draft version', async () => {
+    stubOk();
+    const { client, prompts } = await connect(era, CONFIRM, { profile: 'distribution' });
+
+    await client.callTool({
+      name: 'app_store_versions__update',
+      arguments: { id: 'v-1', body: { data: { type: 'appStoreVersions', id: 'v-1', attributes: { copyright: '2026' } } } },
+    });
+
+    expect(prompts).toEqual([]);
+    expect(sent).toContain('PATCH /v1/appStoreVersions/v-1');
   });
 });

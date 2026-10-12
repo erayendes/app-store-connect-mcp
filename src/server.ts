@@ -45,7 +45,7 @@ import { CI_TOOLS, CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import { serverName } from './clients.js';
-import { STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
+import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
   manualToolsFor,
@@ -600,8 +600,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               // The raw tool behind it is `public` per operation; doing forty
               // at once is not forty times as reversible.
               'public'
-            : ((op?.risk ?? (name.includes('extend_renewal_date') ? 'revenue' : 'low')) as RiskLevel);
-        if (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk)) {
+            : ((op?.risk ??
+                (name.includes('extend_renewal_date')
+                  ? 'revenue'
+                  : // A write macro with no spec operation behind it (the
+                    // screenshot upload) changes what customers see.
+                    macroOffered(name)
+                    ? 'public'
+                    : 'low')) as RiskLevel);
+        if (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name)) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.
         const decision = gate.settle(ctx, request.params.name, request.params.arguments);
@@ -641,7 +648,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               // preview renders them without any lookups.
               await buildWritePreview(
                 name,
-                { method: 'POST', path: `${name} (macro)`, risk: 'public' },
+                { method: 'POST', path: `${name} (macro)`, risk },
                 args,
                 config.credentials.keyId
               )
