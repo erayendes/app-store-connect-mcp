@@ -58,9 +58,9 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 
 | Değişken | Ne için |
 |:--|:--|
-| `ASC_BUNDLE_ID` | StoreKit araçlarını açar. Yalnızca tek bir uygulama için. |
-| `ASC_APP_APPLE_ID` | Uygulamanızın sayısal Apple ID'si |
-| `ASC_ENVIRONMENT` | `Sandbox` (varsayılan) ya da `Production` |
+| `ASC_BUNDLE_ID` | İstek uygulama belirtmediğinde StoreKit araçlarının kullanacağı uygulama. İsteğe bağlı: araçlar uygulamayı adından bulur. |
+| `ASC_APP_APPLE_ID` | Bu varsayılan uygulamanın sayısal Apple ID'si |
+| `ASC_ENVIRONMENT` | `Production` (varsayılan) ya da `Sandbox` |
 | `ASC_APPLE_ROOT_CERTS` | Apple'ın kök sertifikalarının yolları (ya da tek bir klasör). Girilirse StoreKit cevapları doğrulanmış ve çözülmüş gelir; girilmezse Apple'ın imzalı içeriğini alırsınız. |
 
 **Cevaplar.**

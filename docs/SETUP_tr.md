@@ -7,7 +7,6 @@ Heimdall, Node.js **20.19+**'in çalıştığı her yerde çalışır — macOS,
 ## API anahtarı oluşturun
 App Store Connect [Users and Access → Integrations → Keys](https://appstoreconnect.apple.com/access/integrations/api) sayfasına gidin ve bir anahtar oluşturup, `.p8` dosyasını indirin. Aynı sayfadan `Key ID` ve `Issuer ID` değerlerini not alın.
 Hesapta ilk kez API anahtarı oluşturuluyorsa API erişimini önce Account Holder'ın açması gerekir. Takım anahtarını (Team Keys) yalnızca Account Holder ya da Admin oluşturabilir.
-Müşteri satın alımlarını da (StoreKit 2) soracaksanız uygulamanızın `Bundle ID`'sini de hazır tutun. Sihirbaz bunu yalnızca seçiminizde müşteri işlemleri araçları varsa sorar: `monetization` profilinin tamamı ya da `monetization:storekit`. Bundle ID tek bir uygulamaya bağlanır.
 
 > [!WARNING]
 > `.p8` dosyasını yalnızca bir kez indirebilirsiniz. `setup`'ı çalıştırana kadar güvenli bir yerde saklayın.
@@ -35,7 +34,6 @@ Setup sihirbazı App Store Connect hesabına erişmek için bazı bilgiler ve an
 - Satış/finans raporlarına ulaşmak için opsiyonel olarak `Vendor number` sorulur.
 - Cihazınızda kurulu olan yapay zekâ uygulamalarını tespit eder ve profilleri hangilerine kurmak istediğinizi sorar. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır.
 - [Profil](PROFILES_tr.md) seçicinin her satırı, araç sayısını ve kabaca token maliyetini gösterir.
-- Seçiminizde müşteri işlemleri araçları varsa **Bundle ID**'yi ve StoreKit ortamını (`Sandbox` / `Production`) sorar. Yoksa hiç sorulmaz.
 
 Anahtar bilgileri Apple'a doğrulandıktan sonra kaydedilir. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
@@ -108,7 +106,6 @@ Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect
 | **Sürüm güncellemesinde `409 Conflict`** | App Store Connect düzenlemelere yalnızca belirli sürüm durumlarında izin verir. | İncelemede olan veya yayınlanmış bir sürüm kilitlidir. |
 | **İhtiyacım olan araç listede yok** | Başka bir profilde. | Yapay zekâya sorun: *"X için bir araç var mı?"* |
 | **`429 Too Many Requests`** | Apple her anahtar için saatlik bir istek sınırı uygular (şu an 3.600); bu sınır dolmuş. | Heimdall kısa bir süre bekleyip kendisi tekrar dener. Sık görüyorsanız aynı anahtarı başka bir araç da kullanıyordur (ör. CI'daki Fastlane); ona ayrı bir anahtar oluşturun. |
-| **StoreKit araçları eksik** | App Store Server API bir Bundle ID ister. | `setup`'ı yeniden çalıştırın, kayıtlı bilgileri yeniden kullanma sorusuna **n** deyin ve `monetization`'ı seçince Bundle ID'yi girin. |
 | **Yeni uygulama oluşturulamıyor** | Apple'ın API'si yeni uygulama oluşturmaya izin vermez. | Uygulamayı bir kez App Store Connect web sayfasından oluşturun; sonrasını Heimdall'la yönetebilirsiniz. |
 
 ## Kaldırma

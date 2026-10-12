@@ -58,9 +58,9 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 
 | Variable | What it's for |
 |:--|:--|
-| `ASC_BUNDLE_ID` | Turns on the StoreKit tools. One app only. |
-| `ASC_APP_APPLE_ID` | Your app's numeric Apple ID |
-| `ASC_ENVIRONMENT` | `Sandbox` (default) or `Production` |
+| `ASC_BUNDLE_ID` | The app StoreKit tools use when a request names none. Optional: they look the app up by name. |
+| `ASC_APP_APPLE_ID` | The numeric Apple ID of that default app |
+| `ASC_ENVIRONMENT` | `Production` (default) or `Sandbox` |
 | `ASC_APPLE_ROOT_CERTS` | Paths to Apple's root certificates (or one folder). Set it and StoreKit answers come back verified and decoded; without it you get Apple's signed payloads. |
 
 **Responses.**

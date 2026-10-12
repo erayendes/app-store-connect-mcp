@@ -7,6 +7,7 @@
  * verification is handled by first-party code.
  */
 import {
+  APIException,
   AppStoreServerAPIClient,
   Environment,
   ExtendReasonCode,
@@ -30,6 +31,8 @@ import { join } from 'node:path';
 import { AscApiError } from '../core/errors.js';
 import type { McpToolDefinition } from '../core/registry.js';
 import type { ServerConfig } from '../core/config.js';
+import type { AscHttpClient } from '../core/http.js';
+import { resolveApp } from '../core/resolve-app.js';
 
 /**
  * Reads one claim out of a JWS payload without verifying the signature.
@@ -362,6 +365,18 @@ for (const tool of STOREKIT_TOOLS) {
       'Which App Store environment to query. Defaults to the server-configured ' +
       'environment (ASC_ENVIRONMENT). A transaction ID belongs to one environment only.',
   };
+  (tool.inputSchema.properties as Record<string, unknown>).app = {
+    type: 'string',
+    description:
+      'Which app: its name, bundle ID or Apple ID. Optional when the account has one app ' +
+      'or ASC_BUNDLE_ID is set.',
+  };
+}
+
+/** The app an App Store Server API token is scoped to. */
+interface AppTarget {
+  bundleId: string;
+  appAppleId?: number;
 }
 
 export const STOREKIT_TOOL_NAMES = new Set(STOREKIT_TOOLS.map((t) => t.name));
@@ -370,31 +385,69 @@ export class StoreKitService {
   private readonly key: string;
   private readonly keyId: string;
   private readonly issuerId: string;
-  private readonly bundleId: string;
   private readonly defaultEnvironment: 'Production' | 'Sandbox';
-  private readonly appAppleId?: number;
+  /** ASC_BUNDLE_ID, if set: the app a call without `app` goes to. */
+  private readonly defaultApp?: AppTarget;
+  private readonly http?: AscHttpClient;
+  /** What each `app` argument resolved to, so a name costs one lookup per session. */
+  private readonly targets = new Map<string, Promise<AppTarget>>();
   /** Apple's DER roots, read once. Empty means verified decoding is off. */
   private readonly rootCertificates: Buffer[];
-  private readonly verifiers = new Map<'Production' | 'Sandbox', SignedDataVerifier>();
-  // One transaction lives in exactly one environment, so callers can override
-  // per request; clients are built lazily and cached per environment.
-  private readonly clients = new Map<'Production' | 'Sandbox', AppStoreServerAPIClient>();
+  // Apple scopes every App Store Server API token to one app (the `bid`
+  // claim) and one environment, so both are built lazily and cached per pair.
+  private readonly verifiers = new Map<string, SignedDataVerifier>();
+  private readonly clients = new Map<string, AppStoreServerAPIClient>();
 
-  constructor(config: ServerConfig) {
-    if (!config.storekit) {
-      throw new Error(
-        'App Store Server API tools require ASC_BUNDLE_ID to be set.'
-      );
-    }
+  constructor(config: ServerConfig, http?: AscHttpClient) {
+    const storekit = config.storekit ?? { environment: 'Production' as const };
 
     this.key = config.credentials.privateKey?.replace(/\\n/g, '\n')
       ?? readFileSync(config.credentials.privateKeyPath!, 'utf8');
     this.keyId = config.credentials.keyId;
     this.issuerId = config.credentials.issuerId;
-    this.bundleId = config.storekit.bundleId;
-    this.defaultEnvironment = config.storekit.environment === 'Production' ? 'Production' : 'Sandbox';
-    this.appAppleId = config.storekit.appAppleId;
-    this.rootCertificates = readRootCertificates(config.storekit.appleRootCerts);
+    this.defaultEnvironment = storekit.environment === 'Sandbox' ? 'Sandbox' : 'Production';
+    this.defaultApp = storekit.bundleId
+      ? { bundleId: storekit.bundleId, appAppleId: storekit.appAppleId }
+      : undefined;
+    this.http = http;
+    this.rootCertificates = readRootCertificates(storekit.appleRootCerts);
+  }
+
+  /**
+   * The app a call is about. The key already reads the account's app list, so
+   * the bundle ID Apple wants in the token is looked up rather than asked for:
+   * named by the caller, else ASC_BUNDLE_ID, else the account's only app.
+   */
+  private target(app: unknown): Promise<AppTarget> {
+    const wanted = typeof app === 'string' ? app.trim() : '';
+    if (!wanted && this.defaultApp) return Promise.resolve(this.defaultApp);
+    let hit = this.targets.get(wanted);
+    if (!hit) {
+      hit = this.lookUp(wanted);
+      hit.catch(() => this.targets.delete(wanted)); // a failed lookup is retried next call
+      this.targets.set(wanted, hit);
+    }
+    return hit;
+  }
+
+  private async lookUp(wanted: string): Promise<AppTarget> {
+    if (!this.http) throw new Error('StoreKit needs the App Store Connect client to find the app.');
+    if (wanted) {
+      const app = await resolveApp(this.http, wanted);
+      return { bundleId: app.bundleId, appAppleId: Number(app.id) };
+    }
+    const res: any = await this.http.get('/v1/apps', { 'fields[apps]': 'name,bundleId', limit: 20 });
+    const apps: any[] = res?.data ?? [];
+    if (apps.length === 1) {
+      return { bundleId: apps[0].attributes?.bundleId, appAppleId: Number(apps[0].id) };
+    }
+    if (!apps.length) throw new AscApiError('This account has no apps for StoreKit to look up.', 0);
+    throw new AscApiError(
+      'This account has several apps. Pass `app` (name, bundle ID or Apple ID) to say which: ' +
+        apps.map((a) => a.attributes?.name).join(' | ') +
+        (res?.links?.next ? ' | …' : '') + '.',
+      0
+    );
   }
 
   /** True when a caller configured Apple's roots, so payloads can be verified. */
@@ -402,11 +455,12 @@ export class StoreKitService {
     return this.rootCertificates.length > 0;
   }
 
-  private verifierFor(env: 'Production' | 'Sandbox'): SignedDataVerifier {
-    let verifier = this.verifiers.get(env);
+  private verifierFor(env: 'Production' | 'Sandbox', app: AppTarget): SignedDataVerifier {
+    const key = `${app.bundleId}|${env}`;
+    let verifier = this.verifiers.get(key);
     if (!verifier) {
       try {
-        verifier = this.buildVerifier(env);
+        verifier = this.buildVerifier(env, app);
       } catch (err) {
         // A file that is not a DER certificate fails here, inside OpenSSL, with
         // a message nobody can act on ("PEM routines::no start line"). Say what
@@ -418,12 +472,12 @@ export class StoreKitService {
           0
         );
       }
-      this.verifiers.set(env, verifier);
+      this.verifiers.set(key, verifier);
     }
     return verifier;
   }
 
-  private buildVerifier(env: 'Production' | 'Sandbox'): SignedDataVerifier {
+  private buildVerifier(env: 'Production' | 'Sandbox', app: AppTarget): SignedDataVerifier {
     return new SignedDataVerifier(
       this.rootCertificates,
       // Online checks fetch Apple's CRLs on every call. Off: the roots pin the
@@ -431,8 +485,8 @@ export class StoreKitService {
       // outage looks like a verification failure.
       false,
       env === 'Production' ? Environment.PRODUCTION : Environment.SANDBOX,
-      this.bundleId,
-      this.appAppleId
+      app.bundleId,
+      app.appAppleId
     );
   }
 
@@ -447,10 +501,11 @@ export class StoreKitService {
   private async decode(
     signed: string[],
     env: 'Production' | 'Sandbox',
-    raw: boolean
+    raw: boolean,
+    app: AppTarget = this.defaultApp ?? { bundleId: '' }
   ): Promise<unknown[]> {
     if (raw || !this.canVerify) return signed;
-    const verifier = this.verifierFor(env);
+    const verifier = this.verifierFor(env, app);
     const out: unknown[] = [];
     for (const jws of signed) {
       try {
@@ -486,31 +541,49 @@ export class StoreKitService {
   ): Promise<Record<string, unknown>> {
     const raw = Boolean(args.raw);
     if (raw || !this.canVerify) return { signedTransactions: signed, verified: false };
-    return { transactions: await this.decode(signed, this.envFor(args.environment), false), verified: true };
+    return { transactions: await this.decode(signed, this.envFor(args.environment), false, args._app), verified: true };
   }
 
-  /** Client for the requested environment, or the configured default. */
-  private clientFor(environment?: unknown): AppStoreServerAPIClient {
-    const env: 'Production' | 'Sandbox' =
-      environment === 'Production' || environment === 'Sandbox'
-        ? environment
-        : this.defaultEnvironment;
-    let client = this.clients.get(env);
+  /** Client for one app in the requested environment, or the configured default. */
+  private clientFor(environment: unknown, app: AppTarget): AppStoreServerAPIClient {
+    const env = this.envFor(environment);
+    const key = `${app.bundleId}|${env}`;
+    let client = this.clients.get(key);
     if (!client) {
       client = new AppStoreServerAPIClient(
         this.key,
         this.keyId,
         this.issuerId,
-        this.bundleId,
+        app.bundleId,
         env === 'Production' ? Environment.PRODUCTION : Environment.SANDBOX
       );
-      this.clients.set(env, client);
+      this.clients.set(key, client);
     }
     return client;
   }
 
   async execute(name: string, args: Record<string, any>): Promise<unknown> {
-    const client = this.clientFor(args.environment);
+    const app = await this.target(args.app);
+    try {
+      return await this.run(name, { ...args, _app: app }, this.clientFor(args.environment, app));
+    } catch (err) {
+      // The library's error carries Apple's status and code in fields and
+      // leaves `message` empty, which reached the caller as "failed:" and
+      // nothing else.
+      if (err instanceof APIException) {
+        throw new AscApiError(
+          `App Store Server API returned ${err.httpStatusCode}` +
+            (err.apiError != null ? ` (error ${err.apiError})` : '') +
+            (err.errorMessage ? `: ${err.errorMessage}` : '.') +
+            ` App: ${app.bundleId}.`,
+          err.httpStatusCode
+        );
+      }
+      throw err;
+    }
+  }
+
+  private async run(name: string, args: Record<string, any>, client: AppStoreServerAPIClient): Promise<unknown> {
     switch (name) {
       case 'storekit__get_transaction_history':
         return this.transactionHistory(client, args);
@@ -518,7 +591,7 @@ export class StoreKitService {
       case 'storekit__get_transaction_info': {
         const res = await client.getTransactionInfo(args.transaction_id);
         const signed = res.signedTransactionInfo ? [res.signedTransactionInfo] : [];
-        const [one] = await this.decode(signed, this.envFor(args.environment), Boolean(args.raw));
+        const [one] = await this.decode(signed, this.envFor(args.environment), Boolean(args.raw), args._app);
         return this.canVerify && !args.raw
           ? { transaction: one ?? null, verified: true }
           : { signedTransactionInfo: res.signedTransactionInfo, verified: false };

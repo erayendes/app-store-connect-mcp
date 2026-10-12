@@ -48,7 +48,7 @@ This applies to apps. For other records it isn't a general rule: some workflows 
 ## StoreKit 2 — customer transactions
 
 The App Store Server API answers questions about individual customers rather than your store listing: purchase history, entitlements, refunds, subscription status.
-It turns on once you enter a **Bundle ID** (setup asks for it) and comes with `monetization:storekit`.
+It comes with `monetization:storekit`. Name the app in your request (*"Ask Quran's refunds for this transaction"*); Heimdall looks up its bundle ID. With only one app on the account you don't even need to name it.
 
 ## Prompts
 

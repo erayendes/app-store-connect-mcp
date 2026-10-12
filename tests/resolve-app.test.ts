@@ -23,7 +23,7 @@ function catalogue(pages: number, match?: { page: number; name: string }) {
 describe('resolveApp by name', () => {
   it('finds a match past the first page', async () => {
     const { http, calls } = catalogue(3, { page: 3, name: 'Ask Quran' });
-    expect(await resolveApp(http, 'ask quran')).toEqual({ id: 'hit', name: 'Ask Quran' });
+    expect(await resolveApp(http, 'ask quran')).toMatchObject({ id: 'hit', name: 'Ask Quran' });
     expect(calls).toHaveLength(3);
   });
 

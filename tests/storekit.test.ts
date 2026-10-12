@@ -197,3 +197,58 @@ describe('transaction history paging', () => {
     expect(res.note).toBeUndefined();
   });
 });
+
+/**
+ * Apple scopes every App Store Server API token to one app, and the key can
+ * already read the account's app list, so the bundle ID is looked up rather
+ * than asked for in setup.
+ */
+describe('which app a StoreKit call goes to', () => {
+  const apps = (list: Array<{ id: string; name: string; bundleId: string }>) => {
+    const calls: string[] = [];
+    const http = {
+      get: async (path: string) => {
+        calls.push(path);
+        if (path.startsWith('/v1/apps/')) {
+          const hit = list.find((a) => path.endsWith(a.id));
+          return { data: hit && { id: hit.id, attributes: hit } };
+        }
+        return { data: list.map((a) => ({ id: a.id, attributes: a })) };
+      },
+    };
+    return { http: http as never, calls };
+  };
+  const noBundle = { ...config, storekit: { environment: 'Production' } } as ServerConfig;
+  const target = (svc: StoreKitService, app?: string) =>
+    (svc as never as { target(app: unknown): Promise<{ bundleId: string; appAppleId?: number }> }).target(app);
+
+  it("uses the account's only app when none is named", async () => {
+    const { http } = apps([{ id: '111', name: 'Ask Quran', bundleId: 'com.x.quran' }]);
+    expect(await target(new StoreKitService(noBundle, http))).toEqual({ bundleId: 'com.x.quran', appAppleId: 111 });
+  });
+
+  it('asks which app when the account has several, naming them', async () => {
+    const { http } = apps([
+      { id: '1', name: 'Ask Quran', bundleId: 'com.x.quran' },
+      { id: '2', name: 'Postmate', bundleId: 'com.x.post' },
+    ]);
+    await expect(target(new StoreKitService(noBundle, http))).rejects.toThrow(/Ask Quran \| Postmate/);
+  });
+
+  it('resolves a named app, once per session', async () => {
+    const { http, calls } = apps([
+      { id: '1', name: 'Ask Quran', bundleId: 'com.x.quran' },
+      { id: '2', name: 'Postmate', bundleId: 'com.x.post' },
+    ]);
+    const svc = new StoreKitService(noBundle, http);
+    expect(await target(svc, 'postmate')).toEqual({ bundleId: 'com.x.post', appAppleId: 2 });
+    await target(svc, 'postmate');
+    expect(calls).toHaveLength(1);
+  });
+
+  it('keeps ASC_BUNDLE_ID as the default without a lookup', async () => {
+    const { http, calls } = apps([]);
+    expect((await target(new StoreKitService(config, http))).bundleId).toBe('com.example.app');
+    expect(calls).toHaveLength(0);
+  });
+});

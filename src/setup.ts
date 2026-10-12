@@ -457,33 +457,11 @@ export async function runSetup(): Promise<void> {
     const rows = buildRows();
     const { perClient, union } = registeredAcross(clients);
     const chosen = await selectProfiles(ask, rows, preselect(rows, union));
-    const picked = chosen ?? []; // null = picker cancelled; keep saving creds regardless
-
-    // A bundle ID is per-app, not account-global, and only the StoreKit tools
-    // use it — so ask for it only when a selection actually carries them, not
-    // as a blanket setup question.
-    let bundleId: string | undefined;
-    let environment: 'Production' | 'Sandbox' | undefined;
-    if (picked.some((spec) => manualToolsFor(resolveSelection(spec)).some((t) => t.startsWith('storekit__')))) {
-      bundleId =
-        (await ask(
-          '\nApp bundle ID for the monetization profile (StoreKit 2 transaction tools; ' +
-            'binds to one app, Enter to skip): ',
-          false
-        )) || undefined;
-      if (bundleId) {
-        const env = (await ask('StoreKit environment [Production/Sandbox] (default Production): ', false)) ||
-          'Production';
-        environment = env.toLowerCase() === 'sandbox' ? 'Sandbox' : 'Production';
-      }
-    }
 
     const shared: SharedConfig = {
       keyId,
       issuerId,
       vendorNumber: vendorNumber || undefined,
-      bundleId,
-      environment,
     };
 
     if (process.platform === 'darwin') {

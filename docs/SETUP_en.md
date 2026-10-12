@@ -7,7 +7,6 @@ Heimdall runs anywhere Node.js **20.19+** runs: macOS, Linux and Windows. One fe
 ## Create an API key
 In App Store Connect, go to [Users and Access → Integrations → Keys](https://appstoreconnect.apple.com/access/integrations/api), create a key and download the `.p8` file. Note down the `Key ID` and `Issuer ID` shown on the same page.
 If this is the first API key on the account, the Account Holder has to enable API access first. Team keys can only be created by the Account Holder or an Admin.
-If you also want to look up customer purchases (StoreKit 2), have your app's `Bundle ID` ready. The wizard only asks for it when your selection includes the customer-transaction tools: the whole `monetization` profile, or `monetization:storekit`. The Bundle ID is tied to a single app.
 
 > [!WARNING]
 > You can download the `.p8` file only once. Keep it somewhere safe until you've run `setup`.
@@ -35,7 +34,6 @@ The wizard asks for what it needs to reach your App Store Connect account.
 - It optionally asks for your `Vendor number`, which sales and finance reports need.
 - It finds the AI apps installed on your machine and asks which ones to add the profiles to. Settings files it edits directly are backed up first.
 - Each row in the [profile](PROFILES_en.md) picker shows how many tools the profile has and roughly how many tokens it costs.
-- If your selection includes the customer-transaction tools, it asks for the **Bundle ID** and the StoreKit environment (`Sandbox` / `Production`). Otherwise it doesn't ask.
 
 Your credentials are saved once Apple has accepted them. Before the profiles are written to your apps, the wizard shows the plan and asks you to confirm once.
 
@@ -108,7 +106,6 @@ Read-only mode, trying changes without making them, a second App Store Connect a
 | **`409 Conflict` when updating a version** | App Store Connect only allows edits in certain version states. | A version that's in review or already released is locked. |
 | **A tool I need isn't there** | It's in another profile. | Ask the AI: *"Is there a tool for X?"* |
 | **`429 Too Many Requests`** | Apple applies an hourly request limit per key (currently 3,600), and it has been reached. | Heimdall waits a moment and retries on its own. If you see this often, another tool is using the same key (Fastlane in CI, for example); give it a key of its own. |
-| **StoreKit tools are missing** | The App Store Server API needs a Bundle ID. | Run `setup` again, answer **n** to reusing your saved credentials, and enter the Bundle ID when you pick `monetization`. |
 | **Can't create a new app** | Apple's API doesn't allow creating new apps. | Create the app once on the App Store Connect website; from then on you can manage it with Heimdall. |
 
 ## Uninstall

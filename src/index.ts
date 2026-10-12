@@ -76,7 +76,7 @@ Credentials (in resolution order):
   1. Environment: ASC_KEY_ID, ASC_ISSUER_ID, and one of ASC_PRIVATE_KEY /
      ASC_PRIVATE_KEY_KEYCHAIN ("service/account", macOS) / ASC_PRIVATE_KEY_PATH.
      Optional: ASC_VENDOR_NUMBER (sales/finance reports), ASC_BUNDLE_ID
-     (StoreKit 2), ASC_ENVIRONMENT (Sandbox|Production).
+     (default app for StoreKit 2), ASC_ENVIRONMENT (Production|Sandbox).
   2. Shared config written by "npx -y @erayendes/asc-mcp setup" — recommended when
      running several profiles, so credentials live in exactly one place.
 `;
@@ -172,7 +172,7 @@ async function main(): Promise<void> {
   // stderr is safe: stdout carries the MCP protocol itself.
   //
   // The count is what tools/list will actually answer, not what the profile
-  // maps. Those differ by configuration — StoreKit needs a bundle id,
+  // maps. Those differ by configuration — the profile's sub-profiles,
   // --read-only removes writes, --include-deprecated adds tools — and quoting
   // the mapped number meant every client showed something else.
   const scope = selection
