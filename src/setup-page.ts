@@ -7,7 +7,13 @@
  * Needs come first: what the user picks decides which key role to create and
  * which extra values to look up, so they are told before they make the key,
  * not after.
+ *
+ * Built from the Kortext design system (setup-tokens.ts): its tokens, its
+ * buttons, inputs and drawn checkbox. The page adds layout only — no colour,
+ * size or radius of its own.
  */
+import { DESIGN_TOKENS } from './setup-tokens.js';
+
 export const SETUP_PAGE = `<!doctype html>
 <html lang="en">
 <head>
@@ -15,102 +21,104 @@ export const SETUP_PAGE = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Heimdall setup</title>
 <style>
-  :root {
-    --bg: #f6f7f9; --card: #ffffff; --text: #16181d; --muted: #5d6470; --line: #e3e6eb;
-    --accent: #2f6fed; --accent-text: #ffffff; --ok: #1f8a4c; --warn: #a86400; --bad: #c62f2f;
-    --soft: #eef3fe; --pick: #f3f7ff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #101215; --card: #181b20; --text: #e8eaee; --muted: #9aa1ad; --line: #2a2f37;
-      --accent: #5b8cff; --accent-text: #0b0d10; --ok: #46c27a; --warn: #e3a33b; --bad: #f06a6a;
-      --soft: #1d2533; --pick: #19202c;
-    }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
-  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-  h1 { font-size: 22px; margin: 0; }
-  .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--soft); color: var(--accent); }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  section.locked { opacity: .45; pointer-events: none; }
-  h2 { font-size: 17px; margin: 0 0 4px; display: flex; gap: 10px; align-items: center; }
-  h2 .n { width: 24px; height: 24px; border-radius: 50%; background: var(--soft); color: var(--accent); flex: none;
-    display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
-  h2 .n.done { background: var(--ok); color: var(--card); }
-  p.lead { margin: 0 0 16px; color: var(--muted); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
-  .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; }
-  .card.on { border-color: var(--accent); background: var(--pick); }
-  .card input { margin-top: 4px; flex: none; }
-  .card .title { font-weight: 650; }
-  .card .does { font-size: 14px; color: var(--muted); }
-  .card .eg { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 4px; }
-  .card .meta { font: 11px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 6px; }
-  .pill { font: 600 11px -apple-system, sans-serif; padding: 1px 7px; border-radius: 99px; background: var(--soft); color: var(--warn); margin-left: 6px; }
-  .parts { margin-top: 8px; font-size: 13px; }
-  .parts summary { color: var(--accent); cursor: pointer; }
-  .parts label { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; }
-  .parts .h { color: var(--muted); }
-  .need { background: var(--soft); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
-  .need .role { font-size: 16px; }
-  .need ul { margin: 6px 0 0; padding-left: 20px; }
-  .need .why { color: var(--muted); font-size: 13px; }
-  details.how { margin: 10px 0 0; font-size: 14px; }
-  details.how summary { color: var(--accent); cursor: pointer; font-weight: 600; }
-  details.how ol { margin: 8px 0 0; padding-left: 20px; } details.how li { margin: 3px 0; }
-  label.field { display: block; margin: 14px 0 4px; font-weight: 600; font-size: 13px; }
-  label.field .hint { font-weight: 400; color: var(--muted); }
-  input[type=text], textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px;
-    background: var(--bg); color: var(--text); font: inherit; }
-  textarea { font: 12px/1.4 ui-monospace, Menlo, monospace; min-height: 96px; }
-  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .drop { margin-top: 4px; border: 1.5px dashed var(--line); border-radius: 10px; padding: 18px; text-align: center; color: var(--muted); cursor: pointer; }
-  .drop.over { border-color: var(--accent); background: var(--soft); }
-  .drop.has { border-style: solid; border-color: var(--ok); color: var(--text); }
-  details.small { margin-top: 6px; color: var(--muted); font-size: 13px; }
-  details.small summary { cursor: pointer; }
-  button { font: inherit; font-weight: 600; border-radius: 8px; padding: 9px 16px; cursor: pointer;
-    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-text); }
-  button.ghost { background: transparent; color: var(--accent); }
-  button:disabled { opacity: .5; cursor: default; }
-  .row { display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
-  .msg { font-size: 14px; }
-  .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
-  .opt { display: flex; gap: 10px; padding: 8px 4px; border-top: 1px solid var(--line); align-items: flex-start; }
-  .opt:first-child { border-top: 0; }
-  .opt input { margin-top: 4px; }
-  .opt .t { font-weight: 600; } .opt .h { color: var(--muted); font-size: 13px; }
-  .tag { font-size: 11px; color: var(--ok); margin-left: 6px; font-weight: 600; }
-  .plan li { margin: 4px 0; } .plan .add { color: var(--ok); } .plan .rm { color: var(--bad); }
-  pre.out { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-    padding: 12px; font: 12px/1.5 ui-monospace, Menlo, monospace; }
-  a { color: var(--accent); }
-  .hidden { display: none !important; }
+${DESIGN_TOKENS}
+
+/* ---------- the setup page: layout only, every value a token ---------- */
+main { max-width: 760px; margin: 0 auto; padding: var(--sp-6) var(--sp-4); display: grid; gap: var(--sp-4); }
+header { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+h1 { font-size: var(--fs-title); font-weight: 600; margin: 0; flex: 1; }
+.dry { font-size: var(--fs-ui); color: var(--amber); background: var(--amber-bg); border: 1px solid var(--amber-border);
+  border-radius: var(--r-pill); padding: 0 var(--sp-2); }
+section { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-5); }
+section.locked { opacity: .5; pointer-events: none; }
+h2 { font-size: var(--fs-heading); font-weight: 600; margin: 0 0 var(--sp-1); display: flex; gap: var(--sp-2); align-items: baseline; }
+h2 .n { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); font-weight: 500; }
+h2 .n.done { color: var(--green); }
+.lead { margin: 0 0 var(--sp-4); color: var(--fg-secondary); }
+.eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-2); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--sp-2); }
+.card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3);
+  display: flex; gap: var(--sp-3); align-items: flex-start; cursor: pointer;
+  transition: border-color var(--speed) var(--ease), background var(--speed) var(--ease); }
+.card:hover { border-color: var(--border-hover); }
+.card.on { border-color: var(--border-strong); background: var(--accent-tint); }
+.card .title { font-size: var(--fs-body); font-weight: 600; }
+.card .does { font-size: var(--fs-ui); color: var(--fg-secondary); }
+.card .eg { font-size: var(--fs-ui); color: var(--fg-muted); margin-top: var(--sp-1); }
+.card .meta { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-faint); margin-top: var(--sp-1); }
+.need-pill { font-size: var(--fs-micro); font-weight: 500; color: var(--amber); background: var(--amber-bg); border: 1px solid var(--amber-border);
+  border-radius: var(--r-pill); padding: 0 var(--sp-2); margin-left: var(--sp-2); white-space: nowrap; }
+.parts { margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px solid var(--border); display: grid; gap: var(--sp-1); }
+.parts .eyebrow { margin: 0; }
+.part { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-ui); cursor: pointer; }
+.part .name { font-family: var(--font-mono); font-size: var(--fs-label); }
+.part .h { color: var(--fg-muted); }
+
+.need { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); }
+.need .role { font-size: var(--fs-doc); }
+.need .why { color: var(--fg-muted); font-size: var(--fs-ui); }
+.need ul { margin: var(--sp-1) 0 0; padding-left: var(--sp-5); }
+
+details.how { margin: 0 0 var(--sp-3); }
+details summary { cursor: pointer; color: var(--fg-secondary); font-size: var(--fs-ui); font-weight: 500; }
+details summary:hover { color: var(--fg); }
+details.how ol { margin: var(--sp-2) 0 0; padding-left: var(--sp-5); color: var(--fg-secondary); }
+details.how li { margin: var(--sp-1) 0; }
+details.small { margin-top: var(--sp-1); color: var(--fg-muted); font-size: var(--fs-ui); }
+
+label.field { display: block; margin: var(--sp-3) 0 var(--sp-1); font-size: var(--fs-ui); font-weight: 500; }
+label.field .hint { font-weight: 400; color: var(--fg-muted); }
+.input { width: 100%; }
+textarea.input { height: auto; min-height: 96px; padding: var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-label); resize: vertical; }
+.drop { border: 1px dashed var(--border-strong); border-radius: var(--r-md); padding: var(--sp-4); text-align: center;
+  color: var(--fg-muted); background: var(--bg); cursor: pointer; font-size: var(--fs-ui); }
+.drop:hover, .drop.over { border-color: var(--border-hover); background: var(--bg-hover); }
+.drop.has { border-style: solid; color: var(--fg); }
+.drop:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+
+.row { display: flex; gap: var(--sp-2); align-items: center; margin-top: var(--sp-3); flex-wrap: wrap; }
+.msg { font-size: var(--fs-ui); }
+.ok { color: var(--green); } .warn { color: var(--amber); } .bad { color: var(--red); }
+.opt { display: flex; gap: var(--sp-3); padding: var(--sp-2) 0; border-top: 1px solid var(--border); align-items: flex-start; cursor: pointer; }
+.opt:first-child { border-top: 0; }
+.opt .t { font-weight: 500; }
+.opt .h { color: var(--fg-muted); font-size: var(--fs-ui); }
+.found { font-size: var(--fs-micro); color: var(--green); margin-left: var(--sp-2); }
+.plan { margin: var(--sp-3) 0 0; padding-left: var(--sp-5); }
+.plan li { margin: var(--sp-1) 0; }
+.plan .add { color: var(--green); font-family: var(--font-mono); font-size: var(--fs-label); }
+.plan .rm { color: var(--red); font-family: var(--font-mono); font-size: var(--fs-label); }
+pre.out { white-space: pre-wrap; background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-label); margin: var(--sp-3) 0 0; }
+a { color: var(--fg); }
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
 <main>
-  <header><h1>Heimdall setup</h1><span id="dry" class="badge hidden">Dry run — nothing will be saved</span></header>
+  <header>
+    <h1>Heimdall setup</h1>
+    <span id="dry" class="dry hidden">Dry run — nothing will be saved</span>
+    <button class="btn btn-secondary" id="theme">Theme: auto</button>
+  </header>
 
   <section id="s1">
-    <h2><span class="n" id="n1">1</span>What do you want Heimdall to help with?</h2>
+    <h2><span class="n" id="n1">1/4</span>What do you want Heimdall to help with?</h2>
     <p class="lead">Pick only what you use. Every extra tool is more for the AI to read, so a short list makes it
       faster. What you set up before is already picked.</p>
     <div id="rows" class="grid"><p class="lead">Loading…</p></div>
   </section>
 
   <section id="s2">
-    <h2><span class="n" id="n2">2</span>Your App Store Connect key</h2>
+    <h2><span class="n" id="n2">2/4</span>Your App Store Connect key</h2>
     <div class="need" id="need"></div>
 
     <div id="reuseBox" class="hidden">
-      <p class="lead" style="margin-bottom:0">You already have a saved key (Key ID <b id="savedKey"></b>).</p>
+      <p class="lead" style="margin:0">You already have a saved key: <span class="mono" id="savedKey"></span>.</p>
       <div class="row" id="reuseButtons">
-        <button id="reuseYes">Use it</button>
-        <button id="reuseNo" class="ghost">Use a new key</button>
+        <button class="btn btn-secondary" id="reuseYes">Use it</button>
+        <button class="btn btn-link-primary" id="reuseNo">Use a new key instead</button>
       </div>
       <p id="reuseMsg" class="msg"></p>
     </div>
@@ -127,21 +135,21 @@ export const SETUP_PAGE = `<!doctype html>
         </ol>
       </details>
       <label class="field" for="keyId">Key ID</label>
-      <input type="text" id="keyId" placeholder="ABC123XYZ9" autocomplete="off" spellcheck="false">
+      <input class="input mono" type="text" id="keyId" placeholder="ABC123XYZ9" autocomplete="off" spellcheck="false">
       <label class="field" for="issuerId">Issuer ID</label>
-      <input type="text" id="issuerId" placeholder="57246e4f-1a2b-4c3d-9e8f-0123456789ab" autocomplete="off" spellcheck="false">
+      <input class="input mono" type="text" id="issuerId" placeholder="57246e4f-1a2b-4c3d-9e8f-0123456789ab" autocomplete="off" spellcheck="false">
       <label class="field">Key file (.p8) <span class="hint">— it stays on this computer</span></label>
       <div class="drop" id="drop" tabindex="0">Drop the .p8 file here, or click to choose it</div>
       <input type="file" id="file" accept=".p8" class="hidden">
       <details class="small"><summary>Or paste its contents</summary>
-        <textarea id="pem" placeholder="-----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
+        <textarea class="input" id="pem" placeholder="-----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
       </details>
-      <div class="row"><button id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
+      <div class="row"><button class="btn btn-secondary" id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
     </div>
 
     <div id="vendorBox" class="hidden">
       <label class="field" for="vendor">Vendor number <span class="hint">— for sales and finance reports</span></label>
-      <input type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
+      <input class="input mono" type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
       <details class="small"><summary>Where do I find it?</summary>
         In App Store Connect, open <a href="https://appstoreconnect.apple.com/itc/payments_and_financial_reports" target="_blank" rel="noreferrer">Payments and Financial Reports</a>.
         It is in the top left, under your company name. You can leave it empty and add it later.
@@ -149,7 +157,7 @@ export const SETUP_PAGE = `<!doctype html>
     </div>
     <div id="bundleBox" class="hidden">
       <label class="field" for="bundle">App bundle ID <span class="hint">— for customer purchase lookups</span></label>
-      <input type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
+      <input class="input mono" type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
       <details class="small"><summary>Where do I find it?</summary>
         In App Store Connect, open your app, then App Information. It is listed as Bundle ID.
       </details>
@@ -157,22 +165,39 @@ export const SETUP_PAGE = `<!doctype html>
   </section>
 
   <section id="s3" class="locked">
-    <h2><span class="n" id="n3">3</span>Which AI apps should get Heimdall?</h2>
+    <h2><span class="n" id="n3">3/4</span>Which AI apps should get Heimdall?</h2>
     <p class="lead">Tick the apps you talk to. We found the ticked ones on this computer.</p>
     <div id="clients"><p class="lead">Looking for AI apps on this computer…</p></div>
   </section>
 
   <section id="s4" class="locked">
-    <h2><span class="n" id="n4">4</span>Check and finish</h2>
-    <p class="lead">See exactly what will change in each app before anything is written.</p>
-    <div class="row"><button id="review" class="ghost">Show the changes</button></div>
+    <h2><span class="n" id="n4">4/4</span>Check and finish</h2>
+    <p class="lead" style="margin:0">See exactly what will change in each app before anything is written.</p>
+    <div class="row"><button class="btn btn-secondary" id="review">Show the changes</button></div>
     <ul id="plan" class="plan"></ul>
-    <div class="row"><button id="apply" disabled>Apply</button><button id="cancel" class="ghost">Cancel</button></div>
+    <div class="row">
+      <button class="btn btn-primary" id="apply" disabled>Apply</button>
+      <button class="btn btn-link-primary" id="cancel">Cancel</button>
+    </div>
     <pre id="out" class="out hidden"></pre>
   </section>
 </main>
 <script>
 (function () {
+  /* Theme: auto, then light, then dark; no attribute follows the OS. */
+  var themeBtn = document.getElementById('theme');
+  function stored() { try { return localStorage.getItem('heimdall-theme') || ''; } catch (e) { return ''; } }
+  function applyTheme(v) {
+    if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme;
+    themeBtn.textContent = 'Theme: ' + (v || 'auto');
+  }
+  applyTheme(stored());
+  themeBtn.onclick = function () {
+    var cur = stored(), next = cur === '' ? 'light' : cur === 'light' ? 'dark' : '';
+    try { next ? localStorage.setItem('heimdall-theme', next) : localStorage.removeItem('heimdall-theme'); } catch (e) {}
+    applyTheme(next);
+  };
+
   var token = new URLSearchParams(location.search).get('t') || '';
   history.replaceState(null, '', '/');
   var $ = function (id) { return document.getElementById(id); };
@@ -189,6 +214,7 @@ export const SETUP_PAGE = `<!doctype html>
     });
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  function check() { var b = el('input', 'kx-req-check'); b.type = 'checkbox'; return b; }
   function mark(n) { $('n' + n).classList.add('done'); $('n' + n).textContent = '✓'; }
   function setMsg(id, text, kind) { var m = $(id); m.textContent = text; m.className = 'msg ' + (kind || ''); }
   function invalidatePlan() { $('apply').disabled = true; $('plan').innerHTML = ''; }
@@ -213,37 +239,38 @@ export const SETUP_PAGE = `<!doctype html>
     var picked = new Set(state.preselected);
     state.rows.filter(function (r) { return r.parent === null; }).forEach(function (r) {
       var card = el('label', 'card');
-      var box = el('input'); box.type = 'checkbox'; box.checked = picked.has(r.index); box.value = r.index;
+      var box = check(); box.checked = picked.has(r.index); box.value = r.index;
       boxes[r.index] = box;
       var body = el('div');
       var title = el('div', 'title', r.title || r.name);
-      if (r.roles.length === 1) title.appendChild(el('span', 'pill', 'Admin key'));
+      if (r.roles.length === 1) title.appendChild(el('span', 'need-pill', 'Admin key'));
       body.appendChild(title);
       body.appendChild(el('div', 'does', r.does || r.hint));
       if (r.example) body.appendChild(el('div', 'eg', '“' + r.example + '”'));
       body.appendChild(el('div', 'meta', r.name + ' · ' + r.tools + ' tools'));
       var parts = children(r.index);
       if (parts.length) {
-        var det = el('details', 'parts');
-        det.appendChild(el('summary', '', 'Choose parts (' + parts.length + ')'));
+        // Visible as soon as the profile is picked: trimming a 126-tool profile is the point.
+        var list = el('div', 'parts');
+        list.appendChild(el('p', 'eyebrow', 'Parts — untick what you don\\u2019t need'));
         parts.forEach(function (c) {
-          var line = el('label');
-          var cb = el('input'); cb.type = 'checkbox'; cb.value = c.index;
+          var line = el('label', 'part');
+          var cb = check(); cb.value = c.index;
           cb.checked = picked.has(c.index) || !picked.has(r.index);
           boxes[c.index] = cb;
           var txt = el('div');
-          var t = el('div', '', c.name + ' · ' + c.tools + ' tools');
-          if (c.roles.length === 1) t.appendChild(el('span', 'pill', 'Admin key'));
+          var t = el('div'); t.appendChild(el('span', 'name', c.name)); t.appendChild(document.createTextNode(' · ' + c.tools + ' tools'));
+          if (c.roles.length === 1) t.appendChild(el('span', 'need-pill', 'Admin key'));
           txt.appendChild(t); txt.appendChild(el('div', 'h', c.hint.replace(/^~\\d+k · /, '')));
-          line.appendChild(cb); line.appendChild(txt); det.appendChild(line);
+          line.appendChild(cb); line.appendChild(txt); list.appendChild(line);
           cb.addEventListener('change', update);
-          line.addEventListener('click', function (e) { e.stopPropagation(); });
         });
-        det.addEventListener('click', function (e) { e.stopPropagation(); });
-        det.classList.toggle('hidden', !box.checked);
-        body.appendChild(det);
+        // A click inside the list must not toggle the whole card.
+        list.addEventListener('click', function (e) { e.stopPropagation(); });
+        list.classList.toggle('hidden', !box.checked);
+        body.appendChild(list);
         box.addEventListener('change', function () {
-          det.classList.toggle('hidden', !box.checked);
+          list.classList.toggle('hidden', !box.checked);
           if (box.checked) parts.forEach(function (c) { boxes[c.index].checked = true; });
         });
       }
@@ -262,11 +289,12 @@ export const SETUP_PAGE = `<!doctype html>
     var picked = leaves();
     var need = $('need'); need.innerHTML = '';
     if (!picked.length) {
-      need.appendChild(el('div', '', 'Pick at least one thing above, and we will tell you what kind of key to create.'));
+      need.appendChild(el('div', 'why', 'Pick at least one thing above, and we will tell you what kind of key to create.'));
       role = '';
     } else {
       var allowed = NARROW_FIRST.filter(function (name) { return picked.every(function (r) { return r.roles.indexOf(name) !== -1; }); });
       role = allowed[0] || 'Admin';
+      need.appendChild(el('p', 'eyebrow', 'For what you picked'));
       var line = el('div', 'role'); line.appendChild(document.createTextNode('Create a key with the '));
       line.appendChild(el('b', '', role)); line.appendChild(document.createTextNode(' role.'));
       need.appendChild(line);
@@ -305,7 +333,7 @@ export const SETUP_PAGE = `<!doctype html>
     if (role !== 'Admin') { if (reuse) setMsg(id, ''); return; }
     var show = function () {
       if (adminAnswer === true) setMsg(id, '✓ This key has the Admin role.', 'ok');
-      else if (adminAnswer === false) setMsg(id, "This key isn't Admin, so the tools marked “Admin key” won't work. Create an Admin key, or untick them.", 'warn');
+      else if (adminAnswer === false) setMsg(id, "This key isn't Admin, so the parts marked “Admin key” won't work. Create an Admin key, or untick them.", 'warn');
     };
     if (adminAnswer !== null) return show();
     call('admin', { reuse: reuse }).then(function (r) { adminAnswer = r.admin; show(); });
@@ -326,11 +354,11 @@ export const SETUP_PAGE = `<!doctype html>
     return { clients: clients, picked: picked };
   }
 
-  function option(container, value, title, hint, checked, tag) {
+  function option(container, value, title, hint, checked, found) {
     var row = el('label', 'opt');
-    var box = el('input'); box.type = 'checkbox'; box.value = value; box.checked = checked;
+    var box = check(); box.value = value; box.checked = checked;
     var text = el('div'); var t = el('div', 't', title);
-    if (tag) t.appendChild(el('span', 'tag', tag));
+    if (found) t.appendChild(el('span', 'found', 'found'));
     text.appendChild(t); if (hint) text.appendChild(el('div', 'h', hint));
     row.appendChild(box); row.appendChild(text); container.appendChild(row);
   }
@@ -353,7 +381,7 @@ export const SETUP_PAGE = `<!doctype html>
     if (s.existing) { $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden'); }
     else { $('keyBox').classList.remove('hidden'); $('how').open = true; }
     $('clients').innerHTML = '';
-    s.clients.forEach(function (c) { option($('clients'), c.id, c.label, c.present ? '' : c.hint, c.present, c.present ? 'found' : ''); });
+    s.clients.forEach(function (c) { option($('clients'), c.id, c.label, c.present ? '' : c.hint, c.present, c.present); });
     $('clients').addEventListener('change', invalidatePlan);
     renderRows();
   }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. Run setup again. (' + e.message + ')'; });
