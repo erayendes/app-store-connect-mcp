@@ -1,24 +1,25 @@
-Spec version:   4.5
-Paths:          973
-Tools:          987
-  id-only twins dropped: 283
-  read-only:    519
-  mutating:     468
+Spec version:   4.5.1
+Paths:          1001
+Tools:          1011
+  id-only twins dropped: 292
+  read-only:    534
+  mutating:     477
   deprecated:   123
-Risk levels:    low:173 destructive:110 revenue:88 public:62 infrastructure:16 release:13 access:6
-Body schemas:   336 (298 KB resolved, avg 910 chars)
+Risk levels:    low:179 destructive:113 revenue:88 public:62 infrastructure:16 release:13 access:6
+Body schemas:   342 (310 KB resolved, avg 929 chars)
 
 By domain:
   game_center          277
-  apps                 117
+  apps                 118
   subscriptions        105
-  versions             102
+  versions             104
   testflight           72
   iap                  68
-  marketing            60
+  marketing            62
   xcode_cloud          41
   provisioning         40
   builds               39
+  misc                 19
   users                15
   background_assets    13
   analytics            12
