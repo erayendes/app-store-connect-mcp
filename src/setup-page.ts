@@ -34,6 +34,7 @@ section.locked { opacity: .5; pointer-events: none; }
 h2 { font-size: var(--fs-heading); font-weight: 600; margin: 0 0 var(--sp-1); display: flex; gap: var(--sp-2); align-items: baseline; }
 h2 .n { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); font-weight: 500; }
 h2 .n.done { color: var(--green); }
+h2 .help-link { margin-left: auto; }
 .lead { margin: 0 0 var(--sp-4); color: var(--fg-secondary); }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-2); }
 
@@ -75,12 +76,10 @@ h2 .n.done { color: var(--green); }
 .need .role { font-size: var(--fs-doc); }
 .need .why { color: var(--fg-muted); font-size: var(--fs-ui); }
 
-details.how { margin: 0 0 var(--sp-3); }
-details summary { cursor: pointer; color: var(--fg-secondary); font-size: var(--fs-ui); font-weight: 500; }
-details summary:hover { color: var(--fg); }
-details.how ol { margin: var(--sp-2) 0 0; padding-left: var(--sp-5); color: var(--fg-secondary); }
-details.how li { margin: var(--sp-1) 0; }
-details.small { margin-top: var(--sp-1); color: var(--fg-muted); font-size: var(--fs-ui); }
+ol.help { padding-left: var(--sp-5); color: var(--fg-secondary); }
+ol.help li { margin: var(--sp-1) 0; }
+textarea.help { color: var(--fg); }
+.help + .input, .help + .drop { margin-top: var(--sp-2); }
 .field-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
 .field-row label.field { margin-bottom: var(--sp-1); }
 .help-link { background: none; border: 0; padding: 0; cursor: pointer; color: var(--fg-secondary); font: inherit; font-size: var(--fs-ui); font-weight: 500; white-space: nowrap; }
@@ -130,7 +129,7 @@ a { color: var(--fg); }
   </section>
 
   <section id="s2">
-    <h2><span class="n" id="n2">2/4</span>Your App Store Connect key</h2>
+    <h2><span class="n" id="n2">2/4</span>Your App Store Connect key<button type="button" class="help-link hidden" id="backToSaved">← Use the saved key instead</button></h2>
     <div class="need">
       <div id="need"></div>
       <div id="reuseBox" class="saved hidden">
@@ -141,14 +140,12 @@ a { color: var(--fg); }
           <button class="btn btn-link-primary" id="reuseNo">Use a new key instead</button>
         </div>
       </div>
-    </div>
-
-    <div id="keyBox" class="hidden">
-      <div class="row hidden" id="backRow" style="margin:0 0 var(--sp-3)">
-        <button class="btn btn-link-primary" id="backToSaved">← Use the saved key instead</button>
-      </div>
-      <details class="how" id="how"><summary>How do I create a key?</summary>
-        <ol>
+      <div id="keyBox" class="saved hidden">
+        <div class="field-row">
+          <label class="field" for="keyId">Key ID</label>
+          <button type="button" class="help-link" data-help="how">How do I create a key?</button>
+        </div>
+        <ol class="help hidden" id="how">
           <li>Open <a id="keysLink" target="_blank" rel="noreferrer">App Store Connect → Users and Access → Integrations</a>
             (only the Account Holder or an Admin can see it).</li>
           <li>Copy the <b>Issuer ID</b> from the top of the page.</li>
@@ -156,19 +153,19 @@ a { color: var(--fg); }
           <li>Copy its <b>Key ID</b> from the list, then click <b>Download</b> for the <b>.p8</b> file.
             Apple lets you download it only once, so keep it somewhere safe.</li>
         </ol>
-      </details>
-      <label class="field" for="keyId">Key ID</label>
-      <input class="input mono" type="text" id="keyId" placeholder="ABC123XYZ9" autocomplete="off" spellcheck="false">
-      <label class="field" for="issuerId">Issuer ID</label>
-      <input class="input mono" type="text" id="issuerId" placeholder="57246e4f-1a2b-4c3d-9e8f-0123456789ab" autocomplete="off" spellcheck="false">
-      <label class="field">Key file (.p8) <span class="hint">— it stays on this computer</span></label>
-      <div class="drop" id="drop" tabindex="0">Drop the .p8 file here, or click to choose it</div>
-      <input type="file" id="file" accept=".p8" class="hidden">
-      <details class="small"><summary>Or paste its contents — only if you can't use the file</summary>
-        <textarea class="input" id="pem" placeholder="-----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
-      </details>
-      <div class="row"><button class="btn btn-secondary" id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
-      <p id="fitMsg" class="msg"></p>
+        <input class="input mono" type="text" id="keyId" placeholder="ABC123XYZ9" autocomplete="off" spellcheck="false">
+        <label class="field" for="issuerId">Issuer ID</label>
+        <input class="input mono" type="text" id="issuerId" placeholder="57246e4f-1a2b-4c3d-9e8f-0123456789ab" autocomplete="off" spellcheck="false">
+        <div class="field-row">
+          <label class="field">Key file (.p8) <span class="hint">— it stays on this computer</span></label>
+          <button type="button" class="help-link" data-help="pem">Paste it instead</button>
+        </div>
+        <textarea class="input help hidden" id="pem" placeholder="Only if you can't use the file: -----BEGIN PRIVATE KEY-----" spellcheck="false"></textarea>
+        <div class="drop" id="drop" tabindex="0">Drop the .p8 file here, or click to choose it</div>
+        <input type="file" id="file" accept=".p8" class="hidden">
+        <div class="row"><button class="btn btn-secondary" id="verify">Check with Apple</button><span id="vmsg" class="msg"></span></div>
+        <p id="fitMsg" class="msg"></p>
+      </div>
     </div>
 
     <div id="vendorBox" class="hidden">
@@ -176,11 +173,11 @@ a { color: var(--fg); }
         <label class="field" for="vendor">Vendor number <span class="hint">— for sales and finance reports</span></label>
         <button type="button" class="help-link" data-help="vendorHelp">Where do I find it?</button>
       </div>
-      <input class="input mono" type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
       <p class="help hidden" id="vendorHelp">
         In App Store Connect, open <a href="https://appstoreconnect.apple.com/itc/payments_and_financial_reports" target="_blank" rel="noreferrer">Payments and Financial Reports</a>.
         It is in the top left, under your company name. You can leave it empty and add it later.
       </p>
+      <input class="input mono" type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
       <p class="help hidden" id="vendorAdmin">The very first request for a new report type needs an Admin key, once.</p>
     </div>
     <div id="bundleBox" class="hidden">
@@ -188,8 +185,8 @@ a { color: var(--fg); }
         <label class="field" for="bundle">App bundle ID <span class="hint">— for customer purchase lookups</span></label>
         <button type="button" class="help-link" data-help="bundleHelp">Where do I find it?</button>
       </div>
-      <input class="input mono" type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
       <p class="help hidden" id="bundleHelp">In App Store Connect, open your app, then App Information. It is listed as Bundle ID.</p>
+      <input class="input mono" type="text" id="bundle" placeholder="com.example.app" autocomplete="off" spellcheck="false">
     </div>
   </section>
 
@@ -441,7 +438,7 @@ a { color: var(--fg); }
       $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden');
       checkAdmin(true);
     }
-    else { $('keyBox').classList.remove('hidden'); $('how').open = true; }
+    else { $('keyBox').classList.remove('hidden'); $('how').classList.remove('hidden'); }
     $('clients').innerHTML = '';
     s.clients.forEach(function (c) { option($('clients'), c.id, c.label, c.present ? '' : c.hint, c.present, c.present); });
     $('clients').addEventListener('change', invalidatePlan);
@@ -450,10 +447,10 @@ a { color: var(--fg); }
 
   $('reuseYes').onclick = function () { reuse = true; $('reuseButtons').classList.add('hidden'); keyDone(); };
   $('reuseNo').onclick = function () {
-    $('reuseBox').classList.add('hidden'); $('keyBox').classList.remove('hidden'); $('backRow').classList.remove('hidden');
+    $('reuseBox').classList.add('hidden'); $('keyBox').classList.remove('hidden'); $('backToSaved').classList.remove('hidden');
   };
   $('backToSaved').onclick = function () {
-    $('keyBox').classList.add('hidden'); $('reuseBox').classList.remove('hidden');
+    $('keyBox').classList.add('hidden'); $('backToSaved').classList.add('hidden'); $('reuseBox').classList.remove('hidden');
   };
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-help]'), function (b) {
