@@ -16,9 +16,13 @@ Heimdall already asked for your confirmation on some requests. With this version
 
 For lucky new users, the first run downloads half as many packages, so a faster install awaits them.
 
+You no longer need to enter a bundle ID to look up customer purchases. Name the app and Heimdall finds the rest.
+
 Other than that, it's the Heimdall you know and love.
 
 If your app can't show a confirmation, these release steps no longer run. Set `ASC_CONFIRM_WRITES=0` to go back to the old behaviour.
+
+When no environment is set, the StoreKit tools now look at Production. Set `ASC_ENVIRONMENT=Sandbox` for the sandbox.
 
 ### [2.6.0] — 2026-10-11
 
@@ -228,9 +232,13 @@ Bazı isteklerinizde Heimdall onayınızı istiyordu. Yeni sürümle bunu biraz 
 
 Yeni şanslı kullanıcılar için ilk çalıştırmada indirilen paket sayısı yarıya indi. Artık onları daha hızlı bir kurulum bekliyor.
 
+Müşteri satın alımlarına bakmak için artık bundle ID girmeniz gerekmiyor. Uygulamanın adını söyleyin, gerisini Heimdall bulur.
+
 Bunun dışında bildiğiniz ve sevdiğiniz Heimdall.
 
 Kullandığınız uygulama onay penceresi açamıyorsa bu yayın adımları artık çalışmaz. Eski davranışa dönmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
+
+Ortam belirtilmediğinde StoreKit araçları artık Production'a bakıyor. Sandbox için `ASC_ENVIRONMENT=Sandbox` ayarlayın.
 
 ### [2.6.0] — 2026-10-11
 
