@@ -10,13 +10,15 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ### [2.7.0] — 2026-10-12
 
-**Release steps now ask before they run.** Before sending a version to review, pausing or finishing a phased release, or sending a build to external testers through TestFlight review, Heimdall shows what will happen and asks you to confirm. Releasing a version on the App Store asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, don't ask.
+We moved to version 2.0 of the MCP library. In practice, not much changes in your life. Heimdall was always good anyway 🙂
 
-If your app can't open a confirmation, these steps no longer run, as was already the case for prices and deletions. Set `ASC_CONFIRM_WRITES=0` to go back to the old behaviour.
+Heimdall already asked for your confirmation on some requests. With this version we ask a little more often: steps that release your app, such as sending a version to review or releasing it on the App Store, now ask too.
 
-**Faster first install.** The first run downloads half as many packages.
+For lucky new users, the first run downloads half as many packages, so a faster install awaits them.
 
-**Under the hood.** Heimdall supports the new MCP protocol version that Claude Code has moved to. Nothing changes for you; the confirmation works as before.
+Other than that, it's the Heimdall you know and love.
+
+If your app can't show a confirmation, these release steps no longer run. Set `ASC_CONFIRM_WRITES=0` to go back to the old behaviour.
 
 ### [2.6.0] — 2026-10-11
 
@@ -220,13 +222,15 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ### [2.7.0] — 2026-10-12
 
-**Yayına çıkaran adımlardan önce artık onay isteniyor.** Bir sürümü incelemeye göndermeden, kademeli yayını durdurmadan ya da bitirmeden, bir build'i dış test kullanıcıları için TestFlight incelemesine göndermeden önce Heimdall ne olacağını gösterir ve onayınızı ister. Bir sürümü App Store'da yayınlamak için CONFIRM yazmanız gerekir. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımlarında sormaz.
+MCP kütüphanesinin 2.0 sürümüne geçtik. Pratikte hayatınızda çok fazla şey değişmedi. Zaten Heimdall hep iyiydi 🙂
 
-Onay penceresi açamayan bir uygulama kullanıyorsanız bu adımlar artık çalışmaz; fiyat ve silme işlemlerinde de böyleydi. Eski davranışa dönmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
+Bazı isteklerinizde Heimdall onayınızı istiyordu. Yeni sürümle bunu biraz artırdık: sürümü incelemeye göndermek ya da App Store'da yayınlamak gibi yayına çıkaran adımlar da artık onay istiyor.
 
-**İlk kurulum daha hızlı.** İlk çalıştırmada indirilen paket sayısı yarıya indi.
+Yeni şanslı kullanıcılar için ilk çalıştırmada indirilen paket sayısı yarıya indi. Artık onları daha hızlı bir kurulum bekliyor.
 
-**Arka planda.** Claude Code'un geçtiği yeni MCP protokol sürümü destekleniyor. Sizin için bir şey değişmiyor; onay penceresi eskisi gibi çalışıyor.
+Bunun dışında bildiğiniz ve sevdiğiniz Heimdall.
+
+Kullandığınız uygulama onay penceresi açamıyorsa bu yayın adımları artık çalışmaz. Eski davranışa dönmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
 
 ### [2.6.0] — 2026-10-11
 
