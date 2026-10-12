@@ -10,11 +10,13 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ### [2.7.0] — 2026-10-12
 
-**Confirmation works with the newest AI apps.** Apps such as Claude Code now speak a newer version of the protocol, and Heimdall's confirmation step speaks it too. Older apps see the same confirmation as before. Each confirmation now covers exactly the change you were shown, works only once, and expires after 10 minutes.
+**Release steps now ask before they run.** Before sending a version to review, pausing or finishing a phased release, or sending a build to external testers through TestFlight review, Heimdall shows what will happen and asks you to confirm. Releasing a version on the App Store asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, don't ask.
 
-**Release steps that reach users now ask first.** Sending a version to review, changing a phased release, and sending a build to external TestFlight review ask for your confirmation by default. Releasing a version to the App Store asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, still go through your app's own approval. If your app cannot show a confirmation, these steps are now blocked, as price changes and deletions already were; set `ASC_CONFIRM_WRITES=0` to rely on your app's approval instead.
+If your app can't open a confirmation, these steps no longer run, as was already the case for prices and deletions. Set `ASC_CONFIRM_WRITES=0` to go back to the old behaviour.
 
-**Faster first install.** Heimdall moved to version 2 of the official MCP library, which no longer pulls in a web server it never used. The first `npx` run downloads about half as many packages.
+**Faster first install.** The first run downloads half as many packages.
+
+**Under the hood.** Heimdall supports the new MCP protocol version that Claude Code has moved to. Nothing changes for you; the confirmation works as before.
 
 ### [2.6.0] — 2026-10-11
 
@@ -218,11 +220,13 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ### [2.7.0] — 2026-10-12
 
-**Onay, yeni nesil yapay zekâ uygulamalarıyla da çalışıyor.** Claude Code gibi uygulamalar artık protokolün yeni sürümünü kullanıyor; Heimdall'ın onay adımı da bu sürümü destekliyor. Eski uygulamalar onayı eskisi gibi görür. Her onay artık yalnızca size gösterilen değişiklik için geçerli, bir kez kullanılabiliyor ve 10 dakika sonra geçersiz oluyor.
+**Yayına çıkaran adımlardan önce artık onay isteniyor.** Bir sürümü incelemeye göndermeden, kademeli yayını durdurmadan ya da bitirmeden, bir build'i dış test kullanıcıları için TestFlight incelemesine göndermeden önce Heimdall ne olacağını gösterir ve onayınızı ister. Bir sürümü App Store'da yayınlamak için CONFIRM yazmanız gerekir. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımlarında sormaz.
 
-**Kullanıcıya ulaşan yayın adımları artık önce soruyor.** Sürümü incelemeye göndermek, kademeli yayını değiştirmek ve bir build'i dış TestFlight incelemesine göndermek varsayılan olarak onayınızı ister. Bir sürümü App Store'da yayınlamak için CONFIRM yazmanız gerekir. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımları yine uygulamanızın kendi onayına bırakılır. Uygulamanız onay ekranı gösteremiyorsa bu adımlar artık engellenir, tıpkı fiyat değişiklikleri ve silmelerin zaten engellendiği gibi; uygulamanızın onayına güvenmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
+Onay penceresi açamayan bir uygulama kullanıyorsanız bu adımlar artık çalışmaz; fiyat ve silme işlemlerinde de böyleydi. Eski davranışa dönmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
 
-**Daha hızlı ilk kurulum.** Heimdall resmî MCP kütüphanesinin 2. sürümüne geçti; bu sürüm Heimdall'ın hiç kullanmadığı bir web sunucusunu artık indirmiyor. İlk `npx` çalıştırması yaklaşık yarı yarıya daha az paket indiriyor.
+**İlk kurulum daha hızlı.** İlk çalıştırmada indirilen paket sayısı yarıya indi.
+
+**Arka planda.** Claude Code'un geçtiği yeni MCP protokol sürümü destekleniyor. Sizin için bir şey değişmiyor; onay penceresi eskisi gibi çalışıyor.
 
 ### [2.6.0] — 2026-10-11
 
