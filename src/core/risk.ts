@@ -39,6 +39,29 @@ export const STRONG_CONFIRM_LEVELS: ReadonlySet<RiskLevel> = new Set<RiskLevel>(
   'access',
 ]);
 
+/**
+ * Release steps that reach users, so they ask even in the default mode. The
+ * rest of `release` is preparation — a draft version, the build it carries,
+ * an upload — reversible and seen by nobody, and stays with the client's own
+ * approval: asking on every step was tried, and a prompt that fires constantly
+ * stops being read.
+ */
+export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
+  // Hands the version to Apple's review queue.
+  'review_submissions__update',
+  'release__submit',
+  // Pauses, resumes or completes a rollout that real customers are on.
+  'app_store_version_phased_releases__update',
+  // Sends a build to Apple for external TestFlight review.
+  'beta_app_review_submissions__create',
+  'testflight__assign_build_to_groups',
+  // Puts the version on the App Store for everyone.
+  'app_store_version_release_requests__create',
+]);
+
+/** Of those, the ones that cannot be walked back ask for a typed CONFIRM, like the strong levels. */
+export const TYPED_BY_NAME: ReadonlySet<string> = new Set(['app_store_version_release_requests__create']);
+
 /** One-line reversibility note per level, shown in the confirmation prompt. */
 export const REVERSIBILITY: Record<RiskLevel, string> = {
   low: 'Generally reversible.',

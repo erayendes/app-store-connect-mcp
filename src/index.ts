@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { loadConfig } from './core/config.js';
 import { ConfigError } from './core/errors.js';
 import {
@@ -12,7 +12,7 @@ import {
 } from './server.js';
 import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
-import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor } from './profiles.js';
+import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor, type ProfileSelection } from './profiles.js';
 import { serverName } from './clients.js';
 
 /** Exported so a test can prove the profile list here never drifts from the code. */
@@ -129,8 +129,7 @@ async function main(): Promise<void> {
   // explains where its tools went — see createRemovedProfileServer.
   const removedName = positional[0]?.split(':', 1)[0];
   if (removedName && REMOVED_PROFILES[removedName]) {
-    const server = createRemovedProfileServer(removedName);
-    await server.connect(new StdioServerTransport());
+    serveStdio(() => createRemovedProfileServer(removedName));
     console.error(
       `asc-${removedName} v${VERSION}: this profile was removed. ` +
         `${REMOVED_PROFILES[removedName].summary}`
@@ -138,7 +137,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  let selection;
+  let selection: ProfileSelection | undefined;
   if (positional.length) {
     try {
       selection = resolveSelection(positional[0]);
@@ -159,9 +158,16 @@ async function main(): Promise<void> {
     throw err;
   }
 
-  const server = createServer(config, selection);
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  // serveStdio picks the protocol era from the client's opening message and
+  // builds the server then — possibly twice, when a probe is discarded. The
+  // instance built here for the startup count is handed to the first build.
+  let first: ReturnType<typeof createServer> | undefined = createServer(config, selection);
+  const served = servedToolCount(first);
+  serveStdio(() => {
+    const server = first ?? createServer(config, selection);
+    first = undefined;
+    return server;
+  });
 
   // stderr is safe: stdout carries the MCP protocol itself.
   //
@@ -169,7 +175,6 @@ async function main(): Promise<void> {
   // maps. Those differ by configuration — StoreKit needs a bundle id,
   // --read-only removes writes, --include-deprecated adds tools — and quoting
   // the mapped number meant every client showed something else.
-  const served = servedToolCount(server);
   const scope = selection
     ? serverName(selection.profile.name) +
       (selection.partial ? `:${selection.subProfiles.map((s) => s.name).join(',')}` : '') +

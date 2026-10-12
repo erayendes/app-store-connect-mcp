@@ -53,7 +53,7 @@ MCP rehberleri genelde uzak HTTP sunucularını önerir.
 
 ### Riskli işlemlerde önce sorar
 
-Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğinizde önce onay ister ve neyin değişeceğini gösterir. Bu kural gelir, silme, altyapı ve erişim gibi geri alması zor değişikliklerde varsayılan olarak açık gelir. Geri kalan her şeyde kullandığınız uygulamanın kendi onay sistemi devrededir.
+Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğinizde önce onay ister ve neyin değişeceğini gösterir. Bu kural gelir, silme, altyapı ve erişim gibi geri alması zor değişikliklerde ve kullanıcıya ulaşan yayın adımlarında (sürümü incelemeye göndermek, yayınlamak, kademeli yayını değiştirmek, bir build'i dış test kullanıcılarına açmak) varsayılan olarak açık gelir. Geri kalan her şeyde kullandığınız uygulamanın kendi onay sistemi devrededir.
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 

@@ -27,7 +27,7 @@
 | `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükler (102'si Game Center). |
 | `--domains=<liste>` | Yalnızca profilsiz kullanımda: virgülle ayrılmış alanları ya da `all` ile hepsini yükler. |
 
-Varsayılan olarak Heimdall gelir, silme, altyapı ve erişim değişikliklerinden önce sorar; gerisini uygulamanızın onayına bırakır.
+Varsayılan olarak Heimdall gelir, silme, altyapı ve erişim değişikliklerinden ve kullanıcıya ulaşan yayın adımlarından önce sorar: sürümü incelemeye göndermek, yayınlamak, kademeli yayını değiştirmek, bir build'i dış test kullanıcılarına açmak. Yayınlamak için CONFIRM yazmanızı ister. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımlarını ve geri kalan her şeyi uygulamanızın onayına bırakır.
 
 ## Ortam değişkenleri
 

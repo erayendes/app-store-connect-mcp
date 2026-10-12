@@ -27,7 +27,7 @@ Restart your app after changing either.
 | `--include-deprecated` | Also loads the 123 operations Apple has deprecated (102 of them are Game Center). |
 | `--domains=<list>` | Only without a profile: loads these areas, comma-separated, or `all`. |
 
-By default Heimdall asks before revenue, deletion, infrastructure and access changes, and leaves the rest to your app's approval.
+By default Heimdall asks before revenue, deletion, infrastructure and access changes, and before the release steps that reach users: sending a version to review, releasing it, changing a phased rollout, and opening a build to external testers. Releasing asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, and everything else are left to your app's approval.
 
 ## Environment variables
 
