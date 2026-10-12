@@ -49,6 +49,7 @@ h2 .n.done { color: var(--green); }
 .item-head:hover { background: var(--bg-hover); }
 .item-text { flex: 1; min-width: 0; }
 .item .title { font-weight: 500; }
+.item .plain { font-weight: 400; color: var(--fg-secondary); }
 .item .does { font-size: var(--fs-ui); color: var(--fg-muted); }
 .item .meta { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); white-space: nowrap; margin-top: 2px; }
 .item-head .kx-req-check { top: 3px; }
@@ -250,6 +251,8 @@ a { color: var(--fg); }
       boxes[r.index] = box;
       var text = el('div', 'item-text');
       var title = el('div', 'title', r.title || r.name);
+      // Only when it says something the name does not: "App Clips (App Clips)" would be noise.
+      if (r.plain && r.plain !== r.title) title.appendChild(el('span', 'plain', ' (' + r.plain + ')'));
       var p = pills(r); if (p) title.appendChild(p);
       text.appendChild(title);
       text.appendChild(el('div', 'does', r.does || r.hint));

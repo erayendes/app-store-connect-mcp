@@ -52,6 +52,23 @@ export interface WebSetupOptions {
 
 const IDLE_MS = 30 * 60_000;
 
+/** A plain name beside the profile's own, for someone who does not know the API's areas. */
+const PLAIN: Record<string, string> = {
+  access: 'Team and testers',
+  analytics: 'Sales and reports',
+  'app-clips': 'App Clips',
+  'app-info': 'App details',
+  'background-assets': 'Downloadable content',
+  distribution: 'Releases',
+  'game-center': 'Game Center',
+  marketing: 'Store page and reviews',
+  monetization: 'Prices and subscriptions',
+  provisioning: 'Certificates and devices',
+  testflight: 'Beta testing',
+  webhooks: 'Notifications to your server',
+  'xcode-cloud': 'Builds in the cloud',
+};
+
 /** What each profile is for, in the words someone setting it up would use. */
 const DOES: Record<string, string> = {
   access: 'Invite people to your team and manage TestFlight testers and groups.',
@@ -163,7 +180,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           tools: Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0),
           ktokens: Math.max(1, Math.round((Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0) * TOKENS_PER_TOOL) / 1000)),
           hint: r.item.hint ?? '',
-          ...(r.subProfile ? {} : { title: profileLabel(r.profile.name), does: DOES[r.profile.name] }),
+          ...(r.subProfile ? {} : { title: profileLabel(r.profile.name), plain: PLAIN[r.profile.name], does: DOES[r.profile.name] }),
           roles: ROLES[specOf(r.index)] ?? ROLES[r.profile.name] ?? APP_MANAGER,
           parent: r.item.parent ?? null,
           storekit: storekitRows.has(r.index),
