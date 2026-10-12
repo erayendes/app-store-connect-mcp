@@ -37,21 +37,25 @@ h2 .n.done { color: var(--green); }
 .lead { margin: 0 0 var(--sp-4); color: var(--fg-secondary); }
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 var(--sp-2); }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--sp-2); }
-.card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3);
-  display: flex; gap: var(--sp-3); align-items: flex-start; cursor: pointer;
-  transition: border-color var(--speed) var(--ease), background var(--speed) var(--ease); }
-.card:hover { border-color: var(--border-hover); }
-.card.on { border-color: var(--border-strong); background: var(--accent-tint); }
-.card .title { font-size: var(--fs-body); font-weight: 600; }
-.card .does { font-size: var(--fs-ui); color: var(--fg-secondary); }
-.card .eg { font-size: var(--fs-ui); color: var(--fg-muted); margin-top: var(--sp-1); }
-.card .meta { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-faint); margin-top: var(--sp-1); }
+.list { border-top: 1px solid var(--border); }
+.item { border-bottom: 1px solid var(--border); }
+.item-head { display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-2); cursor: pointer;
+  border-radius: var(--r-sm); transition: background var(--speed) var(--ease); }
+.item-head:hover { background: var(--bg-hover); }
+.item-text { flex: 1; min-width: 0; }
+.item .title { font-weight: 500; }
+.item .does { font-size: var(--fs-ui); color: var(--fg-muted); }
+.item .meta { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-faint); white-space: nowrap; }
+.chev { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); width: var(--sp-4); text-align: center;
+  transition: transform var(--speed) var(--ease); }
+.item.open .chev { transform: rotate(90deg); }
+.item-body { padding: 0 var(--sp-2) var(--sp-3) calc(16px + var(--sp-3) + var(--sp-2)); display: grid; gap: var(--sp-2); }
+.item .eg { font-size: var(--fs-ui); color: var(--fg-secondary); }
 .need-pill { font-size: var(--fs-micro); font-weight: 500; color: var(--amber); background: var(--amber-bg); border: 1px solid var(--amber-border);
-  border-radius: var(--r-pill); padding: 0 var(--sp-2); margin-left: var(--sp-2); white-space: nowrap; }
-.parts { margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px solid var(--border); display: grid; gap: var(--sp-1); }
+  border-radius: var(--r-pill); padding: 0 var(--sp-2); white-space: nowrap; }
+.parts { display: grid; gap: var(--sp-1); }
 .parts .eyebrow { margin: 0; }
-.part { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-ui); cursor: pointer; }
+.part { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-ui); cursor: pointer; padding: var(--sp-1) 0; }
 .part .name { font-family: var(--font-mono); font-size: var(--fs-label); }
 .part .h { color: var(--fg-muted); }
 
@@ -107,7 +111,7 @@ a { color: var(--fg); }
     <h2><span class="n" id="n1">1/4</span>What do you want Heimdall to help with?</h2>
     <p class="lead">Pick only what you use. Every extra tool is more for the AI to read, so a short list makes it
       faster. What you set up before is already picked.</p>
-    <div id="rows" class="grid"><p class="lead">Loading…</p></div>
+    <div id="rows" class="list"><p class="lead">Loading…</p></div>
   </section>
 
   <section id="s2">
@@ -238,44 +242,60 @@ a { color: var(--fg); }
     var wrap = $('rows'); wrap.innerHTML = '';
     var picked = new Set(state.preselected);
     state.rows.filter(function (r) { return r.parent === null; }).forEach(function (r) {
-      var card = el('label', 'card');
+      var parts = children(r.index);
+      var item = el('div', 'item');
+      var head = el('div', 'item-head');
       var box = check(); box.checked = picked.has(r.index); box.value = r.index;
       boxes[r.index] = box;
-      var body = el('div');
-      var title = el('div', 'title', r.title || r.name);
-      if (r.roles.length === 1) title.appendChild(el('span', 'need-pill', 'Admin key'));
-      body.appendChild(title);
-      body.appendChild(el('div', 'does', r.does || r.hint));
-      if (r.example) body.appendChild(el('div', 'eg', '“' + r.example + '”'));
-      body.appendChild(el('div', 'meta', r.name + ' · ' + r.tools + ' tools'));
-      var parts = children(r.index);
+      var text = el('div', 'item-text');
+      text.appendChild(el('div', 'title', r.title || r.name));
+      text.appendChild(el('div', 'does', r.does || r.hint));
+      head.appendChild(box); head.appendChild(text);
+      if (r.roles.length === 1) head.appendChild(el('span', 'need-pill', 'Admin key'));
+      head.appendChild(el('span', 'meta', r.name + ' · ' + r.tools));
+      var chev = el('span', 'chev', '›');
+      head.appendChild(chev);
+      item.appendChild(head);
+
+      // The body opens on a click on the row: an example of what to ask, and the parts to trim.
+      var body = el('div', 'item-body hidden');
+      if (r.example) body.appendChild(el('div', 'eg', 'Try: “' + r.example + '”'));
       if (parts.length) {
-        // Visible as soon as the profile is picked: trimming a 126-tool profile is the point.
         var list = el('div', 'parts');
-        list.appendChild(el('p', 'eyebrow', 'Parts — untick what you don\\u2019t need'));
+        list.appendChild(el('p', 'eyebrow', 'Parts — untick what you don\u2019t need'));
         parts.forEach(function (c) {
           var line = el('label', 'part');
           var cb = check(); cb.value = c.index;
-          cb.checked = picked.has(c.index) || !picked.has(r.index);
+          cb.checked = picked.has(c.index);
           boxes[c.index] = cb;
           var txt = el('div');
-          var t = el('div'); t.appendChild(el('span', 'name', c.name)); t.appendChild(document.createTextNode(' · ' + c.tools + ' tools'));
+          var t = el('div'); t.appendChild(el('span', 'name', c.name)); t.appendChild(document.createTextNode(' · ' + c.tools + ' tools '));
           if (c.roles.length === 1) t.appendChild(el('span', 'need-pill', 'Admin key'));
-          txt.appendChild(t); txt.appendChild(el('div', 'h', c.hint.replace(/^~\\d+k · /, '')));
+          txt.appendChild(t); txt.appendChild(el('div', 'h', c.hint.replace(/^~[0-9]+k · /, '')));
           line.appendChild(cb); line.appendChild(txt); list.appendChild(line);
-          cb.addEventListener('change', update);
+          cb.addEventListener('change', function () {
+            // Ticking a part picks its profile; unticking the last one drops it.
+            if (cb.checked) box.checked = true;
+            else if (!parts.some(function (p) { return boxes[p.index].checked; })) box.checked = false;
+            update();
+          });
         });
-        // A click inside the list must not toggle the whole card.
-        list.addEventListener('click', function (e) { e.stopPropagation(); });
-        list.classList.toggle('hidden', !box.checked);
         body.appendChild(list);
-        box.addEventListener('change', function () {
-          list.classList.toggle('hidden', !box.checked);
-          if (box.checked) parts.forEach(function (c) { boxes[c.index].checked = true; });
-        });
       }
-      box.addEventListener('change', update);
-      card.appendChild(box); card.appendChild(body); wrap.appendChild(card);
+      if (!body.childNodes.length) chev.classList.add('hidden');
+      item.appendChild(body);
+
+      head.addEventListener('click', function (e) {
+        if (e.target === box) return;
+        if (body.childNodes.length) { item.classList.toggle('open'); body.classList.toggle('hidden'); }
+        else { box.checked = !box.checked; update(); }
+      });
+      box.addEventListener('change', function () {
+        if (box.checked) parts.forEach(function (c) { boxes[c.index].checked = true; });
+        else parts.forEach(function (c) { boxes[c.index].checked = false; });
+        update();
+      });
+      wrap.appendChild(item);
     });
     update();
   }
@@ -283,9 +303,6 @@ a { color: var(--fg); }
   /* ---- step 2: what the key must be, worked out from step 1 -------------- */
 
   function update() {
-    state.rows.forEach(function (r) {
-      if (r.parent === null) boxes[r.index].closest('.card').classList.toggle('on', boxes[r.index].checked);
-    });
     var picked = leaves();
     var need = $('need'); need.innerHTML = '';
     if (!picked.length) {
