@@ -25,6 +25,7 @@ Reviewing the code only helps if the package you install is built from that same
 - **Pinned third-party actions.** A compromised or retagged action can't change what runs in the release job. Dependabot proposes updates as pull requests I review.
 - **Dependency review on every pull request**, failing at moderate severity and above.
 - **Version checks before publishing.** The version must match across `package.json`, `server.json`, `package-lock.json`, `CITATION.cff`, the git tag and the changelog, or the release stops.
+- **Betas only when you ask for one.** A beta goes through the same release pipeline, but only to npm's `beta` channel. `npx @erayendes/asc-mcp` never installs a beta; only `@erayendes/asc-mcp@beta` does, and running `setup` without it moves you back.
 
 ### What I collect: nothing
 
@@ -98,6 +99,7 @@ Kodu incelemek, ancak kurduğunuz paket aynı koddan üretiliyorsa işe yarar. A
 - **Sabitlenmiş üçüncü taraf eylemler.** Ele geçirilmiş ya da yeniden etiketlenmiş bir eylem, yayın sırasında çalışan kodu değiştiremiyor. Güncellemeleri Dependabot, benim incelediğim pull request'ler olarak açıyor.
 - **Her pull request'te bağımlılık kontrolü** yapılıyor; orta ve üzeri önemdeki bir açıkta kontrol başarısız oluyor.
 - **Yayından önce sürüm kontrolü.** Sürüm numarası `package.json`, `server.json`, `package-lock.json`, `CITATION.cff`, git etiketi ve sürüm notları arasında aynı olmak zorunda; değilse yayın durur.
+- **Beta yalnızca siz isterseniz.** Beta da aynı yayın sürecinden geçiyor, ama yalnızca npm'in `beta` kanalına gidiyor. `npx @erayendes/asc-mcp` hiçbir zaman beta kurmaz; bunu yalnızca `@erayendes/asc-mcp@beta` yapar ve `setup`'ı onsuz çalıştırmak sizi kararlı sürüme geri getirir.
 
 ### Ne topluyorum: hiçbir şey
 
