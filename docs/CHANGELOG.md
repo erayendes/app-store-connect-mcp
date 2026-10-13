@@ -8,7 +8,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [2.7.0] — 2026-10-12
+### [2.7.0-beta.1] — 2026-10-13
 
 The nicest improvement you can actually see that I've made so far arrives in this version. Setup can now happen in your browser too, and I recommend you use it.
 
@@ -230,7 +230,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [2.7.0] — 2026-10-12
+### [2.7.0-beta.1] — 2026-10-13
 
 Bugüne kadar yaptığım gözle görülür en güzel iyileştirme bu sürümde geliyor. Kurulum artık tarayıcıda da yapılabiliyor, hatta bu yöntemi kullanmanızı tavsiye ederim.
 
