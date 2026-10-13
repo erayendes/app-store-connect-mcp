@@ -111,6 +111,9 @@ pre.out { white-space: pre-wrap; background: var(--bg-inset); border: 1px solid 
   padding: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-label); margin: var(--sp-3) 0 0; }
 a { color: var(--fg); }
 .hidden { display: none !important; }
+.totals { position: sticky; bottom: 0; margin: 0 calc(-1 * var(--sp-4)); padding: var(--sp-3) var(--sp-4);
+  background: var(--bg); border-top: 1px solid var(--border); font-size: var(--fs-ui); color: var(--fg-secondary); }
+.totals b { color: var(--fg); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -146,7 +149,8 @@ a { color: var(--fg); }
         </div>
         <ol class="help hidden" id="how">
           <li>Open <a id="keysLink" target="_blank" rel="noreferrer">App Store Connect → Users and Access → Integrations</a>
-            (only the Account Holder or an Admin can see it).</li>
+            Only the Account Holder or an Admin can create keys; if that isn't you, ask one of them
+            for a key with the <b class="roleName"></b> role.</li>
           <li>Copy the <b>Issuer ID</b> from the top of the page.</li>
           <li>Click <b>+</b>, name the key (say, "Heimdall") and give it the <b class="roleName"></b> role.</li>
           <li>Copy its <b>Key ID</b> from the list, then click <b>Download</b> for the <b>.p8</b> file.
@@ -197,6 +201,7 @@ a { color: var(--fg); }
     </div>
     <pre id="out" class="out hidden"></pre>
   </section>
+  <div class="totals" id="totals" aria-live="polite"></div>
 </main>
 <script>
 (function () {
@@ -344,10 +349,22 @@ a { color: var(--fg); }
     update();
   }
 
+  /** What the picks cost the AI, summed: every tool is something it reads on each request. */
+  function showTotals(picked) {
+    var t = $('totals'); t.innerHTML = '';
+    if (!picked.length) { t.textContent = 'Nothing picked yet.'; return; }
+    var tools = 0, k = 0;
+    picked.forEach(function (r) { tools += r.tools; k += r.ktokens; });
+    t.appendChild(document.createTextNode('Picked: '));
+    t.appendChild(el('b', '', tools + ' tools'));
+    t.appendChild(document.createTextNode(' · about ' + k + 'k tokens for the AI to read'));
+  }
+
   /* ---- step 2: what the key must be, worked out from step 1 -------------- */
 
   function update() {
     var picked = leaves();
+    showTotals(picked);
     var need = $('need'); need.innerHTML = '';
     if (!picked.length) {
       need.appendChild(el('div', 'why', 'Pick at least one thing above, and we will tell you what kind of key to create.'));
@@ -525,7 +542,7 @@ a { color: var(--fg); }
     var out = $('out'); out.classList.remove('hidden'); out.textContent = 'Applying…';
     call('apply', body).then(function (r) {
       finished = true; mark(1); mark(3); mark(4);
-      out.textContent = r.lines.join('\\n') + '\\n\\nAll set. Restart your AI apps, then you can close this tab.';
+      out.textContent = r.lines.join('\\n') + '\\n\\nAll set. You can close this tab.';
     }).catch(function (e) { out.textContent = e.message; });
   };
 

@@ -611,7 +611,7 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
     if (results.some((r) => r.ok)) restart.push(client.label);
   }
   if (restart.length) {
-    log(`\nDone. Restart ${list(restart)} for the change to take effect.`);
+    log(`\nDone. Restart ${list(restart)}, then ask: "Check my App Store Connect connection."`);
   }
 }
 

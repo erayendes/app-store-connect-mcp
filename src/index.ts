@@ -44,8 +44,11 @@ Commands:
   setup                  Interactive one-time credential setup shared by every
                          profile (writes ~/.config/asc-mcp, key to Keychain).
                          Also registers profiles with the MCP clients it finds.
-                         --web      answer it in your browser instead (a page
-                                    on 127.0.0.1 that only this computer sees)
+                         Asks first whether to continue in the browser
+                         (recommended) or the terminal; these skip the question:
+                         --web      the browser (a page on 127.0.0.1 that only
+                                    this computer sees)
+                         --terminal the terminal
                          --dry-run  with --web: walk through it, save nothing
   register <profile...>  Register profiles without a terminal — for an AI agent
                          acting on your behalf. Asks for nothing, never touches
@@ -118,7 +121,7 @@ async function main(): Promise<void> {
 
   if (positional[0] === 'setup') {
     try {
-      if (argv.includes('--web')) {
+      if (argv.includes('--web') || (!argv.includes('--terminal') && (await prefersBrowser()))) {
         const { runWebSetup } = await import('./setup-web.js');
         const port = Number(argv.find((a) => a.startsWith('--port='))?.slice('--port='.length)) || undefined;
         await runWebSetup({ dryRun: argv.includes('--dry-run'), open: !argv.includes('--no-open'), port });
@@ -219,4 +222,24 @@ if (invokedAsBinary()) {
     console.error('Fatal error:', err);
     process.exit(1);
   });
+}
+
+/**
+ * The browser is the easier way through setup, so a bare `setup` offers it
+ * first. Only where a browser on this machine can answer: not without a
+ * terminal to ask in, and not over SSH, where 127.0.0.1 is the far end's.
+ */
+async function prefersBrowser(): Promise<boolean> {
+  if (!process.stdin.isTTY || !process.stdout.isTTY || process.env.SSH_CONNECTION) return false;
+  const { createInterface } = await import('node:readline/promises');
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    console.log('\nApp Store Connect MCP — setup\n');
+    console.log('  1) In your browser (recommended)');
+    console.log('  2) Here in the terminal\n');
+    const answer = (await rl.question('Continue how? [1]: ')).trim();
+    return answer !== '2';
+  } finally {
+    rl.close();
+  }
 }

@@ -59,13 +59,11 @@ Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` | doğrudan düzenlenir |
 | VS Code | kullanıcı MCP config'i | `code --add-mcp` |
 
-### Tarayıcı mı tercih edersiniz? `setup --web`
+### Tarayıcıda ya da terminalde
 
-```bash
-npx -y @erayendes/asc-mcp setup --web
-```
+`setup` önce nasıl devam etmek istediğinizi sorar: tarayıcıda (önerilen) ya da burada, terminalde. `setup --web` ve `setup --terminal` bu soruyu atlar. SSH üzerinden bağlıysanız terminalde kalır, çünkü sayfa uzaktaki makinede açılırdı.
 
-Aynı sihirbaz, tarayıcınızda bir sayfa olarak. Önce neye ihtiyacınız olduğunu seçersiniz; sayfa bunun için hangi anahtar rolü gerektiğini ve kayıtlı anahtarınızın uyup uymadığını söyler. Sonra anahtarı eklersiniz (`.p8` dosyasını sayfaya bırakmanız yeterli), yapay zekâ uygulamalarınızı işaretlersiniz ve Apply'a basmadan önce her birinde neyin değişeceğini görürsünüz.
+Tarayıcı sayfası aynı sihirbazdır. Önce neye ihtiyacınız olduğunu seçersiniz; sayfa bunun için hangi anahtar rolü gerektiğini ve kayıtlı anahtarınızın uyup uymadığını söyler. Sonra anahtarı eklersiniz (`.p8` dosyasını sayfaya bırakmanız yeterli), yapay zekâ uygulamalarınızı işaretlersiniz ve Apply'a basmadan önce her birinde neyin değişeceğini görürsünüz.
 
 - Sayfa kendi bilgisayarınızda (`127.0.0.1`) tek kullanımlık bir linkle çalışır; Apply'dan sonra ya da 30 dakika kullanılmazsa kendiliğinden kapanır.
 - Anahtar terminal sihirbazındakiyle aynı şekilde kaydedilir: macOS Keychain'e; macOS dışında `.p8` dosyanızın yoluyla, içeriğini yapıştırdıysanız ortak ayarların yanına yalnızca sizin okuyabileceğiniz bir dosya olarak.
