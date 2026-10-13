@@ -14,6 +14,8 @@ We moved to version 2.0 of the MCP library. In practice, not much changes in you
 
 Heimdall already asked for your confirmation on some requests. With this version we ask a little more often: steps that release your app, such as sending a version to review or releasing it on the App Store, now ask too.
 
+Setup can now happen in your browser too, and that's the way we recommend. You first pick what you need, and Heimdall tells you which key to create. For terminal lovers, the terminal asks in the same order.
+
 For lucky new users, the first run downloads half as many packages, so a faster install awaits them.
 
 You no longer need to enter a bundle ID to look up customer purchases. Name the app and Heimdall finds the rest.
@@ -229,6 +231,8 @@ A safety release. Every change is now checked on your machine, shown to you befo
 MCP kütüphanesinin 2.0 sürümüne geçtik. Pratikte hayatınızda çok fazla şey değişmedi. Zaten Heimdall hep iyiydi 🙂
 
 Bazı isteklerinizde Heimdall onayınızı istiyordu. Yeni sürümle bunu biraz artırdık: sürümü incelemeye göndermek ya da App Store'da yayınlamak gibi yayına çıkaran adımlar da artık onay istiyor.
+
+Kurulum artık tarayıcıda da yapılabiliyor, hatta önerdiğimiz yol bu. Önce neye ihtiyacınız olduğunu seçiyorsunuz, Heimdall size hangi anahtarı oluşturmanız gerektiğini söylüyor. Terminali sevenler için terminal de aynı sırayla soruyor.
 
 Yeni şanslı kullanıcılar için ilk çalıştırmada indirilen paket sayısı yarıya indi. Artık onları daha hızlı bir kurulum bekliyor.
 
