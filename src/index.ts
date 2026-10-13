@@ -119,6 +119,14 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Not for people: setup starts this, detached, when an app that holds its
+  // settings file (Claude Desktop) is open, to write the change once it quits.
+  if (positional[0] === '__write-when-closed' && positional[1]) {
+    const { writeWhenClosed } = await import('./clients.js');
+    await writeWhenClosed(positional[1]);
+    return;
+  }
+
   if (positional[0] === 'setup') {
     try {
       if (argv.includes('--web') || (!argv.includes('--terminal') && (await prefersBrowser()))) {

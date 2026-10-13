@@ -43,6 +43,7 @@ import {
   serverName,
   profileOfServer,
   type McpClient,
+  HEIMDALL_VERSION,
 } from './clients.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
@@ -643,8 +644,11 @@ export async function runSetup(): Promise<void> {
 /** One client's share of a registration run. */
 export interface ClientPlan {
   client: McpClient;
+  /** Everything to write, the channel moves included. */
   toAdd: string[];
   toRemove: string[];
+  /** The part of toAdd that only changes channel (beta/stable); shown apart, since nothing new arrives. */
+  toSwitch: string[];
 }
 
 /**
@@ -672,13 +676,15 @@ export function planChanges(
         .map(([, spec]) => spec)
         .filter((spec) => !prune || chosenNames.has(serverName(spec)));
       const wanted = [...new Set([...chosen, ...migrate])];
+      // An entry on the other channel is rewritten even when its profiles
+      // match: that is how a beta tester's servers follow them back to stable.
+      const toAdd = client.targets.length
+        ? wanted.filter((spec) => registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec)))
+        : chosen;
       return {
         client,
-        // An entry on the other channel is rewritten even when its profiles
-        // match: that is how a beta tester's servers follow them back to stable.
-        toAdd: client.targets.length
-          ? wanted.filter((spec) => registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec)))
-          : chosen,
+        toAdd,
+        toSwitch: toAdd.filter((spec) => registered.get(serverName(spec)) === spec),
         // `register` never prunes: an agent adding one profile must not silently
         // drop the six the user set up last week.
         toRemove: [
@@ -693,9 +699,11 @@ export function planChanges(
 /** The plan, one line per client. */
 function printPlan(plan: ClientPlan[]): void {
   console.log('\nPlanned changes:\n');
-  for (const { client, toAdd, toRemove } of plan) {
+  for (const { client, toAdd, toRemove, toSwitch } of plan) {
     const bits: string[] = [];
-    if (toAdd.length) bits.push(`+ ${toAdd.map(serverName).join(', ')}`);
+    const added = toAdd.filter((s) => !toSwitch.includes(s));
+    if (toSwitch.length) bits.push(HEIMDALL_VERSION);
+    if (added.length) bits.push(`+ ${added.map(serverName).join(', ')}`);
     if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
     console.log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
   }
@@ -710,8 +718,12 @@ function printPlan(plan: ClientPlan[]): void {
  */
 export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
   const restart: string[] = [];
-  for (const { client, toAdd, toRemove } of plan) {
+  for (const { client, toAdd, toRemove, toSwitch } of plan) {
     log(`\n${client.label}`);
+    // Entries rewritten only for the channel are one fact, the version this
+    // app now runs, not one "added" line each. A failure is still listed.
+    const moved = new Set(toSwitch.map(serverName));
+    const isMove = (message: string): boolean => moved.has(/^added (\S+)/.exec(message)?.[1] ?? '');
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
       log('  add this to your client config:\n');
@@ -719,7 +731,8 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
       continue;
     }
     const { results, needsManual } = applyToClient(client, toAdd, toRemove);
-    for (const r of results) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
+    if (results.some((r) => r.ok && isMove(r.message))) log(`  ✓ ${HEIMDALL_VERSION}`);
+    for (const r of results) if (!(r.ok && isMove(r.message))) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
     const stillRegistered = listRegistered(client).size > 0;

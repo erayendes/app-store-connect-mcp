@@ -47,8 +47,11 @@ import {
   profileOfServer,
   type McpClient,
   PACKAGE,
+  mergePending,
+  writeWhenClosed,
+  type PendingWrite,
 } from '../src/clients.js';
-import { planChanges } from '../src/setup.js';
+import { applyPlan, planChanges } from '../src/setup.js';
 import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
@@ -384,5 +387,67 @@ describe('release channel of a registration', () => {
       stale: new Map([['temp', stale]]),
     });
     expect(plan[0].toAdd).toEqual(['analytics']);
+    expect(plan[0].toSwitch).toEqual(['analytics']); // shown as a channel move, not as something new
+  });
+});
+
+describe('reporting a change of release channel', () => {
+  it('says which Heimdall the app now runs, not that the entry was added', () => {
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
+    }));
+    const stale = new Set<string>();
+    const found = listRegistered(jsonClient(), stale);
+    const plan = planChanges([jsonClient()], ['analytics', 'app-info'], new Map([['temp', found]]), {
+      prune: true,
+      stale: new Map([['temp', stale]]),
+    });
+    const lines: string[] = [];
+    applyPlan(plan, (l) => lines.push(l));
+    expect(lines.join('\n')).toMatch(/✓ Heimdall \d+\.\d+\.\d+/);
+    expect(lines.join('\n')).not.toMatch(/added ASC-Analytics/);
+    expect(lines.join('\n')).toMatch(/added ASC-AppInfo/);
+  });
+});
+
+/**
+ * Claude Desktop keeps its settings file in memory and writes it back while it
+ * runs, so an edit made while it is open is gone within seconds. Setup leaves
+ * the change pending and a waiter writes it once the app has quit.
+ */
+describe('writing a file an open app holds', () => {
+  const pendingAt = (extra: Partial<PendingWrite> = {}) => {
+    const file = join(dir, 'held.json.heimdall-pending.json');
+    writeFileSync(file, JSON.stringify({
+      path: join(dir, 'held.json'), key: 'mcpServers', heldBy: 'Claude',
+      add: ['analytics'], remove: ['ASC-Webhooks'], until: Date.now() + 60_000, ...extra,
+    }));
+    return file;
+  };
+
+  it('writes once the app is gone, and clears the pending change', async () => {
+    writeFileSync(join(dir, 'held.json'), JSON.stringify({ mcpServers: { 'ASC-Webhooks': { command: 'npx', args: [] }, other: { command: 'x' } } }));
+    const file = pendingAt();
+    let checks = 0;
+    expect(await writeWhenClosed(file, () => ++checks < 3, 1)).toBe(true);
+    const doc = JSON.parse(readFileSync(join(dir, 'held.json'), 'utf8'));
+    expect(doc.mcpServers['ASC-Analytics'].args).toEqual(serverArgs('analytics'));
+    expect(doc.mcpServers['ASC-Webhooks']).toBeUndefined();
+    expect(doc.mcpServers.other).toBeDefined(); // what the user had stays
+    expect(existsSync(file)).toBe(false);
+  });
+
+  it('gives up after its deadline without touching the file', async () => {
+    const file = pendingAt({ until: Date.now() - 1 });
+    expect(await writeWhenClosed(file, () => false, 1)).toBe(false);
+    expect(existsSync(join(dir, 'held.json'))).toBe(false);
+    expect(existsSync(file)).toBe(false);
+  });
+
+  it('lets a later setup override an earlier one for the servers it names', () => {
+    const merged = mergePending({ add: ['analytics', 'marketing'], remove: ['ASC-Webhooks'] }, ['analytics:sales'], ['ASC-Marketing']);
+    expect(merged.add).toEqual(['analytics:sales']);
+    expect(merged.remove).toEqual(['ASC-Webhooks', 'ASC-Marketing']);
   });
 });

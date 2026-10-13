@@ -107,6 +107,7 @@ textarea.input { height: auto; min-height: 96px; padding: var(--sp-2); font-fami
 .plan li { margin: var(--sp-1) 0; }
 .plan .add { color: var(--green); font-family: var(--font-mono); font-size: var(--fs-label); }
 .plan .rm { color: var(--red); font-family: var(--font-mono); font-size: var(--fs-label); }
+.plan .mv { color: var(--fg-secondary); font-family: var(--font-mono); font-size: var(--fs-label); }
 pre.out { white-space: pre-wrap; background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-md);
   padding: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-label); margin: var(--sp-3) 0 0; }
 a { color: var(--fg); }
@@ -236,6 +237,10 @@ a { color: var(--fg); }
     if (!keyReady) { say('Add your key in step 2 first.'); return; }
     planTimer = setTimeout(refreshPlan, 250);
   }
+  function vendorChanged() {
+    var v = $('vendor').value.trim();
+    return v !== '' && !(state.existing && state.existing.vendorNumber === v);
+  }
   function say(text) { var list = $('plan'); list.innerHTML = ''; list.appendChild(el('li', '', text)); }
   function refreshPlan() {
     var sel = selection(), seq = ++planSeq, list = $('plan');
@@ -245,14 +250,20 @@ a { color: var(--fg); }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq) return;
       list.innerHTML = '';
-      if (!r.plan.length) list.appendChild(el('li', '', 'No changes — your apps already match this selection.'));
+      if (!r.plan.length) {
+        list.appendChild(el('li', '', reuse && !vendorChanged()
+          ? 'No changes — your apps already match this selection.'
+          : 'Your apps already match this selection. Apply saves your key details.'));
+      }
       r.plan.forEach(function (p) {
         var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
+        if (p.switch.length) li.appendChild(el('span', 'mv', r.version + ' '));
         if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
-        if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ')));
+        if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ') + ' '));
         list.appendChild(li);
       });
-      $('apply').disabled = false;
+      // Nothing to change and nothing new to save: Apply would do nothing.
+      $('apply').disabled = !r.plan.length && reuse && !vendorChanged();
     }).catch(function (e) { if (seq === planSeq) list.textContent = e.message; });
   }
 
@@ -495,6 +506,7 @@ a { color: var(--fg); }
       $('clients').appendChild(toggle); $('clients').appendChild(more);
     }
     $('clients').addEventListener('change', invalidatePlan);
+    $('vendor').addEventListener('input', invalidatePlan);
     renderRows();
     if (reuse) keyDone();
   }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. To start again, run npx -y @erayendes/asc-mcp setup --web in your terminal. (' + e.message + ')'; });
