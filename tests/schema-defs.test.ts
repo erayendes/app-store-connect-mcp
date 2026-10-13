@@ -190,10 +190,13 @@ describe('$defs decision tripwires', () => {
     // trade-off deserves a fresh look — a collapse would mean there is nothing
     // left to want, a jump means the prize grew.
     //
-    // Note the floor sits only ~0.6pp below the current value: another pass of
-    // description shortening shrinks the denominator again and could trip this
-    // without the duplication itself having changed. If that is why it fired,
-    // recalibrate the baseline rather than reopening the decision.
+    // The floor (26%) dates from a ~26.6% baseline and now sits ~5pp below:
+    // another pass of description shortening shrinks the denominator and can
+    // still trip it without the duplication itself having changed. If that is
+    // why it fired, recalibrate the baseline rather than reopening the decision.
+    //
+    // A failure here that reports a time instead of a percentage is the greedy
+    // hoist being slow, not the corpus moving — see canonicalMemo.
     const byDomain = new Map<string, unknown[]>();
     for (const op of OPERATIONS) {
       const list = byDomain.get(op.domain) ?? [];
