@@ -63,7 +63,7 @@ No two AI apps share a settings file. Setup registers your profiles with every a
 
 The steps are the same, just easier: you pick what you need, the page tells you which key to create, you drag the `.p8` file onto it, and you see what will change before anything is saved.
 
-- The page opens only on your own computer and closes itself when you're done.
+- The page opens only on your own computer (`127.0.0.1`), behind a one-time link. It closes itself when you're done, or after 30 minutes without use.
 - Your key is stored the same way as in the terminal. The details are in [Security](../.github/SECURITY.md).
 - To skip the question: `setup --web` or `setup --terminal`.
 
