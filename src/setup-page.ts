@@ -135,10 +135,9 @@ a { color: var(--fg); }
     <div class="need">
       <div id="need"></div>
       <div id="reuseBox" class="saved hidden">
-        <div>You already have a saved key: <span class="mono" id="savedKey"></span><span id="savedRole" class="role-tag"></span></div>
+        <div>Using your saved key: <span class="mono" id="savedKey"></span><span id="savedRole" class="role-tag"></span></div>
         <p id="reuseMsg" class="msg"></p>
-        <div class="row" id="reuseButtons" style="margin-top:0">
-          <button class="btn btn-secondary" id="reuseYes">Use it</button>
+        <div class="row" style="margin-top:0">
           <button class="btn btn-link-primary" id="reuseNo">Use a new key instead</button>
         </div>
       </div>
@@ -232,11 +231,17 @@ a { color: var(--fg); }
   function invalidatePlan() {
     $('apply').disabled = true;
     clearTimeout(planTimer);
-    if (keyReady) planTimer = setTimeout(refreshPlan, 250);
+    planSeq++; // an answer already on its way is for a selection that no longer stands
+    // Say why Apply is off rather than leave a dead button.
+    if (!keyReady) { say('Add your key in step 2 first.'); return; }
+    planTimer = setTimeout(refreshPlan, 250);
   }
+  function say(text) { var list = $('plan'); list.innerHTML = ''; list.appendChild(el('li', '', text)); }
   function refreshPlan() {
     var sel = selection(), seq = ++planSeq, list = $('plan');
-    if (!sel.clients.length) { list.innerHTML = ''; list.appendChild(el('li', '', 'Tick at least one app in step 3.')); return; }
+    // Nothing picked would unregister every profile: that is an uninstall, not a setup.
+    if (!leaves().length) { say('Pick at least one thing in step 1.'); return; }
+    if (!sel.clients.length) { say('Tick at least one app in step 3.'); return; }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq) return;
       list.innerHTML = '';
@@ -466,8 +471,10 @@ a { color: var(--fg); }
     if (s.dryRun) $('dry').classList.remove('hidden');
     $('keysLink').href = s.keysUrl;
     if (s.existing) {
+      // A saved key is the answer unless the user says otherwise, as in the terminal's [Y/n].
       $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden');
       checkAdmin(true);
+      reuse = true;
     }
     else { $('keyBox').classList.remove('hidden'); $('how').classList.remove('hidden'); }
     $('clients').innerHTML = '';
@@ -489,14 +496,18 @@ a { color: var(--fg); }
     }
     $('clients').addEventListener('change', invalidatePlan);
     renderRows();
+    if (reuse) keyDone();
   }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. To start again, run npx -y @erayendes/asc-mcp setup --web in your terminal. (' + e.message + ')'; });
 
-  $('reuseYes').onclick = function () { reuse = true; $('reuseButtons').classList.add('hidden'); keyDone(); };
   $('reuseNo').onclick = function () {
+    // The saved key is no longer the one: nothing applies until the new one is checked.
+    reuse = false; keyReady = false; $('n2').classList.remove('done'); $('n2').textContent = '2/4';
+    $('s4').classList.add('locked'); invalidatePlan();
     $('reuseBox').classList.add('hidden'); $('keyBox').classList.remove('hidden'); $('backToSaved').classList.remove('hidden');
   };
   $('backToSaved').onclick = function () {
     $('keyBox').classList.add('hidden'); $('backToSaved').classList.add('hidden'); $('reuseBox').classList.remove('hidden');
+    reuse = true; keyDone();
   };
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-help]'), function (b) {

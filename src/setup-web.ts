@@ -123,7 +123,10 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
     if (!Array.isArray(picked) || !picked.every((i) => Number.isInteger(i) && i >= 0 && i < rows.length)) {
       throw new HttpError(400, 'picked must be row numbers');
     }
-    return selectionToSpecs(rows, picked as number[]);
+    const specs = selectionToSpecs(rows, picked as number[]);
+    // An empty pick would unregister every profile: an uninstall dressed as setup.
+    if (!specs.length) throw new HttpError(400, 'Pick at least one profile.');
+    return specs;
   };
   const plan = (body: Record<string, unknown>) => {
     const clients = chosenClients(body.clients);
