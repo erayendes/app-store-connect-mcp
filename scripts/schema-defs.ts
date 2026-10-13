@@ -50,7 +50,36 @@ function canonical(value: unknown): string {
   });
 }
 
+/**
+ * `canonical`, byte for byte, memoised by node identity so a subtree is
+ * serialized once rather than once per ancestor, and once per greedy pass.
+ * Records each child's parent so a hoist can drop the keys it made stale.
+ */
+function canonicalMemo(
+  node: unknown,
+  memo: Map<object, string>,
+  parents: Map<object, object>
+): string {
+  if (!node || typeof node !== 'object') return JSON.stringify(node);
+  const hit = memo.get(node);
+  if (hit !== undefined) return hit;
+  const child = (value: unknown): string => {
+    if (value && typeof value === 'object') parents.set(value, node);
+    return canonicalMemo(value, memo, parents);
+  };
+  const key = Array.isArray(node)
+    ? `[${node.map(child).join(',')}]`
+    : `{${Object.keys(node)
+        .sort()
+        .map((k) => `${JSON.stringify(k)}:${child((node as any)[k])}`)
+        .join(',')}}`;
+  memo.set(node, key);
+  return key;
+}
+
 interface Slot {
+  /** The object or array the subschema sits in. */
+  owner: object;
   get: () => any;
   set: (value: any) => void;
 }
@@ -67,7 +96,7 @@ function subschemaSlots(root: any): Slot[] {
     if (!node || typeof node !== 'object') return;
 
     const push = (owner: any, key: string | number): void => {
-      slots.push({ get: () => owner[key], set: (v) => (owner[key] = v) });
+      slots.push({ owner, get: () => owner[key], set: (v) => (owner[key] = v) });
       visit(owner[key]);
     };
 
@@ -115,6 +144,12 @@ export interface HoistResult {
 function greedyHoist(roots: any[]): Record<string, unknown> {
   const defs: Record<string, unknown> = {};
   let next = 0;
+  // Canonical keys survive between passes; a hoist invalidates only the
+  // containers it rewrote and their ancestors. Recomputing every key on every
+  // pass made this ~1s for the corpus on an idle machine and past vitest's 5s
+  // timeout on a loaded one.
+  const memo = new Map<object, string>();
+  const parents = new Map<object, object>();
 
   for (;;) {
     const buckets = new Map<string, { size: number; slots: Slot[] }>();
@@ -123,9 +158,11 @@ function greedyHoist(roots: any[]): Record<string, unknown> {
         const node = slot.get();
         if (!node || typeof node !== 'object' || Array.isArray(node)) continue;
         if (node.$ref) continue; // already factored out
-        const key = canonical(node);
+        const key = canonicalMemo(node, memo, parents);
         let bucket = buckets.get(key);
-        if (!bucket) buckets.set(key, (bucket = { size: JSON.stringify(node).length, slots: [] }));
+        // The canonical form only reorders keys, so its length is the node's
+        // serialized size.
+        if (!bucket) buckets.set(key, (bucket = { size: key.length, slots: [] }));
         bucket.slots.push(slot);
       }
     }
@@ -150,7 +187,10 @@ function greedyHoist(roots: any[]): Record<string, unknown> {
     if (!best) break;
 
     defs[name] = clone(best.slots[0].get());
-    for (const slot of best.slots) slot.set({ $ref: `#/$defs/${name}` });
+    for (const slot of best.slots) {
+      slot.set({ $ref: `#/$defs/${name}` });
+      for (let o: object | undefined = slot.owner; o && memo.delete(o); o = parents.get(o));
+    }
     next++;
   }
 
