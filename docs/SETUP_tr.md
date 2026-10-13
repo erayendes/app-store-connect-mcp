@@ -59,13 +59,13 @@ Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`
 
 ### Tarayıcıda ya da terminalde
 
-`setup` önce nasıl devam etmek istediğinizi sorar: tarayıcıda (önerilen) ya da burada, terminalde. `setup --web` ve `setup --terminal` bu soruyu atlar. SSH üzerinden bağlıysanız terminalde kalır, çünkü sayfa uzaktaki makinede açılırdı.
+`setup` önce tarayıcıda mı terminalde mi devam etmek istediğinizi sorar. Tarayıcıyı öneririz.
 
-Tarayıcı sayfası aynı sihirbazdır. Önce neye ihtiyacınız olduğunu seçersiniz; sayfa bunun için hangi anahtar rolü gerektiğini ve kayıtlı anahtarınızın uyup uymadığını söyler. Sonra anahtarı eklersiniz (`.p8` dosyasını sayfaya bırakmanız yeterli), yapay zekâ uygulamalarınızı işaretlersiniz ve Apply'a basmadan önce her birinde neyin değişeceğini görürsünüz.
+Adımlar aynı, yalnızca daha rahat: neye ihtiyacınız olduğunu seçersiniz, sayfa hangi anahtarı oluşturmanız gerektiğini söyler, `.p8` dosyasını sayfaya sürüklersiniz ve hiçbir şey kaydedilmeden önce neyin değişeceğini görürsünüz.
 
-- Sayfa kendi bilgisayarınızda (`127.0.0.1`) tek kullanımlık bir linkle çalışır; Apply'dan sonra ya da 30 dakika kullanılmazsa kendiliğinden kapanır.
-- Anahtar terminal sihirbazındakiyle aynı şekilde kaydedilir: macOS Keychain'e; macOS dışında `.p8` dosyanızın yoluyla, içeriğini yapıştırdıysanız ortak ayarların yanına yalnızca sizin okuyabileceğiniz bir dosya olarak.
-- `--dry-run` hiçbir şey kaydetmeden ve Apple'a bağlanmadan bütün akışı gösterir. `--no-open` tarayıcıyı açmak yerine linki yazdırır, `--port=N` portu seçer.
+- Sayfa yalnızca sizin bilgisayarınızda açılır ve iş bitince kendiliğinden kapanır.
+- Anahtarınız terminaldeki gibi saklanır. Ayrıntısı [Güvenlik](../.github/SECURITY.md) sayfasında.
+- Soruyu atlamak için: `setup --web` ya da `setup --terminal`.
 
 ## Profil ekleme ve çıkarma
 
