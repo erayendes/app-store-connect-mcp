@@ -8,6 +8,18 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.7.0-beta.6] — 2026-10-13
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+What we changed since beta.5:
+
+The list of changes now shows only what you change: profiles you add or remove. The Heimdall version moved to the bottom of the page.
+
+At the end, setup says "open" for an app that is closed instead of "restart".
+
 ### [2.7.0-beta.5] — 2026-10-13
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -285,6 +297,18 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.7.0-beta.6] — 2026-10-13
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+beta.5'ten bu yana değiştirdiklerimiz:
+
+Değişiklik listesi artık yalnızca sizin değiştirdiklerinizi gösteriyor: eklediğiniz ya da çıkardığınız profiller. Heimdall sürümü sayfanın altına taşındı.
+
+Kurulum sonunda kapalı bir uygulama için "yeniden başlat" yerine "aç" diyor.
 
 ### [2.7.0-beta.5] — 2026-10-13
 
