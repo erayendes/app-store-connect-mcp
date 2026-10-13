@@ -127,7 +127,14 @@ jobs:
           if npm view "@erayendes/asc-mcp@$VER" version >/dev/null 2>&1; then
             echo "@erayendes/asc-mcp@$VER is already on npm; not publishing again."
           else
-            npm publish --provenance
+            # A prerelease (2.7.0-beta.1) goes to the `beta` dist-tag, so
+            # `npx @erayendes/asc-mcp` keeps serving stable and only
+            # `@erayendes/asc-mcp@beta` reaches the beta.
+            if [[ "$VER" == *-* ]]; then
+              npm publish --provenance --tag beta
+            else
+              npm publish --provenance
+            fi
           fi
 
       # The MCP Registry is a separate publication from npm, and until now it
@@ -140,7 +147,9 @@ jobs:
       # OIDC audience, and an old binary fails with "invalid audience" — the
       # documented fix is to fetch latest, so pinning buys a reproducible
       # build at the price of a release that cannot publish.
+      # A beta stays off the MCP Registry, which would list it as the latest.
       - name: Install mcp-publisher
+        if: ${{ !contains(github.ref_name, '-') }}
         run: |
           curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
 
@@ -151,6 +160,7 @@ jobs:
       # 2.4.0 got "version '2.4.0' was not found (status: 404)" thirty seconds
       # after `npm publish` had succeeded. So wait for npm first.
       - name: Wait for npm to serve the new version
+        if: ${{ !contains(github.ref_name, '-') }}
         run: |
           VER=$(node -p 'require("./package.json").version')
           for i in $(seq 1 30); do
@@ -165,6 +175,7 @@ jobs:
           exit 1
 
       - name: Publish to the MCP Registry
+        if: ${{ !contains(github.ref_name, '-') }}
         run: |
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
@@ -235,9 +246,11 @@ jobs:
           sbom="asc-mcp-${TAG}-sbom.spdx.json"
           bundle="dist-mcpb/heimdall-asc-${TAG#v}.mcpb"
 
+          # A beta is marked as a pre-release, so the repo's "Latest" stays stable.
+          pre=$( [[ "$TAG" == *-* ]] && echo --prerelease || true )
           if [ -s /tmp/notes.md ]; then
-            gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md "$sbom" "$bundle"
+            gh release create "$TAG" --title "$TAG" $pre --notes-file /tmp/notes.md "$sbom" "$bundle"
           else
             echo "No changelog entry for $TAG — falling back to generated notes."
-            gh release create "$TAG" --title "$TAG" --generate-notes "$sbom" "$bundle"
+            gh release create "$TAG" --title "$TAG" $pre --generate-notes "$sbom" "$bundle"
           fi
