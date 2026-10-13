@@ -63,7 +63,7 @@ Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`
 
 Adımlar aynı, yalnızca daha rahat: neye ihtiyacınız olduğunu seçersiniz, sayfa hangi anahtarı oluşturmanız gerektiğini söyler, `.p8` dosyasını sayfaya sürüklersiniz ve hiçbir şey kaydedilmeden önce neyin değişeceğini görürsünüz.
 
-- Sayfa yalnızca sizin bilgisayarınızda açılır ve iş bitince kendiliğinden kapanır.
+- Sayfa yalnızca sizin bilgisayarınızda (`127.0.0.1`) ve tek kullanımlık bir linkle açılır. İş bitince ya da 30 dakika kullanılmazsa kendiliğinden kapanır.
 - Anahtarınız terminaldeki gibi saklanır. Ayrıntısı [Güvenlik](../.github/SECURITY.md) sayfasında.
 - Soruyu atlamak için: `setup --web` ya da `setup --terminal`.
 
