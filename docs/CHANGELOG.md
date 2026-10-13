@@ -8,6 +8,20 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.7.0-beta.3] — 2026-10-13
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+What we fixed since beta.2:
+
+Setting up while Claude Desktop is open no longer gets lost. Desktop wrote its own settings back while it ran; setup now waits for you to quit it and writes then. This was in 2.6.0 too.
+
+Setup now says which Heimdall it sets up, instead of saying "added" for profiles you already had.
+
+When nothing changes, Apply stays off.
+
 ### [2.7.0-beta.2] — 2026-10-13
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -249,6 +263,20 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.7.0-beta.3] — 2026-10-13
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+beta.2'den bu yana düzelttiklerimiz:
+
+Claude Desktop açıkken yapılan kurulum artık kaybolmuyor. Desktop çalışırken kendi ayarlarını geri yazıyordu; kurulum artık Desktop'ı kapatmanızı bekleyip o zaman yazıyor. Bu sorun 2.6.0'da da vardı.
+
+Kurulum artık hangi Heimdall'ı kurduğunu söylüyor; zaten olan profiller için "eklendi" demiyor.
+
+Hiçbir şey değişmiyorsa Apply kapalı kalıyor.
 
 ### [2.7.0-beta.2] — 2026-10-13
 
