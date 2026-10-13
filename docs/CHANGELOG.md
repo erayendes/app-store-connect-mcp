@@ -11,15 +11,21 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 ### [2.7.0] — 2026-10-12
 
 The nicest improvement you can actually see that I've made so far arrives in this version. Setup can now happen in your browser too, and I recommend you use it.
+
 You first pick what you need, and Heimdall tells you which key to create for it.
+
 For terminal lovers, I built the same flow.
 
 We moved to version 2.0 of the MCP library. In practice, not much changes in your life. Heimdall was always good anyway 🙂
+
 Heimdall already asked for your confirmation on some requests. With this version we ask a little more often: steps that release your app, such as sending a version to review or releasing it on the App Store, now ask too.
+
 Note: If your app can't show a confirmation, these release steps no longer run. Set `ASC_CONFIRM_WRITES=0` to go back to the old behaviour.
+
 For lucky new users, the first run downloads half as many packages, so a faster install awaits them.
 
 You no longer need to enter a bundle ID to look up customer purchases. Name the app and Heimdall will find it.
+
 When no environment is set, the StoreKit tools now look at Production. Set `ASC_ENVIRONMENT=Sandbox` for the sandbox.
 
 Other than that, it's the Heimdall you know and love.
@@ -227,15 +233,21 @@ A safety release. Every change is now checked on your machine, shown to you befo
 ### [2.7.0] — 2026-10-12
 
 Bugüne kadar yaptığım gözle görülür en güzel iyileştirme bu sürümde geliyor. Kurulum artık tarayıcıda da yapılabiliyor, hatta bu yöntemi kullanmanızı tavsiye ederim.
+
 Önce neye ihtiyacınız olduğunu seçiyorsunuz, Heimdall buna göre hangi anahtarı oluşturmanız gerektiğini söylüyor.
+
 Terminal severler için aynı akışı kurguladım.
 
 MCP kütüphanesinin 2.0 sürümüne geçtik. Pratikte hayatınızda çok fazla şey değişmedi. Zaten Heimdall hep iyiydi 🙂
+
 Bazı isteklerinizde Heimdall onayınızı istiyordu. Yeni sürümle bunu biraz artırdık: sürümü incelemeye göndermek ya da App Store'da yayınlamak gibi yayına çıkaran adımlar da artık onay istiyor.
+
 Not: Kullandığınız uygulama onay penceresi açamıyorsa bu yayın adımları artık çalışmaz. Eski davranışa dönmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
+
 Yeni şanslı kullanıcılar için ilk çalıştırmada indirilen paket sayısı yarıya indi. Artık onları daha hızlı bir kurulum bekliyor.
 
 Müşteri satın alımlarına bakmak için artık bundle ID girmeniz gerekmiyor. Uygulamanın adını söylerseniz Heimdall bulacak.
+
 Ortam belirtilmediğinde StoreKit araçları artık Production'a bakıyor. Sandbox için `ASC_ENVIRONMENT=Sandbox` ayarlayın.
 
 Bunun dışında bildiğiniz ve sevdiğiniz Heimdall.
