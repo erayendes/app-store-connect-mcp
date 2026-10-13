@@ -8,6 +8,22 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.7.0-beta.2] — 2026-10-13
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+What we fixed in the browser setup since beta.1:
+
+Your saved key is now used without pressing "Use it". Before, Apply stayed off and the page didn't say why.
+
+When Apply is off, the page now says why.
+
+Switching to a new key after the saved one no longer sets you up with the saved key.
+
+Picking nothing no longer removes every profile from your AI apps.
+
 ### [2.7.0-beta.1] — 2026-10-13
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -233,6 +249,22 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.7.0-beta.2] — 2026-10-13
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+beta.1'den bu yana tarayıcı kurulumunda düzelttiklerimiz:
+
+Kayıtlı anahtarınız artık "Use it"e basmadan kullanılıyor. Önceden Apply kapalı kalıyor ve sayfa nedenini söylemiyordu.
+
+Apply kapalıysa sayfa artık nedenini yazıyor.
+
+Kayıtlı anahtardan sonra yeni anahtara geçince kurulum artık kayıtlı anahtarla yapılmıyor.
+
+Hiçbir şey seçmemek artık yapay zekâ uygulamalarınızdaki bütün profilleri kaldırmıyor.
 
 ### [2.7.0-beta.1] — 2026-10-13
 
