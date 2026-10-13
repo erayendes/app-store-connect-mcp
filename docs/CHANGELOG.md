@@ -8,6 +8,16 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.7.0-beta.4] — 2026-10-13
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+What we fixed since beta.3:
+
+Setup now notices when Claude Desktop is open. In beta.3 it didn't, so it still wrote Desktop's settings right away and Desktop put them back.
+
 ### [2.7.0-beta.3] — 2026-10-13
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -263,6 +273,16 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.7.0-beta.4] — 2026-10-13
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+beta.3'ten bu yana düzelttiklerimiz:
+
+Kurulum artık Claude Desktop'ın açık olduğunu fark ediyor. beta.3 fark etmiyordu; bu yüzden Desktop'ın ayarlarını yine hemen yazıyordu ve Desktop onları geri alıyordu.
 
 ### [2.7.0-beta.3] — 2026-10-13
 
