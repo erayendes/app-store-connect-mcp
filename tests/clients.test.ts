@@ -48,9 +48,6 @@ import {
   type McpClient,
   PACKAGE,
   isRunningIn,
-  mergePending,
-  writeWhenClosed,
-  type PendingWrite,
 } from '../src/clients.js';
 import { applyPlan, planChanges } from '../src/setup.js';
 import { PROFILES } from '../src/profiles.js';
@@ -412,40 +409,8 @@ describe('reporting a change of release channel', () => {
   });
 });
 
-/**
- * Claude Desktop keeps its settings file in memory and writes it back while it
- * runs, so an edit made while it is open is gone within seconds. Setup leaves
- * the change pending and a waiter writes it once the app has quit.
- */
-describe('writing a file an open app holds', () => {
-  const pendingAt = (extra: Partial<PendingWrite> = {}) => {
-    const file = join(dir, 'held.json.heimdall-pending.json');
-    writeFileSync(file, JSON.stringify({
-      path: join(dir, 'held.json'), key: 'mcpServers', heldBy: 'Claude',
-      add: ['analytics'], remove: ['ASC-Webhooks'], until: Date.now() + 60_000, ...extra,
-    }));
-    return file;
-  };
-
-  it('writes once the app is gone, and clears the pending change', async () => {
-    writeFileSync(join(dir, 'held.json'), JSON.stringify({ mcpServers: { 'ASC-Webhooks': { command: 'npx', args: [] }, other: { command: 'x' } } }));
-    const file = pendingAt();
-    let checks = 0;
-    expect(await writeWhenClosed(file, () => ++checks < 3, 1)).toBe(true);
-    const doc = JSON.parse(readFileSync(join(dir, 'held.json'), 'utf8'));
-    expect(doc.mcpServers['ASC-Analytics'].args).toEqual(serverArgs('analytics'));
-    expect(doc.mcpServers['ASC-Webhooks']).toBeUndefined();
-    expect(doc.mcpServers.other).toBeDefined(); // what the user had stays
-    expect(existsSync(file)).toBe(false);
-  });
-
-  it('gives up after its deadline without touching the file', async () => {
-    const file = pendingAt({ until: Date.now() - 1 });
-    expect(await writeWhenClosed(file, () => false, 1)).toBe(false);
-    expect(existsSync(join(dir, 'held.json'))).toBe(false);
-    expect(existsSync(file)).toBe(false);
-  });
-
+/** Claude Desktop is found by its main process, not a helper or Claude Code's namesake. */
+describe('telling whether an app is open', () => {
   it('finds the app by its main process, not by a helper or a namesake', () => {
     const ps = [
       '/Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper',
@@ -453,11 +418,5 @@ describe('writing a file an open app holds', () => {
     ];
     expect(isRunningIn(ps, 'Claude')).toBe(false);
     expect(isRunningIn([...ps, '/Applications/Claude.app/Contents/MacOS/Claude'], 'Claude')).toBe(true);
-  });
-
-  it('lets a later setup override an earlier one for the servers it names', () => {
-    const merged = mergePending({ add: ['analytics', 'marketing'], remove: ['ASC-Webhooks'] }, ['analytics:sales'], ['ASC-Marketing']);
-    expect(merged.add).toEqual(['analytics:sales']);
-    expect(merged.remove).toEqual(['ASC-Webhooks', 'ASC-Marketing']);
   });
 });

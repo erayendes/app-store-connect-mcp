@@ -119,14 +119,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Not for people: setup starts this, detached, when an app that holds its
-  // settings file (Claude Desktop) is open, to write the change once it quits.
-  if (positional[0] === '__write-when-closed' && positional[1]) {
-    const { writeWhenClosed } = await import('./clients.js');
-    await writeWhenClosed(positional[1]);
-    return;
-  }
-
   if (positional[0] === 'setup') {
     try {
       if (argv.includes('--web') || (!argv.includes('--terminal') && (await prefersBrowser()))) {
@@ -242,7 +234,7 @@ async function prefersBrowser(): Promise<boolean> {
   const { createInterface } = await import('node:readline/promises');
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    console.log('\nWelcome to Heimdall setup.');
+    console.log('\n👋 Welcome to Heimdall setup.');
     const answer = (await rl.question('For the best experience, continue in your browser? [Y/n]: ')).trim();
     return !/^n/i.test(answer);
   } finally {

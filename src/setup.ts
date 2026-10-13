@@ -44,6 +44,9 @@ import {
   profileOfServer,
   type McpClient,
   HEIMDALL_VERSION,
+  PACKAGE,
+  claudeDesktop,
+  isRunning,
 } from './clients.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
@@ -254,7 +257,7 @@ export async function selectClients(ask: Ask): Promise<McpClient[] | null> {
   }));
   const preselected = all.map((c, i) => (c.id !== 'other' && isPresent(c) ? i : -1)).filter((i) => i >= 0);
   const title =
-    '\nWhich MCP clients should carry these profiles?\n' +
+    '\n🤖 Which AI apps should get these profiles?\n' +
     'The ones found on this machine are checked. None of them share a config,\n' +
     'so a profile registered with one is invisible to the others.';
 
@@ -328,7 +331,7 @@ async function selectProfiles(
   preselected: number[]
 ): Promise<string[] | null> {
   const title =
-    '\nWhich profiles do you need?\n' +
+    '\n🧩 Which profiles do you need?\n' +
     'Already-registered ones are checked — uncheck to remove, check to add.\n' +
     'Checking a profile opens its sub-profiles, all on; uncheck the ones you\n' +
     "don't need. Every tool loads into every session, so leaner is faster.\n" +
@@ -522,7 +525,29 @@ export async function runSetup(): Promise<void> {
   try {
     // Needs first, then the key: what was picked decides which role the key
     // should have, and that is worth knowing before creating one.
-    console.log('\nFirst, what do you need? You can change this any time, so pick the narrowest set you can.');
+    // Claude Desktop writes its own settings back while it runs; a change made
+    // while it is open never reaches it. Say so before anything is asked.
+    const desktop = claudeDesktop();
+    if (desktop === 'inside') {
+      console.log(
+        `\n⚠️  This setup is running inside Claude Desktop. Desktop writes its own settings back while it is open,\n` +
+          `   so Claude Desktop itself can't be updated from here. Your other AI apps can.\n` +
+          `   To include Claude Desktop: quit it, open Terminal and run  npx -y ${PACKAGE} setup`
+      );
+      if (/^n/i.test(await ask('Continue for your other AI apps? [Y/n]: ', false))) return;
+    } else if (desktop === 'open') {
+      console.log(
+        `\n⚠️  Claude Desktop is open. It writes its own settings back while it runs, so the change wouldn't reach it.\n` +
+          `   Quit Claude Desktop (⌘Q) before you go on.`
+      );
+      for (;;) {
+        const answer = await ask('Press Enter once it is closed (or type s to skip Claude Desktop): ', false);
+        if (/^s/i.test(answer) || !isRunning('Claude')) break;
+        console.log('   Claude Desktop is still open.');
+      }
+    }
+
+    console.log('\n🧩 First, what do you need? You can change this any time, so pick the narrowest set you can.');
     const rows = buildRows();
     const found = CLIENTS.filter((c) => isPresent(c));
     const chosen = await selectProfiles(ask, rows, preselect(rows, registeredAcross(found).union));
@@ -532,9 +557,9 @@ export async function runSetup(): Promise<void> {
     }
     const picked = leafRows(rows, chosen);
     const tools = picked.reduce((n, r) => n + rowTools(r), 0);
-    console.log(`\nPicked: ${tools} tools · about ${Math.max(1, Math.round((tools * TOKENS_PER_TOOL) / 1000))}k tokens for the AI to read.`);
+    console.log(`\n📦 Picked: ${tools} tools · about ${Math.max(1, Math.round((tools * TOKENS_PER_TOOL) / 1000))}k tokens for the AI to read.`);
     const { role, why } = neededRole(picked);
-    console.log(`You need a key with the ${role} role. ${why}`);
+    console.log(`🔑 You need a key with the ${role} role. ${why}`);
 
     // A saved key is offered first, with whether it fits.
     const existing = readSharedConfig();
@@ -584,7 +609,7 @@ export async function runSetup(): Promise<void> {
         );
         const { resolvedPath, pem } = await readP8(ask);
 
-        console.log('\nVerifying with Apple…');
+        console.log('\n⏳ Verifying with Apple…');
         const verdict = await verifyCredentials(keyId, issuerId, pem);
         if (verdict === 'invalid') {
           console.log(
@@ -594,12 +619,12 @@ export async function runSetup(): Promise<void> {
           continue;
         }
         if (verdict === 'ok') {
-          console.log('✓ Credentials verified.');
+          console.log('✅ Credentials verified.');
           const fit = keyFit(await keyIsAdmin({ keyId, issuerId, privateKey: pem }), role);
           if (fit) console.log(fit);
         } else {
           console.log(
-            '⚠ Could not reach Apple to verify (offline?). Saving anyway — run a status check once you are online.'
+            '⚠️  Could not reach Apple to verify (offline?). Saving anyway — run a status check once you are online.'
           );
         }
         credentials = { keyId, issuerId, pem, resolvedPath };
@@ -698,7 +723,7 @@ export function planChanges(
 
 /** The plan, one line per client. */
 function printPlan(plan: ClientPlan[]): void {
-  console.log('\nPlanned changes:\n');
+  console.log('\n📋 Planned changes:\n');
   for (const { client, toAdd, toRemove, toSwitch } of plan) {
     const bits: string[] = [];
     const added = toAdd.filter((s) => !toSwitch.includes(s));
@@ -749,7 +774,7 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
     if (results.some((r) => r.ok)) restart.push(client.label);
   }
   if (restart.length) {
-    log(`\nDone. Restart ${list(restart)}, then ask: "Check my App Store Connect connection."`);
+    log(`\n🎉 Done. Restart ${list(restart)}, then ask: "Check my App Store Connect connection."`);
   }
 }
 
