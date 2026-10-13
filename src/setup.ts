@@ -26,7 +26,8 @@ import {
   type Profile,
   type SubProfile,
 } from './profiles.js';
-import { TokenProvider } from './core/jwt.js';
+import { TokenProvider, type JwtCredentials } from './core/jwt.js';
+import { loadConfig } from './core/config.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
 import { runChecklist, type ChecklistItem } from './checklist.js';
@@ -69,6 +70,101 @@ const subProfileToolCount = (s: SubProfile): number => s.operations.length + s.m
  */
 const profileToolCount = (p: Profile): number =>
   new Set(p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])).size;
+
+/**
+ * The key roles each choice works with, from docs/ROLES_en.md — keep the two
+ * in step. The page intersects them over everything picked and recommends the
+ * narrowest role left; a key carries one role, so Admin is the fallback that
+ * covers any mix.
+ */
+const APP_MANAGER = ['App Manager', 'Admin'];
+export const ROLES: Record<string, string[]> = {
+  access: ['App Manager', 'Developer', 'Admin'],
+  'access:users': ['Admin'],
+  analytics: ['Sales', 'Finance', 'Admin'],
+  'distribution:builds': ['Developer', 'App Manager', 'Admin'],
+  marketing: ['Marketing', 'App Manager', 'Admin'],
+  'marketing:customer-review': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
+  provisioning: ['Admin'],
+  testflight: ['Developer', 'App Manager', 'Admin'],
+  webhooks: ['Admin'],
+  'xcode-cloud': ['Developer', 'App Manager', 'Admin'],
+};
+
+/** Key roles from narrowest to widest: the first one every pick allows is the one to suggest. */
+export const NARROW_FIRST = ['Customer Support', 'Sales', 'Finance', 'Marketing', 'Developer', 'App Manager', 'Admin'];
+
+const specOfRow = (row: Row): string =>
+  row.subProfile ? `${row.profile.name}:${row.subProfile.name}` : row.profile.name;
+
+/** The roles a key may have for one row to work. */
+export const rolesFor = (row: Row): string[] =>
+  ROLES[specOfRow(row)] ?? ROLES[row.profile.name] ?? APP_MANAGER;
+
+/** Tools one row serves, as its picker label states them. */
+export const rowTools = (row: Row): number => Number(/\((\d+)\)$/.exec(row.item.label)?.[1] ?? 0);
+
+/** The rows a selection registers: each picked part, or a picked profile that has none. */
+export function leafRows(rows: Row[], specs: string[]): Row[] {
+  const out: Row[] = [];
+  for (const spec of specs) {
+    const [name, list] = spec.split(':', 2);
+    const parts = rows.filter((r) => r.profile.name === name && r.subProfile);
+    if (!parts.length) {
+      const row = rows.find((r) => r.profile.name === name);
+      if (row) out.push(row);
+      continue;
+    }
+    const wanted = list?.split(',');
+    out.push(...parts.filter((r) => !wanted || wanted.includes(r.subProfile!.name)));
+  }
+  return out;
+}
+
+/**
+ * The narrowest role that covers every pick, and why. A key carries one role,
+ * so when the picks agree on none narrower, Admin is the answer.
+ */
+export function neededRole(picked: Row[]): { role: string; why: string } {
+  const role = NARROW_FIRST.find((name) => picked.every((r) => rolesFor(r).includes(name))) ?? 'Admin';
+  if (role !== 'Admin') return { role, why: 'That is the narrowest role that covers everything you picked. Narrower is safer.' };
+  const forcing = picked.filter((r) => rolesFor(r).length === 1).map(specOfRow);
+  return {
+    role,
+    why: forcing.length
+      ? `Because you picked ${forcing.join(', ')}, which only Admin can manage.`
+      : 'A key has one role, and no narrower role covers all of these together.',
+  };
+}
+
+/**
+ * Whether a key is Admin: only Admin can list team members, and that is the one
+ * fact about its role Apple will tell. null when it cannot tell (offline).
+ */
+export async function keyIsAdmin(credentials: JwtCredentials): Promise<boolean | null> {
+  try {
+    await new AscHttpClient(new TokenProvider(credentials), { baseUrl: process.env.ASC_BASE_URL || undefined }).get(
+      '/v1/users',
+      { limit: 1 }
+    );
+    return true;
+  } catch (err) {
+    return err instanceof AscApiError && err.status === 403 ? false : null;
+  }
+}
+
+/** What a key's Admin-ness means for the role the picks need, in one line. */
+export function keyFit(admin: boolean | null, role: string): string {
+  if (admin === null) return '';
+  if (admin) {
+    return role === 'Admin'
+      ? '✓ It is an Admin key, which is what you need.'
+      : `It is an Admin key, so it can do more than you picked. It will work; a key with the ${role} role would be safer.`;
+  }
+  return role === 'Admin'
+    ? "It isn't an Admin key, so the parts marked [Admin key] won't work. Use an Admin key, or pick again."
+    : `It isn't an Admin key. It will work if its role is ${role} or one that covers it.`;
+}
 
 export function buildRows(): Row[] {
   const rows: Row[] = [];
@@ -226,13 +322,19 @@ async function selectProfiles(
   preselected: number[]
 ): Promise<string[] | null> {
   const title =
-    '\nWhich profiles do you want registered?\n' +
+    '\nWhich profiles do you need?\n' +
     'Already-registered ones are checked — uncheck to remove, check to add.\n' +
     'Checking a profile opens its sub-profiles, all on; uncheck the ones you\n' +
-    "don't need. Every tool loads into every session, so leaner is faster.";
+    "don't need. Every tool loads into every session, so leaner is faster.\n" +
+    '[Admin key] works only with an Admin key · [vendor no.] needs your vendor number.';
 
+  // The tags go on copies: the rows' own labels carry the tool count others parse.
+  const tag = (r: Row): string =>
+    (rolesFor(r).length === 1 ? ' [Admin key]' : '') +
+    (r.profile.name === 'analytics' && !r.subProfile ? ' [vendor no.]' : '');
   if (process.stdin.isTTY) {
-    const picked = await runChecklist(rows.map((r) => r.item), { title, preselected });
+    const items = rows.map((r) => ({ ...r.item, label: r.item.label + tag(r) }));
+    const picked = await runChecklist(items, { title, preselected });
     if (picked === null) return null; // cancelled — leave registration untouched
     return selectionToSpecs(rows, picked);
   }
@@ -412,105 +514,119 @@ export async function runSetup(): Promise<void> {
   };
 
   try {
-    // Credentials already stored? Offer to skip straight to the profile picker,
-    // so registering another profile later doesn't mean re-entering the key.
-    // env-only setups (no shared file) fall through to the full flow.
-    const existing = readSharedConfig();
-    if (existing) {
-      console.log('\nApp Store Connect MCP — setup');
-      console.log(`Found saved credentials (Key ID ${existing.keyId}, Issuer ${existing.issuerId}).`);
-      const reuse = (await ask('Reuse them and just pick profiles? [Y/n]: ', false)).trim();
-      if (!/^n/i.test(reuse)) {
-        const clients = await selectClients(ask);
-        if (clients === null) {
-          console.log('\nCancelled — registration left unchanged.');
-          return;
-        }
-        const rows = buildRows();
-        const { perClient, union } = registeredAcross(clients);
-        const chosen = await selectProfiles(ask, rows, preselect(rows, union));
-        if (chosen === null) console.log('\nCancelled — registration left unchanged.');
-        else await reconcileRegistration(clients, chosen, perClient, ask);
-        return;
-      }
-      console.log('\nEntering new credentials instead.');
-    }
-
-    console.log('\nApp Store Connect MCP — shared credential setup');
-    console.log(`The Key ID, Issuer ID and .p8 all come from:\n  ${KEYS_URL}\n`);
-
-    const open = (await ask('Open that page in your browser now? [y/N]: ', false)).trim();
-    if (/^y/i.test(open)) {
-      const opener =
-        process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
-      try {
-        execFileSync(opener, [KEYS_URL], { stdio: 'ignore' });
-      } catch {
-        console.log(`  Could not open a browser — visit ${KEYS_URL} manually.`);
-      }
-    }
-
-    // Gather Key ID + Issuer ID + .p8, then verify against Apple. On rejection,
-    // re-enter all three (they must belong to the same key); offline, save with
-    // a warning rather than blocking the setup.
-    let keyId: string;
-    let issuerId: string;
-    let resolvedPath: string;
-    let pem: string;
-    for (;;) {
-      keyId = await askValid(
-        '\nKey ID: ',
-        isValidKeyId,
-        'A Key ID is 8–12 letters and digits, e.g. "ABC123XYZ9". Check it and try again.'
-      );
-      issuerId = await askValid(
-        'Issuer ID: ',
-        isValidIssuerId,
-        'An Issuer ID is a UUID, e.g. "57246e4f-1a2b-4c3d-9e8f-0123456789ab". Check it and try again.'
-      );
-      ({ resolvedPath, pem } = await readP8(ask));
-
-      console.log('\nVerifying with Apple…');
-      const verdict = await verifyCredentials(keyId, issuerId, pem);
-      if (verdict === 'ok') {
-        console.log('✓ Credentials verified.');
-        break;
-      }
-      if (verdict === 'unreachable') {
-        console.log(
-          '⚠ Could not reach Apple to verify (offline?). Saving anyway — run a status check once you are online.'
-        );
-        break;
-      }
-      console.log(
-        '✗ Apple rejected these credentials. Make sure the Key ID, Issuer ID and .p8 ' +
-          'all belong to the same key, then re-enter them.\n'
-      );
-    }
-
-    const vendorNumber = await ask(
-      'Vendor number (Payments and Financial Reports page; needed for sales/finance reports, Enter to skip): ',
-      false
-    );
-
-    const clients = (await selectClients(ask)) ?? [];
+    // Needs first, then the key: what was picked decides which role the key
+    // should have, and that is worth knowing before creating one.
+    console.log('\nFirst, what do you need? You can change this any time, so pick the narrowest set you can.');
     const rows = buildRows();
-    const { perClient, union } = registeredAcross(clients);
-    const chosen = await selectProfiles(ask, rows, preselect(rows, union));
-
-    saveCredentials(
-      { keyId, issuerId, vendorNumber: vendorNumber || undefined },
-      pem,
-      resolvedPath
-    );
-
-    // The picker drives registration directly — add what was checked, remove
-    // what was unchecked. A cancelled picker leaves registration untouched.
+    const found = CLIENTS.filter((c) => isPresent(c));
+    const chosen = await selectProfiles(ask, rows, preselect(rows, registeredAcross(found).union));
     if (chosen === null) {
-      console.log('\nProfile selection skipped — credentials saved. Re-run setup to pick profiles.');
-    } else {
-      await reconcileRegistration(clients, chosen, perClient, ask);
+      console.log('\nCancelled — nothing was changed.');
+      return;
     }
+    const picked = leafRows(rows, chosen);
+    const tools = picked.reduce((n, r) => n + rowTools(r), 0);
+    console.log(`\nPicked: ${tools} tools · about ${Math.max(1, Math.round((tools * TOKENS_PER_TOOL) / 1000))}k tokens for the AI to read.`);
+    const { role, why } = neededRole(picked);
+    console.log(`You need a key with the ${role} role. ${why}`);
+
+    // A saved key is offered first, with whether it fits.
+    const existing = readSharedConfig();
+    let reuse = false;
+    if (existing) {
+      let admin: boolean | null = null;
+      try {
+        admin = await keyIsAdmin(loadConfig([]).credentials);
+      } catch {
+        // The saved key could not be read back (Keychain entry gone): offer it anyway.
+      }
+      const tag = admin === true ? ' (Admin)' : admin === false ? ' (not Admin)' : '';
+      console.log(`\nFound a saved key: ${existing.keyId}${tag}.`);
+      const fit = keyFit(admin, role);
+      if (fit) console.log(fit);
+      reuse = !/^n/i.test(await ask('Use it? [Y/n]: ', false));
+    }
+
+    let credentials: { keyId: string; issuerId: string; pem: string; resolvedPath: string } | undefined;
+    if (!reuse) {
+      console.log(`\nCreate a key with the ${role} role at:\n  ${KEYS_URL}`);
+      console.log("Only the Account Holder or an Admin can create keys; if that isn't you, ask one of them for it.");
+      const open = (await ask('Open that page in your browser now? [y/N]: ', false)).trim();
+      if (/^y/i.test(open)) {
+        const opener =
+          process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+        try {
+          execFileSync(opener, [KEYS_URL], { stdio: 'ignore' });
+        } catch {
+          console.log(`  Could not open a browser — visit ${KEYS_URL} manually.`);
+        }
+      }
+
+      // Gather Key ID + Issuer ID + .p8, then verify against Apple. On
+      // rejection, re-enter all three (they must belong to the same key);
+      // offline, save with a warning rather than blocking the setup.
+      for (;;) {
+        const keyId = await askValid(
+          '\nKey ID: ',
+          isValidKeyId,
+          'A Key ID is 8–12 letters and digits, e.g. "ABC123XYZ9". Check it and try again.'
+        );
+        const issuerId = await askValid(
+          'Issuer ID: ',
+          isValidIssuerId,
+          'An Issuer ID is a UUID, e.g. "57246e4f-1a2b-4c3d-9e8f-0123456789ab". Check it and try again.'
+        );
+        const { resolvedPath, pem } = await readP8(ask);
+
+        console.log('\nVerifying with Apple…');
+        const verdict = await verifyCredentials(keyId, issuerId, pem);
+        if (verdict === 'invalid') {
+          console.log(
+            '✗ Apple rejected these credentials. Make sure the Key ID, Issuer ID and .p8 ' +
+              'all belong to the same key, then re-enter them.\n'
+          );
+          continue;
+        }
+        if (verdict === 'ok') {
+          console.log('✓ Credentials verified.');
+          const fit = keyFit(await keyIsAdmin({ keyId, issuerId, privateKey: pem }), role);
+          if (fit) console.log(fit);
+        } else {
+          console.log(
+            '⚠ Could not reach Apple to verify (offline?). Saving anyway — run a status check once you are online.'
+          );
+        }
+        credentials = { keyId, issuerId, pem, resolvedPath };
+        break;
+      }
+    }
+
+    // Only asked when a pick uses it, and not again when the saved key has one.
+    let vendorNumber: string | undefined;
+    if (picked.some((r) => r.profile.name === 'analytics') && !(reuse && existing?.vendorNumber)) {
+      vendorNumber =
+        (await ask(
+          '\nVendor number (Payments and Financial Reports, top left under your company name; Enter to skip): ',
+          false
+        )) || undefined;
+    }
+
+    if (credentials) {
+      saveCredentials(
+        { keyId: credentials.keyId, issuerId: credentials.issuerId, vendorNumber },
+        credentials.pem,
+        credentials.resolvedPath
+      );
+    } else if (vendorNumber && existing) {
+      console.log(`\n✓ Shared config updated at ${writeSharedConfig({ ...existing, vendorNumber })}.`);
+    }
+
+    const clients = await selectClients(ask);
+    if (clients === null) {
+      console.log('\nApp selection cancelled — registration left unchanged.');
+      return;
+    }
+    await reconcileRegistration(clients, chosen, registeredAcross(clients).perClient, ask);
   } finally {
     rl.close();
     // The picker leaves stdin flowing so later prompts work; release it now so

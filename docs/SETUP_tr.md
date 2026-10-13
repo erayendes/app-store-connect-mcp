@@ -26,14 +26,12 @@ npx -y @erayendes/asc-mcp setup
 
 ### Kimlik bilgisini bir kez kaydedin — Setup sihirbazı
 
-Setup sihirbazı App Store Connect hesabına erişmek için bazı bilgiler ve anahtarlar ister.
+Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 
-- Yazarken `Key ID` ve `Issuer ID` formatları kontrol edilir.
-- `.p8` yolunu girersiniz. Sürükle-bırak da kabul eder.
-- Kaydetmeden önce bilgileri Apple'a doğrulatır. Apple reddederse yeniden girersiniz.
-- Satış/finans raporlarına ulaşmak için opsiyonel olarak `Vendor number` sorulur.
-- Cihazınızda kurulu olan yapay zekâ uygulamalarını tespit eder ve profilleri hangilerine kurmak istediğinizi sorar. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır.
-- [Profil](PROFILES_tr.md) seçicinin her satırı, araç sayısını ve kabaca token maliyetini gösterir.
+1. **Neye ihtiyacınız var.** [Profil](PROFILES_tr.md) seçicinin her satırı araç sayısını ve kabaca token maliyetini gösterir; `[Admin key]` ve `[vendor no.]` bunlardan birini isteyen satırları işaretler. Toplam, seçtikçe gösterilir.
+2. **Anahtarınız.** Seçtiklerinize göre bunları karşılayan en dar anahtar [rolünü](ROLES_tr.md) söyler. Kayıtlı bir anahtar varsa önce o önerilir, Admin olup olmadığıyla birlikte. Yeni anahtarda `Key ID` ve `Issuer ID` yazarken kontrol edilir, `.p8` yolunu alır (sürükle-bırak da olur) ve hepsini Apple'a doğrulatır; Apple reddederse yeniden girersiniz. `Vendor number` yalnızca satış ve finans raporlarını seçtiyseniz sorulur.
+3. **Yapay zekâ uygulamalarınız.** Cihazınızda kurulu olanları bulur. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır.
+4. **Plan.** Her uygulamada neyin değişeceği gösterilir ve bir kez onay istenir.
 
 Anahtar bilgileri Apple'a doğrulandıktan sonra kaydedilir. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 

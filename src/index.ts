@@ -234,11 +234,9 @@ async function prefersBrowser(): Promise<boolean> {
   const { createInterface } = await import('node:readline/promises');
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    console.log('\nApp Store Connect MCP — setup\n');
-    console.log('  1) In your browser (recommended)');
-    console.log('  2) Here in the terminal\n');
-    const answer = (await rl.question('Continue how? [1]: ')).trim();
-    return answer !== '2';
+    console.log('\nWelcome to Heimdall setup.');
+    const answer = (await rl.question('For the best experience, continue in your browser? [Y/n]: ')).trim();
+    return !/^n/i.test(answer);
   } finally {
     rl.close();
   }

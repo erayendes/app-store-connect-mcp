@@ -208,7 +208,6 @@ a { color: var(--fg); }
   var token = new URLSearchParams(location.search).get('t') || '';
   history.replaceState(null, '', '/');
   var $ = function (id) { return document.getElementById(id); };
-  var NARROW_FIRST = ['Customer Support', 'Sales', 'Finance', 'Marketing', 'Developer', 'App Manager', 'Admin'];
   var state, boxes = {}, pem = '', reuse = false, keyReady = false, finished = false, role = '';
 
   function call(name, body) {
@@ -370,7 +369,7 @@ a { color: var(--fg); }
       need.appendChild(el('div', 'why', 'Pick at least one thing above, and we will tell you what kind of key to create.'));
       role = '';
     } else {
-      var allowed = NARROW_FIRST.filter(function (name) { return picked.every(function (r) { return r.roles.indexOf(name) !== -1; }); });
+      var allowed = state.narrowFirst.filter(function (name) { return picked.every(function (r) { return r.roles.indexOf(name) !== -1; }); });
       role = allowed[0] || 'Admin';
       need.appendChild(el('p', 'eyebrow', 'For what you picked'));
       var line = el('div', 'role'); line.appendChild(document.createTextNode('You need a key with the '));

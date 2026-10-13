@@ -21,20 +21,21 @@ import { execFileSync } from 'node:child_process';
 import type { AddressInfo } from 'node:net';
 import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
 import { loadConfig } from './core/config.js';
-import { TokenProvider, type JwtCredentials } from './core/jwt.js';
-import { AscHttpClient } from './core/http.js';
-import { AscApiError } from './core/errors.js';
+import type { JwtCredentials } from './core/jwt.js';
 import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName } from './clients.js';
-import { TOKENS_PER_TOOL, manualToolsFor, resolveSelection } from './profiles.js';
+import { TOKENS_PER_TOOL } from './profiles.js';
 import {
   KEYS_URL,
+  NARROW_FIRST,
   applyPlan,
   buildRows,
+  keyIsAdmin,
   isValidIssuerId,
   isValidKeyId,
   planChanges,
   preselect,
   registeredAcross,
+  rolesFor,
   saveCredentials,
   selectionToSpecs,
   verifyCredentials,
@@ -86,26 +87,6 @@ const DOES: Record<string, string> = {
   'xcode-cloud': 'Build workflows and why a build failed.',
 };
 
-/**
- * The key roles each choice works with, from docs/ROLES_en.md — keep the two
- * in step. The page intersects them over everything picked and recommends the
- * narrowest role left; a key carries one role, so Admin is the fallback that
- * covers any mix.
- */
-const APP_MANAGER = ['App Manager', 'Admin'];
-const ROLES: Record<string, string[]> = {
-  access: ['App Manager', 'Developer', 'Admin'],
-  'access:users': ['Admin'],
-  analytics: ['Sales', 'Finance', 'Admin'],
-  'distribution:builds': ['Developer', 'App Manager', 'Admin'],
-  marketing: ['Marketing', 'App Manager', 'Admin'],
-  'marketing:customer-review': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
-  provisioning: ['Admin'],
-  testflight: ['Developer', 'App Manager', 'Admin'],
-  webhooks: ['Admin'],
-  'xcode-cloud': ['Developer', 'App Manager', 'Admin'],
-};
-
 const MAX_BODY = 64 * 1024;
 
 class HttpError extends Error {
@@ -133,10 +114,6 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
   /** Credentials Apple accepted, kept here so the key crosses the wire once. */
   let verified: { keyId: string; issuerId: string; pem: string } | undefined;
 
-  const specOf = (i: number): string => {
-    const row = rows[i];
-    return row.subProfile ? `${row.profile.name}:${row.subProfile.name}` : row.profile.name;
-  };
 
   const chosenClients = (ids: unknown) => {
     if (!Array.isArray(ids)) throw new HttpError(400, 'clients must be a list');
@@ -164,6 +141,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       return {
         dryRun,
         keysUrl: KEYS_URL,
+        narrowFirst: NARROW_FIRST,
         existing: existing ? { keyId: existing.keyId, issuerId: existing.issuerId } : null,
         clients: all.map((c) => ({
           id: c.id,
@@ -178,7 +156,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           ktokens: Math.max(1, Math.round((Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0) * TOKENS_PER_TOOL) / 1000)),
           hint: r.item.hint ?? '',
           ...(r.subProfile ? {} : { title: profileLabel(r.profile.name), plain: PLAIN[r.profile.name], does: DOES[r.profile.name] }),
-          roles: ROLES[specOf(r.index)] ?? ROLES[r.profile.name] ?? APP_MANAGER,
+          roles: rolesFor(r),
           parent: r.item.parent ?? null,
           vendor: r.profile.name === 'analytics',
         })),
@@ -216,15 +194,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         credentials = { keyId: verified.keyId, issuerId: verified.issuerId, privateKey: verified.pem };
       }
       if (!credentials) return { admin: null };
-      try {
-        await new AscHttpClient(new TokenProvider(credentials), { baseUrl: process.env.ASC_BASE_URL || undefined }).get(
-          '/v1/users',
-          { limit: 1 }
-        );
-        return { admin: true };
-      } catch (err) {
-        return { admin: err instanceof AscApiError && err.status === 403 ? false : null };
-      }
+      return { admin: await keyIsAdmin(credentials) };
     },
 
     async plan(body) {
