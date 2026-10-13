@@ -17,7 +17,7 @@
  *   - Codex is TOML, but its CLI writes it, so nothing here generates TOML.
  *   - ChatGPT desktop, Codex CLI and the Codex IDE extension share one file.
  */
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import {
   accessSync,
   constants,
@@ -27,7 +27,6 @@ import {
   readFileSync,
   realpathSync,
   renameSync,
-  rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
@@ -498,16 +497,10 @@ export function applyToClient(
       ? `${t.where} could not be parsed (comments?)`
       : undefined;
     if (!failure && t.heldBy && isRunning(t.heldBy)) {
-      // Written now, it would be overwritten within seconds. Hand it to a
-      // waiter that writes it the moment the app is gone.
-      try {
-        deferJsonWrite(t, toAdd, toRemove);
-        record(`held:${t.where}`, `${t.heldBy} Desktop is open, so it gets this when you quit it`, true);
-      } catch (err) {
-        failure = `${t.where}: ${firstLine(err)}`;
-      }
-      for (const spec of toAdd) record(`add:${spec}`, addLabel(spec), !failure, failure);
-      for (const name of toRemove) record(`rm:${name}`, `removed ${name}`, !failure, failure);
+      // Written now, it would be overwritten within seconds: the app keeps
+      // this file in memory and writes it back while it runs. Leave it and say
+      // so; setup asks for the app to be closed before it gets here.
+      record(`held:${t.where}`, `${t.heldBy} Desktop is open, so it was not changed. Quit it, then run setup again`, false);
       continue;
     }
     if (!failure) {
@@ -602,90 +595,34 @@ export function isRunning(name: string): boolean {
   }
 }
 
+/** Whether this process runs inside the app: in a terminal or an agent the app started. */
+export function insideApp(name: string): boolean {
+  if (process.platform === 'win32') return false;
+  let pid = process.ppid;
+  for (let hops = 0; hops < 40 && pid > 1; hops++) {
+    try {
+      const [ppid, ...path] = execFileSync('ps', ['-o', 'ppid=,comm=', '-p', String(pid)], { encoding: 'utf8' })
+        .trim()
+        .split(/\s+/);
+      if (path.join(' ').split('/').pop() === name) return true;
+      pid = Number(ppid);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Claude Desktop keeps its settings file in memory and writes it back while it
+ * runs, so setup can only change it while Desktop is closed. "inside" means
+ * setup itself runs within Desktop, where quitting Desktop would end setup too.
+ */
+export function claudeDesktop(): 'closed' | 'open' | 'inside' {
+  if (!isRunning('Claude')) return 'closed';
+  return insideApp('Claude') ? 'inside' : 'open';
+}
+
 /** Whether a process list (one executable path per line) has this app's main process. */
 export const isRunningIn = (commands: string[], name: string): boolean =>
   commands.some((c) => c.trim().split('/').pop() === name);
-
-/** A change waiting for the app that holds the file to quit. */
-export interface PendingWrite {
-  path: string;
-  key: string;
-  heldBy: string;
-  add: string[];
-  remove: string[];
-  /** Epoch ms after which the waiter gives up; the next setup tries again. */
-  until: number;
-}
-
-const WAIT_MS = 24 * 60 * 60_000;
-const pendingFile = (path: string): string => `${path}.heimdall-pending.json`;
-
-/**
- * Fold a new change into one still waiting: the later run wins for every
- * server it names, and the rest of the earlier one stands.
- */
-export function mergePending(prev: Pick<PendingWrite, 'add' | 'remove'> | undefined, add: string[], remove: string[]) {
-  const named = new Set([...add.map(serverName), ...remove]);
-  return {
-    add: [...(prev?.add ?? []).filter((spec) => !named.has(serverName(spec))), ...add],
-    remove: [...(prev?.remove ?? []).filter((name) => !named.has(name)), ...remove],
-  };
-}
-
-function deferJsonWrite(t: Extract<Target, { kind: 'json' }>, toAdd: string[], toRemove: string[]): void {
-  const file = pendingFile(t.path);
-  let prev: PendingWrite | undefined;
-  try {
-    prev = JSON.parse(readFileSync(file, 'utf8')) as PendingWrite;
-  } catch {
-    prev = undefined;
-  }
-  const pending: PendingWrite = {
-    path: t.path,
-    key: t.key,
-    heldBy: t.heldBy!,
-    ...mergePending(prev, toAdd, toRemove),
-    until: Date.now() + WAIT_MS,
-  };
-  writeFileSync(file, JSON.stringify(pending), { mode: 0o600 });
-  // This same CLI, detached, so it outlives setup and the terminal it ran in.
-  spawn(process.execPath, [...process.execArgv, process.argv[1], '__write-when-closed', file], {
-    detached: true,
-    stdio: 'ignore',
-  }).unref();
-}
-
-/**
- * The waiter: once the app is gone (and has had a moment to finish its last
- * write), apply the pending change and remove it. Several waiters can be
- * running after several setups; the first to act takes the file and the rest
- * find nothing left to do.
- */
-export async function writeWhenClosed(
-  file: string,
-  running: (name: string) => boolean = isRunning,
-  tick = 1000
-): Promise<boolean> {
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  for (;;) {
-    let pending: PendingWrite;
-    try {
-      pending = JSON.parse(readFileSync(file, 'utf8')) as PendingWrite;
-    } catch {
-      return false; // another waiter already wrote it
-    }
-    if (Date.now() > pending.until) {
-      rmSync(file, { force: true });
-      return false;
-    }
-    if (!running(pending.heldBy)) {
-      await sleep(tick * 2);
-      if (!running(pending.heldBy)) {
-        rmSync(file, { force: true });
-        writeJsonServers({ kind: 'json', path: pending.path, where: pending.path, key: pending.key }, pending.add, pending.remove);
-        return true;
-      }
-    }
-    await sleep(tick);
-  }
-}

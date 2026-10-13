@@ -27,6 +27,8 @@ ${DESIGN_TOKENS}
 main { max-width: 760px; margin: 0 auto; padding: var(--sp-6) var(--sp-4); display: grid; gap: var(--sp-4); }
 header { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 h1 { font-size: var(--fs-title); font-weight: 600; margin: 0; flex: 1; }
+.note { margin: 0; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); font-size: var(--fs-ui);
+  color: var(--fg); background: var(--amber-bg); border: 1px solid var(--amber-border); }
 .dry { font-size: var(--fs-ui); color: var(--amber); background: var(--amber-bg); border: 1px solid var(--amber-border);
   border-radius: var(--r-pill); padding: 0 var(--sp-2); }
 section { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-5); }
@@ -123,6 +125,7 @@ a { color: var(--fg); }
     <h1>Heimdall setup</h1>
     <span id="dry" class="dry hidden">Dry run — nothing will be saved</span>
   </header>
+  <p id="desktopNote" class="note hidden"></p>
 
   <section id="s1">
     <h2><span class="n" id="n1">1/4</span>What do you want Heimdall to help with?</h2>
@@ -480,6 +483,11 @@ a { color: var(--fg); }
   call('state').then(function (s) {
     state = s;
     if (s.dryRun) $('dry').classList.remove('hidden');
+    var notes = {
+      open: '⚠️ Claude Desktop is open. It writes its own settings back while it runs, so the change would not reach it. Quit Claude Desktop (⌘Q) before you press Apply.',
+      inside: '⚠️ This setup is running inside Claude Desktop, so Claude Desktop itself can\u2019t be updated from here. Your other AI apps can. To include Claude Desktop: quit it, open Terminal and run ' + s.setupCommand + '.'
+    };
+    if (notes[s.desktop]) { $('desktopNote').textContent = notes[s.desktop]; $('desktopNote').classList.remove('hidden'); }
     $('keysLink').href = s.keysUrl;
     if (s.existing) {
       // A saved key is the answer unless the user says otherwise, as in the terminal's [Y/n].
@@ -565,11 +573,14 @@ a { color: var(--fg); }
     call('apply', body).then(function (r) {
       finished = true; mark(1); mark(3); mark(4);
       out.textContent = r.lines.join('\\n') + '\\n\\nAll set. You can close this tab.';
-    }).catch(function (e) { out.textContent = e.message; });
+    }).catch(function (e) {
+      // Nothing was applied: let the user fix what the message says and try again.
+      out.textContent = e.message; $('apply').disabled = false; $('cancel').disabled = false;
+    });
   };
 
   $('cancel').onclick = function () {
-    call('cancel').finally(function () { document.querySelector('main').textContent = 'Setup cancelled. Nothing was changed. To start again, run npx -y @erayendes/asc-mcp setup --web in your terminal; it prints a new link.'; });
+    call('cancel').finally(function () { document.querySelector('main').textContent = 'Setup cancelled. Nothing was changed. To start again, run ' + ((state && state.setupCommand) || 'npx -y @erayendes/asc-mcp setup') + ' --web in your terminal; it prints a new link.'; });
   };
   window.addEventListener('beforeunload', function (e) { if (!finished && state) e.preventDefault(); });
 })();

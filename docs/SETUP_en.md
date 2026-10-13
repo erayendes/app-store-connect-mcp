@@ -30,7 +30,7 @@ The wizard asks in the order you'd think it through, in the browser and the term
 
 1. **What you need.** Each row in the [profile](PROFILES_en.md) picker shows how many tools it has and roughly how many tokens it costs; `[Admin key]` and `[vendor no.]` mark the rows that need one. The total is shown as you go.
 2. **Your key.** From what you picked, it tells you the narrowest key [role](ROLES_en.md) that covers it. A saved key is offered first, with whether it is an Admin key. For a new one it checks the `Key ID` and `Issuer ID` as you type, takes the `.p8` path (drag and drop works) and checks everything with Apple; if Apple rejects it, you enter it again. The `Vendor number` is asked only if you picked sales and finance reports.
-3. **Your AI apps.** It finds the ones installed on your machine. Settings files it edits directly are backed up first. If Claude Desktop is open, it gets the change when you quit it: Desktop writes its own settings back while it runs, so setup waits for it to close.
+3. **Your AI apps.** It finds the ones installed on your machine. Settings files it edits directly are backed up first. Claude Desktop writes its own settings back while it is open, so setup asks you to quit it first. If setup itself runs inside Claude Desktop, quit Desktop and run setup from Terminal to include it.
 4. **The plan.** What will change in each app, confirmed once.
 
 Your credentials are saved once Apple has accepted them. Before the profiles are written to your apps, the wizard shows the plan and asks you to confirm once.

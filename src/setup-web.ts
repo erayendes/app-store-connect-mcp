@@ -22,7 +22,7 @@ import type { AddressInfo } from 'node:net';
 import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
 import { loadConfig } from './core/config.js';
 import type { JwtCredentials } from './core/jwt.js';
-import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName, HEIMDALL_VERSION } from './clients.js';
+import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName, HEIMDALL_VERSION, claudeDesktop, PACKAGE } from './clients.js';
 import { TOKENS_PER_TOOL } from './profiles.js';
 import {
   KEYS_URL,
@@ -145,6 +145,8 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         dryRun,
         keysUrl: KEYS_URL,
         narrowFirst: NARROW_FIRST,
+        desktop: claudeDesktop(),
+        setupCommand: `npx -y ${PACKAGE} setup`,
         existing: existing ? { keyId: existing.keyId, issuerId: existing.issuerId, vendorNumber: existing.vendorNumber ?? '' } : null,
         clients: all.map((c) => ({
           id: c.id,
@@ -216,6 +218,12 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       const reuse = body.reuse === true && readSharedConfig() !== undefined;
       if (!reuse && !verified) throw new HttpError(409, 'Verify the credentials first.');
       const steps = plan(body);
+      // Claude Desktop writes its own settings back while it runs, so a change
+      // made now would not reach it. Wait for it to be closed, unless setup
+      // runs inside Desktop, where closing it would end setup too.
+      if (!dryRun && steps.some((p) => p.client.id === 'claude') && claudeDesktop() === 'open') {
+        throw new HttpError(409, 'Claude Desktop is still open. Quit it (⌘Q), then press Apply again.');
+      }
       const lines: string[] = [];
       const log = (line: string) => lines.push(line.replace(/^\n+/, ''));
 
