@@ -45,6 +45,9 @@ export const PACKAGE = (createRequire(import.meta.url)('../package.json').versio
   ? '@erayendes/asc-mcp@beta'
   : '@erayendes/asc-mcp';
 export const serverArgs = (spec: string): string[] => ['-y', PACKAGE, spec];
+/** Where an entry on the other channel is moving, said the way a person reads it. */
+export const CHANNEL_MOVE = PACKAGE.endsWith('@beta') ? 'moves to the beta' : 'moves back to stable';
+export const CHANNEL_MOVED = PACKAGE.endsWith('@beta') ? 'moved to the beta' : 'moved back to stable';
 /** The package an entry runs, or undefined when it names none of ours. */
 const packageOf = (text: string): string | undefined => text.match(/@erayendes\/asc-mcp(?:@\S+)?/)?.[0];
 const SPELLINGS: Record<string, string> = { testflight: 'TestFlight' };

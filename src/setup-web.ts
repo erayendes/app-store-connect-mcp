@@ -22,7 +22,7 @@ import type { AddressInfo } from 'node:net';
 import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
 import { loadConfig } from './core/config.js';
 import type { JwtCredentials } from './core/jwt.js';
-import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName } from './clients.js';
+import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName, CHANNEL_MOVE } from './clients.js';
 import { TOKENS_PER_TOOL } from './profiles.js';
 import {
   KEYS_URL,
@@ -145,7 +145,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         dryRun,
         keysUrl: KEYS_URL,
         narrowFirst: NARROW_FIRST,
-        existing: existing ? { keyId: existing.keyId, issuerId: existing.issuerId } : null,
+        existing: existing ? { keyId: existing.keyId, issuerId: existing.issuerId, vendorNumber: existing.vendorNumber ?? '' } : null,
         clients: all.map((c) => ({
           id: c.id,
           label: c.label,
@@ -204,9 +204,11 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       return {
         plan: plan(body).map((p) => ({
           client: p.client.label,
-          add: p.toAdd.map(serverName),
+          add: p.toAdd.filter((s) => !p.toSwitch.includes(s)).map(serverName),
           remove: p.toRemove,
+          switch: p.toSwitch.map(serverName),
         })),
+        move: CHANNEL_MOVE,
       };
     },
 

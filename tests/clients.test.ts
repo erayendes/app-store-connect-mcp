@@ -48,7 +48,7 @@ import {
   type McpClient,
   PACKAGE,
 } from '../src/clients.js';
-import { planChanges } from '../src/setup.js';
+import { applyPlan, planChanges } from '../src/setup.js';
 import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
@@ -384,5 +384,25 @@ describe('release channel of a registration', () => {
       stale: new Map([['temp', stale]]),
     });
     expect(plan[0].toAdd).toEqual(['analytics']);
+    expect(plan[0].toSwitch).toEqual(['analytics']); // shown as a channel move, not as something new
+  });
+});
+
+describe('reporting a channel move', () => {
+  it('says the entry moved, not that it was added', () => {
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
+    }));
+    const stale = new Set<string>();
+    const found = listRegistered(jsonClient(), stale);
+    const plan = planChanges([jsonClient()], ['analytics', 'app-info'], new Map([['temp', found]]), {
+      prune: true,
+      stale: new Map([['temp', stale]]),
+    });
+    const lines: string[] = [];
+    applyPlan(plan, (l) => lines.push(l));
+    expect(lines.join('\n')).toMatch(/ASC-Analytics moved (to the beta|back to stable)/);
+    expect(lines.join('\n')).toMatch(/added ASC-AppInfo/);
   });
 });
