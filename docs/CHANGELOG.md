@@ -10,6 +10,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ### [2.7.0-beta.1] — 2026-10-13
 
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
 The nicest improvement you can actually see that I've made so far arrives in this version. Setup can now happen in your browser too, and I recommend you use it.
 
 You first pick what you need, and Heimdall tells you which key to create for it.
@@ -231,6 +235,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 ## Türkçe
 
 ### [2.7.0-beta.1] — 2026-10-13
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
 
 Bugüne kadar yaptığım gözle görülür en güzel iyileştirme bu sürümde geliyor. Kurulum artık tarayıcıda da yapılabiliyor, hatta bu yöntemi kullanmanızı tavsiye ederim.
 
