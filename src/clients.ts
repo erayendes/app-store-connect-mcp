@@ -41,13 +41,15 @@ export const SERVER_COMMAND = 'npx';
  * means its servers too, not only its setup; a stable release writes the bare
  * name, which moves a beta tester back to stable the next time setup runs.
  */
-export const PACKAGE = (createRequire(import.meta.url)('../package.json').version as string).includes('-')
-  ? '@erayendes/asc-mcp@beta'
-  : '@erayendes/asc-mcp';
+const VERSION = createRequire(import.meta.url)('../package.json').version as string;
+export const PACKAGE = VERSION.includes('-') ? '@erayendes/asc-mcp@beta' : '@erayendes/asc-mcp';
 export const serverArgs = (spec: string): string[] => ['-y', PACKAGE, spec];
-/** Where an entry on the other channel is moving, said the way a person reads it. */
-export const CHANNEL_MOVE = PACKAGE.endsWith('@beta') ? 'moves to the beta' : 'moves back to stable';
-export const CHANNEL_MOVED = PACKAGE.endsWith('@beta') ? 'moved to the beta' : 'moved back to stable';
+/**
+ * What an app gets when its entries are rewritten only to change channel. To
+ * the user that is not a move of anything: running this setup sets up this
+ * version, so that is all it says.
+ */
+export const HEIMDALL_VERSION = `Heimdall ${VERSION}`;
 /** The package an entry runs, or undefined when it names none of ours. */
 const packageOf = (text: string): string | undefined => text.match(/@erayendes\/asc-mcp(?:@\S+)?/)?.[0];
 const SPELLINGS: Record<string, string> = { testflight: 'TestFlight' };

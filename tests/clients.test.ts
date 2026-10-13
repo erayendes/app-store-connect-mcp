@@ -388,8 +388,8 @@ describe('release channel of a registration', () => {
   });
 });
 
-describe('reporting a channel move', () => {
-  it('says the entry moved, not that it was added', () => {
+describe('reporting a change of release channel', () => {
+  it('says which Heimdall the app now runs, not that the entry was added', () => {
     const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
       mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
@@ -402,7 +402,8 @@ describe('reporting a channel move', () => {
     });
     const lines: string[] = [];
     applyPlan(plan, (l) => lines.push(l));
-    expect(lines.join('\n')).toMatch(/ASC-Analytics moved (to the beta|back to stable)/);
+    expect(lines.join('\n')).toMatch(/✓ Heimdall \d+\.\d+\.\d+/);
+    expect(lines.join('\n')).not.toMatch(/added ASC-Analytics/);
     expect(lines.join('\n')).toMatch(/added ASC-AppInfo/);
   });
 });

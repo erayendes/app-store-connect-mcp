@@ -257,9 +257,9 @@ a { color: var(--fg); }
       }
       r.plan.forEach(function (p) {
         var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
+        if (p.switch.length) li.appendChild(el('span', 'mv', r.version + ' '));
         if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
         if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ') + ' '));
-        if (p.switch.length) li.appendChild(el('span', 'mv', r.move + ': ' + p.switch.join(', ')));
         list.appendChild(li);
       });
       // Nothing to change and nothing new to save: Apply would do nothing.

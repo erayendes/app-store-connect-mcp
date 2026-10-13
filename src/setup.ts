@@ -43,8 +43,7 @@ import {
   serverName,
   profileOfServer,
   type McpClient,
-  CHANNEL_MOVE,
-  CHANNEL_MOVED,
+  HEIMDALL_VERSION,
 } from './clients.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
@@ -703,9 +702,9 @@ function printPlan(plan: ClientPlan[]): void {
   for (const { client, toAdd, toRemove, toSwitch } of plan) {
     const bits: string[] = [];
     const added = toAdd.filter((s) => !toSwitch.includes(s));
+    if (toSwitch.length) bits.push(HEIMDALL_VERSION);
     if (added.length) bits.push(`+ ${added.map(serverName).join(', ')}`);
     if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
-    if (toSwitch.length) bits.push(`${CHANNEL_MOVE}: ${toSwitch.map(serverName).join(', ')}`);
     console.log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
   }
 }
@@ -721,12 +720,10 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
   const restart: string[] = [];
   for (const { client, toAdd, toRemove, toSwitch } of plan) {
     log(`\n${client.label}`);
-    // A channel move is written as an add, but nothing new arrived: say what happened.
+    // Entries rewritten only for the channel are one fact, the version this
+    // app now runs, not one "added" line each. A failure is still listed.
     const moved = new Set(toSwitch.map(serverName));
-    const say = (message: string): string => {
-      const name = /^added (\S+)/.exec(message)?.[1];
-      return name && moved.has(name) ? `${name} ${CHANNEL_MOVED}` : message;
-    };
+    const isMove = (message: string): boolean => moved.has(/^added (\S+)/.exec(message)?.[1] ?? '');
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
       log('  add this to your client config:\n');
@@ -734,7 +731,8 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
       continue;
     }
     const { results, needsManual } = applyToClient(client, toAdd, toRemove);
-    for (const r of results) log(`  ${r.ok ? '✓' : '✗'} ${say(r.message)}`);
+    if (results.some((r) => r.ok && isMove(r.message))) log(`  ✓ ${HEIMDALL_VERSION}`);
+    for (const r of results) if (!(r.ok && isMove(r.message))) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
     const stillRegistered = listRegistered(client).size > 0;

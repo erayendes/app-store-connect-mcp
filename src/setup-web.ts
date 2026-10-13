@@ -22,7 +22,7 @@ import type { AddressInfo } from 'node:net';
 import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
 import { loadConfig } from './core/config.js';
 import type { JwtCredentials } from './core/jwt.js';
-import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName, CHANNEL_MOVE } from './clients.js';
+import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName, HEIMDALL_VERSION } from './clients.js';
 import { TOKENS_PER_TOOL } from './profiles.js';
 import {
   KEYS_URL,
@@ -208,7 +208,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           remove: p.toRemove,
           switch: p.toSwitch.map(serverName),
         })),
-        move: CHANNEL_MOVE,
+        version: HEIMDALL_VERSION,
       };
     },
 
@@ -222,8 +222,13 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       if (dryRun) {
         log('Dry run — nothing was written and Apple was not contacted.');
         for (const p of steps) {
-          log(`${p.client.label}: would add ${p.toAdd.map(serverName).join(', ') || 'nothing'}` +
-            (p.toRemove.length ? `, remove ${p.toRemove.join(', ')}` : ''));
+          const added = p.toAdd.filter((x) => !p.toSwitch.includes(x)).map(serverName);
+          const bits = [
+            ...(p.toSwitch.length ? [`would set up ${HEIMDALL_VERSION}`] : []),
+            ...(added.length ? [`add ${added.join(', ')}`] : []),
+            ...(p.toRemove.length ? [`remove ${p.toRemove.join(', ')}`] : []),
+          ];
+          log(`${p.client.label}: ${bits.join(', ')}`);
         }
       } else {
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;
