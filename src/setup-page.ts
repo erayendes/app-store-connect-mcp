@@ -117,6 +117,7 @@ a { color: var(--fg); }
 .totals { position: sticky; bottom: 0; margin: 0 calc(-1 * var(--sp-4)); padding: var(--sp-3) var(--sp-4);
   background: var(--bg); border-top: 1px solid var(--border); font-size: var(--fs-ui); color: var(--fg-secondary); }
 .totals b { color: var(--fg); font-weight: 600; }
+.totals .ver { float: right; color: var(--fg-muted); font-family: var(--font-mono); font-size: var(--fs-label); }
 </style>
 </head>
 <body>
@@ -253,14 +254,16 @@ a { color: var(--fg); }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq) return;
       list.innerHTML = '';
-      if (!r.plan.length) {
-        list.appendChild(el('li', '', reuse && !vendorChanged()
-          ? 'No changes — your apps already match this selection.'
-          : 'Your apps already match this selection. Apply saves your key details.'));
+      var shown = r.plan.filter(function (p) { return p.add.length || p.remove.length; });
+      if (!shown.length) {
+        list.appendChild(el('li', '', r.plan.length
+          ? 'Your profiles stay as they are.'
+          : reuse && !vendorChanged()
+            ? 'No changes — your apps already match this selection.'
+            : 'Your apps already match this selection. Apply saves your key details.'));
       }
-      r.plan.forEach(function (p) {
+      shown.forEach(function (p) {
         var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
-        if (p.switch.length) li.appendChild(el('span', 'mv', r.version + ' '));
         if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
         if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ') + ' '));
         list.appendChild(li);
@@ -370,12 +373,13 @@ a { color: var(--fg); }
   /** What the picks cost the AI, summed: every tool is something it reads on each request. */
   function showTotals(picked) {
     var t = $('totals'); t.innerHTML = '';
-    if (!picked.length) { t.textContent = 'Nothing picked yet.'; return; }
+    if (!picked.length) { t.textContent = 'Nothing picked yet.'; t.appendChild(el('span', 'ver', state.version)); return; }
     var tools = 0, k = 0;
     picked.forEach(function (r) { tools += r.tools; k += r.ktokens; });
     t.appendChild(document.createTextNode('Picked: '));
     t.appendChild(el('b', '', tools + ' tools'));
     t.appendChild(document.createTextNode(' · about ' + k + 'k tokens for the AI to read'));
+    t.appendChild(el('span', 'ver', state.version));
   }
 
   /* ---- step 2: what the key must be, worked out from step 1 -------------- */

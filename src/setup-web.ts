@@ -147,6 +147,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         narrowFirst: NARROW_FIRST,
         desktop: claudeDesktop(),
         setupCommand: `npx -y ${PACKAGE} setup`,
+        version: HEIMDALL_VERSION,
         existing: existing ? { keyId: existing.keyId, issuerId: existing.issuerId, vendorNumber: existing.vendorNumber ?? '' } : null,
         clients: all.map((c) => ({
           id: c.id,
@@ -204,13 +205,14 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
 
     async plan(body) {
       return {
+        // Only what the user changes is listed; moving entries to this
+        // release's package is part of setting it up, shown as "quiet".
         plan: plan(body).map((p) => ({
           client: p.client.label,
           add: p.toAdd.filter((s) => !p.toSwitch.includes(s)).map(serverName),
           remove: p.toRemove,
-          switch: p.toSwitch.map(serverName),
+          quiet: p.toSwitch.length > 0,
         })),
-        version: HEIMDALL_VERSION,
       };
     },
 
@@ -232,11 +234,10 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         for (const p of steps) {
           const added = p.toAdd.filter((x) => !p.toSwitch.includes(x)).map(serverName);
           const bits = [
-            ...(p.toSwitch.length ? [`would set up ${HEIMDALL_VERSION}`] : []),
             ...(added.length ? [`add ${added.join(', ')}`] : []),
             ...(p.toRemove.length ? [`remove ${p.toRemove.join(', ')}`] : []),
           ];
-          log(`${p.client.label}: ${bits.join(', ')}`);
+          if (bits.length) log(`${p.client.label}: would ${bits.join(', ')}`);
         }
       } else {
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;

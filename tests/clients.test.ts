@@ -390,7 +390,7 @@ describe('release channel of a registration', () => {
 });
 
 describe('reporting a change of release channel', () => {
-  it('says which Heimdall the app now runs, not that the entry was added', () => {
+  it('writes a channel move quietly and lists only what the user changed', () => {
     const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
       mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
@@ -403,7 +403,7 @@ describe('reporting a change of release channel', () => {
     });
     const lines: string[] = [];
     applyPlan(plan, (l) => lines.push(l));
-    expect(lines.join('\n')).toMatch(/✓ Heimdall \d+\.\d+\.\d+/);
+    expect(lines.join('\n')).not.toMatch(/Heimdall \d/); // the version is not a change the user made
     expect(lines.join('\n')).not.toMatch(/added ASC-Analytics/);
     expect(lines.join('\n')).toMatch(/added ASC-AppInfo/);
   });
@@ -418,5 +418,25 @@ describe('telling whether an app is open', () => {
     ];
     expect(isRunningIn(ps, 'Claude')).toBe(false);
     expect(isRunningIn([...ps, '/Applications/Claude.app/Contents/MacOS/Claude'], 'Claude')).toBe(true);
+  });
+});
+
+describe('a channel move alone', () => {
+  it('still restarts the app, without listing anything for it', () => {
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
+    }));
+    const stale = new Set<string>();
+    const found = listRegistered(jsonClient(), stale);
+    const plan = planChanges([jsonClient()], ['analytics'], new Map([['temp', found]]), {
+      prune: true,
+      stale: new Map([['temp', stale]]),
+    });
+    const lines: string[] = [];
+    applyPlan(plan, (l) => lines.push(l));
+    expect(lines.join('\n')).not.toMatch(/added|Heimdall \d/);
+    expect(lines.join('\n')).toMatch(/Done\. Restart Temp/);
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-Analytics'].args[1]).toBe(PACKAGE);
   });
 });

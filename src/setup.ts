@@ -43,9 +43,9 @@ import {
   serverName,
   profileOfServer,
   type McpClient,
-  HEIMDALL_VERSION,
   PACKAGE,
   claudeDesktop,
+  type ChangeResult,
   isRunning,
 } from './clients.js';
 
@@ -721,17 +721,39 @@ export function planChanges(
     .filter((p) => p.toAdd.length || p.toRemove.length);
 }
 
-/** The plan, one line per client. */
+/**
+ * The plan, one line per client that gains or loses a profile. An entry that
+ * only moves to this release's package is part of setting this release up,
+ * not a change to anyone's setup, so it is written but not listed.
+ */
 function printPlan(plan: ClientPlan[]): void {
+  const shown = plan.filter((p) => p.toRemove.length || p.toAdd.some((s) => !p.toSwitch.includes(s)));
+  if (!shown.length) {
+    console.log('\n📋 Your profiles stay as they are.');
+    return;
+  }
   console.log('\n📋 Planned changes:\n');
-  for (const { client, toAdd, toRemove, toSwitch } of plan) {
+  for (const { client, toAdd, toRemove, toSwitch } of shown) {
     const bits: string[] = [];
     const added = toAdd.filter((s) => !toSwitch.includes(s));
-    if (toSwitch.length) bits.push(HEIMDALL_VERSION);
     if (added.length) bits.push(`+ ${added.map(serverName).join(', ')}`);
     if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
     console.log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
   }
+}
+
+/** "Restart" an app that is open, "open" one that is not; a CLI is restarted. */
+function nextStep(clients: McpClient[]): string {
+  const closed = (c: McpClient): boolean =>
+    c.targets.some((t) => t.kind === 'json' && t.app !== undefined) &&
+    !c.targets.some((t) => t.kind === 'json' && t.app !== undefined && isRunning(t.app));
+  const open = clients.filter(closed).map((c) => c.label);
+  const restart = clients.filter((c) => !closed(c)).map((c) => c.label);
+  const verbs = [
+    ...(restart.length ? [`restart ${list(restart)}`] : []),
+    ...(open.length ? [`open ${list(open)}`] : []),
+  ].join(' and ');
+  return verbs.charAt(0).toUpperCase() + verbs.slice(1);
 }
 
 /**
@@ -742,22 +764,24 @@ function printPlan(plan: ClientPlan[]): void {
  * setup.
  */
 export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
-  const restart: string[] = [];
+  const restart: McpClient[] = [];
   for (const { client, toAdd, toRemove, toSwitch } of plan) {
-    log(`\n${client.label}`);
-    // Entries rewritten only for the channel are one fact, the version this
-    // app now runs, not one "added" line each. A failure is still listed.
+    // An entry that only moves to this release's package is written quietly:
+    // it is setting this release up, not a change the user made. A failure is
+    // still reported, and the client still needs restarting to pick it up.
     const moved = new Set(toSwitch.map(serverName));
-    const isMove = (message: string): boolean => moved.has(/^added (\S+)/.exec(message)?.[1] ?? '');
+    const quiet = (r: ChangeResult): boolean => r.ok && moved.has(/^added (\S+)/.exec(r.message)?.[1] ?? '');
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
+      log(`\n${client.label}`);
       log('  add this to your client config:\n');
       log(indent(manualBlock(client, toAdd)));
       continue;
     }
     const { results, needsManual } = applyToClient(client, toAdd, toRemove);
-    if (results.some((r) => r.ok && isMove(r.message))) log(`  ✓ ${HEIMDALL_VERSION}`);
-    for (const r of results) if (!(r.ok && isMove(r.message))) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
+    const shown = results.filter((r) => !quiet(r));
+    if (shown.length) log(`\n${client.label}`);
+    for (const r of shown) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
     const stillRegistered = listRegistered(client).size > 0;
@@ -766,15 +790,15 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
         ? installSkill(client.id)
         : removeSkill(client.id)
       : undefined;
-    if (skill) log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
+    if (skill && (shown.length || !skill.ok)) log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
     if (needsManual && toAdd.length) {
       log('\n  add these by hand:\n');
       log(indent(manualBlock(client, toAdd)));
     }
-    if (results.some((r) => r.ok)) restart.push(client.label);
+    if (results.some((r) => r.ok)) restart.push(client);
   }
   if (restart.length) {
-    log(`\n🎉 Done. Restart ${list(restart)}, then ask: "Check my App Store Connect connection."`);
+    log(`\n🎉 Done. ${nextStep(restart)}, then ask: "Check my App Store Connect connection."`);
   }
 }
 
