@@ -47,7 +47,8 @@ Heimdall has **no server of its own and no telemetry**. There is nothing to turn
 ### Where your key lives
 
 - **macOS:** in the **Keychain**. The key never appears in any settings file; `setup` puts it there for you.
-- **Linux and Windows:** `setup` saves the path to your `.p8` file. There is no Keychain equivalent there yet.
+- **Linux and Windows:** `setup` saves the path to your `.p8` file. There is no Keychain equivalent there yet. If you paste the key's contents into the browser setup instead of choosing the file, it is saved as a copy only your user account can read, next to the shared settings.
+- **The browser setup** (`setup --web`) runs a page on your own computer only (`127.0.0.1`), behind a one-time link that other pages and other computers cannot use. The key goes from the page straight to the same place as above, and the page shuts itself down after you apply or after 30 idle minutes.
 
 > [!WARNING]
 > On Linux and Windows, treat the `.p8` file as a secret: don't share it, don't put it in a repository, and keep it somewhere only you can read. Key ID and Issuer ID are identifiers, not secrets; the `.p8` file is.
@@ -121,7 +122,8 @@ Heimdall'ın **kendine ait bir sunucusu ve telemetrisi yok**. Kapatmanız gereke
 ### Anahtarınız nerede durur
 
 - **macOS:** **Keychain**'de. Anahtar hiçbir ayar dosyasında görünmez; `setup` onu sizin için oraya koyar.
-- **Linux ve Windows:** `setup`, `.p8` dosyanızın yolunu kaydeder. Bu sistemlerde henüz Keychain'in karşılığı yok.
+- **Linux ve Windows:** `setup`, `.p8` dosyanızın yolunu kaydeder. Bu sistemlerde henüz Keychain'in karşılığı yok. Tarayıcı kurulumunda dosyayı seçmek yerine anahtarın içeriğini yapıştırırsanız, ortak ayarların yanına yalnızca sizin kullanıcı hesabınızın okuyabileceği bir kopya olarak kaydedilir.
+- **Tarayıcı kurulumu** (`setup --web`), sayfayı yalnızca kendi bilgisayarınızda (`127.0.0.1`) ve başka sayfaların ya da başka bilgisayarların kullanamayacağı tek kullanımlık bir linkle açar. Anahtar sayfadan doğrudan yukarıdaki yere gider; sayfa siz uygulayınca ya da 30 dakika kullanılmazsa kendiliğinden kapanır.
 
 > [!WARNING]
 > Linux ve Windows'ta `.p8` dosyasını bir sır gibi saklayın: kimseyle paylaşmayın, bir depoya koymayın ve yalnızca sizin okuyabileceğiniz bir yerde tutun. Key ID ve Issuer ID gizli değildir, birer kimliktir; gizli olan `.p8` dosyasıdır.
