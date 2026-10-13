@@ -593,12 +593,18 @@ export function isRunning(name: string): boolean {
     if (process.platform === 'win32') {
       return execFileSync('tasklist', ['/FI', `IMAGENAME eq ${name}.exe`, '/NH'], { encoding: 'utf8' }).includes(`${name}.exe`);
     }
-    execFileSync('pgrep', ['-x', name], { stdio: 'ignore' });
-    return true;
+    // Not pgrep: on macOS it leaves out Claude Desktop's main process (it
+    // lists the helpers only), so an open Desktop read as closed.
+    const commands = execFileSync('ps', ['-axo', 'comm='], { encoding: 'utf8' }).split('\n');
+    return isRunningIn(commands, name);
   } catch {
     return false;
   }
 }
+
+/** Whether a process list (one executable path per line) has this app's main process. */
+export const isRunningIn = (commands: string[], name: string): boolean =>
+  commands.some((c) => c.trim().split('/').pop() === name);
 
 /** A change waiting for the app that holds the file to quit. */
 export interface PendingWrite {
