@@ -47,6 +47,7 @@ import {
   profileOfServer,
   type McpClient,
   PACKAGE,
+  isRunningIn,
   mergePending,
   writeWhenClosed,
   type PendingWrite,
@@ -443,6 +444,15 @@ describe('writing a file an open app holds', () => {
     expect(await writeWhenClosed(file, () => false, 1)).toBe(false);
     expect(existsSync(join(dir, 'held.json'))).toBe(false);
     expect(existsSync(file)).toBe(false);
+  });
+
+  it('finds the app by its main process, not by a helper or a namesake', () => {
+    const ps = [
+      '/Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper',
+      '/Users/me/Library/Application Support/Claude/claude-code/2.1.295/claude.app/Contents/MacOS/claude',
+    ];
+    expect(isRunningIn(ps, 'Claude')).toBe(false);
+    expect(isRunningIn([...ps, '/Applications/Claude.app/Contents/MacOS/Claude'], 'Claude')).toBe(true);
   });
 
   it('lets a later setup override an earlier one for the servers it names', () => {
