@@ -7,7 +7,7 @@
  * change that breaks the round-trip fails here instead of in someone's config.
  */
 import { describe, it, expect } from 'vitest';
-import { buildRows, preselect, selectionToSpecs } from '../src/setup.js';
+import { buildRows, preselect, selectionToSpecs, leafRows, neededRole } from '../src/setup.js';
 import {
   PROFILES,
   resolveSelection,
@@ -127,5 +127,30 @@ describe('round trip — re-running setup must not rewrite a config it did not c
     const out = roundTrip({ monetization: 'monetization:subscription-pricing,iap-pricing' });
     expect(out).toEqual(['monetization:iap-pricing,subscription-pricing']);
     expect(roundTrip({ monetization: out[0] })).toEqual(out);
+  });
+});
+
+/**
+ * The role setup recommends: the narrowest one every pick allows, Admin when
+ * one pick needs it or nothing narrower is shared.
+ */
+describe('the key role the picks need', () => {
+  const rows = buildRows();
+  const role = (...specs: string[]) => neededRole(leafRows(rows, specs));
+
+  it('suggests a narrow role when the picks share one', () => {
+    expect(role('marketing:customer-review').role).toBe('Customer Support');
+  });
+
+  it('falls back to Admin when the picks share nothing narrower', () => {
+    const r = role('analytics', 'testflight');
+    expect(r.role).toBe('Admin');
+    expect(r.why).toMatch(/no narrower role/);
+  });
+
+  it('names the pick that only Admin can manage, even inside a whole profile', () => {
+    const r = role('access');
+    expect(r.role).toBe('Admin');
+    expect(r.why).toMatch(/access:users/);
   });
 });

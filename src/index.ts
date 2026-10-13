@@ -44,6 +44,12 @@ Commands:
   setup                  Interactive one-time credential setup shared by every
                          profile (writes ~/.config/asc-mcp, key to Keychain).
                          Also registers profiles with the MCP clients it finds.
+                         Asks first whether to continue in the browser
+                         (recommended) or the terminal; these skip the question:
+                         --web      the browser (a page on 127.0.0.1 that only
+                                    this computer sees)
+                         --terminal the terminal
+                         --dry-run  with --web: walk through it, save nothing
   register <profile...>  Register profiles without a terminal — for an AI agent
                          acting on your behalf. Asks for nothing, never touches
                          credentials, and only adds (setup is what removes).
@@ -114,8 +120,14 @@ async function main(): Promise<void> {
   }
 
   if (positional[0] === 'setup') {
-    const { runSetup } = await import('./setup.js');
     try {
+      if (argv.includes('--web') || (!argv.includes('--terminal') && (await prefersBrowser()))) {
+        const { runWebSetup } = await import('./setup-web.js');
+        const port = Number(argv.find((a) => a.startsWith('--port='))?.slice('--port='.length)) || undefined;
+        await runWebSetup({ dryRun: argv.includes('--dry-run'), open: !argv.includes('--no-open'), port });
+        return;
+      }
+      const { runSetup } = await import('./setup.js');
       await runSetup();
     } catch (err) {
       // Setup is user-facing: print the message on its own, not a raw stack.
@@ -210,4 +222,22 @@ if (invokedAsBinary()) {
     console.error('Fatal error:', err);
     process.exit(1);
   });
+}
+
+/**
+ * The browser is the easier way through setup, so a bare `setup` offers it
+ * first. Only where a browser on this machine can answer: not without a
+ * terminal to ask in, and not over SSH, where 127.0.0.1 is the far end's.
+ */
+async function prefersBrowser(): Promise<boolean> {
+  if (!process.stdin.isTTY || !process.stdout.isTTY || process.env.SSH_CONNECTION) return false;
+  const { createInterface } = await import('node:readline/promises');
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    console.log('\nWelcome to Heimdall setup.');
+    const answer = (await rl.question('For the best experience, continue in your browser? [Y/n]: ')).trim();
+    return !/^n/i.test(answer);
+  } finally {
+    rl.close();
+  }
 }

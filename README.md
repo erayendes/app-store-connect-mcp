@@ -70,7 +70,7 @@ npx -y @erayendes/asc-mcp setup
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
 
-Before you run it, [create an API key](docs/SETUP_en.md#create-an-api-key) in App Store Connect and make sure Node.js 20.19 or later is installed.
+It asks whether to continue in your browser (recommended) or the terminal. You'll need an [App Store Connect API key](docs/SETUP_en.md#create-an-api-key); the browser page tells you which role to give it from what you pick, so you can run setup before creating the key. Node.js 20.19 or later.
 
 Want your AI to install it for you, or to use it in [Xcode 27](docs/SETUP_en.md#using-heimdall-in-xcode-27)? Everything else is in [Setup](docs/SETUP_en.md).
 

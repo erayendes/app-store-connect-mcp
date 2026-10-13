@@ -85,6 +85,12 @@ export type Target =
       add: (name: string, spec: string) => string[];
       /** Absent when the CLI cannot enumerate or delete what it wrote. */
       list?: string[];
+      /**
+       * The file the CLI writes, read directly instead of running `list`.
+       * `claude mcp list` starts every server to health-check it, which took
+       * ten seconds on a machine with a dozen servers; the file answers at once.
+       */
+      listFile?: { path: string; key: string };
       remove?: (name: string) => string[];
     }
   | {
@@ -127,6 +133,7 @@ export const CLIENTS: McpClient[] = [
         where: '~/.claude.json',
         add: (name, spec) => ['mcp', 'add', '-s', 'user', name, '--', SERVER_COMMAND, ...serverArgs(spec)],
         list: ['mcp', 'list'],
+        listFile: { path: home('.claude.json'), key: 'mcpServers' },
         remove: (name) => ['mcp', 'remove', name],
       },
       {
@@ -323,6 +330,10 @@ export const clientHint = (client: McpClient): string | undefined => {
 export function listRegistered(client: McpClient): Map<string, string> {
   const found = new Map<string, string>();
   for (const t of presentTargets(client)) {
+    if (t.kind === 'cli' && t.listFile) {
+      addServers(found, readJsonServers({ kind: 'json', where: t.where, ...t.listFile }));
+      continue;
+    }
     if (t.kind === 'cli') {
       if (!t.list) continue;
       try {
@@ -337,17 +348,20 @@ export function listRegistered(client: McpClient): Map<string, string> {
       }
       continue;
     }
-    const servers = readJsonServers(t);
-    if (!servers) continue;
-    for (const [name, entry] of Object.entries(servers)) {
-      const profile = profileOfServer(name);
-      if (!profile) continue;
-      const args = (entry as { args?: unknown })?.args;
-      const spec = Array.isArray(args) ? String(args[args.length - 1]) : profile;
-      found.set(name, spec);
-    }
+    addServers(found, readJsonServers(t));
   }
   return found;
+}
+
+/** Heimdall's entries in one config file's server map, with their full argument. */
+function addServers(found: Map<string, string>, servers: Record<string, unknown> | undefined): void {
+  for (const [name, entry] of Object.entries(servers ?? {})) {
+    const profile = profileOfServer(name);
+    if (!profile) continue;
+    const args = (entry as { args?: unknown })?.args;
+    const spec = Array.isArray(args) ? String(args[args.length - 1]) : profile;
+    found.set(name, spec);
+  }
 }
 
 function readJsonServers(t: Extract<Target, { kind: 'json' }>): Record<string, unknown> | undefined {

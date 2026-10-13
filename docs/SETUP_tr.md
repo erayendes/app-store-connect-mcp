@@ -26,14 +26,12 @@ npx -y @erayendes/asc-mcp setup
 
 ### Kimlik bilgisini bir kez kaydedin — Setup sihirbazı
 
-Setup sihirbazı App Store Connect hesabına erişmek için bazı bilgiler ve anahtarlar ister.
+Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 
-- Yazarken `Key ID` ve `Issuer ID` formatları kontrol edilir.
-- `.p8` yolunu girersiniz. Sürükle-bırak da kabul eder.
-- Kaydetmeden önce bilgileri Apple'a doğrulatır. Apple reddederse yeniden girersiniz.
-- Satış/finans raporlarına ulaşmak için opsiyonel olarak `Vendor number` sorulur.
-- Cihazınızda kurulu olan yapay zekâ uygulamalarını tespit eder ve profilleri hangilerine kurmak istediğinizi sorar. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır.
-- [Profil](PROFILES_tr.md) seçicinin her satırı, araç sayısını ve kabaca token maliyetini gösterir.
+1. **Neye ihtiyacınız var.** [Profil](PROFILES_tr.md) seçicinin her satırı araç sayısını ve kabaca token maliyetini gösterir; `[Admin key]` ve `[vendor no.]` bunlardan birini isteyen satırları işaretler. Toplam, seçtikçe gösterilir.
+2. **Anahtarınız.** Seçtiklerinize göre bunları karşılayan en dar anahtar [rolünü](ROLES_tr.md) söyler. Kayıtlı bir anahtar varsa önce o önerilir, Admin olup olmadığıyla birlikte. Yeni anahtarda `Key ID` ve `Issuer ID` yazarken kontrol edilir, `.p8` yolunu alır (sürükle-bırak da olur) ve hepsini Apple'a doğrulatır; Apple reddederse yeniden girersiniz. `Vendor number` yalnızca satış ve finans raporlarını seçtiyseniz sorulur.
+3. **Yapay zekâ uygulamalarınız.** Cihazınızda kurulu olanları bulur. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır.
+4. **Plan.** Her uygulamada neyin değişeceği gösterilir ve bir kez onay istenir.
 
 Anahtar bilgileri Apple'a doğrulandıktan sonra kaydedilir. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
@@ -58,6 +56,16 @@ Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`
 | Cursor | `~/.cursor/mcp.json` | doğrudan düzenlenir |
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` | doğrudan düzenlenir |
 | VS Code | kullanıcı MCP config'i | `code --add-mcp` |
+
+### Tarayıcıda ya da terminalde
+
+`setup` önce nasıl devam etmek istediğinizi sorar: tarayıcıda (önerilen) ya da burada, terminalde. `setup --web` ve `setup --terminal` bu soruyu atlar. SSH üzerinden bağlıysanız terminalde kalır, çünkü sayfa uzaktaki makinede açılırdı.
+
+Tarayıcı sayfası aynı sihirbazdır. Önce neye ihtiyacınız olduğunu seçersiniz; sayfa bunun için hangi anahtar rolü gerektiğini ve kayıtlı anahtarınızın uyup uymadığını söyler. Sonra anahtarı eklersiniz (`.p8` dosyasını sayfaya bırakmanız yeterli), yapay zekâ uygulamalarınızı işaretlersiniz ve Apply'a basmadan önce her birinde neyin değişeceğini görürsünüz.
+
+- Sayfa kendi bilgisayarınızda (`127.0.0.1`) tek kullanımlık bir linkle çalışır; Apply'dan sonra ya da 30 dakika kullanılmazsa kendiliğinden kapanır.
+- Anahtar terminal sihirbazındakiyle aynı şekilde kaydedilir: macOS Keychain'e; macOS dışında `.p8` dosyanızın yoluyla, içeriğini yapıştırdıysanız ortak ayarların yanına yalnızca sizin okuyabileceğiniz bir dosya olarak.
+- `--dry-run` hiçbir şey kaydetmeden ve Apple'a bağlanmadan bütün akışı gösterir. `--no-open` tarayıcıyı açmak yerine linki yazdırır, `--port=N` portu seçer.
 
 ## Profil ekleme ve çıkarma
 

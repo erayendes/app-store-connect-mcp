@@ -285,6 +285,22 @@ describe('reading back what is registered', () => {
   it('reads nothing from a config that does not exist yet', () => {
     expect(listRegistered(jsonClient('absent.json')).size).toBe(0);
   });
+
+  it('reads a CLI client from the file it writes, without running its list command', () => {
+    // `claude mcp list` starts every server to health-check it; the file is instant.
+    writeFileSync(join(dir, 'cli.json'), JSON.stringify({
+      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'analytics'] } },
+    }));
+    const cli: McpClient = {
+      id: 'cli', label: 'CLI',
+      targets: [{
+        kind: 'cli', bin: 'node', where: 'cli.json', add: () => [],
+        list: ['--this-would-fail-if-run'],
+        listFile: { path: join(dir, 'cli.json'), key: 'mcpServers' },
+      }],
+    };
+    expect([...listRegistered(cli)]).toEqual([['ASC-Analytics', 'analytics']]);
+  });
 });
 
 /**
