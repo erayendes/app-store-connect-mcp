@@ -215,19 +215,24 @@ export function buildRows(): Row[] {
 export function registeredAcross(clients: McpClient[]): {
   perClient: Map<string, Map<string, string>>;
   union: Map<string, string>;
+  /** Per client, the entries that run another release channel (beta or stable) than this one. */
+  stale: Map<string, Set<string>>;
 } {
   const known = new Set(PROFILES.map((p) => p.name));
   const perClient = new Map<string, Map<string, string>>();
   const union = new Map<string, string>();
+  const stale = new Map<string, Set<string>>();
   for (const client of clients) {
-    const found = listRegistered(client);
+    const other = new Set<string>();
+    const found = listRegistered(client, other);
     perClient.set(client.id, found);
+    stale.set(client.id, other);
     for (const [name, spec] of found) {
       const profile = profileOfServer(name);
       if (profile && known.has(profile)) union.set(profile, spec);
     }
   }
-  return { perClient, union };
+  return { perClient, union, stale };
 }
 
 /**
@@ -626,7 +631,7 @@ export async function runSetup(): Promise<void> {
       console.log('\nApp selection cancelled — registration left unchanged.');
       return;
     }
-    await reconcileRegistration(clients, chosen, registeredAcross(clients).perClient, ask);
+    await reconcileRegistration(clients, chosen, registeredAcross(clients), ask);
   } finally {
     rl.close();
     // The picker leaves stdin flowing so later prompts work; release it now so
@@ -653,7 +658,7 @@ export function planChanges(
   clients: McpClient[],
   chosen: string[],
   registeredPerClient: Map<string, Map<string, string>>,
-  { prune }: { prune: boolean }
+  { prune, stale }: { prune: boolean; stale?: Map<string, Set<string>> }
 ): ClientPlan[] {
   const chosenNames = new Set(chosen.map(serverName));
   return clients
@@ -669,7 +674,11 @@ export function planChanges(
       const wanted = [...new Set([...chosen, ...migrate])];
       return {
         client,
-        toAdd: client.targets.length ? wanted.filter((spec) => registered.get(serverName(spec)) !== spec) : chosen,
+        // An entry on the other channel is rewritten even when its profiles
+        // match: that is how a beta tester's servers follow them back to stable.
+        toAdd: client.targets.length
+          ? wanted.filter((spec) => registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec)))
+          : chosen,
         // `register` never prunes: an agent adding one profile must not silently
         // drop the six the user set up last week.
         toRemove: [
@@ -740,10 +749,10 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
 async function reconcileRegistration(
   clients: McpClient[],
   chosen: string[],
-  registeredPerClient: Map<string, Map<string, string>>,
+  registered: ReturnType<typeof registeredAcross>,
   ask: Ask
 ): Promise<void> {
-  const plan = planChanges(clients, chosen, registeredPerClient, { prune: true });
+  const plan = planChanges(clients, chosen, registered.perClient, { prune: true, stale: registered.stale });
   if (!plan.length) {
     console.log('\nNo changes — every chosen client already matches your selection.');
     return;
@@ -810,8 +819,8 @@ export function runRegister(specs: string[], clientIds?: string[]): void {
     }
   }
 
-  const { perClient } = registeredAcross(clients);
-  const plan = planChanges(clients, specs, perClient, { prune: false });
+  const { perClient, stale } = registeredAcross(clients);
+  const plan = planChanges(clients, specs, perClient, { prune: false, stale });
   if (!plan.length) {
     console.log('No changes — every client already has these profiles.');
     return;

@@ -32,10 +32,21 @@ import {
 } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
+import { createRequire } from 'node:module';
 
 /** `npx` rather than an absolute path: portable, and survives a reinstall. */
 export const SERVER_COMMAND = 'npx';
-export const serverArgs = (spec: string): string[] => ['-y', '@erayendes/asc-mcp', spec];
+/**
+ * The package a registration runs. A beta writes `@beta`, so trying the beta
+ * means its servers too, not only its setup; a stable release writes the bare
+ * name, which moves a beta tester back to stable the next time setup runs.
+ */
+export const PACKAGE = (createRequire(import.meta.url)('../package.json').version as string).includes('-')
+  ? '@erayendes/asc-mcp@beta'
+  : '@erayendes/asc-mcp';
+export const serverArgs = (spec: string): string[] => ['-y', PACKAGE, spec];
+/** The package an entry runs, or undefined when it names none of ours. */
+const packageOf = (text: string): string | undefined => text.match(/@erayendes\/asc-mcp(?:@\S+)?/)?.[0];
 const SPELLINGS: Record<string, string> = { testflight: 'TestFlight' };
 /** `app-info` -> `App Info`: a profile name the way a person reads it. */
 export const profileLabel = (profile: string): string =>
@@ -327,11 +338,11 @@ export const clientHint = (client: McpClient): string | undefined => {
  * narrowed. Targets that cannot enumerate contribute nothing, which reads as
  * "not registered" and makes the next add a harmless overwrite.
  */
-export function listRegistered(client: McpClient): Map<string, string> {
+export function listRegistered(client: McpClient, stale?: Set<string>): Map<string, string> {
   const found = new Map<string, string>();
   for (const t of presentTargets(client)) {
     if (t.kind === 'cli' && t.listFile) {
-      addServers(found, readJsonServers({ kind: 'json', where: t.where, ...t.listFile }));
+      addServers(found, readJsonServers({ kind: 'json', where: t.where, ...t.listFile }), stale);
       continue;
     }
     if (t.kind === 'cli') {
@@ -341,26 +352,34 @@ export function listRegistered(client: McpClient): Map<string, string> {
         for (const line of out.split('\n')) {
           const name = line.match(/^(asc-[a-z0-9-]+)\b/i)?.[1];
           if (!name) continue;
-          found.set(name, line.match(/@erayendes\/asc-mcp\s+(\S+)/)?.[1] ?? profileOfServer(name)!);
+          found.set(name, line.match(/@erayendes\/asc-mcp(?:@\S+)?\s+(\S+)/)?.[1] ?? profileOfServer(name)!);
+          const pkg = packageOf(line);
+          if (pkg && pkg !== PACKAGE) stale?.add(name);
         }
       } catch {
         // Listing failed — treat as nothing registered rather than guessing.
       }
       continue;
     }
-    addServers(found, readJsonServers(t));
+    addServers(found, readJsonServers(t), stale);
   }
   return found;
 }
 
 /** Heimdall's entries in one config file's server map, with their full argument. */
-function addServers(found: Map<string, string>, servers: Record<string, unknown> | undefined): void {
+function addServers(
+  found: Map<string, string>,
+  servers: Record<string, unknown> | undefined,
+  stale?: Set<string>
+): void {
   for (const [name, entry] of Object.entries(servers ?? {})) {
     const profile = profileOfServer(name);
     if (!profile) continue;
     const args = (entry as { args?: unknown })?.args;
     const spec = Array.isArray(args) ? String(args[args.length - 1]) : profile;
     found.set(name, spec);
+    const pkg = Array.isArray(args) ? args.map(String).map(packageOf).find(Boolean) : undefined;
+    if (pkg && pkg !== PACKAGE) stale?.add(name);
   }
 }
 

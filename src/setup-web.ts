@@ -127,8 +127,8 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
   };
   const plan = (body: Record<string, unknown>) => {
     const clients = chosenClients(body.clients);
-    const { perClient } = registeredAcross(clients);
-    return planChanges(clients, chosenSpecs(body.picked), perClient, { prune: true });
+    const { perClient, stale } = registeredAcross(clients);
+    return planChanges(clients, chosenSpecs(body.picked), perClient, { prune: true, stale });
   };
 
   let finish!: () => void;

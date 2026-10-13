@@ -46,7 +46,9 @@ import {
   serverName,
   profileOfServer,
   type McpClient,
+  PACKAGE,
 } from '../src/clients.js';
+import { planChanges } from '../src/setup.js';
 import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
@@ -141,7 +143,7 @@ describe('the registry itself', () => {
     const doc = JSON.parse(manualBlock(CLIENTS[0], ['distribution:version']));
     expect(doc.mcpServers['ASC-Distribution']).toEqual({
       command: 'npx',
-      args: ['-y', '@erayendes/asc-mcp', 'distribution:version'],
+      args: ['-y', PACKAGE, 'distribution:version'],
     });
   });
 });
@@ -355,5 +357,32 @@ describe('registering with a CLI client', () => {
     expect(results[0].ok).toBe(false);
     expect(results[0].message).toContain('name already in use');
     expect(results[0].message).not.toContain('no such server');
+  });
+});
+
+/**
+ * A beta registers `@erayendes/asc-mcp@beta`, so its servers are the beta too.
+ * The next stable setup must move those entries back, even when the profiles
+ * match exactly — otherwise a tester stays on the beta for good.
+ */
+describe('release channel of a registration', () => {
+  it('flags an entry that runs the other channel, and plans to rewrite it', () => {
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: {
+        'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] },
+        'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info'] },
+      },
+    }));
+    const stale = new Set<string>();
+    const found = listRegistered(jsonClient(), stale);
+    expect(found.get('ASC-Analytics')).toBe('analytics');
+    expect([...stale]).toEqual(['ASC-Analytics']);
+
+    const plan = planChanges([jsonClient()], ['analytics', 'app-info'], new Map([['temp', found]]), {
+      prune: true,
+      stale: new Map([['temp', stale]]),
+    });
+    expect(plan[0].toAdd).toEqual(['analytics']);
   });
 });
