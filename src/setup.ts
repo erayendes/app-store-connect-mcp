@@ -259,7 +259,8 @@ export async function selectClients(ask: Ask): Promise<McpClient[] | null> {
   const title =
     '\n🤖 Which AI apps should get these profiles?\n' +
     'The ones found on this machine are checked. None of them share a config,\n' +
-    'so a profile registered with one is invisible to the others.';
+    'so a profile registered with one is invisible to the others.\n' +
+    'Uncheck an app that has Heimdall to remove it from that app.';
 
   if (process.stdin.isTTY) {
     const picked = await runChecklist(items, { title, preselected });
@@ -722,6 +723,22 @@ export function planChanges(
 }
 
 /**
+ * The apps the user unticked that still run Heimdall.
+ *
+ * Unticking an app says "not here", and people expected it to take Heimdall
+ * out; it used to leave the app as it was without a word. It is removed now,
+ * and the plan lists it before anything is written, which is what keeps it
+ * from being an accident.
+ */
+export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = CLIENTS): ClientPlan[] {
+  const ids = new Set(chosen.map((c) => c.id));
+  return candidates
+    .filter((c) => c.targets.length && !ids.has(c.id))
+    .map((client) => ({ client, toAdd: [], toSwitch: [], toRemove: [...listRegistered(client).keys()] }))
+    .filter((p) => p.toRemove.length);
+}
+
+/**
  * The plan, one line per client that gains or loses a profile. An entry that
  * only moves to this release's package is part of setting this release up,
  * not a change to anyone's setup, so it is written but not listed.
@@ -814,7 +831,10 @@ async function reconcileRegistration(
   registered: ReturnType<typeof registeredAcross>,
   ask: Ask
 ): Promise<void> {
-  const plan = planChanges(clients, chosen, registered.perClient, { prune: true, stale: registered.stale });
+  const plan = [
+    ...planChanges(clients, chosen, registered.perClient, { prune: true, stale: registered.stale }),
+    ...plansForUnticked(clients),
+  ];
   if (!plan.length) {
     console.log('\nNo changes — every chosen client already matches your selection.');
     return;

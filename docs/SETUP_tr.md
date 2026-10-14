@@ -73,7 +73,7 @@ Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birka�
 
 - **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
-- Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler.
+- Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
 
 ## Yüklü olmayan bir araç gerekirse
 
@@ -118,7 +118,7 @@ Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect
 
 ## Kaldırma
 
-`setup`'ı yeniden çalıştırın, profil seçicisinde her şeyin işaretini kaldırın; seçtiğiniz uygulamalardan profilleri siler.
+`setup`'ı yeniden çalıştırın ve Heimdall'ı kaldırmak istediğiniz uygulamaların işaretini kaldırın; Heimdall o uygulamalardan silinir. Kurulum, bir şey yazmadan önce neyin silineceğini gösterir.
 
 İki istisna var: VS Code'da kaldırma komutu olmadığı için Heimdall satırlarını VS Code'un MCP ayarlarından elle silin. Xcode eklentilerini de Xcode → Settings → Intelligence → Plug-ins'ten **Delete Plug-in** ile kaldırın.
 

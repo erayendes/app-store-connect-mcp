@@ -33,6 +33,7 @@ import {
   isValidIssuerId,
   isValidKeyId,
   planChanges,
+  plansForUnticked,
   preselect,
   registeredAcross,
   rolesFor,
@@ -131,7 +132,11 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
   const plan = (body: Record<string, unknown>) => {
     const clients = chosenClients(body.clients);
     const { perClient, stale } = registeredAcross(clients);
-    return planChanges(clients, chosenSpecs(body.picked), perClient, { prune: true, stale });
+    return [
+      ...planChanges(clients, chosenSpecs(body.picked), perClient, { prune: true, stale }),
+      // An app left unticked loses Heimdall, listed in the plan like any removal.
+      ...plansForUnticked(clients),
+    ];
   };
 
   let finish!: () => void;
