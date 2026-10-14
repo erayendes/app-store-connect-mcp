@@ -20,6 +20,13 @@ export interface SharedConfig {
   bundleId?: string;
   appAppleId?: number;
   environment?: 'Sandbox' | 'Production';
+  /**
+   * Set by `trust-client-approval`, which only runs in a real terminal: on a
+   * client that cannot show Heimdall's own prompt, the person running it has
+   * said the client's tool approval is the check for a high-risk write. Absent,
+   * such a write is refused there. Clients that can show the prompt still get it.
+   */
+  clientApprovalWithoutPrompt?: boolean;
 }
 
 export function sharedConfigDir(env: NodeJS.ProcessEnv = process.env): string {

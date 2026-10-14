@@ -44,7 +44,8 @@ import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './t
 import { CI_TOOLS, CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
-import { serverName } from './clients.js';
+import { PACKAGE, serverName } from './clients.js';
+import { readSharedConfig } from './core/shared-config.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
@@ -74,6 +75,45 @@ import {
 function maxResponseChars(): number {
   const raw = Number(process.env.ASC_MAX_RESPONSE_CHARS);
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_MAX_RESPONSE_CHARS;
+}
+
+/**
+ * Whether `trust-client-approval` was run. Read at the moment of refusal
+ * rather than at startup, so "run it, then ask me again" needs no restart.
+ */
+function clientApprovalTrusted(): boolean {
+  try {
+    return readSharedConfig()?.clientApprovalWithoutPrompt === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The refusal on a client that cannot show the prompt.
+ *
+ * Its reader is the agent, and the old text ("Set ASC_CONFIRM_WRITES=0") read
+ * as an instruction to go and edit the user's MCP config — which one did, until
+ * its own permission classifier stopped it. So it names who acts (the user),
+ * the exact command, and what the agent must not do, and it says why the
+ * user's yes in the chat is not enough: the server cannot see the chat.
+ */
+export function noPromptRefusal(name: string, risk: string): string {
+  return (
+    `"${name}" was not run. It is a ${risk.toUpperCase()}-level write, Heimdall asks a person ` +
+    `before running one, and this client cannot show Heimdall's confirmation prompt (it does ` +
+    `not support MCP elicitation). Nothing was changed, and calling it again will be refused ` +
+    `the same way. A yes in this chat does not count: Heimdall cannot see the chat.\n\n` +
+    `Only the user can change this. Tell them they have two options:\n` +
+    `  1. Run this in their own terminal (it asks them to confirm, so it needs a real terminal), ` +
+    `then ask you to try again. No restart is needed:\n` +
+    `       npx -y ${PACKAGE} trust-client-approval\n` +
+    `     From then on, on a client like this one, the client's own tool-approval prompt is the ` +
+    `check for these writes. Clients that can show Heimdall's prompt keep showing it.\n` +
+    `  2. Make this change on the App Store Connect website themselves.\n\n` +
+    `Do not run that command, edit an MCP client config, set ASC_CONFIRM_WRITES, or look for the ` +
+    `App Store Connect key yourself. The approval has to come from the user.`
+  );
 }
 
 // Read from package.json at runtime so the banner can't drift from the published
@@ -618,62 +658,55 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           const envelope = ctx.mcpReq.envelope as Record<string, ClientCapabilities | undefined> | undefined;
           const caps = envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? server.getClientCapabilities();
           if (!caps?.elicitation?.form) {
-            // No way to ask. The user asked for a guard, so say it can't run
-            // here rather than proceed under a guard that stopped guarding.
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text:
-                    `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and this ` +
-                    `client cannot show a confirmation prompt (no elicitation support). ` +
-                    `Nothing was changed. Set ASC_CONFIRM_WRITES=0 (or --no-confirm) to rely on ` +
-                    `the client's own tool approval instead, or use --read-only.`,
-                },
-              ],
-              isError: true,
-            };
+            // No way to ask. A yes in the chat is not one: Heimdall never sees
+            // the chat, and an agent can say anything there. So the write runs
+            // only if the person has said, in their own terminal, that the
+            // client's tool approval is the check on this client.
+            if (!clientApprovalTrusted()) {
+              return { content: [{ type: 'text' as const, text: noPromptRefusal(name, risk) }], isError: true };
+            }
+          } else {
+            const preview = PRICING_TOOL_NAMES.has(name)
+              ? // Macro parameters are already human language — no lookups needed.
+                { message: buildPricingPreview(args, name), strong: true }
+              : TESTFLIGHT_TOOL_NAMES.has(name)
+              ? // The generic macro preview drops the group list and calls this PUBLIC.
+                { message: buildTestflightPreview(args), strong: true }
+              : op
+              ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
+              : macroOffered(name)
+              ? // Other write macros: no spec operation behind them, but their
+                // arguments are already the human-readable facts, so the generic
+                // preview renders them without any lookups.
+                await buildWritePreview(
+                  name,
+                  { method: 'POST', path: `${name} (macro)`, risk },
+                  args,
+                  config.credentials.keyId
+                )
+              : await buildWritePreview(
+                  name,
+                  // StoreKit tools live outside the spec; renewal-date extension is
+                  // the one that moves money.
+                  {
+                    method: 'POST',
+                    path: 'App Store Server API',
+                    risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
+                  },
+                  args
+                );
+            return gate.ask(ctx, request.params.name, request.params.arguments, preview);
           }
-          const preview = PRICING_TOOL_NAMES.has(name)
-            ? // Macro parameters are already human language — no lookups needed.
-              { message: buildPricingPreview(args, name), strong: true }
-            : TESTFLIGHT_TOOL_NAMES.has(name)
-            ? // The generic macro preview drops the group list and calls this PUBLIC.
-              { message: buildTestflightPreview(args), strong: true }
-            : op
-            ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
-            : macroOffered(name)
-            ? // Other write macros: no spec operation behind them, but their
-              // arguments are already the human-readable facts, so the generic
-              // preview renders them without any lookups.
-              await buildWritePreview(
-                name,
-                { method: 'POST', path: `${name} (macro)`, risk },
-                args,
-                config.credentials.keyId
-              )
-            : await buildWritePreview(
-                name,
-                // StoreKit tools live outside the spec; renewal-date extension is
-                // the one that moves money.
-                {
-                  method: 'POST',
-                  path: 'App Store Server API',
-                  risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
-                },
-                args
-              );
-          return gate.ask(ctx, request.params.name, request.params.arguments, preview);
-        }
-        if (!decision.allowed) {
+        } else if (!decision.allowed) {
           const text = decision.stale
             ? `"${name}" was refused: ${decision.reason}.`
             : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +
-              `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
-              `this client declared elicitation support but cannot actually show the ` +
-              `form, and answered for you — the protocol reports that identically to a ` +
-              `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
-              `let the client's own tool approval be the gate.`;
+              `Nothing was changed. If the user saw no confirmation prompt, this client ` +
+              `declared elicitation support but cannot actually show the form, and answered ` +
+              `for them — the protocol reports that identically to a real refusal. Tell the ` +
+              `user; the fix is theirs to make, not yours: ASC_CONFIRM_WRITES=0 in this ` +
+              `server's "env" in their MCP client config, then a restart. Do not edit that ` +
+              `config yourself.`;
           return {
             content: [{ type: 'text' as const, text }],
             isError: true,

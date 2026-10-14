@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### Unreleased
+
+**Submitting from the Claude desktop app's Code tab.** That app can't show Heimdall's confirmation prompt, so a review submission, a price change or anything else Heimdall asks about was refused there, even after you said yes. It still is by default, but now the refusal tells you the one command to run in your terminal, `npx -y @erayendes/asc-mcp trust-client-approval`, and after that the app's own approval prompt is the check. No restart, and no config file to edit by hand.
+
 ### [2.6.0] — 2026-10-11
 
 Six new tools, each doing in one step what used to take several. 902 tools in total.
@@ -207,6 +211,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### Yayımlanmadı
+
+**Claude masaüstü uygulamasının Code sekmesinden incelemeye gönderme.** Bu uygulama Heimdall'ın onay penceresini gösteremiyor; bu yüzden incelemeye gönderme, fiyat değişikliği ya da Heimdall'ın sorduğu başka bir şey, "evet" demenize rağmen orada reddediliyordu. Varsayılan hâlâ bu, ama artık ret mesajı terminalde çalıştıracağınız tek komutu söylüyor: `npx -y @erayendes/asc-mcp trust-client-approval`. Ondan sonra kontrolü uygulamanın kendi onay penceresi yapıyor. Yeniden başlatma da, elle düzenlenecek config dosyası da yok.
 
 ### [2.6.0] — 2026-10-11
 

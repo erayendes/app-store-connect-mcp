@@ -11,6 +11,9 @@
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createServer } from '../src/server.js';
@@ -98,7 +101,10 @@ async function connect(
 
 const textOf = (res: any): string => res.content?.[0]?.text ?? '';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection', (era) => {
   it('runs the write once the user types CONFIRM', async () => {
@@ -151,13 +157,60 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
   });
 
   it('fails closed, without asking, when the client cannot show a prompt', async () => {
+    // Not the developer's own ~/.config/asc-mcp, which may have opted in.
+    vi.stubEnv('ASC_CONFIG_DIR', mkdtempSync(join(tmpdir(), 'asc-trust-')));
     const apple = stubApple();
     const { client } = await connect(era, CONFIRM, { noElicitation: true });
 
     const res: any = await client.callTool(CALL);
 
-    expect(textOf(res)).toContain('no elicitation support');
+    expect(textOf(res)).toContain('does not support MCP elicitation');
     expect(apple.deletes()).toEqual([]);
+  });
+
+  it('refuses a RELEASE-level write without a prompt, telling the agent to send the user to the terminal, until they opt in there', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'asc-trust-'));
+    vi.stubEnv('ASC_CONFIG_DIR', dir);
+    const sent: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL, init?: RequestInit) => {
+        sent.push(`${init?.method ?? 'GET'} ${new URL(String(url)).pathname}`);
+        return new Response(JSON.stringify({ data: { type: 'appStoreVersionReleaseRequests', id: 'r-1' } }), {
+          status: 201,
+          headers: { 'content-type': 'application/json' },
+        });
+      })
+    );
+    const release = {
+      name: 'app_store_version_release_requests__create',
+      arguments: {
+        body: {
+          data: {
+            type: 'appStoreVersionReleaseRequests',
+            relationships: { appStoreVersion: { data: { type: 'appStoreVersions', id: 'v-1' } } },
+          },
+        },
+      },
+    };
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, profile: 'distribution' });
+
+    const refused: any = await client.callTool(release);
+    expect(refused.isError).toBe(true);
+    expect(textOf(refused)).toContain('RELEASE-level write');
+    expect(textOf(refused)).toContain('trust-client-approval');
+    expect(textOf(refused)).toMatch(/Do not run that command, edit an MCP client config/);
+    expect(sent.filter((s) => s.startsWith('POST'))).toEqual([]);
+
+    // What the command writes. The client still has no prompt; its own tool
+    // approval is now the check, so the same call goes through.
+    writeFileSync(
+      join(dir, 'config.json'),
+      JSON.stringify({ keyId: 'TESTKEY123', issuerId: 'issuer', clientApprovalWithoutPrompt: true })
+    );
+    const ran: any = await client.callTool(release);
+    expect(ran.isError ?? false).toBe(false);
+    expect(sent).toContain('POST /v1/appStoreVersionReleaseRequests');
   });
 
   it('sends nothing when the user types something other than CONFIRM', async () => {

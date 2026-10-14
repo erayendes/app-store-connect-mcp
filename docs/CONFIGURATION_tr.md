@@ -29,6 +29,14 @@
 
 Varsayılan olarak Heimdall gelir, silme, altyapı ve erişim değişikliklerinden ve kullanıcıya ulaşan yayın adımlarından önce sorar: sürümü incelemeye göndermek, yayınlamak, kademeli yayını değiştirmek, bir build'i dış test kullanıcılarına açmak. Yayınlamak için CONFIRM yazmanızı ister. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımlarını ve geri kalan her şeyi uygulamanızın onayına bırakır.
 
+**Soruyu gösteremeyen uygulamalar.** Heimdall, uygulamanızın desteklemesi gereken bir pencereyle (MCP elicitation) sorar ve bazı uygulamalar bunu desteklemez: Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Orada bu değişiklikler reddedilir, sohbette "evet" demiş olsanız bile, çünkü Heimdall sohbeti göremez. Böyle uygulamalarda kontrolü uygulamanın kendi onay penceresine bırakmak için şunu terminalde kendiniz çalıştırın:
+
+```bash
+npx -y @erayendes/asc-mcp trust-client-approval
+```
+
+Neyin değiştiğini anlatır ve `yes` yazmanızı ister. Yeniden başlatmak gerekmez; Heimdall'ın penceresini gösterebilen uygulamalar göstermeye devam eder. `--off` geri alır. Bunu yapay zekâ asistanınıza çalıştırtmayın; Heimdall da ona çalıştırmamasını söyler.
+
 ## Ortam değişkenleri
 
 **Kimlik bilgileri.** Setup bunları sizin için kaydeder. Yalnızca setup olmadan çalıştırıyorsanız girin. Herhangi biri girildiğinde kayıtlı ayarlar tamamen yok sayılır; böylece iki hesap asla birbirine karışmaz.

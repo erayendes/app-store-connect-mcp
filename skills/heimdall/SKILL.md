@@ -38,6 +38,14 @@ different operation — never the shell. If the credentials genuinely are not
 configured, `asc__status` says so, and the fix is `setup` (below), which only
 the user can run.
 
+The same goes for a write Heimdall refuses because the client cannot show its
+confirmation prompt (the refusal says "does not support MCP elicitation"). The
+user's yes in the chat does not get past it — the server cannot see the chat —
+and neither does editing their MCP config or setting `ASC_CONFIRM_WRITES`
+yourself. Tell the user what the refusal says: they run
+`npx -y @erayendes/asc-mcp trust-client-approval` in their own terminal, or
+make the change on the App Store Connect website. Then call the tool again.
+
 ## Least privilege
 
 No endpoint returns a key's role, so a 403 partway through a task is often the

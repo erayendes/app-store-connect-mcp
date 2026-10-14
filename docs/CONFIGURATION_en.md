@@ -29,6 +29,14 @@ Restart your app after changing either.
 
 By default Heimdall asks before revenue, deletion, infrastructure and access changes, and before the release steps that reach users: sending a version to review, releasing it, changing a phased rollout, and opening a build to external testers. Releasing asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, and everything else are left to your app's approval.
 
+**Apps that can't show the question.** Heimdall asks through a prompt your app has to support (MCP elicitation), and some apps don't: the Code tab in the Claude desktop app is one. There, those changes are refused, even after you said yes in the chat, because Heimdall can't see the chat. To let the app's own approval prompt be the check on apps like that, run this yourself in a terminal:
+
+```bash
+npx -y @erayendes/asc-mcp trust-client-approval
+```
+
+It explains what changes and asks you to type `yes`. No restart needed, and apps that can show Heimdall's prompt keep showing it. `--off` undoes it. Don't let your AI assistant run it for you; Heimdall tells it not to.
+
 ## Environment variables
 
 **Credentials.** Setup saves these for you. Set them only if you run without setup. When any of them is set, the saved settings are ignored entirely, so two accounts can never get mixed.

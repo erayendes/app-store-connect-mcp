@@ -55,6 +55,11 @@ Commands:
                          credentials, and only adds (setup is what removes).
                          --clients=<ids>  limit to some clients; default is
                          every one found on this machine.
+  trust-client-approval  On an app that cannot show Heimdall's confirmation
+                         prompt, let the app's own tool approval be the check
+                         for revenue, release, infrastructure and access
+                         writes (refused there by default). Asks you first, so
+                         it needs a terminal. --off undoes it.
 
 Options:
   --domains=<list>       (no-profile mode) Comma-separated domains, or "all".
@@ -66,7 +71,9 @@ Options:
                          only gate. ASC_CONFIRM_WRITES=0 does the same.
                          By default Heimdall asks (via MCP elicitation) before
                          a revenue, destructive, infrastructure or access level
-                         write and stays quiet on the rest.
+                         write and stays quiet on the rest. On an app that
+                         cannot show that prompt, those writes are refused
+                         unless you ran trust-client-approval.
   --include-deprecated   Also load operations Apple has marked deprecated.
   --dry-run              Writes never reach Apple: each mutating call returns
                          what WOULD have been sent (method, path, body, risk)
@@ -112,6 +119,17 @@ async function main(): Promise<void> {
       .filter(Boolean);
     try {
       runRegister(positional.slice(1), clients);
+    } catch (err) {
+      console.error(`\n${(err as Error).message}\n`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (positional[0] === 'trust-client-approval') {
+    const { runTrustClientApproval } = await import('./setup.js');
+    try {
+      await runTrustClientApproval(argv.includes('--off'));
     } catch (err) {
       console.error(`\n${(err as Error).message}\n`);
       process.exit(1);

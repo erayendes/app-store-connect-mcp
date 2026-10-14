@@ -899,3 +899,69 @@ export function runRegister(specs: string[], clientIds?: string[]): void {
     );
   }
 }
+
+/**
+ * `trust-client-approval [--off]`: what a revenue, release, infrastructure or
+ * access write does on a client that cannot show Heimdall's prompt. Refused by
+ * default; this records that the client's own tool approval is the check there.
+ *
+ * Asked once, here, rather than per client at `register`: one config entry can
+ * serve a client that can ask and one that cannot (`~/.claude.json` is read by
+ * Claude Code in a terminal and by the desktop app's Code tab alike), so the
+ * file a registration writes says nothing about which of the two will connect.
+ * The server checks that per connection, at the call, and this only decides
+ * what happens when the answer is "cannot".
+ *
+ * Terminal only, like setup, and for a sharper reason: the agent that hit the
+ * refusal is the one party that must not answer this. From an agent's shell
+ * there is no TTY, and it stops before asking.
+ */
+export async function runTrustClientApproval(off: boolean): Promise<void> {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    throw new Error(
+      'This asks you to confirm, so it needs a real terminal. Run it yourself in Terminal — ' +
+        'an AI assistant should not run it for you.'
+    );
+  }
+  const existing = readSharedConfig();
+  if (!existing) {
+    throw new Error(
+      `No saved setup found. Run  npx -y ${PACKAGE} setup  first.\n` +
+        '(If your credentials live in your MCP client config instead, ASC_CONFIRM_WRITES=0 in that ' +
+        "server's env is the nearest thing, but it also stops the prompt on apps that can show it.)"
+    );
+  }
+  if (off) {
+    const { clientApprovalWithoutPrompt: _, ...rest } = existing;
+    writeSharedConfig(rest);
+    console.log(
+      "✓ Off. On an app that can't show Heimdall's prompt, revenue, release, infrastructure and " +
+        'access writes are refused again.'
+    );
+    return;
+  }
+
+  console.log(
+    "\nSome apps can't show Heimdall's confirmation prompt — the Code tab in the Claude desktop app is one.\n" +
+      'On those, Heimdall refuses the writes that change prices, submit or release a version, change\n' +
+      'certificates and profiles, or change who has access, because nobody it can reach has approved them.\n\n' +
+      "Turn this on, and on those apps the app's own approval prompt (the one it shows before any tool\n" +
+      'runs) is the check instead. If you let that app run tools without asking, nothing will ask first.\n' +
+      "Apps that can show Heimdall's prompt keep showing it.\n"
+  );
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  let answer: string;
+  try {
+    answer = await rl.question('Turn this on? Type yes: ');
+  } finally {
+    rl.close();
+  }
+  if (answer.trim().toLowerCase() !== 'yes') {
+    console.log('Nothing changed.');
+    return;
+  }
+  writeSharedConfig({ ...existing, clientApprovalWithoutPrompt: true });
+  console.log(
+    `✓ On. Ask your assistant to try again; no restart needed. To undo:  npx -y ${PACKAGE} trust-client-approval --off`
+  );
+}
