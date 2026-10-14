@@ -17,20 +17,18 @@
  */
 import { execFile } from 'node:child_process';
 
-export type NativeAnswer = 'approved' | 'cancelled' | 'timeout' | 'unavailable';
-
-/** Long enough to read a preview, short enough to end before most client timeouts. */
-export const DIALOG_TIMEOUT_S = 50;
+export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
 
 /** display dialog grows with its text; past this the buttons leave the screen. */
 const MAX_MESSAGE = 1500;
 
+// Return approves and Escape cancels. No time limit: the dialog stays until
+// it is answered, or until the tool call is cancelled (below).
 // The text is passed as an argument, never spliced into the script, so a
 // quote in an app name cannot become AppleScript.
 const SCRIPT = `on run argv
   activate
-  display dialog (item 1 of argv) with title (item 2 of argv) buttons {"Cancel", "Approve"} default button "Cancel" cancel button "Cancel" with icon caution giving up after ${DIALOG_TIMEOUT_S}
-  if gave up of result then return "timeout"
+  display dialog (item 1 of argv) with title (item 2 of argv) buttons {"Cancel", "Approve"} default button "Approve" cancel button "Cancel" with icon caution
   return "approved"
 end run`;
 
@@ -44,7 +42,7 @@ export function nativeConfirm(message: string, title: string, signal?: AbortSign
     // A cancelled tool call takes its dialog with it, so a late click cannot
     // run a write the agent was already told failed.
     execFile('osascript', ['-e', SCRIPT, text, title], { signal }, (error, stdout) => {
-      if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'timeout');
+      if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'cancelled');
       // -128 is AppleScript's "User canceled": the Cancel button.
       if (/-128/.test(String(error.message))) return resolve('cancelled');
       resolve(signal?.aborted ? 'cancelled' : 'unavailable');

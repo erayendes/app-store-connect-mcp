@@ -20,7 +20,6 @@ import { nativeConfirm } from '../src/core/native-confirm.js';
 
 // The macOS dialog, answered by the test instead of a person.
 vi.mock('../src/core/native-confirm.js', () => ({
-  DIALOG_TIMEOUT_S: 50,
   nativeConfirmAvailable: () => true,
   nativeConfirm: vi.fn(),
 }));
@@ -184,9 +183,9 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
     expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
   });
 
-  it.each(['cancelled', 'timeout'] as const)('sends nothing when the macOS dialog ends %s', async (answer) => {
+  it('sends nothing when Cancel is pressed in the macOS dialog', async () => {
     const apple = stubApple();
-    vi.mocked(nativeConfirm).mockResolvedValueOnce(answer);
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('cancelled');
     const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true });
 
     const res: any = await client.callTool(CALL);

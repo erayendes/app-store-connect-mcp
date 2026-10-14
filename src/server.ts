@@ -17,7 +17,7 @@ import {
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
 import { buildWritePreview, createWriteGate, resolveBodyRefs } from './core/confirm.js';
-import { DIALOG_TIMEOUT_S, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
+import { nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -684,11 +684,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 {
                   type: 'text' as const,
                   text:
-                    `"${name}" was not confirmed: ` +
-                    (answer === 'timeout'
-                      ? `the macOS confirmation dialog got no answer in ${DIALOG_TIMEOUT_S} s.`
-                      : 'the user pressed Cancel in the macOS confirmation dialog.') +
-                    ' Nothing was changed.',
+                    `"${name}" was not confirmed: the user pressed Cancel in the macOS ` +
+                    `confirmation dialog. Nothing was changed.`,
                 },
               ],
               isError: true,
