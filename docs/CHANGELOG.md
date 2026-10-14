@@ -8,9 +8,24 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### Unreleased
+### [2.7.0] — 2026-10-14
 
-**Approve risky changes on a Mac, even where the app can't ask.** The Claude desktop app's Code tab can't show Heimdall's question, so submitting for review or changing a price there used to fail even after you said yes. Now a Mac dialog asks you instead, and only your click counts.
+The nicest improvement you can actually see that I've made so far arrives in this version. Setup can now happen in your browser too, and I recommend you use it.
+
+I changed the setup flow too. You first pick what you need, and Heimdall tells you which key to create for it. For terminal lovers, the flow now works the same way.
+
+We moved to version 2.0 of the MCP library. In practice, not much changes in your life. Heimdall was always good anyway 🙂
+
+Heimdall already asked for your confirmation on some requests. With this version we ask a little more often: steps that release your app, such as sending a version to review or releasing it on the App Store, now ask too.
+
+If your app can't show the confirmation (like the Code tab in Claude Desktop), on a Mac Heimdall asks you in a window of its own. Allow it and it goes ahead; don't, and nothing changes. The window is only for you: the AI can't see it or press it.
+
+For lucky new users, the first run downloads half as many packages, so a faster install awaits them.
+
+When you choose StoreKit 2, you no longer need to enter a bundle ID. Name the app and Heimdall will find it.
+When no environment is set, the StoreKit tools now look at Production. Set `ASC_ENVIRONMENT=Sandbox` for the sandbox.
+
+Other than that, it's the Heimdall you know and love.
 
 ### [2.6.0] — 2026-10-11
 
@@ -212,9 +227,24 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.7.0] — 2026-10-14
 
-**Riskli değişiklikleri, uygulama soramasa da Mac'te onaylayın.** Claude masaüstü uygulamasının Code sekmesi Heimdall'ın sorusunu gösteremiyor; incelemeye gönderme ya da fiyat değişikliği orada "evet" deseniz bile başarısız oluyordu. Artık Mac'te bir pencere size soruyor ve yalnızca sizin tıklamanız geçerli.
+Bugüne kadar yaptığım gözle görülür en güzel iyileştirme bu sürümde geliyor. Kurulum artık tarayıcıda da yapılabiliyor, hatta bu yöntemi kullanmanızı tavsiye ederim.
+
+Kurulum akışını da değiştirdim. Önce neye ihtiyacınız olduğunu seçiyorsunuz, Heimdall buna göre hangi anahtarı oluşturmanız gerektiğini söylüyor. Terminal severler için akışı bu hale getirdim.
+
+MCP kütüphanesinin 2.0 sürümüne geçtik. Pratikte hayatınızda çok fazla şey değişmedi. Zaten Heimdall hep iyiydi 🙂
+
+Bazı isteklerinizde Heimdall onayınızı istiyordu. Yeni sürümle bunu biraz artırdık: sürümü incelemeye göndermek ya da App Store'da yayınlamak gibi yayına çıkaran adımlar da artık onay istiyor.
+
+Kullandığınız uygulama onay sorusunu gösteremiyorsa (Claude Desktop'taki Code sekmesi gibi), Mac'te Heimdall size kendi penceresinde soruyor. İzin verirseniz devam ediyor, vermezseniz hiçbir şey değişmiyor. Bu pencere sadece sizin için, yapay zekâ bu pencereyi göremiyor, basamıyor.
+
+Yeni şanslı kullanıcılar için ilk çalıştırmada indirilen paket sayısı yarıya indi. Artık onları daha hızlı bir kurulum bekliyor.
+
+StoreKit 2 seçtiğinizde artık bundle ID girmeniz gerekmiyor. Uygulamanın adını söylerseniz Heimdall bulacak.
+Ortam belirtilmediğinde StoreKit araçları artık Production'a bakıyor. Sandbox için `ASC_ENVIRONMENT=Sandbox` ayarlayın.
+
+Bunun dışında bildiğiniz ve sevdiğiniz Heimdall.
 
 ### [2.6.0] — 2026-10-11
 
