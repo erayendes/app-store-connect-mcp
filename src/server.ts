@@ -45,7 +45,7 @@ import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './t
 import { CI_TOOLS, CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
-import { serverName } from './clients.js';
+import { PACKAGE, serverName } from './clients.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
@@ -194,6 +194,18 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const loadedSubs = new Set(selection?.subProfiles ?? []);
   const unloadedSubs = (): SubProfile[] =>
     selection ? selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s)) : [];
+  /**
+   * The command that makes `sub` part of this server for good. asc__load only
+   * changes this session, and only for a client that re-reads the tool list
+   * when told to — Claude Code in the desktop app does not — so this is the
+   * path that works everywhere: rewrite the config, restart the client.
+   */
+  const registerWith = (sub: SubProfile): string =>
+    selection
+      ? `npx -y ${PACKAGE} register ${selection.profile.name}:` +
+        // What the user registered first, in their order, then what was added.
+        [...new Set([...loadedSubs, sub])].map((s) => s.name).join(',')
+      : '';
 
   /** What this server is, in the unit a user configures: profiles. */
   const profileReport = selection
@@ -377,8 +389,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    *
    * asc__load revises the tool list, and MCP lets a server do that — but the
    * spec says nothing about when a client hands the revised list to the model.
-   * Measured: Claude Code does it inside the turn, Codex only between turns,
-   * where the model is left naming tools it cannot call and the work stalls.
+   * Measured: Claude Code in a terminal does it inside the turn, Codex only
+   * between turns, and Claude Code in the desktop app's Code tab not at all —
+   * the model is left naming tools it cannot call and the work stalls.
    *
    * These two tools sidestep the question entirely. They are in the list from
    * the start, so any operation this profile owns is one call away on any
@@ -552,8 +565,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             `"${op.name}" changes data, and asc__call is read-only.\n` +
               (sub && !loadedSubs.has(sub)
                 ? `Load its sub-profile first — asc__load({ sub_profile: "${sub.name}" }) — then call ` +
-                  `${toolNameFor(op)} directly. If it still isn't in your tool list, your client ` +
-                  `refreshes between turns: say it is ready and ask the user to repeat the request.`
+                  `${toolNameFor(op)} directly. If it does not appear in your tool list, your client ` +
+                  `is not picking up the change and waiting a turn will not help: with the user's ` +
+                  `yes, run \`${registerWith(sub)}\` and ask them to restart their MCP client.`
                 : `Call ${toolNameFor(op)} directly.`)
           );
         }
@@ -733,11 +747,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         loadedSubs.add(sub);
         await server.sendToolListChanged();
 
-        // Measured in two clients: Claude Code hands the revised list to the
-        // model inside the same turn, Codex does not — it refreshes between
-        // turns and the model is left calling tools it cannot see. So the reply
-        // carries the tools itself. A client that refreshed already loses
-        // nothing; one that hasn't gets a usable answer instead of a dead end.
+        // Measured: Claude Code in a terminal hands the revised list to the
+        // model inside the same turn, Codex only between turns, and Claude
+        // Code in the desktop app's Code tab never (2.7.0-beta.7) — though the
+        // notification reaches it, as tests/proxy.test.ts proves for both
+        // eras. So the reply carries the tools itself, and does not promise
+        // they will show up later: it names the fix that works on any client.
         const SHOWN = 25;
         result = {
           loaded: sub.name,
@@ -749,9 +764,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           })),
           ...(added.length > SHOWN ? { andMore: added.length - SHOWN } : {}),
           nextStep:
-            `These tools are live on this server now. If they are not yet in your tool list, ` +
-            `your client only refreshes it between turns — say the tools are ready and ask the ` +
-            `user to repeat the request, rather than calling a tool you cannot see.`,
+            `These tools are live on this server now. If they are in your tool list, use them. ` +
+            `If not, your client is not picking up the change, and they will not appear next ` +
+            `turn either. Reads work now through asc__call. To get the tools themselves, tell ` +
+            `the user the fix and, with their yes, run \`${registerWith(sub)}\` — then ask them ` +
+            `to restart their MCP client. Do not call a tool you cannot see.`,
           ...(sub.manualTools.length
             ? { note: `${sub.manualTools.join(', ')} need a restart — they are not spec operations.` }
             : {}),
