@@ -8,102 +8,21 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [2.7.0-beta.7] — 2026-10-14
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
-
-What we changed since beta.6:
-
-Some apps can't show Heimdall's "are you sure?" question; the Code tab in Claude Desktop is one. There, submitting for review, changing a price or deleting something used to fail even after you said yes. Now, on a Mac, Heimdall asks you in a window of its own: what will change, and what can't be undone. Press Allow (or Return) to go ahead, Don't Allow (or Escape) to stop. The AI can't see or press it, and it waits for you.
-
-### [2.7.0-beta.6] — 2026-10-13
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
-
-What we changed since beta.5:
-
-The list of changes now shows only what you change: profiles you add or remove. The Heimdall version moved to the bottom of the page.
-
-At the end, setup says "open" for an app that is closed instead of "restart".
-
-### [2.7.0-beta.5] — 2026-10-13
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
-
-What we changed since beta.4:
-
-Setup now asks you to quit Claude Desktop before it changes Desktop's settings. Waiting for Desktop to close in the background didn't work: Desktop ends everything started from inside it when it quits.
-
-If you run setup inside Claude Desktop, it tells you to run it from Terminal to include Desktop, and updates your other AI apps.
-
-### [2.7.0-beta.4] — 2026-10-13
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
-
-What we fixed since beta.3:
-
-Setup now notices when Claude Desktop is open. In beta.3 it didn't, so it still wrote Desktop's settings right away and Desktop put them back.
-
-### [2.7.0-beta.3] — 2026-10-13
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
-
-What we fixed since beta.2:
-
-Setting up while Claude Desktop is open no longer gets lost. Desktop wrote its own settings back while it ran; setup now waits for you to quit it and writes then. This was in 2.6.0 too.
-
-Setup now says which Heimdall it sets up, instead of saying "added" for profiles you already had.
-
-When nothing changes, Apply stays off.
-
-### [2.7.0-beta.2] — 2026-10-13
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
-
-What we fixed in the browser setup since beta.1:
-
-Your saved key is now used without pressing "Use it". Before, Apply stayed off and the page didn't say why.
-
-When Apply is off, the page now says why.
-
-Switching to a new key after the saved one no longer sets you up with the saved key.
-
-Picking nothing no longer removes every profile from your AI apps.
-
-### [2.7.0-beta.1] — 2026-10-13
-
-This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
-
-To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+### [2.7.0] — 2026-10-14
 
 The nicest improvement you can actually see that I've made so far arrives in this version. Setup can now happen in your browser too, and I recommend you use it.
 
-You first pick what you need, and Heimdall tells you which key to create for it.
-
-For terminal lovers, I built the same flow.
+I changed the setup flow too. You first pick what you need, and Heimdall tells you which key to create for it. For terminal lovers, the flow now works the same way.
 
 We moved to version 2.0 of the MCP library. In practice, not much changes in your life. Heimdall was always good anyway 🙂
 
 Heimdall already asked for your confirmation on some requests. With this version we ask a little more often: steps that release your app, such as sending a version to review or releasing it on the App Store, now ask too.
 
-Note: If your app can't show a confirmation, these release steps no longer run. Set `ASC_CONFIRM_WRITES=0` to go back to the old behaviour.
+If your app can't show the confirmation (like the Code tab in Claude Desktop), on a Mac Heimdall asks you in a window of its own. Allow it and it goes ahead; don't, and nothing changes. The window is only for you: the AI can't see it or press it.
 
 For lucky new users, the first run downloads half as many packages, so a faster install awaits them.
 
-You no longer need to enter a bundle ID to look up customer purchases. Name the app and Heimdall will find it.
-
+When you choose StoreKit 2, you no longer need to enter a bundle ID. Name the app and Heimdall will find it.
 When no environment is set, the StoreKit tools now look at Production. Set `ASC_ENVIRONMENT=Sandbox` for the sandbox.
 
 Other than that, it's the Heimdall you know and love.
@@ -308,102 +227,21 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [2.7.0-beta.7] — 2026-10-14
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
-
-beta.6'dan bu yana değiştirdiklerimiz:
-
-Bazı uygulamalar Heimdall'ın "emin misiniz?" sorusunu gösteremiyor; Claude Desktop'taki Code sekmesi bunlardan biri. Orada incelemeye göndermek, fiyat değiştirmek ya da bir şey silmek "evet" deseniz bile başarısız oluyordu. Artık Mac'te Heimdall size kendi penceresinde soruyor: ne değişecek, ne geri alınamaz. Devam etmek için Allow'a (ya da Enter'a), durdurmak için Don't Allow'a (ya da Esc'e) basın. Yapay zekâ bu pencereyi göremez, basamaz; pencere sizi bekler.
-
-### [2.7.0-beta.6] — 2026-10-13
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
-
-beta.5'ten bu yana değiştirdiklerimiz:
-
-Değişiklik listesi artık yalnızca sizin değiştirdiklerinizi gösteriyor: eklediğiniz ya da çıkardığınız profiller. Heimdall sürümü sayfanın altına taşındı.
-
-Kurulum sonunda kapalı bir uygulama için "yeniden başlat" yerine "aç" diyor.
-
-### [2.7.0-beta.5] — 2026-10-13
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
-
-beta.4'ten bu yana değiştirdiklerimiz:
-
-Kurulum artık Claude Desktop'ın ayarlarını değiştirmeden önce Desktop'ı kapatmanızı istiyor. Desktop'ın kapanmasını arka planda beklemek işe yaramadı: Desktop kapanırken içinden başlatılan her şeyi de kapatıyor.
-
-Kurulumu Claude Desktop'ın içinden çalıştırırsanız, Desktop'ı da kapsaması için Terminal'den çalıştırmanızı söylüyor ve diğer yapay zekâ uygulamalarınızı güncelliyor.
-
-### [2.7.0-beta.4] — 2026-10-13
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
-
-beta.3'ten bu yana düzelttiklerimiz:
-
-Kurulum artık Claude Desktop'ın açık olduğunu fark ediyor. beta.3 fark etmiyordu; bu yüzden Desktop'ın ayarlarını yine hemen yazıyordu ve Desktop onları geri alıyordu.
-
-### [2.7.0-beta.3] — 2026-10-13
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
-
-beta.2'den bu yana düzelttiklerimiz:
-
-Claude Desktop açıkken yapılan kurulum artık kaybolmuyor. Desktop çalışırken kendi ayarlarını geri yazıyordu; kurulum artık Desktop'ı kapatmanızı bekleyip o zaman yazıyor. Bu sorun 2.6.0'da da vardı.
-
-Kurulum artık hangi Heimdall'ı kurduğunu söylüyor; zaten olan profiller için "eklendi" demiyor.
-
-Hiçbir şey değişmiyorsa Apply kapalı kalıyor.
-
-### [2.7.0-beta.2] — 2026-10-13
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
-
-beta.1'den bu yana tarayıcı kurulumunda düzelttiklerimiz:
-
-Kayıtlı anahtarınız artık "Use it"e basmadan kullanılıyor. Önceden Apply kapalı kalıyor ve sayfa nedenini söylemiyordu.
-
-Apply kapalıysa sayfa artık nedenini yazıyor.
-
-Kayıtlı anahtardan sonra yeni anahtara geçince kurulum artık kayıtlı anahtarla yapılmıyor.
-
-Hiçbir şey seçmemek artık yapay zekâ uygulamalarınızdaki bütün profilleri kaldırmıyor.
-
-### [2.7.0-beta.1] — 2026-10-13
-
-Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
-
-Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+### [2.7.0] — 2026-10-14
 
 Bugüne kadar yaptığım gözle görülür en güzel iyileştirme bu sürümde geliyor. Kurulum artık tarayıcıda da yapılabiliyor, hatta bu yöntemi kullanmanızı tavsiye ederim.
 
-Önce neye ihtiyacınız olduğunu seçiyorsunuz, Heimdall buna göre hangi anahtarı oluşturmanız gerektiğini söylüyor.
-
-Terminal severler için aynı akışı kurguladım.
+Kurulum akışını da değiştirdim. Önce neye ihtiyacınız olduğunu seçiyorsunuz, Heimdall buna göre hangi anahtarı oluşturmanız gerektiğini söylüyor. Terminal severler için akışı bu hale getirdim.
 
 MCP kütüphanesinin 2.0 sürümüne geçtik. Pratikte hayatınızda çok fazla şey değişmedi. Zaten Heimdall hep iyiydi 🙂
 
 Bazı isteklerinizde Heimdall onayınızı istiyordu. Yeni sürümle bunu biraz artırdık: sürümü incelemeye göndermek ya da App Store'da yayınlamak gibi yayına çıkaran adımlar da artık onay istiyor.
 
-Not: Kullandığınız uygulama onay penceresi açamıyorsa bu yayın adımları artık çalışmaz. Eski davranışa dönmek için `ASC_CONFIRM_WRITES=0` ayarlayın.
+Kullandığınız uygulama onay sorusunu gösteremiyorsa (Claude Desktop'taki Code sekmesi gibi), Mac'te Heimdall size kendi penceresinde soruyor. İzin verirseniz devam ediyor, vermezseniz hiçbir şey değişmiyor. Bu pencere sadece sizin için, yapay zekâ bu pencereyi göremiyor, basamıyor.
 
 Yeni şanslı kullanıcılar için ilk çalıştırmada indirilen paket sayısı yarıya indi. Artık onları daha hızlı bir kurulum bekliyor.
 
-Müşteri satın alımlarına bakmak için artık bundle ID girmeniz gerekmiyor. Uygulamanın adını söylerseniz Heimdall bulacak.
-
+StoreKit 2 seçtiğinizde artık bundle ID girmeniz gerekmiyor. Uygulamanın adını söylerseniz Heimdall bulacak.
 Ortam belirtilmediğinde StoreKit araçları artık Production'a bakıyor. Sandbox için `ASC_ENVIRONMENT=Sandbox` ayarlayın.
 
 Bunun dışında bildiğiniz ve sevdiğiniz Heimdall.
