@@ -169,6 +169,10 @@ a link.
   `ACCESS-level write.` marks a call whose consequence the HTTP method does not
   show — moving money, shipping a release, changing who has access, or breaking
   code signing. Surface what will happen and get a yes before calling one.
+- Where the client cannot show Heimdall's own prompt (the Claude desktop app's
+  Code tab), such a write opens a macOS dialog and waits for an answer: tell
+  the user to look for it. If it is still refused, relay that; never edit
+  client config, set `ASC_CONFIRM_WRITES`, or reach Apple another way.
 - Territories are ISO-3166 **alpha-3**: `USA`, `TUR`, `DEU` — never `US`, `TR`,
   `DE`. The two-letter form is not rejected; it returns 200 and an empty list
   that reads as "no data here".

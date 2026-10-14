@@ -29,6 +29,7 @@
   },
   "files": [
     "dist",
+    "assets/brand/heimdall-icon-rounded-256.png",
     "skills",
     "README.md",
     "AGENTS.md",
