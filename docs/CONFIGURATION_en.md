@@ -29,7 +29,7 @@ Restart your app after changing either.
 
 By default Heimdall asks before revenue, deletion, infrastructure and access changes, and before the release steps that reach users: sending a version to review, releasing it, changing a phased rollout, and opening a build to external testers. Releasing asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, and everything else are left to your app's approval.
 
-Some apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press Approve (or Return). Cancel or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+Some apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press Allow (or Return). Don't Allow or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 

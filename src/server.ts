@@ -17,7 +17,7 @@ import {
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
 import { buildWritePreview, createWriteGate, resolveBodyRefs } from './core/confirm.js';
-import { nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
+import { dialogText, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -672,9 +672,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 args
               );
           if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+          // The tool's own summary, up to the first full stop or dash, says what will happen.
+          const what = servedTools()
+            .find((t) => t.name === name)
+            ?.description?.split(/\.\s| — /)[0]
+            ?.replace(/ in one call$/, '')
+            ?.replace(/\.$/, '');
           const answer = await nativeConfirm(
-            preview.message,
-            `Heimdall: ${risk.toUpperCase()}-level write`,
+            dialogText(what && `${what}.`, preview.message),
+            'Heimdall · App Store Connect',
             ctx.mcpReq.signal
           );
           if (answer === 'unavailable') return blocked;
@@ -684,7 +690,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 {
                   type: 'text' as const,
                   text:
-                    `"${name}" was not confirmed: the user pressed Cancel in the macOS ` +
+                    `"${name}" was not confirmed: the user pressed Don't Allow in the macOS ` +
                     `confirmation dialog. Nothing was changed.`,
                 },
               ],

@@ -22,15 +22,40 @@ export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
 /** display dialog grows with its text; past this the buttons leave the screen. */
 const MAX_MESSAGE = 1500;
 
-// Return approves and Escape cancels. No time limit: the dialog stays until
-// it is answered, or until the tool call is cancelled (below).
+// Return allows and Escape refuses. No time limit: the dialog stays until it
+// is answered, or until the tool call is cancelled (below).
 // The text is passed as an argument, never spliced into the script, so a
 // quote in an app name cannot become AppleScript.
 const SCRIPT = `on run argv
   activate
-  display dialog (item 1 of argv) with title (item 2 of argv) buttons {"Cancel", "Approve"} default button "Approve" cancel button "Cancel" with icon caution
+  display dialog (item 1 of argv) with title (item 2 of argv) buttons {"Don’t Allow", "Allow"} default button "Allow" cancel button "Don’t Allow"
   return "approved"
 end run`;
+
+/**
+ * The dialog's text, from the elicitation preview.
+ *
+ * That preview is written for a form inside the client: it opens with the
+ * tool name, lists the HTTP operation and the key id, and ends by asking for
+ * CONFIRM. In a dialog of its own the person needs what will happen, to what,
+ * and what cannot be undone. `what` is the tool's own one-line summary.
+ */
+export function dialogText(what: string | undefined, preview: string): string {
+  const details: string[] = [];
+  let warning = '';
+  for (const line of preview.split('\n').slice(1)) {
+    const t = line.trim();
+    if (!t || t === 'Changes:' || /^(Operation|Account):/.test(t) || /Type CONFIRM/.test(t)) continue;
+    if (t.startsWith('Risk:')) warning = t.split(' — ').slice(1).join(' — ');
+    else details.push(t.replace(/^(\w)(\w*):\s+/, (_, c: string, rest: string) => `${c.toUpperCase()}${rest}: `));
+  }
+  return [
+    'Your AI assistant wants to make this change in App Store Connect:',
+    ...(what ? ['', what] : []),
+    ...(details.length ? ['', ...details] : []),
+    ...(warning ? ['', `⚠️ ${warning}`] : []),
+  ].join('\n');
+}
 
 /** Whether a dialog can be tried at all; checked before the preview's lookups are spent. */
 export const nativeConfirmAvailable = (): boolean => process.platform === 'darwin';

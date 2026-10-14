@@ -16,10 +16,11 @@ import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createServer } from '../src/server.js';
 import { resolveSelection } from '../src/profiles.js';
 import type { ServerConfig } from '../src/core/config.js';
-import { nativeConfirm } from '../src/core/native-confirm.js';
+import { dialogText, nativeConfirm } from '../src/core/native-confirm.js';
 
 // The macOS dialog, answered by the test instead of a person.
-vi.mock('../src/core/native-confirm.js', () => ({
+vi.mock('../src/core/native-confirm.js', async (actual) => ({
+  ...(await actual<typeof import('../src/core/native-confirm.js')>()),
   nativeConfirmAvailable: () => true,
   nativeConfirm: vi.fn(),
 }));
@@ -183,7 +184,7 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
     expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
   });
 
-  it('sends nothing when Cancel is pressed in the macOS dialog', async () => {
+  it('sends nothing when Don\'t Allow is pressed in the macOS dialog', async () => {
     const apple = stubApple();
     vi.mocked(nativeConfirm).mockResolvedValueOnce('cancelled');
     const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true });
@@ -350,5 +351,28 @@ describe.each(['legacy', 'modern'] as const)('release steps in the default mode,
 
     expect(prompts).toEqual([]);
     expect(sent).toContain('PATCH /v1/appStoreVersions/v-1');
+  });
+});
+
+describe('the macOS dialog text', () => {
+  it('says what will happen and what cannot be undone, without the form-only lines', async () => {
+    const preview = [
+      'Heimdall is about to run "release__submit" — a RELEASE-level write.',
+      '',
+      'Operation:  POST release__submit (macro)',
+      'Account:    TESTKEY123',
+      'Changes:',
+      '  app: Ask Quran',
+      'Risk:       release — Release steps can be hard to walk back.',
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n');
+
+    const text = dialogText('Send an App Store version to Apple for review.', preview);
+
+    expect(text).toContain('Send an App Store version to Apple for review.');
+    expect(text).toContain('App: Ask Quran');
+    expect(text).toContain('⚠️ Release steps can be hard to walk back.');
+    expect(text).not.toMatch(/Operation|TESTKEY123|CONFIRM|release__submit/);
   });
 });
