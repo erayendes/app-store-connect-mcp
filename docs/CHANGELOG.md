@@ -8,6 +8,16 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.7.0-beta.7] — 2026-10-14
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+What we changed since beta.6:
+
+Some apps can't show Heimdall's "are you sure?" question; the Code tab in Claude Desktop is one. There, submitting for review, changing a price or deleting something used to fail even after you said yes. Now, on a Mac, Heimdall asks you in a window of its own: what will change, and what can't be undone. Press Allow (or Return) to go ahead, Don't Allow (or Escape) to stop. The AI can't see or press it, and it waits for you.
+
 ### [2.7.0-beta.6] — 2026-10-13
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -297,6 +307,16 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.7.0-beta.7] — 2026-10-14
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+beta.6'dan bu yana değiştirdiklerimiz:
+
+Bazı uygulamalar Heimdall'ın "emin misiniz?" sorusunu gösteremiyor; Claude Desktop'taki Code sekmesi bunlardan biri. Orada incelemeye göndermek, fiyat değiştirmek ya da bir şey silmek "evet" deseniz bile başarısız oluyordu. Artık Mac'te Heimdall size kendi penceresinde soruyor: ne değişecek, ne geri alınamaz. Devam etmek için Allow'a (ya da Enter'a), durdurmak için Don't Allow'a (ya da Esc'e) basın. Yapay zekâ bu pencereyi göremez, basamaz; pencere sizi bekler.
 
 ### [2.7.0-beta.6] — 2026-10-13
 
