@@ -29,6 +29,8 @@
 
 Varsayılan olarak Heimdall gelir, silme, altyapı ve erişim değişikliklerinden ve kullanıcıya ulaşan yayın adımlarından önce sorar: sürümü incelemeye göndermek, yayınlamak, kademeli yayını değiştirmek, bir build'i dış test kullanıcılarına açmak. Yayınlamak için CONFIRM yazmanızı ister. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımlarını ve geri kalan her şeyi uygulamanızın onayına bırakır.
 
+Bazı uygulamalar Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak Approve'a basarsanız yapılır. Yapay zekâ bu pencereyi göremez ve tıklayamaz. 50 saniye içinde cevap gelmezse hiçbir şey değişmez. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
+
 ## Ortam değişkenleri
 
 **Kimlik bilgileri.** Setup bunları sizin için kaydeder. Yalnızca setup olmadan çalıştırıyorsanız girin. Herhangi biri girildiğinde kayıtlı ayarlar tamamen yok sayılır; böylece iki hesap asla birbirine karışmaz.
@@ -51,6 +53,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | `ASC_READ_ONLY` | `true` = `--read-only` |
 | `ASC_DRY_RUN` | `1` ya da `true` = `--dry-run` |
 | `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` |
+| `ASC_NATIVE_CONFIRM` | `0` = uygulama soramıyorsa Mac penceresi açılmaz; bu değişiklikler reddedilir |
 | `ASC_INCLUDE_DEPRECATED` | `true` = `--include-deprecated` |
 | `ASC_DOMAINS` | `--domains` ile aynı |
 

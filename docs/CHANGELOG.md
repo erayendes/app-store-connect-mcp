@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### Unreleased
+
+**Approve risky changes on a Mac, even where the app can't ask.** The Claude desktop app's Code tab can't show Heimdall's question, so submitting for review or changing a price there used to fail even after you said yes. Now a Mac dialog asks you instead, and only your click counts.
+
 ### [2.6.0] — 2026-10-11
 
 Six new tools, each doing in one step what used to take several. 902 tools in total.
@@ -207,6 +211,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### Yayımlanmamış
+
+**Riskli değişiklikleri, uygulama soramasa da Mac'te onaylayın.** Claude masaüstü uygulamasının Code sekmesi Heimdall'ın sorusunu gösteremiyor; incelemeye gönderme ya da fiyat değişikliği orada "evet" deseniz bile başarısız oluyordu. Artık Mac'te bir pencere size soruyor ve yalnızca sizin tıklamanız geçerli.
 
 ### [2.6.0] — 2026-10-11
 

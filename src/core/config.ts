@@ -26,6 +26,12 @@ export interface ServerConfig {
    * tool runs. `strong` is the default — see the note at the assignment.
    */
   confirmWrites: 'off' | 'strong' | 'all';
+  /**
+   * When the client cannot show a confirmation prompt, ask in a macOS dialog
+   * instead of refusing (core/native-confirm.ts). On unless
+   * ASC_NATIVE_CONFIRM=0; unset in a hand-built config means off.
+   */
+  nativeConfirm?: boolean;
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
   /**
@@ -173,6 +179,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
             env.ASC_CONFIRM_WRITES === '0'
           ? 'off'
           : 'strong',
+    nativeConfirm: env.ASC_NATIVE_CONFIRM !== '0' && env.ASC_NATIVE_CONFIRM !== 'false',
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     baseUrl: env.ASC_BASE_URL || undefined,

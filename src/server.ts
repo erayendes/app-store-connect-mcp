@@ -17,6 +17,7 @@ import {
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
 import { buildWritePreview, createWriteGate, resolveBodyRefs } from './core/confirm.js';
+import { DIALOG_TIMEOUT_S, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
@@ -617,23 +618,30 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           // 2025 client once at initialize. (The SDK types the envelope as `{}`.)
           const envelope = ctx.mcpReq.envelope as Record<string, ClientCapabilities | undefined> | undefined;
           const caps = envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? server.getClientCapabilities();
-          if (!caps?.elicitation?.form) {
-            // No way to ask. The user asked for a guard, so say it can't run
-            // here rather than proceed under a guard that stopped guarding.
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text:
-                    `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and this ` +
-                    `client cannot show a confirmation prompt (no elicitation support). ` +
-                    `Nothing was changed. Set ASC_CONFIRM_WRITES=0 (or --no-confirm) to rely on ` +
-                    `the client's own tool approval instead, or use --read-only.`,
-                },
-              ],
-              isError: true,
-            };
-          }
+          const canElicit = Boolean(caps?.elicitation?.form);
+          // No prompt from the client: on macOS, ask in a dialog of our own,
+          // which the agent can neither see nor answer (core/native-confirm.ts).
+          const canDialog = !canElicit && config.nativeConfirm === true && nativeConfirmAvailable();
+          // No way to ask at all. The user asked for a guard, so say it can't
+          // run here rather than proceed under a guard that stopped guarding.
+          // Worded for the agent to relay, not to act on: the last version
+          // named the env var, and an agent went to edit the user's config.
+          const blocked = {
+            content: [
+              {
+                type: 'text' as const,
+                text:
+                  `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and no ` +
+                  `confirmation prompt could be shown to the user here. Nothing was changed. ` +
+                  `A yes in chat does not count, because this server cannot see the chat. Tell ` +
+                  `the user to make this change in App Store Connect, or to change Heimdall's ` +
+                  `confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit ` +
+                  `client config, set ASC_CONFIRM_WRITES, or call Apple another way.`,
+              },
+            ],
+            isError: true,
+          };
+          if (!canElicit && !canDialog) return blocked;
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
               { message: buildPricingPreview(args, name), strong: true }
@@ -663,9 +671,32 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 },
                 args
               );
-          return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+          const answer = await nativeConfirm(
+            preview.message,
+            `Heimdall: ${risk.toUpperCase()}-level write`,
+            ctx.mcpReq.signal
+          );
+          if (answer === 'unavailable') return blocked;
+          if (answer !== 'approved') {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text:
+                    `"${name}" was not confirmed: ` +
+                    (answer === 'timeout'
+                      ? `the macOS confirmation dialog got no answer in ${DIALOG_TIMEOUT_S} s.`
+                      : 'the user pressed Cancel in the macOS confirmation dialog.') +
+                    ' Nothing was changed.',
+                },
+              ],
+              isError: true,
+            };
+          }
+          // Approved in the dialog: fall through and run the write.
         }
-        if (!decision.allowed) {
+        if (decision && !decision.allowed) {
           const text = decision.stale
             ? `"${name}" was refused: ${decision.reason}.`
             : `"${name}" was cancelled — the write was not confirmed (${decision.reason}). ` +

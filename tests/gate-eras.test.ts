@@ -16,6 +16,14 @@ import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createServer } from '../src/server.js';
 import { resolveSelection } from '../src/profiles.js';
 import type { ServerConfig } from '../src/core/config.js';
+import { nativeConfirm } from '../src/core/native-confirm.js';
+
+// The macOS dialog, answered by the test instead of a person.
+vi.mock('../src/core/native-confirm.js', () => ({
+  DIALOG_TIMEOUT_S: 50,
+  nativeConfirmAvailable: () => true,
+  nativeConfirm: vi.fn(),
+}));
 
 const privateKey = generateKeyPairSync('ec', {
   namedCurve: 'P-256',
@@ -63,13 +71,14 @@ async function connect(
     autoFulfill?: boolean;
     noElicitation?: boolean;
     confirmWrites?: ServerConfig['confirmWrites'];
+    nativeConfirm?: boolean;
     profile?: string;
   } = {}
 ) {
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const build = () =>
     createServer(
-      { ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites },
+      { ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites, nativeConfirm: options.nativeConfirm },
       resolveSelection(options.profile ?? 'access')
     );
   if (era === 'modern') {
@@ -98,7 +107,10 @@ async function connect(
 
 const textOf = (res: any): string => res.content?.[0]?.text ?? '';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.mocked(nativeConfirm).mockReset();
+});
 
 describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection', (era) => {
   it('runs the write once the user types CONFIRM', async () => {
@@ -156,7 +168,30 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
 
     const res: any = await client.callTool(CALL);
 
-    expect(textOf(res)).toContain('no elicitation support');
+    expect(textOf(res)).toContain('no confirmation prompt could be shown');
+    expect(apple.deletes()).toEqual([]);
+  });
+
+  it('asks in the macOS dialog instead, and runs the write once it is approved there', async () => {
+    const apple = stubApple();
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('approved');
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    expect(res.isError ?? false).toBe(false);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
+  });
+
+  it.each(['cancelled', 'timeout'] as const)('sends nothing when the macOS dialog ends %s', async (answer) => {
+    const apple = stubApple();
+    vi.mocked(nativeConfirm).mockResolvedValueOnce(answer);
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(textOf(res)).toContain('was not confirmed');
     expect(apple.deletes()).toEqual([]);
   });
 
