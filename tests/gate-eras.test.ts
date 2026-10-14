@@ -368,11 +368,11 @@ describe('the macOS dialog text', () => {
       'Type CONFIRM in the field below to proceed.',
     ].join('\n');
 
-    const text = dialogText('Send an App Store version to Apple for review.', preview);
+    const { title, body } = dialogText('Send an App Store version to Apple for review', preview);
 
-    expect(text).toContain('Send an App Store version to Apple for review.');
-    expect(text).toContain('App: Ask Quran');
-    expect(text).toContain('⚠️ Release steps can be hard to walk back.');
-    expect(text).not.toMatch(/Operation|TESTKEY123|CONFIRM|release__submit/);
+    expect(title).toBe('Send an App Store version to Apple for review?');
+    expect(body).toContain('App: Ask Quran');
+    expect(body).toContain('Release steps can be hard to walk back.');
+    expect(body).not.toMatch(/Operation|TESTKEY123|CONFIRM|release__submit/);
   });
 });

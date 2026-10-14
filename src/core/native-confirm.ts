@@ -16,31 +16,63 @@
  * missing), the answer is `unavailable` and the caller keeps failing closed.
  */
 import { execFile } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
 
-/** display dialog grows with its text; past this the buttons leave the screen. */
-const MAX_MESSAGE = 1500;
+/** An alert grows with its text; past this the buttons leave the screen. */
+const MAX_BODY = 1500;
 
-// Return allows and Escape refuses. No time limit: the dialog stays until it
-// is answered, or until the tool call is cancelled (below).
-// The text is passed as an argument, never spliced into the script, so a
-// quote in an app name cannot become AppleScript.
-const SCRIPT = `on run argv
-  activate
-  display dialog (item 1 of argv) with title (item 2 of argv) buttons {"Don’t Allow", "Allow"} default button "Allow" cancel button "Don’t Allow"
-  return "approved"
-end run`;
+// The same path from src/core (tsx) and dist/core (published), shipped via
+// package.json "files". If it is missing the alert shows its default icon.
+const ICON = fileURLToPath(new URL('../../assets/brand/heimdall-icon-rounded-256.png', import.meta.url));
+
+// NSAlert through JXA rather than AppleScript's display dialog: it takes a
+// custom icon and a bold question, and looks like every other macOS alert.
+// Return allows, Escape refuses. No time limit: it stays until answered, or
+// until the tool call is cancelled (below). The text arrives as arguments,
+// never spliced into the script, so a quote in an app name stays text.
+const SCRIPT = `ObjC.import('AppKit');
+function run(argv) {
+  const app = $.NSApplication.sharedApplication;
+  app.setActivationPolicy($.NSApplicationActivationPolicyAccessory);
+  const alert = $.NSAlert.alloc.init;
+  alert.messageText = argv[0];
+  alert.informativeText = argv[1];
+  alert.addButtonWithTitle('Allow');
+  alert.addButtonWithTitle('Don’t Allow').keyEquivalent = '\\u001b';
+  const icon = $.NSImage.alloc.initWithContentsOfFile(argv[2]);
+  if (!icon.isNil()) alert.icon = icon;
+  alert.layout;
+  // Opaque, so the text does not compete with whatever is behind it.
+  const win = alert.window;
+  win.opaque = true;
+  win.backgroundColor = $.NSColor.windowBackgroundColor;
+  const settle = (v) => {
+    if (v.isKindOfClass($.NSVisualEffectView)) { v.material = $.NSVisualEffectMaterialWindowBackground; v.state = $.NSVisualEffectStateActive; }
+    const subs = v.subviews;
+    for (let i = 0; i < subs.count; i++) settle(subs.objectAtIndex(i));
+  };
+  settle(win.contentView.superview);
+  app.activateIgnoringOtherApps(true);
+  return alert.runModal === $.NSAlertFirstButtonReturn ? 'approved' : 'cancelled';
+}`;
+
+export interface DialogText {
+  /** The bold line: the question itself. */
+  title: string;
+  body: string;
+}
 
 /**
- * The dialog's text, from the elicitation preview.
+ * The alert's text, from the elicitation preview.
  *
  * That preview is written for a form inside the client: it opens with the
  * tool name, lists the HTTP operation and the key id, and ends by asking for
- * CONFIRM. In a dialog of its own the person needs what will happen, to what,
+ * CONFIRM. In an alert of its own the person needs what will happen, to what,
  * and what cannot be undone. `what` is the tool's own one-line summary.
  */
-export function dialogText(what: string | undefined, preview: string): string {
+export function dialogText(what: string | undefined, preview: string): DialogText {
   const details: string[] = [];
   let warning = '';
   for (const line of preview.split('\n').slice(1)) {
@@ -49,27 +81,27 @@ export function dialogText(what: string | undefined, preview: string): string {
     if (t.startsWith('Risk:')) warning = t.split(' — ').slice(1).join(' — ');
     else details.push(t.replace(/^(\w)(\w*):\s+/, (_, c: string, rest: string) => `${c.toUpperCase()}${rest}: `));
   }
-  return [
-    'Your AI assistant wants to make this change in App Store Connect:',
-    ...(what ? ['', what] : []),
-    ...(details.length ? ['', ...details] : []),
-    ...(warning ? ['', `⚠️ ${warning}`] : []),
-  ].join('\n');
+  return {
+    title: what ? `${what.replace(/\.$/, '')}?` : 'Allow this change in App Store Connect?',
+    body: [
+      'Your AI assistant asked Heimdall to make this change in App Store Connect.',
+      ...(details.length ? ['', ...details] : []),
+      ...(warning ? ['', warning] : []),
+    ].join('\n'),
+  };
 }
 
-/** Whether a dialog can be tried at all; checked before the preview's lookups are spent. */
+/** Whether an alert can be tried at all; checked before the preview's lookups are spent. */
 export const nativeConfirmAvailable = (): boolean => process.platform === 'darwin';
 
-export function nativeConfirm(message: string, title: string, signal?: AbortSignal): Promise<NativeAnswer> {
+export function nativeConfirm(text: DialogText, signal?: AbortSignal): Promise<NativeAnswer> {
   if (!nativeConfirmAvailable()) return Promise.resolve('unavailable');
-  const text = message.length > MAX_MESSAGE ? `${message.slice(0, MAX_MESSAGE)}…` : message;
+  const body = text.body.length > MAX_BODY ? `${text.body.slice(0, MAX_BODY)}…` : text.body;
   return new Promise((resolve) => {
-    // A cancelled tool call takes its dialog with it, so a late click cannot
+    // A cancelled tool call takes its alert with it, so a late click cannot
     // run a write the agent was already told failed.
-    execFile('osascript', ['-e', SCRIPT, text, title], { signal }, (error, stdout) => {
+    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ICON], { signal }, (error, stdout) => {
       if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'cancelled');
-      // -128 is AppleScript's "User canceled": the Cancel button.
-      if (/-128/.test(String(error.message))) return resolve('cancelled');
       resolve(signal?.aborted ? 'cancelled' : 'unavailable');
     });
   });

@@ -678,11 +678,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const answer = await nativeConfirm(
-            dialogText(what && `${what}.`, preview.message),
-            'Heimdall · App Store Connect',
-            ctx.mcpReq.signal
-          );
+          const answer = await nativeConfirm(dialogText(what, preview.message), ctx.mcpReq.signal);
           if (answer === 'unavailable') return blocked;
           if (answer !== 'approved') {
             return {
