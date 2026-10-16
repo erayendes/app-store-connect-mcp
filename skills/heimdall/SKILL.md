@@ -180,3 +180,9 @@ a link.
   `asc__search_tools` searches all 987 operations and names the profile that
   owns each one; the server's own error messages print the exact command to add
   it. Do not conclude the operation does not exist.
+- `asc__load` adds a sub-profile for this session, but some clients never show
+  the new tools mid-session (the Claude desktop app's Code tab among them), and
+  waiting a turn does not help. Reads work at once through `asc__call`. For the
+  tools themselves, run the `register` command its reply names — for example
+  `npx -y @erayendes/asc-mcp register access:users,beta-groups` — once the user
+  says yes, then ask them to restart their MCP client.
