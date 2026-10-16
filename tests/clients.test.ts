@@ -49,7 +49,7 @@ import {
   PACKAGE,
   isRunningIn,
 } from '../src/clients.js';
-import { applyPlan, planChanges } from '../src/setup.js';
+import { applyPlan, planChanges, plansForUnticked } from '../src/setup.js';
 import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
@@ -438,5 +438,34 @@ describe('a channel move alone', () => {
     expect(lines.join('\n')).not.toMatch(/added|Heimdall \d/);
     expect(lines.join('\n')).toMatch(/Done\. Restart Temp/);
     expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-Analytics'].args[1]).toBe(PACKAGE);
+  });
+});
+
+describe('an app the user unticked', () => {
+  it('plans to remove every Heimdall entry from it, and removes them', () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: {
+        'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'] },
+        'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info'] },
+        other: { command: 'node', args: ['keep-me.js'] },
+      },
+    }));
+
+    const plan = plansForUnticked([], [jsonClient()]);
+
+    expect(plan).toHaveLength(1);
+    expect(plan[0].toAdd).toEqual([]);
+    expect(plan[0].toRemove.sort()).toEqual(['ASC-Analytics', 'ASC-AppInfo']);
+    applyPlan(plan, () => {});
+    expect(Object.keys(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers)).toEqual(['other']);
+  });
+
+  it('leaves a ticked app, and an unticked one without Heimdall, out of it', () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { other: { command: 'node' } } }));
+    expect(plansForUnticked([], [jsonClient()])).toEqual([]);
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'] } },
+    }));
+    expect(plansForUnticked([jsonClient()], [jsonClient()])).toEqual([]);
   });
 });

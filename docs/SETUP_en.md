@@ -73,7 +73,7 @@ You don't have to install everything up front. Start with the few profiles you n
 
 - **Run setup again**: `npx -y @erayendes/asc-mcp setup`.
 - It reuses your credentials and shows the pickers again.
-- Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected.
+- Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected. An app you untick loses Heimdall.
 
 ## When you need a tool you haven't installed
 
@@ -118,7 +118,7 @@ Read-only mode, trying changes without making them, a second App Store Connect a
 
 ## Uninstall
 
-Run `setup` again and untick everything in the profile picker; it removes the profiles from the apps you select.
+Run `setup` again and untick the apps you want Heimdall gone from; it removes Heimdall from them. Setup lists the removal before it writes anything.
 
 Two exceptions: VS Code has no remove command, so delete the Heimdall entries from VS Code's MCP settings by hand. Remove Xcode plug-ins under Xcode → Settings → Intelligence → Plug-ins with **Delete Plug-in**.
 

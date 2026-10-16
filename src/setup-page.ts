@@ -191,7 +191,7 @@ a { color: var(--fg); }
 
   <section id="s3">
     <h2><span class="n" id="n3">3/4</span>Which AI apps should get Heimdall?</h2>
-    <p class="lead">Tick the apps you talk to. These are the ones we found on this computer.</p>
+    <p class="lead">Tick the apps you talk to. These are the ones we found on this computer. Untick an app to remove Heimdall from it.</p>
     <div id="clients"><p class="lead">Looking for AI apps on this computer…</p></div>
   </section>
 
@@ -212,7 +212,7 @@ a { color: var(--fg); }
   var token = new URLSearchParams(location.search).get('t') || '';
   history.replaceState(null, '', '/');
   var $ = function (id) { return document.getElementById(id); };
-  var state, boxes = {}, pem = '', reuse = false, keyReady = false, finished = false, role = '';
+  var state, boxes = {}, pem = '', reuse = false, keyReady = false, finished = false, applying = false, role = '';
 
   function call(name, body) {
     return fetch('/api/' + name, {
@@ -234,6 +234,9 @@ a { color: var(--fg); }
    */
   var planTimer = 0, planSeq = 0;
   function invalidatePlan() {
+    // Once Apply is pressed the plan is settled, and the server closes when it
+    // is done: a refresh then would only report that it is gone.
+    if (applying || finished) return;
     $('apply').disabled = true;
     clearTimeout(planTimer);
     planSeq++; // an answer already on its way is for a selection that no longer stands
@@ -252,7 +255,7 @@ a { color: var(--fg); }
     if (!leaves().length) { say('Pick at least one thing in step 1.'); return; }
     if (!sel.clients.length) { say('Tick at least one app in step 3.'); return; }
     call('plan', sel).then(function (r) {
-      if (seq !== planSeq) return;
+      if (seq !== planSeq || applying || finished) return;
       list.innerHTML = '';
       var shown = r.plan.filter(function (p) { return p.add.length || p.remove.length; });
       if (!shown.length) {
@@ -270,7 +273,7 @@ a { color: var(--fg); }
       });
       // Nothing to change and nothing new to save: Apply would do nothing.
       $('apply').disabled = !r.plan.length && reuse && !vendorChanged();
-    }).catch(function (e) { if (seq === planSeq) list.textContent = e.message; });
+    }).catch(function (e) { if (seq === planSeq && !applying && !finished) list.textContent = e.message; });
   }
 
   /* ---- step 1: needs ---------------------------------------------------- */
@@ -570,6 +573,7 @@ a { color: var(--fg); }
 
 
   $('apply').onclick = function () {
+    applying = true; clearTimeout(planTimer); planSeq++;
     this.disabled = true; $('cancel').disabled = true;
     var body = selection();
     body.reuse = reuse; body.vendorNumber = $('vendor').value;
@@ -579,7 +583,7 @@ a { color: var(--fg); }
       out.textContent = r.lines.join('\\n') + '\\n\\nAll set. You can close this tab.';
     }).catch(function (e) {
       // Nothing was applied: let the user fix what the message says and try again.
-      out.textContent = e.message; $('apply').disabled = false; $('cancel').disabled = false;
+      applying = false; out.textContent = e.message; $('apply').disabled = false; $('cancel').disabled = false;
     });
   };
 

@@ -8,6 +8,12 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### Unreleased
+
+Unticking an app in setup now removes Heimdall from it. Before, it was left as it was, without a word. The list of changes shows the removal before you press Apply.
+
+The browser setup no longer says "Load failed" after it finishes. Nothing had failed; the page asked one more question after setup had already closed.
+
 ### [2.7.0] — 2026-10-14
 
 The nicest improvement you can actually see that I've made so far arrives in this version. Setup can now happen in your browser too, and I recommend you use it.
@@ -226,6 +232,12 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### Yayımlanmamış
+
+Kurulumda bir uygulamanın işaretini kaldırırsanız Heimdall artık o uygulamadan siliniyor. Önceden hiçbir şey söylemeden olduğu gibi bırakılıyordu. Apply'a basmadan önce değişiklik listesinde neyin silineceğini görüyorsunuz.
+
+Tarayıcıdaki kurulum bittikten sonra artık "Load failed" demiyor. Aslında hiçbir şey başarısız olmamıştı; kurulum kapandıktan sonra sayfa bir soru daha sormuştu.
 
 ### [2.7.0] — 2026-10-14
 
