@@ -8,11 +8,13 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### Unreleased
+### [2.7.1] — 2026-10-16
 
-Unticking an app in setup now removes Heimdall from it. Before, it was left as it was, without a word. The list of changes shows the removal before you press Apply.
+Unticking an app in setup now removes Heimdall from it. Before, it was left as it was, without a word. The list of changes shows the removal before you press Apply ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
 
-The browser setup no longer says "Load failed" after it finishes. Nothing had failed; the page asked one more question after setup had already closed.
+The browser setup no longer says "Load failed" after it finishes. Nothing had failed; the page asked one more question after setup had already closed ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
+
+When the AI loads more tools in the middle of a conversation and your app doesn't show them (Claude Desktop's Code tab doesn't), Heimdall no longer tells it to wait for the next turn. Waiting never helped. Reads work right away, and the AI gets the command that adds the tools for good, which it runs once you say yes ([#163](https://github.com/erayendes/app-store-connect-mcp/pull/163)).
 
 ### [2.7.0] — 2026-10-14
 
@@ -233,11 +235,13 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.7.1] — 2026-10-16
 
-Kurulumda bir uygulamanın işaretini kaldırırsanız Heimdall artık o uygulamadan siliniyor. Önceden hiçbir şey söylemeden olduğu gibi bırakılıyordu. Apply'a basmadan önce değişiklik listesinde neyin silineceğini görüyorsunuz.
+Kurulumda bir uygulamanın işaretini kaldırırsanız Heimdall artık o uygulamadan siliniyor. Önceden hiçbir şey söylemeden olduğu gibi bırakılıyordu. Apply'a basmadan önce değişiklik listesinde neyin silineceğini görüyorsunuz ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
 
-Tarayıcıdaki kurulum bittikten sonra artık "Load failed" demiyor. Aslında hiçbir şey başarısız olmamıştı; kurulum kapandıktan sonra sayfa bir soru daha sormuştu.
+Tarayıcıdaki kurulum bittikten sonra artık "Load failed" demiyor. Aslında hiçbir şey başarısız olmamıştı; kurulum kapandıktan sonra sayfa bir soru daha sormuştu ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
+
+Yapay zekâ konuşmanın ortasında yeni araçlar yüklediğinde uygulamanız bunları göstermiyorsa (Claude Desktop'ın Code sekmesi göstermiyor), Heimdall artık ona bir sonraki turu beklemesini söylemiyor. Beklemek zaten işe yaramıyordu. Okuma işlemleri hemen çalışıyor; araçları kalıcı olarak ekleyen komutu da yapay zekâ sizin onayınızla çalıştırıyor ([#163](https://github.com/erayendes/app-store-connect-mcp/pull/163)).
 
 ### [2.7.0] — 2026-10-14
 

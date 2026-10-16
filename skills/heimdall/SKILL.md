@@ -130,7 +130,7 @@ A large profile takes a colon and a list of sub-profiles —
 `monetization` is 211. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
-Heimdall serves 896 distinct tools across 13 profiles: 864 reachable Apple operations plus 32 hand-written tools. The `testflight` profile serves 56 tools including core.
+Heimdall serves 902 distinct tools across 13 profiles: 864 reachable Apple operations plus 38 hand-written tools. The `testflight` profile serves 56 tools including core.
 
 ## Prefer the macro over the chain
 
