@@ -8,9 +8,9 @@ You name a profile, and only that area's tools are loaded.
 | Profile | Covers | ~Tools | Sub-profiles |
 |:--|:--|--:|:--|
 | `app-info` | App identity, store metadata, categories, country availability, age rating, accessibility labels, EULA | 58 | — |
-| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Versions, localizations, phased release, review submission, builds, export compliance, EU distribution | 137 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Subscriptions, in-app purchases, pricing, offers, StoreKit 2, sandbox testers | 211 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
-| `marketing` | Screenshots, product pages, in-app events, reviews | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
+| `marketing` | Screenshots, product pages, in-app events, reviews, asset library | 126 | asset-library, custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta groups, testers, invitations, team members | 66 | beta-testers, beta-groups, users |
 | `testflight` | Beta app descriptions, beta review details, crash feedback, beta license agreement | 56 | — |
 | `game-center` | Achievements, leaderboards, activities, challenges, matchmaking | 187 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
@@ -40,11 +40,11 @@ A quick answer to "Which profiles should I install?" Each pack comes with the co
 
 | Role | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 194 |
-| ASO / marketing | `marketing` + `analytics` | 126 |
+| Release manager | `distribution` + `app-info` | 195 |
+| ASO / marketing | `marketing` + `analytics` | 152 |
 | QA / TestFlight | `testflight` + `access` | 122 |
 | Monetization | `monetization` | 211 |
-| Game developer | `game-center` + `distribution` | 323 |
+| Game developer | `game-center` + `distribution` | 324 |
 | Customer support | `monetization:storekit` | 19 |
 | Build and signing | `provisioning` + `xcode-cloud` | 103 |
 

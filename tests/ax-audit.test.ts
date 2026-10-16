@@ -41,10 +41,16 @@ const CEILING = {
    * resolver". What is left are types Apple gives no GET-by-id endpoint, so
    * there is nothing to fetch a name from — a resolver cannot be written for
    * them, only a different write body could avoid them.
+   *
+   * 41 since a create body stopped counting its own new type: it has no id yet,
+   * so a confirmation never shows one for it. Fourteen submit and request
+   * creates left the list that way, spec 4.5.1's placement ordering among them.
    */
-  unresolvedRefTypes: 54,
+  unresolvedRefTypes: 41,
   /** AXIS4 — path length: writes that need a lookup call first. */
-  writesNeedingLookup: 258,
+  // Spec 4.5.1 (+5): update and delete for asset library images, videos and
+  // placements. Changing a file means naming it, so these cannot avoid the id.
+  writesNeedingLookup: 263,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
   unfilterableLists: 99,
 };

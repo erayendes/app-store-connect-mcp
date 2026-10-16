@@ -81,7 +81,9 @@ const DESCRIPTIONS: Record<string, string> = {
   'game-center/gc-matchmaking': 'Matchmaking queues, rule sets, rule set tests and their metrics.',
 
   marketing:
-    'Store presence: screenshots, previews, custom product pages, in-app events, customer reviews.',
+    'Store presence: screenshots, previews, custom product pages, in-app events, customer reviews, the asset library.',
+  'marketing/asset-library':
+    'Asset library: upload images and videos once, then place them on version, custom product page, experiment and event pages.',
   'marketing/app-event': 'In-app events: localizations, screenshots, video clips.',
   'marketing/customer-review':
     'Customer reviews, responses, summaries, and the AI triage and reply-draft tools.',

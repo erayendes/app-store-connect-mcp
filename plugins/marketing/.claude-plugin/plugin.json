@@ -1,7 +1,7 @@
 {
   "name": "asc-marketing",
   "version": "2.7.1",
-  "description": "Store presence: screenshots, previews, custom product pages, in-app events, customer reviews.",
+  "description": "Store presence: screenshots, previews, custom product pages, in-app events, customer reviews, the asset library.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"

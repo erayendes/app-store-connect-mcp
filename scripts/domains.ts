@@ -139,6 +139,14 @@ export const DOMAIN_MAP: Record<string, string> = {
   appEventLocalizations: 'marketing',
   appEventScreenshots: 'marketing',
   appEventVideoClips: 'marketing',
+  // The asset library (spec 4.5.1) holds images and videos that are then placed
+  // on the same pages as screenshots, previews and event media above.
+  appAssetLibraries: 'marketing',
+  appAssetLibraryImages: 'marketing',
+  appAssetLibraryVideos: 'marketing',
+  appAssetLibraryPlacements: 'marketing',
+  appAssetLibraryPlacementOrderingRequests: 'marketing',
+  appAssetLibraryRefData: 'marketing',
 
   // Provisioning
   bundleIds: 'provisioning',

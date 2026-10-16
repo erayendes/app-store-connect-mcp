@@ -101,6 +101,30 @@ function collectSchemaTypes(schema: unknown, out: Set<string>): void {
 }
 
 /**
+ * The types a write body can show the user as a raw id. A POST body's own
+ * `data.type` is the thing being created: it has no id yet, so the confirmation
+ * never prints one for it (collectRefs in src/core/confirm.ts needs both). It
+ * still counts when the same type also appears as a reference elsewhere in the
+ * body. Counting it anyway listed fourteen "submit" and "request" creates as
+ * unreadable when nothing about them is.
+ */
+function referencedTypes(op: Operation, schema: unknown): Set<string> {
+  const types = new Set<string>();
+  collectSchemaTypes(schema, types);
+  const data = isRecord(schema) && isRecord(schema.properties) ? schema.properties.data : undefined;
+  const dataProps = isRecord(data) && isRecord(data.properties) ? data.properties : undefined;
+  if (op.method !== 'POST' || !dataProps || !isRecord(dataProps.type)) return types;
+
+  const own = new Set<string>();
+  collectSchemaTypes({ properties: { type: dataProps.type } }, own);
+  const elsewhere = new Set<string>();
+  const { type: _own, ...restOfData } = dataProps;
+  collectSchemaTypes({ properties: { ...(schema as { properties: object }).properties, data: { properties: restOfData } } }, elsewhere);
+  for (const t of own) if (!elsewhere.has(t)) types.delete(t);
+  return types;
+}
+
+/**
  * Deprecated operations are excluded by default because the registry never
  * loads them (`includeDeprecated` defaults to false), so no agent can reach
  * them and their debt is unpayable and unfelt. Counting them inflated every
@@ -146,9 +170,7 @@ export function auditAx(operations: readonly Operation[] = LOADABLE): AxDebt {
   for (const op of writes) {
     const schema = op.bodyRef ? BODY_SCHEMAS[op.bodyRef] : undefined;
     if (!schema) continue;
-    const types = new Set<string>();
-    collectSchemaTypes(schema, types);
-    for (const t of types) typeUses.set(t, (typeUses.get(t) ?? 0) + 1);
+    for (const t of referencedTypes(op, schema)) typeUses.set(t, (typeUses.get(t) ?? 0) + 1);
   }
   const unresolvedRefTypes: TypeFinding[] = [...typeUses.entries()]
     .filter(([type]) => !REF_RESOLVERS[type] && !SELF_DESCRIBING.has(type) && !GET_BY_ID.has(type))

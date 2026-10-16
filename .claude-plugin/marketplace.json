@@ -60,7 +60,7 @@
     {
       "name": "Heimdall | ASC Marketing",
       "source": "./plugins/marketing",
-      "description": "Store presence: screenshots, previews, custom product pages, in-app events, customer reviews.",
+      "description": "Store presence: screenshots, previews, custom product pages, in-app events, customer reviews, the asset library.",
       "version": "2.7.1"
     },
     {
