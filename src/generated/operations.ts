@@ -21322,7 +21322,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseAppStoreReviewScreenshotCreateRequest",
-    "risk": "revenue"
+    "risk": "low"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.delete",
@@ -21337,7 +21337,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "in_app_purchase_app_store_review_screenshots.get",
@@ -21392,7 +21392,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseAppStoreReviewScreenshotUpdateRequest",
-    "risk": "revenue"
+    "risk": "low"
   },
   {
     "name": "in_app_purchase_availabilities.available_territories.list",
@@ -21507,7 +21507,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseImageV2CreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_images_v2.delete",
@@ -21522,7 +21522,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "in_app_purchase_images_v2.get",
@@ -21566,7 +21566,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseImageV2UpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_images.create",
@@ -21580,7 +21580,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseImageCreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_images.delete",
@@ -21595,7 +21595,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "in_app_purchase_images.get",
@@ -21649,7 +21649,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseImageUpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_localizations_v2.create",
@@ -21663,7 +21663,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseLocalizationV2CreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_localizations_v2.delete",
@@ -21678,7 +21678,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "in_app_purchase_localizations_v2.get",
@@ -21728,7 +21728,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseLocalizationV2UpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_localizations.create",
@@ -21742,7 +21742,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseLocalizationCreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_localizations.delete",
@@ -21757,7 +21757,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "in_app_purchase_localizations.get",
@@ -21808,7 +21808,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseLocalizationUpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "in_app_purchase_offer_code_custom_codes.create",
@@ -24973,7 +24973,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionAppStoreReviewScreenshotCreateRequest",
-    "risk": "revenue"
+    "risk": "low"
   },
   {
     "name": "subscription_app_store_review_screenshots.delete",
@@ -24988,7 +24988,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_app_store_review_screenshots.get",
@@ -25043,7 +25043,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionAppStoreReviewScreenshotUpdateRequest",
-    "risk": "revenue"
+    "risk": "low"
   },
   {
     "name": "subscription_availabilities.available_territories.list",
@@ -25165,7 +25165,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionGroupLocalizationV2CreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_group_localizations_v2.delete",
@@ -25180,7 +25180,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_group_localizations_v2.get",
@@ -25230,7 +25230,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionGroupLocalizationV2UpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_group_localizations.create",
@@ -25244,7 +25244,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionGroupLocalizationCreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_group_localizations.delete",
@@ -25259,7 +25259,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_group_localizations.get",
@@ -25310,7 +25310,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionGroupLocalizationUpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_group_submissions.create",
@@ -25687,7 +25687,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionImageV2CreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_images_v2.delete",
@@ -25702,7 +25702,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_images_v2.get",
@@ -25746,7 +25746,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionImageV2UpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_images.create",
@@ -25760,7 +25760,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionImageCreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_images.delete",
@@ -25775,7 +25775,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_images.get",
@@ -25829,7 +25829,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionImageUpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_introductory_offers.create",
@@ -25888,7 +25888,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionLocalizationV2CreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_localizations_v2.delete",
@@ -25903,7 +25903,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_localizations_v2.get",
@@ -25953,7 +25953,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionLocalizationV2UpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_localizations.create",
@@ -25967,7 +25967,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionLocalizationCreateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_localizations.delete",
@@ -25982,7 +25982,7 @@ export const OPERATIONS: Operation[] = [
     ],
     "queryParams": [],
     "hasBody": false,
-    "risk": "revenue"
+    "risk": "destructive"
   },
   {
     "name": "subscription_localizations.get",
@@ -26033,7 +26033,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionLocalizationUpdateRequest",
-    "risk": "revenue"
+    "risk": "public"
   },
   {
     "name": "subscription_offer_code_custom_codes.create",

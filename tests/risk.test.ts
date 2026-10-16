@@ -34,6 +34,18 @@ describe('risk manifest', () => {
     expect(riskFor('subscriptions.delete', 'DELETE')).toBe('revenue');
   });
 
+  it('keeps a product’s words and pictures out of the money class', () => {
+    // Renaming a weekly plan per language asked "affects what customers are
+    // charged", once per language. The price itself still does.
+    expect(riskFor('subscription_localizations_v2.update', 'PATCH')).toBe('public');
+    expect(riskFor('subscription_group_localizations.create', 'POST')).toBe('public');
+    expect(riskFor('in_app_purchase_images_v2.create', 'POST')).toBe('public');
+    expect(riskFor('subscription_app_store_review_screenshots.update', 'PATCH')).toBe('low');
+    expect(riskFor('subscription_localizations.delete', 'DELETE')).toBe('destructive');
+    expect(riskFor('subscription_prices.create', 'POST')).toBe('revenue');
+    expect(riskFor('subscriptions.update', 'PATCH')).toBe('revenue');
+  });
+
   it('announces the four unreadable levels in the tool list itself', () => {
     const byName = (n: string) => OPERATIONS.find((o) => o.name === n)!;
 
