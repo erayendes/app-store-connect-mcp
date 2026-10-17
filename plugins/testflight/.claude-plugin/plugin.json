@@ -1,6 +1,6 @@
 {
   "name": "asc-testflight",
-  "version": "2.7.1",
+  "version": "2.8.0-beta.1",
   "description": "TestFlight build metadata: beta app localizations, review details, crash feedback, the beta license agreement testers accept.",
   "author": {
     "name": "Eray Endes",
