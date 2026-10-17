@@ -8,13 +8,19 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### Unreleased
+### [2.8.0-beta.1] — 2026-10-17
 
-Apple added the App Store asset library to its API (spec 4.5.1), and Heimdall now covers it. You upload an image or video to your app's library once, then place it where you need it: a version's product page, a custom product page, a product page test or an in-app event. The 24 new tools live in a new `marketing:asset-library` sub-profile.
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
 
-`listing__upload_asset` uploads an image or video in one step, and can place it in the same call. Apple's own tools can only reserve a spot for a file; they can't send it.
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
 
-Placing a file changes what customers see, so it gets the same care as a screenshot.
+Apple added an image and video library to App Store Connect. You upload an image or video to your app's library and use it wherever you like.
+
+This added a set of 24 new tools in the `marketing:asset-library` sub-profile, which brings Heimdall to 927 tools.
+
+You can now tell the AI "upload this image or video to the library", and it can place it on a page in the same step if you want.
+
+Fewer "are you sure?" windows. Changing the name, description or image of a subscription or in-app purchase used to ask as if you were changing its price, once for every language. It doesn't ask anymore. Deleting one still asks, and so does changing a price.
 
 ### [2.7.1] — 2026-10-16
 
@@ -243,13 +249,19 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.8.0-beta.1] — 2026-10-17
 
-Apple, App Store görsel/video kütüphanesini API'sine ekledi (spec 4.5.1); Heimdall artık onu da kapsıyor. Bir görseli ya da videoyu uygulamanın kütüphanesine bir kez yüklüyorsunuz, sonra ihtiyacınız olan yere yerleştiriyorsunuz: sürümün ürün sayfası, özel ürün sayfası, ürün sayfası testi ya da uygulama içi etkinlik. 24 yeni araç, yeni `marketing:asset-library` alt profilinde.
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
 
-`listing__upload_asset` bir görseli ya da videoyu tek adımda yüklüyor, isterseniz aynı çağrıda yerleştiriyor da. Apple'ın kendi araçları bir dosyaya yalnızca yer ayırabiliyor, dosyayı gönderemiyor.
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
 
-Bir dosyayı yerleştirmek müşterinin gördüğünü değiştirdiği için, ekran görüntüsüyle aynı özeni görüyor.
+Apple, App Store Connect’e bir görsel/video kütüphanesi ekledi. Bir görseli ya da videoyu uygulamanın kütüphanesine yükleyip istediğiniz yerde kullanıyorsunuz.
+
+Bu `marketing:asset-library` alt profilinde 24 yeni araç seti ekledi. Böylece Heimdall 927 araca ulaştı.
+
+Artık yapay zekâya “şu görseli ya da videoyu kütüphaneye yükle” diyebilirsiniz; isterseniz aynı anda bir sayfaya da yerleştiriyor.
+
+Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
 
 ### [2.7.1] — 2026-10-16
 
