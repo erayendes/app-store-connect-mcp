@@ -5,7 +5,7 @@ Tools:          1011
   read-only:    534
   mutating:     477
   deprecated:   123
-Risk levels:    low:177 destructive:113 revenue:88 public:64 infrastructure:16 release:13 access:6
+Risk levels:    low:181 destructive:125 public:84 revenue:52 infrastructure:16 release:13 access:6
 Body schemas:   342 (310 KB resolved, avg 929 chars)
 
 By domain:

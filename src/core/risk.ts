@@ -76,12 +76,28 @@ export const REVERSIBILITY: Record<RiskLevel, string> = {
 interface RiskRule {
   /** Regex over the dotted operation name (e.g. `subscription_prices.create`). */
   pattern: RegExp;
-  level: Exclude<RiskLevel, 'low' | 'destructive'>;
+  // 'low' only to keep a name away from a broader rule below it.
+  level: Exclude<RiskLevel, 'destructive'>;
   why: string;
 }
 
 /** Ordered, hand-reviewed rules. First match wins. */
 export const RULES: RiskRule[] = [
+  // --- words and pictures around a product, not its price ---------------
+  // These carry "subscription" or "in_app_purchase" in their names, so the
+  // money rule below used to claim them: renaming a weekly plan in Portuguese
+  // asked as if it changed what customers pay, once per language.
+  {
+    pattern: /_app_store_review_screenshots\./,
+    level: 'low',
+    why: 'a screenshot only App Review sees',
+  },
+  {
+    pattern: /^(in_app_purchase|subscription)(_group)?_(localizations|images)(_v2)?\./,
+    level: 'public',
+    why: 'changes the name, description or image customers see for a product',
+  },
+
   // --- money ------------------------------------------------------------
   {
     pattern: /price|subscription|in_app_purchase|offer|promoted_purchase|win_back/,
