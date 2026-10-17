@@ -5,7 +5,7 @@ description: Work with an Apple App Store Connect account through Heimdall's MCP
 
 Heimdall is one binary serving several separately scoped MCP servers, one per
 profile: `ASC-Monetization`, `ASC-Distribution`, `ASC-TestFlight` and so on.
-Apple's API is 987 operations, which costs more in tool definitions than most
+Apple's API is 1011 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
 
@@ -130,7 +130,7 @@ A large profile takes a colon and a list of sub-profiles —
 `monetization` is 211. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
-Heimdall serves 902 distinct tools across 13 profiles: 864 reachable Apple operations plus 38 hand-written tools. The `testflight` profile serves 56 tools including core.
+Heimdall serves 927 distinct tools across 13 profiles: 888 reachable Apple operations plus 39 hand-written tools. The `testflight` profile serves 56 tools including core.
 
 ## Prefer the macro over the chain
 
@@ -146,6 +146,7 @@ right choice for anything the macro does not cover.
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
+| reserving an asset library image or video, uploading it, then placing it | `listing__upload_asset` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` — build counts, devices/OS, newest comments and bounded crash excerpts |
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |
@@ -157,9 +158,10 @@ right choice for anything the macro does not cover.
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` |
 | pasting a translation into each locale | `metadata_ai__apply_localizations` |
 
-Two of these do something the raw tools cannot do at all, not merely faster:
-`listing__upload_screenshot` performs Apple's reserve/upload/commit sequence
-(the raw tool only reserves a slot and moves no bytes), and
+Three of these do something the raw tools cannot do at all, not merely faster:
+`listing__upload_screenshot` and `listing__upload_asset` perform Apple's
+reserve/upload/commit sequence (the raw tools only reserve a slot and move no
+bytes), and
 `analytics__get_report` downloads the report, where the raw chain ends holding
 a link.
 
@@ -177,7 +179,7 @@ a link.
   `DE`. The two-letter form is not rejected; it returns 200 and an empty list
   that reads as "no data here".
 - A tool that is not in this session's list may still belong to this account.
-  `asc__search_tools` searches all 987 operations and names the profile that
+  `asc__search_tools` searches all 1011 operations and names the profile that
   owns each one; the server's own error messages print the exact command to add
   it. Do not conclude the operation does not exist.
 - `asc__load` adds a sub-profile for this session, but some clients never show

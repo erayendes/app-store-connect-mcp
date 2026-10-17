@@ -8,9 +8,9 @@ Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir.
 | Profil | Kapsam | ~Araç | Alt profiller |
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 58 | — |
-| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 136 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
+| `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 137 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
 | `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 211 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
-| `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar | 100 | custom-product-page, product-page-optimization, app-event, customer-review, nominations |
+| `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar, görsel/video kütüphanesi | 126 | asset-library, custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 66 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 56 | — |
 | `game-center` | Başarımlar, liderlik tabloları, etkinlikler, meydan okumalar, eşleştirme | 187 | gc-leaderboard, gc-matchmaking, gc-activities, gc-challenge, gc-achievement, gc-details, gc-groups, gc-default |
@@ -40,11 +40,11 @@ Bunlar "Hangi profili kurayım?" sorusunun kısa yanıtını bulmanız için haz
 
 | Rol | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 194 |
-| ASO / pazarlama | `marketing` + `analytics` | 126 |
+| Yayın yöneticisi | `distribution` + `app-info` | 195 |
+| ASO / pazarlama | `marketing` + `analytics` | 152 |
 | QA / TestFlight | `testflight` + `access` | 122 |
 | Monetizasyon | `monetization` | 211 |
-| Oyun geliştirici | `game-center` + `distribution` | 323 |
+| Oyun geliştirici | `game-center` + `distribution` | 324 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
 

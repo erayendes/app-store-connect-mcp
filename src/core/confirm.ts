@@ -170,6 +170,8 @@ const LABEL_ATTRIBUTES = [
   'email',
   'deviceClass',
   'platform',
+  // An asset library placement has no name; what it is placed as is the label.
+  'placementType',
 ];
 
 /**

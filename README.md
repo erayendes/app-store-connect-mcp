@@ -32,9 +32,9 @@ Almost anything you'd click through App Store Connect to do, you can now just as
 
 ### Heimdall
 
-One MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **13 profiles, 32 sub-profiles, 902 tools.**
+One MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **13 profiles, 33 sub-profiles, 927 tools.**
 
-Apple's specification lists 987 API operations. Heimdall leaves out the 123 that Apple has deprecated, so 864 become tools, and adds 38 hand-written ones: 902 tools in all.
+Apple's specification lists 1011 API operations. Heimdall leaves out the 123 that Apple has deprecated, so 888 become tools, and adds 39 hand-written ones: 927 tools in all.
 
 Most App Store Connect MCP servers give you a hand-picked slice of the API. That works until you need the one endpoint they left out, and then **you're off hunting for yet another tool.**
 
