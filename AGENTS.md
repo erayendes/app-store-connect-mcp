@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 902 tools across 13 profiles: 864 generated from Apple's 987 operations (the 123 deprecated ones stay unloaded unless asked for) and 38 hand-written.
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 927 tools across 13 profiles: 888 generated from Apple's 1011 operations (the 123 deprecated ones stay unloaded unless asked for) and 39 hand-written.
 
 ## If a user asks you to install it
 
@@ -48,12 +48,12 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 
 ## While helping the user
 
-- **Finding a tool that isn't loaded:** call `asc__search_tools` (searches all 987 operations plus StoreKit) or `asc__discover_domains`. They name the sibling profile that owns a tool and print the exact command to add it.
+- **Finding a tool that isn't loaded:** call `asc__search_tools` (searches all 1011 operations plus StoreKit) or `asc__discover_domains`. They name the sibling profile that owns a tool and print the exact command to add it.
 - **`asc__load` is not a reliable way to get new tools.** It adds a sub-profile for this session and the server announces it, but some clients never show the new tools mid-session (the Claude desktop app's Code tab among them), and they do not appear next turn either. Reads work at once through `asc__call`. For the tools themselves, run the `register` command its reply names — e.g. `npx -y @erayendes/asc-mcp register access:users,beta-groups` — after the user says yes, then ask them to restart their MCP client.
 - **StoreKit / customer transactions** live on the `monetization` profile (`monetization:storekit`). Each tool takes an optional `app` (name, bundle ID or Apple ID) and looks the bundle ID up; it can be left out when the account has one app or `ASC_BUNDLE_ID` is set. `environment` (`Production` by default, or `Sandbox`) is optional too.
 - **Safety:** `--read-only` mode blocks every mutating tool. `destructiveHint` no longer means "this is a DELETE" — it now covers every write whose consequence the HTTP method cannot show, so a description ending in `REVENUE-`, `RELEASE-`, `INFRASTRUCTURE-` or `ACCESS-level write.` is flagged too. Those change live data: say what will happen and get a yes before calling one.
 - **When the client cannot show Heimdall's prompt** (the Claude desktop app's Code tab), Heimdall opens a macOS dialog for such a write and waits until the user answers it. Tell the user to look for it before you call. If the write is still refused, relay the refusal; do not edit client config, set `ASC_CONFIRM_WRITES`, or reach Apple another way.
-- **Prefer the macro over the chain.** Hand-written tools (`pricing__*`, `listing__*`, `preflight__*`, `release__submit`, `testflight__*`, `ci__diagnose_run`, `analytics__get_report`, `reviews_ai__*`) answer in one call what the raw tools need a chain for; the table is in [GUIDE_en.md](docs/GUIDE_en.md#one-call-instead-of-a-chain). Two do something the raw tools cannot do at all: `listing__upload_screenshot` performs Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
+- **Prefer the macro over the chain.** Hand-written tools (`pricing__*`, `listing__*`, `preflight__*`, `release__submit`, `testflight__*`, `ci__diagnose_run`, `analytics__get_report`, `reviews_ai__*`) answer in one call what the raw tools need a chain for; the table is in [GUIDE_en.md](docs/GUIDE_en.md#one-call-instead-of-a-chain). Three do something the raw tools cannot do at all: `listing__upload_screenshot` and `listing__upload_asset` perform Apple's reserve/upload/commit sequence, and `pricing__equalize_price` derives every country's price from one anchor.
 
 ## If you are working ON this repository
 

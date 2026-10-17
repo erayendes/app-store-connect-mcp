@@ -1,10 +1,10 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.5
+// Source: Apple App Store Connect OpenAPI specification v4.5.1
 // Regenerate with: npm run generate
 
 import type { Operation } from '../core/types.js';
 
-export const SPEC_VERSION = "4.5";
+export const SPEC_VERSION = "4.5.1";
 
 export const OPERATIONS: Operation[] = [
   {
@@ -842,6 +842,780 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AndroidToIosAppMappingDetailUpdateRequest",
+    "risk": "low"
+  },
+  {
+    "name": "app_asset_libraries.get",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraries/{id}",
+    "description": "Read an asset library by ID.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[appAssetLibraries]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraries Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "images",
+          "videos"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_libraries.images.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraries/{id}/images",
+    "description": "List the images in an app's asset library, with their review state.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[category]",
+        "type": "array",
+        "description": "filter by attribute 'category'",
+        "enum": [
+          "CREATIVE_ASSETS",
+          "APP_SCREENSHOTS_AND_PREVIEWS"
+        ]
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "AWAITING_UPLOAD",
+          "UPLOAD_COMPLETE",
+          "FAILED",
+          "COMPLETE",
+          "PREPARE_FOR_SUBMISSION",
+          "READY_FOR_REVIEW",
+          "WAITING_FOR_REVIEW",
+          "IN_REVIEW",
+          "ACCEPTED",
+          "APPROVED",
+          "REJECTED",
+          "ARCHIVED"
+        ]
+      },
+      {
+        "name": "filter[referenceName]",
+        "type": "array",
+        "description": "filter by attribute 'referenceName'"
+      },
+      {
+        "name": "filter[specId]",
+        "type": "array",
+        "description": "filter by attribute 'specId'"
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "referenceName",
+          "-referenceName"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_libraries.videos.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraries/{id}/videos",
+    "description": "List the videos in an app's asset library, with their review state.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[category]",
+        "type": "array",
+        "description": "filter by attribute 'category'",
+        "enum": [
+          "CREATIVE_ASSETS",
+          "APP_SCREENSHOTS_AND_PREVIEWS"
+        ]
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "AWAITING_UPLOAD",
+          "UPLOAD_COMPLETE",
+          "FAILED",
+          "COMPLETE",
+          "PREPARE_FOR_SUBMISSION",
+          "READY_FOR_REVIEW",
+          "WAITING_FOR_REVIEW",
+          "IN_REVIEW",
+          "ACCEPTED",
+          "APPROVED",
+          "REJECTED",
+          "ARCHIVED"
+        ]
+      },
+      {
+        "name": "filter[referenceName]",
+        "type": "array",
+        "description": "filter by attribute 'referenceName'"
+      },
+      {
+        "name": "filter[specId]",
+        "type": "array",
+        "description": "filter by attribute 'specId'"
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "referenceName",
+          "-referenceName"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_images.create",
+    "domain": "marketing",
+    "method": "POST",
+    "path": "/v1/appAssetLibraryImages",
+    "description": "Reserve an image in the asset library: returns upload operations, moves no bytes. Commit by setting uploaded.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "AppAssetLibraryImageCreateRequest",
+    "risk": "low"
+  },
+  {
+    "name": "app_asset_library_images.delete",
+    "domain": "marketing",
+    "method": "DELETE",
+    "path": "/v1/appAssetLibraryImages/{id}",
+    "description": "Delete an image from the asset library.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": false,
+    "risk": "destructive"
+  },
+  {
+    "name": "app_asset_library_images.get",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryImages/{id}",
+    "description": "Read one asset library image: file, size and review state.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[appAssetLibraryImages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraryImages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "category",
+          "createdDate",
+          "lastModifiedDate",
+          "fileName",
+          "fileSize",
+          "imageAsset",
+          "referenceName",
+          "specId",
+          "state",
+          "stateDetails",
+          "uploadOperations",
+          "placements"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_images.placements.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryImages/{id}/placements",
+    "description": "List the placements of an asset library image: which localizations it is on.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[placementType]",
+        "type": "array",
+        "description": "filter by attribute 'placementType'",
+        "enum": [
+          "APP_SCREENSHOT",
+          "IMESSAGE_APP_SCREENSHOT",
+          "APP_PREVIEW",
+          "PRODUCT_PAGE_HEADER_ASSET",
+          "APP_STORE_SEARCH_RESULTS_ASSET",
+          "SEARCH_RESULTS_ADS_ASSET",
+          "TODAY_TAB_ADS_ASSET",
+          "EVENT_CARD_ASSET",
+          "EVENT_DETAILS_PAGE_ASSET",
+          "RETENTION_MESSAGE_ASSET"
+        ]
+      },
+      {
+        "name": "filter[placementGroup]",
+        "type": "array",
+        "description": "filter by attribute 'placementGroup'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "ASSET_PROCESSING",
+          "FAILED",
+          "PARENT_PREPARE_FOR_SUBMISSION",
+          "PARENT_READY_FOR_REVIEW",
+          "PARENT_WAITING_FOR_REVIEW",
+          "PARENT_IN_REVIEW",
+          "PARENT_APPROVED"
+        ]
+      },
+      {
+        "name": "filter[video]",
+        "type": "array",
+        "description": "filter by id(s) of related 'video' Takes a 'video' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appEventLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appEventLocalization' Takes a 'appEventLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appCustomProductPageLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "placementGroupPosition",
+          "-placementGroupPosition"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_images.update",
+    "domain": "marketing",
+    "method": "PATCH",
+    "path": "/v1/appAssetLibraryImages/{id}",
+    "description": "Rename an asset library image, archive it, or mark its upload complete.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "AppAssetLibraryImageUpdateRequest",
+    "risk": "low"
+  },
+  {
+    "name": "app_asset_library_placement_ordering_requests.create",
+    "domain": "marketing",
+    "method": "POST",
+    "path": "/v1/appAssetLibraryPlacementOrderingRequests",
+    "description": "Reorder the asset library placements of one group within a localization.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "orderedPlacements"
+        ]
+      },
+      {
+        "name": "fields[appAssetLibraryPlacementOrderingRequests]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraryPlacementOrderingRequests Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "orderedPlacements"
+        ]
+      }
+    ],
+    "hasBody": true,
+    "bodyRef": "AppAssetLibraryPlacementOrderingRequestCreateRequest",
+    "risk": "public"
+  },
+  {
+    "name": "app_asset_library_placements.create",
+    "domain": "marketing",
+    "method": "POST",
+    "path": "/v1/appAssetLibraryPlacements",
+    "description": "Put an asset library image or video into one localization: version, custom product variant, treatment or event.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "AppAssetLibraryPlacementCreateRequest",
+    "risk": "public"
+  },
+  {
+    "name": "app_asset_library_placements.delete",
+    "domain": "marketing",
+    "method": "DELETE",
+    "path": "/v1/appAssetLibraryPlacements/{id}",
+    "description": "Remove one asset library placement; the file stays in the library.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": false,
+    "risk": "destructive"
+  },
+  {
+    "name": "app_asset_library_placements.get",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryPlacements/{id}",
+    "description": "Read one asset library placement and its state.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[appAssetLibraryPlacements]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraryPlacements Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "mediaType",
+          "placementType",
+          "placementGroup",
+          "createdDate",
+          "lastModifiedDate",
+          "state",
+          "stateDetails",
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_ref_data.get",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryRefData/{id}",
+    "description": "Read one asset library reference entry by ID.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[appAssetLibraryRefData]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraryRefData Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "features",
+          "placementProfileGroups",
+          "imageSpecs",
+          "videoSpecs",
+          "placementTypes",
+          "displayClasses"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_ref_data.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryRefData",
+    "description": "List which placement types, groups and limits the asset library allows.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filter[placementTypes]",
+        "type": "array",
+        "description": "filter by attribute 'placementTypes'"
+      },
+      {
+        "name": "filter[placementProfileGroups]",
+        "type": "array",
+        "description": "filter by attribute 'placementProfileGroups'"
+      },
+      {
+        "name": "filter[features]",
+        "type": "array",
+        "description": "filter by attribute 'features'"
+      },
+      {
+        "name": "filter[specs]",
+        "type": "array",
+        "description": "filter by specs"
+      },
+      {
+        "name": "fields[appAssetLibraryRefData]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraryRefData Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "features",
+          "placementProfileGroups",
+          "imageSpecs",
+          "videoSpecs",
+          "placementTypes",
+          "displayClasses"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_videos.create",
+    "domain": "marketing",
+    "method": "POST",
+    "path": "/v1/appAssetLibraryVideos",
+    "description": "Reserve one video in the asset library: returns upload operations, moves no bytes. Commit by setting uploaded.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "AppAssetLibraryVideoCreateRequest",
+    "risk": "low"
+  },
+  {
+    "name": "app_asset_library_videos.delete",
+    "domain": "marketing",
+    "method": "DELETE",
+    "path": "/v1/appAssetLibraryVideos/{id}",
+    "description": "Delete a video from the asset library.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": false,
+    "risk": "destructive"
+  },
+  {
+    "name": "app_asset_library_videos.get",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryVideos/{id}",
+    "description": "Read one asset library video: file, size, preview frame and review state.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[appAssetLibraryVideos]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type appAssetLibraryVideos Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "category",
+          "createdDate",
+          "lastModifiedDate",
+          "fileName",
+          "fileSize",
+          "previewFrameImage",
+          "previewFrameTimeCode",
+          "referenceName",
+          "specId",
+          "state",
+          "stateDetails",
+          "uploadOperations",
+          "videoAsset",
+          "placements"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_videos.placements.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appAssetLibraryVideos/{id}/placements",
+    "description": "List the placements of an asset library video: which localizations it is on.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[placementType]",
+        "type": "array",
+        "description": "filter by attribute 'placementType'",
+        "enum": [
+          "APP_SCREENSHOT",
+          "IMESSAGE_APP_SCREENSHOT",
+          "APP_PREVIEW",
+          "PRODUCT_PAGE_HEADER_ASSET",
+          "APP_STORE_SEARCH_RESULTS_ASSET",
+          "SEARCH_RESULTS_ADS_ASSET",
+          "TODAY_TAB_ADS_ASSET",
+          "EVENT_CARD_ASSET",
+          "EVENT_DETAILS_PAGE_ASSET",
+          "RETENTION_MESSAGE_ASSET"
+        ]
+      },
+      {
+        "name": "filter[placementGroup]",
+        "type": "array",
+        "description": "filter by attribute 'placementGroup'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "ASSET_PROCESSING",
+          "FAILED",
+          "PARENT_PREPARE_FOR_SUBMISSION",
+          "PARENT_READY_FOR_REVIEW",
+          "PARENT_WAITING_FOR_REVIEW",
+          "PARENT_IN_REVIEW",
+          "PARENT_APPROVED"
+        ]
+      },
+      {
+        "name": "filter[image]",
+        "type": "array",
+        "description": "filter by id(s) of related 'image' Takes a 'image' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appEventLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appEventLocalization' Takes a 'appEventLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appCustomProductPageLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "placementGroupPosition",
+          "-placementGroupPosition"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_asset_library_videos.update",
+    "domain": "marketing",
+    "method": "PATCH",
+    "path": "/v1/appAssetLibraryVideos/{id}",
+    "description": "Rename an asset library video, archive it, set its preview frame, or mark its upload complete.",
+    "readOnly": false,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "AppAssetLibraryVideoUpdateRequest",
     "risk": "low"
   },
   {
@@ -2014,7 +2788,8 @@ export const OPERATIONS: Operation[] = [
           "appCustomProductPageVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
         ]
       },
       {
@@ -2025,7 +2800,120 @@ export const OPERATIONS: Operation[] = [
           "appCustomProductPageVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_custom_product_page_localizations.placements.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appCustomProductPageLocalizations/{id}/placements",
+    "description": "List the placements belonging to an app custom product page localization.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[placementType]",
+        "type": "array",
+        "description": "filter by attribute 'placementType'",
+        "enum": [
+          "APP_SCREENSHOT",
+          "IMESSAGE_APP_SCREENSHOT",
+          "APP_PREVIEW",
+          "PRODUCT_PAGE_HEADER_ASSET",
+          "APP_STORE_SEARCH_RESULTS_ASSET",
+          "SEARCH_RESULTS_ADS_ASSET",
+          "TODAY_TAB_ADS_ASSET",
+          "EVENT_CARD_ASSET",
+          "EVENT_DETAILS_PAGE_ASSET",
+          "RETENTION_MESSAGE_ASSET"
+        ]
+      },
+      {
+        "name": "filter[placementGroup]",
+        "type": "array",
+        "description": "filter by attribute 'placementGroup'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "ASSET_PROCESSING",
+          "FAILED",
+          "PARENT_PREPARE_FOR_SUBMISSION",
+          "PARENT_READY_FOR_REVIEW",
+          "PARENT_WAITING_FOR_REVIEW",
+          "PARENT_IN_REVIEW",
+          "PARENT_APPROVED"
+        ]
+      },
+      {
+        "name": "filter[image]",
+        "type": "array",
+        "description": "filter by id(s) of related 'image' Takes a 'image' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[video]",
+        "type": "array",
+        "description": "filter by id(s) of related 'video' Takes a 'video' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appEventLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appEventLocalization' Takes a 'appEventLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "placementGroupPosition",
+          "-placementGroupPosition"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
         ]
       }
     ],
@@ -2136,7 +3024,8 @@ export const OPERATIONS: Operation[] = [
           "appCustomProductPageVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
         ]
       },
       {
@@ -2152,7 +3041,8 @@ export const OPERATIONS: Operation[] = [
           "appCustomProductPageVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
         ]
       }
     ],
@@ -2741,7 +3631,8 @@ export const OPERATIONS: Operation[] = [
           "longDescription",
           "appEvent",
           "appEventScreenshots",
-          "appEventVideoClips"
+          "appEventVideoClips",
+          "placements"
         ]
       },
       {
@@ -2751,7 +3642,120 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appEvent",
           "appEventScreenshots",
-          "appEventVideoClips"
+          "appEventVideoClips",
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_event_localizations.placements.list",
+    "domain": "marketing",
+    "method": "GET",
+    "path": "/v1/appEventLocalizations/{id}/placements",
+    "description": "List the asset library images and videos placed on an in-app event localization.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[placementType]",
+        "type": "array",
+        "description": "filter by attribute 'placementType'",
+        "enum": [
+          "APP_SCREENSHOT",
+          "IMESSAGE_APP_SCREENSHOT",
+          "APP_PREVIEW",
+          "PRODUCT_PAGE_HEADER_ASSET",
+          "APP_STORE_SEARCH_RESULTS_ASSET",
+          "SEARCH_RESULTS_ADS_ASSET",
+          "TODAY_TAB_ADS_ASSET",
+          "EVENT_CARD_ASSET",
+          "EVENT_DETAILS_PAGE_ASSET",
+          "RETENTION_MESSAGE_ASSET"
+        ]
+      },
+      {
+        "name": "filter[placementGroup]",
+        "type": "array",
+        "description": "filter by attribute 'placementGroup'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "ASSET_PROCESSING",
+          "FAILED",
+          "PARENT_PREPARE_FOR_SUBMISSION",
+          "PARENT_READY_FOR_REVIEW",
+          "PARENT_WAITING_FOR_REVIEW",
+          "PARENT_IN_REVIEW",
+          "PARENT_APPROVED"
+        ]
+      },
+      {
+        "name": "filter[image]",
+        "type": "array",
+        "description": "filter by id(s) of related 'image' Takes a 'image' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[video]",
+        "type": "array",
+        "description": "filter by id(s) of related 'video' Takes a 'video' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appCustomProductPageLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "placementGroupPosition",
+          "-placementGroupPosition"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
         ]
       }
     ],
@@ -3036,7 +4040,8 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appEvent",
           "appEventScreenshots",
-          "appEventVideoClips"
+          "appEventVideoClips",
+          "placements"
         ]
       }
     ],
@@ -4516,7 +5521,8 @@ export const OPERATIONS: Operation[] = [
           "locale",
           "appStoreVersionExperimentTreatment",
           "appScreenshotSets",
-          "appPreviewSets"
+          "appPreviewSets",
+          "placements"
         ]
       },
       {
@@ -4526,7 +5532,120 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appStoreVersionExperimentTreatment",
           "appScreenshotSets",
-          "appPreviewSets"
+          "appPreviewSets",
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_store_version_experiment_treatment_localizations.placements.list",
+    "domain": "versions",
+    "method": "GET",
+    "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements",
+    "description": "List the placements belonging to an App Store version experiment treatment localization.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[placementType]",
+        "type": "array",
+        "description": "filter by attribute 'placementType'",
+        "enum": [
+          "APP_SCREENSHOT",
+          "IMESSAGE_APP_SCREENSHOT",
+          "APP_PREVIEW",
+          "PRODUCT_PAGE_HEADER_ASSET",
+          "APP_STORE_SEARCH_RESULTS_ASSET",
+          "SEARCH_RESULTS_ADS_ASSET",
+          "TODAY_TAB_ADS_ASSET",
+          "EVENT_CARD_ASSET",
+          "EVENT_DETAILS_PAGE_ASSET",
+          "RETENTION_MESSAGE_ASSET"
+        ]
+      },
+      {
+        "name": "filter[placementGroup]",
+        "type": "array",
+        "description": "filter by attribute 'placementGroup'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "ASSET_PROCESSING",
+          "FAILED",
+          "PARENT_PREPARE_FOR_SUBMISSION",
+          "PARENT_READY_FOR_REVIEW",
+          "PARENT_WAITING_FOR_REVIEW",
+          "PARENT_IN_REVIEW",
+          "PARENT_APPROVED"
+        ]
+      },
+      {
+        "name": "filter[image]",
+        "type": "array",
+        "description": "filter by id(s) of related 'image' Takes a 'image' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[video]",
+        "type": "array",
+        "description": "filter by id(s) of related 'video' Takes a 'video' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appEventLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appEventLocalization' Takes a 'appEventLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appCustomProductPageLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "placementGroupPosition",
+          "-placementGroupPosition"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
         ]
       }
     ],
@@ -4557,7 +5676,8 @@ export const OPERATIONS: Operation[] = [
           "locale",
           "appStoreVersionExperimentTreatment",
           "appScreenshotSets",
-          "appPreviewSets"
+          "appPreviewSets",
+          "placements"
         ]
       },
       {
@@ -4572,7 +5692,8 @@ export const OPERATIONS: Operation[] = [
         "enum": [
           "appStoreVersionExperimentTreatment",
           "appScreenshotSets",
-          "appPreviewSets"
+          "appPreviewSets",
+          "placements"
         ]
       }
     ],
@@ -5148,7 +6269,8 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
         ]
       },
       {
@@ -5159,7 +6281,120 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "app_store_version_localizations.placements.list",
+    "domain": "versions",
+    "method": "GET",
+    "path": "/v1/appStoreVersionLocalizations/{id}/placements",
+    "description": "List the asset library images and videos placed on a version localization.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[placementType]",
+        "type": "array",
+        "description": "filter by attribute 'placementType'",
+        "enum": [
+          "APP_SCREENSHOT",
+          "IMESSAGE_APP_SCREENSHOT",
+          "APP_PREVIEW",
+          "PRODUCT_PAGE_HEADER_ASSET",
+          "APP_STORE_SEARCH_RESULTS_ASSET",
+          "SEARCH_RESULTS_ADS_ASSET",
+          "TODAY_TAB_ADS_ASSET",
+          "EVENT_CARD_ASSET",
+          "EVENT_DETAILS_PAGE_ASSET",
+          "RETENTION_MESSAGE_ASSET"
+        ]
+      },
+      {
+        "name": "filter[placementGroup]",
+        "type": "array",
+        "description": "filter by attribute 'placementGroup'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "ASSET_PROCESSING",
+          "FAILED",
+          "PARENT_PREPARE_FOR_SUBMISSION",
+          "PARENT_READY_FOR_REVIEW",
+          "PARENT_WAITING_FOR_REVIEW",
+          "PARENT_IN_REVIEW",
+          "PARENT_APPROVED"
+        ]
+      },
+      {
+        "name": "filter[image]",
+        "type": "array",
+        "description": "filter by id(s) of related 'image' Takes a 'image' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[video]",
+        "type": "array",
+        "description": "filter by id(s) of related 'video' Takes a 'video' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appEventLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appEventLocalization' Takes a 'appEventLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appCustomProductPageLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
+        "type": "array",
+        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
+      },
+      {
+        "name": "filter[id]",
+        "type": "array",
+        "description": "filter by id(s)"
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "createdDate",
+          "-createdDate",
+          "lastModifiedDate",
+          "-lastModifiedDate",
+          "placementGroupPosition",
+          "-placementGroupPosition"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization"
         ]
       }
     ],
@@ -5559,7 +6794,8 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
         ]
       },
       {
@@ -5575,7 +6811,8 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersion",
           "appScreenshotSets",
           "appPreviewSets",
-          "searchKeywords"
+          "searchKeywords",
+          "placements"
         ]
       }
     ],
@@ -6739,6 +7976,20 @@ export const OPERATIONS: Operation[] = [
         ]
       }
     ],
+    "hasBody": false
+  },
+  {
+    "name": "apps.asset_library.get",
+    "domain": "apps",
+    "method": "GET",
+    "path": "/v1/apps/{id}/assetLibrary",
+    "description": "Get an app's asset library, the media library its images and videos live in. Start here for its ID.",
+    "readOnly": true,
+    "deprecated": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
     "hasBody": false
   },
   {
@@ -24331,6 +25582,8 @@ export const OPERATIONS: Operation[] = [
           "appStoreVersionExperiment",
           "appStoreVersionExperimentV2",
           "appEvent",
+          "appAssetLibraryImage",
+          "appAssetLibraryVideo",
           "backgroundAssetVersion",
           "gameCenterAchievementVersion",
           "gameCenterActivityVersion",

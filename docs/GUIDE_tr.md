@@ -32,6 +32,7 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Siz b
 | iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
 | sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
 | ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
+| kütüphaneye görsel ya da video için yer ayırıp yüklemek, sonra bir sayfaya yerleştirmek | `listing__upload_asset` | `marketing:asset-library` |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
 | uygulama → kilitlenme ve ekran görüntüsü bildirimleri → crash log'lar | `testflight__feedback_digest` — build bazında sayılar, cihaz/OS, yorumlar ve kısa crash log alıntıları | `testflight` |
 | uygulama → Xcode Cloud ürünü → koşu → adımlar → sorunlar ve testler | `ci__diagnose_run` — en yeni 40 koşu içinde en son patlayanı bulur, sorunları ve başarısız testleri listeler | `xcode-cloud` |

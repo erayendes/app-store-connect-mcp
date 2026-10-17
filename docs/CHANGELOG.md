@@ -8,6 +8,14 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### Unreleased
+
+Apple added the App Store asset library to its API (spec 4.5.1), and Heimdall now covers it. You upload an image or video to your app's library once, then place it where you need it: a version's product page, a custom product page, a product page test or an in-app event. The 24 new tools live in a new `marketing:asset-library` sub-profile.
+
+`listing__upload_asset` uploads an image or video in one step, and can place it in the same call. Apple's own tools can only reserve a spot for a file; they can't send it.
+
+Placing a file changes what customers see, so it gets the same care as a screenshot.
+
 ### [2.7.1] — 2026-10-16
 
 Unticking an app in setup now removes Heimdall from it. Before, it was left as it was, without a word. The list of changes shows the removal before you press Apply ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
@@ -234,6 +242,14 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### Yayımlanmamış
+
+Apple, App Store görsel/video kütüphanesini API'sine ekledi (spec 4.5.1); Heimdall artık onu da kapsıyor. Bir görseli ya da videoyu uygulamanın kütüphanesine bir kez yüklüyorsunuz, sonra ihtiyacınız olan yere yerleştiriyorsunuz: sürümün ürün sayfası, özel ürün sayfası, ürün sayfası testi ya da uygulama içi etkinlik. 24 yeni araç, yeni `marketing:asset-library` alt profilinde.
+
+`listing__upload_asset` bir görseli ya da videoyu tek adımda yüklüyor, isterseniz aynı çağrıda yerleştiriyor da. Apple'ın kendi araçları bir dosyaya yalnızca yer ayırabiliyor, dosyayı gönderemiyor.
+
+Bir dosyayı yerleştirmek müşterinin gördüğünü değiştirdiği için, ekran görüntüsüyle aynı özeni görüyor.
 
 ### [2.7.1] — 2026-10-16
 

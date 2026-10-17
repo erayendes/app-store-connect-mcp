@@ -306,3 +306,146 @@ describe('listing__upload_screenshot', () => {
     }
   });
 });
+
+/** The asset library's API: one library per app, reserve → PUT → commit, then place. */
+function fakeAssetHttp(operations = [{ method: 'PUT', url: 'https://upload.apple.com/x', offset: 0, length: 8 }]) {
+  const puts: Array<{ url: string; length: number }> = [];
+  const http = {
+    get: vi.fn(async (path: string) => {
+      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Test App', bundleId: 'com.example.test' } }] };
+      if (path === '/v1/apps/app-1/assetLibrary') return { data: { id: 'lib-1', type: 'appAssetLibraries' } };
+      if (path.includes('/appStoreVersionLocalizations')) return { data: [{ id: 'loc-tr', attributes: { locale: 'tr' } }] };
+      if (path.includes('/appStoreVersions')) return { data: [{ id: 'v-1', attributes: { versionString: '1.0' } }] };
+      return {};
+    }),
+    post: vi.fn(async (path: string, body: any) => {
+      if (path === '/v1/appAssetLibraryPlacements') return { data: { id: 'pl-1', attributes: { state: 'PENDING' } } };
+      return { data: { id: `${body.data.type}-1`, attributes: { uploadOperations: operations } } };
+    }),
+    patch: vi.fn(async (path: string) => ({ data: { id: path.split('/').pop(), attributes: { state: 'UPLOAD_COMPLETE' } } })),
+    uploadAssetPart: vi.fn(async (op: { url: string }, part: Buffer) => {
+      puts.push({ url: op.url, length: part.length });
+    }),
+  };
+  return { http, puts };
+}
+
+describe('listing__upload_asset', () => {
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const file = join(tmpdir(), 'heimdall-asset-test.png');
+  const base = { app: 'Test App', file_path: file, category: 'CREATIVE_ASSETS' };
+  const withFile = async (bytes: Buffer, body: () => Promise<void>) => {
+    const { writeFile, rm } = await import('node:fs/promises');
+    await writeFile(file, bytes);
+    try { await body(); } finally { await rm(file, { force: true }); }
+  };
+
+  it('is a write, offered beside the screenshot upload', () => {
+    const tool = SCREENSHOT_TOOLS.find((t) => t.name === 'listing__upload_asset')!;
+    expect(tool.annotations?.readOnlyHint).toBe(false);
+    expect((tool.inputSchema.properties as any).category.enum).toContain('CREATIVE_ASSETS');
+    expect((tool.inputSchema.properties as any).placement_type.enum).toContain('APP_SCREENSHOT');
+  });
+
+  it('reserves in the app’s library, uploads, and commits without a checksum', async () => {
+    await withFile(png, async () => {
+      const { http, puts } = fakeAssetHttp();
+      const result: any = await executeScreenshotTool('listing__upload_asset', base, { http } as unknown as ScreenshotContext);
+      const reserve = http.post.mock.calls[0];
+      expect(reserve[0]).toBe('/v1/appAssetLibraryImages');
+      expect(reserve[1].data.attributes).toEqual({ fileName: 'heimdall-asset-test.png', fileSize: 8, category: 'CREATIVE_ASSETS' });
+      expect(reserve[1].data.relationships.assetLibrary.data.id).toBe('lib-1');
+      expect(puts).toEqual([{ url: 'https://upload.apple.com/x', length: 8 }]);
+      const commit = http.patch.mock.calls[0];
+      expect(commit[0]).toBe('/v1/appAssetLibraryImages/appAssetLibraryImages-1');
+      expect(commit[1].data.attributes).toEqual({ uploaded: true });
+      // No target: nothing is placed, so nothing reaches a store page.
+      expect(http.post).toHaveBeenCalledTimes(1);
+      expect(result.state).toBe('UPLOAD_COMPLETE');
+    });
+  });
+
+  it('places the upload on a version locale when asked', async () => {
+    await withFile(png, async () => {
+      const { http } = fakeAssetHttp();
+      const result: any = await executeScreenshotTool(
+        'listing__upload_asset',
+        { ...base, placement_type: 'APP_SCREENSHOT', locale: 'tr' },
+        { http } as unknown as ScreenshotContext
+      );
+      const place = http.post.mock.calls[1];
+      expect(place[0]).toBe('/v1/appAssetLibraryPlacements');
+      expect(place[1].data.attributes.placementType).toBe('APP_SCREENSHOT');
+      expect(place[1].data.relationships.image.data.id).toBe('appAssetLibraryImages-1');
+      expect(place[1].data.relationships.appStoreVersionLocalization.data.id).toBe('loc-tr');
+      expect(result.placementId).toBe('pl-1');
+    });
+  });
+
+  it('treats an MP4 as a video', async () => {
+    const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom')]);
+    await withFile(mp4, async () => {
+      const { http } = fakeAssetHttp([{ method: 'PUT', url: 'https://upload.apple.com/v', offset: 0, length: 12 }]);
+      await executeScreenshotTool('listing__upload_asset', base, { http } as unknown as ScreenshotContext);
+      expect(http.post.mock.calls[0][0]).toBe('/v1/appAssetLibraryVideos');
+    });
+  });
+
+  it('refuses a file that is neither image nor video before any network call', async () => {
+    await withFile(Buffer.from('-----BEGIN PRIVATE KEY-----'), async () => {
+      const { http, puts } = fakeAssetHttp();
+      await expect(
+        executeScreenshotTool('listing__upload_asset', base, { http } as unknown as ScreenshotContext)
+      ).rejects.toThrow(/not a PNG, JPEG, MP4 or MOV/);
+      expect(http.get).not.toHaveBeenCalled();
+      expect(puts).toEqual([]);
+    });
+  });
+
+  it('wants exactly one target with a placement type, and a type with a target', async () => {
+    const { http } = fakeAssetHttp();
+    const ctx = { http } as unknown as ScreenshotContext;
+    await expect(
+      executeScreenshotTool('listing__upload_asset', { ...base, placement_type: 'APP_SCREENSHOT' }, ctx)
+    ).rejects.toThrow(/exactly one target/);
+    await expect(
+      executeScreenshotTool('listing__upload_asset', { ...base, placement_type: 'APP_SCREENSHOT', locale: 'tr', app_event_localization_id: 'e1' }, ctx)
+    ).rejects.toThrow(/exactly one target/);
+    await expect(executeScreenshotTool('listing__upload_asset', { ...base, locale: 'tr' }, ctx)).rejects.toThrow(/without placement_type/);
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
+  it('keeps the upload when only the placement fails, and says so', async () => {
+    await withFile(png, async () => {
+      const { http } = fakeAssetHttp();
+      http.post.mockImplementationOnce(async (_p: string, body: any) => ({
+        data: { id: `${body.data.type}-1`, attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.apple.com/x', offset: 0, length: 8 }] } },
+      }));
+      http.post.mockImplementationOnce(async () => { throw new Error('placement limit reached'); });
+      const result: any = await executeScreenshotTool(
+        'listing__upload_asset',
+        { ...base, placement_type: 'EVENT_CARD_ASSET', app_event_localization_id: 'ev-1' },
+        { http } as unknown as ScreenshotContext
+      );
+      expect(result.ok).toBe(true);
+      expect(result.placed).toBe(false);
+      expect(result.placementError).toMatch(/placement limit/);
+    });
+  });
+
+  it('dry-run resolves library and target and sends nothing', async () => {
+    await withFile(png, async () => {
+      const { http, puts } = fakeAssetHttp();
+      const result: any = await executeScreenshotTool(
+        'listing__upload_asset',
+        { ...base, placement_type: 'APP_SCREENSHOT', locale: 'tr' },
+        { http, dryRun: true } as unknown as ScreenshotContext
+      );
+      expect(result.dryRun).toBe(true);
+      expect(result.risk).toBe('public');
+      expect(result.wouldSend.map((w: any) => w.path)).toEqual(['/v1/appAssetLibraryImages', '/v1/appAssetLibraryPlacements']);
+      expect(http.post).not.toHaveBeenCalled();
+      expect(puts).toEqual([]);
+    });
+  });
+});

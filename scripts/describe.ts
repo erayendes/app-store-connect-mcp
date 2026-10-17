@@ -397,6 +397,52 @@ export const CURATED: Record<string, string> = {
   'app_screenshot_sets.create':
     'Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version ' +
     'localization, then upload screenshots into it.',
+
+  // --- asset library (spec 4.5.1) -----------------------------------------
+  // One library per app holds images and videos; a placement puts one of them
+  // on a store page. Apple's summaries name the resource and nothing else, so
+  // these say which half of that each call is. Kept clear of "screenshot" as a
+  // verb: uploading a screenshot to a version still belongs to the screenshot
+  // tools, and search matches on words.
+  'apps.asset_library.get':
+    "Get an app's asset library, the media library its images and videos live in. Start here for its ID.",
+  'app_asset_libraries.get': 'Read an asset library by ID.',
+  'app_asset_libraries.images.list':
+    "List the images in an app's asset library, with their review state.",
+  'app_asset_libraries.videos.list':
+    "List the videos in an app's asset library, with their review state.",
+  'app_asset_library_images.create':
+    'Reserve an image in the asset library: returns upload operations, moves no bytes. Commit by setting uploaded.',
+  'app_asset_library_images.get':
+    'Read one asset library image: file, size and review state.',
+  'app_asset_library_images.update':
+    'Rename an asset library image, archive it, or mark its upload complete.',
+  'app_asset_library_images.delete': 'Delete an image from the asset library.',
+  'app_asset_library_images.placements.list':
+    'List the placements of an asset library image: which localizations it is on.',
+  'app_asset_library_videos.create':
+    'Reserve one video in the asset library: returns upload operations, moves no bytes. Commit by setting uploaded.',
+  'app_asset_library_videos.get':
+    'Read one asset library video: file, size, preview frame and review state.',
+  'app_asset_library_videos.update':
+    'Rename an asset library video, archive it, set its preview frame, or mark its upload complete.',
+  'app_asset_library_videos.delete': 'Delete a video from the asset library.',
+  'app_asset_library_videos.placements.list':
+    'List the placements of an asset library video: which localizations it is on.',
+  'app_asset_library_placements.create':
+    'Put an asset library image or video into one localization: version, custom product variant, treatment or event.',
+  'app_asset_library_placements.get': 'Read one asset library placement and its state.',
+  'app_asset_library_placements.delete':
+    'Remove one asset library placement; the file stays in the library.',
+  'app_asset_library_placement_ordering_requests.create':
+    'Reorder the asset library placements of one group within a localization.',
+  'app_asset_library_ref_data.list':
+    'List which placement types, groups and limits the asset library allows.',
+  'app_asset_library_ref_data.get': 'Read one asset library reference entry by ID.',
+  'app_store_version_localizations.placements.list':
+    'List the asset library images and videos placed on a version localization.',
+  'app_event_localizations.placements.list':
+    'List the asset library images and videos placed on an in-app event localization.',
 };
 
 interface DescribeInput {

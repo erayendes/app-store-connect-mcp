@@ -130,9 +130,11 @@ export const RULES: RiskRule[] = [
   // --- customer-visible store content ------------------------------------
   {
     pattern:
-      /localization|screenshot|preview|^app_infos?\.|^apps\.update|^customer_review_response|^app_events?|^app_custom_product_page|^nominations\.|search_keywords|^game_center_detail_players\.|^game_center_score_moderations\./,
+      /localization|screenshot|preview|^app_infos?\.|^apps\.update|^customer_review_response|^app_events?|^app_custom_product_page|^nominations\.|search_keywords|^game_center_detail_players\.|^game_center_score_moderations\.|^app_asset_library_placement/,
     level: 'public',
     // Blocking a Game Center player or score hides them from other players.
+    // An asset library placement puts an image or video on a store page; the
+    // library upload itself shows nowhere until it is placed, so it stays low.
     why: 'changes what customers see on the App Store',
   },
 
