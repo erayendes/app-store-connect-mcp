@@ -8,6 +8,18 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.8.0-beta.2] — 2026-10-19
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+**Make a subscription offer in every country at once.** `pricing__make_offer` makes a win-back or promotional offer from one country and one price, or as a free trial. Apple works out the price in every other country the subscription is sold in. The whole offer goes to Apple in one request, so it is made complete or not at all. If any country is missing a price, nothing is sent. Apple doesn't let you change an offer's countries or prices afterwards, so try it with `--dry-run` first to see every country's price.
+
+It makes introductory offers too. Apple takes those one country at a time, so Heimdall checks every country first and only then starts writing. If something fails partway, it tells you which countries are done, and running the same call again carries on from there. `undo: true` takes the offer back from every country.
+
+Creating a win-back offer with the raw tool works now. It used to refuse a request in the exact shape Apple's own documentation shows, before sending it. With the new tool, Heimdall has 928 tools.
+
 ### [2.8.0-beta.1] — 2026-10-17
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -21,10 +33,6 @@ This added a set of 24 new tools in the `marketing:asset-library` sub-profile, w
 You can now tell the AI "upload this image or video to the library", and it can place it on a page in the same step if you want.
 
 Fewer "are you sure?" windows. Changing the name, description or image of a subscription or in-app purchase used to ask as if you were changing its price, once for every language. It doesn't ask anymore. Deleting one still asks, and so does changing a price.
-
-**Make a subscription offer in every country at once.** `pricing__make_offer` makes a win-back or promotional offer from one country and one price, or as a free trial. Apple works out the price in every other country the subscription is sold in. The whole offer goes to Apple in one request, so it is made complete or not at all. If any country is missing a price, nothing is sent. Apple doesn't let you change an offer's countries or prices afterwards, so try it with `--dry-run` first to see every country's price.
-
-It makes introductory offers too. Apple takes those one country at a time, so Heimdall checks every country first and only then starts writing. If something fails partway, it tells you which countries are done, and running the same call again carries on from there. `undo: true` takes the offer back from every country.
 
 ### [2.7.1] — 2026-10-16
 
@@ -253,6 +261,18 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
+### [2.8.0-beta.2] — 2026-10-19
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+**Abonelik teklifini tüm ülkelerde bir kerede kurun.** `pricing__make_offer`, bir ülke ve bir fiyattan (ya da ücretsiz deneme olarak) win-back veya promosyon teklifi kuruyor; aboneliğin satıldığı diğer bütün ülkelerin fiyatını Apple hesaplıyor. Teklifin tamamı Apple'a tek istekte gidiyor: ya eksiksiz kuruluyor ya hiç kurulmuyor. Bir ülkenin bile fiyatı eksikse hiçbir şey gönderilmiyor. Apple bir teklifin ülkelerini ve fiyatlarını sonradan değiştirmeye izin vermediği için önce `--dry-run` ile deneyin; her ülkenin fiyatını görürsünüz.
+
+Tanıtım tekliflerini de kuruyor. Apple bunları ülke ülke kabul ettiği için Heimdall önce her ülkeyi kontrol ediyor, sonra yazmaya başlıyor. Yarıda bir hata çıkarsa hangi ülkelerin bittiğini söylüyor; aynı çağrıyı tekrar çalıştırdığınızda kaldığı yerden devam ediyor. `undo: true` teklifi bütün ülkelerden geri alıyor.
+
+Ham araçla win-back teklifi kurmak artık çalışıyor. Önceden, Apple'ın kendi belgesindeki biçimde bir isteği göndermeden reddediyordu. Yeni araçla Heimdall 928 araca ulaştı.
+
 ### [2.8.0-beta.1] — 2026-10-17
 
 Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
@@ -266,10 +286,6 @@ Bu `marketing:asset-library` alt profilinde 24 yeni araç seti ekledi. Böylece 
 Artık yapay zekâya “şu görseli ya da videoyu kütüphaneye yükle” diyebilirsiniz; isterseniz aynı anda bir sayfaya da yerleştiriyor.
 
 Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
-
-**Abonelik teklifini tüm ülkelerde bir kerede kurun.** `pricing__make_offer`, bir ülke ve bir fiyattan (ya da ücretsiz deneme olarak) win-back veya promosyon teklifi kuruyor; aboneliğin satıldığı diğer bütün ülkelerin fiyatını Apple hesaplıyor. Teklifin tamamı Apple'a tek istekte gidiyor: ya eksiksiz kuruluyor ya hiç kurulmuyor. Bir ülkenin bile fiyatı eksikse hiçbir şey gönderilmiyor. Apple bir teklifin ülkelerini ve fiyatlarını sonradan değiştirmeye izin vermediği için önce `--dry-run` ile deneyin; her ülkenin fiyatını görürsünüz.
-
-Tanıtım tekliflerini de kuruyor. Apple bunları ülke ülke kabul ettiği için Heimdall önce her ülkeyi kontrol ediyor, sonra yazmaya başlıyor. Yarıda bir hata çıkarsa hangi ülkelerin bittiğini söylüyor; aynı çağrıyı tekrar çalıştırdığınızda kaldığı yerden devam ediyor. `undo: true` teklifi bütün ülkelerden geri alıyor.
 
 ### [2.7.1] — 2026-10-16
 

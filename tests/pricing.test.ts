@@ -1138,14 +1138,7 @@ describe('pricing__make_offer', () => {
     expect(included.map((p: any) => p.relationships.territory.data.id)).toEqual(['DEU', 'TUR', 'USA']);
     expect(included.map((p: any) => p.relationships.subscriptionPricePoint.data.id)).toEqual(['pp-deu', 'pp-tur', 'pp-usa']);
     expect(data.relationships.prices.data.map((r: any) => r.id)).toEqual(included.map((p: any) => p.id));
-    // Apple's spec gives WinBackOfferPriceInlineCreate no relationships, yet its own
-    // "Creating and configuring win-back offers" example sends subscriptionPricePoint
-    // on every price — without one a price has no price. That gap is the only allowed miss.
-    expect(
-      validateBody(schemaFor('win_back_offers.create'), posts[0].body).filter(
-        (e) => !/^body\.included\[\d+\]\.relationships: unknown field/.test(e)
-      )
-    ).toEqual([]);
+    expect(validateBody(schemaFor('win_back_offers.create'), posts[0].body)).toEqual([]);
     expect(result.ok).toBe(true);
     expect(result.created.id).toBe('offer-1');
   });
