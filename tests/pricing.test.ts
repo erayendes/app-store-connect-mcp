@@ -1268,6 +1268,17 @@ describe('pricing__make_offer — introductory', () => {
     expect(result).toMatchObject({ ok: true, created: 2, alreadyThere: 1 });
   });
 
+  it('treats Apple\'s "start now" date stamp as the same offer when no start date was asked for', async () => {
+    // Apple answers a create without startDate by stamping the day it was made.
+    const stamped = { ...same('DEU', 'pp-deu'), attributes: { ...same('DEU', 'x').attributes, startDate: '2020-01-01' } };
+    const { http, posts, deletes } = offerHttp({ intro: [stamped] });
+    const result: any = await run(intro, http);
+    expect(result).toMatchObject({ ok: true, created: 2, alreadyThere: 1 });
+    expect(posts).toHaveLength(2);
+    await run({ ...intro, undo: true }, http);
+    expect(deletes).toEqual(['/v1/subscriptionIntroductoryOffers/io-DEU']);
+  });
+
   it('refuses without writing when a different offer already runs in a country', async () => {
     const other = { ...same('USA', 'pp-usa-other') };
     const { http, posts } = offerHttp({ intro: [other] });

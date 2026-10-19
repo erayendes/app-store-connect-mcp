@@ -1757,11 +1757,14 @@ async function introductoryOffers(args: Record<string, unknown>, ctx: PricingCon
     if (!wanted.has(code)) continue;
     const a = o.attributes ?? {};
     const point = o.relationships?.subscriptionPricePoint?.data?.id ?? null;
+    // Apple stamps "start now" as the day it was created, so with no start date
+    // asked for, any start up to today is the same offer.
+    const sameStart = startDate === null ? !a.startDate || a.startDate <= today : a.startDate === startDate;
     const identical =
       a.duration === duration &&
       a.offerMode === mode &&
       a.numberOfPeriods === args.periods &&
-      (a.startDate ?? null) === startDate &&
+      sameStart &&
       (a.endDate ?? null) === endDate &&
       point === (free ? null : points.get(code)!.id);
     if (identical) same.set(code, String(o.id));
