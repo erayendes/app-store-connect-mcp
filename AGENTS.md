@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 927 tools across 13 profiles: 888 generated from Apple's 1011 operations (the 123 deprecated ones stay unloaded unless asked for) and 39 hand-written.
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 928 tools across 13 profiles: 888 generated from Apple's 1011 operations (the 123 deprecated ones stay unloaded unless asked for) and 40 hand-written.
 
 ## If a user asks you to install it
 
@@ -16,7 +16,7 @@ The install is two steps and they are not both yours. **You register. The user h
 
 Ask what the user works on. If they have not said, `analytics`, `marketing` and `app-info` are a sensible default. Each profile is a small scoped server; the table is in [PROFILES_en.md](docs/PROFILES_en.md).
 
-A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 55 tools where `monetization` is 211. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `ASC-Monetization`.
+A big profile takes a colon and a list of its sub-profiles — `monetization:subscription-pricing,subscription-offers` is 56 tools where `monetization` is 212. Worth suggesting for `monetization`, `game-center`, `distribution`, `marketing` and `access`. The server is still called `ASC-Monetization`.
 
 **Say what you are about to do and wait for a yes**, then run:
 
