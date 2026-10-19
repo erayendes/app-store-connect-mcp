@@ -94,6 +94,7 @@ describe('write-gate annotations (offline)', () => {
       'pricing__set_subscription_price',
       'pricing__equalize_price',
       'pricing__set_iap_price',
+      'pricing__make_offer',
       'listing__upload_screenshot',
       'listing__upload_asset',
       'testflight__assign_build_to_groups',

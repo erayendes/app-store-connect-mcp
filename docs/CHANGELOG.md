@@ -22,6 +22,8 @@ You can now tell the AI "upload this image or video to the library", and it can 
 
 Fewer "are you sure?" windows. Changing the name, description or image of a subscription or in-app purchase used to ask as if you were changing its price, once for every language. It doesn't ask anymore. Deleting one still asks, and so does changing a price.
 
+**Make a subscription offer in every country at once.** `pricing__make_offer` makes a win-back or promotional offer from one country and one price, or as a free trial. Apple works out the price in every other country the subscription is sold in. The whole offer goes to Apple in one request, so it is made complete or not at all. If any country is missing a price, nothing is sent. Apple doesn't let you change an offer's countries or prices afterwards, so try it with `--dry-run` first to see every country's price.
+
 ### [2.7.1] — 2026-10-16
 
 Unticking an app in setup now removes Heimdall from it. Before, it was left as it was, without a word. The list of changes shows the removal before you press Apply ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
@@ -262,6 +264,8 @@ Bu `marketing:asset-library` alt profilinde 24 yeni araç seti ekledi. Böylece 
 Artık yapay zekâya “şu görseli ya da videoyu kütüphaneye yükle” diyebilirsiniz; isterseniz aynı anda bir sayfaya da yerleştiriyor.
 
 Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
+
+**Abonelik teklifini tüm ülkelerde bir kerede kurun.** `pricing__make_offer`, bir ülke ve bir fiyattan (ya da ücretsiz deneme olarak) win-back veya promosyon teklifi kuruyor; aboneliğin satıldığı diğer bütün ülkelerin fiyatını Apple hesaplıyor. Teklifin tamamı Apple'a tek istekte gidiyor: ya eksiksiz kuruluyor ya hiç kurulmuyor. Bir ülkenin bile fiyatı eksikse hiçbir şey gönderilmiyor. Apple bir teklifin ülkelerini ve fiyatlarını sonradan değiştirmeye izin vermediği için önce `--dry-run` ile deneyin; her ülkenin fiyatını görürsünüz.
 
 ### [2.7.1] — 2026-10-16
 

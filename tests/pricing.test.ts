@@ -1019,3 +1019,173 @@ describe('pricing__set_iap_price', () => {
     expect(preview).toMatch(/base territory/);
   });
 });
+
+/**
+ * Offers. Apple takes the offer and every country's price in one request and
+ * will not let either be changed afterwards, so the tests are mostly about what
+ * is refused before anything is sent.
+ */
+function offerHttp(opts: { sold?: string[]; equalized?: string[]; equalizationsHaveMore?: boolean } = {}) {
+  const sold = opts.sold ?? ['TUR', 'USA', 'DEU'];
+  const currency: Record<string, string> = { TUR: 'TRY', USA: 'USD', DEU: 'EUR', FRA: 'EUR' };
+  const prices: Record<string, string> = { TUR: '29.99', USA: '2.99', DEU: '2.99', FRA: '2.99' };
+  const posts: Array<{ path: string; body: any }> = [];
+  const http = {
+    get: vi.fn(async (path: string) => {
+      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
+      if (path.includes('subscriptionGroups')) {
+        return {
+          data: [{ id: 'g1', attributes: {} }],
+          included: [{ id: 's1', type: 'subscriptions', attributes: { name: 'Yearly', productId: 'yearly.1' } }],
+        };
+      }
+      if (path === '/v1/subscriptions/s1/subscriptionAvailability') return { data: { id: 'av-1' } };
+      if (path === '/v1/subscriptionAvailabilities/av-1/availableTerritories') {
+        return { data: sold.map((id) => ({ type: 'territories', id, attributes: { currency: currency[id] } })) };
+      }
+      if (path.includes('/equalizations')) {
+        // Apple's list covers every country, including ones this subscription is not sold in.
+        return {
+          data: (opts.equalized ?? ['USA', 'DEU', 'FRA']).map((t) => eqPoint(t, `pp-${t.toLowerCase()}`, prices[t])),
+          ...(opts.equalizationsHaveMore ? { links: { next: 'https://api.appstoreconnect.apple.com/next' } } : {}),
+        };
+      }
+      if (path === '/v1/subscriptions/s1/pricePoints') {
+        return { data: [{ id: 'pp-tur', attributes: { customerPrice: '29.99' } }, { id: 'pp-tur-hi', attributes: { customerPrice: '39.99' } }] };
+      }
+      return { data: [] };
+    }),
+    post: vi.fn(async (path: string, body: any) => {
+      posts.push({ path, body });
+      return { data: { id: 'offer-1' } };
+    }),
+    collect: vi.fn(async function (path: string, query?: any) {
+      const res: any = await http.get(path, query);
+      return { items: res.data ?? [], pagesFetched: 1, hasMore: Boolean(res.links?.next) };
+    }),
+  };
+  return { http, posts };
+}
+
+describe('pricing__make_offer', () => {
+  const run = (args: Record<string, unknown>, http: unknown, dryRun = false) =>
+    executePricingTool('pricing__make_offer', args, { http, dryRun } as unknown as PricingContext);
+  const schemaFor = (opName: string) => BODY_SCHEMAS[OPERATIONS.find((o) => o.name === opName)!.bodyRef!];
+  const winBack = {
+    app: 'Ask Quran',
+    subscription: 'yearly.1',
+    offer_type: 'win_back',
+    name: 'Winback 1y',
+    offer_id: 'winback_1y',
+    offer_mode: 'PAY_UP_FRONT',
+    duration: 'ONE_YEAR',
+    periods: 1,
+    territory: 'TUR',
+    price: '29.99',
+    eligibility_paid_months: 1,
+    eligibility_last_subscribed_min_months: 1,
+    eligibility_last_subscribed_max_months: 24,
+    start_date: '2026-11-01',
+  };
+  const promoFree = {
+    app: 'Ask Quran',
+    subscription: 'yearly.1',
+    offer_type: 'promotional',
+    name: 'Retention week',
+    offer_id: 'retention_1w',
+    offer_mode: 'FREE_TRIAL',
+    duration: 'ONE_WEEK',
+    periods: 1,
+  };
+
+  it('makes a win-back offer in ONE request, priced in every country the subscription is sold in', async () => {
+    const { http, posts } = offerHttp();
+    const result: any = await run(winBack, http);
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0].path).toBe('/v1/winBackOffers');
+    const { data, included } = posts[0].body;
+    expect(data.attributes.customerEligibilityTimeSinceLastSubscribedInMonths).toEqual({ minimum: 1, maximum: 24 });
+    expect(data.attributes.priority).toBe('NORMAL');
+    // FRA came back from the equalizations but the subscription is not sold there.
+    expect(included.map((p: any) => p.relationships.territory.data.id)).toEqual(['DEU', 'TUR', 'USA']);
+    expect(included.map((p: any) => p.relationships.subscriptionPricePoint.data.id)).toEqual(['pp-deu', 'pp-tur', 'pp-usa']);
+    expect(data.relationships.prices.data.map((r: any) => r.id)).toEqual(included.map((p: any) => p.id));
+    // Apple's spec gives WinBackOfferPriceInlineCreate no relationships, yet its own
+    // "Creating and configuring win-back offers" example sends subscriptionPricePoint
+    // on every price — without one a price has no price. That gap is the only allowed miss.
+    expect(
+      validateBody(schemaFor('win_back_offers.create'), posts[0].body).filter(
+        (e) => !/^body\.included\[\d+\]\.relationships: unknown field/.test(e)
+      )
+    ).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(result.created.id).toBe('offer-1');
+  });
+
+  it('makes a free promotional offer with a country on every row and no price point', async () => {
+    const { http, posts } = offerHttp();
+    await run(promoFree, http);
+
+    expect(posts[0].path).toBe('/v1/subscriptionPromotionalOffers');
+    expect(posts[0].body.data.attributes).toMatchObject({ offerCode: 'retention_1w', numberOfPeriods: 1, offerMode: 'FREE_TRIAL' });
+    expect(posts[0].body.included).toHaveLength(3);
+    expect(posts[0].body.included.every((p: any) => !p.relationships.subscriptionPricePoint)).toBe(true);
+    expect(validateBody(schemaFor('subscription_promotional_offers.create'), posts[0].body)).toEqual([]);
+    // Free needs no price lookup at all.
+    expect(http.get.mock.calls.some(([path]) => String(path).includes('equalizations'))).toBe(false);
+  });
+
+  it('refuses without sending when a country the subscription is sold in has no equalized price', async () => {
+    const { http, posts } = offerHttp({ equalized: ['USA'] });
+    await expect(run(winBack, http)).rejects.toThrow(/no equalized price for 1 of the 3 countries.*\(DEU\)/);
+    expect(posts).toEqual([]);
+  });
+
+  it('refuses without sending when the equalizations do not fit in the pages read', async () => {
+    const { http, posts } = offerHttp({ equalizationsHaveMore: true });
+    await expect(run(winBack, http)).rejects.toThrow(/nothing was sent/);
+    expect(posts).toEqual([]);
+  });
+
+  it('dry-run returns the full table with currencies and sends nothing', async () => {
+    const { http, posts } = offerHttp();
+    const result: any = await run(winBack, http, true);
+    expect(result.dryRun).toBe(true);
+    expect(result.risk).toBe('revenue');
+    expect(result.prices).toEqual(['DEU: 2.99 EUR', 'TUR: 29.99 TRY', 'USA: 2.99 USD']);
+    expect(result.resolved.countries).toBe(3);
+    expect(result.wouldSend.includedCount).toBe(3);
+    expect(posts).toEqual([]);
+  });
+
+  it('refuses inputs that cannot become a valid offer before reading anything', async () => {
+    const { http } = offerHttp();
+    await expect(run({ ...promoFree, territory: 'TUR', price: '29.99' }, http)).rejects.toThrow(/FREE_TRIAL offer has no price/);
+    await expect(run({ ...winBack, territory: 'TR' }, http)).rejects.toThrow(/alpha-3/);
+    await expect(run({ ...winBack, eligibility_paid_months: undefined }, http)).rejects.toThrow(/eligibility_paid_months/);
+    await expect(run({ ...winBack, start_date: undefined }, http)).rejects.toThrow(/start_date/);
+    await expect(run({ ...winBack, offer_type: 'introductory' }, http)).rejects.toThrow(/win_back, promotional/);
+    await expect(run({ ...winBack, periods: 0 }, http)).rejects.toThrow(/periods/);
+    expect(http.get).not.toHaveBeenCalled();
+  });
+
+  it('refuses an anchor in a country the subscription is not sold in', async () => {
+    const { http, posts } = offerHttp({ sold: ['USA', 'DEU'] });
+    await expect(run(winBack, http)).rejects.toThrow(/not sold in TUR/);
+    expect(posts).toEqual([]);
+  });
+
+  it('refuses a price Apple does not offer, and names the nearest tiers', async () => {
+    const { http } = offerHttp();
+    await expect(run({ ...winBack, price: '31' }, http)).rejects.toThrow(/nearest available: 29.99, 39.99/);
+  });
+
+  it('previews the offer as permanent and derived, not copied', () => {
+    const preview = buildPricingPreview(winBack, 'pricing__make_offer');
+    expect(preview).toMatch(/REVENUE-level write/);
+    expect(preview).toMatch(/29\.99 in TUR/);
+    expect(preview).toMatch(/cannot|does not allow/);
+    expect(buildPricingPreview(promoFree, 'pricing__make_offer')).toMatch(/free in every country/);
+  });
+});
