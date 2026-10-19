@@ -23,7 +23,7 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Siz b
 | aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | IAP → fiyat noktaları → elle kurulan yepyeni bir fiyat takvimi | `pricing__set_iap_price` — tek ülkenin fiyatı; diğer elle girilmiş ve planlanmış fiyatlar aynen korunur | `monetization:iap-pricing` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
-| win-back ya da promosyon teklifini ülke ülke fiyatlamak | `pricing__make_offer` — tek çapa fiyat (ya da ücretsiz deneme), teklif aboneliğin satıldığı her ülkede bir kerede kurulur ya da hiç kurulmaz | `monetization:subscription-offers` |
+| win-back, promosyon ya da tanıtım teklifini ülke ülke fiyatlamak | `pricing__make_offer` — tek çapa fiyat (ya da ücretsiz deneme), teklif aboneliğin satıldığı her ülkede kurulur; tanıtım teklifi ülke ülke yazılır ve kaldığı yerden devam eder | `monetization:subscription-offers` |
 | submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` | `distribution:submission` |
 | build'i bul, beta gruplarını çözümle, eksik bağlantıları ekle | `testflight__assign_build_to_groups` | `access:beta-groups` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |

@@ -24,6 +24,8 @@ Fewer "are you sure?" windows. Changing the name, description or image of a subs
 
 **Make a subscription offer in every country at once.** `pricing__make_offer` makes a win-back or promotional offer from one country and one price, or as a free trial. Apple works out the price in every other country the subscription is sold in. The whole offer goes to Apple in one request, so it is made complete or not at all. If any country is missing a price, nothing is sent. Apple doesn't let you change an offer's countries or prices afterwards, so try it with `--dry-run` first to see every country's price.
 
+It makes introductory offers too. Apple takes those one country at a time, so Heimdall checks every country first and only then starts writing. If something fails partway, it tells you which countries are done, and running the same call again carries on from there. `undo: true` takes the offer back from every country.
+
 ### [2.7.1] — 2026-10-16
 
 Unticking an app in setup now removes Heimdall from it. Before, it was left as it was, without a word. The list of changes shows the removal before you press Apply ([#165](https://github.com/erayendes/app-store-connect-mcp/pull/165)).
@@ -266,6 +268,8 @@ Artık yapay zekâya “şu görseli ya da videoyu kütüphaneye yükle” diyeb
 Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
 
 **Abonelik teklifini tüm ülkelerde bir kerede kurun.** `pricing__make_offer`, bir ülke ve bir fiyattan (ya da ücretsiz deneme olarak) win-back veya promosyon teklifi kuruyor; aboneliğin satıldığı diğer bütün ülkelerin fiyatını Apple hesaplıyor. Teklifin tamamı Apple'a tek istekte gidiyor: ya eksiksiz kuruluyor ya hiç kurulmuyor. Bir ülkenin bile fiyatı eksikse hiçbir şey gönderilmiyor. Apple bir teklifin ülkelerini ve fiyatlarını sonradan değiştirmeye izin vermediği için önce `--dry-run` ile deneyin; her ülkenin fiyatını görürsünüz.
+
+Tanıtım tekliflerini de kuruyor. Apple bunları ülke ülke kabul ettiği için Heimdall önce her ülkeyi kontrol ediyor, sonra yazmaya başlıyor. Yarıda bir hata çıkarsa hangi ülkelerin bittiğini söylüyor; aynı çağrıyı tekrar çalıştırdığınızda kaldığı yerden devam ediyor. `undo: true` teklifi bütün ülkelerden geri alıyor.
 
 ### [2.7.1] — 2026-10-16
 
