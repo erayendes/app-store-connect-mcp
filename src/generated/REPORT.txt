@@ -6,7 +6,7 @@ Tools:          1011
   mutating:     477
   deprecated:   123
 Risk levels:    low:181 destructive:125 public:84 revenue:52 infrastructure:16 release:13 access:6
-Body schemas:   342 (310 KB resolved, avg 929 chars)
+Body schemas:   342 (311 KB resolved, avg 931 chars)
 
 By domain:
   game_center          277
