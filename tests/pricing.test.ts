@@ -1025,11 +1025,19 @@ describe('pricing__set_iap_price', () => {
  * will not let either be changed afterwards, so the tests are mostly about what
  * is refused before anything is sent.
  */
-function offerHttp(opts: { sold?: string[]; equalized?: string[]; equalizationsHaveMore?: boolean } = {}) {
+function offerHttp(opts: {
+  sold?: string[];
+  equalized?: string[];
+  equalizationsHaveMore?: boolean;
+  /** Introductory offers already on the subscription. */
+  intro?: Array<{ id: string; territory: string; point: string | null; attributes: Record<string, unknown> }>;
+  failAt?: string;
+} = {}) {
   const sold = opts.sold ?? ['TUR', 'USA', 'DEU'];
   const currency: Record<string, string> = { TUR: 'TRY', USA: 'USD', DEU: 'EUR', FRA: 'EUR' };
   const prices: Record<string, string> = { TUR: '29.99', USA: '2.99', DEU: '2.99', FRA: '2.99' };
   const posts: Array<{ path: string; body: any }> = [];
+  const deletes: string[] = [];
   const http = {
     get: vi.fn(async (path: string) => {
       if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
@@ -1053,18 +1061,37 @@ function offerHttp(opts: { sold?: string[]; equalized?: string[]; equalizationsH
       if (path === '/v1/subscriptions/s1/pricePoints') {
         return { data: [{ id: 'pp-tur', attributes: { customerPrice: '29.99' } }, { id: 'pp-tur-hi', attributes: { customerPrice: '39.99' } }] };
       }
+      if (path === '/v1/subscriptions/s1/introductoryOffers') {
+        return {
+          data: (opts.intro ?? []).map((o) => ({
+            type: 'subscriptionIntroductoryOffers',
+            id: o.id,
+            attributes: o.attributes,
+            relationships: {
+              territory: { data: { type: 'territories', id: o.territory } },
+              subscriptionPricePoint: { data: o.point ? { type: 'subscriptionPricePoints', id: o.point } : null },
+            },
+          })),
+        };
+      }
       return { data: [] };
     }),
     post: vi.fn(async (path: string, body: any) => {
+      if (opts.failAt && body?.data?.relationships?.territory?.data?.id === opts.failAt) throw new Error('Apple said no');
       posts.push({ path, body });
       return { data: { id: 'offer-1' } };
+    }),
+    delete: vi.fn(async (path: string) => {
+      if (opts.failAt && path.endsWith(opts.failAt)) throw new Error('Apple said no');
+      deletes.push(path);
+      return undefined;
     }),
     collect: vi.fn(async function (path: string, query?: any) {
       const res: any = await http.get(path, query);
       return { items: res.data ?? [], pagesFetched: 1, hasMore: Boolean(res.links?.next) };
     }),
   };
-  return { http, posts };
+  return { http, posts, deletes };
 }
 
 describe('pricing__make_offer', () => {
@@ -1165,7 +1192,7 @@ describe('pricing__make_offer', () => {
     await expect(run({ ...winBack, territory: 'TR' }, http)).rejects.toThrow(/alpha-3/);
     await expect(run({ ...winBack, eligibility_paid_months: undefined }, http)).rejects.toThrow(/eligibility_paid_months/);
     await expect(run({ ...winBack, start_date: undefined }, http)).rejects.toThrow(/start_date/);
-    await expect(run({ ...winBack, offer_type: 'introductory' }, http)).rejects.toThrow(/win_back, promotional/);
+    await expect(run({ ...winBack, offer_type: 'trial' }, http)).rejects.toThrow(/win_back, promotional, introductory/);
     await expect(run({ ...winBack, periods: 0 }, http)).rejects.toThrow(/periods/);
     expect(http.get).not.toHaveBeenCalled();
   });
@@ -1187,5 +1214,125 @@ describe('pricing__make_offer', () => {
     expect(preview).toMatch(/29\.99 in TUR/);
     expect(preview).toMatch(/cannot|does not allow/);
     expect(buildPricingPreview(promoFree, 'pricing__make_offer')).toMatch(/free in every country/);
+  });
+});
+
+/**
+ * Introductory offers: Apple takes one country per request, so the tests are
+ * about what is checked before the first write, where it stops, and that the
+ * same call resumes instead of duplicating.
+ */
+describe('pricing__make_offer — introductory', () => {
+  const run = (args: Record<string, unknown>, http: unknown, dryRun = false) =>
+    executePricingTool('pricing__make_offer', args, { http, dryRun } as unknown as PricingContext);
+  const schemaFor = (opName: string) => BODY_SCHEMAS[OPERATIONS.find((o) => o.name === opName)!.bodyRef!];
+  const intro = {
+    app: 'Ask Quran',
+    subscription: 'yearly.1',
+    offer_type: 'introductory',
+    offer_mode: 'PAY_UP_FRONT',
+    duration: 'ONE_MONTH',
+    periods: 1,
+    territory: 'TUR',
+    price: '29.99',
+  };
+  const same = (territory: string, point: string) => ({
+    id: `io-${territory}`,
+    territory,
+    point,
+    attributes: { duration: 'ONE_MONTH', offerMode: 'PAY_UP_FRONT', numberOfPeriods: 1, startDate: null, endDate: null },
+  });
+
+  it('writes one offer per country the subscription is sold in, each with its own price point', async () => {
+    const { http, posts } = offerHttp();
+    const result: any = await run(intro, http);
+    expect(posts.map((p) => p.path)).toEqual(Array(3).fill('/v1/subscriptionIntroductoryOffers'));
+    expect(posts.map((p) => p.body.data.relationships.territory.data.id)).toEqual(['DEU', 'TUR', 'USA']);
+    expect(posts.map((p) => p.body.data.relationships.subscriptionPricePoint.data.id)).toEqual(['pp-deu', 'pp-tur', 'pp-usa']);
+    for (const p of posts) expect(validateBody(schemaFor('subscription_introductory_offers.create'), p.body)).toEqual([]);
+    expect(result).toMatchObject({ ok: true, created: 3, alreadyThere: 0 });
+    expect(result.note).toMatch(/only the end date/);
+  });
+
+  it('needs no name or offer id, and a free trial carries no price point', async () => {
+    const { http, posts } = offerHttp();
+    await run({ ...intro, offer_mode: 'FREE_TRIAL', duration: 'ONE_WEEK', territory: undefined, price: undefined }, http);
+    expect(posts).toHaveLength(3);
+    expect(posts.every((p) => !p.body.data.relationships.subscriptionPricePoint)).toBe(true);
+  });
+
+  it('resumes: a country that already has the identical offer is skipped, not duplicated', async () => {
+    const { http, posts } = offerHttp({ intro: [same('DEU', 'pp-deu')] });
+    const result: any = await run(intro, http);
+    expect(posts.map((p) => p.body.data.relationships.territory.data.id)).toEqual(['TUR', 'USA']);
+    expect(result).toMatchObject({ ok: true, created: 2, alreadyThere: 1 });
+  });
+
+  it('treats Apple\'s "start now" date stamp as the same offer when no start date was asked for', async () => {
+    // Apple answers a create without startDate by stamping the day it was made.
+    const stamped = { ...same('DEU', 'pp-deu'), attributes: { ...same('DEU', 'x').attributes, startDate: '2020-01-01' } };
+    const { http, posts, deletes } = offerHttp({ intro: [stamped] });
+    const result: any = await run(intro, http);
+    expect(result).toMatchObject({ ok: true, created: 2, alreadyThere: 1 });
+    expect(posts).toHaveLength(2);
+    await run({ ...intro, undo: true }, http);
+    expect(deletes).toEqual(['/v1/subscriptionIntroductoryOffers/io-DEU']);
+  });
+
+  it('refuses without writing when a different offer already runs in a country', async () => {
+    const other = { ...same('USA', 'pp-usa-other') };
+    const { http, posts } = offerHttp({ intro: [other] });
+    await expect(run(intro, http)).rejects.toThrow(/1 of the 3 countries already have a different introductory offer.*\(USA\)/);
+    expect(posts).toEqual([]);
+  });
+
+  it('ignores an offer that ended before the new one starts', async () => {
+    const ended = { ...same('USA', 'pp-usa-other'), attributes: { ...same('USA', 'x').attributes, endDate: '2020-01-01' } };
+    const { http, posts } = offerHttp({ intro: [ended] });
+    await run(intro, http);
+    expect(posts).toHaveLength(3);
+  });
+
+  it('stops at the first failure and names what landed and what did not', async () => {
+    const { http, posts } = offerHttp({ failAt: 'TUR' });
+    const result: any = await run(intro, http);
+    expect(result).toMatchObject({ ok: false, partial: true, created: ['DEU'], failedAt: 'TUR', remaining: 2 });
+    expect(result.note).toMatch(/same call again/);
+    expect(posts).toHaveLength(1);
+  });
+
+  it('dry-run shows every country, marks the ones already there, and sends nothing', async () => {
+    const { http, posts } = offerHttp({ intro: [same('DEU', 'pp-deu')] });
+    const result: any = await run(intro, http, true);
+    expect(result.prices).toEqual(['DEU: 2.99 EUR (already there)', 'TUR: 29.99 TRY', 'USA: 2.99 USD']);
+    expect(result.resolved).toMatchObject({ countries: 3, alreadyThere: 1, writes: 2 });
+    expect(result.wouldSend.body.data.relationships.territory.data.id).toBe('TUR');
+    expect(posts).toEqual([]);
+  });
+
+  it('undo deletes exactly the identical offers and nothing else', async () => {
+    const other = { ...same('USA', 'pp-usa-other'), id: 'io-other' };
+    const { http, posts, deletes } = offerHttp({ intro: [same('DEU', 'pp-deu'), same('TUR', 'pp-tur'), other] });
+    const result: any = await run({ ...intro, undo: true }, http);
+    expect(deletes).toEqual(['/v1/subscriptionIntroductoryOffers/io-DEU', '/v1/subscriptionIntroductoryOffers/io-TUR']);
+    expect(result).toMatchObject({ ok: true, deleted: 2 });
+    expect(posts).toEqual([]);
+  });
+
+  it('undo under dry-run lists what it would delete', async () => {
+    const { http, deletes } = offerHttp({ intro: [same('TUR', 'pp-tur')] });
+    const result: any = await run({ ...intro, undo: true }, http, true);
+    expect(result.wouldDelete).toEqual(['TUR: 29.99 TRY']);
+    expect(deletes).toEqual([]);
+  });
+
+  it('keeps undo to introductory offers', async () => {
+    const { http } = offerHttp();
+    await expect(run({ ...intro, offer_type: 'promotional', name: 'x', offer_id: 'y', undo: true }, http)).rejects.toThrow(/only for introductory/);
+  });
+
+  it('previews the per-country write and the undo as such', () => {
+    expect(buildPricingPreview(intro, 'pricing__make_offer')).toMatch(/one by one[\s\S]*same call again[\s\S]*only the end date/);
+    expect(buildPricingPreview({ ...intro, undo: true }, 'pricing__make_offer')).toMatch(/DELETE an introductory offer/);
   });
 });
