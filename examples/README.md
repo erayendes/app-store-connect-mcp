@@ -19,7 +19,7 @@ one you install can find an app ID and point you at a tool it does not have.
 | You are | Install | Tools |
 |:--|:--|--:|
 | Release manager | `distribution` + `app-info` | 195 |
-| ASO / marketing | `marketing` + `analytics` | 152 |
+| ASO / marketing | `marketing` + `analytics` | 153 |
 | QA / TestFlight | `testflight` + `access` | 122 |
 | Monetization | `monetization` | 211 |
 | Game developer | `game-center` + `distribution` | 324 |
@@ -194,7 +194,7 @@ gösterebilir.
 | Siz | Kurun | Araç |
 |:--|:--|--:|
 | Yayın yöneticisi | `distribution` + `app-info` | 195 |
-| ASO / pazarlama | `marketing` + `analytics` | 152 |
+| ASO / pazarlama | `marketing` + `analytics` | 153 |
 | QA / TestFlight | `testflight` + `access` | 122 |
 | Monetizasyon | `monetization` | 211 |
 | Oyun geliştirici | `game-center` + `distribution` | 324 |

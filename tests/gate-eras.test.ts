@@ -376,3 +376,54 @@ describe('the macOS dialog text', () => {
     expect(body).not.toMatch(/Operation|TESTKEY123|CONFIRM|release__submit/);
   });
 });
+
+describe.each(['legacy', 'modern'] as const)('deleting library files on a %s connection', (era) => {
+  // Three "Delete an image from the asset library?" dialogs in a row, each
+  // showing only "01.png (15)": the macro asks once and names them all.
+  it('asks once in the macOS dialog, naming the app and each file', async () => {
+    const sent: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL, init?: RequestInit) => {
+        const u = new URL(String(url));
+        const method = init?.method ?? 'GET';
+        sent.push(`${method} ${u.pathname}`);
+        if (method === 'DELETE') return new Response(null, { status: 204 });
+        const body =
+          u.pathname === '/v1/apps'
+            ? { data: [{ type: 'apps', id: 'app-1', attributes: { name: 'Test App', bundleId: 'com.example.test' } }] }
+            : u.pathname === '/v1/apps/app-1/assetLibrary'
+              ? { data: { type: 'appAssetLibraries', id: 'lib-1' } }
+              : u.pathname.endsWith('/images')
+                ? {
+                    data: ['img-1', 'img-2'].map((id, i) => ({
+                      type: 'appAssetLibraryImages',
+                      id,
+                      attributes: { referenceName: `0${i + 1}.png (15)` },
+                      relationships: { placements: { data: [] } },
+                    })),
+                  }
+                : { data: [] };
+        return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
+      })
+    );
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('approved');
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'marketing:asset-library' });
+
+    const res: any = await client.callTool({
+      name: 'listing__delete_assets',
+      arguments: { app: 'Test App', asset_ids: ['img-1', 'img-2'] },
+    });
+
+    expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    const { title, body } = vi.mocked(nativeConfirm).mock.calls[0][0];
+    expect(title).toBe('Delete images or videos from an app’s asset library?');
+    expect(body).toContain('App: Test App');
+    expect(body).toContain('Files: 01.png (15), 02.png (15)');
+    expect(res.isError ?? false).toBe(false);
+    expect(sent.filter((s) => s.startsWith('DELETE'))).toEqual([
+      'DELETE /v1/appAssetLibraryImages/img-1',
+      'DELETE /v1/appAssetLibraryImages/img-2',
+    ]);
+  });
+});
