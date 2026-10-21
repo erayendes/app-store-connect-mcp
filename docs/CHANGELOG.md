@@ -8,6 +8,14 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.8.0-beta.3] — 2026-10-21
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+The "are you sure?" window for a screenshot or app preview now says which one it is. It used to show only the file name, such as `02.png`. Now it also shows the app, the version, the language and the device size, such as `02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67`.
+
 ### [2.8.0-beta.2] — 2026-10-19
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -260,6 +268,14 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.8.0-beta.3] — 2026-10-21
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+Bir ekran görüntüsü ya da önizleme videosu için açılan "emin misiniz?" penceresi artık hangisi olduğunu söylüyor. Önceden yalnızca `02.png` gibi dosya adını gösteriyordu. Artık uygulamayı, sürümü, dili ve cihaz boyutunu da gösteriyor: `02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67` gibi.
 
 ### [2.8.0-beta.2] — 2026-10-19
 

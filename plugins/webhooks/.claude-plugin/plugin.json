@@ -1,6 +1,6 @@
 {
   "name": "asc-webhooks",
-  "version": "2.8.0-beta.2",
+  "version": "2.8.0-beta.3",
   "description": "Webhooks pushing App Store Connect events to your endpoint.",
   "author": {
     "name": "Eray Endes",
