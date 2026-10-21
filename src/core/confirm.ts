@@ -138,13 +138,22 @@ async function listingSetContext(
   if (loc?.type === 'appCustomProductPageLocalizations') where.unshift('custom product page');
   if (loc?.type === 'appStoreVersionExperimentTreatmentLocalizations') where.unshift('product page test');
   say(where);
-  if (loc?.type !== 'appStoreVersionLocalizations') return where;
+  if (loc?.type === 'appStoreVersionLocalizations') await versionPageContext(http, loc.id, where, say);
+  return where;
+}
 
-  const withVersion: any = await http.get(`/v1/appStoreVersionLocalizations/${encodeURIComponent(loc.id)}`, {
+/** From a version page's locale up to its version and app: two reads, prepended to `where`. */
+async function versionPageContext(
+  http: RefReader,
+  localizationId: string,
+  where: string[],
+  say: (where: string[]) => void
+): Promise<void> {
+  const withVersion: any = await http.get(`/v1/appStoreVersionLocalizations/${encodeURIComponent(localizationId)}`, {
     include: 'appStoreVersion',
   });
   const version = (withVersion?.included ?? []).find((i: any) => i?.type === 'appStoreVersions');
-  if (!version?.id) return where;
+  if (!version?.id) return;
   where.unshift(`version ${version.attributes?.versionString ?? version.id}`);
   say(where);
 
@@ -152,8 +161,52 @@ async function listingSetContext(
   const app = (withApp?.included ?? []).find((i: any) => i?.type === 'apps');
   if (app?.attributes?.name) where.unshift(app.attributes.name);
   say(where);
-  return where;
 }
+
+/** What each kind of page an asset library file can be placed on is called in a label. */
+const PLACEMENT_PAGES: Record<string, string | undefined> = {
+  appStoreVersionLocalizations: undefined,
+  appCustomProductPageLocalizations: 'custom product page',
+  appStoreVersionExperimentTreatmentLocalizations: 'product page test',
+  appEventLocalizations: 'in-app event',
+};
+
+/**
+ * Asset library images and videos. The file itself records no app — Apple
+ * links the library down to its files, never back up — so the label climbs
+ * from the file's first placement: page, locale, then version and app. A file
+ * placed nowhere says so, which is what a delete prompt most needs to show.
+ */
+const libraryAsset =
+  (type: string): RefResolver =>
+  async (http, id, progress) => {
+    const res: any = await http.get(`/v1/${type}/${encodeURIComponent(id)}`, { include: 'placements' });
+    const a = res?.data?.attributes;
+    const name: string | undefined = a?.referenceName || a?.fileName;
+    const placements: Array<{ id: string }> = res?.data?.relationships?.placements?.data ?? [];
+    const more = placements.length > 1 ? [`and ${placements.length - 1} more`] : [];
+    const label = (where: string[]) => [name, where.join(', ')].filter(Boolean).join(' — ') || undefined;
+    if (!placements.length) return label(['not placed on any page']);
+    if (name) progress?.(name);
+
+    const placement: any = await http.get(`/v1/appAssetLibraryPlacements/${encodeURIComponent(placements[0].id)}`, {
+      include:
+        'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization,appEventLocalization',
+    });
+    const page = (placement?.included ?? []).find((i: any) => i?.type in PLACEMENT_PAGES);
+    const where: string[] = [placement?.data?.attributes?.placementType].filter(Boolean);
+    if (page?.attributes?.locale) where.unshift(page.attributes.locale);
+    if (PLACEMENT_PAGES[page?.type]) where.unshift(PLACEMENT_PAGES[page.type]!);
+    let current = label([...where, ...more]);
+    if (current) progress?.(current);
+    if (page?.type === 'appStoreVersionLocalizations') {
+      await versionPageContext(http, page.id, where, (w) => {
+        current = label([...w, ...more]);
+        if (current) progress?.(current);
+      });
+    }
+    return current;
+  };
 
 const listingAsset =
   (type: keyof typeof LISTING_ASSETS): RefResolver =>
@@ -224,6 +277,8 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
   appPreviews: listingAsset('appPreviews'),
   appScreenshotSets: listingSet('appScreenshotSets'),
   appPreviewSets: listingSet('appPreviewSets'),
+  appAssetLibraryImages: libraryAsset('appAssetLibraryImages'),
+  appAssetLibraryVideos: libraryAsset('appAssetLibraryVideos'),
 };
 
 /**

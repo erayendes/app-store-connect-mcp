@@ -217,6 +217,42 @@ describe('the preview names the thing it is about to write to', () => {
     expect(preview.message).toContain('(02.png — version 1.6.1, tr, APP_IPHONE_67)');
   });
 
+  // "Delete an image from the asset library? … (01.png (15))": the file names no
+  // app, so the label has to come from where it is placed.
+  const library = (placed: number) => ({
+    get: async (path: string) => {
+      if (path.startsWith('/v1/appAssetLibraryImages/')) {
+        const data = Array.from({ length: placed }, (_, i) => ({ type: 'appAssetLibraryPlacements', id: `p-${i}` }));
+        return { data: { attributes: { referenceName: '01.png (15)' }, relationships: { placements: { data } } } };
+      }
+      if (path.startsWith('/v1/appAssetLibraryPlacements/')) {
+        return {
+          data: { attributes: { placementType: 'APP_SCREENSHOT' } },
+          included: [{ type: 'appStoreVersionLocalizations', id: 'loc-tr', attributes: { locale: 'tr' } }],
+        };
+      }
+      return listing().get(path);
+    },
+  });
+  const deleteImage = (http: ReturnType<typeof library>) =>
+    buildWritePreview(
+      'app_asset_library_images__delete',
+      { method: 'DELETE', path: '/v1/appAssetLibraryImages/{id}', risk: 'destructive' },
+      { id: 'img-1' },
+      undefined,
+      http
+    );
+
+  it('names the app a placed library image shows on', async () => {
+    const preview = await deleteImage(library(3));
+    expect(preview.message).toContain('(01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT, and 2 more)');
+  });
+
+  it('says when a library image is placed nowhere', async () => {
+    const preview = await deleteImage(library(0));
+    expect(preview.message).toContain('(01.png (15) — not placed on any page)');
+  });
+
   it('falls back to the bare id when the lookup says nothing', async () => {
     const preview = await buildWritePreview(
       'apps__update',
