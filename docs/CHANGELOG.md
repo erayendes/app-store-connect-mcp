@@ -8,6 +8,18 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [2.8.0-beta.4] — 2026-10-21
+
+This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
+
+To go back to the stable release, run `npx -y @erayendes/asc-mcp setup`.
+
+**Delete several files from the asset library with one confirmation.** `listing__delete_assets` takes the app and the files to delete. Before it deletes anything, it checks that every file is in that app's library. If even one isn't, it deletes nothing. Then it asks you once, and the window names the app and every file. Before, you got one window per file.
+
+The window for deleting a single library image or video now also says which app it belongs to, when the file is used on a page, for example `01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT`. A file that isn't used on any page says so instead. Apple doesn't record which app an unused file belongs to, so its app can't be shown.
+
+With the new tool, Heimdall has 929 tools.
+
 ### [2.8.0-beta.3] — 2026-10-21
 
 This is a beta. To try it: `npx -y @erayendes/asc-mcp@beta setup`. Everything it sets up runs the beta.
@@ -268,6 +280,18 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [2.8.0-beta.4] — 2026-10-21
+
+Bu bir beta. Denemek isterseniz: `npx -y @erayendes/asc-mcp@beta setup`. Kurduğunuz her şey beta olarak çalışır.
+
+Kararlı sürüme dönmek için `npx -y @erayendes/asc-mcp setup` yeterli.
+
+**Kütüphaneden birden çok dosyayı tek onayla silin.** `listing__delete_assets` uygulamayı ve silinecek dosyaları alıyor. Bir şey silmeden önce her dosyanın o uygulamanın kütüphanesinde olduğunu kontrol ediyor. Biri bile yoksa hiçbir şey silmiyor. Sonra size bir kez soruyor; pencerede uygulama ve her dosyanın adı yazıyor. Önceden her dosya için ayrı bir pencere açılıyordu.
+
+Tek bir kütüphane görselini ya da videosunu silerken açılan pencere de artık, dosya bir sayfada kullanılıyorsa hangi uygulamaya ait olduğunu söylüyor: `01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT` gibi. Hiçbir sayfada kullanılmayan dosyada bunun yerine bunu yazıyor. Apple, kullanılmayan bir dosyanın hangi uygulamaya ait olduğunu kaydetmiyor; bu yüzden onun uygulaması gösterilemiyor.
+
+Yeni araçla Heimdall 929 araca ulaştı.
 
 ### [2.8.0-beta.3] — 2026-10-21
 
