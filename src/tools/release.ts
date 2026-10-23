@@ -21,7 +21,7 @@ import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
-import { executePreflightTool } from './preflight.js';
+import { PLATFORMS, PLATFORM_NAMES, executePreflightTool, pickVersion } from './preflight.js';
 
 export const RELEASE_TOOLS: McpToolDefinition[] = [
   {
@@ -39,6 +39,11 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
           type: 'string',
           description: 'Version string (e.g. "3.2.0"). Defaults to the newest editable version.',
         },
+        platform: {
+          type: 'string',
+          enum: PLATFORMS,
+          description: 'Which platform’s version. Needed when the app has one on more than one platform.',
+        },
         skip_preflight: {
           type: 'boolean',
           description:
@@ -53,6 +58,7 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
       properties: {
         app: { type: 'string' },
         version: { type: 'string' },
+        platform: { type: 'string' },
         submissionId: { type: 'string' },
         state: { type: 'string' },
         steps: {
@@ -85,9 +91,13 @@ export async function executeReleaseTool(
   // resolving it twice and risking two different answers.
   const preflight = (await executePreflightTool(
     'preflight__check_version',
-    { app: String(args.app), ...(args.version ? { version: args.version } : {}) },
+    {
+      app: String(args.app),
+      ...(args.version ? { version: args.version } : {}),
+      ...(args.platform ? { platform: args.platform } : {}),
+    },
     { http }
-  )) as { version: string; state: string; ready: boolean; blocking: Array<{ check: string; problem: string; fixWith: string }> };
+  )) as { version: string; platform: string; state: string; ready: boolean; blocking: Array<{ check: string; problem: string; fixWith: string }> };
 
   if (!preflight.ready && args.skip_preflight !== true) {
     throw new AscApiError(
@@ -109,7 +119,8 @@ export async function executeReleaseTool(
     limit: 20,
   });
   const version = (versions?.data ?? []).find(
-    (v: any) => String(v.attributes?.versionString ?? '') === preflight.version
+    (v: any) =>
+      String(v.attributes?.versionString ?? '') === preflight.version && v.attributes?.platform === preflight.platform
   );
   if (!version) throw new AscApiError(`Version ${preflight.version} disappeared between calls.`, 0);
 
@@ -134,6 +145,7 @@ export async function executeReleaseTool(
       dryRun: true,
       app: `${app.name} (${app.id})`,
       version: preflight.version,
+      platform: versionPlatform,
       preflight,
       wouldDo: [
         `reuse or open a review submission for app ${app.id}`,
@@ -207,9 +219,40 @@ export async function executeReleaseTool(
   return {
     app: `${app.name} (${app.id})`,
     version: preflight.version,
+    platform: versionPlatform,
     submissionId: String(submission.id),
     state: handed?.data?.attributes?.state ?? 'SUBMITTED',
     steps,
     preflight: { ready: preflight.ready, warnings: (preflight as any).warnings ?? [] },
+  };
+}
+
+/**
+ * What the confirmation shows for `release__submit`: the app by name and the
+ * version and platform it will pick, which the arguments may leave out. The
+ * same rule as the submission itself, so the prompt cannot name one version
+ * and submit another; an ambiguous call fails here, before anyone is asked.
+ */
+export async function releasePreviewArgs(
+  args: Record<string, unknown>,
+  http: AscHttpClient
+): Promise<Record<string, unknown>> {
+  const app = await resolveApp(http, String(args.app ?? ''));
+  const versions: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/appStoreVersions`, {
+    'fields[appStoreVersions]': 'versionString,appStoreState,platform',
+    limit: 20,
+  });
+  const version = pickVersion(
+    app.name,
+    versions?.data ?? [],
+    args.version ? String(args.version).trim() : undefined,
+    args.platform ? String(args.platform) : undefined
+  );
+  const platform = String(version.attributes?.platform ?? '');
+  return {
+    app: `${app.name} (${app.id})`,
+    version: version.attributes?.versionString,
+    platform: PLATFORM_NAMES[platform] ?? platform,
+    ...(args.skip_preflight === true ? { skip_preflight: true } : {}),
   };
 }
