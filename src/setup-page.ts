@@ -14,6 +14,29 @@
  */
 import { DESIGN_TOKENS } from './setup-tokens.js';
 
+// Sibling projects, in this order. No url = not released yet.
+const SIBLINGS: { name: string; what: string; url?: string }[] = [
+  { name: 'Mogut', what: 'Read-only App Store growth MCP: keywords, competitors, reviews and pricing.' },
+  { name: 'Kortext', what: 'The project brain for AI-driven development.', url: 'https://github.com/erayendes/kortext' },
+  { name: 'Cogitors', what: 'Codex, Claude and Antigravity deliberate and reach one reasoned decision.', url: 'https://github.com/erayendes/cogitors' },
+  { name: 'Krafta', what: 'Check interfaces against explicit design rules, in CI or in agent review.', url: 'https://github.com/erayendes/krafta' },
+  { name: 'Oduncu', what: 'Silent-executor skill for coding agents.', url: 'https://github.com/erayendes/oduncu' },
+  { name: 'Madenci', what: 'Minimal-code mode for coding agents: the smallest complete change.', url: 'https://github.com/erayendes/madenci' },
+  { name: 'Mimir', what: 'AI usage limits in your macOS menu bar.', url: 'https://github.com/erayendes/mimir' },
+  { name: 'Delling', what: 'A light, dark and auto theme switcher for any web page.', url: 'https://github.com/erayendes/themeSwitcher' },
+];
+
+const GITHUB_MARK = '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>';
+
+function siblingCard(s: (typeof SIBLINGS)[number], i: number): string {
+  const cls = i === 0 ? 'sib lead-sib' : 'sib';
+  const inner = `<span class="name">${s.name}</span><span class="what">${s.what}</span>`
+    + `<span class="foot"><span>MIT · free</span>${s.url ? GITHUB_MARK : '<span>in development</span>'}</span>`;
+  return s.url
+    ? `<a class="${cls}" href="${s.url}" target="_blank" rel="noreferrer">${inner}</a>`
+    : `<div class="${cls}">${inner}</div>`;
+}
+
 export const SETUP_PAGE = `<!doctype html>
 <html lang="en">
 <head>
@@ -24,7 +47,24 @@ export const SETUP_PAGE = `<!doctype html>
 ${DESIGN_TOKENS}
 
 /* ---------- the setup page: layout only, every value a token ---------- */
-main { max-width: 760px; margin: 0 auto; padding: var(--sp-6) var(--sp-4); display: grid; gap: var(--sp-4); }
+.layout { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 760px) 280px; gap: var(--sp-6); align-items: start; }
+main { padding: var(--sp-6) var(--sp-4); display: grid; gap: var(--sp-4); }
+@media (max-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr); max-width: 760px; gap: 0; } }
+
+/* Also from Milowda: Kortext's sibling cards, as a sidebar. */
+.sibs { padding: calc(var(--sp-6) + 6px) var(--sp-4) var(--sp-6) 0; display: grid; gap: var(--sp-2); }
+@media (max-width: 960px) { .sibs { padding: 0 var(--sp-4) var(--sp-6); } }
+.sibs-head { font-size: var(--fs-label); color: var(--fg-muted); margin-bottom: var(--sp-1); }
+.sibs-head a { color: inherit; }
+.sibs-head a:hover { color: var(--fg); }
+.sib { display: flex; flex-direction: column; gap: 3px; padding: var(--sp-3) var(--sp-4); border: 1px solid var(--border);
+  border-radius: var(--r-lg); background: var(--bg-subtle); text-decoration: none; }
+.sib.lead-sib { border-color: var(--border-strong); }
+a.sib:hover { border-color: var(--border-strong); background: var(--bg-muted); }
+.sib .name { font-size: var(--fs-ui); color: var(--fg); font-weight: 500; }
+.sib .what { font-size: var(--fs-label); color: var(--fg-muted); }
+.sib .foot { display: flex; justify-content: space-between; align-items: center; padding-top: var(--sp-2); font-size: var(--fs-micro); color: var(--fg-muted); }
+a.sib:hover .foot svg { color: var(--fg); }
 header { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 h1 { font-size: var(--fs-title); font-weight: 600; margin: 0; flex: 1; }
 .note { margin: 0; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); font-size: var(--fs-ui);
@@ -121,6 +161,7 @@ a { color: var(--fg); }
 </style>
 </head>
 <body>
+<div class="layout">
 <main>
   <header>
     <h1>Heimdall setup</h1>
@@ -207,6 +248,11 @@ a { color: var(--fg); }
   </section>
   <div class="totals" id="totals" aria-live="polite"></div>
 </main>
+<aside class="sibs" id="sibs" aria-label="Also from Milowda">
+  <div class="sibs-head">Also from <a href="https://milowda.com" target="_blank" rel="noreferrer">Milowda</a></div>
+  ${SIBLINGS.map(siblingCard).join('\n  ')}
+</aside>
+</div>
 <script>
 (function () {
   var token = new URLSearchParams(location.search).get('t') || '';
