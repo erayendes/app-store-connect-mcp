@@ -40,6 +40,10 @@ const truncatedSchema = {
   description: 'Reads stopped at a cap; these notes identify data not inspected.',
 };
 
+/** Apple's App Store platforms, and how a person writes them. */
+export const PLATFORMS = ['IOS', 'MAC_OS', 'TV_OS', 'VISION_OS'];
+export const PLATFORM_NAMES: Record<string, string> = { IOS: 'iOS', MAC_OS: 'macOS', TV_OS: 'tvOS', VISION_OS: 'visionOS' };
+
 export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
   {
     name: 'preflight__check_version',
@@ -63,6 +67,11 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
             'Version string (e.g. "3.2.0"). Defaults to the newest version that is ' +
             'still editable.',
         },
+        platform: {
+          type: 'string',
+          enum: PLATFORMS,
+          description: 'Which platform’s version. Needed when the app has one on more than one platform.',
+        },
       },
       required: ['app'],
     },
@@ -71,6 +80,7 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
       properties: {
         app: { type: 'string' },
         version: { type: 'string' },
+        platform: { type: 'string' },
         state: { type: 'string' },
         ready: { type: 'boolean' },
         blocking: {
@@ -168,6 +178,39 @@ const EDITABLE_STATES = new Set([
   'WAITING_FOR_EXPORT_COMPLIANCE',
 ]);
 
+/**
+ * The version a version-scoped macro means. An app sold on iOS and tvOS has a
+ * version per platform, often both editable at once, and the version string
+ * alone does not say which: picking the first one submitted whichever Apple
+ * listed first. With no platform given and more than one in play, refuse and
+ * name them rather than guess.
+ */
+export function pickVersion(appName: string, all: any[], wanted?: string, platform?: string): any {
+  const onPlatform = platform ? all.filter((v) => v.attributes?.platform === platform) : all;
+  const matches = wanted
+    ? onPlatform.filter((v) => String(v.attributes?.versionString ?? '') === wanted)
+    : onPlatform.filter((v) => EDITABLE_STATES.has(String(v.attributes?.appStoreState ?? '')));
+  if (new Set(matches.map((v) => v.attributes?.platform)).size > 1) {
+    const found = matches.map((v) => `${PLATFORM_NAMES[v.attributes?.platform] ?? v.attributes?.platform} ${v.attributes?.versionString}`);
+    throw new AscApiError(
+      `${appName} has ${wanted ? `version ${wanted}` : 'an editable version'} on more than one platform (${found.join(', ')}). ` +
+        `Say which with platform: ${PLATFORMS.join(', ')}.`,
+      0
+    );
+  }
+  const version = matches[0] ?? (wanted ? undefined : onPlatform[0]);
+  if (!version) {
+    const on = platform ? ` on ${PLATFORM_NAMES[platform] ?? platform}` : '';
+    throw new AscApiError(
+      wanted
+        ? `${appName} has no version "${wanted}"${on}. Found: ${onPlatform.map((v) => v.attributes?.versionString).join(', ') || 'none'}.`
+        : `${appName} has no App Store versions${on}.`,
+      0
+    );
+  }
+  return version;
+}
+
 interface Gap {
   check: string;
   problem: string;
@@ -202,21 +245,12 @@ export async function executePreflightTool(
     limit: 20,
   });
 
-  const wanted = args.version ? String(args.version).trim() : undefined;
-  const all = versions?.data ?? [];
-  const version = wanted
-    ? all.find((v: any) => String(v.attributes?.versionString ?? '') === wanted)
-    : (all.find((v: any) => EDITABLE_STATES.has(String(v.attributes?.appStoreState ?? ''))) ??
-      all[0]);
-
-  if (!version) {
-    throw new AscApiError(
-      wanted
-        ? `${app.name} has no version "${wanted}". Found: ${all.map((v: any) => v.attributes?.versionString).join(', ') || 'none'}.`
-        : `${app.name} has no App Store versions.`,
-      0
-    );
-  }
+  const version = pickVersion(
+    app.name,
+    versions?.data ?? [],
+    args.version ? String(args.version).trim() : undefined,
+    args.platform ? String(args.platform) : undefined
+  );
 
   const included = (versions?.included ?? []) as any[];
   const byId = (type: string, id?: string) =>
@@ -236,6 +270,7 @@ export async function executePreflightTool(
     return {
       app: `${app.name} (${app.id})`,
       version: version.attributes?.versionString,
+      platform: version.attributes?.platform,
       state,
       ready: false,
       blocking: [],
@@ -441,6 +476,7 @@ export async function executePreflightTool(
   return {
     app: `${app.name} (${app.id})`,
     version: version.attributes?.versionString,
+    platform: version.attributes?.platform,
     state,
     ready: blocking.length === 0,
     blocking,

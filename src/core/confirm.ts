@@ -282,6 +282,25 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
 };
 
 /**
+ * A macro's `app` argument as a person knows it. Macros take a name, bundle ID
+ * or Apple ID, and an agent often passes the Apple ID: "App: 6636549188" asked
+ * for a release to be approved for an app nobody could name. Best-effort under
+ * the label deadline; the argument as given when the lookup fails or is slow.
+ */
+export async function withAppName(
+  args: Record<string, unknown>,
+  http?: RefReader
+): Promise<Record<string, unknown>> {
+  const app = typeof args.app === 'string' ? args.app.trim() : '';
+  if (!http || !/^\d+$/.test(app)) return args;
+  const label = await Promise.race([
+    REF_RESOLVERS.apps(http, app).catch(() => undefined),
+    new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), LABEL_DEADLINE_MS).unref()),
+  ]);
+  return label ? { ...args, app: label } : args;
+}
+
+/**
  * Types whose id is already the human-readable thing. A territory's id is its
  * alpha-3 code — resolving `USA` to "USA" is a round trip to learn nothing.
  */

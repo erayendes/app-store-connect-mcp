@@ -16,7 +16,7 @@ import {
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import { buildWritePreview, createWriteGate, resolveBodyRefs } from './core/confirm.js';
+import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from './core/confirm.js';
 import { dialogText, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
@@ -39,7 +39,7 @@ import { PREFLIGHT_TOOLS, PREFLIGHT_TOOL_NAMES, executePreflightTool } from './t
 import { METADATA_TOOLS, METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOLS, ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool } from './tools/release.js';
+import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs } from './tools/release.js';
 import { TESTFLIGHT_TOOLS, TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOLS, CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
@@ -658,12 +658,18 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             isError: true,
           };
           if (!canElicit && !canDialog) return blocked;
+          // What the prompt shows; the fingerprint stays on the arguments as sent.
+          const shown = op
+            ? args
+            : RELEASE_TOOL_NAMES.has(name)
+              ? await releasePreviewArgs(args, http)
+              : await withAppName(args, http);
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
-              { message: buildPricingPreview(args, name), strong: true }
+              { message: buildPricingPreview(shown, name), strong: true }
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
-              { message: buildTestflightPreview(args), strong: true }
+              { message: buildTestflightPreview(shown), strong: true }
             : name === 'listing__delete_assets'
             ? // The arguments are bare ids; the prompt names the app and each file.
               await buildAssetDeletePreview(args, http)
@@ -676,7 +682,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               await buildWritePreview(
                 name,
                 { method: 'POST', path: `${name} (macro)`, risk },
-                args,
+                shown,
                 config.credentials.keyId
               )
             : await buildWritePreview(
@@ -688,7 +694,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                   path: 'App Store Server API',
                   risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
                 },
-                args
+                shown
               );
           if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
