@@ -32,9 +32,9 @@ Yani App Store Connect ekranlarında yapabildiğiniz işlerin neredeyse tamamın
 
 ### Heimdall
 
-Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **13 ana profil altında 33 alt profil ve 927 araç** içeren tek bir MCP sunucusudur.
+Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **13 ana profil altında 33 alt profil ve 928 araç** içeren tek bir MCP sunucusudur.
 
-Apple'ın spesifikasyonunda 1011 API operasyonu var. Heimdall, Apple'ın kullanımdan kaldırdığı 123 tanesini dışarıda bırakıyor, kalan 888'ini araca çeviriyor ve üstüne elle yazılmış 39 araç ekliyor: toplam 927 araç.
+Apple'ın spesifikasyonunda 1011 API operasyonu var. Heimdall, Apple'ın kullanımdan kaldırdığı 123 tanesini dışarıda bırakıyor, kalan 888'ini araca çeviriyor ve üstüne elle yazılmış 40 araç ekliyor: toplam 928 araç.
 
 Çoğu muadili API'nin elle seçilmiş bir araç dilimini sunar. Bu kürasyon ihtiyaç duyacağınız o uç noktaya kadar işe yarar. Ama **o uç nokta geldiğinde çözümü bulmak için alternatifler arasında kaybolur gidersiniz.**
 
