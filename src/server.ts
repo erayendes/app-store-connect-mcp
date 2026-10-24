@@ -34,7 +34,7 @@ import {
   executePricingTool,
   buildPricingPreview,
 } from './tools/pricing.js';
-import { SCREENSHOT_TOOLS, executeScreenshotTool } from './tools/screenshots.js';
+import { SCREENSHOT_TOOLS, buildAssetDeletePreview, executeScreenshotTool } from './tools/screenshots.js';
 import { PREFLIGHT_TOOLS, PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
 import { METADATA_TOOLS, METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOLS, ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
@@ -606,6 +606,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         // never going to show.
         const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
+          : name === 'listing__delete_assets'
+            ? 'destructive'
           : RELEASE_TOOL_NAMES.has(name) || TESTFLIGHT_TOOL_NAMES.has(name)
             ? // A macro that moves a build or version toward users carries
               // the same release risk as its raw calls.
@@ -668,6 +670,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
               { message: buildTestflightPreview(shown), strong: true }
+            : name === 'listing__delete_assets'
+            ? // The arguments are bare ids; the prompt names the app and each file.
+              await buildAssetDeletePreview(args, http)
             : op
             ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
             : macroOffered(name)

@@ -130,7 +130,7 @@ A large profile takes a colon and a list of sub-profiles —
 `monetization` is 211. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
-Heimdall serves 927 distinct tools across 13 profiles: 888 reachable Apple operations plus 39 hand-written tools. The `testflight` profile serves 56 tools including core.
+Heimdall serves 928 distinct tools across 13 profiles: 888 reachable Apple operations plus 40 hand-written tools. The `testflight` profile serves 56 tools including core.
 
 ## Prefer the macro over the chain
 
@@ -147,6 +147,7 @@ right choice for anything the macro does not cover.
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | reserving an asset library image or video, uploading it, then placing it | `listing__upload_asset` |
+| deleting several asset library files, under one confirmation | `listing__delete_assets` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` — build counts, devices/OS, newest comments and bounded crash excerpts |
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |

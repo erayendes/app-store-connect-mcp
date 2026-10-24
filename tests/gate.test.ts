@@ -96,6 +96,7 @@ describe('write-gate annotations (offline)', () => {
       'pricing__set_iap_price',
       'listing__upload_screenshot',
       'listing__upload_asset',
+      'listing__delete_assets',
       'testflight__assign_build_to_groups',
     ]);
     // The listing and analytics families were outside this check until the

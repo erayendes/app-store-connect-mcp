@@ -33,6 +33,7 @@ The workflows below turn chains like that into a single step. You don't have to 
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
 | reserving a screenshot slot and uploading the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
 | reserving an asset library image or video, uploading it, then placing it on a page | `listing__upload_asset` | `marketing:asset-library` |
+| deleting several asset library images or videos, under one confirmation | `listing__delete_assets` | `marketing:asset-library` |
 | request → report → instance → segment → signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
 | app → crash and screenshot feedback → crash logs | `testflight__feedback_digest` — counts per build, device and OS, tester comments and short crash log excerpts | `testflight` |
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` — finds the most recent failure among the last 40 runs and lists its issues and failed tests | `xcode-cloud` |

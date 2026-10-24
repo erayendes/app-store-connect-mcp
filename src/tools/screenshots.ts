@@ -43,6 +43,7 @@ import type { AscHttpClient } from '../core/http.js';
 import { BODY_SCHEMAS } from '../generated/body-schemas.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
+import { REVERSIBILITY } from '../core/risk.js';
 
 /**
  * Pulled off the generated schema rather than retyped: 33 device sizes that
@@ -71,6 +72,9 @@ const PLACEMENT_TARGETS = [
   { arg: 'experiment_treatment_localization_id', rel: 'appStoreVersionExperimentTreatmentLocalization', type: 'appStoreVersionExperimentTreatmentLocalizations' },
   { arg: 'app_event_localization_id', rel: 'appEventLocalization', type: 'appEventLocalizations' },
 ] as const;
+
+/** One `filter[id]` request per kind has to hold them all; Apple pages at 200. */
+const MAX_ASSET_DELETES = 50;
 
 export const SCREENSHOT_TOOLS: McpToolDefinition[] = [
   {
@@ -265,6 +269,31 @@ export const SCREENSHOT_TOOLS: McpToolDefinition[] = [
     // No outputSchema, for the reason given on the screenshot upload.
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
+  {
+    name: 'listing__delete_assets',
+    description:
+      'Delete images or videos from an app’s asset library. One confirmation covers them all and ' +
+      'names each file. Give the app and the ids of the files; every id is checked against that ' +
+      'app’s library before anything is deleted. DESTRUCTIVE-level write: deletion is not reversible.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: {
+          type: 'string',
+          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
+        },
+        asset_ids: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          maxItems: MAX_ASSET_DELETES,
+          description: 'Ids of the library images or videos to delete, from the library’s image and video lists.',
+        },
+      },
+      required: ['app', 'asset_ids'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
 ];
 
 export const SCREENSHOT_TOOL_NAMES = new Set(SCREENSHOT_TOOLS.map((t) => t.name));
@@ -313,6 +342,7 @@ export async function executeScreenshotTool(
 ): Promise<unknown> {
   if (name === 'listing__upload_screenshot') return uploadScreenshot(args, ctx);
   if (name === 'listing__upload_asset') return uploadAsset(args, ctx);
+  if (name === 'listing__delete_assets') return deleteAssets(args, ctx);
   if (name !== 'listing__get_screenshots') {
     throw new Error(`Unknown listing tool: ${name}`);
   }
@@ -827,4 +857,131 @@ async function uploadAsset(args: Record<string, unknown>, ctx: ScreenshotContext
       note: `The ${kind} is in the asset library (${assetId}) but was not placed. Place it with the asset library placement tool rather than uploading again.`,
     };
   }
+}
+
+/** A library file the delete was asked for, as found in the app's own library. */
+interface LibraryFile {
+  id: string;
+  collection: 'appAssetLibraryImages' | 'appAssetLibraryVideos';
+  name: string;
+  placements: number;
+}
+
+/**
+ * Looks the ids up in the app's own library, images and videos, one request
+ * each. Apple's library links down to its files and never back up, so this is
+ * the only way to know a file belongs to the app the user named.
+ */
+async function findLibraryFiles(
+  http: AscHttpClient,
+  appId: string,
+  ids: string[]
+): Promise<LibraryFile[]> {
+  const library: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/assetLibrary`);
+  const libraryId: string | undefined = library?.data?.id;
+  if (!libraryId) throw new AscApiError('This app has no asset library.', 0);
+  const found: LibraryFile[] = [];
+  for (const [kind, collection] of [
+    ['images', 'appAssetLibraryImages'],
+    ['videos', 'appAssetLibraryVideos'],
+  ] as const) {
+    const res: any = await http.get(`/v1/appAssetLibraries/${encodeURIComponent(libraryId)}/${kind}`, {
+      'filter[id]': ids.join(','),
+      [`fields[${collection}]`]: 'referenceName,fileName,placements',
+      limit: 200,
+    });
+    for (const f of res?.data ?? []) {
+      found.push({
+        id: f.id,
+        collection,
+        name: f.attributes?.referenceName || f.attributes?.fileName || f.id,
+        placements: f.relationships?.placements?.data?.length ?? 0,
+      });
+    }
+  }
+  return found;
+}
+
+/**
+ * The app and the files it was asked to delete, every id checked against that
+ * app's library. All or nothing: an id from another app's library, or a typo,
+ * stops the call before the prompt and before the first delete.
+ */
+async function checkedFiles(
+  http: AscHttpClient,
+  args: Record<string, unknown>
+): Promise<{ app: { id: string; name: string }; files: LibraryFile[] }> {
+  if (!args.app || typeof args.app !== 'string') throw new AscApiError('"app" is required.', 0);
+  const ids = Array.isArray(args.asset_ids) ? [...new Set(args.asset_ids.map(String).filter(Boolean))] : [];
+  if (!ids.length) throw new AscApiError('"asset_ids" needs at least one id.', 0);
+  if (ids.length > MAX_ASSET_DELETES) {
+    throw new AscApiError(`At most ${MAX_ASSET_DELETES} files per call; got ${ids.length}.`, 0);
+  }
+  const app = await resolveApp(http, args.app);
+  const files = await findLibraryFiles(http, app.id, ids);
+  const missing = ids.filter((id) => !files.some((f) => f.id === id));
+  if (missing.length) {
+    throw new AscApiError(`Not in ${app.name}’s asset library: ${missing.join(', ')}. Nothing was deleted.`, 0);
+  }
+  return { app, files };
+}
+
+const describeFile = (f: LibraryFile): string =>
+  f.placements ? `${f.name} (on ${f.placements} page${f.placements > 1 ? 's' : ''})` : f.name;
+
+/**
+ * The confirmation for `listing__delete_assets`: the app and every file by
+ * name, so one prompt stands in for one per file. Looked up here because the
+ * arguments carry only ids — the exact prompt this tool exists to replace.
+ */
+export async function buildAssetDeletePreview(
+  args: Record<string, unknown>,
+  http: AscHttpClient
+): Promise<{ message: string; strong: boolean }> {
+  const { app, files } = await checkedFiles(http, args);
+  return {
+    message: [
+      `Heimdall is about to delete ${files.length} file${files.length > 1 ? 's' : ''} from an app’s asset library — a DESTRUCTIVE-level write.`,
+      '',
+      `App:        ${app.name}`,
+      `Files:      ${files.map(describeFile).join(', ')}`,
+      `Risk:       destructive — ${REVERSIBILITY.destructive}`,
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n'),
+    strong: true,
+  };
+}
+
+async function deleteAssets(args: Record<string, unknown>, ctx: ScreenshotContext): Promise<unknown> {
+  const { app, files } = await checkedFiles(ctx.http, args);
+  if (ctx.dryRun) {
+    return {
+      dryRun: true,
+      note: 'Dry-run mode: every file was found in the library; nothing was deleted.',
+      app: `${app.name} (${app.id})`,
+      wouldDelete: files.map((f) => ({ id: f.id, name: f.name, placements: f.placements })),
+      risk: 'destructive',
+    };
+  }
+
+  const deleted: Array<{ id: string; name: string }> = [];
+  const failed: Array<{ id: string; name: string; error: string }> = [];
+  for (const f of files) {
+    try {
+      await ctx.http.delete(`/v1/${f.collection}/${encodeURIComponent(f.id)}`);
+      deleted.push({ id: f.id, name: f.name });
+    } catch (err) {
+      failed.push({ id: f.id, name: f.name, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+  return {
+    ok: failed.length === 0,
+    app: `${app.name} (${app.id})`,
+    deleted,
+    ...(failed.length ? { failed } : {}),
+    note: failed.length
+      ? `${deleted.length} deleted, ${failed.length} failed. Calling again with the failed ids retries only those.`
+      : `Deleted ${deleted.length} file${deleted.length > 1 ? 's' : ''} from the asset library.`,
+  };
 }

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   SCREENSHOT_TOOLS,
+  buildAssetDeletePreview,
   executeScreenshotTool,
   type ScreenshotContext,
 } from '../src/tools/screenshots.js';
@@ -447,5 +448,83 @@ describe('listing__upload_asset', () => {
       expect(http.post).not.toHaveBeenCalled();
       expect(puts).toEqual([]);
     });
+  });
+});
+
+/** An app's library holding two images, one placed, and a video. */
+function fakeLibraryHttp(failOn?: string) {
+  const files: Record<string, any[]> = {
+    images: [
+      { id: 'img-1', attributes: { referenceName: '01.png (15)' }, relationships: { placements: { data: [] } } },
+      { id: 'img-2', attributes: { referenceName: '05.png (14)' }, relationships: { placements: { data: [{ id: 'p-1' }] } } },
+    ],
+    videos: [{ id: 'vid-1', attributes: { fileName: 'intro.mp4' }, relationships: { placements: { data: [] } } }],
+  };
+  return {
+    get: vi.fn(async (path: string, query?: any) => {
+      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Test App', bundleId: 'com.example.test' } }] };
+      if (path === '/v1/apps/app-1/assetLibrary') return { data: { id: 'lib-1', type: 'appAssetLibraries' } };
+      const kind = /^\/v1\/appAssetLibraries\/lib-1\/(images|videos)$/.exec(path)?.[1];
+      if (kind) {
+        const wanted = String(query?.['filter[id]'] ?? '').split(',');
+        return { data: files[kind].filter((f) => wanted.includes(f.id)) };
+      }
+      return {};
+    }),
+    delete: vi.fn(async (path: string) => {
+      if (failOn && path.endsWith(failOn)) throw new Error('409 conflict');
+      return undefined;
+    }),
+  };
+}
+
+describe('listing__delete_assets', () => {
+  const args = { app: 'Test App', asset_ids: ['img-1', 'img-2', 'vid-1'] };
+
+  it('is a destructive write', () => {
+    const tool = SCREENSHOT_TOOLS.find((t) => t.name === 'listing__delete_assets')!;
+    expect(tool.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+  });
+
+  it('asks once, naming the app and every file', async () => {
+    const preview = await buildAssetDeletePreview(args, fakeLibraryHttp() as any);
+    expect(preview.strong).toBe(true);
+    expect(preview.message).toContain('App:        Test App');
+    expect(preview.message).toContain('Files:      01.png (15), 05.png (14) (on 1 page), intro.mp4');
+  });
+
+  it('deletes each file at its own kind’s path', async () => {
+    const http = fakeLibraryHttp();
+    const result: any = await executeScreenshotTool('listing__delete_assets', args, { http } as unknown as ScreenshotContext);
+    expect(http.delete.mock.calls.map((c) => c[0])).toEqual([
+      '/v1/appAssetLibraryImages/img-1',
+      '/v1/appAssetLibraryImages/img-2',
+      '/v1/appAssetLibraryVideos/vid-1',
+    ]);
+    expect(result.ok).toBe(true);
+  });
+
+  it('deletes nothing when an id is not in this app’s library', async () => {
+    const http = fakeLibraryHttp();
+    await expect(
+      executeScreenshotTool('listing__delete_assets', { ...args, asset_ids: ['img-1', 'other-app-img'] }, { http } as unknown as ScreenshotContext)
+    ).rejects.toThrow(/Not in Test App’s asset library: other-app-img\. Nothing was deleted/);
+    expect(http.delete).not.toHaveBeenCalled();
+    await expect(buildAssetDeletePreview({ ...args, asset_ids: ['other-app-img'] }, http as any)).rejects.toThrow(/Nothing was deleted/);
+  });
+
+  it('carries on past a failure and says which ones to retry', async () => {
+    const http = fakeLibraryHttp('img-2');
+    const result: any = await executeScreenshotTool('listing__delete_assets', args, { http } as unknown as ScreenshotContext);
+    expect(result.ok).toBe(false);
+    expect(result.deleted.map((d: any) => d.id)).toEqual(['img-1', 'vid-1']);
+    expect(result.failed).toEqual([{ id: 'img-2', name: '05.png (14)', error: '409 conflict' }]);
+  });
+
+  it('touches nothing in dry-run', async () => {
+    const http = fakeLibraryHttp();
+    const result: any = await executeScreenshotTool('listing__delete_assets', args, { http, dryRun: true } as unknown as ScreenshotContext);
+    expect(result.wouldDelete).toHaveLength(3);
+    expect(http.delete).not.toHaveBeenCalled();
   });
 });

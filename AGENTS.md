@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 927 tools across 13 profiles: 888 generated from Apple's 1011 operations (the 123 deprecated ones stay unloaded unless asked for) and 39 hand-written.
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 928 tools across 13 profiles: 888 generated from Apple's 1011 operations (the 123 deprecated ones stay unloaded unless asked for) and 40 hand-written.
 
 ## If a user asks you to install it
 

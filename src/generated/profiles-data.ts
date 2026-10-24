@@ -212,7 +212,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "asset-library",
       operations: ["app_asset_libraries.get","app_asset_libraries.images.list","app_asset_libraries.videos.list","app_asset_library_images.create","app_asset_library_images.delete","app_asset_library_images.get","app_asset_library_images.placements.list","app_asset_library_images.update","app_asset_library_placement_ordering_requests.create","app_asset_library_placements.create","app_asset_library_placements.delete","app_asset_library_placements.get","app_asset_library_ref_data.get","app_asset_library_ref_data.list","app_asset_library_videos.create","app_asset_library_videos.delete","app_asset_library_videos.get","app_asset_library_videos.placements.list","app_asset_library_videos.update","app_custom_product_page_localizations.placements.list","app_event_localizations.placements.list","app_store_version_experiment_treatment_localizations.placements.list","app_store_version_localizations.placements.list","app_store_versions.app_store_version_localizations.list","apps.asset_library.get"],
-      manualTools: ["listing__upload_asset"],
+      manualTools: ["listing__delete_assets","listing__upload_asset"],
       rootResources: ["(makro)","app_asset_libraries","app_asset_library_images","app_asset_library_placement_ordering_requests","app_asset_library_placements","app_asset_library_ref_data","app_asset_library_videos","app_custom_product_page_localizations","app_event_localizations","app_store_version_experiment_treatment_localizations","app_store_version_localizations","app_store_versions","apps"],
     },
     {
