@@ -303,7 +303,7 @@ a { color: var(--fg); }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq || applying || finished) return;
       list.innerHTML = '';
-      var shown = r.plan.filter(function (p) { return p.add.length || p.remove.length; });
+      var shown = r.plan.filter(function (p) { return p.add.length || p.remove.length || p.rewrites.length || p.userManaged.length; });
       if (!shown.length) {
         list.appendChild(el('li', '', r.plan.length
           ? 'Your profiles stay as they are.'
@@ -315,10 +315,14 @@ a { color: var(--fg); }
         var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
         if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
         if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ') + ' '));
+        if (p.rewrites.length) li.appendChild(el('span', 'mv', 'rewrite ' + p.rewrites.join(', ') + ' '));
+        if (p.userManaged.length) li.appendChild(el('span', 'mv', 'user-managed, unchanged: ' + p.userManaged.join(', ') + ' '));
         list.appendChild(li);
       });
       // Nothing to change and nothing new to save: Apply would do nothing.
-      $('apply').disabled = !r.plan.length && reuse && !vendorChanged();
+      $('apply').disabled = reuse && !vendorChanged() && !r.plan.some(function (p) {
+        return p.add.length || p.remove.length || p.rewrites.length;
+      });
     }).catch(function (e) { if (seq === planSeq && !applying && !finished) list.textContent = e.message; });
   }
 

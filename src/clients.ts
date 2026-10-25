@@ -88,9 +88,8 @@ const home = (...parts: string[]): string => join(homedir(), ...parts);
 /**
  * A place a client keeps its MCP servers.
  *
- * `cli` targets hand the work to a command the vendor ships — the safest option
- * because the vendor's own code owns the file format. `json` targets are edited
- * here, which is why they back up first.
+ * `cli` targets use the vendor command for writes. `json` targets are edited
+ * here and backed up.
  */
 export type Target =
   | {
@@ -99,6 +98,8 @@ export type Target =
       bin: string;
       where: string;
       add: (name: string, spec: string) => string[];
+      /** A CLI operation that accepts the entire entry as one JSON argument. */
+      addEntry?: (name: string, entry: Record<string, unknown>) => string[];
       /** Absent when the CLI cannot enumerate or delete what it wrote. */
       list?: string[];
       /**
@@ -154,9 +155,10 @@ export const CLIENTS: McpClient[] = [
         bin: 'claude',
         where: '~/.claude.json',
         add: (name, spec) => ['mcp', 'add', '-s', 'user', name, '--', SERVER_COMMAND, ...serverArgs(spec)],
-        list: ['mcp', 'list'],
+        addEntry: (name, entry) => ['mcp', 'add-json', '-s', 'user', name, JSON.stringify(entry)],
+        list: ['mcp', 'list', '--json'],
         listFile: { path: home('.claude.json'), key: 'mcpServers' },
-        remove: (name) => ['mcp', 'remove', name],
+        remove: (name) => ['mcp', 'remove', name, '--scope', 'user'],
       },
       {
         kind: 'json',
@@ -186,7 +188,7 @@ export const CLIENTS: McpClient[] = [
         bin: 'codex',
         where: '~/.codex/config.toml',
         add: (name, spec) => ['mcp', 'add', name, '--', SERVER_COMMAND, ...serverArgs(spec)],
-        list: ['mcp', 'list'],
+        list: ['mcp', 'list', '--json'],
         remove: (name) => ['mcp', 'remove', name],
       },
     ],
@@ -217,6 +219,12 @@ export const CLIENTS: McpClient[] = [
         kind: 'cli',
         bin: 'code',
         where: 'VS Code user MCP config',
+        addEntry: (name, entry) => ['--add-mcp', JSON.stringify({ name, ...entry })],
+        listFile: { path: process.platform === 'darwin'
+          ? home('Library', 'Application Support', 'Code', 'User', 'mcp.json')
+          : process.platform === 'win32'
+            ? join(process.env.APPDATA ?? home('AppData', 'Roaming'), 'Code', 'User', 'mcp.json')
+            : join(process.env.XDG_CONFIG_HOME ?? home('.config'), 'Code', 'User', 'mcp.json'), key: 'servers' },
         add: (name, spec) => [
           '--add-mcp',
           JSON.stringify({ name, command: SERVER_COMMAND, args: serverArgs(spec) }),
@@ -345,64 +353,187 @@ export const clientHint = (client: McpClient): string | undefined => {
 /**
  * Profiles this client already has registered, keyed by server name.
  *
- * The value is the full argument (`monetization:iap`), not just the profile:
- * re-registering with the bare name would silently widen a config the user had
- * narrowed. Targets that cannot enumerate contribute nothing, which reads as
- * "not registered" and makes the next add a harmless overwrite.
+ * A registration retains its target and complete entry. A target that cannot
+ * enumerate contributes an unreadable marker, so setup cannot guess it is safe.
  */
-export function listRegistered(client: McpClient, stale?: Set<string>): Map<string, string> {
-  const found = new Map<string, string>();
+export interface Registration {
+  name: string;
+  target: Target;
+  /** Undefined when the client cannot give us its complete, original entry. */
+  entry?: Record<string, unknown>;
+  spec?: string;
+  pkg?: string;
+}
+
+/** The sole rule for entries that setup must leave in the user's hands. */
+export function isUserManaged(reg: Registration): boolean {
+  const env = reg.entry?.env;
+  return !reg.entry || !reg.pkg || !reg.spec || 'envFile' in reg.entry ||
+    (typeof env === 'object' && env !== null && Object.keys(env).some((key) =>
+      key === 'ASC_KEY_ID' || key === 'ASC_ISSUER_ID' || key === 'ASC_CONFIG_DIR' || key.startsWith('ASC_PRIVATE_KEY')));
+}
+
+/** Shared decision for planning, unticking and the final write. */
+export function registrationBlock(entries: Registration[]) {
+  const managed = entries.filter(isUserManaged);
+  const names = new Set(managed.map((r) => r.name));
+  const profiles = new Set(managed.map((r) => profileOfServer(r.name)));
+  const unsafeUnreadable = managed.some((r) => r.name === '*' &&
+    !(r.target.kind === 'cli' && r.target.bin === 'claude' && r.target.addEntry));
+  return {
+    managed,
+    canAdd: (spec: string) => !unsafeUnreadable && !names.has(serverName(spec)) &&
+      !profiles.has(spec.split(':', 1)[0]),
+    canRemove: (name: string) => !names.has('*') && !names.has(name),
+  };
+}
+
+/** The first non-option argument after our package is the profile spec. */
+function entryParts(entry: Record<string, unknown>): { spec?: string; pkg?: string } {
+  const args = entry.args;
+  if (!Array.isArray(args) || !args.every((arg) => typeof arg === 'string')) return {};
+  const at = args.findIndex((arg) => packageOf(arg) === arg);
+  if (at < 0) return {};
+  return { pkg: args[at], spec: args.slice(at + 1).find((arg) => !arg.startsWith('-')) };
+}
+
+/** Codex's normalized list is safe to round-trip only in its default stdio shape. */
+function codexEntry(row: Record<string, unknown>): Record<string, unknown> | undefined {
+  const transport = row.transport;
+  if (!transport || typeof transport !== 'object' || Array.isArray(transport)) return undefined;
+  const t = transport as Record<string, unknown>;
+  const args = t.args;
+  const empty = (value: unknown): boolean => value == null ||
+    (Array.isArray(value) && value.length === 0) ||
+    (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0);
+  if (t.type !== 'stdio' || t.command !== SERVER_COMMAND || !Array.isArray(args) || args.length < 3 ||
+      !args.every((arg) => typeof arg === 'string') || args[0] !== '-y' ||
+      packageOf(args[1]) !== args[1] || !args[2] || args[2].startsWith('-') ||
+      profileOfServer(String(row.name)) !== args[2].split(':', 1)[0] ||
+      !args.slice(3).every((arg) => arg.startsWith('-')) ||
+      t.env != null || !empty(t.env_vars) || t.cwd != null ||
+      (row.enabled !== undefined && row.enabled !== true) || !empty(row.disabled_reason) ||
+      !empty(row.enabled_tools) || !empty(row.disabled_tools) ||
+      !empty(row.startup_timeout_sec) || !empty(row.tool_timeout_sec) ||
+      (row.required !== undefined && row.required !== false) ||
+      Object.keys(t).some((key) => !['type', 'command', 'args', 'env', 'env_vars', 'cwd'].includes(key)) ||
+      Object.keys(row).some((key) => !['name', 'transport', 'enabled', 'disabled_reason', 'enabled_tools',
+        'disabled_tools', 'startup_timeout_sec', 'tool_timeout_sec', 'auth_status', 'required'].includes(key))) return undefined;
+  return { command: SERVER_COMMAND, args: [...args] };
+}
+
+export function readRegistrations(client: McpClient): Registration[] {
+  const found: Registration[] = [];
   for (const t of presentTargets(client)) {
     if (t.kind === 'cli' && t.listFile) {
-      addServers(found, readJsonServers({ kind: 'json', where: t.where, ...t.listFile }), stale);
+      const servers = readJsonServers({ kind: 'json', where: t.where, ...t.listFile }, t.bin === 'code');
+      if (!servers && existsSync(t.listFile.path)) found.push({ name: '*', target: t });
+      else addServers(found, t, servers);
       continue;
     }
     if (t.kind === 'cli') {
-      if (!t.list) continue;
+      if (!t.list) {
+        found.push({ name: '*', target: t });
+        continue;
+      }
       try {
-        const out = execFileSync(t.bin, t.list, { encoding: 'utf8' });
-        for (const line of out.split('\n')) {
-          const name = line.match(/^(asc-[a-z0-9-]+)\b/i)?.[1];
-          if (!name) continue;
-          found.set(name, line.match(/@erayendes\/asc-mcp(?:@\S+)?\s+(\S+)/)?.[1] ?? profileOfServer(name)!);
-          const pkg = packageOf(line);
-          if (pkg && pkg !== PACKAGE) stale?.add(name);
+        const rows = JSON.parse(execFileSync(t.bin, t.list, { encoding: 'utf8' })) as unknown;
+        if (!Array.isArray(rows)) throw new Error('Invalid MCP list');
+        for (const row of rows) {
+          const name = (row as { name?: unknown })?.name;
+          if (typeof name !== 'string' || !profileOfServer(name)) continue;
+          const full = t.bin === 'codex' && row && typeof row === 'object' && !Array.isArray(row)
+            ? codexEntry(row as Record<string, unknown>) : undefined;
+          found.push({ name, target: t, entry: full, ...(full ? entryParts(full) : {}) });
         }
       } catch {
-        // Listing failed — treat as nothing registered rather than guessing.
+        found.push({ name: '*', target: t });
       }
       continue;
     }
-    addServers(found, readJsonServers(t), stale);
+    const servers = readJsonServers(t);
+    if (!servers && existsSync(t.path)) found.push({ name: '*', target: t });
+    else addServers(found, t, servers);
   }
   return found;
 }
 
-/** Heimdall's entries in one config file's server map, with their full argument. */
+/** Existing callers that only need profile names still get the parsed spec. */
+export function listRegistered(client: McpClient, stale?: Set<string>): Map<string, string> {
+  const found = new Map<string, string>();
+  for (const reg of readRegistrations(client)) {
+    if (reg.name === '*') continue;
+    found.set(reg.name, reg.spec ?? profileOfServer(reg.name)!);
+    if (reg.pkg && reg.pkg !== PACKAGE) stale?.add(reg.name);
+  }
+  return found;
+}
+
+/** Heimdall-named entries in one config file, retaining every original field. */
 function addServers(
-  found: Map<string, string>,
-  servers: Record<string, unknown> | undefined,
-  stale?: Set<string>
+  found: Registration[],
+  target: Target,
+  servers: Record<string, unknown> | undefined
 ): void {
   for (const [name, entry] of Object.entries(servers ?? {})) {
-    const profile = profileOfServer(name);
-    if (!profile) continue;
-    const args = (entry as { args?: unknown })?.args;
-    const spec = Array.isArray(args) ? String(args[args.length - 1]) : profile;
-    found.set(name, spec);
-    const pkg = Array.isArray(args) ? args.map(String).map(packageOf).find(Boolean) : undefined;
-    if (pkg && pkg !== PACKAGE) stale?.add(name);
+    if (!profileOfServer(name)) continue;
+    const full = typeof entry === 'object' && entry !== null && !Array.isArray(entry)
+      ? entry as Record<string, unknown> : undefined;
+    found.push({ name, target, entry: full, ...(full ? entryParts(full) : {}) });
   }
 }
 
-function readJsonServers(t: Extract<Target, { kind: 'json' }>): Record<string, unknown> | undefined {
+/** Strip JSONC syntax without changing strings; VS Code uses this only for reading. */
+function stripJsonc(text: string): string {
+  let withoutComments = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"' && (i === 0 || !isEscaped(text, i))) quoted = !quoted;
+    if (!quoted && char === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      withoutComments += '\n';
+      continue;
+    }
+    if (!quoted && char === '/' && text[i + 1] === '*') {
+      i += 2;
+      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) i++;
+      if (i === text.length) throw new Error('Unterminated JSONC comment');
+      i++;
+      withoutComments += ' ';
+      continue;
+    }
+    withoutComments += char;
+  }
+  let clean = '';
+  quoted = false;
+  for (let i = 0; i < withoutComments.length; i++) {
+    const char = withoutComments[i];
+    if (char === '"' && (i === 0 || !isEscaped(withoutComments, i))) quoted = !quoted;
+    if (!quoted && char === ',' && /^\s*[}\]]/.test(withoutComments.slice(i + 1))) continue;
+    clean += char;
+  }
+  return clean;
+}
+
+function isEscaped(text: string, at: number): boolean {
+  let slashes = 0;
+  for (let i = at - 1; i >= 0 && text[i] === '\\'; i--) slashes++;
+  return slashes % 2 === 1;
+}
+
+function readJsonServers(t: Extract<Target, { kind: 'json' }>, jsonc = false): Record<string, unknown> | undefined {
   if (!existsSync(t.path)) return undefined;
   try {
-    const doc = JSON.parse(readFileSync(t.path, 'utf8')) as Record<string, unknown>;
-    return (doc[t.key] as Record<string, unknown>) ?? {};
+    const raw = readFileSync(t.path, 'utf8');
+    const doc = JSON.parse(jsonc ? stripJsonc(raw) : raw) as unknown;
+    if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) return undefined;
+    const servers = (doc as Record<string, unknown>)[t.key];
+    if (servers === undefined) return {};
+    return typeof servers === 'object' && servers !== null && !Array.isArray(servers)
+      ? servers as Record<string, unknown> : undefined;
   } catch {
-    // Comments (JSONC) or a hand-broken file. The caller falls back to printing
-    // rather than overwriting something it could not read.
+    // A hand-broken file is left for the user rather than overwritten.
     return undefined;
   }
 }
@@ -429,7 +560,8 @@ export interface ChangeResult {
 export function applyToClient(
   client: McpClient,
   toAdd: string[],
-  toRemove: string[]
+  toRemove: string[],
+  migrations: Map<string, string> = new Map()
 ): { results: ChangeResult[]; needsManual: boolean } {
   // Keyed by the change, so two targets doing the same thing collapse to one
   // line. Insertion order is the order the user picked, which is the order
@@ -447,36 +579,60 @@ export function applyToClient(
   };
 
   for (const t of writableTargets(client)) {
+    const current = readRegistrations({ ...client, targets: [t] });
+    const block = registrationBlock(current);
     if (t.kind === 'cli') {
+      const failedMigrations = new Set<string>();
+      const addEntry = (name: string, spec: string, entry: Record<string, unknown>): void => {
+        const fallback = t.add(name, spec);
+        const marker = fallback.indexOf(SERVER_COMMAND);
+        const args = t.addEntry
+          ? t.addEntry(name, entry)
+          : marker >= 0 && typeof entry.command === 'string' && Array.isArray(entry.args)
+            ? [...fallback.slice(0, marker), entry.command, ...entry.args as string[]]
+            : fallback;
+        // JSON CLI arguments can expose non-credential env values in process listings.
+        execFileSync(t.bin, args, { stdio: 'ignore' });
+      };
       for (const spec of toAdd) {
         const name = serverName(spec);
+        if (!block.canAdd(spec)) {
+          record(`add:${spec}`, addLabel(spec), false, 'user-managed entry left unchanged');
+          continue;
+        }
+        const old = current.find((r) => r.name === name || r.name === migrations.get(name));
+        const next = old?.entry ? rewrittenEntry(old.entry, spec)
+          : { command: SERVER_COMMAND, args: serverArgs(spec) };
         try {
-          // Add first. Removing up front is what re-registration needs, but
-          // only when the add would otherwise be refused for the name already
-          // being taken — do it unconditionally and a failing add has already
-          // deleted a registration that was working, with nothing to put back.
+          // Keep the old registration until the new add has actually failed.
           try {
-            execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
-          } catch (err) {
-            if (!t.remove) throw err;
-            // The add may have failed for a reason that has nothing to do with
-            // the name being taken — a missing binary, a flag the CLI stopped
-            // accepting. Clearing is a guess at that point, so its own failure
-            // must not replace the add's error, which is the one that says
-            // what actually went wrong.
+            addEntry(name, spec, next);
+          } catch (firstError) {
+            if (!t.remove || !old?.entry || old.name !== name) throw firstError;
+            try { execFileSync(t.bin, t.remove(name), { stdio: 'ignore' }); }
+            catch { throw firstError; }
             try {
-              execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
-            } catch {
-              throw err;
+              addEntry(name, spec, next);
+            } catch (retryError) {
+              let restoreError: unknown;
+              try { addEntry(name, old.spec!, old.entry); }
+              catch (err) { restoreError = err; }
+              if (restoreError) throw new Error(`new add failed; old entry was removed and restore failed (${cliError(restoreError)})`);
+              throw retryError;
             }
-            execFileSync(t.bin, t.add(name, spec), { stdio: 'ignore' });
           }
           record(`add:${spec}`, addLabel(spec), true);
         } catch (err) {
-          record(`add:${spec}`, addLabel(spec), false, firstLine(err));
+          if (old && old.name !== name) failedMigrations.add(old.name);
+          record(`add:${spec}`, addLabel(spec), false, cliError(err));
         }
       }
       for (const name of toRemove) {
+        if (!block.canRemove(name) || failedMigrations.has(name)) {
+          record(`rm:${name}`, `removed ${name}`, false,
+            failedMigrations.has(name) ? 'new entry failed; old entry left unchanged' : 'user-managed entry left unchanged');
+          continue;
+        }
         if (!t.remove) {
           record(`rm:${name}`, `removed ${name}`, false, `${client.label} has no remove command — edit ${t.where}`);
           continue;
@@ -485,7 +641,7 @@ export function applyToClient(
           execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
           record(`rm:${name}`, `removed ${name}`, true);
         } catch (err) {
-          record(`rm:${name}`, `removed ${name}`, false, firstLine(err));
+          record(`rm:${name}`, `removed ${name}`, false, cliError(err));
         }
       }
       continue;
@@ -505,13 +661,17 @@ export function applyToClient(
     }
     if (!failure) {
       try {
-        writeJsonServers(t, toAdd, toRemove);
+        const adds = toAdd.filter(block.canAdd);
+        const removes = toRemove.filter(block.canRemove);
+        if (adds.length || removes.length) writeJsonServers(t, adds, removes, migrations);
       } catch (err) {
         failure = `${t.where}: ${firstLine(err)}`;
       }
     }
-    for (const spec of toAdd) record(`add:${spec}`, addLabel(spec), !failure, failure);
-    for (const name of toRemove) record(`rm:${name}`, `removed ${name}`, !failure, failure);
+    for (const spec of toAdd) record(`add:${spec}`, addLabel(spec), !failure && block.canAdd(spec),
+      failure ?? (!block.canAdd(spec) ? 'user-managed entry left unchanged' : undefined));
+    for (const name of toRemove) record(`rm:${name}`, `removed ${name}`, !failure && block.canRemove(name),
+      failure ?? (!block.canRemove(name) ? 'user-managed entry left unchanged' : undefined));
   }
 
   const results = [...outcomes.values()].map(({ label, ok, why }) => ({
@@ -532,7 +692,8 @@ export function applyToClient(
 function writeJsonServers(
   t: Extract<Target, { kind: 'json' }>,
   toAdd: string[],
-  toRemove: string[]
+  toRemove: string[],
+  migrations: Map<string, string> = new Map()
 ): void {
   let doc: Record<string, unknown> = {};
   if (existsSync(t.path)) {
@@ -542,12 +703,27 @@ function writeJsonServers(
     mkdirSync(dirname(t.path), { recursive: true });
   }
   const servers = (doc[t.key] as Record<string, unknown>) ?? {};
+  const migrated = new Map(toAdd.map((spec) => [serverName(spec), servers[migrations.get(serverName(spec)) ?? '']]));
   for (const name of toRemove) delete servers[name];
   for (const spec of toAdd) {
-    servers[serverName(spec)] = { command: SERVER_COMMAND, args: serverArgs(spec) };
+    const name = serverName(spec);
+    const existing = servers[name] ?? migrated.get(name);
+    servers[name] = typeof existing === 'object' && existing !== null && !Array.isArray(existing)
+      ? rewrittenEntry(existing as Record<string, unknown>, spec)
+      : { command: SERVER_COMMAND, args: serverArgs(spec) };
   }
   doc[t.key] = servers;
   writeAtomic(t.path, `${JSON.stringify(doc, null, 2)}\n`);
+}
+
+/** Replace only the package and profile tokens in a complete entry. */
+function rewrittenEntry(entry: Record<string, unknown>, spec: string): Record<string, unknown> {
+  const args = [...entry.args as string[]];
+  const pkgAt = args.findIndex((arg) => packageOf(arg) === arg);
+  const specAt = args.findIndex((arg, i) => i > pkgAt && !arg.startsWith('-'));
+  args[pkgAt] = PACKAGE;
+  args[specAt] = spec;
+  return { ...entry, args };
 }
 
 /**
@@ -579,6 +755,11 @@ export function manualBlock(client: McpClient, specs: string[]): string {
 }
 
 const firstLine = (err: unknown): string => String((err as Error).message ?? err).split('\n')[0];
+const cliError = (err: unknown): string => {
+  if (err instanceof Error && err.message.startsWith('new add failed;')) return err.message;
+  const status = typeof err === 'object' && err !== null ? (err as { status?: number }).status : undefined;
+  return status === undefined ? 'CLI command failed' : `CLI exited ${status}`;
+};
 
 /** Whether a desktop app is running, by its process name. */
 export function isRunning(name: string): boolean {

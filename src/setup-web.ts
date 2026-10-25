@@ -40,6 +40,7 @@ import {
   saveCredentials,
   selectionToSpecs,
   verifyCredentials,
+  type ClientPlan,
 } from './setup.js';
 import { SETUP_PAGE } from './setup-page.js';
 
@@ -89,6 +90,15 @@ const DOES: Record<string, string> = {
 };
 
 const MAX_BODY = 64 * 1024;
+
+export const planForPage = (steps: ClientPlan[]) => steps.map((p) => ({
+  client: p.client.label,
+  add: p.toAdd.filter((s) => !p.toSwitch.includes(s)).map(serverName),
+  remove: p.toRemove,
+  quiet: p.toSwitch.length > 0,
+  rewrites: p.rewrites,
+  userManaged: p.userManaged,
+}));
 
 class HttpError extends Error {
   constructor(
@@ -210,14 +220,8 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
 
     async plan(body) {
       return {
-        // Only what the user changes is listed; moving entries to this
-        // release's package is part of setting it up, shown as "quiet".
-        plan: plan(body).map((p) => ({
-          client: p.client.label,
-          add: p.toAdd.filter((s) => !p.toSwitch.includes(s)).map(serverName),
-          remove: p.toRemove,
-          quiet: p.toSwitch.length > 0,
-        })),
+        // Existing entries are listed separately, including channel moves.
+        plan: planForPage(plan(body)),
       };
     },
 
@@ -241,6 +245,8 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           const bits = [
             ...(added.length ? [`add ${added.join(', ')}`] : []),
             ...(p.toRemove.length ? [`remove ${p.toRemove.join(', ')}`] : []),
+            ...(p.rewrites.length ? [`rewrite ${p.rewrites.join(', ')}`] : []),
+            ...(p.userManaged.length ? [`leave user-managed ${p.userManaged.join(', ')}`] : []),
           ];
           if (bits.length) log(`${p.client.label}: would ${bits.join(', ')}`);
         }

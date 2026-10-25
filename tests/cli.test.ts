@@ -13,7 +13,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -59,7 +59,7 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
     return { home, cursor: join(home, '.cursor', 'mcp.json') };
   };
   /** Never inherits the real HOME: this writes client configs. */
-  const register = (home: string, args: string[]): { out: string; code: number } => {
+  const register = (home: string, args: string[], extraEnv: Record<string, string> = {}): { out: string; code: number } => {
     try {
       return {
         out: execFileSync(process.execPath, [DIST, 'register', ...args], {
@@ -67,7 +67,7 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
           timeout: 20_000,
           // A bare PATH so no real `claude`/`codex` on this machine is found
           // and driven: the sandbox HOME only isolates the JSON clients.
-          env: { HOME: home, PATH: '/nonexistent' },
+          env: { HOME: home, PATH: '/nonexistent', ...extraEnv },
         }),
         code: 0,
       };
@@ -78,6 +78,32 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
   };
   const servers = (path: string): string[] =>
     Object.keys(JSON.parse(readFileSync(path, 'utf8')).mcpServers);
+  const codeConfig = (home: string): string => process.platform === 'darwin'
+    ? join(home, 'Library', 'Application Support', 'Code', 'User', 'mcp.json')
+    : process.platform === 'win32'
+      ? join(home, 'AppData', 'Roaming', 'Code', 'User', 'mcp.json')
+      : join(home, '.config', 'Code', 'User', 'mcp.json');
+  const fakeCode = (home: string): Record<string, string> => {
+    const bin = join(home, 'code');
+    writeFileSync(bin, `#!/usr/bin/env node
+const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+fs.writeFileSync(path.join(process.env.HOME, 'code-argv.json'), JSON.stringify(args));
+const file = process.platform === 'darwin'
+  ? path.join(process.env.HOME, 'Library', 'Application Support', 'Code', 'User', 'mcp.json')
+  : process.platform === 'win32'
+    ? path.join(process.env.APPDATA, 'Code', 'User', 'mcp.json')
+    : path.join(process.env.HOME, '.config', 'Code', 'User', 'mcp.json');
+const entry = JSON.parse(args[1]);
+const doc = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { servers: {} };
+doc.servers[entry.name] = { ...entry }; delete doc.servers[entry.name].name;
+fs.mkdirSync(path.dirname(file), { recursive: true });
+fs.writeFileSync(file, JSON.stringify(doc));
+`);
+    chmodSync(bin, 0o755);
+    return { PATH: `${home}:${process.env.PATH}`, APPDATA: join(home, 'AppData', 'Roaming') };
+  };
 
   it('writes the profiles it was given, sub-profile argument and all', () => {
     const { home, cursor } = sandbox();
@@ -90,6 +116,87 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
     rmSync(home, { recursive: true, force: true });
   });
 
+  it('registers VS Code through its real client definition with a fake code binary', () => {
+    const { home } = sandbox();
+    const { out, code } = register(home, ['app-info', '--clients=vscode'], fakeCode(home));
+    const path = codeConfig(home);
+    expect(code).toBe(0);
+    expect(out).toContain('added ASC-AppInfo');
+    expect(JSON.parse(readFileSync(join(home, 'code-argv.json'), 'utf8'))[0]).toBe('--add-mcp');
+    expect(JSON.parse(readFileSync(path, 'utf8')).servers['ASC-AppInfo'].args.at(-1)).toBe('app-info');
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('reads VS Code JSONC and leaves a credential entry untouched', () => {
+    const { home } = sandbox();
+    const env = fakeCode(home);
+    const path = codeConfig(home);
+    mkdirSync(resolve(path, '..'), { recursive: true });
+    const jsonc = `{
+  // A user entry with a trailing comma and a URL string.
+  "servers": {
+    "ASC-AppInfo": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "app-info", "--url=https://example.test/a/*"],
+      "env": { "ASC_KEY_ID": "test-only-secret", }, },
+  },
+}`;
+    writeFileSync(path, jsonc);
+    const { out, code } = register(home, ['app-info', '--clients=vscode'], env);
+    expect(code).toBe(0);
+    expect(out).toContain('user-managed, unchanged: ASC-AppInfo');
+    expect(readFileSync(path, 'utf8')).toBe(jsonc);
+    expect(existsSync(join(home, 'code-argv.json'))).toBe(false);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('reports an unreadable VS Code target without calling add', () => {
+    const { home } = sandbox();
+    const env = fakeCode(home);
+    const path = codeConfig(home);
+    mkdirSync(resolve(path, '..'), { recursive: true });
+    writeFileSync(path, '{ "servers": { "ASC-AppInfo": ');
+    const { out, code } = register(home, ['app-info', '--clients=vscode'], env);
+    expect(code).toBe(0);
+    expect(out).toContain('unreadable');
+    expect(existsSync(join(home, 'code-argv.json'))).toBe(false);
+    expect(readFileSync(path, 'utf8')).toBe('{ "servers": { "ASC-AppInfo": ');
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('uses Claude Code add-json with the full entry as a single argument', () => {
+    const { home } = sandbox();
+    const bin = join(home, 'claude');
+    writeFileSync(bin, `#!/usr/bin/env node
+const fs = require('node:fs');
+const path = process.env.HOME + '/.claude.json';
+const log = process.env.HOME + '/claude-argv.json';
+const args = process.argv.slice(2);
+const calls = fs.existsSync(log) ? JSON.parse(fs.readFileSync(log, 'utf8')) : [];
+calls.push(args); fs.writeFileSync(log, JSON.stringify(calls));
+const doc = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, 'utf8')) : { mcpServers: {} };
+const name = args[1] === 'add-json' ? args[4] : args[2];
+if (args[1] === 'add-json') {
+  if (doc.mcpServers[name]) process.exit(2);
+  doc.mcpServers[name] = JSON.parse(args[5]);
+}
+if (args[1] === 'remove') delete doc.mcpServers[name];
+fs.writeFileSync(path, JSON.stringify(doc));
+`);
+    chmodSync(bin, 0o755);
+    const old = { command: 'npx', args: ['-y', '@erayendes/asc-mcp@beta', 'app-info', '--read-only'],
+      env: { DEMO_MODE: 'yes' }, timeout: 19 };
+    writeFileSync(join(home, '.claude.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': old } }));
+    const { code } = register(home, ['app-info', '--clients=claude'],
+      { PATH: `${home}:${process.env.PATH}` });
+    const calls = JSON.parse(readFileSync(join(home, 'claude-argv.json'), 'utf8'));
+    const updated = JSON.parse(readFileSync(join(home, '.claude.json'), 'utf8')).mcpServers['ASC-AppInfo'];
+    expect(code).toBe(0);
+    expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json']);
+    expect(JSON.parse(calls[2][5])).toEqual({ ...old,
+      args: ['-y', '@erayendes/asc-mcp', 'app-info', '--read-only'] });
+    expect(updated).toEqual(JSON.parse(calls[2][5]));
+    rmSync(home, { recursive: true, force: true });
+  });
+
   it('adds without pruning what was already there', () => {
     // setup reconciles because the user is looking at the list. An agent is
     // not, so asking for one profile must never drop the others.
@@ -97,6 +204,28 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
     register(home, ['analytics', '--clients=cursor']);
     register(home, ['webhooks', '--clients=cursor']);
     expect(servers(cursor)).toEqual(['ASC-Analytics', 'ASC-Webhooks']);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('keeps read-only flags and env on a channel rewrite, and reports credential entries', () => {
+    const { home, cursor } = sandbox();
+    const other = '@erayendes/asc-mcp@beta';
+    const guarded = { command: 'npx', args: ['-y', other, 'analytics'],
+      env: { ASC_CONFIG_DIR: '/test-only/config' } };
+    writeFileSync(cursor, JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', other, 'app-info', '--read-only'],
+        env: { DEMO_MODE: 'yes' }, timeout: 10 },
+      'ASC-Analytics': guarded,
+    } }));
+    const { out, code } = register(home, ['app-info', 'analytics', '--clients=cursor']);
+    const entries = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers;
+    expect(code).toBe(0);
+    expect(entries['ASC-AppInfo']).toEqual({ command: 'npx',
+      args: ['-y', '@erayendes/asc-mcp', 'app-info', '--read-only'],
+      env: { DEMO_MODE: 'yes' }, timeout: 10 });
+    expect(entries['ASC-Analytics']).toEqual(guarded);
+    expect(out).toContain('user-managed, unchanged: ASC-Analytics');
+    expect(out).not.toContain('/test-only/config');
     rmSync(home, { recursive: true, force: true });
   });
 
