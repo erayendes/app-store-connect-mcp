@@ -39,7 +39,7 @@ jobs:
       - run: npm run generate
       - name: Fail if generated output is stale
         shell: bash
-        run: test -z "$(git status --porcelain src/generated plugins .claude-plugin)"
+        run: git status --porcelain src/generated plugins .claude-plugin && test -z "$(git status --porcelain src/generated plugins .claude-plugin)"
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
