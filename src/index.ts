@@ -13,7 +13,7 @@ import {
 import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor, type ProfileSelection } from './profiles.js';
-import { serverName } from './clients.js';
+import { PACKAGE, serverName } from './clients.js';
 
 /** Exported so a test can prove the profile list here never drifts from the code. */
 export function helpText(): string {
@@ -21,8 +21,8 @@ export function helpText(): string {
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
-  npx -y @erayendes/asc-mcp [profile] [options]
-  npx -y @erayendes/asc-mcp setup
+  npx -y ${PACKAGE} [profile] [options]
+  npx -y ${PACKAGE} setup
 
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "ASC-<Profile>"). Add one entry per profile to
@@ -83,7 +83,7 @@ Credentials (in resolution order):
      ASC_PRIVATE_KEY_KEYCHAIN ("service/account", macOS) / ASC_PRIVATE_KEY_PATH.
      Optional: ASC_VENDOR_NUMBER (sales/finance reports), ASC_BUNDLE_ID
      (default app for StoreKit 2), ASC_ENVIRONMENT (Production|Sandbox).
-  2. Shared config written by "npx -y @erayendes/asc-mcp setup" — recommended when
+  2. Shared config written by "npx -y ${PACKAGE} setup" — recommended when
      running several profiles, so credentials live in exactly one place.
 `;
 }

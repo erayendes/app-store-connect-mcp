@@ -13,6 +13,7 @@
  * size or radius of its own.
  */
 import { DESIGN_TOKENS } from './setup-tokens.js';
+import { PACKAGE } from './clients.js';
 
 // Sibling projects, in this order. No url = not released yet.
 const SIBLINGS: { name: string; what: string; url?: string }[] = [
@@ -574,7 +575,7 @@ a { color: var(--fg); }
     $('vendor').addEventListener('input', invalidatePlan);
     renderRows();
     if (reuse) keyDone();
-  }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. To start again, run npx -y @erayendes/asc-mcp setup --web in your terminal. (' + e.message + ')'; });
+  }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. To start again, run npx -y ${PACKAGE} setup --web in your terminal. (' + e.message + ')'; });
 
   $('reuseNo').onclick = function () {
     // The saved key is no longer the one: nothing applies until the new one is checked.
@@ -638,7 +639,7 @@ a { color: var(--fg); }
   };
 
   $('cancel').onclick = function () {
-    call('cancel').finally(function () { document.querySelector('main').textContent = 'Setup cancelled. Nothing was changed. To start again, run ' + ((state && state.setupCommand) || 'npx -y @erayendes/asc-mcp setup') + ' --web in your terminal; it prints a new link.'; });
+    call('cancel').finally(function () { document.querySelector('main').textContent = 'Setup cancelled. Nothing was changed. To start again, run ' + ((state && state.setupCommand) || 'npx -y ${PACKAGE} setup') + ' --web in your terminal; it prints a new link.'; });
   };
   window.addEventListener('beforeunload', function (e) { if (!finished && state) e.preventDefault(); });
 })();

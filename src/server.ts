@@ -20,29 +20,28 @@ import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from
 import { dialogText, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
+import { MACRO_TOOLS } from './tools/catalog.js';
 import { REVIEWS_AI_TOOLS, REVIEWS_AI_TOOL_NAMES, executeReviewsAiTool } from './tools/reviews-ai.js';
 import {
-  METADATA_I18N_TOOLS,
   METADATA_I18N_TOOL_NAMES,
   METADATA_I18N_WRITE_TOOLS,
   executeMetadataI18nTool,
 } from './tools/metadata-i18n.js';
 import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
 import {
-  PRICING_TOOLS,
   PRICING_TOOL_NAMES,
   executePricingTool,
   buildPricingPreview,
 } from './tools/pricing.js';
-import { SCREENSHOT_TOOLS, buildAssetDeletePreview, executeScreenshotTool } from './tools/screenshots.js';
-import { PREFLIGHT_TOOLS, PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
-import { METADATA_TOOLS, METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
-import { ACCOUNT_TOOLS, ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
+import { buildAssetDeletePreview, executeScreenshotTool } from './tools/screenshots.js';
+import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
+import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
+import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOLS, RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs } from './tools/release.js';
-import { TESTFLIGHT_TOOLS, TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
-import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
-import { CI_TOOLS, CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
+import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs } from './tools/release.js';
+import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
+import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
+import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
@@ -267,7 +266,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * this cost" on a server built to answer questions would be the wrong kind of
    * safe.
    */
-  const macroTools = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].filter(
+  const macroTools = MACRO_TOOLS.filter(
     (t) =>
       (!manualTools || manualTools.has(t.name)) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
@@ -276,7 +275,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /** The macros that declare an outputSchema, so their result can be sent structured. */
   const READ_MACRO_NAMES = new Set(
-    [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].filter((t) => t.outputSchema).map((t) => t.name)
+    MACRO_TOOLS.filter((t) => t.outputSchema).map((t) => t.name)
   );
 
   const gate = createWriteGate();
@@ -331,7 +330,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
     if (op) return !op.readOnly;
-    const macro = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...METADATA_I18N_TOOLS, ...RELEASE_TOOLS, ...TESTFLIGHT_TOOLS].find((t) => t.name === name);
+    const macro = MACRO_TOOLS.find((t) => t.name === name);
     if (macro) return macro.annotations?.readOnlyHint !== true;
     if (STOREKIT_TOOL_NAMES.has(name) && storekit && !config.readOnly) {
       return STOREKIT_TOOLS.find((t) => t.name === name)?.annotations?.readOnlyHint !== true;
@@ -817,7 +816,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                   lines.push(
                     `The rest live on sibling MCP servers. Register the ones you need — ` +
                       `the command is the same everywhere:\n` +
-                      homes.map((n) => `  ${serverName(n)}  ->  npx -y @erayendes/asc-mcp ${n}`).join('\n') +
+                      homes.map((n) => `  ${serverName(n)}  ->  npx -y ${PACKAGE} ${n}`).join('\n') +
                       `\nFor example, in Claude Code:\n` +
                       homes.map((n) => `  ${registerCommand(n)}`).join('\n') +
                       `\nOn other clients (Codex, Antigravity, Claude Desktop, …) add the same ` +

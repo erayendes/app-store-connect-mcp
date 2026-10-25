@@ -14,7 +14,7 @@
  * Generated from PROFILES so a profile cannot ship absent from Xcode or under a
  * name that differs from what `setup` registers. Run through `npm run generate`.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SERVER_COMMAND, profileLabel, serverArgs, serverName } from '../src/clients.js';
@@ -37,6 +37,7 @@ const displayName = (area: string): string => `Heimdall | ASC ${area}`;
 const write = (path: string, value: unknown) =>
   writeFileSync(resolve(root, path), JSON.stringify(value, null, 2) + '\n');
 
+rmSync(resolve(root, 'plugins'), { recursive: true, force: true });
 for (const p of PROFILES) {
   const name = serverName(p.name);
   mkdirSync(resolve(root, 'plugins', p.name, '.claude-plugin'), { recursive: true });

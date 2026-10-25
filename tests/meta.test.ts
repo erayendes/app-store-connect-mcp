@@ -133,6 +133,16 @@ describe('asc__search_tools finds the macros', () => {
     );
     expect(res.matches.find((m: any) => m.domain === 'macro').loaded).toBe(false);
   });
+
+  it('does not suggest writes when the server is read-only', async () => {
+    const searchReadOnly = async (query: string) =>
+      (await executeMetaTool('asc__search_tools', { query, limit: 100 },
+        { ...ctx(), readOnly: true })) as any;
+    const price = await searchReadOnly('change subscription price');
+    expect(price.matches.some((m: any) => m.tool === 'pricing__set_subscription_price')).toBe(false);
+    const offer = await searchReadOnly('make offer');
+    expect(offer.matches.some((m: any) => m.tool === 'pricing__make_offer')).toBe(false);
+  });
 });
 
 describe('summarizeExpirations (asc__status check_expirations)', () => {

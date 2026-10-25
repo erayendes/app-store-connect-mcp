@@ -953,7 +953,7 @@ export function runRegister(specs: string[], clientIds?: string[]): void {
   if (plan.some((p) => p.toAdd.length || p.toRemove.length) && !readSharedConfig()) {
     console.log(
       '\nNo credentials stored yet. The servers are registered but cannot ' +
-        'authenticate until you run this yourself:\n  npx -y @erayendes/asc-mcp setup'
+        `authenticate until you run this yourself:\n  npx -y ${PACKAGE} setup`
     );
   }
 }
