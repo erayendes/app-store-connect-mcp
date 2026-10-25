@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@erayendes/asc-mcp@beta",
+        "@erayendes/asc-mcp",
         "background-assets"
       ]
     }
