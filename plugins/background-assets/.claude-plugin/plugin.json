@@ -1,6 +1,6 @@
 {
   "name": "asc-background-assets",
-  "version": "2.7.1",
+  "version": "2.8.0",
   "description": "Background Assets (iOS 26): asset packs downloaded outside the app binary.",
   "author": {
     "name": "Eray Endes",

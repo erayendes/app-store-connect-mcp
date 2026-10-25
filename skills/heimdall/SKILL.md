@@ -126,11 +126,11 @@ No strong preference: `analytics`, `marketing` and `app-info` is a reasonable
 default.
 
 A large profile takes a colon and a list of sub-profiles —
-`monetization:subscription-pricing,subscription-offers` is 55 tools where
-`monetization` is 211. Worth suggesting for `monetization`, `game-center`,
+`monetization:subscription-pricing,subscription-offers` is 56 tools where
+`monetization` is 212. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
 
-Heimdall serves 928 distinct tools across 13 profiles: 888 reachable Apple operations plus 40 hand-written tools. The `testflight` profile serves 56 tools including core.
+Heimdall serves 929 distinct tools across 13 profiles: 888 reachable Apple operations plus 41 hand-written tools. The `testflight` profile serves 56 tools including core.
 
 ## Prefer the macro over the chain
 
@@ -144,6 +144,7 @@ right choice for anything the macro does not cover.
 | app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:iap-pricing`) |
 | rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:iap-pricing`) — keeps every other price |
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
+| looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers`) — win-back, promotional or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
 | version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
 | reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
 | reserving an asset library image or video, uploading it, then placing it | `listing__upload_asset` |

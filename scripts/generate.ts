@@ -470,6 +470,25 @@ async function tokenReport(verbose: boolean): Promise<string> {
   return lines.join('\n');
 }
 
+/**
+ * Corrections for places where Apple's spec contradicts Apple's own API docs.
+ * Body schemas are closed-world, so a field the spec forgot makes a correct
+ * request fail locally before it is ever sent.
+ *
+ * WinBackOfferPriceInlineCreate has only `type` and `id`, yet "Creating and
+ * configuring win-back offers" sends `relationships.territory` and
+ * `relationships.subscriptionPricePoint` on every included price — there is no
+ * other way to say what the price is. Borrow the shape from the WinBackOfferPrice
+ * resource. Applied only while the gap exists, so a fixed spec makes it a no-op.
+ */
+function patchSpecGaps(schemas: Record<string, any>): void {
+  const inline = schemas.WinBackOfferPriceInlineCreate;
+  const relationships = schemas.WinBackOfferPrice?.properties?.relationships;
+  if (inline?.properties && !inline.properties.relationships && relationships) {
+    inline.properties.relationships = relationships;
+  }
+}
+
 function main(): void {
   const specPath = resolve(ROOT, 'spec/openapi.json');
   const spec = JSON.parse(readFileSync(specPath, 'utf8'));
@@ -480,6 +499,7 @@ function main(): void {
   /** bodyRef -> simplified, self-contained JSON Schema (deduped across ops). */
   const bodySchemas: Record<string, unknown> = {};
   const componentSchemas: Record<string, any> = spec.components?.schemas ?? {};
+  patchSpecGaps(componentSchemas);
 
   for (const [path, pathItem] of Object.entries<any>(spec.paths ?? {})) {
     const sharedParams: OpenApiParameter[] = pathItem.parameters ?? [];

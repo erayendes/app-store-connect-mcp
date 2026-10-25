@@ -27297,6 +27297,62 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
       },
       "id": {
        "type": "string"
+      },
+      "relationships": {
+       "type": "object",
+       "properties": {
+        "territory": {
+         "type": "object",
+         "properties": {
+          "data": {
+           "type": "object",
+           "properties": {
+            "type": {
+             "type": "string",
+             "enum": [
+              "territories"
+             ]
+            },
+            "id": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "type"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "additionalProperties": false
+        },
+        "subscriptionPricePoint": {
+         "type": "object",
+         "properties": {
+          "data": {
+           "type": "object",
+           "properties": {
+            "type": {
+             "type": "string",
+             "enum": [
+              "subscriptionPricePoints"
+             ]
+            },
+            "id": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "type"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "additionalProperties": false
       }
      },
      "required": [

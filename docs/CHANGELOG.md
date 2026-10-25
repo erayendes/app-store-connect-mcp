@@ -8,13 +8,29 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### Unreleased
+### [2.8.0] — 2026-10-25
 
-Apple added the App Store asset library to its API (spec 4.5.1), and Heimdall now covers it. You upload an image or video to your app's library once, then place it where you need it: a version's product page, a custom product page, a product page test or an in-app event. The 24 new tools live in a new `marketing:asset-library` sub-profile.
+**An image and video library for your app.** Apple added an image and video library to App Store Connect. You upload an image or video to your app's library and use it wherever you like. 24 new tools in the `marketing:asset-library` sub-profile cover it. You can now tell the AI "upload this image or video to the library", and it can place it on a page in the same step if you want.
 
-`listing__upload_asset` uploads an image or video in one step, and can place it in the same call. Apple's own tools can only reserve a spot for a file; they can't send it.
+**Delete several files from the asset library with one confirmation.** `listing__delete_assets` takes the app and the files to delete. Before it deletes anything, it checks that every file is in that app's library. If even one isn't, it deletes nothing. Then it asks you once, and the window names the app and every file. Before, you got one window per file.
 
-Placing a file changes what customers see, so it gets the same care as a screenshot.
+The window for deleting a single library image or video now also says which app it belongs to, when the file is used on a page, for example `01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT`. A file that isn't used on any page says so instead. Apple doesn't record which app an unused file belongs to, so its app can't be shown.
+
+**Make a subscription offer in every country at once.** `pricing__make_offer` makes a win-back or promotional offer from one country and one price, or as a free trial. Apple works out the price in every other country the subscription is sold in. The whole offer goes to Apple in one request, so it is made complete or not at all. If any country is missing a price, nothing is sent. Apple doesn't let you change an offer's countries or prices afterwards, so try it with `--dry-run` first to see every country's price.
+
+It makes introductory offers too. Apple takes those one country at a time, so Heimdall checks every country first and only then starts writing. If something fails partway, it tells you which countries are done, and running the same call again carries on from there. `undo: true` takes the offer back from every country.
+
+Creating a win-back offer with the raw tool works now. It used to refuse a request in the exact shape Apple's own documentation shows, before sending it.
+
+The "are you sure?" window for a screenshot or app preview now says which one it is. It used to show only the file name, such as `02.png`. Now it also shows the app, the version, the language and the device size, such as `02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67`.
+
+The window for sending a version to review now names the app and the platform, such as `App: Ask Quran (6636549188), Version: 2.1.3, Platform: iOS`. It used to show only the Apple ID. When an app has an editable version on more than one platform, `release__submit` and `preflight__check_version` now ask which one instead of taking whichever Apple listed first ([#179](https://github.com/erayendes/app-store-connect-mcp/pull/179)).
+
+Fewer "are you sure?" windows. Changing the name, description or image of a subscription or in-app purchase used to ask as if you were changing its price, once for every language. It doesn't ask anymore. Deleting one still asks, and so does changing a price.
+
+The browser setup page shows other projects from Milowda in a column beside the steps ([#180](https://github.com/erayendes/app-store-connect-mcp/pull/180)).
+
+Heimdall now has 929 tools.
 
 ### [2.7.1] — 2026-10-16
 
@@ -243,13 +259,29 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### Yayımlanmamış
+### [2.8.0] — 2026-10-25
 
-Apple, App Store görsel/video kütüphanesini API'sine ekledi (spec 4.5.1); Heimdall artık onu da kapsıyor. Bir görseli ya da videoyu uygulamanın kütüphanesine bir kez yüklüyorsunuz, sonra ihtiyacınız olan yere yerleştiriyorsunuz: sürümün ürün sayfası, özel ürün sayfası, ürün sayfası testi ya da uygulama içi etkinlik. 24 yeni araç, yeni `marketing:asset-library` alt profilinde.
+**Uygulamanız için bir görsel ve video kütüphanesi.** Apple, App Store Connect’e bir görsel/video kütüphanesi ekledi. Bir görseli ya da videoyu uygulamanın kütüphanesine yükleyip istediğiniz yerde kullanıyorsunuz. `marketing:asset-library` alt profilindeki 24 yeni araç bunu kapsıyor. Artık yapay zekâya “şu görseli ya da videoyu kütüphaneye yükle” diyebilirsiniz; isterseniz aynı anda bir sayfaya da yerleştiriyor.
 
-`listing__upload_asset` bir görseli ya da videoyu tek adımda yüklüyor, isterseniz aynı çağrıda yerleştiriyor da. Apple'ın kendi araçları bir dosyaya yalnızca yer ayırabiliyor, dosyayı gönderemiyor.
+**Kütüphaneden birden çok dosyayı tek onayla silin.** `listing__delete_assets` uygulamayı ve silinecek dosyaları alıyor. Bir şey silmeden önce her dosyanın o uygulamanın kütüphanesinde olduğunu kontrol ediyor. Biri bile yoksa hiçbir şey silmiyor. Sonra size bir kez soruyor; pencerede uygulama ve her dosyanın adı yazıyor. Önceden her dosya için ayrı bir pencere açılıyordu.
 
-Bir dosyayı yerleştirmek müşterinin gördüğünü değiştirdiği için, ekran görüntüsüyle aynı özeni görüyor.
+Tek bir kütüphane görselini ya da videosunu silerken açılan pencere de artık, dosya bir sayfada kullanılıyorsa hangi uygulamaya ait olduğunu söylüyor: `01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT` gibi. Hiçbir sayfada kullanılmayan dosyada bunun yerine bunu yazıyor. Apple, kullanılmayan bir dosyanın hangi uygulamaya ait olduğunu kaydetmiyor; bu yüzden onun uygulaması gösterilemiyor.
+
+**Abonelik teklifini tüm ülkelerde bir kerede kurun.** `pricing__make_offer`, bir ülke ve bir fiyattan (ya da ücretsiz deneme olarak) win-back veya promosyon teklifi kuruyor; aboneliğin satıldığı diğer bütün ülkelerin fiyatını Apple hesaplıyor. Teklifin tamamı Apple'a tek istekte gidiyor: ya eksiksiz kuruluyor ya hiç kurulmuyor. Bir ülkenin bile fiyatı eksikse hiçbir şey gönderilmiyor. Apple bir teklifin ülkelerini ve fiyatlarını sonradan değiştirmeye izin vermediği için önce `--dry-run` ile deneyin; her ülkenin fiyatını görürsünüz.
+
+Tanıtım tekliflerini de kuruyor. Apple bunları ülke ülke kabul ettiği için Heimdall önce her ülkeyi kontrol ediyor, sonra yazmaya başlıyor. Yarıda bir hata çıkarsa hangi ülkelerin bittiğini söylüyor; aynı çağrıyı tekrar çalıştırdığınızda kaldığı yerden devam ediyor. `undo: true` teklifi bütün ülkelerden geri alıyor.
+
+Ham araçla win-back teklifi kurmak artık çalışıyor. Önceden, Apple'ın kendi belgesindeki biçimde bir isteği göndermeden reddediyordu.
+
+Bir ekran görüntüsü ya da önizleme videosu için açılan "emin misiniz?" penceresi artık hangisi olduğunu söylüyor. Önceden yalnızca `02.png` gibi dosya adını gösteriyordu. Artık uygulamayı, sürümü, dili ve cihaz boyutunu da gösteriyor: `02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67` gibi.
+
+Bir sürümü incelemeye gönderirken açılan pencere artık uygulamanın adını ve platformu söylüyor: `App: Ask Quran (6636549188), Version: 2.1.3, Platform: iOS` gibi. Önceden yalnızca Apple ID'yi gösteriyordu. Bir uygulamanın birden çok platformda düzenlenebilir sürümü varsa `release__submit` ve `preflight__check_version` artık Apple'ın ilk listelediğini almak yerine hangisi olduğunu soruyor ([#179](https://github.com/erayendes/app-store-connect-mcp/pull/179)).
+
+Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
+
+Tarayıcıdaki kurulum sayfası, adımların yanındaki bir sütunda Milowda'nın diğer projelerini gösteriyor ([#180](https://github.com/erayendes/app-store-connect-mcp/pull/180)).
+
+Heimdall artık 929 araç içeriyor.
 
 ### [2.7.1] — 2026-10-16
 

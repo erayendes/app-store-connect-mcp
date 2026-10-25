@@ -99,6 +99,41 @@ describe('generated body schemas (invariants)', () => {
     expect(body.properties.data.properties.attributes.required).toContain('versionString');
     expect(body.properties.data.properties.type.enum).toEqual(['appStoreVersions']);
   });
+
+  it('accepts a win-back create shaped like Apple’s own doc example (spec gap patched)', () => {
+    const op = OPERATIONS.find((o) => o.name === 'win_back_offers.create')!;
+    const body = {
+      data: {
+        type: 'winBackOffers',
+        attributes: {
+          referenceName: 'Come back',
+          offerId: 'come_back_1',
+          duration: 'ONE_MONTH',
+          offerMode: 'PAY_AS_YOU_GO',
+          periodCount: 1,
+          customerEligibilityPaidSubscriptionDurationInMonths: 3,
+          customerEligibilityTimeSinceLastSubscribedInMonths: { minimum: 1, maximum: 6 },
+          startDate: '2026-11-01',
+          priority: 'NORMAL',
+        },
+        relationships: {
+          subscription: { data: { type: 'subscriptions', id: '6449000000' } },
+          prices: { data: [{ type: 'winBackOfferPrices', id: '${price-usa}' }] },
+        },
+      },
+      included: [
+        {
+          type: 'winBackOfferPrices',
+          id: '${price-usa}',
+          relationships: {
+            territory: { data: { type: 'territories', id: 'USA' } },
+            subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: 'eyJzIjoiNjQ0OSJ9' } },
+          },
+        },
+      ],
+    };
+    expect(validateBody(BODY_SCHEMAS[op.bodyRef!], body)).toEqual([]);
+  });
 });
 
 describe('registry execute validation (bad body never reaches Apple)', () => {

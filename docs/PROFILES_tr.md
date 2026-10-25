@@ -9,7 +9,7 @@ Profil adını verirsiniz ve yalnızca o alanın araçları yüklenir.
 |:--|:--|--:|:--|
 | `app-info` | Uygulama kimliği, mağaza metadata'sı, kategoriler, ülke uygunluğu, yaş sınırı, erişilebilirlik etiketleri, EULA | 58 | — |
 | `distribution` | Sürümler, yerelleştirmeler, kademeli yayın, inceleme gönderimi, build'ler, ihracat uyumluluğu, AB dağıtımı | 137 | version, dma-distribution, builds, submission, encryption, review, pre-release, coverages |
-| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 211 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
+| `monetization` | Abonelikler, IAP, fiyatlandırma, teklifler, StoreKit 2, sandbox testçileri | 212 | subscription-catalog, subscription-pricing, subscription-offers, iap-catalog, iap-pricing, iap-offers, app-price, storekit |
 | `marketing` | Ekran görüntüleri, ürün sayfaları, uygulama içi etkinlikler, yorumlar, görsel/video kütüphanesi | 127 | asset-library, custom-product-page, product-page-optimization, app-event, customer-review, nominations |
 | `access` | Beta grupları, testçiler, davetler, ekip üyeleri | 66 | beta-testers, beta-groups, users |
 | `testflight` | Beta uygulama metinleri, beta inceleme bilgisi, kilitlenme geri bildirimi, beta lisans sözleşmesi | 56 | — |
@@ -29,7 +29,7 @@ Her profil, uygulamalarınızı bulmaya ve eksik araçları aramaya yarayan kü�
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri, araç sayısı ve token tahminiyle açılıyor" width="720">
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
-Örneğin `monetization` 211 araç; ama sadece abonelik fiyatı değiştiriyorsanız 27 araçlık `monetization:subscription-pricing` sizin için yeterlidir. Araç adedinden bağımsız olarak, sunucunun adı her zaman `ASC-Monetization` kalır.
+Örneğin `monetization` 212 araç; ama sadece abonelik fiyatı değiştiriyorsanız 27 araçlık `monetization:subscription-pricing` sizin için yeterlidir. Araç adedinden bağımsız olarak, sunucunun adı her zaman `ASC-Monetization` kalır.
 
 > [!TIP]
 > Hangi profillerin yüklü olduğunu görmek için yapay zekâya *"Hangi profiller yüklü?"* diye sorun.
@@ -43,7 +43,7 @@ Bunlar "Hangi profili kurayım?" sorusunun kısa yanıtını bulmanız için haz
 | Yayın yöneticisi | `distribution` + `app-info` | 195 |
 | ASO / pazarlama | `marketing` + `analytics` | 153 |
 | QA / TestFlight | `testflight` + `access` | 122 |
-| Monetizasyon | `monetization` | 211 |
+| Monetizasyon | `monetization` | 212 |
 | Oyun geliştirici | `game-center` + `distribution` | 324 |
 | Müşteri desteği | `monetization:storekit` | 19 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
