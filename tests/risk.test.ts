@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
+import { riskByBody, riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { buildWritePreview, resolveBodyRefs } from '../src/core/confirm.js';
 import { ToolRegistry, toMcpTool } from '../src/core/registry.js';
@@ -77,6 +77,40 @@ describe('risk manifest', () => {
     expect(list.description).not.toContain('-level write');
     expect(list.annotations?.readOnlyHint).toBe(true);
     expect(list.annotations?.destructiveHint).toBe(false);
+  });
+
+  it('classes the live writes that used to fall through to low', () => {
+    // Selling in a country or ending a pre-order moves the app toward customers.
+    expect(riskFor('territory_availabilities.update', 'PATCH')).toBe('release');
+    expect(riskFor('app_availabilities_v2.create', 'POST')).toBe('release');
+    expect(riskFor('end_app_availability_pre_orders.create', 'POST')).toBe('release');
+    // Printed on the product page, like store text.
+    expect(riskFor('age_rating_declarations.update', 'PATCH')).toBe('public');
+    expect(riskFor('end_user_license_agreements.update', 'PATCH')).toBe('public');
+    expect(riskFor('accessibility_declarations.create', 'POST')).toBe('public');
+    expect(riskFor('app_store_version_experiments_v2.update', 'PATCH')).toBe('public');
+    // A replace detaches everything left out of the list.
+    expect(riskFor('game_center_groups.game_center_achievements_v2.replace', 'PATCH')).toBe('destructive');
+    expect(riskFor('game_center_details.game_center_leaderboards_v2.replace', 'PATCH')).toBe('destructive');
+    // Game Center config itself stays low.
+    expect(riskFor('game_center_achievements_v2.update', 'PATCH')).toBe('low');
+  });
+
+  it('says a Game Center replace removes things, since PATCH does not', () => {
+    const replace = toMcpTool(OPERATIONS.find((o) => o.name === 'game_center_details.game_center_leaderboards_v2.replace')!);
+    expect(replace.description).toContain('DESTRUCTIVE-level write');
+    expect(replace.annotations?.destructiveHint).toBe(true);
+  });
+
+  it('makes builds.update destructive only when it expires the build', () => {
+    const build = (attributes: Record<string, unknown>) => ({ id: 'b-1', body: { data: { type: 'builds', id: 'b-1', attributes } } });
+    expect(riskByBody('builds__update', build({ expired: true }))).toBe('destructive');
+    expect(riskByBody('builds__update', build({ expired: 'true' }))).toBe('destructive');
+    expect(riskByBody('builds__update', { id: 'b-1', body: JSON.stringify(build({ expired: true }).body) })).toBe('destructive');
+    expect(riskByBody('builds__update', build({ expired: false }))).toBeUndefined();
+    expect(riskByBody('builds__update', build({ usesNonExemptEncryption: false }))).toBeUndefined();
+    expect(riskByBody('builds__update', {})).toBeUndefined();
+    expect(riskByBody('apps__update', build({ expired: true }))).toBeUndefined();
   });
 
   it('stamps every mutating operation and never a read (generated invariant)', () => {

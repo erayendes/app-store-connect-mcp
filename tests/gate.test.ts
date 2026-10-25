@@ -152,6 +152,8 @@ describe('write-gate annotations (offline)', () => {
     ]);
     expect([...ASK_BY_DEFAULT].filter((n) => !real.has(n))).toEqual([]);
     expect([...TYPED_BY_NAME].filter((n) => !ASK_BY_DEFAULT.has(n))).toEqual([]);
+    // Listed by name it would ask on every encryption answer too (risk.ts, riskByBody).
+    expect(ASK_BY_DEFAULT.has('builds__update')).toBe(false);
   });
 
   it('puts every irreversible operation behind a typed confirmation', () => {
