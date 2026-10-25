@@ -177,6 +177,12 @@ function validate(rows: Row[]): void {
     if (placed.has(dropped)) problems.push(`TWIN_OF: "${dropped}" is marked dropped but has a row.`);
   }
 
+  for (const row of rows) {
+    if (row.profile === PROFILELESS_MARKER && placed.has(row.operation)) {
+      problems.push(`line ${row.line}: "${row.tool}" is marked ${PROFILELESS_MARKER} but also sits in a profile.`);
+    }
+  }
+
   const macros = new Set(rows.filter((r) => r.operation === MANUAL_MARKER).map((r) => r.tool));
   for (const [covered, macro] of Object.entries(MACRO_COVERED)) {
     if (!byName.has(covered)) problems.push(`MACRO_COVERED: "${covered}" is not in the spec.`);
