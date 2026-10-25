@@ -84,11 +84,11 @@ const profileToolCount = (p: Profile): number =>
 const APP_MANAGER = ['App Manager', 'Admin'];
 export const ROLES: Record<string, string[]> = {
   access: ['App Manager', 'Developer', 'Admin'],
-  'access:users': ['Admin'],
+  'access:user-management': ['Admin'],
   analytics: ['Sales', 'Finance', 'Admin'],
   'distribution:builds': ['Developer', 'App Manager', 'Admin'],
   marketing: ['Marketing', 'App Manager', 'Admin'],
-  'marketing:customer-review': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
+  'marketing:customer-reviews': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
   provisioning: ['Admin'],
   testflight: ['Developer', 'App Manager', 'Admin'],
   webhooks: ['Admin'],

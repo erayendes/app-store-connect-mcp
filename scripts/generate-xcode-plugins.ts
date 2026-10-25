@@ -14,11 +14,11 @@
  * Generated from PROFILES so a profile cannot ship absent from Xcode or under a
  * name that differs from what `setup` registers. Run through `npm run generate`.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SERVER_COMMAND, profileLabel, serverArgs, serverName } from '../src/clients.js';
-import { PROFILES } from '../src/profiles.js';
+import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(resolve(root, '.claude-plugin', 'plugin.json'), 'utf8'));
@@ -37,7 +37,16 @@ const displayName = (area: string): string => `Heimdall | ASC ${area}`;
 const write = (path: string, value: unknown) =>
   writeFileSync(resolve(root, path), JSON.stringify(value, null, 2) + '\n');
 
-for (const p of PROFILES) {
+/**
+ * A plug-in is one server, and Xcode runs each one on its own, so every
+ * plug-in carries the core tools itself (`--with-core`) rather than counting
+ * on an ASC-Core beside it. `register` and `setup` use a separate ASC-Core.
+ */
+// A separate ASC-Core plug-in was considered and rejected: every plug-in already carries the core tools.
+const PLUGIN_PROFILES = PROFILES.filter((p) => p.name !== CORE_PROFILE);
+
+rmSync(resolve(root, 'plugins'), { recursive: true, force: true });
+for (const p of PLUGIN_PROFILES) {
   const name = serverName(p.name);
   mkdirSync(resolve(root, 'plugins', p.name, '.claude-plugin'), { recursive: true });
   write(`plugins/${p.name}/.claude-plugin/plugin.json`, {
@@ -50,7 +59,7 @@ for (const p of PROFILES) {
     repository,
   });
   write(`plugins/${p.name}/.mcp.json`, {
-    mcpServers: { [name]: { command: SERVER_COMMAND, args: serverArgs(p.name) } },
+    mcpServers: { [name]: { command: SERVER_COMMAND, args: [...serverArgs(p.name), '--with-core'] } },
   });
 }
 
@@ -70,7 +79,7 @@ write('.claude-plugin/marketplace.json', {
         'inside the credential boundary. Install it with whichever areas you pick.',
       version,
     },
-    ...PROFILES.map((p) => ({
+    ...PLUGIN_PROFILES.map((p) => ({
       name: displayName(label(p.name)),
       source: `./plugins/${p.name}`,
       description: p.description,

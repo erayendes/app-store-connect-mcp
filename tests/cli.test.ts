@@ -12,7 +12,7 @@
  * — which `npm test` does not do. They skip rather than lie when dist is stale.
  */
 import { describe, it, expect } from 'vitest';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -24,6 +24,40 @@ const built = existsSync(DIST);
 
 const run = (bin: string, args: string[]): string =>
   execFileSync('node', [bin, ...args], { encoding: 'utf8', timeout: 20_000 });
+
+/**
+ * A profile argument that no longer resolves — `app-info` from a 2.x config, or
+ * a typo. With no terminal it is almost certainly an MCP client, so the server
+ * starts with one tool that tells the agent what to relay. With nothing on the
+ * other end it must still fail, not hang.
+ */
+describe.skipIf(!built)('an unknown profile', () => {
+  const runServer = (input: string) =>
+    spawnSync(process.execPath, [DIST, 'app-info'], {
+      input,
+      encoding: 'utf8',
+      timeout: 20_000,
+      env: { ...process.env, ASC_CONFIG_DIR: mkdtempSync(join(tmpdir(), 'asc-empty-')) },
+    });
+
+  it('fails at once when input closes before any client speaks', () => {
+    const res = runServer('');
+    expect(res.status).toBe(1);
+    expect(res.stderr).toContain('npx -y @erayendes/asc-mcp setup');
+    expect(res.stderr).toContain('general');
+  });
+
+  it('serves the one tool that says to run setup, to a client that does speak', () => {
+    const rpc = (msg: object) => JSON.stringify({ jsonrpc: '2.0', ...msg }) + '\n';
+    const res = runServer(
+      rpc({ id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } } }) +
+        rpc({ method: 'notifications/initialized' }) +
+        rpc({ id: 2, method: 'tools/call', params: { name: 'asc__profile_unknown', arguments: {} } })
+    );
+    expect(res.stdout).toContain('ASC-AppInfo');
+    expect(res.stdout).toContain('asc-mcp setup');
+  });
+});
 
 describe.skipIf(!built)('the binary starts', () => {
   it('answers --version when run directly', () => {
@@ -81,12 +115,12 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
 
   it('writes the profiles it was given, sub-profile argument and all', () => {
     const { home, cursor } = sandbox();
-    const { out, code } = register(home, ['monetization:storekit', 'analytics', '--clients=cursor']);
+    const { out, code } = register(home, ['monetization:transactions', 'analytics', '--clients=cursor']);
     expect(code).toBe(0);
     expect(out).toContain('✓ added ASC-Monetization');
     expect(servers(cursor)).toEqual(['ASC-Monetization', 'ASC-Analytics']);
     const args = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Monetization'].args;
-    expect(args.at(-1)).toBe('monetization:storekit');
+    expect(args.at(-1)).toBe('monetization:transactions');
     rmSync(home, { recursive: true, force: true });
   });
 

@@ -262,12 +262,14 @@ describe(NAME, () => {
 });
 
 describe('MCP integration', () => {
+  // --with-core: search lives in core, so this is the one-process shape that
+  // has both the digest and the search that should find it.
   it('lists, searches and dispatches the digest in the read-only TestFlight profile with valid structured output', async () => {
     const http = fakeHttp({ [SHOTS]: page([submission('s1')]) });
     vi.spyOn(AscHttpClient.prototype, 'get').mockImplementation(http.get);
     const server = createServer({
       credentials: { keyId: 'TEST', issuerId: 'issuer', privateKey: 'unused' },
-      readOnly: true, confirmWrites: 'all', includeDeprecated: false, dryRun: false,
+      readOnly: true, confirmWrites: 'all', includeDeprecated: false, dryRun: false, withCore: true,
     }, resolveSelection('testflight'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' });

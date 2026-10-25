@@ -35,6 +35,12 @@ export interface ServerConfig {
   /** Include operations Apple has marked deprecated. */
   includeDeprecated: boolean;
   /**
+   * Fold the core profile's tools (app lookup, tool search, the media macros)
+   * into this profile server. For a channel that runs one process and so
+   * cannot register ASC-Core next to it; everywhere else core is its own server.
+   */
+  withCore?: boolean;
+  /**
    * Override the API origin (ASC_BASE_URL) — for tests against a local
    * fixture server. Host-pinning then pins to this origin instead of Apple's.
    */
@@ -182,6 +188,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
     nativeConfirm: env.ASC_NATIVE_CONFIRM !== '0' && env.ASC_NATIVE_CONFIRM !== 'false',
     includeDeprecated:
       flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
+    withCore: flag('with-core'),
     baseUrl: env.ASC_BASE_URL || undefined,
     dryRun: flag('dry-run') || env.ASC_DRY_RUN === 'true' || env.ASC_DRY_RUN === '1',
     rateLimit:

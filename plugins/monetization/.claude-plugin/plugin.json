@@ -1,7 +1,7 @@
 {
   "name": "asc-monetization",
   "version": "2.8.0",
-  "description": "Money: subscriptions, in-app purchases, offers, app pricing, StoreKit 2 transactions.",
+  "description": "Money: subscriptions, in-app purchases, offers and codes, app pricing, StoreKit 2 transactions.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"

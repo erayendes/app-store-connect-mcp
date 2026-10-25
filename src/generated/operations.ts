@@ -3441,7 +3441,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[builds]",
@@ -10483,7 +10483,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "fields[betaAppLocalizations]",
@@ -10597,7 +10597,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list.",
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list.",
         "required": true
       },
       {
@@ -11441,7 +11441,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[builds]",
@@ -11606,7 +11606,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "fields[betaLicenseAgreements]",
@@ -13057,7 +13057,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[betaGroups]",
@@ -13995,7 +13995,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[betaGroups]",
@@ -14487,7 +14487,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "fields[ciProducts]",
@@ -18599,7 +18599,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[id]",
@@ -25072,7 +25072,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
       },
       {
         "name": "filter[builds]",
@@ -25636,7 +25636,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[app]",
         "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list.",
+        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list.",
         "required": true
       },
       {

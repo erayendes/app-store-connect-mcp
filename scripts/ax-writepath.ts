@@ -113,8 +113,8 @@ async function main(): Promise<void> {
       dim('Creates a TestFlight group, reads it back, deletes it. No dry-run.\n')
   );
 
-  // Resolving the app id is a read, so it can run against the same server.
-  const info = client('app-info', []);
+  // Resolving the app id is a read; app lookup lives in ASC-Core.
+  const info = client('core', []);
   await info.start();
   const apps = await info.call('apps__list', { filter_bundleId: APP, limit: 1 });
   info.stop();
@@ -132,7 +132,8 @@ async function main(): Promise<void> {
   }
   console.log(`  app id        ${appId}`);
 
-  const asc = client('access', []);
+  // Beta groups moved from access to testflight in 3.0.
+  const asc = client('testflight:groups', []);
   await asc.start();
 
   let groupId: string | undefined;

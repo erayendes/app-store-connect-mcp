@@ -5,7 +5,8 @@
       "args": [
         "-y",
         "@erayendes/asc-mcp",
-        "analytics"
+        "analytics",
+        "--with-core"
       ]
     }
   }

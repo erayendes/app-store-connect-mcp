@@ -11,7 +11,8 @@ import { PRICING_TOOLS } from './pricing.js';
 import { SCREENSHOT_TOOLS } from './screenshots.js';
 import { CI_TOOLS } from './ci.js';
 import { PREFLIGHT_TOOLS } from './preflight.js';
-import { PROFILES } from '../profiles.js';
+import { PROFILES, type SubProfile } from '../profiles.js';
+import { serverName } from '../clients.js';
 import { TESTFLIGHT_TOOLS } from './testflight.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
@@ -21,8 +22,8 @@ export const META_TOOLS: McpToolDefinition[] = [
   {
     name: 'asc__discover_domains',
     description:
-      'List what this server can reach and what it cannot: in profile mode the profiles ' +
-      'and sub-profiles that exist, which are loaded here, and how many tools each holds; ' +
+      'List what this server can reach and what it cannot: in profile mode every profile ' +
+      'and sub-profile that exists, its server name, and how many tools each holds; ' +
       'otherwise the tool domains. Use this when a capability you need is not in the tool list.',
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true },
@@ -224,6 +225,38 @@ function matchByToken<T extends { name: string; description: string }>(
     .filter((s) => s.score >= need)
     .sort((a, b) => b.score - a.score)
     .map((s) => s.t);
+}
+
+/**
+ * Which server carries a tool, for a search result: `server` to look for in
+ * the client's tool list, `subProfile` for the register command. A tool can
+ * sit in several profiles on purpose; this server's own wins, so a match it
+ * could serve is never sent elsewhere.
+ */
+function homeOf(
+  carries: (sub: SubProfile) => boolean,
+  ownProfile?: string
+): { server?: string; subProfile?: string } {
+  const homes = PROFILES.flatMap((p) => p.subProfiles.filter(carries).map((s) => ({ p, s })));
+  const home = homes.find((h) => h.p.name === ownProfile) ?? homes[0];
+  if (!home) return {};
+  return { server: serverName(home.p.name), ...(home.s.name ? { subProfile: home.s.name } : {}) };
+}
+
+/** Every profile and sub-profile, for core's discovery answer. */
+function catalogue(): Array<Record<string, unknown>> {
+  const count = (subs: SubProfile[]) => new Set(subs.flatMap((s) => [...s.operations, ...s.manualTools])).size;
+  return PROFILES.map((p) => ({
+    name: p.name,
+    server: serverName(p.name),
+    tools: count(p.subProfiles),
+    description: p.description,
+    ...(p.subProfiles.some((s) => s.name)
+      ? {
+          subProfiles: p.subProfiles.map((s) => ({ name: s.name, tools: count([s]), description: s.description })),
+        }
+      : {}),
+  }));
 }
 
 /** Days ahead that counts as "expiring soon" for certificates and profiles. */
@@ -436,6 +469,10 @@ export async function executeMetaTool(
     macroOffered?: (name: string) => boolean;
     /** Mirrors --include-deprecated: search must offer only what can be loaded. */
     includeDeprecated?: boolean;
+    /** The profile this server serves, preferred when a tool lives in several. */
+    ownProfile?: string;
+    /** On core: discovery answers with every profile, not just this server. */
+    catalogue?: boolean;
   }
 ): Promise<unknown> {
   switch (name) {
@@ -448,6 +485,14 @@ export async function executeMetaTool(
           totalOperations: OPERATIONS.length,
           loadedTools: ctx.registry.size,
           ...ctx.profileReport(),
+          ...(ctx.catalogue
+            ? {
+                profiles: catalogue(),
+                register:
+                  'Add a profile with `npx -y @erayendes/asc-mcp register <profile>` or ' +
+                  '`<profile>:<sub-profile>,…`, with the user\'s yes, then restart the client.',
+              }
+            : {}),
         };
       }
 
@@ -488,6 +533,7 @@ export async function executeMetaTool(
         description: op.description,
         loaded: Boolean(ctx.registry.get(op.name)),
         deprecated: op.deprecated,
+        ...homeOf((s) => s.operations.includes(op.name), ctx.ownProfile),
       }));
 
       // Neither StoreKit nor the macros come from the OpenAPI spec, so both are
@@ -507,6 +553,7 @@ export async function executeMetaTool(
           description: t.description,
           loaded: loaded(t.name),
           deprecated: false,
+          ...homeOf((s) => s.manualTools.includes(t.name), ctx.ownProfile),
         }));
 
       // Ahead of the generated tools, not after them. There are twelve of these
@@ -564,17 +611,23 @@ export async function executeMetaTool(
       }
       if (storekitUnloaded) {
         hints.push(
-          'StoreKit tools are on the monetization profile\'s storekit sub-profile ' +
-            '(`npx -y @erayendes/asc-mcp register monetization:storekit`).'
+          'StoreKit tools are on the monetization profile\'s transactions sub-profile ' +
+            '(`npx -y @erayendes/asc-mcp register monetization:transactions`).'
         );
       }
 
+      // A tool missing here is often loaded on a sibling ASC server the client
+      // already runs — core and a profile side by side is the normal setup —
+      // so registering is the fallback, not the first move.
       return {
         matches,
         count: matches.length,
         ...(hints.length
           ? {
-              hint: `${unloaded.length} of these are not loaded and cannot be called from this server. ` +
+              hint:
+                `${unloaded.length} of these are not on this server. Each match names the ` +
+                `\`server\` that serves it: if that tool is in your tool list, call it there; ` +
+                `otherwise register that server. ` +
                 hints.join(' '),
             }
           : {}),

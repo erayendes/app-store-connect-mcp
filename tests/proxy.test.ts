@@ -41,7 +41,7 @@ const textOf = (res: any): string => res.content?.[0]?.text ?? '';
 
 describe('the client-independent path', () => {
   it('offers the proxy from the first tool list, before anything is loaded', async () => {
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     const names = (await client.listTools()).tools.map((t) => t.name);
     expect(names).toContain('asc__describe');
     expect(names).toContain('asc__call');
@@ -50,7 +50,7 @@ describe('the client-independent path', () => {
   });
 
   it('describes a tool that is not loaded, by either name form', async () => {
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     for (const tool of ['apps__app_price_schedule__get', 'apps.app_price_schedule.get']) {
       const res: any = await client.callTool({ name: 'asc__describe', arguments: { tool } });
       const described = JSON.parse(textOf(res));
@@ -65,25 +65,50 @@ describe('the client-independent path', () => {
     // Codex refused every proxied read while this tool could also write: a
     // client that auto-approves reads and prompts for writes blocks whatever it
     // cannot classify. The annotation is load-bearing, not decoration.
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     const call = (await client.listTools()).tools.find((t) => t.name === 'asc__call')!;
     expect(call.annotations?.readOnlyHint).toBe(true);
   });
 
   it('refuses to write through the proxy, and says how to do it properly', async () => {
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     const res: any = await client.callTool({
       name: 'asc__call',
       arguments: { tool: 'win_back_offers__create', arguments: { body: {} } },
     });
     expect(res.isError).toBe(true);
     expect(textOf(res)).toMatch(/read-only/);
-    expect(textOf(res)).toMatch(/asc__load/);
-    expect(textOf(res)).toMatch(/subscription-offers/);
+    // Register and restart: the one remedy that works on every client.
+    expect(textOf(res)).toMatch(/register monetization:subscription,subscription-win-back`/);
+    expect(textOf(res)).not.toMatch(/asc__load/);
+  });
+
+  it('is offered only when some sub-profiles were left out, and refused otherwise', async () => {
+    for (const spec of ['monetization', 'core', 'webhooks']) {
+      const client = await connect(spec);
+      const names = (await client.listTools()).tools.map((t) => t.name);
+      expect(names, spec).not.toContain('asc__call');
+      expect(names, spec).not.toContain('asc__describe');
+      // Not in the list is not enough: a model that remembers the name from
+      // another server must not get a working proxy here.
+      const res: any = await client.callTool({
+        name: 'asc__call',
+        arguments: { tool: 'apps__app_price_schedule__get', arguments: {} },
+      });
+      expect(res.isError, spec).toBe(true);
+      expect(textOf(res), spec).toMatch(/not offered here/);
+    }
+  });
+
+  it('reaches only its own profile, not core', async () => {
+    const client = await connect('monetization:subscription');
+    const res: any = await client.callTool({ name: 'asc__describe', arguments: { tool: 'apps__list' } });
+    expect(res.isError).toBe(true);
+    expect(textOf(res)).toMatch(/ASC-Core/);
   });
 
   it('names the sibling server for a tool this profile does not own', async () => {
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     const res: any = await client.callTool({
       name: 'asc__call',
       arguments: { tool: 'game_center_details__get' },
@@ -93,7 +118,7 @@ describe('the client-independent path', () => {
   });
 
   it('says so plainly when the name is not a tool at all', async () => {
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     const res: any = await client.callTool({
       name: 'asc__describe',
       arguments: { tool: 'apps__there_is_no_such_thing__list' },
@@ -103,7 +128,7 @@ describe('the client-independent path', () => {
   });
 
   it('promotes what it proxied, so a refreshing client gets the real tool', async () => {
-    const client = await connect('monetization:subscription-catalog');
+    const client = await connect('monetization:subscription');
     const res: any = await client.callTool({
       name: 'asc__call',
       // Deliberately missing the required id, so nothing reaches the network.
@@ -158,8 +183,8 @@ describe('what a failure tells the caller', () => {
   // Our own refusals carry hand-written multi-line guidance — register
   // commands, sub-profile names. JSON would turn those into \n escapes.
   it('leaves a local refusal as the prose it was written as', () => {
-    const text = formatError(new AscApiError('Loaded read-only. Use asc__load.', 0), 'asc__call');
-    expect(text).toBe('asc__call failed: Loaded read-only. Use asc__load.');
+    const text = formatError(new AscApiError('Read-only here.\nRegister it instead.', 0), 'asc__call');
+    expect(text).toBe('asc__call failed: Read-only here.\nRegister it instead.');
   });
 });
 
@@ -171,35 +196,37 @@ describe('what a failure tells the caller', () => {
  * count when a tool moves.
  */
 describe('the count a client sees', () => {
-  it('matches what tools/list returns, including the always-served proxy tools', async () => {
-    const selection = resolveSelection('monetization:subscription-catalog');
-    const server = createServer(config, selection);
-    const [ct, st] = InMemoryTransport.createLinkedPair();
-    const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
-    await Promise.all([server.connect(st), client.connect(ct)]);
+  it('matches what tools/list returns, including the proxy tools and asc__status', async () => {
+    for (const spec of ['monetization:subscription', 'monetization', 'core']) {
+      const selection = resolveSelection(spec);
+      const server = createServer(config, selection);
+      const [ct, st] = InMemoryTransport.createLinkedPair();
+      const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
+      await Promise.all([server.connect(st), client.connect(ct)]);
 
-    const listed = (await client.listTools()).tools.length;
-    expect(servedToolCount(server)).toBe(listed);
-
-    // And it is genuinely a different number from the mapped one — otherwise
-    // this test would pass with the bug still in place.
-    expect(listed).not.toBe(toolCountFor(selection));
+      const listed = (await client.listTools()).tools.length;
+      expect(servedToolCount(server), spec).toBe(listed);
+      // The mapped count now counts what the server adds on its own — the
+      // proxy pair on a narrowed profile, asc__status everywhere — so the two
+      // agree instead of differing by an amount nobody could explain.
+      expect(toolCountFor(selection), spec).toBe(listed);
+    }
   });
 });
 
 /**
- * The announcement asc__load makes, in both protocol eras. A 2025-era client
- * gets an unsolicited notifications/tools/list_changed; a 2026-07-28 client
- * gets one only on a `subscriptions/listen` stream it opened, and serveStdio
- * routes the server's notification onto that stream. Either way the client
- * must hear it and a fresh tools/list must carry the new tools — this is the
- * server's half of the contract, so a client that still shows the old list is
- * not refreshing (seen in Claude Code in the desktop app, 2.7.0-beta.7).
+ * What asc__call announces when it promotes a tool, in both protocol eras. A
+ * 2025-era client gets an unsolicited notifications/tools/list_changed; a
+ * 2026-07-28 client gets one only on a `subscriptions/listen` stream it opened,
+ * and serveStdio routes the server's notification onto that stream. Either way
+ * the client must hear it and a fresh tools/list must carry the new tool —
+ * this is the server's half of the contract, so a client that still shows the
+ * old list is not refreshing (seen in Claude Code in the desktop app).
  */
-describe.each(['legacy', 'modern'] as const)('asc__load on a %s connection', (era) => {
-  it('declares listChanged, announces the tools it added and lists them after', async () => {
+describe.each(['legacy', 'modern'] as const)('asc__call promotion on a %s connection', (era) => {
+  it('declares listChanged, announces the tool it added and lists it after', async () => {
     const [ct, st] = InMemoryTransport.createLinkedPair();
-    const build = () => createServer(config, resolveSelection('access:users'));
+    const build = () => createServer(config, resolveSelection('access:user-management'));
     if (era === 'modern') serveStdio(build, { transport: st });
     else await build().connect(st);
     let announced: string[] | undefined;
@@ -214,18 +241,16 @@ describe.each(['legacy', 'modern'] as const)('asc__load on a %s connection', (er
     await client.connect(ct);
     expect(client.getServerCapabilities()?.tools?.listChanged).toBe(true);
     const before = (await client.listTools()).tools.map((t) => t.name);
-    expect(before).not.toContain('beta_groups__create');
+    expect(before).not.toContain('user_invitations__get');
+    expect(before).not.toContain('asc__load');
 
-    const loaded: any = await client.callTool({ name: 'asc__load', arguments: { sub_profile: 'beta-groups' } });
-    // For a client that ignores the notification: the fix that works, not "next turn".
-    const { nextStep } = JSON.parse(textOf(loaded));
-    expect(nextStep).toMatch(/register access:users,beta-groups`/);
-    expect(nextStep).not.toMatch(/between turns/);
+    // Missing the required id, so nothing reaches the network; the operation
+    // is loaded before the call is validated.
+    await client.callTool({ name: 'asc__call', arguments: { tool: 'user_invitations__get', arguments: {} } });
     await vi.waitFor(() => expect(announced).toBeDefined());
 
-    expect(announced).toContain('beta_groups__create');
+    expect(announced).toContain('user_invitations__get');
     const after = (await client.listTools()).tools.map((t) => t.name);
-    expect(after).toContain('beta_groups__create');
-    expect(after).toContain('beta_groups__delete');
+    expect(after).toContain('user_invitations__get');
   });
 });

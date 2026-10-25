@@ -79,7 +79,7 @@ async function connect(
   const build = () =>
     createServer(
       { ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites, nativeConfirm: options.nativeConfirm },
-      resolveSelection(options.profile ?? 'access')
+      resolveSelection(options.profile ?? 'testflight')
     );
   if (era === 'modern') {
     serveStdio(build, { transport: st });
@@ -408,7 +408,7 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
       })
     );
     vi.mocked(nativeConfirm).mockResolvedValueOnce('approved');
-    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'marketing:asset-library' });
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'core' });
 
     const res: any = await client.callTool({
       name: 'listing__delete_assets',

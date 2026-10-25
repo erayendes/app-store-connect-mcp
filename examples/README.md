@@ -12,30 +12,31 @@ part that usually goes wrong.
 
 ### Starter packs
 
-Register only what the project uses. Every profile carries the core set
-(`apps__list`, `apps__get`, `asc__search_tools`, `asc__status`), so whichever
-one you install can find an app ID and point you at a tool it does not have.
+Register only what the project uses, plus `core`. Core is its own server
+(ASC-Core) with app lookup (`apps__list`, `apps__get`), tool search
+(`asc__search_tools`) and the screenshot and asset-library tools; the other
+profiles leave those out, so it goes next to whichever ones you install.
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 195 |
-| ASO / marketing | `marketing` + `analytics` | 153 |
-| QA / TestFlight | `testflight` + `access` | 122 |
-| Monetization | `monetization` | 212 |
-| Game developer | `game-center` + `distribution` | 324 |
-| Customer support | `monetization:storekit` | 19 |
-| Build & signing | `provisioning` + `xcode-cloud` | 103 |
+| Release manager | `core` + `distribution` + `general` | 183 |
+| ASO / marketing | `core` + `marketing` + `analytics` | 151 |
+| QA / TestFlight | `core` + `testflight` | 97 |
+| Monetization | `core` + `monetization` | 213 |
+| Game developer | `core` + `game-center` + `distribution` | 309 |
+| Customer support | `core` + `monetization:transactions` | 28 |
+| Build & signing | `core` + `provisioning` + `xcode-cloud` | 101 |
 
 ```bash
-npx -y @erayendes/asc-mcp register distribution app-info
+npx -y @erayendes/asc-mcp register core distribution general
 ```
 
 Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
-Narrower is better than broader: `monetization:subscription-pricing` is 27
-tools where `monetization` is 212, and everything you skipped is one
-`asc__call` away — the proxy reaches any operation in the catalogue, loaded or
-not.
+Narrower is better than broader: `monetization:subscription-offers` is 17
+tools where `monetization` is 197, and the reads in the sub-profiles you
+skipped are one `asc__call` away — the proxy reaches any operation of its own
+profile, loaded or not.
 
 ---
 
@@ -67,13 +68,12 @@ Needs `testflight`. Call `testflight__feedback_digest` with `app`, `build: "2026
 
 > Add sara@example.com to the Insiders group and give her the latest build.
 
-Needs `access` (groups, testers) and `testflight` (build localizations, review
-details). Order matters and the API will not tell you: a tester belongs to the
+Needs `testflight` (groups, testers, builds). Order matters and the API will not tell you: a tester belongs to the
 account first, then to a group, then a build is served to the group. Adding an
 email to a group creates the tester if they do not exist yet.
 
 To serve a specific processed build to several groups, call
-`testflight__assign_build_to_groups` on `access:beta-groups` with the app, exact
+`testflight__assign_build_to_groups` on `testflight:groups` with the app, exact
 build number or ID, and group names or IDs. It skips existing links and reports
 each result; `--dry-run` shows the planned assignments.
 
@@ -88,7 +88,7 @@ the reason.
 > For Example, check the Monthly subscription before review and list the catalog gaps.
 > Then check every subscription in the Premium group.
 
-Needs `monetization:subscription-catalog`. Call `preflight__check_subscription` with
+Needs `monetization:subscription`. Call `preflight__check_subscription` with
 `{"app":"Example","subscription":"Monthly"}` or `{"app":"Example","group":"Premium"}`.
 It reads at most 20 subscriptions in group mode, reports `truncated` reads and
 names a raw fix tool for each blocking gap or warning. `ready` means no observed
@@ -186,30 +186,31 @@ nothing reaches Apple.
 
 ### Başlangıç paketleri
 
-Yalnızca projenin kullandığını kaydedin. Her profil çekirdek seti taşıyor
-(`apps__list`, `apps__get`, `asc__search_tools`, `asc__status`); yani hangisini
-kurarsanız kurun, bir app ID bulabilir ve sahip olmadığı bir aracı size
-gösterebilir.
+Yalnızca projenin kullandığını, bir de `core`'u kaydedin. Core kendi başına bir
+sunucu (ASC-Core): uygulama arama (`apps__list`, `apps__get`), araç arama
+(`asc__search_tools`), ekran görüntüsü ve varlık kütüphanesi araçları onda.
+Diğer profiller bunları taşımıyor; o yüzden hangilerini kurarsanız kurun,
+yanına core'u da ekleyin.
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 195 |
-| ASO / pazarlama | `marketing` + `analytics` | 153 |
-| QA / TestFlight | `testflight` + `access` | 122 |
-| Monetizasyon | `monetization` | 212 |
-| Oyun geliştirici | `game-center` + `distribution` | 324 |
-| Müşteri desteği | `monetization:storekit` | 19 |
-| Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
+| Yayın yöneticisi | `core` + `distribution` + `general` | 183 |
+| ASO / pazarlama | `core` + `marketing` + `analytics` | 151 |
+| QA / TestFlight | `core` + `testflight` | 97 |
+| Monetizasyon | `core` + `monetization` | 213 |
+| Oyun geliştirici | `core` + `game-center` + `distribution` | 309 |
+| Müşteri desteği | `core` + `monetization:transactions` | 28 |
+| Build ve imzalama | `core` + `provisioning` + `xcode-cloud` | 101 |
 
 ```bash
-npx -y @erayendes/asc-mcp register distribution app-info
+npx -y @erayendes/asc-mcp register core distribution general
 ```
 
 “Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
-Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
-`monetization` 212. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
-yüklü olsun olmasın katalogdaki her işleme ulaşır.
+Dar olan geniş olandan iyidir: `monetization:subscription-offers` 17 araç,
+`monetization` 197. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
+uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her işleme ulaşır.
 
 ---
 
@@ -240,12 +241,11 @@ yüklü olsun olmasın katalogdaki her işleme ulaşır.
 
 > sara@example.com'u Insiders grubuna ekle ve en son build'i ver.
 
-`access` (gruplar, testçiler) ve `testflight` (build yerelleştirmeleri,
-inceleme detayları) gerekir. Sıra önemli ve API bunu söylemiyor: testçi önce
+`testflight` (gruplar, testçiler, build'ler) gerekir. Sıra önemli ve API bunu söylemiyor: testçi önce
 hesaba, sonra gruba ait olur, build ise gruba sunulur. Bir e-postayı gruba
 eklemek, testçi yoksa onu oluşturur.
 
-Belirli bir işlenmiş build'i birden çok gruba sunmak için `access:beta-groups`
+Belirli bir işlenmiş build'i birden çok gruba sunmak için `testflight:groups`
 üzerindeki `testflight__assign_build_to_groups` aracına uygulamayı, tam build
 numarasını veya ID'sini ve grup adlarını veya ID'lerini verin. Mevcut bağlantıları
 atlar, her grubun sonucunu bildirir; `--dry-run` planı gösterir.
@@ -260,7 +260,7 @@ gerekmez. Testçiler "hiçbir şey görünmüyor" diyorsa sebep genelde budur.
 > Example uygulamasının Monthly aboneliğini inceleme öncesi kontrol et, katalog eksiklerini listele.
 > Ardından Premium grubundaki bütün abonelikleri denetle.
 
-`monetization:subscription-catalog` gerekir. `preflight__check_subscription` aracını
+`monetization:subscription` gerekir. `preflight__check_subscription` aracını
 `{"app":"Example","subscription":"Monthly"}` veya `{"app":"Example","group":"Premium"}` ile çağırın.
 Grup modunda en fazla 20 abonelik okur, `truncated` okumaları belirtir ve her engelleyici
 bulgu veya uyarı için ham düzeltme aracını adlandırır. `ready`, gözlenen engelleyici

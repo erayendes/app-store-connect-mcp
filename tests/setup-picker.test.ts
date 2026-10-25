@@ -7,13 +7,13 @@
  * change that breaks the round-trip fails here instead of in someone's config.
  */
 import { describe, it, expect } from 'vitest';
-import { buildRows, preselect, selectionToSpecs, leafRows, neededRole } from '../src/setup.js';
+import { buildRows, preselect, selectionToSpecs, leafRows, neededRole, ROLES } from '../src/setup.js';
 import {
   PROFILES,
   resolveSelection,
   operationsFor,
   manualToolsFor,
-  CORE_OPERATIONS,
+  CORE_PROFILE,
 } from '../src/profiles.js';
 
 const rows = buildRows();
@@ -45,12 +45,11 @@ describe('the picker rows', () => {
     // preview tools sit under every page that can list a set. Summing the rows
     // counts those twice, and the number the user picks by stops matching the
     // number of tools the server loads.
-    for (const p of PROFILES) {
+    // Core is left out: it is registered with every setup rather than picked,
+    // and the registration rewrite decides how the picker shows it.
+    for (const p of PROFILES.filter((p) => p.name !== CORE_PROFILE)) {
       const sel = resolveSelection(p.name);
-      // operationsFor folds the core operations in; manualToolsFor does not —
-      // the core manual tools are added by the server itself. So the row is the
-      // served set minus exactly CORE_OPERATIONS.
-      const served = operationsFor(sel).length - CORE_OPERATIONS.length + manualToolsFor(sel).length;
+      const served = operationsFor(sel).length + manualToolsFor(sel).length;
       const shown = Number(rowFor(p.name).item.label.match(/\((\d+)\)$/)![1]);
       expect(shown, `${p.name} row says ${shown}, the server loads ${served}`).toBe(served);
     }
@@ -65,10 +64,10 @@ describe('selection -> config argument', () => {
 
   it('writes profile:sub,sub when some are unchecked', () => {
     const parent = rowFor('monetization');
-    const keep = ['subscription-pricing', 'subscription-offers'];
+    const keep = ['subscription-offers', 'subscription'];
     const picked = [parent.index, ...keep.map((s) => rowFor('monetization', s).index)];
     expect(selectionToSpecs(rows, picked)).toEqual([
-      'monetization:subscription-offers,subscription-pricing',
+      'monetization:subscription,subscription-offers',
     ]);
   });
 
@@ -84,7 +83,7 @@ describe('selection -> config argument', () => {
   });
 
   it('ignores a checked sub-profile whose parent is unchecked', () => {
-    expect(selectionToSpecs(rows, [rowFor('monetization', 'storekit').index])).toEqual([]);
+    expect(selectionToSpecs(rows, [rowFor('monetization', 'transactions').index])).toEqual([]);
   });
 
   it('emits nothing but arguments the server can actually resolve', () => {
@@ -92,13 +91,13 @@ describe('selection -> config argument', () => {
       expect(() => resolveSelection(spec)).not.toThrow();
     }
     const narrowed = selectionToSpecs(rows, [
-      rowFor('access').index,
-      rowFor('access', 'beta-groups').index,
+      rowFor('testflight').index,
+      rowFor('testflight', 'groups').index,
       rowFor('distribution').index,
       rowFor('distribution', 'version').index,
-      rowFor('distribution', 'encryption').index,
+      rowFor('distribution', 'app-encryption').index,
     ]);
-    expect(narrowed).toEqual(['access:beta-groups', 'distribution:encryption,version']);
+    expect(narrowed).toEqual(['distribution:app-encryption,version', 'testflight:groups']);
     for (const spec of narrowed) expect(() => resolveSelection(spec)).not.toThrow();
   });
 });
@@ -117,15 +116,15 @@ describe('round trip — re-running setup must not rewrite a config it did not c
   it('keeps a narrowed profile narrowed', () => {
     // Without reading the registered argument this used to come back widened —
     // the user's trimming silently undone by opening the picker.
-    const spec = 'monetization:subscription-pricing';
+    const spec = 'monetization:subscription';
     expect(roundTrip({ monetization: spec })).toEqual([spec]);
   });
 
   it('preserves the order the CLI writes, not the order the user typed', () => {
     // Sub-profiles come back in row order, so the same selection always writes
     // the same string and re-registration stays a no-op.
-    const out = roundTrip({ monetization: 'monetization:subscription-pricing,iap-pricing' });
-    expect(out).toEqual(['monetization:iap-pricing,subscription-pricing']);
+    const out = roundTrip({ monetization: 'monetization:subscription,in-app-purchases' });
+    expect(out).toEqual(['monetization:in-app-purchases,subscription']);
     expect(roundTrip({ monetization: out[0] })).toEqual(out);
   });
 });
@@ -139,7 +138,7 @@ describe('the key role the picks need', () => {
   const role = (...specs: string[]) => neededRole(leafRows(rows, specs));
 
   it('suggests a narrow role when the picks share one', () => {
-    expect(role('marketing:customer-review').role).toBe('Customer Support');
+    expect(role('marketing:customer-reviews').role).toBe('Customer Support');
   });
 
   it('falls back to Admin when the picks share nothing narrower', () => {
@@ -151,6 +150,12 @@ describe('the key role the picks need', () => {
   it('names the pick that only Admin can manage, even inside a whole profile', () => {
     const r = role('access');
     expect(r.role).toBe('Admin');
-    expect(r.why).toMatch(/access:users/);
+    expect(r.why).toMatch(/access:user-management/);
+  });
+
+  // A key in ROLES that names no sub-profile is a role rule that never fires —
+  // which is how `access:users` outlived its sub-profile when 3.0 renamed it.
+  it('keys roles only by profiles and sub-profiles that exist', () => {
+    for (const key of Object.keys(ROLES)) expect(() => resolveSelection(key), key).not.toThrow();
   });
 });

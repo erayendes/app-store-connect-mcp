@@ -122,8 +122,11 @@ jobs:
 
       # Booting is the part that catches a missing file: --help reads no
       # generated output, while starting a profile loads the catalogue, the
-      # profile data and the macros.
-      - name: The installed server starts and serves a profile
+      # profile data and the macros. `general` is 49 tools in 3.0, so > 40
+      # still means "the profile loaded", and core folded in with --with-core
+      # must add app lookup. A 2.x name (`app-info`) must not fail: it opens
+      # the one-tool tombstone that tells the agent to run setup.
+      - name: The installed server starts, serves a profile, and tombstones a 2.x name
         run: |
           set -euo pipefail
           cd /tmp/packtest
@@ -141,21 +144,32 @@ jobs:
           ASC_PRIVATE_KEY_PATH=/tmp/pack.p8 \
           node -e "
           const { spawn } = require('child_process');
-          const p = spawn('node_modules/.bin/asc-mcp', ['app-info'], { env: process.env });
-          let out = '';
-          p.stdout.on('data', d => out += d);
-          p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'pack',version:'1'}}}) + '\n');
-          setTimeout(() => {
-            p.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'}) + '\n');
-            p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/list'}) + '\n');
-          }, 500);
-          setTimeout(() => {
-            p.kill();
-            const listed = out.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(r => r && r.id === 2);
-            const count = listed?.result?.tools?.length ?? 0;
-            console.log('Tools served from the packed install:', count);
-            process.exit(count > 40 ? 0 : 1);
-          }, 3000);
+          const list = (args) => new Promise((done) => {
+            const p = spawn('node_modules/.bin/asc-mcp', args, { env: process.env });
+            let out = '';
+            p.stdout.on('data', d => out += d);
+            p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'pack',version:'1'}}}) + '\n');
+            setTimeout(() => {
+              p.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'}) + '\n');
+              p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/list'}) + '\n');
+            }, 500);
+            setTimeout(() => {
+              p.kill();
+              const listed = out.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(r => r && r.id === 2);
+              done((listed?.result?.tools ?? []).map(t => t.name));
+            }, 3000);
+          });
+          (async () => {
+            const general = await list(['general']);
+            console.log('Tools served by general from the packed install:', general.length);
+            const withCore = await list(['general', '--with-core']);
+            console.log('general --with-core serves apps__list:', withCore.includes('apps__list'));
+            const tombstone = await list(['app-info']);
+            console.log('app-info serves:', tombstone.join(', '));
+            const ok = general.length > 40 && withCore.includes('apps__list') &&
+              tombstone.length === 1 && tombstone[0] === 'asc__profile_unknown';
+            process.exit(ok ? 0 : 1);
+          })();
           "
 
   # Flags dependencies a pull request would newly introduce that carry known

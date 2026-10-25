@@ -13,7 +13,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { PROFILES } from '../src/profiles.js';
+import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const manifest = JSON.parse(readFileSync('mcpb/manifest.json', 'utf8'));
 const config = readFileSync('src/core/config.ts', 'utf8');
@@ -31,6 +31,12 @@ describe('the MCPB manifest describes this server', () => {
   it('passes the profile as the positional argument the CLI takes', () => {
     expect(manifest.server.mcp_config.args[1]).toBe('${user_config.profile}');
     expect(manifest.user_config.profile.required).toBe(true);
+  });
+
+  it('folds core into the bundle, which runs alone', () => {
+    // One bundle is one process; nothing guarantees an ASC-Core next to it.
+    expect(manifest.server.mcp_config.args.slice(2)).toEqual(['--with-core']);
+    expect(config).toContain("flag('with-core')");
   });
 
   it.each(Object.entries(manifest.server.mcp_config.env as Record<string, string>))(
@@ -74,5 +80,6 @@ describe('the MCPB manifest describes this server', () => {
 
   it('claims a default profile that exists', () => {
     expect(PROFILES.map((p) => p.name)).toContain(manifest.user_config.profile.default);
+    expect(manifest.user_config.profile.default).not.toBe(CORE_PROFILE);
   });
 });
