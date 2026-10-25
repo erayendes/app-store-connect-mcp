@@ -422,7 +422,8 @@ describe('reading back what is registered', () => {
 });
 
 /** A fake executable on PATH exercises the actual subprocess and rollback. */
-describe('registering with a CLI client', () => {
+// shortcut: the fake CLI is a shebang script, which Windows will not execute; give it a .cmd shim if Windows CI should cover these.
+describe.skipIf(process.platform === 'win32')('registering with a CLI client', () => {
   let previousPath: string | undefined;
   beforeEach(() => {
     previousPath = process.env.PATH;
@@ -590,7 +591,7 @@ fs.writeFileSync(path, JSON.stringify(data));
   });
 });
 
-describe('Claude Code add-json rollback', () => {
+describe.skipIf(process.platform === 'win32')('Claude Code add-json rollback', () => {
   let previousPath: string | undefined;
   beforeEach(() => {
     previousPath = process.env.PATH;

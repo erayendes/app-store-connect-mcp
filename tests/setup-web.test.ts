@@ -16,9 +16,12 @@ import { runInNewContext } from 'node:vm';
 import type { WebSetupHandle } from '../src/setup-web.js';
 
 const priorHome = process.env.HOME;
+const priorProfile = process.env.USERPROFILE;
 const priorPath = process.env.PATH;
 const isolatedHome = mkdtempSync(join(tmpdir(), 'asc-web-home-'));
 process.env.HOME = isolatedHome;
+// os.homedir() reads USERPROFILE on Windows, not HOME.
+process.env.USERPROFILE = isolatedHome;
 process.env.PATH = '/nonexistent';
 const { startWebSetup, planForPage } = await import('../src/setup-web.js');
 const { CLIENTS, PACKAGE, readRegistrations } = await import('../src/clients.js');
@@ -32,6 +35,8 @@ const canListen = await new Promise<boolean>((resolve) => {
 
 afterAll(() => {
   process.env.HOME = priorHome;
+  if (priorProfile === undefined) delete process.env.USERPROFILE;
+  else process.env.USERPROFILE = priorProfile;
   process.env.PATH = priorPath;
   rmSync(isolatedHome, { recursive: true, force: true });
 });
