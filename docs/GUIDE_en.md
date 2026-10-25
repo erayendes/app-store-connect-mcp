@@ -23,6 +23,7 @@ The workflows below turn chains like that into a single step. You don't have to 
 | the same chain, plus the change | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
 | in-app purchase → price points → a new price schedule built by hand | `pricing__set_iap_price` — one country's price; every other manual and scheduled price is kept | `monetization:iap-pricing` |
 | setting prices country by country | `pricing__equalize_price` — you set one base price and Apple works out every other market; for apps, in-app purchases or subscriptions | `monetization:subscription-pricing` |
+| pricing a win-back, promotional or introductory offer country by country | `pricing__make_offer` — you set one base price (or a free trial) and the offer is made in every country the subscription is sold in; an introductory offer goes country by country and picks up where it stopped | `monetization:subscription-offers` |
 | create a submission, add the version, submit — three calls in that order | `release__submit` | `distribution:submission` |
 | find the build, look up the beta groups, add the missing links | `testflight__assign_build_to_groups` | `access:beta-groups` |
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |

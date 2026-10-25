@@ -150,6 +150,122 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   {
+    name: 'pricing__make_offer',
+    description:
+      'Make a subscription win-back, promotional or introductory offer, priced in every ' +
+      'country where the subscription is sold, in one call. Give the app, the subscription, ' +
+      'the offer kind, mode, duration and periods, and either an anchor territory and price ' +
+      'or a free trial. Every other market comes from Apple\'s own equalizations of the ' +
+      'anchor. Win-back and promotional offers go to Apple as one request, so they exist ' +
+      'complete or not at all. Introductory offers are one write per country, taking a few ' +
+      'minutes: everything is checked first, it stops at the first failure, and the same call ' +
+      'again resumes. Once made, only an introductory offer\'s end date can change. Refuses ' +
+      'without writing when any country is missing a price. REVENUE-level write; run it under ' +
+      '--dry-run first to see the full derived table.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: {
+          type: 'string',
+          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
+        },
+        subscription: {
+          type: 'string',
+          description: 'Subscription product ID (e.g. com.example.pro.yearly) or its reference name.',
+        },
+        offer_type: {
+          type: 'string',
+          description:
+            'win_back: shown to lapsed subscribers who meet the eligibility below. ' +
+            'promotional: redeemed by existing or lapsed subscribers through a signed offer in the app. ' +
+            'introductory: the first period for customers new to the subscription group.',
+          enum: ['win_back', 'promotional', 'introductory'],
+        },
+        name: {
+          type: 'string',
+          description: 'Win-back and promotional, required: reference name, seen only in App Store Connect.',
+        },
+        offer_id: {
+          type: 'string',
+          description:
+            'Win-back and promotional, required: the identifier the app uses for this offer ' +
+            '(Apple\'s offerId for win-back, offerCode for promotional). Must not be used by any ' +
+            'other offer of this subscription.',
+        },
+        offer_mode: {
+          type: 'string',
+          description:
+            'PAY_AS_YOU_GO: the price is charged every period, for `periods` periods. ' +
+            'PAY_UP_FRONT: the price is charged once for the whole duration. ' +
+            'FREE_TRIAL: no price; leave territory and price out.',
+          enum: ['PAY_AS_YOU_GO', 'PAY_UP_FRONT', 'FREE_TRIAL'],
+        },
+        duration: {
+          type: 'string',
+          description: 'Length of one offer period (PAY_AS_YOU_GO) or of the whole offer.',
+          enum: ['THREE_DAYS', 'ONE_WEEK', 'TWO_WEEKS', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'],
+        },
+        periods: {
+          type: 'integer',
+          description: 'Number of periods. 1 for PAY_UP_FRONT and FREE_TRIAL.',
+        },
+        territory: {
+          type: 'string',
+          description:
+            'Paid offers: the anchor country, three letters (ISO-3166 alpha-3): TUR, USA, DEU. ' +
+            'Every other country is derived from it.',
+        },
+        price: {
+          type: 'string',
+          description:
+            'Paid offers: customer price in the anchor territory\'s currency, e.g. "29.99". Must ' +
+            'match an Apple price point exactly; the nearest available are suggested if it does not.',
+        },
+        eligibility_paid_months: {
+          type: 'integer',
+          description: 'Win-back only, required: how many months the customer must have paid for before.',
+        },
+        eligibility_last_subscribed_min_months: {
+          type: 'integer',
+          description: 'Win-back only, required: fewest months since the customer\'s subscription lapsed.',
+        },
+        eligibility_last_subscribed_max_months: {
+          type: 'integer',
+          description: 'Win-back only, required: most months since the customer\'s subscription lapsed.',
+        },
+        eligibility_wait_months: {
+          type: 'integer',
+          description: 'Win-back only, optional: months before the same customer can redeem this offer again.',
+        },
+        start_date: {
+          type: 'string',
+          description:
+            'First day the offer runs (YYYY-MM-DD). Required for win-back; optional for ' +
+            'introductory (omit to start now); not used for promotional.',
+        },
+        end_date: {
+          type: 'string',
+          description:
+            'The offer\'s end date (YYYY-MM-DD), win-back and introductory only. Omit for open-ended.',
+        },
+        undo: {
+          type: 'boolean',
+          description:
+            'Introductory only. true takes back an introductory offer this tool set: with the same ' +
+            'terms, price and dates as the original call, it deletes that exact offer in every ' +
+            'country carrying it, one country at a time, and touches no other offer.',
+        },
+        priority: {
+          type: 'string',
+          description: 'Win-back only: how Apple ranks it against other offers. Defaults to NORMAL.',
+          enum: ['HIGH', 'NORMAL'],
+        },
+      },
+      required: ['app', 'subscription', 'offer_type', 'offer_mode', 'duration', 'periods'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
+  {
     name: 'pricing__get_subscription_price',
     description:
       'What a subscription costs customers today — in one country, or in every country at ' +
@@ -563,6 +679,63 @@ export function buildPricingPreview(args: Record<string, unknown>, toolName?: st
     ].join('\n');
   }
 
+  if (toolName === 'pricing__make_offer') {
+    const free = args.offer_mode === 'FREE_TRIAL';
+    if (args.offer_type === 'introductory') {
+      const terms = `${String(args.offer_mode ?? '?')}, ${String(args.periods ?? '?')} × ${String(args.duration ?? '?')}`;
+      const price = free
+        ? 'free'
+        : `${normalizePrice(String(args.price ?? '?'))} in ${String(args.territory ?? '?').toUpperCase()}`;
+      const dates = `${args.start_date ? `from ${String(args.start_date)}` : 'from now'}${args.end_date ? ` to ${String(args.end_date)}` : ', open-ended'}`;
+      return args.undo === true
+        ? [
+            `Heimdall is about to DELETE an introductory offer in every country that carries it — a REVENUE-level write.`,
+            '',
+            `App:          ${String(args.app ?? '?')}`,
+            `Subscription: ${String(args.subscription ?? '?')}`,
+            `Offer:        introductory, ${terms}, ${price}, ${dates}`,
+            `Scope:        only offers with exactly these terms, price and dates; one deletion per country.`,
+            '',
+            'Type CONFIRM in the field below to proceed.',
+          ].join('\n')
+        : [
+            `Heimdall is about to set an introductory offer in EVERY COUNTRY the subscription is sold in — a REVENUE-level write.`,
+            '',
+            `App:          ${String(args.app ?? '?')}`,
+            `Subscription: ${String(args.subscription ?? '?')}`,
+            `Terms:        ${terms}`,
+            free
+              ? `Price:        free in every country.`
+              : `Anchor:       ${price}; every other country is derived by Apple, NOT the same number.`,
+            `Runs:         ${dates}`,
+            // Not atomic, and whoever approves this should know before saying yes.
+            `Scope:        about 175 countries, written one by one; it takes a few minutes. If one`,
+            `              fails it stops there, and the same call again carries on from it.`,
+            `Afterwards:   Apple lets only the end date change.`,
+            '',
+            'Type CONFIRM in the field below to proceed.',
+          ].join('\n');
+    }
+    return [
+      `Heimdall is about to create a subscription offer in EVERY COUNTRY it is sold in — a REVENUE-level write.`,
+      '',
+      `App:          ${String(args.app ?? '?')}`,
+      `Subscription: ${String(args.subscription ?? '?')}`,
+      `Offer:        ${String(args.offer_type ?? '?')} "${String(args.name ?? '?')}" (${String(args.offer_id ?? '?')})`,
+      `Terms:        ${String(args.offer_mode ?? '?')}, ${String(args.periods ?? '?')} × ${String(args.duration ?? '?')}`,
+      free
+        ? `Price:        free in every country.`
+        : `Anchor:       ${normalizePrice(String(args.price ?? '?'))} in ${String(args.territory ?? '?').toUpperCase()}; every other country is derived by Apple, NOT the same number.`,
+      ...(args.offer_type === 'win_back'
+        ? [`Runs:         from ${String(args.start_date ?? '?')}${args.end_date ? ` to ${String(args.end_date)}` : ', open-ended'}`]
+        : []),
+      // Apple's own rule, and the reason a wrong price cannot be fixed later.
+      `Permanent:    Apple does not allow an offer's countries or prices to be changed after creation.`,
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n');
+  }
+
   if (toolName === 'pricing__set_iap_price') {
     const territory = String(args.territory ?? '?').toUpperCase();
     return [
@@ -860,6 +1033,7 @@ export async function executePricingTool(
 
   if (name === 'pricing__equalize_price') return equalizePrice(args, ctx);
   if (name === 'pricing__set_iap_price') return setIapPrice(args, ctx);
+  if (name === 'pricing__make_offer') return createOffer(args, ctx);
 
   if (name !== 'pricing__set_subscription_price') {
     throw new Error(`Unknown pricing tool: ${name}`);
@@ -1293,6 +1467,431 @@ async function equalizePrice(
     note:
       'Apple applies each change on its own schedule; check with ' +
       'pricing__get_subscription_price (omit the territory) to see them worldwide.',
+  };
+}
+
+/**
+ * A win-back or promotional offer, priced in every country in one request.
+ *
+ * Both create endpoints take the offer and all of its per-territory prices in
+ * one body, and Apple accepts or rejects it whole — unlike subscription prices,
+ * there is no partial state to report. Apple also refuses to change an offer's
+ * countries or prices afterwards, so the one thing this must never do is send a
+ * body that silently leaves a market out. The territory set is therefore the
+ * subscription's own availability, and every one of those countries has to come
+ * back from the equalizations, or nothing is sent.
+ *
+ * Introductory offers are the exception Apple forces: one request per country,
+ * so they cannot be all-or-nothing. Everything that can fail is therefore
+ * checked before the first write (prices, existing offers, sale countries),
+ * the writes stop at the first failure, and a repeat of the same call skips the
+ * countries that already carry the identical offer — so it resumes rather than
+ * duplicates. `undo` deletes exactly those identical offers.
+ */
+const OFFER_DURATIONS = ['THREE_DAYS', 'ONE_WEEK', 'TWO_WEEKS', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'];
+const OFFER_MODES = ['PAY_AS_YOU_GO', 'PAY_UP_FRONT', 'FREE_TRIAL'];
+
+async function createOffer(args: Record<string, unknown>, ctx: PricingContext): Promise<unknown> {
+  const winBack = args.offer_type === 'win_back';
+  const intro = args.offer_type === 'introductory';
+  if (!winBack && !intro && args.offer_type !== 'promotional') {
+    throw new AscApiError(`"${args.offer_type ?? ''}" is not an offer type. One of: win_back, promotional, introductory.`, 0);
+  }
+  // Introductory offers carry no name or identifier at Apple.
+  const required = intro
+    ? (['app', 'subscription', 'offer_mode', 'duration'] as const)
+    : (['app', 'subscription', 'name', 'offer_id', 'offer_mode', 'duration'] as const);
+  for (const field of required) {
+    if (typeof args[field] !== 'string' || !String(args[field]).trim()) {
+      throw new AscApiError(`"${field}" is required.`, 0);
+    }
+  }
+  if (args.undo !== undefined && (typeof args.undo !== 'boolean' || (args.undo && !intro))) {
+    throw new AscApiError('"undo" is true or false, and only for introductory offers.', 0);
+  }
+  const mode = String(args.offer_mode);
+  if (!OFFER_MODES.includes(mode)) {
+    throw new AscApiError(`"${mode}" is not an offer mode. One of: ${OFFER_MODES.join(', ')}.`, 0);
+  }
+  const duration = String(args.duration);
+  if (!OFFER_DURATIONS.includes(duration)) {
+    throw new AscApiError(`"${duration}" is not an offer duration. One of: ${OFFER_DURATIONS.join(', ')}.`, 0);
+  }
+  const isCount = (v: unknown) => Number.isInteger(v) && (v as number) >= 0;
+  if (!isCount(args.periods) || (args.periods as number) < 1) {
+    throw new AscApiError('"periods" is required: a whole number, 1 or more.', 0);
+  }
+  const free = mode === 'FREE_TRIAL';
+  if (free && (args.territory || args.price)) {
+    throw new AscApiError('A FREE_TRIAL offer has no price: leave "territory" and "price" out.', 0);
+  }
+  const anchorTerritory = free ? '' : String(args.territory ?? '').trim().toUpperCase();
+  if (!free) {
+    if (!/^[A-Z]{3}$/.test(anchorTerritory)) {
+      throw new AscApiError(
+        '"territory" is required for a paid offer: three letters (ISO-3166 alpha-3) such as TUR, USA, DEU.',
+        0
+      );
+    }
+    if (typeof args.price !== 'string' || !args.price.trim()) {
+      throw new AscApiError('"price" is required for a paid offer, e.g. "29.99".', 0);
+    }
+  }
+  const isDate = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if (winBack) {
+    for (const field of ['eligibility_paid_months', 'eligibility_last_subscribed_min_months', 'eligibility_last_subscribed_max_months'] as const) {
+      if (!isCount(args[field])) throw new AscApiError(`"${field}" is required for a win-back offer: a whole number of months.`, 0);
+    }
+    if (args.eligibility_wait_months !== undefined && !isCount(args.eligibility_wait_months)) {
+      throw new AscApiError('"eligibility_wait_months" must be a whole number of months.', 0);
+    }
+    if (!isDate(args.start_date)) throw new AscApiError('"start_date" is required for a win-back offer (YYYY-MM-DD).', 0);
+    if (args.end_date !== undefined && !isDate(args.end_date)) throw new AscApiError('"end_date" must be YYYY-MM-DD.', 0);
+    if (args.priority !== undefined && args.priority !== 'HIGH' && args.priority !== 'NORMAL') {
+      throw new AscApiError('"priority" is HIGH or NORMAL.', 0);
+    }
+  } else if (intro) {
+    for (const field of ['start_date', 'end_date'] as const) {
+      if (args[field] !== undefined && !isDate(args[field])) throw new AscApiError(`"${field}" must be YYYY-MM-DD.`, 0);
+    }
+  }
+
+  const app = await resolveApp(ctx.http, String(args.app));
+  const sub = await resolveSubscription(ctx.http, app.id, String(args.subscription));
+
+  // Where the subscription is sold, with each country's currency.
+  let availabilityId: string | undefined;
+  try {
+    const availability: any = await ctx.http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/subscriptionAvailability`);
+    availabilityId = availability?.data?.id;
+  } catch (err) {
+    if (!(err instanceof AscApiError && err.status === 404)) throw err;
+  }
+  if (!availabilityId) {
+    throw new AscApiError(`"${sub.productId}" has no availability set, so there is no country to price the offer in.`, 0);
+  }
+  const sold = await ctx.http.collect<any>(
+    `/v1/subscriptionAvailabilities/${encodeURIComponent(availabilityId)}/availableTerritories`,
+    { limit: 200 },
+    5
+  );
+  if (sold.hasMore) throw new AscApiError('Apple returned more sale countries than could be read; nothing was sent.', 0);
+  const currency = new Map<string, string>(sold.items.map((t: any) => [String(t.id), String(t.attributes?.currency ?? '')]));
+  if (!currency.size) throw new AscApiError(`"${sub.productId}" is not sold in any country; nothing was sent.`, 0);
+
+  const points = new Map<string, PricePoint>();
+  if (!free) {
+    if (!currency.has(anchorTerritory)) {
+      throw new AscApiError(`"${sub.productId}" is not sold in ${anchorTerritory}; anchor the offer in a country it is sold in.`, 0);
+    }
+    const anchor = await findPricePoint(
+      ctx.http,
+      `/v1/subscriptions/${encodeURIComponent(sub.id)}/pricePoints`,
+      anchorTerritory,
+      normalizePrice(String(args.price)),
+      `"${sub.productId}"`
+    );
+    const eq = await ctx.http.collect<any>(
+      `/v1/subscriptionPricePoints/${encodeURIComponent(anchor.id)}/equalizations`,
+      { include: 'territory', limit: 200 },
+      5
+    );
+    if (eq.hasMore) throw new AscApiError('Apple returned more equalized prices than could be read; nothing was sent.', 0);
+    for (const p of eq.items) {
+      const code = String(p.relationships?.territory?.data?.id ?? '');
+      if (code) points.set(code, { id: String(p.id), customerPrice: String(p.attributes?.customerPrice ?? '') });
+    }
+    points.set(anchorTerritory, anchor);
+    const missing = [...currency.keys()].filter((code) => !points.get(code)?.customerPrice);
+    if (missing.length) {
+      throw new AscApiError(
+        `Apple has no equalized price for ${missing.length} of the ${currency.size} countries ` +
+          `"${sub.productId}" is sold in (${missing.join(', ')}). Nothing was sent` +
+          (intro
+            ? '.'
+            : `: Apple does not allow an offer's countries to be added later, so an offer without them would stay that way.`),
+        0
+      );
+    }
+  }
+
+  const territories = [...currency.keys()].sort();
+  if (intro) return introductoryOffers(args, ctx, { app, sub, territories, currency, points, free, anchorTerritory, mode, duration });
+  const priceType = winBack ? 'winBackOfferPrices' : 'subscriptionPromotionalOfferPrices';
+  // Client-supplied placeholder ids: JSON:API's way of linking resources created in the same request.
+  const ref = (code: string) => `\${price-${code}}`;
+  const body = {
+    data: {
+      type: winBack ? 'winBackOffers' : 'subscriptionPromotionalOffers',
+      attributes: winBack
+        ? {
+            referenceName: String(args.name),
+            offerId: String(args.offer_id),
+            duration,
+            offerMode: mode,
+            periodCount: args.periods,
+            customerEligibilityPaidSubscriptionDurationInMonths: args.eligibility_paid_months,
+            customerEligibilityTimeSinceLastSubscribedInMonths: {
+              minimum: args.eligibility_last_subscribed_min_months,
+              maximum: args.eligibility_last_subscribed_max_months,
+            },
+            ...(args.eligibility_wait_months !== undefined
+              ? { customerEligibilityWaitBetweenOffersInMonths: args.eligibility_wait_months }
+              : {}),
+            startDate: String(args.start_date),
+            ...(args.end_date ? { endDate: String(args.end_date) } : {}),
+            priority: args.priority ?? 'NORMAL',
+          }
+        : {
+            name: String(args.name),
+            offerCode: String(args.offer_id),
+            duration,
+            offerMode: mode,
+            numberOfPeriods: args.periods,
+          },
+      relationships: {
+        subscription: { data: { type: 'subscriptions', id: sub.id } },
+        prices: { data: territories.map((code) => ({ type: priceType, id: ref(code) })) },
+      },
+    },
+    included: territories.map((code) => ({
+      type: priceType,
+      id: ref(code),
+      relationships: {
+        territory: { data: { type: 'territories', id: code } },
+        ...(free ? {} : { subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: points.get(code)!.id } } }),
+      },
+    })),
+  };
+  const path = winBack ? '/v1/winBackOffers' : '/v1/subscriptionPromotionalOffers';
+
+  const resolved = {
+    app: `${app.name} (${app.id})`,
+    subscription: `${sub.name} (${sub.productId})`,
+    offer: `${String(args.offer_type)} "${String(args.name)}" (${String(args.offer_id)})`,
+    terms: `${mode}, ${String(args.periods)} × ${duration}`,
+    anchor: free ? 'free' : `${points.get(anchorTerritory)!.customerPrice} (${anchorTerritory})`,
+    countries: territories.length,
+    writes: 1,
+  };
+  const prices = territories.map((code) =>
+    free ? `${code}: free` : `${code}: ${points.get(code)!.customerPrice} ${currency.get(code)}`
+  );
+
+  if (ctx.dryRun) {
+    return {
+      dryRun: true,
+      note: `Dry-run mode: fully resolved, nothing sent to Apple. This would be one request carrying ${territories.length} country prices.`,
+      resolved,
+      prices,
+      // The full body repeats a price per country, twice; the first is enough to check its shape.
+      wouldSend: {
+        method: 'POST',
+        path,
+        body: {
+          data: {
+            ...body.data,
+            relationships: { ...body.data.relationships, prices: { data: body.data.relationships.prices.data.slice(0, 1) } },
+          },
+          included: body.included.slice(0, 1),
+        },
+        includedCount: body.included.length,
+      },
+      risk: 'revenue',
+    };
+  }
+
+  const res: any = await ctx.http.post(path, body);
+  return {
+    ok: true,
+    created: { id: res?.data?.id ?? null, ...resolved },
+    prices,
+    note: 'Apple created the offer with every country listed. Its countries and prices cannot be changed later.',
+  };
+}
+
+interface IntroPlan {
+  app: { id: string; name: string };
+  sub: Subscription;
+  territories: string[];
+  currency: Map<string, string>;
+  points: Map<string, PricePoint>;
+  free: boolean;
+  anchorTerritory: string;
+  mode: string;
+  duration: string;
+}
+
+/** Whether [start, end) ranges meet; an open start is "already running", an open end "forever". */
+function rangesOverlap(aStart: string | null, aEnd: string | null, bStart: string | null, bEnd: string | null, today: string): boolean {
+  const s1 = aStart ?? '0000-00-00';
+  const e1 = aEnd ?? '9999-12-31';
+  const s2 = bStart ?? today;
+  const e2 = bEnd ?? '9999-12-31';
+  return s1 < e2 && s2 < e1;
+}
+
+async function introductoryOffers(args: Record<string, unknown>, ctx: PricingContext, plan: IntroPlan): Promise<unknown> {
+  const { app, sub, territories, currency, points, free, anchorTerritory, mode, duration } = plan;
+  const startDate = args.start_date ? String(args.start_date) : null;
+  const endDate = args.end_date ? String(args.end_date) : null;
+  const undo = args.undo === true;
+
+  const existing = await ctx.http.collect<any>(
+    `/v1/subscriptions/${encodeURIComponent(sub.id)}/introductoryOffers`,
+    { include: 'territory,subscriptionPricePoint', limit: 200 },
+    10
+  );
+  if (existing.hasMore) {
+    throw new AscApiError('Apple returned more introductory offers than could be read; nothing was sent.', 0);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const wanted = new Set(territories);
+  // The same offer means every term and the price point match; anything else
+  // running in that country at the same time is in the way, because Apple
+  // allows one introductory offer per country at a time.
+  const same = new Map<string, string>();
+  const conflicts: string[] = [];
+  for (const o of existing.items) {
+    const code = String(o.relationships?.territory?.data?.id ?? '');
+    if (!wanted.has(code)) continue;
+    const a = o.attributes ?? {};
+    const point = o.relationships?.subscriptionPricePoint?.data?.id ?? null;
+    // Apple stamps "start now" as the day it was created, so with no start date
+    // asked for, any start up to today is the same offer.
+    const sameStart = startDate === null ? !a.startDate || a.startDate <= today : a.startDate === startDate;
+    const identical =
+      a.duration === duration &&
+      a.offerMode === mode &&
+      a.numberOfPeriods === args.periods &&
+      sameStart &&
+      (a.endDate ?? null) === endDate &&
+      point === (free ? null : points.get(code)!.id);
+    if (identical) same.set(code, String(o.id));
+    else if (rangesOverlap(a.startDate ?? null, a.endDate ?? null, startDate, endDate, today)) conflicts.push(code);
+  }
+
+  const resolved = {
+    app: `${app.name} (${app.id})`,
+    subscription: `${sub.name} (${sub.productId})`,
+    offer: 'introductory',
+    terms: `${mode}, ${String(args.periods)} × ${duration}`,
+    anchor: free ? 'free' : `${points.get(anchorTerritory)!.customerPrice} (${anchorTerritory})`,
+    ...(startDate ? { startDate } : {}),
+    ...(endDate ? { endDate } : {}),
+    countries: territories.length,
+  };
+  const priceOf = (code: string) => (free ? 'free' : `${points.get(code)!.customerPrice} ${currency.get(code)}`);
+
+  if (undo) {
+    const targets = territories.filter((code) => same.has(code));
+    if (ctx.dryRun) {
+      return {
+        dryRun: true,
+        note: `Dry-run mode: nothing sent to Apple. This would be ${targets.length} separate deletions, one per country.`,
+        resolved: { ...resolved, deletes: targets.length },
+        wouldDelete: targets.map((code) => `${code}: ${priceOf(code)}`),
+        risk: 'revenue',
+      };
+    }
+    const deleted: string[] = [];
+    for (const code of targets) {
+      try {
+        await ctx.http.delete(`/v1/subscriptionIntroductoryOffers/${encodeURIComponent(same.get(code)!)}`);
+        deleted.push(code);
+      } catch (err) {
+        return {
+          ok: false,
+          partial: true,
+          deleted,
+          failedAt: code,
+          remaining: targets.length - deleted.length,
+          error: (err as Error).message,
+          note: `Stopped at ${code}. The ${deleted.length} listed are gone; run the same call again to take back the rest.`,
+        };
+      }
+    }
+    return {
+      ok: true,
+      resolved,
+      deleted: deleted.length,
+      note: deleted.length
+        ? 'Every country\'s copy of this introductory offer is gone.'
+        : 'No country carries this exact introductory offer; nothing was deleted.',
+    };
+  }
+
+  if (conflicts.length) {
+    throw new AscApiError(
+      `${conflicts.length} of the ${territories.length} countries already have a different introductory offer ` +
+        `in that period (${conflicts.sort().join(', ')}). Apple allows one at a time in a country. Nothing was sent.`,
+      0
+    );
+  }
+
+  const todo = territories.filter((code) => !same.has(code));
+  const bodyFor = (code: string) => ({
+    data: {
+      type: 'subscriptionIntroductoryOffers',
+      attributes: {
+        duration,
+        offerMode: mode,
+        numberOfPeriods: args.periods,
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+      },
+      relationships: {
+        subscription: { data: { type: 'subscriptions', id: sub.id } },
+        territory: { data: { type: 'territories', id: code } },
+        ...(free ? {} : { subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: points.get(code)!.id } } }),
+      },
+    },
+  });
+  const afterwards = 'After creation Apple allows only the end date of an introductory offer to change.';
+
+  if (ctx.dryRun) {
+    return {
+      dryRun: true,
+      note:
+        `Dry-run mode: fully resolved, nothing sent to Apple. This would be ${todo.length} separate writes, ` +
+        `one per country — Apple takes introductory offers one country at a time.`,
+      resolved: { ...resolved, alreadyThere: same.size, writes: todo.length },
+      prices: territories.map((code) => `${code}: ${priceOf(code)}${same.has(code) ? ' (already there)' : ''}`),
+      ...(todo.length ? { wouldSend: { method: 'POST', path: '/v1/subscriptionIntroductoryOffers', body: bodyFor(todo[0]) } } : {}),
+      risk: 'revenue',
+    };
+  }
+
+  // Sequential, stopping at the first failure: carrying on would spread an
+  // unknown state. What did land is named, and the same call resumes from it.
+  const created: string[] = [];
+  for (const code of todo) {
+    try {
+      await ctx.http.post('/v1/subscriptionIntroductoryOffers', bodyFor(code));
+      created.push(code);
+    } catch (err) {
+      return {
+        ok: false,
+        partial: true,
+        resolved,
+        created,
+        alreadyThere: same.size,
+        failedAt: code,
+        remaining: todo.length - created.length,
+        error: (err as Error).message,
+        note:
+          `Stopped at ${code}. The ${created.length} listed are set; the remaining ` +
+          `${todo.length - created.length} are not. Fix the cause and run the same call again: countries ` +
+          `that already carry this offer are skipped. To take it back instead, run it with undo: true.`,
+      };
+    }
+  }
+  return {
+    ok: true,
+    resolved,
+    created: created.length,
+    alreadyThere: same.size,
+    note: `${created.length ? 'Introductory offer set in every country.' : 'Every country already carried this offer; nothing was sent.'} ${afterwards}`,
   };
 }
 

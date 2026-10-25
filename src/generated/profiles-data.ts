@@ -283,8 +283,8 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "subscription-offers",
       operations: ["apps.subscription_groups.list","subscription_groups.subscriptions.list","subscription_introductory_offers.create","subscription_introductory_offers.delete","subscription_introductory_offers.update","subscription_offer_code_custom_codes.create","subscription_offer_code_custom_codes.get","subscription_offer_code_custom_codes.update","subscription_offer_code_one_time_use_codes.create","subscription_offer_code_one_time_use_codes.get","subscription_offer_code_one_time_use_codes.update","subscription_offer_code_one_time_use_codes.values.get","subscription_offer_codes.create","subscription_offer_codes.custom_codes.list","subscription_offer_codes.get","subscription_offer_codes.one_time_use_codes.list","subscription_offer_codes.update","subscription_promotional_offers.create","subscription_promotional_offers.delete","subscription_promotional_offers.get","subscription_promotional_offers.update","subscriptions.get","subscriptions.introductory_offers.list","subscriptions.introductory_offers.remove","subscriptions.offer_codes.list","subscriptions.promotional_offers.list","subscriptions.win_back_offers.list","win_back_offers.create","win_back_offers.delete","win_back_offers.get","win_back_offers.update"],
-      manualTools: [],
-      rootResources: ["apps","subscription_groups","subscription_introductory_offers","subscription_offer_code_custom_codes","subscription_offer_code_one_time_use_codes","subscription_offer_codes","subscription_promotional_offers","subscriptions","win_back_offers"],
+      manualTools: ["pricing__make_offer"],
+      rootResources: ["(makro)","apps","subscription_groups","subscription_introductory_offers","subscription_offer_code_custom_codes","subscription_offer_code_one_time_use_codes","subscription_offer_codes","subscription_promotional_offers","subscriptions","win_back_offers"],
     },
     {
       name: "subscription-pricing",
