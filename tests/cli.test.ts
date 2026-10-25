@@ -67,7 +67,8 @@ describe.skipIf(!built)('register — the non-interactive door', () => {
           timeout: 20_000,
           // A bare PATH so no real `claude`/`codex` on this machine is found
           // and driven: the sandbox HOME only isolates the JSON clients.
-          env: { HOME: home, PATH: '/nonexistent', ...extraEnv },
+          // os.homedir() reads USERPROFILE on Windows, not HOME.
+          env: { HOME: home, USERPROFILE: home, PATH: '/nonexistent', ...extraEnv },
         }),
         code: 0,
       };
