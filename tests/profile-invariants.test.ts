@@ -165,14 +165,6 @@ describe('reachability — every sub-profile reaches its own resources from an a
     'marketing/asset-library: app_event_localizations',
     'marketing/asset-library: app_store_version_experiment_treatment_localizations',
     'marketing/asset-library: app_store_version_localizations',
-    // Tester-usage metrics per group and per tester; the group and tester
-    // listings are in testflight:groups and testflight:testers.
-    'testflight/feedbacks: beta_groups',
-    'testflight/feedbacks: beta_testers',
-    // A product's repositories and a workflow's repository; products and
-    // workflows are listed in xcode-cloud:workflows.
-    'xcode-cloud/repositories: ci_products',
-    'xcode-cloud/repositories: ci_workflows',
   ]);
 
   it('finds entry points at all (guards the walk, not the data)', () => {
@@ -353,17 +345,7 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
    * Real gaps, listed rather than patched in the sheet — see the reachability
    * KNOWN_GAPS. `profile/sub: operation needs <collection>`.
    */
-  const KNOWN_GAPS = new Set<string>([
-    // Linking achievements and leaderboards to an activity needs their ids,
-    // which game-center:achievements and game-center:leaderboards list.
-    'game-center/activities: game_center_activities.achievements_v2.add needs gameCenterAchievements (body)',
-    'game-center/activities: game_center_activities.achievements_v2.remove needs gameCenterAchievements (body)',
-    'game-center/activities: game_center_activities.leaderboards_v2.add needs gameCenterLeaderboards (body)',
-    'game-center/activities: game_center_activities.leaderboards_v2.remove needs gameCenterLeaderboards (body)',
-    // A new workflow names its repository; repositories are listed in
-    // xcode-cloud:repositories.
-    'xcode-cloud/workflows: ci_workflows.create needs scmRepositories (body)',
-  ]);
+  const KNOWN_GAPS = new Set<string>([]);
 
   const gapsOf = (label: string): string[] => {
     const { sub } = SUBS.find((s) => s.label === label)!;
@@ -449,10 +431,10 @@ describe('counts — curation output, not something that drifts on its own', () 
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 982 CSV rows - 7 profile-less ones. Not a count of distinct tools: the
+    // 989 CSV rows - 7 profile-less ones. Not a count of distinct tools: the
     // screenshot and preview tools sit under all three pages that can list a
     // set, and a few entry reads are deliberately in two slices.
-    expect(tools.length).toBe(975);
+    expect(tools.length).toBe(982);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 5 listing, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 1 release, 2

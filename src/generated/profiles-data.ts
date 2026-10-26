@@ -150,7 +150,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     },
     {
       name: "activities",
-      operations: ["apps.game_center_detail.get","game_center_activities.achievements_v2.add","game_center_activities.achievements_v2.remove","game_center_activities.create","game_center_activities.delete","game_center_activities.get","game_center_activities.leaderboards_v2.add","game_center_activities.leaderboards_v2.remove","game_center_activities.update","game_center_activities.versions.list","game_center_activity_images.create","game_center_activity_images.delete","game_center_activity_images.get","game_center_activity_images.update","game_center_activity_localizations.create","game_center_activity_localizations.delete","game_center_activity_localizations.get","game_center_activity_localizations.image.get","game_center_activity_localizations.update","game_center_activity_versions.create","game_center_activity_versions.default_image.get","game_center_activity_versions.get","game_center_activity_versions.localizations.list","game_center_activity_versions.update","game_center_details.game_center_activities.list"],
+      operations: ["apps.game_center_detail.get","game_center_activities.achievements_v2.add","game_center_activities.achievements_v2.remove","game_center_activities.create","game_center_activities.delete","game_center_activities.get","game_center_activities.leaderboards_v2.add","game_center_activities.leaderboards_v2.remove","game_center_activities.update","game_center_activities.versions.list","game_center_activity_images.create","game_center_activity_images.delete","game_center_activity_images.get","game_center_activity_images.update","game_center_activity_localizations.create","game_center_activity_localizations.delete","game_center_activity_localizations.get","game_center_activity_localizations.image.get","game_center_activity_localizations.update","game_center_activity_versions.create","game_center_activity_versions.default_image.get","game_center_activity_versions.get","game_center_activity_versions.localizations.list","game_center_activity_versions.update","game_center_details.game_center_achievements_v2.list","game_center_details.game_center_activities.list","game_center_details.game_center_leaderboards_v2.list"],
       manualTools: [],
       rootResources: ["apps","game_center_activities","game_center_activity_images","game_center_activity_localizations","game_center_activity_versions","game_center_details"],
     },
@@ -379,7 +379,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     },
     {
       name: "feedbacks",
-      operations: ["apps.beta_feedback_crash_submissions.list","apps.beta_feedback_screenshot_submissions.list","apps.beta_tester_usages.metrics","beta_crash_logs.get","beta_feedback_crash_submissions.crash_log.get","beta_feedback_crash_submissions.delete","beta_feedback_crash_submissions.get","beta_feedback_screenshot_submissions.delete","beta_feedback_screenshot_submissions.get","beta_groups.beta_tester_usages.metrics","beta_testers.beta_tester_usages.metrics","builds.beta_build_usages.metrics"],
+      operations: ["apps.beta_feedback_crash_submissions.list","apps.beta_feedback_screenshot_submissions.list","apps.beta_groups.list","apps.beta_tester_usages.metrics","beta_crash_logs.get","beta_feedback_crash_submissions.crash_log.get","beta_feedback_crash_submissions.delete","beta_feedback_crash_submissions.get","beta_feedback_screenshot_submissions.delete","beta_feedback_screenshot_submissions.get","beta_groups.beta_tester_usages.metrics","beta_testers.beta_tester_usages.metrics","beta_testers.list","builds.beta_build_usages.metrics"],
       manualTools: ["testflight__feedback_digest"],
       rootResources: ["apps","beta_crash_logs","beta_feedback_crash_submissions","beta_feedback_screenshot_submissions","beta_groups","beta_testers","builds"],
     },
@@ -419,15 +419,15 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     subProfiles: [
     {
       name: "repositories",
-      operations: ["ci_products.additional_repositories.list","ci_products.primary_repositories.list","ci_workflows.repository.get","scm_git_references.get","scm_providers.get","scm_providers.list","scm_providers.repositories.list","scm_pull_requests.get","scm_repositories.get","scm_repositories.git_references.list","scm_repositories.list","scm_repositories.pull_requests.list"],
+      operations: ["ci_products.additional_repositories.list","ci_products.list","ci_products.primary_repositories.list","ci_products.workflows.list","ci_workflows.repository.get","scm_git_references.get","scm_providers.get","scm_providers.list","scm_providers.repositories.list","scm_pull_requests.get","scm_repositories.get","scm_repositories.git_references.list","scm_repositories.list","scm_repositories.pull_requests.list"],
       manualTools: [],
       rootResources: ["ci_products","ci_workflows","scm_git_references","scm_providers","scm_pull_requests","scm_repositories"],
     },
     {
       name: "workflows",
-      operations: ["apps.ci_product.get","ci_artifacts.get","ci_build_actions.artifacts.list","ci_build_actions.build_run.get","ci_build_actions.get","ci_build_actions.issues.list","ci_build_actions.test_results.list","ci_build_runs.actions.list","ci_build_runs.builds.list","ci_build_runs.create","ci_build_runs.get","ci_issues.get","ci_mac_os_versions.get","ci_mac_os_versions.list","ci_mac_os_versions.xcode_versions.list","ci_products.app.get","ci_products.build_runs.list","ci_products.delete","ci_products.get","ci_products.list","ci_products.workflows.list","ci_test_results.get","ci_workflows.build_runs.list","ci_workflows.create","ci_workflows.delete","ci_workflows.get","ci_workflows.update","ci_xcode_versions.get","ci_xcode_versions.list","ci_xcode_versions.mac_os_versions.list"],
+      operations: ["apps.ci_product.get","ci_artifacts.get","ci_build_actions.artifacts.list","ci_build_actions.build_run.get","ci_build_actions.get","ci_build_actions.issues.list","ci_build_actions.test_results.list","ci_build_runs.actions.list","ci_build_runs.builds.list","ci_build_runs.create","ci_build_runs.get","ci_issues.get","ci_mac_os_versions.get","ci_mac_os_versions.list","ci_mac_os_versions.xcode_versions.list","ci_products.app.get","ci_products.build_runs.list","ci_products.delete","ci_products.get","ci_products.list","ci_products.workflows.list","ci_test_results.get","ci_workflows.build_runs.list","ci_workflows.create","ci_workflows.delete","ci_workflows.get","ci_workflows.update","ci_xcode_versions.get","ci_xcode_versions.list","ci_xcode_versions.mac_os_versions.list","scm_repositories.list"],
       manualTools: ["ci__diagnose_run"],
-      rootResources: ["apps","ci_artifacts","ci_build_actions","ci_build_runs","ci_issues","ci_mac_os_versions","ci_products","ci_test_results","ci_workflows","ci_xcode_versions"],
+      rootResources: ["apps","ci_artifacts","ci_build_actions","ci_build_runs","ci_issues","ci_mac_os_versions","ci_products","ci_test_results","ci_workflows","ci_xcode_versions","scm_repositories"],
     },
     ],
   },
