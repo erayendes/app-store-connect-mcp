@@ -418,7 +418,7 @@ function xmlPlistFramed(head: string, tail: string): boolean {
   const root = /^<plist(?:\s[^<>]*)?>/.exec(rest);
   if (!root || root[0].endsWith('/>')) return false;
   rest = rest.slice(root[0].length).trimStart().replace(/^(?:<!--[\s\S]*?-->\s*)+/, '');
-  if (!/^<(?:[A-Za-z]|\/plist\s*>)/.test(rest)) return false;
+  if (!/^<[A-Za-z]/.test(rest)) return false;
   let end = tail.trimEnd();
   while (end.endsWith('-->') && end.includes('<!--')) end = end.slice(0, end.lastIndexOf('<!--')).trimEnd();
   return /<\/plist\s*>$/.test(end);
@@ -505,13 +505,13 @@ async function resolveFileParent(args: Args, http: AscHttpClient) {
   };
   if (label(row)) labels.push(label(row));
   if (adapter.parentInclude === 'build') {
-    const [build] = relationshipIds(parent, 'build');
+    const [build] = parent.relationships?.build === undefined ? [] : relationshipIds(parent, 'build');
     labels.push(build ? `build ${build} attached` : 'no build attached');
   }
   const ownerIds = [parentId];
   for (let i = 0; i < adapter.chain.length; i++) {
     const step = adapter.chain[i];
-    if (step.group && row?.relationships?.[step.via]?.data === null) {
+    if (step.group && row?.relationships?.[step.via]?.data == null) {
       // A shared group's item has no detail of its own. It belongs to the app
       // when the app's own Game Center detail is in that group.
       const groupId: string = row.relationships?.[step.group]?.data?.id ?? fail(`Neither ${step.via} nor ${step.group} links ${parentId} to an app; cannot verify ownership. Nothing was changed.`);
@@ -558,6 +558,17 @@ async function fileRows(http: AscHttpClient, adapter: FileAdapter, ids: string[]
 async function listFileMedia(args: Args, http: AscHttpClient) {
   if (args.library_id !== undefined || args.ref_data_id !== undefined) fail('File targets do not use the asset library.');
   if (args.asset_ids !== undefined) fail('Use file_ids to filter a file target.');
+  if (args.target === 'app_clip_advanced_experience_image' && args.page_id === undefined) {
+    if (args.locale !== undefined || args.version !== undefined || args.platform !== undefined) fail('An unattached image takes no version, locale or platform.');
+    const ids = arrayIds(args, 'file_ids');
+    const app = await resolveApp(http, str(args, 'app', true)!);
+    const rows = await fileRows(http, FILE_TARGETS.app_clip_advanced_experience_image, ids);
+    return { app: `${app.name} (${app.id})`, target: args.target, libraryId: null,
+      assets: rows.map((row) => ({ id: row.id, kind: 'image', name: row.id,
+        fileName: null, state: row.attributes?.assetDeliveryState?.state ?? null,
+        errors: errorsOf(row), width: null, height: null, placements: [] })),
+      pages: [], limits: [], note: 'Apple keeps no app link on an unattached advanced App Clip image; its ownership by the named app cannot be proven. Read-only state and errors.' };
+  }
   const resolved = await resolveFileParent(args, http);
   const filter = arrayIds(args, 'file_ids', false);
   for (const id of filter) if (!resolved.parentFiles.includes(id)) fail(`File ${id} is not on ${resolved.parentId}.`);
@@ -604,6 +615,8 @@ async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): 
   const uti = str(args, 'uti');
   const upload = name === MEDIA_NAMES.upload ? await readUpload(str(args, 'file_path', true)!, adapter.format, uti) : undefined;
   try {
+    if (upload && singleFile(adapter) && !adapter.delete && !adapter.attach && upload.size > MAX_PART_BYTES)
+      fail(`File exceeds the ${MAX_PART_BYTES}-byte safe limit for a single-slot target without DELETE; nothing was reserved.`);
     const ownerApp = newBuild || standalone ? await resolveApp(http, str(args, 'app', true)!) : undefined;
     const createBuild = newBuild ? mediaBody('build_uploads.create', {
       attributes: { cfBundleVersion: str(args, 'build_version', true), cfBundleShortVersionString: str(args, 'build_short_version', true), platform: str(args, 'platform', true) },
@@ -649,7 +662,7 @@ async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): 
       } else for (const file of files) writes.push({ operation: adapter.delete!, id: file.id, name: file.attributes?.fileName ?? file.id });
     }
     const risk: RiskLevel = writes.some((write) => write.operation.endsWith('.delete')) ? 'destructive'
-      : createBuild ? mediaOperation('build_uploads.create').risk! : standalone ? 'low' : adapter.risk;
+      : target === 'build_upload_file' && upload ? 'release' : standalone ? 'low' : adapter.risk;
     if (risk !== intentRisk(mediaIntent(name, args))) fail('Media plan risk differs from the preflight confirmation risk. Nothing was changed.');
     // No request may carry a higher generated risk than the plan is confirmed at.
     for (const write of writes) {
@@ -657,7 +670,7 @@ async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): 
       if (level && level !== 'low' && level !== risk && risk !== 'destructive') fail(`${write.operation} is a ${level}-level write; the media plan is ${risk}. Nothing was changed.`);
     }
     const fingerprint = createHash('sha256').update(JSON.stringify({ app: resolved.app.id, target, parentId: resolved.parentId,
-      parentLabel: resolved.parentLabel, parentFiles: resolved.parentFiles, ownerIds: resolved.ownerIds, files: files.map((file) => ({ id: file.id, attributes: file.attributes })), writes,
+      parentLabel: resolved.parentLabel, parentFiles: resolved.parentFiles, ownerIds: resolved.ownerIds, files: files.map((file) => ({ id: file.id, fileSize: file.attributes?.fileSize ?? null })), writes,
       upload: upload?.sha256, createBuild, standalone,
     })).digest('hex');
     return { ...resolved, target, files, writes, risk, fingerprint, upload, createBuild, standalone };
@@ -686,9 +699,9 @@ function intentRisk(intent: Intent): RiskLevel {
   if (['delete', 'remove', 'archive'].includes(intent.action) || intent.replace) return 'destructive';
   if (Object.hasOwn(FILE_TARGETS, intent.target)) {
     const adapter = (FILE_TARGETS as Record<string, FileAdapter>)[intent.target];
-    // A new build upload is Apple's build_uploads.create, a release step; an
-    // unattached image shows nowhere until an experience names it.
-    if (intent.ownerless && intent.target === 'build_upload_file') return mediaOperation('build_uploads.create').risk!;
+    // Build file commit starts processing at release level, including on an
+    // existing upload. An unattached image awaits an experience to name it.
+    if (intent.action === 'upload' && intent.target === 'build_upload_file') return 'release';
     if (intent.ownerless && adapter.standalone) return 'low';
     return adapter.risk;
   }
@@ -903,6 +916,21 @@ async function uploadParts(ctx: MediaContext, reserved: any, source: UploadSourc
   return ops.length;
 }
 
+/** Recheck the approved bytes immediately before an irreversible replace. */
+async function verifyUploadSource(source: UploadSource) {
+  if (stampOf(await source.fd.stat()) !== source.stamp) fail('File changed since it was checked; existing file was not deleted.');
+  const hash = createHash('sha256');
+  const chunk = Buffer.alloc(Math.min(CHUNK_BYTES, source.size));
+  for (let offset = 0; offset < source.size;) {
+    const read = await source.fd.read(chunk, 0, Math.min(chunk.length, source.size - offset), offset);
+    if (!read.bytesRead) fail('File shrank since it was checked; existing file was not deleted.');
+    hash.update(chunk.subarray(0, read.bytesRead));
+    offset += read.bytesRead;
+  }
+  if (hash.digest('hex') !== source.sha256 || stampOf(await source.fd.stat()) !== source.stamp)
+    fail('File changed since it was checked; existing file was not deleted.');
+}
+
 async function executeFileWrite(name: string, args: Args, ctx: MediaContext) {
   const plan = await prepareFileWrite(name, args, ctx.http);
   try { return await runFileWrite(plan, ctx); } finally { await closeUpload(plan.upload); }
@@ -917,6 +945,7 @@ async function runFileWrite(plan: FilePlan, ctx: MediaContext) {
   if (plan.upload) {
     // Replace: Apple's slot holds one file, so the old one goes first.
     const deleted: string[] = [];
+    if (plan.writes.some((write) => write.operation.endsWith('.delete'))) await verifyUploadSource(plan.upload);
     for (const write of plan.writes.filter((w) => w.operation.endsWith('.delete'))) {
       try { await applyWrite(ctx.http, write); deleted.push(write.id!); }
       catch (err) { return { ...summary, ok: false, fileName: plan.upload.fileName, failedPhase: 'replace', error: errorText(err), deleted, note: 'Nothing was uploaded.' }; }
@@ -952,7 +981,8 @@ async function runFileWrite(plan: FilePlan, ctx: MediaContext) {
       }
       return { ...summary, ownerId, ...done, ok: true, fileId: id, fileName: plan.upload.fileName, state, errors: errorsOf(committed?.data ?? {}), parts,
         note: plan.standalone ? `Committed, not attached. Create the advanced experience with relationships.headerImage set to ${id}.` : 'Committed; inspect media__list for subsequent processing state.' };
-    } catch (err) { return { ...summary, ownerId, ...done, ok: false, fileId: id, fileName: plan.upload.fileName, failedPhase: phase, error: errorText(err), inspectWith: MEDIA_NAMES.list }; }
+    } catch (err) { return { ...summary, ownerId, ...done, ok: false, fileId: id, orphanReservationId: id, fileName: plan.upload.fileName, failedPhase: phase, error: errorText(err), inspectWith: MEDIA_NAMES.list,
+      note: `Apple reserved file ${id}, but ${phase} did not finish. This reservation may be orphaned; inspect its state before retrying.` }; }
   }
   const succeeded = [], failed = [];
   for (const write of plan.writes) {
@@ -999,7 +1029,8 @@ async function runWrite(name: string, args: Args, ctx: MediaContext, plan: Plan)
             ? { review: { required: true, state, submitWith: 'release__submit_items', item: { type: kind === 'image' ? 'appAssetLibraryImage' : 'appAssetLibraryVideo', id } } } : {}),
         };
       } catch (err) { return { ...result, ok: false, placed: false, placementError: errorText(err), retryWith: MEDIA_NAMES.arrange, note: `Upload stands. Call media__arrange with action: place, asset_ids: ["${id}"], the same page target and placement_type to retry.` }; }
-    } catch (err) { return { ...summary, ok: false, assetId: id, fileName, failedPhase: phase, error: errorText(err), inspectWith: MEDIA_NAMES.list, deleteWith: MEDIA_NAMES.delete }; }
+    } catch (err) { return { ...summary, ok: false, assetId: id, orphanReservationId: id, fileName, failedPhase: phase, error: errorText(err), inspectWith: MEDIA_NAMES.list, deleteWith: MEDIA_NAMES.delete,
+      note: `Apple reserved asset ${id}, but ${phase} did not finish. This reservation may be orphaned; inspect its state before retrying.` }; }
   }
   const succeeded = [], failed = [];
   for (const write of plan.writes) {

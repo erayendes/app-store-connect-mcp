@@ -99,8 +99,8 @@ export const FILE_TARGETS = {
     ], 'image', 'public', { createParent: 'version', read: 'game_center_challenge_versions.default_image.get' }) }),
   in_app_purchase_image: fileTarget('in_app_purchase_images_v2', 'in_app_purchase_versions.get', 'images', [
     { get: 'in_app_purchases_v2.get', via: 'inAppPurchase' },
-  ], 'image', 'public', { createParent: 'version', appList: 'apps.in_app_purchases_v2.list', read: 'in_app_purchase_versions.images.list' }),
-  in_app_purchase_review_screenshot: fileTarget('in_app_purchase_app_store_review_screenshots', 'in_app_purchases_v2.get', 'appStoreReviewScreenshot', [], 'image', 'low', { createParent: 'inAppPurchaseV2', appList: 'apps.in_app_purchases_v2.list', read: 'in_app_purchases_v2.app_store_review_screenshot.get' }),
+  ], 'image', 'public', { createParent: 'version', appList: 'apps.in_app_purchases_v2.list', appListFilter: ['productId'], read: 'in_app_purchase_versions.images.list' }),
+  in_app_purchase_review_screenshot: fileTarget('in_app_purchase_app_store_review_screenshots', 'in_app_purchases_v2.get', 'appStoreReviewScreenshot', [], 'image', 'low', { createParent: 'inAppPurchaseV2', appList: 'apps.in_app_purchases_v2.list', appListFilter: ['productId'], read: 'in_app_purchases_v2.app_store_review_screenshot.get' }),
   subscription_image: fileTarget('subscription_images_v2', 'subscription_versions.get', 'images', [
     { get: 'subscriptions.get', via: 'subscription' }, { get: 'subscription_groups.get', via: 'group' },
   ], 'image', 'public', { createParent: 'version', appList: 'apps.subscription_groups.list', read: 'subscription_versions.images.list' }),

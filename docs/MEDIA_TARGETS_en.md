@@ -22,7 +22,7 @@ states and errors. Use `file_ids` to filter the list or select files to delete.
 | `app_review_attachment` | App Store review detail | ✓ | ✓ | ✓ | low | Opaque attachment bytes |
 | `routing_coverage` | App Store version | ✓ | ✓ | ✓ | low | Parsed GeoJSON structure, ≤4 MiB |
 | `background_asset_file` | Background asset version | ✓ | ✓ | — | low | Opaque asset/manifest bytes |
-| `build_upload_file` | Build upload, or none | ✓ | ✓ | Whole upload | low; release without `page_id` | UTI-specific signature |
+| `build_upload_file` | Build upload, or none | ✓ | ✓ | Whole upload | release | UTI-specific signature |
 
 All deletes are `destructive`. None of these targets supports
 `media__arrange`: Apple has no placement ordering for them. A dash means the
@@ -34,7 +34,7 @@ and whether a build is attached.
 ## One file per owner
 
 Most image and file owners hold exactly one file: Apple models them as a to-one
-relationship (`app_clip_header_image`, the four Game Center localization images,
+relationship (`app_clip_header_image`, the five Game Center localization images,
 both version default images, both review screenshots, `encryption_document`,
 `routing_coverage` and the advanced experience header). An empty to-one answers
 404 or `data: null`; both read as "no file yet", so the first upload works.
@@ -58,8 +58,9 @@ localization first, and on 404 reads the ID as the version (IDs are unique
 across types). The preview labels it `version default image`.
 
 **Shared Game Center groups.** An achievement, leaderboard, leaderboard set,
-activity or challenge in a shared group has `gameCenterDetail: null` and a
-`gameCenterGroup` instead. It belongs to the named app when the app's own Game
+activity or challenge in a shared group has `gameCenterDetail: null` (or omits
+that optional relationship entirely) and a `gameCenterGroup` instead. It
+belongs to the named app when the app's own Game
 Center detail (`/v1/apps/{id}/gameCenterDetail?include=gameCenterGroup`) is in
 that group. When neither link proves the app, the call is refused.
 
@@ -69,13 +70,17 @@ Upload `app_clip_advanced_experience_image` without `page_id`: the app is still
 named, the image is reserved, sent and committed with no owner, and the result
 returns its `fileId` to pass as `headerImage` to the experience create. The
 preview says it is not attached. With nothing customer-facing yet, it is `low`.
+To check a standalone upload, call `media__list` with the named app, this target,
+and `file_ids: [fileId]`, omitting `page_id`. Apple keeps no app link on this
+resource, so its ownership by the named app cannot be proven. This path only
+reports processing state and errors; it never writes.
 
 **Build uploads.** A build upload has no app relationship. Ownership is proven
 by the app's build upload list filtered by the upload's own
 `cfBundleVersion`, `cfBundleShortVersionString` and `platform`, so apps with
 thousands of uploads are not paged through. A new build upload (no `page_id`)
-sends `build_uploads.create`, whose risk is `release`; the plan is confirmed at
-that level, never below an operation it sends.
+sends `build_uploads.create`, whose risk is `release`. Committing a file to an
+existing build upload also starts build processing and is `release` level.
 
 ## File checks and memory
 
@@ -84,8 +89,12 @@ coverage GeoJSON, 500 MiB for other files. These are local safety limits, not
 claims about Apple's acceptance limits. Reading uses stat, open and fstat, then
 hashes the file in 1 MiB reads on that descriptor. The descriptor stays open:
 each reserved byte range is read again from it and sent, one range in memory at
-a time (a range over 64 MiB is refused before it is read). The SHA-256 of what
-was sent must equal the one that was checked and confirmed, and the file's
+a time (a range over 64 MiB is refused before it is read). For a no-DELETE
+single-file slot such as `encryption_document`, files above 64 MiB are refused
+before reservation because Apple may return one range for the entire file.
+If a reservation has already been made and upload or commit fails, the result
+names its orphan reservation ID. The SHA-256 of what was sent must equal the
+one that was checked and confirmed, and the file's
 identity, size and times must not change, or nothing is committed. Only GeoJSON
 is held whole, under its own limit, to be parsed.
 
@@ -133,8 +142,10 @@ not transactional; if a later request fails, results identify completed and
 failed items, including a replace whose delete went through.
 
 Preview and execution use the same planner. Its fingerprint covers app,
-owners, existing files, proposed requests and the upload's digest. Advanced App
-Clip uploads with `page_id` attach the new header only after commit. Commits
+owners, existing file IDs and sizes, proposed requests and the upload's digest;
+processing state changes do not invalidate approval. A replace rechecks the
+local file's stamp and SHA-256 immediately before deleting the old file.
+Advanced App Clip uploads with `page_id` attach the new header only after commit. Commits
 include MD5 `sourceFileChecksum` where that is the schema's field, or SHA-256
 `sourceFileChecksums.file` for background and build files. The seven image
 families whose update accepts only `uploaded` need no checksum field.

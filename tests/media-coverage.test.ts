@@ -241,16 +241,16 @@ function fileHttp(target: FileTarget, options: MockOptions = {}) {
   const linksAt = (i: number): Record<string, unknown> => {
     const step = adapter.chain[i];
     if (!step) return {};
-    if (step.group && options.group) return { [step.via]: link(null), [step.group]: link('group1') };
+    if (step.group && options.group) return { [step.group]: link('group1') };
     return { [step.via]: link(step.get === 'apps.get' ? 'app' : `owner${i}`) };
   };
-  const parent = { id: 'parent', attributes: build ? { name: 'Owner', platform: 'IOS', cfBundleShortVersionString: '3.0', cfBundleVersion: '42' } : { name: 'Owner', locale: 'en-US' }, relationships: {
+  const parent = { id: 'parent', attributes: build ? { name: 'Owner', platform: 'IOS', cfBundleShortVersionString: '3.0', cfBundleVersion: '42' } : { name: 'Owner', locale: 'en-US', ...(target.startsWith('in_app_purchase') ? { productId: 'example.product' } : {}) }, relationships: {
     // Build/background collections have links only, with no include option.
     ...(adapter.read ? {} : { [adapter.files]: link(options.empty ? null : 'file1') }),
-    ...linksAt(0), ...(build ? { build: link(null) } : {}),
+    ...linksAt(0),
   } };
   const chain = adapter.chain.filter((step) => step.get !== 'apps.get').map((step, i) => ({
-    operation: step.get, id: `owner${i}`, row: { id: `owner${i}`, relationships: linksAt(i + 1) },
+    operation: step.get, id: `owner${i}`, row: { id: `owner${i}`, attributes: target === 'in_app_purchase_image' && step.get === 'in_app_purchases_v2.get' ? { productId: 'example.product' } : {}, relationships: linksAt(i + 1) },
   }));
   // Validate includes against Apple, then omit linkage unless it was requested.
   // A mock derived only from the adapter would hide v1/v2 and link-only mistakes.
@@ -282,6 +282,8 @@ function fileHttp(target: FileTarget, options: MockOptions = {}) {
         if (build && !(query?.['filter[cfBundleVersion]'] === '42' && query?.['filter[cfBundleShortVersionString]'] === '3.0' && query?.['filter[platform]'] === 'IOS')) {
           return { data: [{ id: 'other-upload' }], links: { next: `${path}?cursor=${Math.random()}` } };
         }
+        if (target.startsWith('in_app_purchase') && query?.['filter[productId]'] !== 'example.product')
+          return { data: [{ id: 'other-purchase' }], links: { next: `${path}?cursor=2` } };
         return { data: [{ id: adapter.chain.length ? `owner${chain.length - 1}` : 'parent' }] };
       }
       if (path.includes('?cursor=')) return { data: [{ id: 'other-upload' }], links: { next: `${path}x` } };
@@ -363,7 +365,7 @@ describe('image and file target × action coverage', () => {
     ['in_app_purchase_image', 'public'], ['subscription_image', 'public'],
     ['in_app_purchase_review_screenshot', 'low'], ['subscription_review_screenshot', 'low'],
     ['encryption_document', 'low'], ['app_review_attachment', 'low'],
-    ['routing_coverage', 'low'], ['background_asset_file', 'low'], ['build_upload_file', 'low'],
+    ['routing_coverage', 'low'], ['background_asset_file', 'low'], ['build_upload_file', 'release'],
   ])('classifies %s upload as %s and delete as destructive', (target, risk) => {
     expect(mediaRisk('media__upload', { target, page_id: 'parent' })).toBe(risk);
     if (FILE_TARGETS[target as keyof typeof FILE_TARGETS].delete || target === 'build_upload_file') expect(mediaRisk('media__delete', { target })).toBe('destructive');
@@ -462,12 +464,35 @@ describe('image and file target × action coverage', () => {
       const original = http.get.getMockImplementation()!;
       http.get.mockImplementation(async (path, query) => {
         const result = structuredClone(await original(path, query));
-        if (path === pathFor(adapter.get, 'file1')) result.data.attributes.fileName = 'Changed file';
+        if (path === pathFor(adapter.get, 'file1')) result.data.attributes.fileSize = 9000;
         return result;
       });
       await expect(executeMediaTool(macro, input, { http: http as any, approvedPlanFingerprint: preview.planFingerprint })).rejects.toThrow('changed since confirmation');
       expect(http.post).not.toHaveBeenCalled(); expect(http.patch).not.toHaveBeenCalled(); expect(http.delete).not.toHaveBeenCalled();
     } finally { await rm(directory, { recursive: true, force: true }); }
+  });
+
+  it.each(['in_app_purchase_image', 'in_app_purchase_review_screenshot'] as FileTarget[])('%s scopes app ownership by productId', async (target) => {
+    const http = fileHttp(target);
+    const result: any = await executeMediaTool('media__list', { app: 'Example', target, page_id: 'parent' }, { http: http as any });
+    expect(result.assets.map((asset: any) => asset.id)).toEqual(['file1']);
+    const calls = http.get.mock.calls.filter(([path]) => path === pathFor('apps.in_app_purchases_v2.list', 'app'));
+    expect(calls).toHaveLength(1);
+    expect(calls[0][1]).toMatchObject({ 'filter[productId]': 'example.product' });
+  });
+
+  it('accepts processing-state changes after approval but rejects changed file size', async () => {
+    const http = fileHttp('routing_coverage');
+    const args = { app: 'Example', target: 'routing_coverage', page_id: 'parent', file_ids: ['file1'] };
+    const preview = await buildMediaPreview('media__delete', args, http as any);
+    const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => {
+      const response = structuredClone(await original(path, query));
+      if (path === pathFor('routing_app_coverages.get', 'file1')) response.data.attributes.assetDeliveryState.state = 'PROCESSING';
+      return response;
+    });
+    const result: any = await executeMediaTool('media__delete', args, { http: http as any, dryRun: true, approvedPlanFingerprint: preview.planFingerprint });
+    expect(result.dryRun).toBe(true);
   });
 
   it('paginates build file ownership and refuses an incomplete list before deleting the whole upload', async () => {
@@ -515,6 +540,14 @@ describe('image and file target × action coverage', () => {
       await expect(executeMediaTool('media__upload', args, { http: http as any })).rejects.toThrow('UTI requires');
       expect(http.get).not.toHaveBeenCalled(); expect(http.post).not.toHaveBeenCalled();
     } finally { await rm(directory, { recursive: true, force: true }); }
+  });
+
+  it('rejects an XML plist with no root element', async () => {
+    await withFile('<plist></plist>', async (path) => {
+      const http = fileHttp('build_upload_file');
+      await expect(executeMediaTool('media__upload', { app: 'Example', target: 'build_upload_file', page_id: 'parent', file_path: path, asset_type: 'ASSET_DESCRIPTION', uti: 'com.apple.xml-property-list' }, { http: http as any })).rejects.toThrow('requires an XML plist');
+      expect(http.post).not.toHaveBeenCalled();
+    });
   });
 
   it.each([
@@ -609,6 +642,20 @@ describe('single-file owners: first upload, empty to-one and replace', () => {
     });
   });
 
+  it('keeps the old file when local bytes change after planning and before replace', async () => {
+    await withFile(PNG, async (path) => {
+      const http = fileHttp('app_clip_header_image');
+      const original = http.get.getMockImplementation()!;
+      http.get.mockImplementation(async (url, query) => {
+        const response = await original(url, query);
+        if (url === pathFor('app_clip_header_images.get', 'file1')) await writeFile(path, Buffer.concat([PNG.subarray(0, 8), Buffer.from([9, 9, 9, 9])]));
+        return response;
+      });
+      await expect(executeMediaTool('media__upload', { app: 'Example', target: 'app_clip_header_image', page_id: 'parent', file_path: path, replace: true }, { http: http as any })).rejects.toThrow('existing file was not deleted');
+      expect(http.delete).not.toHaveBeenCalled(); expect(http.post).not.toHaveBeenCalled();
+    });
+  });
+
   it('refuses replace where Apple has no DELETE, on multi-file targets, and with nothing to replace', async () => {
     await withFile('%PDF-1.7\n', async (path) => {
       const http = fileHttp('encryption_document');
@@ -683,11 +730,24 @@ describe('advanced App Clip image before its experience', () => {
     });
   });
 
-  it('still needs page_id for other targets and for listing', async () => {
+  it('lists an unattached image by ID, with an explicit ownership limit and no writes', async () => {
+    const http = fileHttp('app_clip_advanced_experience_image');
+    const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => path === pathFor('app_clip_advanced_experience_images.get', 'new')
+      ? { data: { id: 'new', attributes: { fileName: 'header.png', assetDeliveryState: { state: 'FAILED', errors: [{ code: 'INVALID_IMAGE' }] } } } }
+      : original(path, query));
+    const listed: any = await executeMediaTool('media__list', { app: 'Example', target: 'app_clip_advanced_experience_image', file_ids: ['new'] }, { http: http as any });
+    expect(listed.assets[0]).toMatchObject({ id: 'new', state: 'FAILED', errors: ['INVALID_IMAGE'], fileName: null, width: null, height: null });
+    expect(listed.note).toContain('ownership by the named app cannot be proven');
+    expect(http.post).not.toHaveBeenCalled(); expect(http.patch).not.toHaveBeenCalled(); expect(http.delete).not.toHaveBeenCalled();
+    await expect(executeMediaTool('media__list', { app: 'Example', target: 'app_clip_advanced_experience_image' }, { http: http as any })).rejects.toThrow('file_ids');
+  });
+
+  it('still needs page_id for other targets', async () => {
     await withFile(PNG, async (path) => {
       const http = fileHttp('app_clip_header_image');
       await expect(executeMediaTool('media__upload', { app: 'Example', target: 'app_clip_header_image', file_path: path }, { http: http as any })).rejects.toThrow('page_id');
-      await expect(executeMediaTool('media__list', { app: 'Example', target: 'app_clip_advanced_experience_image' }, { http: http as any })).rejects.toThrow('page_id');
+      await expect(executeMediaTool('media__list', { app: 'Example', target: 'app_clip_header_image' }, { http: http as any })).rejects.toThrow('page_id');
       await expect(executeMediaTool('media__upload', { app: 'Example', target: 'app_clip_advanced_experience_image', file_path: path, platform: 'IOS' }, { http: http as any })).rejects.toThrow('no platform');
     });
   });
@@ -725,6 +785,18 @@ describe('build upload ownership and preview', () => {
       expect(preview.message).toContain('RELEASE-level');
       const dry: any = await executeMediaTool('media__upload', args, { http: http as any, dryRun: true });
       expect(dry.risk).toBe('release');
+    });
+  });
+
+  it('confirms a file on an existing build upload at release level', async () => {
+    await withFile(Buffer.from([0x50,0x4b,0x03,0x04,1,2,3,4]), async (path) => {
+      const http = fileHttp('build_upload_file');
+      const args = { app: 'Example', target: 'build_upload_file', page_id: 'parent', file_path: path, asset_type: 'ASSET', uti: 'com.apple.ipa' };
+      const preview = await buildMediaPreview('media__upload', args, http as any);
+      expect(preview.message).toContain('RELEASE-level');
+      expect(preview.strong).toBe(false);
+      const result: any = await executeMediaTool('media__upload', args, { http: http as any, dryRun: true, approvedPlanFingerprint: preview.planFingerprint });
+      expect(result.risk).toBe('release');
     });
   });
 });
@@ -784,9 +856,30 @@ describe('bounded reads: hashing and sending from one descriptor', () => {
       const file = await open(path, 'r+'); try { await file.truncate(65 * 1024 * 1024); } finally { await file.close(); }
       const http = fileHttp('background_asset_file', { empty: true });
       const result: any = await executeMediaTool('media__upload', { app: 'Example', target: 'background_asset_file', page_id: 'parent', file_path: path, asset_type: 'ASSET' }, { http: http as any });
-      expect(result).toMatchObject({ ok: false, failedPhase: 'upload' });
+      expect(result).toMatchObject({ ok: false, failedPhase: 'upload', orphanReservationId: 'new' });
       expect(result.error).toContain('holds at most');
+      expect(result.note).toContain('Apple reserved file new');
       expect(http.uploadAssetPart).not.toHaveBeenCalled(); expect(http.patch).not.toHaveBeenCalled();
+    });
+  });
+
+  it('refuses an oversized no-DELETE single slot before reservation', async () => {
+    await withFile('', async (path) => {
+      const file = await open(path, 'r+'); try { await file.truncate(65 * 1024 * 1024); } finally { await file.close(); }
+      const http = fileHttp('encryption_document', { empty: true });
+      await expect(executeMediaTool('media__upload', { app: 'Example', target: 'encryption_document', page_id: 'parent', file_path: path }, { http: http as any })).rejects.toThrow('nothing was reserved');
+      expect(http.post).not.toHaveBeenCalled(); expect(http.uploadAssetPart).not.toHaveBeenCalled();
+    });
+  });
+
+  it('reports the file reservation ID after a post-reservation upload abort', async () => {
+    await withFile('%PDF-1.7\n', async (path) => {
+      const http = fileHttp('encryption_document', { empty: true });
+      http.uploadAssetPart.mockRejectedValue(new Error('delivery failed'));
+      const result: any = await executeMediaTool('media__upload', { app: 'Example', target: 'encryption_document', page_id: 'parent', file_path: path }, { http: http as any });
+      expect(result).toMatchObject({ ok: false, failedPhase: 'upload', orphanReservationId: 'new' });
+      expect(result.note).toContain('Apple reserved file new');
+      expect(http.patch).not.toHaveBeenCalled();
     });
   });
 
