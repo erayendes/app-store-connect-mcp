@@ -7,13 +7,9 @@ import { ALL_DOMAINS, ToolRegistry } from '../core/registry.js';
 import { DOMAIN_DESCRIPTIONS } from '../generated/domain-info.js';
 import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
-import { PRICING_TOOLS } from './pricing.js';
-import { SCREENSHOT_TOOLS } from './screenshots.js';
-import { CI_TOOLS } from './ci.js';
-import { PREFLIGHT_TOOLS } from './preflight.js';
+import { MACRO_TOOLS } from './catalog.js';
 import { PROFILES, type SubProfile } from '../profiles.js';
-import { serverName } from '../clients.js';
-import { TESTFLIGHT_TOOLS } from './testflight.js';
+import { PACKAGE, serverName } from '../clients.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import type { TokenProvider } from '../core/jwt.js';
@@ -525,7 +521,9 @@ export async function executeMetaTool(
       const limit = Number(args.limit ?? 25);
       if (!query) return { matches: [], count: 0 };
 
-      const apiHits = searchOperations(query, ctx.includeDeprecated);
+      const apiHits = searchOperations(query, ctx.includeDeprecated).filter(
+        (op) => !ctx.readOnly || op.readOnly
+      );
       const apiMatches = apiHits.map((op) => ({
         tool: op.name,
         domain: op.domain,
@@ -556,15 +554,18 @@ export async function executeMetaTool(
           ...homeOf((s) => s.manualTools.includes(t.name), ctx.ownProfile),
         }));
 
-      // Ahead of the generated tools, not after them. There are twelve of these
-      // against 982, so appending buried them below the slice — which is how a
+      // Ahead of the generated tools, not after them. Appending macros below
+      // hundreds of operations buried them below the slice — which is how a
       // macro written to replace a five-call chain lost to the five calls. A
       // macro that matches the query is the answer to it.
       const matches = [
-        ...extras([...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...PREFLIGHT_TOOLS, ...TESTFLIGHT_TOOLS, ...CI_TOOLS], 'macro', 'Heimdall macro', (name) =>
-          Boolean(ctx.macroOffered?.(name))
+        ...extras(
+          MACRO_TOOLS.filter((t) => !ctx.readOnly || t.annotations?.readOnlyHint === true),
+          'macro',
+          'Heimdall macro',
+          (name) => Boolean(ctx.macroOffered?.(name))
         ),
-        ...extras(STOREKIT_TOOLS, 'storekit', 'App Store Server API', () =>
+        ...extras(STOREKIT_TOOLS.filter((t) => !ctx.readOnly || t.annotations?.readOnlyHint === true), 'storekit', 'App Store Server API', () =>
           Boolean(ctx.storekitEnabled)
         ),
         ...apiMatches,
@@ -597,7 +598,7 @@ export async function executeMetaTool(
         const homes = PROFILES.flatMap((p) => p.subProfiles
           .filter((s) => s.manualTools.includes(macro.tool))
           .map((s) => s.name ? `${p.name}:${s.name}` : p.name));
-        if (homes.length) hints.push(`${macro.tool}: register with \`npx -y @erayendes/asc-mcp register ${homes.join(' ')}\`, then restart the client.`);
+        if (homes.length) hints.push(`${macro.tool}: register with \`npx -y ${PACKAGE} register ${homes.join(' ')}\`, then restart the client.`);
       }
       if (unloadedApiDomains.length) {
         const unloadedOps = apiHits.filter(
@@ -612,7 +613,7 @@ export async function executeMetaTool(
       if (storekitUnloaded) {
         hints.push(
           'StoreKit tools are on the monetization profile\'s transactions sub-profile ' +
-            '(`npx -y @erayendes/asc-mcp register monetization:transactions`).'
+            `(\`npx -y ${PACKAGE} register monetization:transactions\`).`
         );
       }
 

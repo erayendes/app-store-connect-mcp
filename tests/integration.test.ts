@@ -43,15 +43,15 @@ describe.skipIf(!configured)('App Store Connect API Integration', () => {
 
   it('lists apps from the account', async () => {
     const response = await http.collect('/v1/apps', { limit: 5 });
-    expect(Array.isArray(response)).toBe(true);
+    expect(Array.isArray(response.items)).toBe(true);
   }, 30000);
 
   it('fetches app details', async () => {
-    const apps = await http.collect('/v1/apps', { limit: 1 });
-    expect(Array.isArray(apps)).toBe(true);
-    if (apps.length > 0) {
-      expect(apps[0].id).toBeDefined();
-      expect(apps[0].attributes?.bundleId).toBeDefined();
+    const apps = await http.collect<{ id: string; attributes?: { bundleId?: string } }>('/v1/apps', { limit: 1 });
+    expect(Array.isArray(apps.items)).toBe(true);
+    if (apps.items.length > 0) {
+      expect(apps.items[0].id).toBeDefined();
+      expect(apps.items[0].attributes?.bundleId).toBeDefined();
     }
   }, 30000);
 });

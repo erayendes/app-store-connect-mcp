@@ -57,10 +57,40 @@ export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
   'testflight__assign_build_to_groups',
   // Puts the version on the App Store for everyone.
   'app_store_version_release_requests__create',
+  // Opens or closes the app in a country, or turns a pre-order into a sale.
+  'territory_availabilities__update',
+  'app_availabilities_v2__create',
+  'end_app_availability_pre_orders__create',
+  // Starts or stops a product page experiment, or moves its traffic split:
+  // real visitors see the treatment.
+  'app_store_version_experiments_v2__update',
+  // A score or achievement lands on a real player's record.
+  'game_center_leaderboard_entry_submissions__create',
+  'game_center_player_achievement_submissions__create',
 ]);
 
 /** Of those, the ones that cannot be walked back ask for a typed CONFIRM, like the strong levels. */
-export const TYPED_BY_NAME: ReadonlySet<string> = new Set(['app_store_version_release_requests__create']);
+export const TYPED_BY_NAME: ReadonlySet<string> = new Set([
+  'app_store_version_release_requests__create',
+  // An ended pre-order cannot be reopened.
+  'end_app_availability_pre_orders__create',
+]);
+
+/**
+ * The one write whose name cannot decide: `builds.update` records the
+ * encryption answer, which nobody sees, and with `expired: true` pulls the
+ * build from every tester for good — destructive, so a typed CONFIRM.
+ * A body sent as a JSON string, or `"true"`, still counts: fail closed.
+ */
+export function riskByBody(toolName: string, args: Record<string, unknown>): RiskLevel | undefined {
+  if (toolName !== 'builds__update') return undefined;
+  let body = args.body as any;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return undefined; }
+  }
+  const expired = body?.data?.attributes?.expired;
+  return expired === true || expired === 'true' ? 'destructive' : undefined;
+}
 
 /** One-line reversibility note per level, shown in the confirmation prompt. */
 export const REVERSIBILITY: Record<RiskLevel, string> = {
@@ -76,8 +106,9 @@ export const REVERSIBILITY: Record<RiskLevel, string> = {
 interface RiskRule {
   /** Regex over the dotted operation name (e.g. `subscription_prices.create`). */
   pattern: RegExp;
-  // 'low' only to keep a name away from a broader rule below it.
-  level: Exclude<RiskLevel, 'destructive'>;
+  // 'low' only to keep a name away from a broader rule below it; 'destructive'
+  // only for a write that removes without saying DELETE.
+  level: RiskLevel;
   why: string;
 }
 
@@ -105,6 +136,15 @@ export const RULES: RiskRule[] = [
     why: 'touches prices, subscriptions, IAPs or offers',
   },
 
+  // --- Game Center relationship replaces ---------------------------------
+  // A replace sets the whole list: every achievement or leaderboard left out
+  // is detached, which reads like an edit and removes like a delete.
+  {
+    pattern: /^game_center_.*\.replace$/,
+    level: 'destructive',
+    why: 'detaches every Game Center record not in the list',
+  },
+
   // --- who has access ---------------------------------------------------
   {
     pattern: /^users\.|^user_invitations\.|^sandbox_testers/,
@@ -122,7 +162,7 @@ export const RULES: RiskRule[] = [
   // --- release pipeline -------------------------------------------------
   {
     pattern:
-      /^review_submission|^app_store_version_release_request|^app_store_version_promotion|phased_release|^app_store_versions\.(create|update|build\.set)|^build_uploads?\.|^beta_app_review_submission/,
+      /^review_submission|^app_store_version_release_request|^app_store_version_promotion|phased_release|^app_store_versions\.(create|update|build\.set)|^build_uploads?\.|^beta_app_review_submission|^territory_availabilities\.update|^app_availabilities_v2\.create|^end_app_availability_pre_orders\./,
     level: 'release',
     why: 'moves a version toward or through release',
   },
@@ -130,11 +170,13 @@ export const RULES: RiskRule[] = [
   // --- customer-visible store content ------------------------------------
   {
     pattern:
-      /localization|screenshot|preview|^app_infos?\.|^apps\.update|^customer_review_response|^app_events?|^app_custom_product_page|^nominations\.|search_keywords|^game_center_detail_players\.|^game_center_score_moderations\.|^app_asset_library_placement/,
+      /localization|screenshot|preview|^app_infos?\.|^apps\.update|^customer_review_response|^app_events?|^app_custom_product_page|^nominations\.|search_keywords|^game_center_detail_players\.|^game_center_score_moderations\.|^app_asset_library_placement|^age_rating_declarations\.|^end_user_license_agreements\.|^accessibility_declarations\.|^app_store_version_experiments(_v2)?\.update/,
     level: 'public',
     // Blocking a Game Center player or score hides them from other players.
     // An asset library placement puts an image or video on a store page; the
     // library upload itself shows nowhere until it is placed, so it stays low.
+    // The age rating, EULA and accessibility declarations print on the product
+    // page; an experiment's update starts it and sets its share of visitors.
     why: 'changes what customers see on the App Store',
   },
 

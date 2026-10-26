@@ -27,17 +27,17 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { OPERATIONS } from '../src/generated/operations.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { STOREKIT_TOOLS } from '../src/storekit/index.js';
-import { PRICING_TOOLS } from '../src/tools/pricing.js';
-import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
-import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
+import { MACRO_TOOLS } from '../src/tools/catalog.js';
 import { TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 import { RELEASE_TOOLS } from '../src/tools/release.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, TYPED_BY_NAME, type RiskLevel } from '../src/core/risk.js';
 import { loadConfig } from '../src/core/config.js';
-import { CORE_POINTER, SERVER_INSTRUCTIONS } from '../src/server.js';
+import { CORE_POINTER, createServer, SERVER_INSTRUCTIONS } from '../src/server.js';
+import { MUTATING_TAILS } from '../scripts/ax-breach.js';
 
 /**
  * The session-level rules. Pinned by meaning rather than by wording, so the
@@ -89,6 +89,10 @@ describe('write-gate annotations (offline)', () => {
 
   it('keeps hand-written tools honest about whether they write', () => {
     const shouldWrite = new Set([
+      ...MACRO_TOOLS.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name),
+      ...STOREKIT_TOOLS.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name),
+    ]);
+    expect([...shouldWrite].sort()).toEqual([
       'storekit__extend_renewal_date',
       'storekit__request_test_notification',
       'pricing__set_subscription_price',
@@ -98,23 +102,45 @@ describe('write-gate annotations (offline)', () => {
       'listing__upload_screenshot',
       'listing__upload_asset',
       'listing__delete_assets',
+      'metadata_ai__apply_localizations',
+      'release__submit',
       'testflight__assign_build_to_groups',
-    ]);
+    ].sort());
     // The listing and analytics families were outside this check until the
     // upload macro made one of them a write — an unchecked family is exactly
     // where a mislabelled write hides.
     const wrong = [
       ...STOREKIT_TOOLS,
-      ...PRICING_TOOLS,
       ...REVIEWS_AI_TOOLS,
       ...META_TOOLS,
-      ...SCREENSHOT_TOOLS,
-      ...ANALYTICS_TOOLS,
-      ...TESTFLIGHT_TOOLS,
+      ...MACRO_TOOLS,
     ]
       .filter((t) => shouldWrite.has(t.name) === (t.annotations?.readOnlyHint === true))
       .map((t) => t.name);
     expect(wrong, 'hand-written tools whose readOnlyHint contradicts what they do').toEqual([]);
+  });
+
+  it('keeps the catalog, served macros and write classifier in sync', async () => {
+    const config = {
+      credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'unused' },
+      readOnly: false,
+      confirmWrites: 'off' as const,
+      includeDeprecated: false,
+      dryRun: true,
+    };
+    const server = createServer(config);
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: 'catalog-test', version: '0' }, { capabilities: {} });
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    const catalogNames = new Set(MACRO_TOOLS.map((t) => t.name));
+    const served = (await client.listTools()).tools.filter((t) => catalogNames.has(t.name));
+    expect(new Set(served.map((t) => t.name))).toEqual(catalogNames);
+    const writes = MACRO_TOOLS.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort();
+    expect(served.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort()).toEqual(writes);
+    expect([...catalogNames].filter((name) => MUTATING_TAILS.has(name)).sort()).toEqual(writes);
+    expect(catalogNames.has('pricing__make_offer')).toBe(true);
+    await client.close();
+    await server.close();
   });
 
   it('names only real tools in the default-mode release list', () => {
@@ -126,6 +152,8 @@ describe('write-gate annotations (offline)', () => {
     ]);
     expect([...ASK_BY_DEFAULT].filter((n) => !real.has(n))).toEqual([]);
     expect([...TYPED_BY_NAME].filter((n) => !ASK_BY_DEFAULT.has(n))).toEqual([]);
+    // Listed by name it would ask on every encryption answer too (risk.ts, riskByBody).
+    expect(ASK_BY_DEFAULT.has('builds__update')).toBe(false);
   });
 
   it('puts every irreversible operation behind a typed confirmation', () => {

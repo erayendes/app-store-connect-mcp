@@ -4,20 +4,49 @@
  * anywhere; ASC_CONFIG_DIR points at an empty directory so no saved key on the
  * test machine changes what the page offers.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
 import { request } from 'node:http';
-import { mkdtempSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 // Listing the AI apps on this machine asks some of them over their CLI, which
 // takes seconds; the tests that read the state allow for it.
-import { startWebSetup, type WebSetupHandle } from '../src/setup-web.js';
+import type { WebSetupHandle } from '../src/setup-web.js';
+
+const priorHome = process.env.HOME;
+const priorProfile = process.env.USERPROFILE;
+const priorPath = process.env.PATH;
+const isolatedHome = mkdtempSync(join(tmpdir(), 'asc-web-home-'));
+process.env.HOME = isolatedHome;
+// os.homedir() reads USERPROFILE on Windows, not HOME.
+process.env.USERPROFILE = isolatedHome;
+process.env.PATH = '/nonexistent';
+const { startWebSetup, planForPage } = await import('../src/setup-web.js');
+const { CLIENTS, PACKAGE, readRegistrations } = await import('../src/clients.js');
+const { planChanges } = await import('../src/setup.js');
+const { SETUP_PAGE } = await import('../src/setup-page.js');
+const canListen = await new Promise<boolean>((resolve) => {
+  const server = createServer();
+  server.once('error', () => resolve(false));
+  server.listen(0, '127.0.0.1', () => server.close(() => resolve(true)));
+});
+
+afterAll(() => {
+  process.env.HOME = priorHome;
+  if (priorProfile === undefined) delete process.env.USERPROFILE;
+  else process.env.USERPROFILE = priorProfile;
+  process.env.PATH = priorPath;
+  rmSync(isolatedHome, { recursive: true, force: true });
+});
 
 let setup: WebSetupHandle;
 let base: string;
 let token: string;
 
 beforeEach(async () => {
+  if (!canListen) return;
   process.env.ASC_CONFIG_DIR = mkdtempSync(join(tmpdir(), 'asc-web-'));
   setup = await startWebSetup({ dryRun: true, open: false });
   const url = new URL(setup.url);
@@ -26,7 +55,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  setup.close();
+  setup?.close();
   delete process.env.ASC_CONFIG_DIR;
 });
 
@@ -45,7 +74,7 @@ const withHost = (host: string) =>
     req.end('{}');
   });
 
-describe('setup --web, the doors', () => {
+describe.skipIf(!canListen)('setup --web, the doors', () => {
   it('listens on 127.0.0.1 only', () => {
     expect(new URL(setup.url).hostname).toBe('127.0.0.1');
   });
@@ -78,7 +107,7 @@ describe('setup --web, the doors', () => {
   });
 });
 
-describe('setup --web, a dry run', () => {
+describe.skipIf(!canListen)('setup --web, a dry run', () => {
   it('checks the key, plans and finishes without writing anything', async () => {
     const state = await (await post('state')).json();
     expect(state.dryRun).toBe(true);
@@ -102,4 +131,55 @@ describe('setup --web, a dry run', () => {
 
     await expect(setup.done).resolves.toBeUndefined();
   }, 30_000);
+});
+
+describe('setup --web, registration confirmation', () => {
+  it('lists each rewrite with flags while keeping env values out of the page data', () => {
+    const cursor = CLIENTS.find((c) => c.id === 'cursor')!;
+    const path = join(isolatedHome, '.cursor', 'mcp.json');
+    mkdirSync(join(isolatedHome, '.cursor'), { recursive: true });
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    writeFileSync(path, JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', other, 'app-info', '--read-only', '--x=secret-flag-value'], env: { DEMO_TOKEN: 'secret-test-value' } },
+      'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'], env: { ASC_KEY_ID: 'another-secret-value' } },
+    } }));
+    const entries = readRegistrations(cursor);
+    const plan = planChanges([cursor], ['app-info', 'analytics'], new Map([['cursor', entries]]),
+      { prune: true, stale: new Map([['cursor', new Set(['ASC-AppInfo'])]]) });
+    const pagePlan = planForPage(plan)[0];
+    const pageData = JSON.stringify(pagePlan);
+    expect(pageData).toContain('ASC-AppInfo (--read-only --x=<hidden>)');
+    expect(pagePlan.userManaged).toContain('ASC-Analytics');
+    expect(pagePlan.rewrites).toEqual(['ASC-AppInfo (--read-only --x=<hidden>)']);
+    expect(pagePlan.rewrites).not.toContain('ASC-Analytics');
+    expect(pageData).not.toContain('secret-test-value');
+    expect(pageData).not.toContain('another-secret-value');
+    expect(pageData).not.toContain('secret-flag-value');
+    expect(SETUP_PAGE).toContain("'rewrite ' + p.rewrites.join(', ')");
+    expect(SETUP_PAGE).toContain("el('span', 'mv'");
+    expect(SETUP_PAGE).toContain('reuse && !vendorChanged() && !r.plan.some');
+    expect(readFileSync(path, 'utf8')).toContain('secret-test-value');
+  });
+
+  it('marks a report-only plan as having no action for Apply', () => {
+    const cursor = CLIENTS.find((c) => c.id === 'cursor')!;
+    const path = join(isolatedHome, '.cursor', 'mcp.json');
+    mkdirSync(join(isolatedHome, '.cursor'), { recursive: true });
+    writeFileSync(path, JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info'],
+        env: { ASC_ISSUER_ID: 'test-only' } },
+    } }));
+    const pagePlan = planForPage(planChanges([cursor], ['app-info'],
+      new Map([['cursor', readRegistrations(cursor)]]), { prune: true }));
+    expect(pagePlan).toHaveLength(1);
+    expect(pagePlan[0]).toMatchObject({ add: [], remove: [], rewrites: [], userManaged: ['ASC-AppInfo'] });
+    const expression = SETUP_PAGE.match(/\$\('apply'\)\.disabled = (reuse[\s\S]*?\n      \}\));/)?.[1];
+    expect(expression).toBeDefined();
+    const disabled = (reuse: boolean, changed: boolean, plan: typeof pagePlan): boolean =>
+      runInNewContext(expression!, { reuse, vendorChanged: () => changed, r: { plan } }) as boolean;
+    expect(disabled(true, false, pagePlan)).toBe(true);
+    expect(disabled(false, false, pagePlan)).toBe(false);
+    expect(disabled(true, true, pagePlan)).toBe(false);
+    expect(disabled(true, false, [{ ...pagePlan[0], add: ['ASC-Analytics'] }])).toBe(false);
+  });
 });

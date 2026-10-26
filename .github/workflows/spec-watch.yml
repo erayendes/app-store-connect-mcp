@@ -78,11 +78,17 @@ jobs:
       # something the ratchets or the curated descriptions depend on. The pull
       # request still opens and says so, which is more useful than a workflow
       # failure nobody sees.
+      - name: Build the regenerated server
+        id: build
+        if: steps.changed.outputs.changed == 'true'
+        continue-on-error: true
+        run: npm run build
+
       - name: Verify the regenerated catalogue still passes
         id: verify
         if: steps.changed.outputs.changed == 'true'
         continue-on-error: true
-        run: npm run typecheck && npm test
+        run: npm run typecheck && test "${{ steps.build.outcome }}" = success && npm test
 
       - name: Push the branch and say what changed
         if: steps.changed.outputs.changed == 'true'

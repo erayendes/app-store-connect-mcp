@@ -1,4 +1,5 @@
 import { ConfigError } from './errors.js';
+import { PACKAGE } from '../clients.js';
 import { readKeychainPassword } from './keychain.js';
 import { readSharedConfig } from './shared-config.js';
 import type { JwtCredentials } from './jwt.js';
@@ -119,7 +120,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
   if (missing.length) {
     throw new ConfigError(
       `Missing required configuration: ${missing.join(', ')}.\n` +
-        `Either run "npx -y @erayendes/asc-mcp setup" once (shared by every profile), or ` +
+        `Either run "npx -y ${PACKAGE} setup" once (shared by every profile), or ` +
         `create an API key at https://appstoreconnect.apple.com/access/integrations/api ` +
         `and set these as environment variables in your MCP client config.`
     );

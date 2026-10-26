@@ -30,7 +30,7 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
       'Send an App Store version to Apple for review in one call — it opens the submission, ' +
       'puts the version in it, and hands it over. Checks first that the version is actually ' +
       'submittable and refuses rather than submitting something that will bounce. Use this ' +
-      'instead of review_submissions__create, which by itself sends nothing.',
+      'instead of opening an empty review submission by hand, which by itself sends nothing.',
     inputSchema: {
       type: 'object',
       properties: {

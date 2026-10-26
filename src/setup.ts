@@ -47,6 +47,9 @@ import {
   claudeDesktop,
   type ChangeResult,
   isRunning,
+  readRegistrations,
+  registrationBlock,
+  type Registration,
 } from './clients.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
@@ -217,19 +220,21 @@ export function buildRows(): Row[] {
  * silently widen a config the user had narrowed.
  */
 export function registeredAcross(clients: McpClient[]): {
-  perClient: Map<string, Map<string, string>>;
+  perClient: Map<string, Registration[]>;
   union: Map<string, string>;
   /** Per client, the entries that run another release channel (beta or stable) than this one. */
   stale: Map<string, Set<string>>;
 } {
   const known = new Set(PROFILES.map((p) => p.name));
-  const perClient = new Map<string, Map<string, string>>();
+  const perClient = new Map<string, Registration[]>();
   const union = new Map<string, string>();
   const stale = new Map<string, Set<string>>();
   for (const client of clients) {
     const other = new Set<string>();
-    const found = listRegistered(client, other);
-    perClient.set(client.id, found);
+    const entries = readRegistrations(client);
+    const found = new Map(entries.filter((r) => r.name !== '*').map((r) => [r.name, r.spec ?? profileOfServer(r.name)!]));
+    for (const reg of entries) if (reg.pkg && reg.pkg !== PACKAGE) other.add(reg.name);
+    perClient.set(client.id, entries);
     stale.set(client.id, other);
     for (const [name, spec] of found) {
       const profile = profileOfServer(name);
@@ -675,7 +680,18 @@ export interface ClientPlan {
   toRemove: string[];
   /** The part of toAdd that only changes channel (beta/stable); shown apart, since nothing new arrives. */
   toSwitch: string[];
+  /** Existing entries that setup reports but never changes. */
+  userManaged: string[];
+  /** Existing entries whose arguments will be rewritten, with flags only. */
+  rewrites: string[];
+  migrations: Map<string, string>;
 }
+
+const shownEntry = (reg: Registration): string => {
+  const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && arg !== '-y')
+    .map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
+  return `${reg.name}${flags.length ? ` (${flags.join(' ')})` : ''}`;
+};
 
 /**
  * What each client would gain and lose.
@@ -687,17 +703,19 @@ export interface ClientPlan {
 export function planChanges(
   clients: McpClient[],
   chosen: string[],
-  registeredPerClient: Map<string, Map<string, string>>,
+  registeredPerClient: Map<string, Registration[]>,
   { prune, stale }: { prune: boolean; stale?: Map<string, Set<string>> }
 ): ClientPlan[] {
   const chosenNames = new Set(chosen.map(serverName));
   return clients
     .map((client) => {
-      const registered = registeredPerClient.get(client.id) ?? new Map<string, string>();
+      const entries = registeredPerClient.get(client.id) ?? [];
+      const block = registrationBlock(entries);
+      const registered = new Map(entries.filter((r) => !block.managed.includes(r)).map((r) => [r.name, r.spec!]));
       // A name older versions wrote (`ASC-Analytics` before 2.5.0) is the same
       // server under another key; left beside the new one, Claude lists it
       // twice. It moves to the new name — unless setup is pruning it anyway.
-      const legacy = [...registered].filter(([n, spec]) => n !== serverName(spec));
+      const legacy = [...registered].filter(([n, spec]) => profileOfServer(n) === spec.split(':', 1)[0] && n !== serverName(spec));
       const migrate = legacy
         .map(([, spec]) => spec)
         .filter((spec) => !prune || chosenNames.has(serverName(spec)));
@@ -705,21 +723,27 @@ export function planChanges(
       // An entry on the other channel is rewritten even when its profiles
       // match: that is how a beta tester's servers follow them back to stable.
       const toAdd = client.targets.length
-        ? wanted.filter((spec) => registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec)))
+        ? wanted.filter((spec) => block.canAdd(spec) &&
+          (registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec))))
         : chosen;
+      const migrations = new Map(legacy.map(([name, spec]) => [serverName(spec), name]));
       return {
         client,
         toAdd,
         toSwitch: toAdd.filter((spec) => registered.get(serverName(spec)) === spec),
+        userManaged: block.managed.map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : shownEntry(r)),
+        rewrites: toAdd.flatMap((spec) => entries.filter((r) => !block.managed.includes(r) &&
+          (r.name === serverName(spec) || r.name === migrations.get(serverName(spec)))).map(shownEntry)),
+        migrations,
         // `register` never prunes: an agent adding one profile must not silently
         // drop the six the user set up last week.
         toRemove: [
-          ...legacy.map(([n]) => n),
-          ...(prune ? [...registered.keys()].filter((n) => !chosenNames.has(n) && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
+          ...legacy.map(([n]) => n).filter(block.canRemove),
+          ...(prune ? [...registered.keys()].filter((n) => block.canRemove(n) && !chosenNames.has(n) && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
         ],
       };
     })
-    .filter((p) => p.toAdd.length || p.toRemove.length);
+    .filter((p) => p.toAdd.length || p.toRemove.length || p.userManaged.length);
 }
 
 /**
@@ -734,28 +758,35 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
   const ids = new Set(chosen.map((c) => c.id));
   return candidates
     .filter((c) => c.targets.length && !ids.has(c.id))
-    .map((client) => ({ client, toAdd: [], toSwitch: [], toRemove: [...listRegistered(client).keys()] }))
-    .filter((p) => p.toRemove.length);
+    .map((client) => {
+      const entries = readRegistrations(client);
+      const block = registrationBlock(entries);
+      return { client, toAdd: [], toSwitch: [],
+        toRemove: entries.filter((r) => !block.managed.includes(r) && block.canRemove(r.name)).map((r) => r.name),
+        userManaged: block.managed.map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : shownEntry(r)),
+        rewrites: [], migrations: new Map<string, string>() };
+    })
+    .filter((p) => p.toRemove.length || p.userManaged.length);
 }
 
 /**
- * The plan, one line per client that gains or loses a profile. An entry that
- * only moves to this release's package is part of setting this release up,
- * not a change to anyone's setup, so it is written but not listed.
+ * The plan, one line per client, includes each existing entry to rewrite.
  */
-function printPlan(plan: ClientPlan[]): void {
-  const shown = plan.filter((p) => p.toRemove.length || p.toAdd.some((s) => !p.toSwitch.includes(s)));
+export function printPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
+  const shown = plan.filter((p) => p.toRemove.length || p.toAdd.length || p.userManaged.length);
   if (!shown.length) {
-    console.log('\n📋 Your profiles stay as they are.');
+    log('\n📋 Your profiles stay as they are.');
     return;
   }
-  console.log('\n📋 Planned changes:\n');
-  for (const { client, toAdd, toRemove, toSwitch } of shown) {
+  log('\n📋 Planned changes:\n');
+  for (const { client, toAdd, toRemove, toSwitch, rewrites, userManaged } of shown) {
     const bits: string[] = [];
     const added = toAdd.filter((s) => !toSwitch.includes(s));
     if (added.length) bits.push(`+ ${added.map(serverName).join(', ')}`);
     if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
-    console.log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
+    if (rewrites.length) bits.push(`rewrite ${rewrites.join(', ')}`);
+    if (userManaged.length) bits.push(`user-managed, unchanged: ${userManaged.join(', ')}`);
+    log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
   }
 }
 
@@ -782,7 +813,9 @@ function nextStep(clients: McpClient[]): string {
  */
 export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
   const restart: McpClient[] = [];
-  for (const { client, toAdd, toRemove, toSwitch } of plan) {
+  for (const { client, toAdd, toRemove, toSwitch, userManaged, migrations } of plan) {
+    if (userManaged.length) log(`${client.label}: user-managed, unchanged: ${userManaged.join(', ')}`);
+    if (!toAdd.length && !toRemove.length) continue;
     // An entry that only moves to this release's package is written quietly:
     // it is setting this release up, not a change the user made. A failure is
     // still reported, and the client still needs restarting to pick it up.
@@ -795,7 +828,7 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
       log(indent(manualBlock(client, toAdd)));
       continue;
     }
-    const { results, needsManual } = applyToClient(client, toAdd, toRemove);
+    const { results, needsManual } = applyToClient(client, toAdd, toRemove, migrations);
     const shown = results.filter((r) => !quiet(r));
     if (shown.length) log(`\n${client.label}`);
     for (const r of shown) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
@@ -825,21 +858,26 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
  * The plan is shown and confirmed once, because this edits files the user did
  * not open.
  */
-async function reconcileRegistration(
+export async function reconcileRegistration(
   clients: McpClient[],
   chosen: string[],
   registered: ReturnType<typeof registeredAcross>,
-  ask: Ask
+  ask: Ask,
+  candidates: McpClient[] = CLIENTS
 ): Promise<void> {
   const plan = [
     ...planChanges(clients, chosen, registered.perClient, { prune: true, stale: registered.stale }),
-    ...plansForUnticked(clients),
+    ...plansForUnticked(clients, candidates),
   ];
   if (!plan.length) {
     console.log('\nNo changes — every chosen client already matches your selection.');
     return;
   }
   printPlan(plan);
+  if (!plan.some((p) => p.toAdd.length || p.toRemove.length)) {
+    console.log('No registration changes to apply.');
+    return;
+  }
   const answer = (await ask('\nApply these changes? [Y/n]: ', false)).trim();
   if (/^n/i.test(answer)) {
     console.log('Left registration unchanged.');
@@ -912,10 +950,10 @@ export function runRegister(specs: string[], clientIds?: string[]): void {
   // Registration and credentials are separate steps on purpose: this one has no
   // secret in it, which is why an agent may run it. Say so, or the user is left
   // with servers that start and cannot authenticate.
-  if (!readSharedConfig()) {
+  if (plan.some((p) => p.toAdd.length || p.toRemove.length) && !readSharedConfig()) {
     console.log(
       '\nNo credentials stored yet. The servers are registered but cannot ' +
-        'authenticate until you run this yourself:\n  npx -y @erayendes/asc-mcp setup'
+        `authenticate until you run this yourself:\n  npx -y ${PACKAGE} setup`
     );
   }
 }
