@@ -85,7 +85,7 @@ Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birka�
 - **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp@beta setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
 - Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
-- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve sizin eklediğiniz ayarları taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir.
+- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir.
 
 ## Yüklü olmayan bir araç gerekirse
 

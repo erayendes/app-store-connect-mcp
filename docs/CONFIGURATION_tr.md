@@ -35,7 +35,7 @@ Heimdall varsayılan olarak iki şekilde sorar:
 - **CONFIRM yazmanızı ister:** gelir, silme (`destructive`), altyapı ya da erişim seviyesindeki her değişiklikte — fiyatlar ve teklifler, silmeler, sertifikalar ve iş akışları, kullanıcılar ve sandbox hesapları — ve geri alınamayan üç adımda: bir sürümü yayınlamak, ön siparişi bitirmek ve bir build'in süresini bitirmek (`expired: true` ile `builds__update`; silme sayılır). Fiyat makroları ve `testflight__assign_build_to_groups` da böyle sorar.
 - **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan adımlarda: bir şeyi incelemeye göndermek (`release__submit`, `release__submit_items`, bir inceleme başvurusu), yeni bir abonelik, abonelik grubu ya da uygulama içi satın alma sürümü oluşturmak, kademeli yayını değiştirmek, bir build'i dış beta incelemesine göndermek, bir ülkede satışa açmak ya da satış durumunu değiştirmek, ürün sayfası denemesini başlatmak ya da değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
 
-Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_build_to_groups` CONFIRM ister. Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, diğer TestFlight ayarları ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek herkese açık seviyededir ve sormaz; birini kaldırmak ya da değiştirmek silme sayılır ve CONFIRM ister.
+Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_build_to_groups` CONFIRM ister. Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, diğer TestFlight ayarları ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek herkese açık seviyededir ve sormaz; birini kaldırmak ya da önce mevcut dosyayı silen `replace: true` ile yüklemek silme sayılır ve CONFIRM ister.
 
 Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak Allow'a (ya da Enter'a) basarsanız yapılır. Don't Allow ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
 
@@ -138,7 +138,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
   ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp@beta setup
   ```
 
-  Hangi uygulamalara kaydedeceğini sorduğunda hiçbirini seçmeyin; böylece ilk hesabınızın sunucularına dokunmaz. Sonra aynı `ASC_CONFIG_DIR`'ı ikinci sunucunun `env` bloğuna yazın. Her klasör kendi anahtarını, Vendor number'ını ve Bundle ID'sini tutar.
+  Setup, işaretini kaldırdığınız her uygulamadan Heimdall'ı siler; bu yüzden işaretleri kaldırmayın. Sorduğunda terminali seçin ve *Apply these changes?* sorusuna **n** deyin: anahtar o noktada kaydedilmiştir ve ilk hesabınızın sunucuları olduğu gibi kalır. Sonra aynı `ASC_CONFIG_DIR`'ı ikinci sunucunun `env` bloğuna yazın. Her klasör kendi anahtarını, Vendor number'ını ve Bundle ID'sini tutar.
 
 Uygulamanızda ayırt edebilmek için sunuculara hesabın adını verin.
 

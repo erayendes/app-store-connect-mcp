@@ -73,13 +73,13 @@ Heimdall doesn't replace [Fastlane](https://fastlane.tools/); it complements it.
 One command:
 
 ```bash
-npx -y @erayendes/asc-mcp setup
+npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
 
-To try the 3.0 beta, run `npx -y @erayendes/asc-mcp@beta setup` instead.
+This is the 3.0 beta; `@beta` picks it until 3.0.0 is out. For 2.8, leave `@beta` off.
 
 It asks whether to continue in your browser (recommended) or the terminal. You'll need an [App Store Connect API key](docs/SETUP_en.md#create-an-api-key); the browser page tells you which role to give it from what you pick, so you can run setup before creating the key. Node.js 20.19 or later.
 

@@ -45,7 +45,7 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Siz b
 
 Son sütundaki "ASC-Core", aracın setup'ın profillerinizin yanına kaydettiği ASC-Core sunucusunda olduğunu söyler. Profil sunucuları bu araçları taşımaz; tek sunucu çalıştırabilen bir uygulama onları `--with-core` ile alır.
 
-`pricing__equalize_price` yaklaşık 175 ülkede fiyatı birden değiştirir, yani doğrudan gelirinize dokunur. Bu yüzden çalışmadan önce mutlaka onayınızı ister.
+`pricing__equalize_price` yaklaşık 175 ülkede fiyatı birden değiştirir, yani doğrudan gelirinize dokunur. Bu yüzden, onayları `--no-confirm` ile kapatmadıysanız çalışmadan önce onayınızı ister.
 
 ## Uygulamayı adıyla çağırmak
 

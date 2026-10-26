@@ -77,7 +77,7 @@
     "bundle_id": {
       "type": "string",
       "title": "Bundle ID",
-      "description": "Only for StoreKit 2 — customer transactions, entitlements and refunds. The App Store Server API is scoped to one app, so these tools appear only when this is set.",
+      "description": "Only for StoreKit 2 — customer transactions, entitlements and refunds. The App Store Server API is scoped to one app: this sets the default. Without it, each call names its app, or the account's only app is used.",
       "required": false
     },
     "read_only": {

@@ -57,7 +57,7 @@ Heimdall has **no server of its own and no telemetry**. There is nothing to turn
 
 Letting an AI work on a live App Store listing deserves some care.
 
-- **Risky changes ask first (on by default).** Before changing a price, giving someone Admin access, deleting something or touching certificates, Heimdall opens a confirmation in the app you use and shows what would change. A misread instruction can't run unchecked. If the app can't show that confirmation, the change doesn't run.
+- **Risky changes ask first (on by default).** Before changing a price, giving someone Admin access, deleting something or touching certificates, Heimdall opens a confirmation in the app you use and shows what would change. A misread instruction can't run unchecked. If the app can't show that confirmation, Heimdall opens a dialog of its own on a Mac, which the AI can neither see nor answer; where there is no such dialog, the change doesn't run.
 - **Other changes** go through the app's own tool approval, which every app has.
 - **Read-only mode** removes every tool that can change something. The AI can't see them, so it can't call them. [How to turn it on](../docs/CONFIGURATION_en.md#flags).
 - **Labels on every tool.** Each tool tells the app whether it only reads, or makes a change that's hard to undo (a price, a release, a deletion, access, certificates), so the app can ask for approval where it matters.
@@ -132,7 +132,7 @@ Heimdall'ın **kendine ait bir sunucusu ve telemetrisi yok**. Kapatmanız gereke
 
 Canlı bir App Store sayfasında bir yapay zekâyı çalıştırmak biraz özen ister.
 
-- **Riskli değişikliklerden önce onay (varsayılan olarak açık).** Fiyat değiştirmek, birine Admin yetkisi vermek, bir şeyi silmek ya da sertifikalara dokunmak gibi işlemlerden önce Heimdall, kullandığınız uygulamada bir onay penceresi açar ve neyin değişeceğini gösterir. Yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Uygulama bu onay penceresini gösteremiyorsa değişiklik hiç yapılmaz.
+- **Riskli değişikliklerden önce onay (varsayılan olarak açık).** Fiyat değiştirmek, birine Admin yetkisi vermek, bir şeyi silmek ya da sertifikalara dokunmak gibi işlemlerden önce Heimdall, kullandığınız uygulamada bir onay penceresi açar ve neyin değişeceğini gösterir. Yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Uygulama bu onay penceresini gösteremiyorsa Heimdall, Mac'te yapay zekânın göremeyeceği ve cevaplayamayacağı kendi penceresini açar; böyle bir pencere yoksa değişiklik hiç yapılmaz.
 - **Diğer değişiklikler** uygulamanın kendi araç onayından geçer; her uygulamada bu onay vardır.
 - **Salt okunur mod**, bir şeyi değiştirebilecek bütün araçları kaldırır. Yapay zekâ onları göremez, dolayısıyla çağıramaz. [Nasıl açılır](../docs/CONFIGURATION_tr.md#bayraklar).
 - **Her araçta etiket.** Her araç uygulamaya yalnızca okuyup okumadığını ya da geri alması zor bir değişiklik yapıp yapmadığını (fiyat, yayın, silme, erişim, sertifika) bildirir; uygulama da gereken yerde onay ister.

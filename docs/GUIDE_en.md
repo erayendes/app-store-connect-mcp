@@ -45,7 +45,7 @@ The workflows below turn chains like that into a single step. You don't have to 
 
 "ASC-Core" means the tool is on ASC-Core, the server setup registers next to your profiles. A profile server does not carry it; an app that runs only one server gets it with `--with-core`.
 
-`pricing__equalize_price` changes prices in about 175 countries at once, so it goes straight to your revenue. That's why it always asks for your approval before it runs.
+`pricing__equalize_price` changes prices in about 175 countries at once, so it goes straight to your revenue. That's why it asks for your approval before it runs, unless you turned confirmations off with `--no-confirm`.
 
 ## Calling an app by name
 

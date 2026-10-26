@@ -184,7 +184,7 @@ Three things about credentials and flags in CI:
 
 Run the whole thing under **`--dry-run`** first. Every write comes back as what
 *would* have been sent — method, path, body, risk level — after validation, and
-nothing reaches Apple.
+no change is sent to Apple. Reads still go to Apple.
 
 ---
 
@@ -356,4 +356,4 @@ CI'da kimlik ve bayraklar için üç not:
 
 Önce hepsini **`--dry-run`** ile koşturun. Her yazma, doğrulamadan geçtikten
 sonra ne *gönderilecekti* onu döndürür — metot, yol, gövde, risk seviyesi — ve
-Apple'a hiçbir şey ulaşmaz.
+Apple'a hiçbir değişiklik gönderilmez. Okumalar yine Apple'a gider.

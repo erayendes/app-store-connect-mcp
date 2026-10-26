@@ -35,7 +35,7 @@ By default Heimdall asks in two ways:
 - **Type CONFIRM** for any change at the revenue, deletion (`destructive`), infrastructure or access level — prices and offers, deletes, certificates and workflows, users and sandbox accounts — and for three steps that cannot be walked back: releasing a version, ending a pre-order, and expiring a build (`builds__update` with `expired: true`, which counts as a deletion). The pricing macros and `testflight__assign_build_to_groups` ask this way too.
 - **Yes or no** for the steps that reach customers, players or testers: sending something to review (`release__submit`, `release__submit_items`, a review submission), creating a new subscription, subscription group or in-app purchase version, changing a phased rollout, sending a build to external beta review, selling in a country or changing availability, starting or changing a product page test, and sending a score or achievement for a player.
 
-`testflight__assign_build_to_groups`, which resolves a build and adds it to beta groups in one call, asks for CONFIRM. Everything else — store text, a draft version, picking its build, other TestFlight settings and webhook settings — is left to your AI app's approval. A media tool asks at the level its plan has: placing an image on a page is public and does not ask, removing or replacing one is a deletion and asks for CONFIRM.
+`testflight__assign_build_to_groups`, which resolves a build and adds it to beta groups in one call, asks for CONFIRM. Everything else — store text, a draft version, picking its build, other TestFlight settings and webhook settings — is left to your AI app's approval. A media tool asks at the level its plan has: placing an image on a page is public and does not ask, removing one, or uploading with `replace: true`, which deletes the existing file first, is a deletion and asks for CONFIRM.
 
 Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press Allow (or Return). Don't Allow or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
@@ -138,7 +138,7 @@ Two ways, no extra setup needed:
   ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp@beta setup
   ```
 
-  When it asks which apps to register with, pick none, so it doesn't touch your first account's servers. Then put the same `ASC_CONFIG_DIR` in the second server's `env` block. Each folder keeps its own key, Vendor number and Bundle ID.
+  Setup removes Heimdall from every app you leave unticked, so do not untick them. Choose the terminal when it asks, and answer **n** at *Apply these changes?*: the key is saved by then, and your first account's servers stay as they are. Then put the same `ASC_CONFIG_DIR` in the second server's `env` block. Each folder keeps its own key, Vendor number and Bundle ID.
 
 Name the servers after the account so you can tell them apart in your app.
 

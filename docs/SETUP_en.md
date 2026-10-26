@@ -85,7 +85,7 @@ You don't have to install everything up front. Start with the few profiles you n
 - **Run setup again**: `npx -y @erayendes/asc-mcp@beta setup`.
 - It reuses your credentials and shows the pickers again.
 - Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected. An app you untick loses Heimdall.
-- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no settings you added yourself; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so.
+- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so.
 
 ## When you need a tool you haven't installed
 

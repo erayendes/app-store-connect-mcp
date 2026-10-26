@@ -74,13 +74,13 @@ Heimdall, [Fastlane](https://fastlane.tools/)'in alternatifi değil, tamamlayıc
 Tek komut.
 
 ```bash
-npx -y @erayendes/asc-mcp setup
+npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, Issuer ID, Apple doğrulaması, profil ve alt profil seçimi, anahtarın Keychain'e kaydı" width="720">
 
-3.0 betasını denemek için bunun yerine `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırın.
+Bu 3.0 betası; 3.0.0 çıkana kadar `@beta` onu seçer. 2.8 için `@beta`'yı yazmayın.
 
 Tarayıcıda (önerilen) ya da terminalde devam etmek isteyip istemediğinizi sorar. Bir [App Store Connect API anahtarı](SETUP_tr.md#api-anahtarı-oluşturun) gerekir; tarayıcı sayfası seçtiklerinize göre anahtara hangi rolü vermeniz gerektiğini söyler, yani anahtarı oluşturmadan da setup'ı başlatabilirsiniz. Node.js 20.19 veya üstü gerekir.
 

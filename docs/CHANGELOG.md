@@ -26,7 +26,7 @@ The same tools now also take the other images and files App Store Connect holds:
 
 **`asc__load` is gone.** A server started with some of its sub-profiles still reads the rest through `asc__call`. For the tools themselves, the AI runs the `register` command the server names, with your yes.
 
-**Try it.** Run `npx -y @erayendes/asc-mcp@beta setup` and pick your profiles again; old names are not carried over (`app-info` is now `general`). Setup removes the entries whose profile no longer exists when they are Heimdall's own and carry nothing you added yourself; others it lists and leaves alone. It moves the entries you keep to the beta and adds ASC-Core. Until then, a server whose settings still name an old profile shows one tool telling the AI to run setup.
+**Try it.** Run `npx -y @erayendes/asc-mcp@beta setup` and pick your profiles again; old names are not carried over (`app-info` is now `general`). Setup removes the entries whose profile no longer exists when they are Heimdall's own and carry no credentials or `envFile` of their own; others it lists and leaves alone. It moves the entries you keep to the beta and adds ASC-Core. Until then, a server whose settings still name an old profile shows one tool telling the AI to run setup.
 
 **Your permission rules need the new names.** Rules in your AI app that allow Heimdall tools by server name, such as `mcp__ASC-AppInfo__*` or `mcp__ASC-Marketing__listing__upload_asset`, no longer match: `ASC-AppInfo` is now `ASC-General`, app lookup and the media tools live in `ASC-Core`, and the media tools have new names. Your AI app will ask again for those tools until you update the rules.
 
@@ -306,7 +306,7 @@ Aynı araçlar artık App Store Connect'teki diğer görselleri ve dosyaları da
 
 **`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
 
-**Denemek için** `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırıp profillerinizi yeniden seçin; eski adlar taşınmıyor (`app-info` artık `general`). Setup, profili artık olmayan kayıtları Heimdall'ın kendi kayıtlarıysa ve sizin eklediğiniz bir şeyi taşımıyorsa siliyor; diğerlerini listeleyip olduğu gibi bırakıyor. Tuttuğunuz kayıtları betaya geçiriyor ve ASC-Core'u ekliyor. O zamana kadar ayarlarında eski bir profil adı geçen bir sunucu, yapay zekâya setup'ı çalıştırmasını söyleyen tek bir araç gösteriyor.
+**Denemek için** `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırıp profillerinizi yeniden seçin; eski adlar taşınmıyor (`app-info` artık `general`). Setup, profili artık olmayan kayıtları Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siliyor; diğerlerini listeleyip olduğu gibi bırakıyor. Tuttuğunuz kayıtları betaya geçiriyor ve ASC-Core'u ekliyor. O zamana kadar ayarlarında eski bir profil adı geçen bir sunucu, yapay zekâya setup'ı çalıştırmasını söyleyen tek bir araç gösteriyor.
 
 **İzin kurallarınızın yeni adlara geçmesi gerekiyor.** Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren `mcp__ASC-AppInfo__*` ya da `mcp__ASC-Marketing__listing__upload_asset` gibi kurallar artık eşleşmiyor: `ASC-AppInfo` artık `ASC-General`, uygulama bulma ve medya araçları `ASC-Core`'da, medya araçlarının adları da değişti. Kuralları güncelleyene kadar yapay zekâ uygulamanız bu araçlar için yeniden onay isteyecek.
 
