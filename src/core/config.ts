@@ -69,6 +69,26 @@ export interface ServerConfig {
   };
 }
 
+/**
+ * Whether a server's arguments make it read-only: `--read-only`, or the same
+ * with `=true` / `=1`. `=false`, `=0` and anything else do not. One rule for
+ * the server and for setup, which reads it off client configs to decide how
+ * ASC-Core is registered — a reading that differs from the server's would
+ * register core more open than the profile it serves beside.
+ */
+export function readOnlyFromArgs(args: readonly unknown[]): boolean {
+  return args.some((a) => a === '--read-only' || a === '--read-only=true' || a === '--read-only=1');
+}
+
+/**
+ * `ASC_READ_ONLY` as the server reads it: on for "true" and nothing else. A
+ * JSON config may hold a boolean; a client passes `true` on as "true" and
+ * `false` as "false", so the boolean reads the same way.
+ */
+export function readOnlyFromEnv(value: unknown): boolean {
+  return value === 'true' || value === true;
+}
+
 function parseList(value: string | undefined): string[] | undefined {
   if (!value) return undefined;
   const items = value
@@ -166,7 +186,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
           appleRootCerts: parseList(env.ASC_APPLE_ROOT_CERTS),
         },
     domains: parseList(option('domains') ?? env.ASC_DOMAINS),
-    readOnly: flag('read-only') || env.ASC_READ_ONLY === 'true',
+    readOnly: readOnlyFromArgs(argv) || readOnlyFromEnv(env.ASC_READ_ONLY),
     // `strong` by default: ask on the four levels the risk manifest calls
     // revenue, destructive, infrastructure and access, and stay out of the way
     // on the rest.

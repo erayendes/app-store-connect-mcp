@@ -53,7 +53,7 @@ import {
   type Registration,
   CORE_SPEC,
   CORE_SERVER,
-  coreDecision,
+  coreActionFor,
   deadAndDeletable,
   describeEntry,
   isDead,
@@ -906,6 +906,10 @@ export interface ClientPlan {
   coreAdded: string[];
   /** Targets ASC-Core is held back from, each with the reason. */
   coreWithheld: string[];
+  /** Targets that lose ASC-Core because no profile is left in them. */
+  coreRemoved: string[];
+  /** ASC-Core was asked for by name, so it stays even with no profile beside it. */
+  explicitCore: boolean;
   /** Dead entries to delete, name -> name with spec, flags and env keys. */
   deadDeleted: Map<string, string>;
   /** Dead entries setup may not delete, only report. */
@@ -925,37 +929,51 @@ const isCore = (spec: string): boolean => spec.split(':', 1)[0] === CORE_SPEC;
 const deadReason = (reg: Registration, block: ReturnType<typeof registrationBlock>): string =>
   !reg.pkg ? 'not ours' : !block.canRemove(reg.name) || block.managed.includes(reg) ? 'user-managed' : 'left in place';
 
+/** The entries one target holds, and the block that guards them. */
+const inTarget = (entries: Registration[], where: string) => {
+  const here = entries.filter((r) => r.target.where === where);
+  return { here, block: registrationBlock(here) };
+};
+
 /**
- * ASC-Core for one client: added to each target that keeps any profile,
- * unless that target's own entries say not to (see coreDecision).
+ * ASC-Core across a client's targets, each decided by coreActionFor on that
+ * target's own entries and the changes this run makes to it — the very call
+ * the write makes again, so the plan shows what the write will do.
  */
 function planCore(
   client: McpClient,
   entries: Registration[],
-  staying: boolean,
-  stale: Set<string> | undefined
-): { add: boolean; added: string[]; withheld: string[] } {
-  if (!staying) return { add: false, added: [], withheld: [] };
+  profileAdds: string[],
+  profileRemoves: string[],
+  explicit: boolean,
+  asked: string[] = profileAdds
+): { add: boolean; remove: boolean; added: string[]; withheld: string[]; removed: string[] } {
   // "Other" has no target to read: the paste-in block carries core plainly.
-  if (!client.targets.length) return { add: true, added: [CORE_SERVER], withheld: [] };
-  const added: string[] = [];
-  const withheld: string[] = [];
-  let add = false;
-  for (const t of writableTargets(client)) {
-    const here = entries.filter((r) => r.target.where === t.where);
-    const decision = coreDecision(here);
-    if (!decision.add) {
-      withheld.push(`${t.where}: ${decision.reason}`);
-      continue;
-    }
-    const existing = here.find((r) => r.name === CORE_SERVER);
-    const flagged = (existing?.entry?.args as string[] | undefined)?.includes('--read-only') === true;
-    const settled = existing?.spec === CORE_SPEC && !stale?.has(CORE_SERVER) && (!decision.readOnly || flagged);
-    if (settled) continue;
-    add = true;
-    added.push(`${CORE_SERVER}${decision.readOnly ? ' (--read-only)' : ''}`);
+  if (!client.targets.length) {
+    const add = explicit || profileAdds.some((s) => !isCore(s));
+    return { add, remove: false, added: add ? [CORE_SERVER] : [], withheld: [], removed: [] };
   }
-  return { add, added: [...new Set(added)], withheld };
+  const targets = writableTargets(client);
+  const where = (w: string): string => (targets.length > 1 ? ` in ${w}` : '');
+  const out = { add: false, remove: false, added: [] as string[], withheld: [] as string[], removed: [] as string[] };
+  for (const t of targets) {
+    const { here } = inTarget(entries, t.where);
+    const adds = here.some((r) => r.name === '*') ? asked : profileAdds;
+    const action = coreActionFor(here, adds, profileRemoves.filter((n) => here.some((r) => r.name === n)), explicit);
+    if (action.kind === 'add') {
+      out.add = true;
+      out.added.push(`${CORE_SERVER}${action.readOnly ? ' (--read-only)' : ''}${where(t.where)}`);
+    } else if (action.kind === 'withheld') {
+      out.withheld.push(`${t.where}: ${action.reason}`);
+    } else if (action.kind === 'remove') {
+      out.remove = true;
+      out.removed.push(t.where);
+    }
+  }
+  // One label when every target agrees; per target only when they differ.
+  const bare = new Set(out.added.map((a) => a.replace(/ in .*$/, '')));
+  if (bare.size === 1 && out.added.length === targets.length) out.added = [...bare];
+  return out;
 }
 
 /**
@@ -977,14 +995,23 @@ export function planChanges(
   { prune, stale }: { prune: boolean; stale?: Map<string, Set<string>> }
 ): ClientPlan[] {
   const chosenNames = new Set(chosen.map(serverName));
+  const explicitCore = chosen.some(isCore);
   return clients
     .map((client) => {
       const entries = registeredPerClient.get(client.id) ?? [];
-      const block = registrationBlock(entries);
+      const targets = client.targets.length ? writableTargets(client) : [];
+      // Every rule below is asked of the target that holds the entry, never
+      // of the client: Claude's two configs can hold different things, and a
+      // user-managed entry in one says nothing about the other.
+      const blockOf = (r: Registration) => inTarget(entries, r.target.where).block;
+      const managed = entries.filter((r) => blockOf(r).managed.includes(r));
       const dead = entries.filter(isDead);
-      const deletable = dead.filter((r) => deadAndDeletable(r, block));
+      const deletable = dead.filter((r) => deadAndDeletable(r, blockOf(r)));
       const live = entries.filter((r) => !isDead(r));
-      const registered = new Map(live.filter((r) => !block.managed.includes(r)).map((r) => [r.name, r.spec!]));
+      const ours = live.filter((r) => !managed.includes(r));
+      const removable = (name: string): boolean =>
+        ours.some((r) => r.name === name && blockOf(r).canRemove(name));
+      const registered = new Map(ours.map((r) => [r.name, r.spec!]));
       // A name older versions wrote (`ASC-Analytics` before 2.5.0) is the same
       // server under another key; left beside the new one, Claude lists it
       // twice. It moves to the new name — unless setup is pruning it anyway.
@@ -993,45 +1020,58 @@ export function planChanges(
         .map(([, spec]) => spec)
         .filter((spec) => !prune || chosenNames.has(serverName(spec)));
       const wanted = [...new Set([...chosen, ...migrate])];
-      // Profiles this client still has once the run is done: what is wanted,
-      // what setup may not touch, and — for `register`, which only adds —
-      // everything already there.
-      const staying = [
-        ...wanted,
-        ...live.filter((r) => block.managed.includes(r) && r.spec).map((r) => r.spec!),
-        ...(prune ? [] : [...registered.values()]),
-      ].some((spec) => !isCore(spec));
-      // Named outright (`register core`), it is wanted even with nothing beside it.
-      const core = planCore(client, entries, staying || chosen.some(isCore), stale?.get(client.id));
-      // An entry on the other channel is rewritten even when its profiles
-      // match: that is how a beta tester's servers follow them back to stable.
-      const profilesToAdd = client.targets.length
-        ? wanted.filter((spec) => !isCore(spec) && block.canAdd(spec) &&
-          (registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec))))
-        : wanted.filter((spec) => !isCore(spec));
-      const toAdd = [...profilesToAdd, ...(core.add && block.canAdd(CORE_SPEC) ? [CORE_SPEC] : [])];
       const migrations = new Map(legacy.map(([name, spec]) => [serverName(spec), name]));
-      const keep = new Set([...chosenNames, ...(staying ? [CORE_SERVER] : [])]);
+      // A profile is written when no target that may take it holds it, or one
+      // holds it otherwise than asked: another spec, or the other release
+      // channel — that is how a beta tester's servers follow them back to
+      // stable. Held as asked in one target is registered with the client: the
+      // other target is not given it on the side, which would hand Desktop a
+      // read-write copy of a profile the user keeps read-only in Code.
+      const needsWrite = (spec: string): boolean => {
+        const open = targets.map((t) => inTarget(entries, t.where)).filter(({ block }) => block.canAdd(spec));
+        if (!open.length) return false;
+        const held = open.map(({ here }) => here.find((r) => r.name === serverName(spec) && !isDead(r)));
+        return held.every((h) => !h) || migrations.has(serverName(spec)) ||
+          held.some((h) => h && (h.spec !== spec || h.pkg !== PACKAGE || stale?.get(client.id)?.has(h.name) === true));
+      };
+      const profilesToAdd = wanted.filter((spec) => !isCore(spec) && (!targets.length ? true : needsWrite(spec)));
+      // `register` never prunes: an agent adding one profile must not silently
+      // drop the six the user set up last week.
+      const profileRemoves = [...new Set([
+        ...legacy.map(([n]) => n).filter(removable),
+        ...deletable.map((r) => r.name),
+        ...(prune ? [...registered.keys()].filter((n) => removable(n) && !chosenNames.has(n) &&
+          profileOfServer(n) !== CORE_SPEC && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
+      ])];
+      // What the write will give each target — and, for a target that could
+      // not be read, what was asked of it, so its core is reported as withheld.
+      const core = planCore(client, entries, profilesToAdd, profileRemoves, explicitCore,
+        wanted.filter((s) => !isCore(s)));
+      const toAdd = [...profilesToAdd, ...(core.add ? [CORE_SPEC] : [])];
+      const multi = targets.length > 1;
+      const at = (r: Registration): string => (multi ? ` in ${r.target.where}` : '');
+      const joined = (rs: Registration[], show: (r: Registration) => string): Map<string, string> => {
+        const out = new Map<string, string[]>();
+        for (const r of rs) out.set(r.name, [...(out.get(r.name) ?? []), show(r)]);
+        return new Map([...out].map(([n, all]) => [n, [...new Set(all)].join(' and ')]));
+      };
       return {
         client,
         toAdd,
         toSwitch: profilesToAdd.filter((spec) => registered.get(serverName(spec)) === spec),
-        userManaged: block.managed.filter((r) => !isDead(r))
-          .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : shownEntry(r)),
-        rewrites: profilesToAdd.flatMap((spec) => live.filter((r) => !block.managed.includes(r) &&
-          (r.name === serverName(spec) || r.name === migrations.get(serverName(spec)))).map(shownEntry)),
+        userManaged: [...new Set(managed.filter((r) => !isDead(r))
+          .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : `${shownEntry(r)}${at(r)}`))],
+        rewrites: [...new Set(profilesToAdd.flatMap((spec) => ours.filter((r) =>
+          r.name === serverName(spec) || r.name === migrations.get(serverName(spec))).map(shownEntry)))],
         migrations,
-        coreAdded: toAdd.includes(CORE_SPEC) ? core.added : [],
+        coreAdded: core.added,
         coreWithheld: core.withheld,
-        deadDeleted: new Map(deletable.map((r) => [r.name, describeEntry(r)])),
-        deadReported: dead.filter((r) => !deletable.includes(r)).map((r) => `${describeEntry(r)}: ${deadReason(r, block)}`),
-        // `register` never prunes: an agent adding one profile must not silently
-        // drop the six the user set up last week.
-        toRemove: [...new Set([
-          ...legacy.map(([n]) => n).filter(block.canRemove),
-          ...deletable.map((r) => r.name),
-          ...(prune ? [...registered.keys()].filter((n) => block.canRemove(n) && !keep.has(n) && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
-        ])],
+        coreRemoved: core.removed,
+        explicitCore,
+        deadDeleted: joined(deletable, (r) => `${describeEntry(r)}${at(r)}`),
+        deadReported: dead.filter((r) => !deletable.includes(r))
+          .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`),
+        toRemove: [...profileRemoves, ...(core.remove ? [CORE_SERVER] : [])],
       };
     })
     .filter((p) => p.toAdd.length || p.toRemove.length || p.userManaged.length ||
@@ -1052,18 +1092,28 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
     .filter((c) => c.targets.length && !ids.has(c.id))
     .map((client) => {
       const entries = readRegistrations(client);
-      const block = registrationBlock(entries);
+      const blockOf = (r: Registration) => inTarget(entries, r.target.where).block;
+      const managed = entries.filter((r) => blockOf(r).managed.includes(r));
       const dead = entries.filter(isDead);
-      const deletable = dead.filter((r) => deadAndDeletable(r, block));
-      // Every profile goes, so ASC-Core goes with them.
+      const deletable = dead.filter((r) => deadAndDeletable(r, blockOf(r)));
+      // Names, not entries: Claude holds the same name in two configs, and
+      // each target removes its own copy (applyToClient), once.
+      const profileRemoves = [...new Set(entries
+        .filter((r) => !managed.includes(r) && blockOf(r).canRemove(r.name) && profileOfServer(r.name) !== CORE_SPEC)
+        .map((r) => r.name))];
+      // Core goes wherever no profile is left — not where a user-managed one stays.
+      const core = planCore(client, entries, [], profileRemoves, false);
+      const multi = client.targets.length > 1;
+      const at = (r: Registration): string => (multi ? ` in ${r.target.where}` : '');
       return { client, toAdd: [], toSwitch: [],
-        toRemove: entries.filter((r) => !block.managed.includes(r) && block.canRemove(r.name)).map((r) => r.name),
-        userManaged: block.managed.filter((r) => !isDead(r))
-          .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : shownEntry(r)),
+        toRemove: [...profileRemoves, ...(core.remove ? [CORE_SERVER] : [])],
+        userManaged: [...new Set(managed.filter((r) => !isDead(r))
+          .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : `${shownEntry(r)}${at(r)}`))],
         rewrites: [], migrations: new Map<string, string>(),
-        coreAdded: [], coreWithheld: [],
-        deadDeleted: new Map(deletable.map((r) => [r.name, describeEntry(r)])),
-        deadReported: dead.filter((r) => !deletable.includes(r)).map((r) => `${describeEntry(r)}: ${deadReason(r, block)}`) };
+        coreAdded: [], coreWithheld: [], coreRemoved: core.removed, explicitCore: false,
+        deadDeleted: new Map(deletable.map((r) => [r.name, `${describeEntry(r)}${at(r)}`])),
+        deadReported: dead.filter((r) => !deletable.includes(r))
+          .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`) };
     })
     .filter((p) => p.toRemove.length || p.userManaged.length || p.deadReported.length);
 }
@@ -1082,13 +1132,26 @@ export function printPlan(plan: ClientPlan[], log: (line: string) => void = cons
   for (const p of shown) log(`  ${p.client.label.padEnd(24)} ${planBits(p).join('  ')}`);
 }
 
+/**
+ * What a plan removes, as shown: dead entries apart (they have their own
+ * line), and ASC-Core with where it goes from — on a two-target client it may
+ * leave one config and stay in the other.
+ */
+export function removedLabels(p: ClientPlan): string[] {
+  const removed = p.toRemove.filter((n) => !p.deadDeleted.has(n) && n !== CORE_SERVER);
+  if (p.toRemove.includes(CORE_SERVER)) {
+    removed.push(`${CORE_SERVER} (no profile left${p.client.targets.length > 1 ? ` in ${p.coreRemoved.join(', ')}` : ''})`);
+  }
+  return removed;
+}
+
 /** One client's plan as the short pieces both setups print. */
 export function planBits(p: ClientPlan): string[] {
   const bits: string[] = [];
   const added = p.toAdd.filter((s) => !p.toSwitch.includes(s) && s !== CORE_SPEC).map(serverName);
   if (p.toAdd.includes(CORE_SPEC)) added.push(...(p.coreAdded.length ? p.coreAdded : [CORE_SERVER]));
   if (added.length) bits.push(`+ ${added.join(', ')}`);
-  const removed = p.toRemove.filter((n) => !p.deadDeleted.has(n));
+  const removed = removedLabels(p);
   if (removed.length) bits.push(`- ${removed.join(', ')}`);
   if (p.deadDeleted.size) bits.push(`delete dead ${[...p.deadDeleted.values()].join(', ')}`);
   if (p.rewrites.length) bits.push(`rewrite ${p.rewrites.join(', ')}`);
@@ -1121,7 +1184,7 @@ function nextStep(clients: McpClient[]): string {
  */
 export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
   const restart: McpClient[] = [];
-  for (const { client, toAdd, toRemove, toSwitch, userManaged, migrations, coreWithheld, deadDeleted, deadReported } of plan) {
+  for (const { client, toAdd, toRemove, toSwitch, userManaged, migrations, coreWithheld, deadDeleted, deadReported, explicitCore } of plan) {
     if (userManaged.length) log(`${client.label}: user-managed, unchanged: ${userManaged.join(', ')}`);
     // Said here only when nothing will be written: otherwise the write itself
     // decides again per target and reports it.
@@ -1142,7 +1205,7 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
       log(indent(manualBlock(client, toAdd)));
       continue;
     }
-    const { results, needsManual } = applyToClient(client, toAdd, toRemove, migrations, deadDeleted);
+    const { results, needsManual } = applyToClient(client, toAdd, toRemove, migrations, { dead: deadDeleted, explicitCore });
     const shown = results.filter((r) => !quiet(r));
     if (shown.length) log(`\n${client.label}`);
     for (const r of shown) log(`  ${r.ok ? '✓' : r.withheld ? '–' : '✗'} ${r.message}`);

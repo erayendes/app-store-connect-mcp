@@ -36,6 +36,7 @@ import { createRequire } from 'node:module';
 // A cycle (profiles.ts names servers through serverName), safe because
 // neither module calls into the other while it is still loading.
 import { resolveSelection } from './profiles.js';
+import { readOnlyFromArgs, readOnlyFromEnv } from './core/config.js';
 
 /** `npx` rather than an absolute path: portable, and survives a reinstall. */
 export const SERVER_COMMAND = 'npx';
@@ -426,11 +427,10 @@ export function deadAndDeletable(reg: Registration, block: ReturnType<typeof reg
   return isDead(reg) && !isUserManaged(reg) && block.canRemove(reg.name);
 }
 
-/** Whether an entry runs read-only, by flag or by env. */
-const isReadOnly = (reg: Registration): boolean => {
-  const env = envOf(reg).ASC_READ_ONLY;
-  return (reg.entry?.args as string[] | undefined)?.includes('--read-only') === true ||
-    (env !== undefined && env !== 'false' && env !== '0');
+/** Whether an entry runs read-only, by flag or by env — exactly as the server decides it. */
+export const isReadOnly = (reg: Registration): boolean => {
+  const args = reg.entry?.args;
+  return (Array.isArray(args) && readOnlyFromArgs(args)) || readOnlyFromEnv(envOf(reg).ASC_READ_ONLY);
 };
 
 export type CoreDecision = { add: true; readOnly: boolean } | { add: false; reason: string };
@@ -490,6 +490,59 @@ export function registrationBlock(entries: Registration[]) {
       !profiles.has(spec.split(':', 1)[0]),
     canRemove: (name: string) => !names.has('*') && !names.has(name),
   };
+}
+
+/** What happens to ASC-Core in one config target. */
+export type CoreAction =
+  | { kind: 'add'; readOnly: boolean }
+  | { kind: 'settled' }
+  | { kind: 'withheld'; reason: string }
+  | { kind: 'remove' }
+  | { kind: 'none' };
+
+/**
+ * ASC-Core for one target, from that target's own entries — never the
+ * client's. Claude is two targets (Code and Desktop), and deciding for the
+ * client put a read-write core alone into a Desktop config that held no
+ * profile at all, next to a read-only one in Code.
+ *
+ * Core belongs in a target only while the target keeps or gets a Heimdall
+ * profile (or core was asked for by name); a target left with none loses an
+ * ASC-Core we own. Where it belongs, coreDecision says whether and how, and an
+ * ASC-Core already matching that is settled — left alone, not re-added. The
+ * plan and the write both call this, so they cannot disagree about a target.
+ *
+ * `adds` are the profile specs this run writes to the target, `removes` the
+ * server names it deletes from it.
+ */
+export function coreActionFor(
+  regs: Registration[],
+  adds: string[],
+  removes: string[],
+  explicit = false
+): CoreAction {
+  const block = registrationBlock(regs);
+  const isCoreName = (name: string): boolean => profileOfServer(name) === CORE_SPEC;
+  // Any ASC-named entry that stays counts, ours or not: one run through a
+  // local checkout (`node dist/index.js general`) is Heimdall all the same.
+  // A target that could not be read counts as getting what is asked of it,
+  // so coreDecision can say it was withheld rather than nothing at all.
+  const unknown = regs.some((r) => r.name === '*');
+  const keeps = regs.some((r) => r.name !== '*' && !isCoreName(r.name) && !isDead(r) && !removes.includes(r.name)) ||
+    adds.some((spec) => spec.split(':', 1)[0] !== CORE_SPEC && (unknown || block.canAdd(spec)));
+  const existing = regs.find((r) => r.name === CORE_SERVER);
+  if (!keeps && !explicit) {
+    return existing && !isUserManaged(existing) && block.canRemove(CORE_SERVER) ? { kind: 'remove' } : { kind: 'none' };
+  }
+  const decision = coreDecision(regs);
+  if (!decision.add) return { kind: 'withheld', reason: decision.reason };
+  // A user-managed ASC-Core is the user's; it is reported as such elsewhere.
+  if (!block.canAdd(CORE_SPEC)) return { kind: 'none' };
+  // Read-only where none is needed is stricter, not wrong: it stays.
+  if (existing && existing.spec === CORE_SPEC && existing.pkg === PACKAGE && (!decision.readOnly || isReadOnly(existing))) {
+    return { kind: 'settled' };
+  }
+  return { kind: 'add', readOnly: decision.readOnly };
 }
 
 /** The first non-option argument after our package is the profile spec. */
@@ -671,8 +724,15 @@ export function applyToClient(
   toAdd: string[],
   toRemove: string[],
   migrations: Map<string, string> = new Map(),
-  /** Dead entries planned for deletion, name -> how the plan described them. */
-  dead: Map<string, string> = new Map()
+  {
+    dead = new Map(),
+    explicitCore = false,
+  }: {
+    /** Dead entries planned for deletion, name -> how the plan described them. */
+    dead?: Map<string, string>;
+    /** ASC-Core was asked for by name (`register core`), not only brought along. */
+    explicitCore?: boolean;
+  } = {}
 ): { results: ChangeResult[]; needsManual: boolean } {
   // Keyed by the change, so two targets doing the same thing collapse to one
   // line. Insertion order is the order the user picked, which is the order
@@ -697,14 +757,12 @@ export function applyToClient(
   for (const t of writableTargets(client)) {
     const current = readRegistrations({ ...client, targets: [t] });
     const block = registrationBlock(current);
-    // Decided again here, on what this target holds now, not trusted from the
-    // plan: the file may have changed between the confirmation and the write.
-    const core = toAdd.includes(CORE_SPEC) ? coreDecision(current) : undefined;
-    const coreReadOnly = core?.add === true && core.readOnly;
-    const extra = (spec: string): string[] => (spec === CORE_SPEC && coreReadOnly ? ['--read-only'] : []);
-    const label = (spec: string): string => addLabel(spec, spec === CORE_SPEC && coreReadOnly);
-    if (core && !core.add) withhold(`core:${t.where}`, `${CORE_SERVER} not added to ${t.where}: ${core.reason}`);
-    const adding = toAdd.filter((spec) => spec !== CORE_SPEC || core?.add);
+    // Each target removes what it has. A name only another target held is no
+    // change here — and not a failure, which a second `mcp remove` of it was.
+    // An unreadable target cannot say what it has, so it is still asked, and
+    // refuses through registrationBlock as before.
+    const unknown = current.some((r) => r.name === '*');
+    const has = (name: string): boolean => unknown || current.some((r) => r.name === name);
     // A dead entry is deleted only if it still is dead, ours and clean.
     const deadKept = new Set([...dead.keys()].filter((name) => {
       const reg = current.find((r) => r.name === name);
@@ -713,9 +771,30 @@ export function applyToClient(
     for (const name of deadKept) {
       withhold(`dead:${name}`, `${dead.get(name)} left in place: it is no longer ours to delete`);
     }
-    // A dead entry lives in the targets that have it; the others have nothing to remove.
-    const removing = toRemove.filter((name) => !deadKept.has(name) &&
-      (!dead.has(name) || current.some((r) => r.name === name)));
+    // A target that already holds the profile as asked is left alone — the
+    // other target may be why it is in the plan. Re-adding it here made the
+    // CLI refuse the duplicate and remove and re-add a working server.
+    const settled = (spec: string): boolean => {
+      const held = current.find((r) => r.name === serverName(spec) && !isDead(r));
+      const legacy = migrations.get(serverName(spec));
+      return held !== undefined && !isUserManaged(held) && held.spec === spec && held.pkg === PACKAGE &&
+        !(legacy && current.some((r) => r.name === legacy));
+    };
+    const profileAdds = toAdd.filter((spec) => spec !== CORE_SPEC && !settled(spec));
+    const profileRemoves = toRemove.filter((name) => name !== CORE_SERVER && !deadKept.has(name) && has(name));
+    // Decided again here, on what this target holds now, by the same function
+    // the plan used — the file may have changed since the confirmation.
+    const core: CoreAction = toAdd.includes(CORE_SPEC) || toRemove.includes(CORE_SERVER)
+      ? coreActionFor(current, profileAdds, profileRemoves, explicitCore)
+      : { kind: 'none' };
+    const coreReadOnly = core.kind === 'add' && core.readOnly;
+    const extra = (spec: string): string[] => (spec === CORE_SPEC && coreReadOnly ? ['--read-only'] : []);
+    const label = (spec: string): string => addLabel(spec, spec === CORE_SPEC && coreReadOnly);
+    if (core.kind === 'withheld' && toAdd.includes(CORE_SPEC)) {
+      withhold(`core:${t.where}`, `${CORE_SERVER} not added to ${t.where}: ${core.reason}`);
+    }
+    const adding = [...profileAdds, ...(core.kind === 'add' ? [CORE_SPEC] : [])];
+    const removing = [...profileRemoves, ...(core.kind === 'remove' ? [CORE_SERVER] : [])];
     if (t.kind === 'cli') {
       const failedMigrations = new Set<string>();
       const addEntry = (name: string, spec: string, entry: Record<string, unknown>): void => {

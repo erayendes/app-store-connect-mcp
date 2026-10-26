@@ -39,7 +39,9 @@ import {
   PACKAGE,
   isRunningIn,
 } from '../src/clients.js';
-import { applyPlan, planChanges, plansForUnticked, printPlan, reconcileRegistration, registeredAcross } from '../src/setup.js';
+import { applyPlan, planBits, planChanges, plansForUnticked, printPlan, reconcileRegistration, registeredAcross } from '../src/setup.js';
+import { isReadOnly, type Registration } from '../src/clients.js';
+import { readOnlyFromArgs, readOnlyFromEnv } from '../src/core/config.js';
 import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
@@ -809,17 +811,45 @@ describe('ASC-Core comes with the profiles', () => {
     expect(file()['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
   });
 
-  it('decides per target: read-only where one is, plain where none is', () => {
+  it('decides per target: core only beside a profile, read-only where that profile is', () => {
     const two: McpClient = { id: 'two', label: 'Two', targets: [
       { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
       { kind: 'json', path: join(dir, 'desktop.json'), where: 'desktop.json', key: 'mcpServers' },
     ] };
     writeFileSync(join(dir, 'code.json'), JSON.stringify({ mcpServers: {
       'ASC-Analytics': { command: 'npx', args: [...serverArgs('analytics'), '--read-only'] } } }));
-    applyPlan(plan(['analytics'], true, two), () => {});
-    const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers['ASC-Core'];
-    expect(read('code.json').args).toEqual([...serverArgs('core'), '--read-only']);
-    expect(read('desktop.json').args).toEqual(serverArgs('core'));
+    const p = plan(['analytics'], true, two);
+    expect(p[0].toAdd).toEqual(['core']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only) in code.json']);
+    applyPlan(p, () => {});
+    const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers;
+    expect(read('code.json')['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
+    // Desktop holds no profile and is given none, so it gets no core either —
+    // least of all a read-write one beside a profile kept read-only in Code.
+    expect(existsSync(join(dir, 'desktop.json'))).toBe(false);
+  });
+
+  it('removes our core from a target left with no profile, and keeps it where one stays', () => {
+    const two: McpClient = { id: 'two', label: 'Two', targets: [
+      { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
+      { kind: 'json', path: join(dir, 'desktop.json'), where: 'desktop.json', key: 'mcpServers' },
+    ] };
+    writeFileSync(join(dir, 'code.json'), JSON.stringify({ mcpServers: {
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') } } }));
+    // Left alone in Desktop by an earlier run.
+    writeFileSync(join(dir, 'desktop.json'), JSON.stringify({ mcpServers: {
+      'ASC-Core': { command: 'npx', args: serverArgs('core') } } }));
+    for (const prune of [false, true]) {
+      const p = plan(['general'], prune, two);
+      expect(p[0].toRemove).toEqual(['ASC-Core']);
+      expect(p[0].coreRemoved).toEqual(['desktop.json']);
+      expect(planBits(p[0]).join(' ')).toContain('- ASC-Core (no profile left in desktop.json)');
+    }
+    applyPlan(plan(['general'], true, two), () => {});
+    const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers;
+    expect(Object.keys(read('code.json')).sort()).toEqual(['ASC-Core', 'ASC-General']);
+    expect(read('desktop.json')).toEqual({});
   });
 
   it('is withheld, and says why, when the entries use different accounts', () => {
@@ -861,6 +891,166 @@ describe('ASC-Core comes with the profiles', () => {
     const p = plan(['general']);
     expect(p[0].toAdd).toEqual(['general']);
     expect(p[0].userManaged).toEqual(['ASC-Core']);
+  });
+});
+
+/**
+ * Claude's real shape: Claude Code through its CLI (`claude mcp add-json`,
+ * `remove`) and Claude Desktop as a JSON file — two targets, one client. A
+ * fake `claude` on PATH records every call; nothing real is driven.
+ */
+describe.skipIf(process.platform === 'win32')('core per target in a Claude-shaped client', () => {
+  let previousPath: string | undefined;
+  const code = () => join(dir, 'code.json');
+  const desktop = () => join(dir, 'desktop.json');
+  const calls = (): string[][] => existsSync(join(dir, 'calls.json'))
+    ? JSON.parse(readFileSync(join(dir, 'calls.json'), 'utf8')) : [];
+  beforeEach(() => {
+    previousPath = process.env.PATH;
+    const bin = join(dir, 'claude');
+    writeFileSync(bin, `#!/usr/bin/env node
+const fs = require('node:fs');
+const dir = process.env.FAKE_CLAUDE_DIR;
+const args = process.argv.slice(2);
+const log = dir + '/calls.json';
+const calls = fs.existsSync(log) ? JSON.parse(fs.readFileSync(log, 'utf8')) : [];
+calls.push(args); fs.writeFileSync(log, JSON.stringify(calls));
+const file = dir + '/code.json';
+const doc = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { mcpServers: {} };
+const name = args[1] === 'add-json' ? args[4] : args[2];
+if (args[1] === 'add-json') {
+  if (doc.mcpServers[name]) process.exit(2);
+  doc.mcpServers[name] = JSON.parse(args[5]);
+}
+if (args[1] === 'remove') {
+  if (!doc.mcpServers[name]) process.exit(1);
+  delete doc.mcpServers[name];
+}
+fs.writeFileSync(file, JSON.stringify(doc));
+`);
+    chmodSync(bin, 0o755);
+    process.env.PATH = `${dir}:${previousPath}`;
+    process.env.FAKE_CLAUDE_DIR = dir;
+  });
+  afterEach(() => {
+    process.env.PATH = previousPath;
+    delete process.env.FAKE_CLAUDE_DIR;
+  });
+  const claude = (): McpClient => ({ id: 'claude-like', label: 'Claude', targets: [
+    {
+      kind: 'cli', bin: 'claude', where: '~/.claude.json',
+      add: (name, spec) => ['mcp', 'add', '-s', 'user', name, '--', 'npx', ...serverArgs(spec)],
+      addEntry: (name, entry) => ['mcp', 'add-json', '-s', 'user', name, JSON.stringify(entry)],
+      remove: (name) => ['mcp', 'remove', name, '--scope', 'user'],
+      listFile: { path: code(), key: 'mcpServers' },
+    },
+    { kind: 'json', path: desktop(), where: 'claude_desktop_config.json', key: 'mcpServers' },
+  ] });
+  const seed = (path: string, servers: Record<string, unknown>) =>
+    writeFileSync(path, JSON.stringify({ mcpServers: servers }));
+  const servers = (path: string) => JSON.parse(readFileSync(path, 'utf8')).mcpServers;
+  const plan = (chosen: string[], prune: boolean) =>
+    planChanges([claude()], chosen, new Map([['claude-like', readRegistrations(claude())]]), { prune });
+
+  it.each([false, true])('never puts core alone into Desktop beside a read-only profile in Code (prune=%s)', (prune) => {
+    seed(code(), { 'ASC-General': { command: 'npx', args: [...serverArgs('general'), '--read-only'] } });
+    seed(desktop(), {});
+    const p = plan(['general'], prune);
+    expect(p[0].toAdd).toEqual(['core']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only) in ~/.claude.json']);
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(servers(code())['ASC-Core']).toEqual({ command: 'npx', args: [...serverArgs('core'), '--read-only'] });
+    expect(servers(desktop())).toEqual({});
+    expect(lines.join('\n')).toContain('✓ added ASC-Core (--read-only)');
+    expect(lines.join('\n')).not.toContain('✗');
+  });
+
+  it('removes each name once per target that holds it, and reports success when unticked', () => {
+    seed(code(), {
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+    seed(desktop(), {
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+    const p = plansForUnticked([], [claude()]);
+    expect(p[0].toRemove).toEqual(['ASC-General', 'ASC-Core']);
+    const { results, needsManual } = applyToClient(claude(), [], p[0].toRemove, new Map());
+    expect(results).toEqual([
+      { ok: true, message: 'removed ASC-General' },
+      { ok: true, message: 'removed ASC-Core' },
+    ]);
+    expect(needsManual).toBe(false);
+    expect(calls().filter((c) => c[1] === 'remove').map((c) => c[2])).toEqual(['ASC-General', 'ASC-Core']);
+    expect(servers(code())).toEqual({});
+    expect(servers(desktop())).toEqual({});
+  });
+
+  it('does not touch a target whose core already matches while adding it to another', () => {
+    const settled = { command: 'npx', args: serverArgs('core') };
+    seed(code(), { 'ASC-General': { command: 'npx', args: serverArgs('general') }, 'ASC-Core': settled });
+    seed(desktop(), { 'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') } });
+    const p = plan(['analytics'], false);
+    expect(p[0].toAdd).toEqual(['core']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core in claude_desktop_config.json']);
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    // No add-json refused as a duplicate, no remove and re-add of a working server.
+    expect(calls()).toEqual([]);
+    expect(servers(code())['ASC-Core']).toEqual(settled);
+    expect(servers(desktop())['ASC-Core']).toEqual(settled);
+    expect(lines.join('\n')).not.toContain('✗');
+  });
+});
+
+describe('what counts as read-only — the server\'s own rule', () => {
+  const reg = (entry: Record<string, unknown>): Registration =>
+    ({ name: 'ASC-General', target: { kind: 'json', path: '', where: '', key: 'mcpServers' }, entry, spec: 'general', pkg: PACKAGE });
+
+  it.each([
+    [['--read-only'], true],
+    [['--read-only=true'], true],
+    [['--read-only=1'], true],
+    [['--read-only=false'], false],
+    [['--read-only=0'], false],
+    [['--read-only-ish'], false],
+  ])('args %j -> %s', (flags, expected) => {
+    expect(readOnlyFromArgs(flags)).toBe(expected);
+    expect(isReadOnly(reg({ command: 'npx', args: [...serverArgs('general'), ...flags] }))).toBe(expected);
+  });
+
+  it.each([
+    ['true', true],
+    [true, true],
+    ['false', false],
+    [false, false],
+    ['1', false],
+    ['', false],
+  ])('ASC_READ_ONLY=%j -> %s', (value, expected) => {
+    expect(readOnlyFromEnv(value)).toBe(expected);
+    expect(isReadOnly(reg({ command: 'npx', args: serverArgs('general'), env: { ASC_READ_ONLY: value } }))).toBe(expected);
+  });
+
+  it('is the rule the server applies to its own arguments and env', () => {
+    const src = readFileSync('src/core/config.ts', 'utf8');
+    expect(src).toContain('readOnly: readOnlyFromArgs(argv) || readOnlyFromEnv(env.ASC_READ_ONLY)');
+  });
+
+  it('gives core read-only from --read-only=1, and not from ASC_READ_ONLY=false', () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
+      'ASC-General': { command: 'npx', args: [...serverArgs('general'), '--read-only=1'] },
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics'), env: { ASC_READ_ONLY: false } },
+    } }));
+    expect(planChanges([jsonClient()], ['general', 'analytics'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: false })[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
+      'ASC-General': { command: 'npx', args: [...serverArgs('general'), '--read-only=false'] },
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics'), env: { ASC_READ_ONLY: false } },
+    } }));
+    expect(planChanges([jsonClient()], ['general', 'analytics'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: false })[0].coreAdded).toEqual(['ASC-Core']);
   });
 });
 
