@@ -19,11 +19,11 @@ profiles leave those out, so it goes next to whichever ones you install.
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `core` + `distribution` + `general` | 162 |
+| Release manager | `core` + `distribution` + `general` | 145 |
 | ASO / marketing | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 97 |
-| Monetization | `core` + `monetization` | 186 |
-| Game developer | `core` + `game-center` + `distribution` | 289 |
+| Monetization | `core` + `monetization` | 168 |
+| Game developer | `core` + `game-center` + `distribution` | 245 |
 | Customer support | `core` + `monetization:transactions` | 28 |
 | Build & signing | `core` + `provisioning` + `xcode-cloud` | 101 |
 
@@ -194,11 +194,11 @@ yanına core'u da ekleyin.
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `core` + `distribution` + `general` | 162 |
+| Yayın yöneticisi | `core` + `distribution` + `general` | 145 |
 | ASO / pazarlama | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 97 |
-| Monetizasyon | `core` + `monetization` | 186 |
-| Oyun geliştirici | `core` + `game-center` + `distribution` | 289 |
+| Monetizasyon | `core` + `monetization` | 168 |
+| Oyun geliştirici | `core` + `game-center` + `distribution` | 245 |
 | Müşteri desteği | `core` + `monetization:transactions` | 28 |
 | Build ve imzalama | `core` + `provisioning` + `xcode-cloud` | 101 |
 

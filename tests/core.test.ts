@@ -516,7 +516,7 @@ describe('configured parameter defaults', () => {
 describe('unloaded-domain guidance', () => {
   it('names the domain and flag when a real tool is not loaded', async () => {
     const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
-    const live = OPERATIONS.find((o) => o.domain === 'game_center' && !o.deprecated)!;
+    const live = OPERATIONS.find((o) => o.name === 'game_center_achievements_v2.update')!;
     await expect(
       registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
     ).rejects.toThrow(/is not loaded on this server.*--domains=game_center/s);
@@ -541,7 +541,7 @@ describe('missing-tool diagnosis', () => {
   });
 
   it('says the tool is not loaded here, and how to reach it', async () => {
-    const live = OPERATIONS.find((o) => o.domain === 'game_center' && !o.deprecated)!;
+    const live = OPERATIONS.find((o) => o.name === 'game_center_achievements_v2.update')!;
     await expect(
       mk({ domains: ['apps'] }).execute(toolNameFor(live), { id: 'x' }, {} as never)
     ).rejects.toThrow(/is not loaded on this server.*--domains=game_center/s);
@@ -558,7 +558,7 @@ describe('missing-tool diagnosis', () => {
   // loaded" says nothing about one tool. Checking the domain first made every
   // missing tool in a partly-loaded domain read as deprecated.
   it('does not call a live tool deprecated just because its domain is partly loaded', async () => {
-    const live = OPERATIONS.find((o) => o.domain === 'game_center' && !o.deprecated)!;
+    const live = OPERATIONS.find((o) => o.name === 'game_center_achievements_v2.update')!;
     const sibling = OPERATIONS.find(
       (o) => o.domain === 'game_center' && !o.deprecated && o.name !== live.name
     )!;

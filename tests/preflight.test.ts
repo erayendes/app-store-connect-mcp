@@ -257,7 +257,7 @@ describe(subscriptionTool, () => {
       }
     }
   });
-  it('every finding names an existing, current raw fix tool in the curation sheet', async () => {
+  it('every finding names an existing current fix tool in the curation sheet', async () => {
     const sub = catalogSubscription();
     Object.assign(sub.attributes, { name: '', productId: '', subscriptionPeriod: '', familySharable: null, reviewNote: '' });
     const result = await runCatalog({
@@ -273,6 +273,10 @@ describe(subscriptionTool, () => {
       'subscription_localizations_v2__update', 'subscription_group_localizations_v2__update',
       'subscription_plan_availabilities__available_territories__replace'];
     for (const fix of fixes) {
+      if (fix === 'media__upload') {
+        expect(csv).toMatch(/core,,media__upload,/);
+        continue;
+      }
       const op = OPERATIONS.find((o) => o.name.replaceAll('.', '__') === fix);
       expect(op, fix).toBeTruthy();
       expect(op!.deprecated, fix).toBe(false);
@@ -317,7 +321,7 @@ describe(subscriptionTool, () => {
     ['localizations', 'localizations', 'subscription_localizations_v2__create'],
     ['prices', 'price', 'subscription_prices__create'],
     ['planAvailabilities', 'availability', 'subscription_plan_availabilities__create'],
-    ['appStoreReviewScreenshot', 'review screenshot', 'subscription_app_store_review_screenshots__create'],
+    ['appStoreReviewScreenshot', 'review screenshot', 'media__upload'],
   ])('blocks on empty %s', async (relationship, check, fixWith) => {
     const result = await runCatalog({ [relationship === 'localizations' ? '/v1/subscriptionVersions/sv1/localizations' : `/v1/subscriptions/s1/${relationship}`]: { data: relationship === 'appStoreReviewScreenshot' ? null : [] } });
     expect(result.subscriptions[0].ready).toBe(false);

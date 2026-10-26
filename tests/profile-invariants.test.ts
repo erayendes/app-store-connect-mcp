@@ -23,11 +23,16 @@ import {
 import { OPERATIONS } from '../src/generated/operations.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
 import { ToolRegistry } from '../src/core/registry.js';
+import { FILE_TARGETS, type FileAdapter } from '../src/tools/media-catalog.js';
 import { helpText } from '../src/index.js';
 
 const loadable = OPERATIONS.filter((o) => !o.deprecated);
 const byName = new Map(OPERATIONS.map((o) => [o.name, o]));
 const coreOps = PROFILES.find((p) => p.name === CORE_PROFILE)!.subProfiles.flatMap((s) => s.operations);
+// Core macros are available next to each slice. Their covered reads still
+// produce IDs; media-coverage.test.ts executes every such target/read cell.
+const coreMacros = new Set(PROFILES.find((p) => p.name === CORE_PROFILE)!.subProfiles.flatMap((s) => s.manualTools));
+const coreMacroReads = Object.entries(MACRO_COVERED).filter(([operation, macro]) => coreMacros.has(macro) && byName.get(operation)?.method === 'GET').map(([operation]) => operation);
 
 /** Every sub-profile, flat profiles included as `profile/-`. */
 const SUBS = PROFILES.flatMap((p) =>
@@ -178,7 +183,7 @@ describe('reachability — every sub-profile reaches its own resources from an a
 
   const gapsOf = (label: string): string[] => {
     const { sub } = SUBS.find((s) => s.label === label)!;
-    const edges = edgesFrom([...sub.operations, ...coreOps]);
+    const edges = edgesFrom([...sub.operations, ...coreOps, ...coreMacroReads]);
     return sub.rootResources
       .filter((r) => {
         const c = collectionOf(r);
@@ -339,16 +344,49 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
    */
   const KNOWN_GAPS = new Set<string>([]);
 
+  /**
+   * A body reference must name something that can exist before the request.
+   * INCLUDE_ONLY and a `/X/{id}` read only find what already exists, and
+   * counting them hid a dead end: an advanced App Clip experience's create
+   * requires headerImage, and the only image create needed that experience.
+   * So a body id needs a read that lists it, a create in the slice, or a core
+   * macro that creates it with no owner (media__upload without page_id).
+   * Include-only resources nobody can create (Apple makes build bundles while
+   * processing a build) stay given.
+   */
+  const listing = (names: string[]) => readCollections(names.filter((n) => !byName.get(n)?.path.endsWith('}')));
+  const creates = (names: string[]) => names.map((n) => byName.get(n)!).filter((o) => o?.method === 'POST' && o.path.split('/').length === 3).map((o) => norm(o.path.split('/')[2]));
+  const appleMade = INCLUDE_ONLY.filter((c) => !creates(loadable.map((o) => o.name)).includes(c));
+  const standaloneCreates = Object.values(FILE_TARGETS as Record<string, FileAdapter>)
+    .filter((a) => a.standalone && coreMacros.has(MACRO_COVERED[a.create])).map((a) => a.create);
+
+  it('finds a required body resource that only its own dependant could create', () => {
+    // Without media__upload's ownerless image, the advanced experience create
+    // is a dead end: its headerImage has no producer anywhere in app-clips.
+    expect(standaloneCreates).toContain('app_clip_advanced_experience_images.create');
+    expect(appleMade).toContain(norm('buildBundles'));
+    expect(appleMade).not.toContain(norm('appClipAdvancedExperienceImages'));
+    const { sub } = SUBS.find((s) => s.label === 'app-clips/-')!;
+    const without = new Set([...listing(sub.operations), ...listing(coreOps), ...listing(coreMacroReads), ...creates(sub.operations), ...appleMade]);
+    expect([...without].some((r) => r.endsWith(norm('appClipAdvancedExperienceImages')))).toBe(false);
+    expect(gapsOf('app-clips/-')).toEqual([]);
+  });
+
   const gapsOf = (label: string): string[] => {
     const { sub } = SUBS.find((s) => s.label === label)!;
-    // Core media__arrange can create a placement ID, which a custom product
-    // page may reference when it is created. Its raw producer is macro-covered.
+    // Core media__list returns file and placement IDs for the raw writes
+    // retained in slices (e.g. checksum repairs outside an upload).
     const reads = new Set([...readCollections(sub.operations), ...readCollections(coreOps),
-      ...readCollections(['app_asset_library_placements.get']), ...INCLUDE_ONLY]);
-    const satisfiedBy = (collection: string) =>
-      [...reads].some((r) => collection.endsWith(r) || r.endsWith(collection));
+      ...readCollections(coreMacroReads), ...INCLUDE_ONLY]);
+    const producers = new Set([...listing(sub.operations), ...listing(coreOps), ...listing(coreMacroReads),
+      ...creates(sub.operations), ...creates(standaloneCreates), ...appleMade]);
+    const matchIn = (set: Set<string>, collection: string) =>
+      [...set].some((r) => collection.endsWith(r) || r.endsWith(collection));
+    const satisfiedBy = (collection: string) => matchIn(reads, collection);
     const satisfied = (collection: string) =>
       satisfiedBy(collection) || (collection in ALIASES && satisfiedBy(ALIASES[collection]));
+    const produced = (collection: string) =>
+      matchIn(producers, collection) || (collection in ALIASES && matchIn(producers, ALIASES[collection]));
 
     const gaps: string[] = [];
     for (const name of sub.operations) {
@@ -360,7 +398,7 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
       }
       for (const type of op.bodyRef ? bodyRefs(op.bodyRef) : []) {
         if (SELF_EVIDENT_IDS.has(type)) continue;
-        if (!satisfied(norm(type))) gaps.push(`${label}: ${name} needs ${type} (body)`);
+        if (!produced(norm(type))) gaps.push(`${label}: ${name} needs ${type} (body)`);
       }
     }
     return [...new Set(gaps)];
@@ -416,19 +454,19 @@ describe('help text', () => {
 describe('counts — curation output, not something that drifts on its own', () => {
   it('matches the numbers the sheet was signed off with', () => {
     expect(PROFILES.length).toBe(14);
-    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(51);
+    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(50);
     const core = resolveSelection(CORE_PROFILE);
     expect(operationsFor(core).length).toBe(8);
     expect(manualToolsFor(core).length).toBe(8);
     expect(PROFILELESS.length).toBe(7);
     expect(Object.keys(TWIN_OF).length).toBe(12);
-    expect(Object.keys(MACRO_COVERED).length).toBe(24);
+    expect(Object.keys(MACRO_COVERED).length).toBe(97);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 873 CSV rows - 7 profile-less ones. Not a count of distinct tools:
+    // 800 CSV rows - 7 profile-less ones. Not a count of distinct tools:
     // a few entry reads deliberately sit in more than one slice.
-    expect(tools.length).toBe(866);
+    expect(tools.length).toBe(793);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 2

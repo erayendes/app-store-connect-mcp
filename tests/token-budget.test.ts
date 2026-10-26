@@ -14,10 +14,11 @@
 import { describe, it, expect } from 'vitest';
 import { measureServers } from '../scripts/measure-tokens.js';
 
-// PR-D1: four page/library media macros replace four listing macros. The
-// measured core definition cost is 6,983 → 7,837 tokens (+854), chiefly
-// from target, action and output schemas. Keep only 13 tokens of headroom.
-const CORE_CEILING = 7_850;
+// PR-D2: 16 file target names plus asset type/UTI enums and build version
+// selectors raise measured definitions from 7,837 to 8,418 (+581) tokens.
+// The enums make valid uploads discoverable without raw create tools.
+// Keep 12 tokens of headroom.
+const CORE_CEILING = 8_430;
 
 describe('what ASC-Core costs every session', () => {
   it(`stays under ${CORE_CEILING} definition tokens`, async () => {

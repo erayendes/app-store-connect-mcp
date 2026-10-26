@@ -726,9 +726,9 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
       // Permission, network and server failures must remain errors, not gaps.
       if (!(err instanceof AscApiError) || err.status !== 404) throw err;
     }
-    if (!screenshot?.data) add('review screenshot', 'blocking', 'The subscription has no App Store review screenshot.', 'subscription_app_store_review_screenshots__create');
+    if (!screenshot?.data) add('review screenshot', 'blocking', 'The subscription has no App Store review screenshot. Upload with target subscription_review_screenshot and page_id set to the subscription ID.', 'media__upload');
     else if (screenshot.data.attributes?.assetDeliveryState?.state === 'FAILED') {
-      add('review screenshot', 'blocking', 'The App Store review screenshot failed asset delivery.', 'subscription_app_store_review_screenshots__create');
+      add('review screenshot', 'blocking', 'The App Store review screenshot failed asset delivery. Upload with target subscription_review_screenshot and page_id set to the subscription ID.', 'media__upload');
     }
     subscriptions.push({
       id: String(sub.id), productId: String(a.productId ?? ''), name: String(a.name ?? ''),

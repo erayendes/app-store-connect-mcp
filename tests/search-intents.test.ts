@@ -50,9 +50,9 @@ import { INTENTS, FILTER_PROBES } from './eval/intents.js';
  *
  * Ceiling today is 160 (270 minus the 110 that find nothing).
  */
-// PR-D1 replaces deprecated screenshot operations and adds three media
-// scenarios. Raw-operation top-3 is 144; macro-aware routing is tested above.
-const FLOOR = 144;
+// PR-D2 adds five file-media intents. Raw-operation top-3 is 149; the macro
+// handles the complete upload while this ranking still measures raw discovery.
+const FLOOR = 149;
 
 interface IntentQueryCase {
   intent: string;
@@ -110,6 +110,18 @@ const FAILING = EVALUATION.filter((e) => !e.pass);
  * rank the English phrasings honestly.
  */
 const KNOWN_FAILING_QUERIES: string[] = [
+  // PR-D2: five file-media intents add ten raw-search misses. Turkish inputs
+  // mostly have no results; the two English misses rank a different raw tool.
+  'App Clip başlık görselini yükle',
+  'upload leaderboard artwork for players',
+  'Liderlik tablosuna görsel yükle',
+  'Uygulama içi satın alma inceleme ekran görüntüsü yükle',
+  'Attach screenshot for IAP review',
+  'upload routing coverage GeoJSON file',
+  'Yönlendirme kapsama dosyasını yükle',
+  'Provide routing area coverage GeoJSON',
+  'Build IPA dosyasını yükle',
+  'Send the app binary as a build upload',
   // New feedback corpus: raw-operation search misses the broad query and
   // Turkish; macro-aware search is pinned separately below.
   'beta feedback reports',
@@ -447,6 +459,8 @@ describe('contested intents', () => {
     'ci_build_actions.get > ci_build_runs.create',
     'game_center_achievement_images_v2.create > game_center_achievements_v2.create',
     'game_center_activities.leaderboards_v2.add > game_center_leaderboards_v2.create',
+    // PR-D2 leaderboard-image intent exposes this existing raw ranking tie.
+    'game_center_activities.leaderboards_v2.add > game_center_leaderboard_images_v2.create',
     'game_center_leaderboard_images_v2.create > game_center_leaderboards_v2.create',
     'profiles.create > certificates.create',
     'profiles.create > subscription_offer_codes.create',
@@ -474,7 +488,7 @@ describe('contested intents', () => {
   it('no more queries are contested than before', () => {
     // Not a floor to hold: a rise means an existing competitor took more
     // phrasings, which the pair list alone cannot show.
-    expect(contestedPairs().count).toBeLessThanOrEqual(31);
+    expect(contestedPairs().count).toBeLessThanOrEqual(32);
   });
 
   it('splits the corpus the same way the FLOOR counts it', () => {
@@ -483,7 +497,7 @@ describe('contested intents', () => {
     const { count } = contestedPairs();
     const uncontested = PASSING.length - count;
     expect(uncontested + count).toBe(PASSING.length);
-    expect(uncontested).toBe(113);
+    expect(uncontested).toBe(117);
   });
 });
 
