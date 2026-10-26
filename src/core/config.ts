@@ -81,12 +81,15 @@ export function readOnlyFromArgs(args: readonly unknown[]): boolean {
 }
 
 /**
- * `ASC_READ_ONLY` as the server reads it: on for "true" and nothing else. A
- * JSON config may hold a boolean; a client passes `true` on as "true" and
- * `false` as "false", so the boolean reads the same way.
+ * `ASC_READ_ONLY` as the server reads it: on for "true", "1" and "yes" in any
+ * case, off for everything else ("false", "0", "no", empty). A JSON config may
+ * hold a boolean or a number; a client passes it on as its text, so `true` and
+ * `1` read as on and `false` as off. Wider than the "true" alone it once was,
+ * which only ever makes a server stricter.
  */
 export function readOnlyFromEnv(value: unknown): boolean {
-  return value === 'true' || value === true;
+  if (value === true || value === 1) return true;
+  return typeof value === 'string' && ['true', '1', 'yes'].includes(value.trim().toLowerCase());
 }
 
 function parseList(value: string | undefined): string[] | undefined {

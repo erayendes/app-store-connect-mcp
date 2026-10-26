@@ -451,9 +451,12 @@ export function coreDecision(regs: Registration[]): CoreDecision {
   if (regs.some((r) => r.name === '*')) {
     return { add: false, reason: 'the config could not be read, so the account its servers use is unknown' };
   }
-  // Ours, or possibly ours: an entry we could not read in full may be either.
-  // A dead entry serves no tools, so core has nothing to match it on.
-  const heimdall = regs.filter((r) => (!r.entry || r.pkg) && !isDead(r));
+  // Every ASC-named entry that stays, ours or not — the same set coreActionFor
+  // counts as a profile. A local checkout (`node dist/index.js general
+  // --read-only`) is Heimdall too: its read-only binds core, and its account
+  // has to match like any other. A dead entry serves no tools, so core has
+  // nothing to match it on.
+  const heimdall = regs.filter((r) => !isDead(r));
   const partial = heimdall.filter((r) => !r.entry || 'envFile' in r.entry);
   if (partial.length) {
     return {
@@ -492,6 +495,42 @@ export function registrationBlock(entries: Registration[]) {
   };
 }
 
+/**
+ * Whether a target already holds a profile the way a run asks for it: ours,
+ * live, this spec, this release, and not halfway through a rename.
+ */
+export function holdsAsAsked(here: Registration[], spec: string, migrations: Map<string, string> = new Map()): boolean {
+  const held = here.find((r) => r.name === serverName(spec) && !isDead(r));
+  const legacy = migrations.get(serverName(spec));
+  return held !== undefined && !isUserManaged(held) && held.spec === spec && held.pkg === PACKAGE &&
+    !(legacy !== undefined && here.some((r) => r.name === legacy));
+}
+
+/**
+ * The profiles a run writes into one target: every one asked for that the
+ * target may take and does not already hold as asked. Per target, because
+ * Claude Code holding a profile says nothing about Claude Desktop.
+ */
+export function targetAdds(here: Registration[], specs: string[], migrations: Map<string, string> = new Map()): string[] {
+  const block = registrationBlock(here);
+  return specs.filter((spec) => spec.split(':', 1)[0] !== CORE_SPEC && block.canAdd(spec) &&
+    !holdsAsAsked(here, spec, migrations));
+}
+
+/**
+ * The names a run actually deletes from one target: held there, removable by
+ * that target's own block, and — for a dead entry — still deletable. A name
+ * that is a user-managed entry here stays, whatever another target does.
+ */
+export function targetRemoves(here: Registration[], names: string[], dead: { has(name: string): boolean } = new Set()): string[] {
+  const block = registrationBlock(here);
+  return names.filter((name) => {
+    const reg = here.find((r) => r.name === name);
+    if (!reg || isUserManaged(reg) || !block.canRemove(name)) return false;
+    return !dead.has(name) || deadAndDeletable(reg, block);
+  });
+}
+
 /** What happens to ASC-Core in one config target. */
 export type CoreAction =
   | { kind: 'add'; readOnly: boolean }
@@ -512,8 +551,9 @@ export type CoreAction =
  * ASC-Core already matching that is settled — left alone, not re-added. The
  * plan and the write both call this, so they cannot disagree about a target.
  *
- * `adds` are the profile specs this run writes to the target, `removes` the
- * server names it deletes from it.
+ * `adds` are the profile specs this run writes to the target (targetAdds),
+ * `removes` the names it actually deletes from it (targetRemoves) — not the
+ * client's lists, which name entries other targets hold.
  */
 export function coreActionFor(
   regs: Registration[],
@@ -534,7 +574,8 @@ export function coreActionFor(
   if (!keeps && !explicit) {
     return existing && !isUserManaged(existing) && block.canRemove(CORE_SERVER) ? { kind: 'remove' } : { kind: 'none' };
   }
-  const decision = coreDecision(regs);
+  // Decided on what stays: an entry this run deletes binds nothing.
+  const decision = coreDecision(regs.filter((r) => !removes.includes(r.name)));
   if (!decision.add) return { kind: 'withheld', reason: decision.reason };
   // A user-managed ASC-Core is the user's; it is reported as such elsewhere.
   if (!block.canAdd(CORE_SPEC)) return { kind: 'none' };
@@ -771,21 +812,36 @@ export function applyToClient(
     for (const name of deadKept) {
       withhold(`dead:${name}`, `${dead.get(name)} left in place: it is no longer ours to delete`);
     }
+    // A rename moves an old entry's content to the new name and deletes the
+    // old one, so its source is checked again here with this target's block:
+    // one that became user-managed since the plan stays where it is (its
+    // removal is refused and reported below), and nothing of it is copied.
+    const moves = new Map([...migrations].filter(([, from]) => {
+      const reg = current.find((r) => r.name === from);
+      return reg !== undefined && !isUserManaged(reg) && block.canRemove(from);
+    }));
     // A target that already holds the profile as asked is left alone — the
     // other target may be why it is in the plan. Re-adding it here made the
     // CLI refuse the duplicate and remove and re-add a working server.
-    const settled = (spec: string): boolean => {
-      const held = current.find((r) => r.name === serverName(spec) && !isDead(r));
-      const legacy = migrations.get(serverName(spec));
-      return held !== undefined && !isUserManaged(held) && held.spec === spec && held.pkg === PACKAGE &&
-        !(legacy && current.some((r) => r.name === legacy));
-    };
-    const profileAdds = toAdd.filter((spec) => spec !== CORE_SPEC && !settled(spec));
-    const profileRemoves = toRemove.filter((name) => name !== CORE_SERVER && !deadKept.has(name) && has(name));
-    // Decided again here, on what this target holds now, by the same function
-    // the plan used — the file may have changed since the confirmation.
+    const profileAdds = toAdd.filter((spec) => spec !== CORE_SPEC && !holdsAsAsked(current, spec, moves));
+    // What this target actually deletes. A name it holds as a user-managed
+    // entry — kept here though another target deletes its copy, or turned
+    // user-managed since the plan — stays, and is said to, not failed.
+    const named = toRemove.filter((name) => name !== CORE_SERVER && !deadKept.has(name));
+    const actual = targetRemoves(current, named, dead);
+    if (!unknown) {
+      for (const name of named.filter((n) => has(n) && !actual.includes(n))) {
+        withhold(`kept:${name}:${t.where}`, `${name} left in place in ${t.where}: it is user-managed there`);
+      }
+    }
+    // An unreadable target is still asked, so registrationBlock refuses and reports it.
+    const profileRemoves = unknown ? named : actual;
+    // Decided again here, on what this target holds now, by the same helpers
+    // the plan used — the file may have changed since the confirmation. A
+    // target that could not be read is asked with everything, so its core is
+    // reported withheld rather than silently skipped.
     const core: CoreAction = toAdd.includes(CORE_SPEC) || toRemove.includes(CORE_SERVER)
-      ? coreActionFor(current, profileAdds, profileRemoves, explicitCore)
+      ? coreActionFor(current, unknown ? profileAdds : targetAdds(current, profileAdds, moves), actual, explicitCore)
       : { kind: 'none' };
     const coreReadOnly = core.kind === 'add' && core.readOnly;
     const extra = (spec: string): string[] => (spec === CORE_SPEC && coreReadOnly ? ['--read-only'] : []);
@@ -814,7 +870,7 @@ export function applyToClient(
           record(`add:${spec}`, label(spec), false, 'user-managed entry left unchanged');
           continue;
         }
-        const old = current.find((r) => r.name === name || r.name === migrations.get(name));
+        const old = current.find((r) => r.name === name) ?? current.find((r) => r.name === moves.get(name));
         const next = nextEntry(old?.entry, spec, extra(spec));
         try {
           // Keep the old registration until the new add has actually failed.
@@ -877,7 +933,7 @@ export function applyToClient(
         const adds = adding.filter(block.canAdd);
         const removes = removing.filter(block.canRemove);
         if (adds.length || removes.length) {
-          writeJsonServers(t, adds, removes, migrations, new Map(adds.map((spec) => [spec, extra(spec)])));
+          writeJsonServers(t, adds, removes, moves, new Map(adds.map((spec) => [spec, extra(spec)])));
         }
       } catch (err) {
         failure = `${t.where}: ${firstLine(err)}`;

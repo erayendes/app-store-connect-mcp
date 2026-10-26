@@ -811,45 +811,101 @@ describe('ASC-Core comes with the profiles', () => {
     expect(file()['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
   });
 
-  it('decides per target: core only beside a profile, read-only where that profile is', () => {
-    const two: McpClient = { id: 'two', label: 'Two', targets: [
-      { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
-      { kind: 'json', path: join(dir, 'desktop.json'), where: 'desktop.json', key: 'mcpServers' },
-    ] };
+  const twoJson = (): McpClient => ({ id: 'two', label: 'Two', targets: [
+    { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
+    { kind: 'json', path: join(dir, 'desktop.json'), where: 'desktop.json', key: 'mcpServers' },
+  ] });
+  const readIn = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers;
+
+  it('decides per target: each target gets the profile it lacks, and a core matching its own entries', () => {
     writeFileSync(join(dir, 'code.json'), JSON.stringify({ mcpServers: {
       'ASC-Analytics': { command: 'npx', args: [...serverArgs('analytics'), '--read-only'] } } }));
-    const p = plan(['analytics'], true, two);
-    expect(p[0].toAdd).toEqual(['core']);
-    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only) in code.json']);
+    const p = plan(['analytics'], true, twoJson());
+    expect(p[0].toAdd).toEqual(['analytics', 'core']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only) in code.json', 'ASC-Core in desktop.json']);
     applyPlan(p, () => {});
-    const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers;
-    expect(read('code.json')['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
-    // Desktop holds no profile and is given none, so it gets no core either —
-    // least of all a read-write one beside a profile kept read-only in Code.
-    expect(existsSync(join(dir, 'desktop.json'))).toBe(false);
+    // Code keeps its read-only profile untouched, and its core follows it.
+    expect(readIn('code.json')['ASC-Analytics'].args).toEqual([...serverArgs('analytics'), '--read-only']);
+    expect(readIn('code.json')['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
+    // Desktop lacked the profile, so it gets it — and core beside it, matching
+    // Desktop's own entries, never alone.
+    expect(readIn('desktop.json')['ASC-Analytics'].args).toEqual(serverArgs('analytics'));
+    expect(readIn('desktop.json')['ASC-Core'].args).toEqual(serverArgs('core'));
   });
 
-  it('removes our core from a target left with no profile, and keeps it where one stays', () => {
-    const two: McpClient = { id: 'two', label: 'Two', targets: [
-      { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
-      { kind: 'json', path: join(dir, 'desktop.json'), where: 'desktop.json', key: 'mcpServers' },
-    ] };
+  it('removes our core from a target left with no profile, and keeps it beside a user-managed one', () => {
     writeFileSync(join(dir, 'code.json'), JSON.stringify({ mcpServers: {
       'ASC-General': { command: 'npx', args: serverArgs('general') },
       'ASC-Core': { command: 'npx', args: serverArgs('core') } } }));
-    // Left alone in Desktop by an earlier run.
+    const managed = { command: 'npx', args: serverArgs('general'), env: { ASC_KEY_ID: 'managed-secret' } };
     writeFileSync(join(dir, 'desktop.json'), JSON.stringify({ mcpServers: {
+      'ASC-General': managed,
       'ASC-Core': { command: 'npx', args: serverArgs('core') } } }));
-    for (const prune of [false, true]) {
-      const p = plan(['general'], prune, two);
-      expect(p[0].toRemove).toEqual(['ASC-Core']);
-      expect(p[0].coreRemoved).toEqual(['desktop.json']);
-      expect(planBits(p[0]).join(' ')).toContain('- ASC-Core (no profile left in desktop.json)');
+    const p = plansForUnticked([], [twoJson()]);
+    // The name list names Desktop's General too; that target keeps it, so it keeps its core.
+    expect(p[0].toRemove).toEqual(['ASC-General', 'ASC-Core']);
+    expect(p[0].coreRemoved).toEqual(['code.json']);
+    expect(planBits(p[0]).join(' ')).toContain('- ASC-General, ASC-Core (no profile left in code.json)');
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(readIn('code.json')).toEqual({});
+    expect(readIn('desktop.json')).toEqual({ 'ASC-General': managed, 'ASC-Core': { command: 'npx', args: serverArgs('core') } });
+    const out = lines.join('\n');
+    expect(out).toContain('✓ removed ASC-General');
+    expect(out).toContain('✓ removed ASC-Core');
+    expect(out).toContain('– ASC-General left in place in desktop.json: it is user-managed there');
+    expect(out).not.toContain('✗');
+    expect(out).not.toContain('managed-secret');
+  });
+
+  it('removes core from every target when no profile is left anywhere', () => {
+    for (const f of ['code.json', 'desktop.json']) {
+      writeFileSync(join(dir, f), JSON.stringify({ mcpServers: {
+        'ASC-General': { command: 'npx', args: serverArgs('general') },
+        'ASC-Core': { command: 'npx', args: serverArgs('core') } } }));
     }
-    applyPlan(plan(['general'], true, two), () => {});
-    const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers;
-    expect(Object.keys(read('code.json')).sort()).toEqual(['ASC-Core', 'ASC-General']);
-    expect(read('desktop.json')).toEqual({});
+    const p = plan([], true, twoJson());
+    expect(p[0].coreRemoved).toEqual(['code.json', 'desktop.json']);
+    applyPlan(p, () => {});
+    expect(readIn('code.json')).toEqual({});
+    expect(readIn('desktop.json')).toEqual({});
+  });
+
+  it('counts a local checkout as a profile: its read-only binds core', () => {
+    seed({
+      'ASC-General': { command: 'node', args: ['/src/asc-mcp/dist/index.js', 'general', '--read-only'] },
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') },
+    });
+    const p = plan(['analytics'], false);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
+    applyPlan(p, () => {});
+    expect(file()['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
+  });
+
+  it('withholds core beside a local checkout bound to its own account', () => {
+    seed({
+      'ASC-General': { command: 'node', args: ['/src/asc-mcp/dist/index.js', 'general'], env: { ASC_KEY_ID: 'local-secret' } },
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') },
+    });
+    const p = plan(['analytics'], false);
+    expect(p[0].toAdd).toEqual([]);
+    expect(p[0].coreWithheld).toEqual(['mcp.json: its Heimdall servers use different App Store Connect accounts']);
+    expect(JSON.stringify(p)).not.toContain('local-secret');
+  });
+
+  it('keeps a rename source that turned user-managed after the plan, and copies nothing from it', () => {
+    seed({ 'asc-general': { command: 'npx', args: serverArgs('general') } });
+    const p = plan(['general'], false);
+    expect(p[0].toRemove).toEqual(['asc-general']);
+    const guarded = { command: 'npx', args: serverArgs('general'), env: { ASC_KEY_ID: 'late-secret' } };
+    seed({ 'asc-general': guarded });
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(file()).toEqual({ 'asc-general': guarded });
+    const out = lines.join('\n');
+    expect(out).toContain('asc-general left in place in mcp.json: it is user-managed there');
+    expect(out).toContain('added ASC-General: user-managed entry left unchanged');
+    expect(out).not.toContain('late-secret');
   });
 
   it('is withheld, and says why, when the entries use different accounts', () => {
@@ -952,17 +1008,22 @@ fs.writeFileSync(file, JSON.stringify(doc));
   const plan = (chosen: string[], prune: boolean) =>
     planChanges([claude()], chosen, new Map([['claude-like', readRegistrations(claude())]]), { prune });
 
-  it.each([false, true])('never puts core alone into Desktop beside a read-only profile in Code (prune=%s)', (prune) => {
+  it.each([false, true])('never puts core alone into Desktop: it comes with the profile, per its own entries (prune=%s)', (prune) => {
     seed(code(), { 'ASC-General': { command: 'npx', args: [...serverArgs('general'), '--read-only'] } });
     seed(desktop(), {});
     const p = plan(['general'], prune);
-    expect(p[0].toAdd).toEqual(['core']);
-    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only) in ~/.claude.json']);
+    expect(p[0].toAdd).toEqual(['general', 'core']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only) in ~/.claude.json', 'ASC-Core in claude_desktop_config.json']);
     const lines: string[] = [];
     applyPlan(p, (l) => lines.push(l));
+    // Code: the read-only profile is not rewritten; only its core is added, read-only.
+    expect(calls().map((c) => [c[1], c[4]])).toEqual([['add-json', 'ASC-Core']]);
     expect(servers(code())['ASC-Core']).toEqual({ command: 'npx', args: [...serverArgs('core'), '--read-only'] });
-    expect(servers(desktop())).toEqual({});
-    expect(lines.join('\n')).toContain('✓ added ASC-Core (--read-only)');
+    // Desktop: core arrives only together with the profile it serves beside.
+    expect(servers(desktop())).toEqual({
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
     expect(lines.join('\n')).not.toContain('✗');
   });
 
@@ -993,14 +1054,59 @@ fs.writeFileSync(file, JSON.stringify(doc));
     seed(code(), { 'ASC-General': { command: 'npx', args: serverArgs('general') }, 'ASC-Core': settled });
     seed(desktop(), { 'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') } });
     const p = plan(['analytics'], false);
-    expect(p[0].toAdd).toEqual(['core']);
+    expect(p[0].toAdd).toEqual(['analytics', 'core']);
     expect(p[0].coreAdded).toEqual(['ASC-Core in claude_desktop_config.json']);
     const lines: string[] = [];
     applyPlan(p, (l) => lines.push(l));
-    // No add-json refused as a duplicate, no remove and re-add of a working server.
-    expect(calls()).toEqual([]);
+    // Code only gains the profile it lacked: its settled core gets no add-json
+    // refused as a duplicate, no remove and re-add of a working server.
+    expect(calls().map((c) => [c[1], c[4]])).toEqual([['add-json', 'ASC-Analytics']]);
     expect(servers(code())['ASC-Core']).toEqual(settled);
     expect(servers(desktop())['ASC-Core']).toEqual(settled);
+    expect(lines.join('\n')).not.toContain('✗');
+  });
+
+  it.each([false, true])('writes a profile Code already has into Desktop, which lacks it (prune=%s)', (prune) => {
+    seed(code(), {
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+    seed(desktop(), {});
+    const p = plan(['general'], prune);
+    expect(p[0].toAdd).toEqual(['general', 'core']);
+    // Desktop gains a profile — not a quiet channel move — and Code's entry,
+    // which the write leaves alone, is not called a rewrite.
+    expect(p[0].toSwitch).toEqual([]);
+    expect(p[0].rewrites).toEqual([]);
+    expect(planBits(p[0]).join(' ')).toContain('+ ASC-General, ASC-Core in claude_desktop_config.json');
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(lines.join('\n')).toContain('✓ added ASC-General');
+    expect(calls()).toEqual([]);
+    expect(servers(desktop())).toEqual({
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+  });
+
+  it('switching analytics for general leaves Desktop with general and its core, not empty', () => {
+    seed(code(), {
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+    seed(desktop(), {
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+    const p = plan(['general'], true);
+    expect(p[0].toAdd).toEqual(['general']);
+    expect(p[0].toRemove).toEqual(['ASC-Analytics']);
+    expect(p[0].coreRemoved).toEqual([]);
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(calls()).toEqual([]);
+    expect(Object.keys(servers(desktop())).sort()).toEqual(['ASC-Core', 'ASC-General']);
+    expect(Object.keys(servers(code())).sort()).toEqual(['ASC-Core', 'ASC-General']);
     expect(lines.join('\n')).not.toContain('✗');
   });
 });
@@ -1023,11 +1129,19 @@ describe('what counts as read-only — the server\'s own rule', () => {
 
   it.each([
     ['true', true],
+    ['TRUE', true],
+    [' True ', true],
+    ['1', true],
+    ['yes', true],
+    ['YES', true],
     [true, true],
+    [1, true],
     ['false', false],
-    [false, false],
-    ['1', false],
+    ['0', false],
+    ['no', false],
     ['', false],
+    [false, false],
+    [0, false],
   ])('ASC_READ_ONLY=%j -> %s', (value, expected) => {
     expect(readOnlyFromEnv(value)).toBe(expected);
     expect(isReadOnly(reg({ command: 'npx', args: serverArgs('general'), env: { ASC_READ_ONLY: value } }))).toBe(expected);

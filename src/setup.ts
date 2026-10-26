@@ -54,6 +54,8 @@ import {
   CORE_SPEC,
   CORE_SERVER,
   coreActionFor,
+  targetAdds,
+  targetRemoves,
   deadAndDeletable,
   describeEntry,
   isDead,
@@ -946,7 +948,11 @@ function planCore(
   profileAdds: string[],
   profileRemoves: string[],
   explicit: boolean,
-  asked: string[] = profileAdds
+  {
+    asked = profileAdds,
+    migrations = new Map<string, string>(),
+    dead = new Set<string>(),
+  }: { asked?: string[]; migrations?: Map<string, string>; dead?: Set<string> } = {}
 ): { add: boolean; remove: boolean; added: string[]; withheld: string[]; removed: string[] } {
   // "Other" has no target to read: the paste-in block carries core plainly.
   if (!client.targets.length) {
@@ -958,8 +964,9 @@ function planCore(
   const out = { add: false, remove: false, added: [] as string[], withheld: [] as string[], removed: [] as string[] };
   for (const t of targets) {
     const { here } = inTarget(entries, t.where);
-    const adds = here.some((r) => r.name === '*') ? asked : profileAdds;
-    const action = coreActionFor(here, adds, profileRemoves.filter((n) => here.some((r) => r.name === n)), explicit);
+    // What this target itself gets and loses — the write computes the same.
+    const adds = here.some((r) => r.name === '*') ? asked : targetAdds(here, profileAdds, migrations);
+    const action = coreActionFor(here, adds, targetRemoves(here, profileRemoves, dead), explicit);
     if (action.kind === 'add') {
       out.add = true;
       out.added.push(`${CORE_SERVER}${action.readOnly ? ' (--read-only)' : ''}${where(t.where)}`);
@@ -1021,19 +1028,13 @@ export function planChanges(
         .filter((spec) => !prune || chosenNames.has(serverName(spec)));
       const wanted = [...new Set([...chosen, ...migrate])];
       const migrations = new Map(legacy.map(([name, spec]) => [serverName(spec), name]));
-      // A profile is written when no target that may take it holds it, or one
-      // holds it otherwise than asked: another spec, or the other release
-      // channel — that is how a beta tester's servers follow them back to
-      // stable. Held as asked in one target is registered with the client: the
-      // other target is not given it on the side, which would hand Desktop a
-      // read-write copy of a profile the user keeps read-only in Code.
-      const needsWrite = (spec: string): boolean => {
-        const open = targets.map((t) => inTarget(entries, t.where)).filter(({ block }) => block.canAdd(spec));
-        if (!open.length) return false;
-        const held = open.map(({ here }) => here.find((r) => r.name === serverName(spec) && !isDead(r)));
-        return held.every((h) => !h) || migrations.has(serverName(spec)) ||
-          held.some((h) => h && (h.spec !== spec || h.pkg !== PACKAGE || stale?.get(client.id)?.has(h.name) === true));
-      };
+      // A profile the user wants goes into every target that may take it and
+      // does not already hold it as asked — decided per target, by the same
+      // targetAdds the write uses. Claude Code holding it says nothing about
+      // Claude Desktop. "Not as asked" includes the other release channel:
+      // that is how a beta tester's servers follow them back to stable.
+      const needsWrite = (spec: string): boolean => targets.some((t) =>
+        targetAdds(inTarget(entries, t.where).here, [spec], migrations).length > 0);
       const profilesToAdd = wanted.filter((spec) => !isCore(spec) && (!targets.length ? true : needsWrite(spec)));
       // `register` never prunes: an agent adding one profile must not silently
       // drop the six the user set up last week.
@@ -1045,8 +1046,11 @@ export function planChanges(
       ])];
       // What the write will give each target — and, for a target that could
       // not be read, what was asked of it, so its core is reported as withheld.
-      const core = planCore(client, entries, profilesToAdd, profileRemoves, explicitCore,
-        wanted.filter((s) => !isCore(s)));
+      const core = planCore(client, entries, profilesToAdd, profileRemoves, explicitCore, {
+        asked: wanted.filter((s) => !isCore(s)),
+        migrations,
+        dead: new Set(deletable.map((r) => r.name)),
+      });
       const toAdd = [...profilesToAdd, ...(core.add ? [CORE_SPEC] : [])];
       const multi = targets.length > 1;
       const at = (r: Registration): string => (multi ? ` in ${r.target.where}` : '');
@@ -1055,14 +1059,29 @@ export function planChanges(
         for (const r of rs) out.set(r.name, [...(out.get(r.name) ?? []), show(r)]);
         return new Map([...out].map(([n, all]) => [n, [...new Set(all)].join(' and ')]));
       };
+      // The targets a spec is actually written to, with what each holds now —
+      // what the confirmation describes, so it never names an entry in a
+      // target the write leaves alone.
+      const writtenTo = (spec: string) => targets.length
+        ? targets.map((t) => inTarget(entries, t.where).here)
+          .filter((here) => targetAdds(here, [spec], migrations).length > 0)
+        : [];
+      // Only a channel move when every target written already holds this very
+      // spec: a target that lacks it gains a profile, which is shown.
+      const toSwitch = profilesToAdd.filter((spec) => {
+        const heres = writtenTo(spec);
+        return heres.length > 0 && heres.every((here) =>
+          here.some((r) => r.name === serverName(spec) && r.spec === spec && !managed.includes(r)));
+      });
       return {
         client,
         toAdd,
-        toSwitch: profilesToAdd.filter((spec) => registered.get(serverName(spec)) === spec),
+        toSwitch,
         userManaged: [...new Set(managed.filter((r) => !isDead(r))
           .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : `${shownEntry(r)}${at(r)}`))],
-        rewrites: [...new Set(profilesToAdd.flatMap((spec) => ours.filter((r) =>
-          r.name === serverName(spec) || r.name === migrations.get(serverName(spec))).map(shownEntry)))],
+        rewrites: [...new Set(profilesToAdd.flatMap((spec) => writtenTo(spec).flatMap((here) => here.filter((r) =>
+          ours.includes(r) && (r.name === serverName(spec) || r.name === migrations.get(serverName(spec)))))
+          .map(shownEntry)))],
         migrations,
         coreAdded: core.added,
         coreWithheld: core.withheld,
@@ -1101,8 +1120,10 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
       const profileRemoves = [...new Set(entries
         .filter((r) => !managed.includes(r) && blockOf(r).canRemove(r.name) && profileOfServer(r.name) !== CORE_SPEC)
         .map((r) => r.name))];
-      // Core goes wherever no profile is left — not where a user-managed one stays.
-      const core = planCore(client, entries, [], profileRemoves, false);
+      // Core goes wherever no profile is left — not where a user-managed one
+      // stays: each target's own removals decide (targetRemoves), never the
+      // name list, which also names user-managed entries other targets hold.
+      const core = planCore(client, entries, [], profileRemoves, false, { dead: new Set(deletable.map((r) => r.name)) });
       const multi = client.targets.length > 1;
       const at = (r: Registration): string => (multi ? ` in ${r.target.where}` : '');
       return { client, toAdd: [], toSwitch: [],
@@ -1209,6 +1230,16 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
     const shown = results.filter((r) => !quiet(r));
     if (shown.length) log(`\n${client.label}`);
     for (const r of shown) log(`  ${r.ok ? '✓' : r.withheld ? '–' : '✗'} ${r.message}`);
+    // A target the plan held core back from, and the write had nothing to do
+    // in (an unreadable one gets no profile either), is still said — once.
+    if (toAdd.includes(CORE_SPEC)) {
+      for (const why of coreWithheld) {
+        const where = why.split(': ', 1)[0];
+        if (!results.some((r) => r.message.startsWith(`${CORE_SERVER} not added to ${where}:`))) {
+          log(`  – ${CORE_SERVER} not added to ${why}`);
+        }
+      }
+    }
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
     const stillRegistered = listRegistered(client).size > 0;
