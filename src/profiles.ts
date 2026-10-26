@@ -82,7 +82,6 @@ const DESCRIPTIONS: Record<string, string> = {
   'distribution/publish':
     'Submitting for review and releasing: review submissions and their items, release requests, ' +
     'the one-call submit macro.',
-  'distribution/routing-coverage': 'Routing app coverage files for apps that offer directions.',
   'distribution/version':
     'App Store versions and their localizations: what is new, keywords, screenshot and preview ' +
     'sets, the version preflight and the translation tools.',

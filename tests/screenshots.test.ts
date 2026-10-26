@@ -235,8 +235,9 @@ describe('media resolution, confirmation and file safety', () => {
     try { await executeMediaTool('media__upload', uploadArgs(), context(http)); } catch (err) { expect(String(err)).toMatch(/File changed/); refused = true; }
     if (refused) expect(http.uploadAssetPart).not.toHaveBeenCalled();
     else { expect(http.uploadAssetPart).toHaveBeenCalledOnce(); expect(http.uploadAssetPart.mock.calls[0][1]).toEqual(PNG); }
-    expect(descriptorBytes).toHaveLength(2);
-    expect(descriptorBytes[1]).toEqual(PNG);
+    // Head, digest, and (unless refused) the reserved range sent from the same descriptor.
+    expect(descriptorBytes).toHaveLength(refused ? 2 : 3);
+    for (const bytes of descriptorBytes.slice(1)) expect(bytes).toEqual(PNG);
     expect(vi.mocked(fs.open)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
     expect(readSizes[0]).toBe(12); expect(Math.max(...readSizes)).toBeLessThanOrEqual(1024 * 1024);
