@@ -6,7 +6,7 @@
  * The JSON tests run against real temp files rather than a mock, because the
  * failure that matters is what ends up on disk.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   chmodSync,
   existsSync,
@@ -23,24 +23,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-// ESM namespaces are not configurable, so the CLI subprocess is replaced at
-// module level and steered per test through this hoisted state.
-const cli = vi.hoisted(() => ({ calls: [] as string[][], addFails: 0, removeFails: false }));
-vi.mock('node:child_process', async (original) => ({
-  ...(await original<typeof import('node:child_process')>()),
-  execFileSync: (_bin: string, args: string[]) => {
-    cli.calls.push(args);
-    if (args[0] === 'add' && cli.addFails-- > 0) throw new Error('name already in use');
-    if (args[0] === 'remove' && cli.removeFails) throw new Error('no such server');
-    return '';
-  },
-}));
 import {
   CLIENTS,
   OTHER_CLIENT,
   applyToClient,
   isPresent,
   listRegistered,
+  readRegistrations,
+  registrationBlock,
   manualBlock,
   serverArgs,
   serverName,
@@ -49,7 +39,7 @@ import {
   PACKAGE,
   isRunningIn,
 } from '../src/clients.js';
-import { applyPlan, planChanges, plansForUnticked } from '../src/setup.js';
+import { applyPlan, planChanges, plansForUnticked, printPlan, reconcileRegistration, registeredAcross } from '../src/setup.js';
 import { PROFILES } from '../src/profiles.js';
 
 let dir: string;
@@ -236,7 +226,7 @@ describe('writing a JSON client config', () => {
   it('removes a server that is no longer chosen', () => {
     writeFileSync(
       join(dir, 'mcp.json'),
-      JSON.stringify({ mcpServers: { 'ASC-Analytics': { command: 'npx' }, keep: {} } })
+      JSON.stringify({ mcpServers: { 'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') }, keep: {} } })
     );
     applyToClient(jsonClient(), [], ['ASC-Analytics']);
     const doc = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8'));
@@ -273,6 +263,131 @@ describe('writing a JSON client config', () => {
 });
 
 describe('reading back what is registered', () => {
+  it('allows a blind add only through Claude add-json, which refuses duplicates', () => {
+    const target = { kind: 'cli' as const, bin: 'claude', where: 'fake',
+      add: () => [] as string[], addEntry: () => [] as string[] };
+    expect(registrationBlock([{ name: '*', target }]).canAdd('app-info')).toBe(true);
+    expect(registrationBlock([{ name: '*', target: { ...target, bin: 'codex' } }]).canAdd('app-info')).toBe(false);
+  });
+
+  it('parses the first non-option argument after the package as the spec', () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] },
+    } }));
+    const first = readRegistrations(jsonClient())[0];
+    expect(first.spec).toBe('app-info');
+    expect(first.entry?.args).toEqual(['-y', PACKAGE, 'app-info', '--read-only']);
+    expect(first.target).toMatchObject({ kind: 'json', path: join(dir, 'mcp.json') });
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, '--read-only', 'app-info'] },
+    } }));
+    expect(readRegistrations(jsonClient())[0].spec).toBe('app-info');
+  });
+
+  it('preserves flags, env and other fields when changing release channel', () => {
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    const entry = { command: 'npx', args: ['-y', other, 'app-info', '--read-only', '--x=private-value'],
+      env: { DEMO_MODE: 'yes' }, timeout: 12 };
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
+    const found = readRegistrations(jsonClient());
+    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', found]]), { prune: false,
+      stale: new Map([['temp', new Set(['ASC-AppInfo'])]]) });
+    expect(plan[0].rewrites).toEqual(['ASC-AppInfo (--read-only --x=<hidden>)']);
+    const lines: string[] = [];
+    printPlan(plan, (line) => lines.push(line));
+    expect(lines.join('\n')).toContain('rewrite ASC-AppInfo (--read-only --x=<hidden>)');
+    expect(lines.join('\n')).not.toContain('private-value');
+    expect(lines.join('\n')).not.toContain('yes');
+    applyPlan(plan, () => {});
+    const after = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo'];
+    expect(after).toEqual({ ...entry, args: ['-y', PACKAGE, 'app-info', '--read-only', '--x=private-value'] });
+  });
+
+  it('reports and leaves a credential-carrying entry untouched in planning and writing', () => {
+    const entry = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'],
+      env: { ASC_KEY_ID: 'test-only-secret' }, note: 'mine' };
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
+    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: true });
+    expect(plan[0].userManaged).toEqual(['ASC-AppInfo (--read-only)']);
+    expect(plan[0].toAdd).toEqual([]);
+    expect(plan[0].toRemove).toEqual([]);
+    applyPlan(plan, () => {});
+    applyToClient(jsonClient(), ['app-info'], ['ASC-AppInfo']);
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo']).toEqual(entry);
+    expect(plansForUnticked([], [jsonClient()])[0].userManaged).toEqual(['ASC-AppInfo (--read-only)']);
+  });
+
+  it('does not ask to apply a terminal plan that only reports user-managed entries', async () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'node', args: ['custom.js'] },
+    } }));
+    const client = jsonClient();
+    await reconcileRegistration([client], ['app-info'], registeredAcross([client]),
+      async () => { throw new Error('unexpected Apply prompt'); }, [client]);
+  });
+
+  it.each([
+    { env: { ASC_ISSUER_ID: 'test-id' } },
+    { env: { ASC_PRIVATE_KEY_PATH: '/test/key' } },
+    { envFile: '/test/env' },
+  ])('protects credential settings in %j', (extra) => {
+    const entry = { command: 'npx', args: serverArgs('app-info'), ...extra };
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
+    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: true });
+    expect(plan[0].userManaged).toEqual(['ASC-AppInfo']);
+    expect(plan[0].toAdd).toEqual([]);
+    expect(plansForUnticked([], [jsonClient()])[0].toRemove).toEqual([]);
+    applyToClient(jsonClient(), ['app-info'], ['ASC-AppInfo']);
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo']).toEqual(entry);
+  });
+
+  it('never prunes or unticks an ASC-named entry without our package', () => {
+    const entry = { command: 'node', args: ['other.js'] };
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
+    const plan = planChanges([jsonClient()], ['analytics'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: true });
+    expect(plan[0].toRemove).toEqual([]);
+    expect(plansForUnticked([], [jsonClient()])[0].toRemove).toEqual([]);
+    applyPlan(plan, () => {});
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo']).toEqual(entry);
+  });
+
+  it('migrates a legacy name while preserving flags, env and other fields', () => {
+    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'],
+      env: { DEMO_MODE: 'yes' }, timeout: 14 };
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'asc-app-info': old } }));
+    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: false });
+    expect(plan[0].toRemove).toEqual(['asc-app-info']);
+    applyPlan(plan, () => {});
+    const entries = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers;
+    expect(entries['asc-app-info']).toBeUndefined();
+    expect(entries['ASC-AppInfo']).toEqual(old);
+  });
+
+  it('reports an unreadable config and refuses to overwrite its file', () => {
+    const broken = '{ "mcpServers": { /* comment */ } }';
+    writeFileSync(join(dir, 'mcp.json'), broken);
+    const plan = planChanges([jsonClient()], ['analytics'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: true });
+    expect(plan[0].userManaged).toEqual(['mcp.json (unreadable)']);
+    expect(plan[0].toAdd).toEqual([]);
+    applyPlan(plan, () => {});
+    expect(readFileSync(join(dir, 'mcp.json'), 'utf8')).toBe(broken);
+  });
+
+  it('recognizes a legacy name only when its profile matches the entry spec', () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
+      'asc-analytics': { command: 'npx', args: serverArgs('webhooks') },
+    } }));
+    const plan = planChanges([jsonClient()], ['analytics'], new Map([['temp', readRegistrations(jsonClient())]]),
+      { prune: false });
+    expect(plan[0].toRemove).toEqual([]);
+    expect(plan[0].migrations.size).toBe(0);
+  });
+
   it('reports the full argument, not just the profile name', () => {
     // Returning the bare name would make the next run re-register it wide and
     // silently undo the user's narrowing.
@@ -306,58 +421,221 @@ describe('reading back what is registered', () => {
   });
 });
 
-/**
- * The CLI clients register through a subprocess, and the destructive shape is
- * remove-then-add: a failing add there has already deleted a registration that
- * worked, and nothing holds the old arguments to put it back.
- */
-describe('registering with a CLI client', () => {
-  // `node` stands in for `claude`/`codex`: the only thing that matters is that
-  // hasBinary() finds it on PATH.
-  const cliClient = (): McpClient => ({
-    id: 'cli',
-    label: 'CLI',
-    targets: [
-      {
-        kind: 'cli',
-        bin: 'node',
-        where: 'somewhere',
-        add: (name, spec) => ['add', name, spec],
-        remove: (name) => ['remove', name],
-      },
-    ],
+/** A fake executable on PATH exercises the actual subprocess and rollback. */
+// shortcut: the fake CLI is a shebang script, which Windows will not execute; give it a .cmd shim if Windows CI should cover these.
+describe.skipIf(process.platform === 'win32')('registering with a CLI client', () => {
+  let previousPath: string | undefined;
+  beforeEach(() => {
+    previousPath = process.env.PATH;
+    const bin = join(dir, 'codex');
+    writeFileSync(bin, `#!/usr/bin/env node
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+const path = process.env.FAKE_MCP_STATE;
+const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+data.calls.push(args);
+const action = args[1];
+if (action === 'list') {
+  if (data.failList) { fs.writeFileSync(path, JSON.stringify(data)); process.exit(4); }
+  console.log(JSON.stringify(Object.entries(data.servers).map(([name, entry]) => ({
+    name, enabled: true, disabled_reason: null, enabled_tools: null, disabled_tools: null,
+    startup_timeout_sec: null, tool_timeout_sec: null, auth_status: 'unsupported',
+    transport: { type: 'stdio', ...entry, env: entry.env || null, env_vars: [], cwd: null, ...data.transportExtras },
+    ...data.rowExtras,
+  }))));
+}
+if (action === 'remove') { delete data.servers[args[2]]; }
+if (action === 'add-json') {
+  const name = args[4];
+  const entry = JSON.parse(args[5]);
+  if (data.servers[name]) { fs.writeFileSync(path, JSON.stringify(data)); process.exit(2); }
+  if (data.failNew) { data.failNew = false; fs.writeFileSync(path, JSON.stringify(data)); process.exit(3); }
+  if (data.failRestore) { fs.writeFileSync(path, JSON.stringify(data)); process.exit(5); }
+  data.servers[name] = entry;
+}
+if (action === 'add') {
+  const name = args[2];
+  const at = args.indexOf('--');
+  const env = {};
+  for (let i = 3; i < at; i++) if (args[i] === '--env') {
+    const [key, ...value] = args[++i].split('='); env[key] = value.join('=');
+  }
+  const entry = { command: args[at + 1], args: args.slice(at + 2), ...(Object.keys(env).length ? { env } : {}) };
+  if (data.failAdds > 0) { data.failAdds--; fs.writeFileSync(path, JSON.stringify(data)); process.exit(3); }
+  if (data.failRestore && data.calls.filter((call) => call[1] === 'add').length > 2) { fs.writeFileSync(path, JSON.stringify(data)); process.exit(5); }
+  data.servers[name] = entry;
+}
+fs.writeFileSync(path, JSON.stringify(data));
+`);
+    chmodSync(bin, 0o755);
+    process.env.PATH = `${dir}:${previousPath}`;
+    process.env.FAKE_MCP_STATE = join(dir, 'state.json');
+  });
+  afterEach(() => {
+    process.env.PATH = previousPath;
+    delete process.env.FAKE_MCP_STATE;
+  });
+  const client = (): McpClient => ({ id: 'fake', label: 'Fake', targets: [{
+    kind: 'cli', bin: 'codex', where: 'fake',
+    list: ['mcp', 'list', '--json'],
+    add: (name, spec) => ['mcp', 'add', name, '--', 'npx', ...serverArgs(spec)],
+    remove: (name) => ['mcp', 'remove', name],
+  }] });
+  const state = (servers: Record<string, unknown>, failAdds = 0) =>
+    writeFileSync(join(dir, 'state.json'), JSON.stringify({ servers, calls: [], failAdds }));
+  const result = () => JSON.parse(readFileSync(join(dir, 'state.json'), 'utf8'));
+
+  it('adds a new server without removing anything', () => {
+    state({});
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(true);
+    expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'add']);
   });
 
-  const runWith = (addFails: number, removeFails = false) => {
-    cli.calls = [];
-    cli.addFails = addFails;
-    cli.removeFails = removeFails;
-    const { results } = applyToClient(cliClient(), ['monetization'], []);
-    return { calls: cli.calls, results };
-  };
-
-  it('does not remove anything when the add just works', () => {
-    const { calls, results } = runWith(0);
-    expect(calls.map((c) => c[0])).toEqual(['add']);
-    expect(results[0].ok).toBe(true);
+  it('restores the complete old entry when the second add fails', () => {
+    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] };
+    state({ 'ASC-AppInfo': old }, 2);
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
+    expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'add', 'remove', 'add', 'add']);
+    expect(result().servers['ASC-AppInfo']).toEqual(old);
   });
 
-  it('clears the old entry only once the add has been refused', () => {
-    const { calls, results } = runWith(1);
-    expect(calls.map((c) => c[0])).toEqual(['add', 'remove', 'add']);
-    expect(results[0].ok).toBe(true);
+  it('preserves flags on a successful Codex overwrite', () => {
+    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] };
+    state({ 'ASC-AppInfo': old });
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(true);
+    expect(result().servers['ASC-AppInfo']).toEqual(old);
+    expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'add']);
+    expect(result().calls[1]).toEqual(['mcp', 'add', 'ASC-AppInfo', '--', 'npx', ...old.args]);
+    expect(result().calls[1]).not.toContain('--env');
   });
 
-  // The clear is a guess about why the add failed. When the guess is wrong the
-  // add's message is the only one that says anything useful, so it has to be
-  // the one that survives — otherwise a missing flag gets reported as "no such
-  // server", which sends the reader after a registration that was never there.
-  it('reports the add error, not the clear error, when clearing also fails', () => {
-    const { calls, results } = runWith(9, true);
-    expect(calls.map((c) => c[0])).toEqual(['add', 'remove']);
-    expect(results[0].ok).toBe(false);
-    expect(results[0].message).toContain('name already in use');
-    expect(results[0].message).not.toContain('no such server');
+  it('treats a non-default Codex row as user-managed', () => {
+    const old = { command: 'npx', args: serverArgs('app-info'), env: { DEMO_MODE: 'secret-test-value' } };
+    state({ 'ASC-AppInfo': old });
+    expect(readRegistrations(client())[0].entry).toBeUndefined();
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
+    expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'list']);
+    expect(JSON.stringify(result().calls)).not.toContain('secret-test-value');
+    expect(result().servers['ASC-AppInfo']).toEqual(old);
+  });
+
+  it.each([
+    { rowExtras: { enabled_tools: ['custom'] } },
+    { rowExtras: { tool_timeout_sec: 30 } },
+    { transportExtras: { cwd: '/test/work' } },
+  ])('protects non-default normalized Codex fields in %j', (extra) => {
+    state({ 'ASC-AppInfo': { command: 'npx', args: serverArgs('app-info') } });
+    writeFileSync(join(dir, 'state.json'), JSON.stringify({ ...result(), ...extra }));
+    expect(readRegistrations(client())[0].entry).toBeUndefined();
+    expect(planChanges([client()], ['app-info'], new Map([['fake', readRegistrations(client())]]),
+      { prune: true })[0].userManaged).toEqual(['ASC-AppInfo']);
+  });
+
+  it('protects a Codex row whose server name disagrees with its spec', () => {
+    state({ 'ASC-AppInfo': { command: 'npx', args: serverArgs('analytics') } });
+    expect(readRegistrations(client())[0].entry).toBeUndefined();
+  });
+
+  it('reports an unreadable Codex target without adding', () => {
+    state({});
+    const data = result(); data.failList = true;
+    writeFileSync(join(dir, 'state.json'), JSON.stringify(data));
+    const plan = planChanges([client()], ['app-info'], new Map([['fake', readRegistrations(client())]]),
+      { prune: false });
+    expect(plan[0].toAdd).toEqual([]);
+    expect(plan[0].userManaged).toEqual(['fake (unreadable)']);
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
+    expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'list']);
+    expect(result().servers).toEqual({});
+  });
+
+  it('does not remove an existing Codex name when listing failed', () => {
+    const old = { command: 'npx', args: serverArgs('app-info'), env: { ASC_KEY_ID: 'test-only-secret' } };
+    state({ 'ASC-AppInfo': old });
+    writeFileSync(join(dir, 'state.json'), JSON.stringify({ ...result(), failList: true }));
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
+    expect(result().calls.map((a: string[]) => a[1])).toEqual(['list']);
+    expect(result().servers['ASC-AppInfo']).toEqual(old);
+  });
+
+  it('plans and performs a Codex channel switch, then allows unticking it', () => {
+    const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
+    state({ 'ASC-AppInfo': { command: 'npx', args: ['-y', other, 'app-info', '--read-only'] } });
+    const entries = readRegistrations(client());
+    expect(entries[0].entry).toBeDefined();
+    const plan = planChanges([client()], ['app-info'], new Map([['fake', entries]]),
+      { prune: true, stale: new Map([['fake', new Set(['ASC-AppInfo'])]]) });
+    expect(plan[0].toAdd).toEqual(['app-info']);
+    applyPlan(plan, () => {});
+    expect(result().servers['ASC-AppInfo'].args).toEqual(['-y', PACKAGE, 'app-info', '--read-only']);
+    expect(plansForUnticked([], [client()])[0].toRemove).toEqual(['ASC-AppInfo']);
+  });
+
+  it('plans a Codex legacy rename without losing the old entry on a failed add', () => {
+    state({ 'asc-app-info': { command: 'npx', args: serverArgs('app-info') } }, 2);
+    const entries = readRegistrations(client());
+    const plan = planChanges([client()], ['app-info'], new Map([['fake', entries]]), { prune: false });
+    expect(plan[0].toAdd).toEqual(['app-info']);
+    expect(plan[0].toRemove).toEqual(['asc-app-info']);
+    applyPlan(plan, () => {});
+    expect(result().servers['asc-app-info']).toBeDefined();
+  });
+
+  it('reports explicitly when the restore also fails', () => {
+    state({ 'ASC-AppInfo': { command: 'npx', args: serverArgs('app-info') } }, 2);
+    const data = result(); data.failRestore = true;
+    writeFileSync(join(dir, 'state.json'), JSON.stringify(data));
+    const message = applyToClient(client(), ['app-info'], []).results[0].message;
+    expect(message).toContain('old entry was removed and restore failed');
+    expect(result().servers['ASC-AppInfo']).toBeUndefined();
+  });
+});
+
+describe.skipIf(process.platform === 'win32')('Claude Code add-json rollback', () => {
+  let previousPath: string | undefined;
+  beforeEach(() => {
+    previousPath = process.env.PATH;
+    const bin = join(dir, 'claude');
+    writeFileSync(bin, `#!/usr/bin/env node
+const fs = require('node:fs');
+const path = process.env.FAKE_MCP_STATE;
+const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+const args = process.argv.slice(2);
+data.calls.push(args);
+const name = args[1] === 'add-json' ? args[4] : args[2];
+if (args[1] === 'remove') delete data.servers[name];
+if (args[1] === 'add-json') {
+  if (data.servers[name]) { fs.writeFileSync(path, JSON.stringify(data)); process.exit(2); }
+  if (data.failNew) { data.failNew = false; fs.writeFileSync(path, JSON.stringify(data)); process.exit(3); }
+  if (data.failRestore) { fs.writeFileSync(path, JSON.stringify(data)); process.exit(5); }
+  data.servers[name] = JSON.parse(args[5]);
+}
+fs.writeFileSync(path, JSON.stringify(data));
+`);
+    chmodSync(bin, 0o755);
+    process.env.PATH = `${dir}:${previousPath}`;
+    process.env.FAKE_MCP_STATE = join(dir, 'claude.json');
+  });
+  afterEach(() => {
+    process.env.PATH = previousPath;
+    delete process.env.FAKE_MCP_STATE;
+  });
+  const client = (): McpClient => ({ id: 'claude-fake', label: 'Claude', targets: [{
+    kind: 'cli', bin: 'claude', where: 'fake',
+    add: (name, spec) => ['mcp', 'add', '-s', 'user', name, '--', 'npx', ...serverArgs(spec)],
+    addEntry: (name, entry) => ['mcp', 'add-json', '-s', 'user', name, JSON.stringify(entry)],
+    remove: (name) => ['mcp', 'remove', name, '--scope', 'user'],
+    listFile: { path: join(dir, 'claude.json'), key: 'servers' },
+  }] });
+  it('passes the complete old entry as one argv element on restore', () => {
+    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'],
+      env: { DEMO_MODE: 'yes' }, timeout: 15 };
+    writeFileSync(join(dir, 'claude.json'), JSON.stringify({ servers: { 'ASC-AppInfo': old }, calls: [], failNew: true }));
+    expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
+    const data = JSON.parse(readFileSync(join(dir, 'claude.json'), 'utf8'));
+    expect(data.servers['ASC-AppInfo']).toEqual(old);
+    expect(data.calls.map((a: string[]) => a[1])).toEqual(['add-json', 'remove', 'add-json', 'add-json']);
+    expect(JSON.parse(data.calls[3][5])).toEqual(old);
   });
 });
 
@@ -376,8 +654,9 @@ describe('release channel of a registration', () => {
       },
     }));
     const stale = new Set<string>();
-    const found = listRegistered(jsonClient(), stale);
-    expect(found.get('ASC-Analytics')).toBe('analytics');
+    const found = readRegistrations(jsonClient());
+    listRegistered(jsonClient(), stale);
+    expect(found.find((r) => r.name === 'ASC-Analytics')?.spec).toBe('analytics');
     expect([...stale]).toEqual(['ASC-Analytics']);
 
     const plan = planChanges([jsonClient()], ['analytics', 'app-info'], new Map([['temp', found]]), {
@@ -396,7 +675,8 @@ describe('reporting a change of release channel', () => {
       mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
     }));
     const stale = new Set<string>();
-    const found = listRegistered(jsonClient(), stale);
+    const found = readRegistrations(jsonClient());
+    listRegistered(jsonClient(), stale);
     const plan = planChanges([jsonClient()], ['analytics', 'app-info'], new Map([['temp', found]]), {
       prune: true,
       stale: new Map([['temp', stale]]),
@@ -428,7 +708,8 @@ describe('a channel move alone', () => {
       mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
     }));
     const stale = new Set<string>();
-    const found = listRegistered(jsonClient(), stale);
+    const found = readRegistrations(jsonClient());
+    listRegistered(jsonClient(), stale);
     const plan = planChanges([jsonClient()], ['analytics'], new Map([['temp', found]]), {
       prune: true,
       stale: new Map([['temp', stale]]),
