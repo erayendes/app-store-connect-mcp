@@ -80,3 +80,28 @@ describe('withAppName', () => {
     expect(await withAppName({ app: '6636549188' }, { get: async () => { throw new Error('down'); } })).toEqual({ app: '6636549188' });
   });
 });
+
+describe('bounded shared version selection', () => {
+  it('retains includes across pages for preflight and rejects total-only truncation', async () => {
+    const { readAppStoreVersions } = await import('../src/tools/preflight.js');
+    const paths: string[] = [];
+    const http = { get: async (path: string) => {
+      paths.push(path);
+      return paths.length === 1
+        ? { data: [v('1', 'IOS')], included: [{ id: 'build-1' }], links: { next: '/next' }, meta: { paging: { total: 2 } } }
+        : { data: [v('2', 'IOS')], included: [{ id: 'build-2' }] };
+    } } as any;
+    const result = await readAppStoreVersions(http, 'app');
+    expect(result.data.map((r) => r.id)).toEqual(['IOS-1', 'IOS-2']);
+    expect(result.included.map((r) => r.id)).toEqual(['build-1', 'build-2']);
+    await expect(readAppStoreVersions({ get: async () => ({ data: [v('1', 'IOS')], meta: { paging: { total: 2 } } }) } as any, 'app')).rejects.toThrow(/truncated/);
+  });
+  it('bounds pagination and refuses repeated cursors', async () => {
+    const { readAppStoreVersions } = await import('../src/tools/preflight.js');
+    let calls = 0;
+    const http = { get: async () => ({ data: [v(String(++calls), 'IOS')], links: { next: `/page/${calls}` } }) } as any;
+    await expect(readAppStoreVersions(http, 'app')).rejects.toThrow(/truncated after at most 10 pages/);
+    expect(calls).toBe(10);
+    await expect(readAppStoreVersions({ get: async () => ({ data: [v('1', 'IOS')], links: { next: '/same' } }) } as any, 'app')).rejects.toThrow(/repeated pagination cursor/);
+  });
+});

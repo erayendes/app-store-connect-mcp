@@ -35,6 +35,7 @@ import {
 } from '@modelcontextprotocol/server';
 import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, TYPED_BY_NAME, type RiskLevel } from './risk.js';
 import { OPERATIONS } from '../generated/operations.js';
+import { REVIEW_RESOURCE_TYPES } from '../tools/release.js';
 
 export interface ConfirmDecision {
   allowed: boolean;
@@ -579,6 +580,12 @@ export async function buildWritePreview(
   const targets = pathTargets(op.path, args);
   const bodyRefs: Array<{ type: string; id: string }> = [];
   if (body) collectRefs(body, bodyRefs);
+  const submissionItems = Array.isArray(args.items) ? args.items as Array<{ type: string; id: string }> : [];
+  const itemNames = (args.itemNames ?? {}) as Record<string, string>;
+  for (const item of submissionItems) {
+    const type = REVIEW_RESOURCE_TYPES[item.type];
+    if (type && !itemNames[`${item.type}/${item.id}`]) bodyRefs.push({ type, id: item.id });
+  }
   const labels = http ? await resolveRefs(http, [...targets, ...bodyRefs]) : new Map<string, string>();
 
   const ids = Object.entries(args)
@@ -621,8 +628,11 @@ export async function buildWritePreview(
     }
     if (Array.isArray(args.items)) {
       lines.push('Items in submission:');
-      for (const item of args.items as Array<{ type?: string; id?: string }>) {
-        lines.push(`  ${item.type ?? 'unknown'}: ${item.id ?? 'unknown'}`);
+      const existing = new Set((Array.isArray(args.existingItems) ? args.existingItems : []).map((i: any) => `${i.type}/${i.id}`));
+      for (const item of submissionItems) {
+        const key = `${item.type}/${item.id}`;
+        const label = itemNames[key] ?? labels.get(`${REVIEW_RESOURCE_TYPES[item.type]}/${item.id}`);
+        lines.push(`  ${item.type ?? 'unknown'}: ${item.id ?? 'unknown'}${label ? ` (${label})` : ''} — ${existing.has(key) ? 'already in submission' : 'will be added'}`);
       }
     }
   }

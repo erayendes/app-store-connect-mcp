@@ -22,7 +22,8 @@ import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 import { createHash } from 'node:crypto';
-import { PLATFORMS, PLATFORM_NAMES, executePreflightTool, pickVersion } from './preflight.js';
+import { PLATFORMS, PLATFORM_NAMES, EDITABLE_STATES, executePreflightTool, pickVersion, readAppStoreVersions } from './preflight.js';
+import { APPROVED_STATES, PRODUCT_APPROVED_STATES } from '../core/review-states.js';
 
 /** Relationship names accepted by Apple's ReviewSubmissionItemCreateRequest. */
 export const REVIEW_ITEM_TYPES = [
@@ -34,7 +35,7 @@ export const REVIEW_ITEM_TYPES = [
 ] as const;
 const ITEM_INCLUDES = ['appStoreVersion', ...REVIEW_ITEM_TYPES].join(',');
 type ReviewItem = { type: string; id: string };
-const RESOURCE_TYPES: Record<string, string> = {
+export const REVIEW_RESOURCE_TYPES: Record<string, string> = {
   appCustomProductPageVersion: 'appCustomProductPageVersions',
   appStoreVersionExperiment: 'appStoreVersionExperiments',
   appStoreVersionExperimentV2: 'appStoreVersionExperiments',
@@ -48,10 +49,12 @@ const RESOURCE_TYPES: Record<string, string> = {
   inAppPurchaseVersion: 'inAppPurchaseVersions', subscriptionVersion: 'subscriptionVersions',
   subscriptionGroupVersion: 'subscriptionGroupVersions', appStoreVersion: 'appStoreVersions',
 };
+const RESOURCE_TYPES = REVIEW_RESOURCE_TYPES;
 const VERSIONED_ITEMS = new Set([
   'appCustomProductPageVersion', 'backgroundAssetVersion', 'gameCenterActivityVersion',
   'gameCenterChallengeVersion', 'inAppPurchaseVersion', 'subscriptionVersion',
   'subscriptionGroupVersion',
+  'gameCenterAchievementVersion', 'gameCenterLeaderboardVersion', 'gameCenterLeaderboardSetVersion',
 ]);
 function itemKey(item: ReviewItem): string { return `${item.type}/${item.id}`; }
 function itemFromResource(row: any): ReviewItem | undefined {
@@ -194,14 +197,13 @@ export async function executeReleaseTool(
   }
 
   // Resolved after the pre-flight so a refusal costs one call rather than four.
-  const versions: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/appStoreVersions`, {
+  const versions = await readAppStoreVersions(http, app.id, preflight.version, preflight.platform, {
     // platform is load-bearing: the submission below is created for it, and a
     // sparse fieldset that omits it makes every macOS, tvOS and visionOS
     // submission silently claim to be iOS.
     'fields[appStoreVersions]': 'versionString,appStoreState,platform',
-    limit: 20,
   });
-  const version = completeRows(versions, 'App Store versions').find(
+  const version = versions.data.find(
     (v: any) =>
       String(v.attributes?.versionString ?? '') === preflight.version && v.attributes?.platform === preflight.platform
   );
@@ -241,13 +243,11 @@ export async function releasePreviewArgs(
   http: AscHttpClient
 ): Promise<Record<string, unknown>> {
   const app = await resolveApp(http, String(args.app ?? ''));
-  const versions: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/appStoreVersions`, {
-    'fields[appStoreVersions]': 'versionString,appStoreState,platform',
-    limit: 20,
-  });
+  const versions = await readAppStoreVersions(http, app.id,
+    args.version ? String(args.version).trim() : undefined, args.platform ? String(args.platform) : undefined);
   const version = pickVersion(
     app.name,
-    completeRows(versions, 'App Store versions'),
+    versions.data,
     args.version ? String(args.version).trim() : undefined,
     args.platform ? String(args.platform) : undefined
   );
@@ -259,6 +259,8 @@ export async function releasePreviewArgs(
     version: version.attributes?.versionString,
     platform: PLATFORM_NAMES[platform] ?? platform,
     items: plan.items,
+    existingItems: plan.existing,
+    itemNames: { [itemKey({ type: 'appStoreVersion', id: String(version.id) })]: `Version ${version.attributes?.versionString}` },
     planFingerprint: planFingerprint(app.id, platform, plan.submission?.id, plan.items),
     ...(args.skip_preflight === true ? { skip_preflight: true } : {}),
   };
@@ -296,13 +298,12 @@ async function planSubmission(http: AscHttpClient, appId: string, platform: stri
   return { submission, existing, requested, items };
 }
 
-/** Source: Apple's App Store Connect Review Submissions documentation and the
- * ReviewSubmissionItemCreateRequest relationships in spec/openapi.json. A first
- * item of a type accompanies a new app version; a first subscription also
- * accompanies its group version. These reads precede every POST, including
- * when a submission is reused. */
+/** Source: https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-in-app-purchase
+ * The first approved product of each IAP type / auto-renewable subscription is
+ * an APP-level rule, not version === 1 on each product. A subscription only
+ * needs its group version alongside it when that group has no approved version.
+ * These reads precede every POST, including when a submission is reused. */
 const HISTORICAL_STATES = 'WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES,COMPLETING,COMPLETE';
-const APPROVED_STATES = new Set(['APPROVED', 'ACCEPTED', 'READY_FOR_SALE', 'REMOVED_FROM_SALE', 'DEVELOPER_REMOVED_FROM_SALE']);
 const VERSION_PARENTS: Record<string, { relationship: string; path: string }> = {
   appCustomProductPageVersion: { relationship: 'appCustomProductPage', path: '/v1/appCustomProductPages/{id}/appCustomProductPageVersions' },
   backgroundAssetVersion: { relationship: 'backgroundAsset', path: '/v1/backgroundAssets/{id}/versions' },
@@ -315,8 +316,40 @@ async function hasEarlierApprovedVersion(http: AscHttpClient, type: string, curr
   const id = parent && current?.relationships?.[parent.relationship]?.data?.id;
   if (!id) return undefined;
   const path = parent.path.replace('{id}', encodeURIComponent(id));
-  const res: any = await http.get(path, { limit: 100 });
-  return completeRows(res, 'Earlier product versions').some((row) => row.id !== current.id && APPROVED_STATES.has(String(row.attributes?.state ?? '')));
+  const res: any = await http.get(path, { limit: 100, ...(type === 'backgroundAssetVersion' ? { include: 'appStoreRelease' } : {}) });
+  return approvedPresence(res, (row) => row.id !== current.id && versionApproved(type, row, res.included));
+}
+
+function versionApproved(type: string, row: any, included: any[] = []): boolean {
+  if (type !== 'backgroundAssetVersion') return APPROVED_STATES.has(String(row?.attributes?.state ?? ''));
+  const releaseId = row?.relationships?.appStoreRelease?.data?.id;
+  return included.some((r) => r.type === 'backgroundAssetVersionAppStoreReleases' && r.id === releaseId && APPROVED_STATES.has(r.attributes?.state));
+}
+function approvedPresence(res: any, matches: (row: any) => boolean): boolean | undefined {
+  if (!Array.isArray(res?.data)) return undefined;
+  if (res.data.some(matches)) return true;
+  if (res.links?.next || Number(res.meta?.paging?.total ?? 0) > res.data.length) return undefined;
+  return false;
+}
+async function appHasApprovedProduct(http: AscHttpClient, appId: string, type: string, product: any): Promise<boolean | undefined> {
+  if (type === 'inAppPurchaseVersion') {
+    const productType = product?.attributes?.inAppPurchaseType;
+    if (!productType) return undefined;
+    const res: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/inAppPurchasesV2`, {
+      'filter[state]': PRODUCT_APPROVED_STATES, 'filter[inAppPurchaseType]': productType,
+      'fields[inAppPurchases]': 'state,inAppPurchaseType', limit: 1,
+    });
+    return approvedPresence(res, (r) => r.attributes?.inAppPurchaseType === productType && APPROVED_STATES.has(r.attributes?.state));
+  }
+  if (type === 'subscriptionVersion') {
+    // This filter selects groups containing an approved subscription, across
+    // the whole app; a new subscription can belong to a different group.
+    const res: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/subscriptionGroups`, {
+      'filter[subscriptions.state]': PRODUCT_APPROVED_STATES, limit: 1,
+    });
+    return approvedPresence(res, () => true);
+  }
+  return undefined;
 }
 async function previouslySubmitted(http: AscHttpClient, appId: string, platform: string, currentId: string | undefined, type: string): Promise<boolean | undefined> {
   const history: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/reviewSubmissions`, {
@@ -340,7 +373,7 @@ async function previouslySubmitted(http: AscHttpClient, appId: string, platform:
       const item = itemFromResource(row);
       if (!item) throw new AscApiError(`Historical review submission item ${row?.id ?? '(no id)'} cannot be identified.`, 0);
       if (!row.attributes?.state) throw new AscApiError(`Historical review submission item ${row.id} has no state; cannot use it as first-submission evidence.`, 0);
-      if (item.type === type && !['REMOVED', 'REJECTED'].includes(row.attributes?.state)) return true;
+      if (item.type === type && APPROVED_STATES.has(row.attributes?.state)) return true;
     }
   }
   // An empty v2 history is not proof that a product was never approved through
@@ -357,22 +390,25 @@ async function checkCompanions(http: AscHttpClient, appId: string, platform: str
     let product: any;
     if (VERSIONED_ITEMS.has(item.type)) {
       const include = VERSION_PARENTS[item.type]?.relationship;
-      version = await http.get(`/v1/${RESOURCE_TYPES[item.type]}/${encodeURIComponent(item.id)}`, include ? { include } : undefined);
-      const raw = version?.data?.attributes?.version;
-      // CPP and background-asset versions are strings: even "2" is a label,
-      // not proof that an earlier version was approved.
-      const numeric = typeof raw === 'number' && Number.isInteger(raw) ? raw : undefined;
+      const api = ['gameCenterAchievementVersion', 'gameCenterLeaderboardVersion', 'gameCenterLeaderboardSetVersion'].includes(item.type) ? 'v2' : 'v1';
+      version = await http.get(`/${api}/${RESOURCE_TYPES[item.type]}/${encodeURIComponent(item.id)}`,
+        include ? { include: item.type === 'backgroundAssetVersion' ? `${include},appStoreRelease` : include } : undefined);
       product = (version?.included ?? []).find((row: any) => row.id === version?.data?.relationships?.[include ?? '']?.data?.id);
-      if (numeric && numeric > 1) first = false;
-      else if (APPROVED_STATES.has(String(product?.attributes?.state ?? '')) ||
-        APPROVED_STATES.has(String(version?.data?.attributes?.state ?? ''))) first = false;
+      if (APPROVED_STATES.has(String(product?.attributes?.state ?? '')) ||
+        versionApproved(item.type, version?.data, version?.included)) first = false;
       else {
         const earlier = await hasEarlierApprovedVersion(http, item.type, version?.data);
         if (earlier) first = false;
-        else if (numeric === 1) first = true;
       }
     }
-    if (first === undefined && !hasAppVersion) {
+    const isProduct = item.type === 'inAppPurchaseVersion' || item.type === 'subscriptionVersion';
+    if (first === undefined && !hasAppVersion && isProduct) {
+      const key = `${item.type}/${product?.attributes?.inAppPurchaseType ?? ''}`;
+      if (!historyByType.has(key)) historyByType.set(key, await appHasApprovedProduct(http, appId, item.type, product));
+      const approved = historyByType.get(key);
+      if (approved !== undefined) first = !approved;
+    }
+    if (first === undefined && !hasAppVersion && !isProduct) {
       if (!historyByType.has(item.type)) historyByType.set(item.type, await previouslySubmitted(http, appId, platform, plan.submission?.id, item.type));
       if (historyByType.get(item.type) === true) first = false;
     }
@@ -380,13 +416,14 @@ async function checkCompanions(http: AscHttpClient, appId: string, platform: str
       throw new AscApiError(`Cannot establish whether ${itemKey(item)} is the first of its type. Add with_app_version=true or provide an open submission containing an editable app version.`, 0);
     }
     if (first && !hasAppVersion) throw new AscApiError(`First ${itemKey(item)} requires a new app version in the same review submission. Use with_app_version=true.`, 0);
-    if (item.type === 'subscriptionVersion' && first) {
+    if (item.type === 'subscriptionVersion') {
       const subscriptionId = version?.data?.relationships?.subscription?.data?.id;
       if (!subscriptionId) throw new AscApiError(`Cannot verify the group for subscription version ${item.id}.`, 0);
       const subscription: any = await http.get(`/v1/subscriptions/${encodeURIComponent(subscriptionId)}`, { include: 'group' });
       const groupId = subscription?.data?.relationships?.group?.data?.id;
       if (!groupId) throw new AscApiError(`Cannot verify the group for subscription version ${item.id}.`, 0);
       const groupVersions: any = await http.get(`/v1/subscriptionGroups/${encodeURIComponent(groupId)}/versions`, { limit: 100 });
+      if (approvedPresence(groupVersions, (v) => APPROVED_STATES.has(v.attributes?.state))) continue;
       const groupIds = new Set(completeRows(groupVersions, 'Subscription group versions').map((v: any) => String(v.id)));
       if (!plan.items.some((i) => i.type === 'subscriptionGroupVersion' && groupIds.has(i.id))) {
         throw new AscApiError(`First subscription version ${item.id} requires its subscription group version in the same review submission.`, 0);
@@ -472,21 +509,21 @@ function parseRequested(value: unknown): ReviewItem[] {
   });
   return [...new Map(parsed.map((item: ReviewItem) => [itemKey(item), item])).values()] as ReviewItem[];
 }
-async function itemTarget(http: AscHttpClient, appId: string, requested: string | undefined, withAppVersion: boolean): Promise<{ platform: string; appVersion?: ReviewItem }> {
+async function itemTarget(http: AscHttpClient, appId: string, requested: string | undefined, withAppVersion: boolean): Promise<{ platform: string; appVersion?: ReviewItem; version?: string }> {
   if (requested && !PLATFORMS.includes(requested)) throw new AscApiError(`Unknown platform ${requested}.`, 0);
   if (requested && !withAppVersion) return { platform: requested };
-  const res: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/appStoreVersions`, {
-    'fields[appStoreVersions]': 'versionString,appStoreState,platform', limit: 20,
-  });
-  const versions = completeRows(res, 'App Store versions');
+  const { data: versions } = await readAppStoreVersions(http, appId, undefined, requested);
   const selected = pickVersion(appId, versions, undefined, requested);
   const platform = String(requested ?? selected.attributes?.platform ?? '');
   if (!platform) throw new AscApiError('Platform is missing; pass platform explicitly.', 0);
   if (!withAppVersion) return { platform };
   const editable = versions.filter((v: any) => v.attributes?.platform === platform &&
-    ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY', 'WAITING_FOR_EXPORT_COMPLIANCE'].includes(v.attributes?.appStoreState));
+    EDITABLE_STATES.has(v.attributes?.appStoreState));
   if (editable.length !== 1) throw new AscApiError(`Expected exactly one editable App Store version on ${platform}; found ${editable.length}. Pass a platform with one editable version or prepare one first.`, 0);
-  return { platform, appVersion: { type: 'appStoreVersion', id: String(editable[0].id) } };
+  const version = String(editable[0].attributes?.versionString ?? '');
+  const preflight: any = await executePreflightTool('preflight__check_version', { app: appId, platform, version }, { http, expectedVersionId: String(editable[0].id) });
+  if (!preflight.ready) throw new AscApiError(`App version ${version} cannot accompany these items: ${preflight.blocking.map((b: any) => `${b.check}: ${b.problem} (fix with ${b.fixWith})`).join('; ') || preflight.state}. Nothing was submitted.`, 0);
+  return { platform, version, appVersion: { type: 'appStoreVersion', id: String(editable[0].id) } };
 }
 async function submitItems(args: Record<string, unknown>, ctx: { http: AscHttpClient; dryRun?: boolean; approvedPlanFingerprint?: string; requireApprovedPlan?: boolean }) {
   const requested = parseRequested(args.items);
@@ -506,5 +543,7 @@ export async function releaseItemsPreviewArgs(args: Record<string, unknown>, htt
   const plan = await planSubmission(http, app.id, target.platform, requested);
   await checkCompanions(http, app.id, target.platform, plan);
   return { app: `${app.name} (${app.id})`, platform: PLATFORM_NAMES[target.platform] ?? target.platform, items: plan.items,
+    existingItems: plan.existing,
+    ...(target.appVersion ? { version: target.version, itemNames: { [itemKey(target.appVersion)]: `Version ${target.version}` } } : {}),
     planFingerprint: planFingerprint(app.id, target.platform, plan.submission?.id, plan.items) };
 }

@@ -675,8 +675,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                   `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and no ` +
                   `confirmation prompt could be shown to the user here. Nothing was changed. ` +
                   `A yes in chat does not count, because this server cannot see the chat. Tell ` +
-                  `the user to make this change in App Store Connect, or to change Heimdall's ` +
-                  `confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit ` +
+                  (RELEASE_TOOL_NAMES.has(name)
+                    ? `the user to use a client with confirmation forms or enable native confirmation on macOS, then retry and approve the item list; they can also submit in App Store Connect. Release tools always require this confirmation. Do not edit `
+                    : `the user to make this change in App Store Connect, or to change Heimdall's confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit `) +
                   `client config, set ASC_CONFIRM_WRITES, or call Apple another way.`,
               },
             ],
@@ -703,14 +704,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             : op
             ? await buildWritePreview(name, bodyRisk ? { ...op, risk: bodyRisk } : op, args, config.credentials.keyId, http)
             : macroOffered(name)
-            ? // Other write macros: no spec operation behind them, but their
-              // arguments are already the human-readable facts, so the generic
-              // preview renders them without any lookups.
+            ? // Macros carry readable arguments; review item references still
+              // use the same bounded name resolvers as raw writes.
               await buildWritePreview(
                 name,
                 { method: 'POST', path: `${name} (macro)`, risk },
                 shown,
-                config.credentials.keyId
+                config.credentials.keyId,
+                http
               )
             : await buildWritePreview(
                 name,
@@ -755,8 +756,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
               `this client declared elicitation support but cannot actually show the ` +
               `form, and answered for you — the protocol reports that identically to a ` +
-              `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
-              `let the client's own tool approval be the gate.`;
+              `real refusal. ` +
+              (RELEASE_TOOL_NAMES.has(name)
+                ? `Use a client that can display Heimdall's confirmation form, or a macOS client with native confirmation enabled, then retry and approve the displayed item list. Release tools always require this confirmation. You can also submit in App Store Connect.`
+                : `In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and let the client's own tool approval be the gate.`);
           return {
             content: [{ type: 'text' as const, text }],
             isError: true,

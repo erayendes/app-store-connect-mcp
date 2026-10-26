@@ -436,7 +436,7 @@ describe(subscriptionTool, () => {
     await expect(executePreflightTool(subscriptionTool, args, { http })).rejects.toThrow();
     expect(http.get).not.toHaveBeenCalled();
   });
-  it('reports truncation for every paginated list and does not infer missing unseen locales', async () => {
+  it('reports truncation for inspected lists and does not infer missing unseen locales', async () => {
     const more = { next: '/unread' };
     const result = await runCatalog({
       '/v1/subscriptionGroupVersions/gv1/localizations': { data: [groupLocale('tr')], links: more },
@@ -445,10 +445,10 @@ describe(subscriptionTool, () => {
       '/v1/subscriptions/s1/planAvailabilities': { data: [{ id: 'plan1' }], links: more },
       '/v1/subscriptionPlanAvailabilities/plan1/availableTerritories': { data: [{ id: 'USA' }], links: more },
     });
-    // Presence is established, but any incomplete paged read prevents ready.
-    expect(result.subscriptions[0].truncated).toHaveLength(5);
+    // Only full-list checks carry truncation debt; presence is conclusive.
+    expect(result.subscriptions[0].truncated).toHaveLength(3);
     expect(result.subscriptions[0].ready).toBe(false);
-    expect(result.subscriptions[0].truncated.join()).toMatch(/prices|availableTerritories/);
+    expect(result.subscriptions[0].truncated.join()).not.toMatch(/prices|availableTerritories/);
     expect(result.subscriptions[0].findings).toEqual([]);
   });
   it('names each missing group locale once, though Apple lists a draft beside the approved copy', async () => {
@@ -475,5 +475,52 @@ describe(subscriptionTool, () => {
     await expect(runCatalog(overrides, { app: '1', subscription: 'unknown' })).rejects.toThrow('Search truncated');
     await expect(runCatalog(overrides, { app: '1', subscription: 'Monthly' })).rejects.toThrow('cannot establish');
     await expect(runCatalog({ '/v1/subscriptionGroups/g1/subscriptions': { data: [catalogSubscription()], meta: { paging: { total: 100 } } } }, { app: '1', subscription: 'Monthly' })).rejects.toThrow('Search truncated');
+  });
+});
+
+describe('subscription preflight review regressions', () => {
+  it('treats prices and available territories as presence checks even with more pages', async () => {
+    const result = await runCatalog({
+      '/v1/subscriptions/s1/prices': { data: [{ id: 'price' }], links: { next: '/unread' }, meta: { paging: { total: 175 } } },
+      '/v1/subscriptionPlanAvailabilities/plan1/availableTerritories': { data: [{ id: 'USA' }], links: { next: '/unread' } },
+    });
+    expect(result.subscriptions[0]).toMatchObject({ ready: true, truncated: [], findings: [] });
+  });
+  it('does not claim absence or readiness from an empty partial price page', async () => {
+    const result = await runCatalog({ '/v1/subscriptions/s1/prices': { data: [], links: { next: '/unread' } } });
+    expect(result.subscriptions[0].ready).toBe(false);
+    expect(result.subscriptions[0].truncated).toHaveLength(1);
+    expect(result.subscriptions[0].findings.some((f: any) => f.check === 'price')).toBe(false);
+  });
+  it.each(['REJECTED', 'WAITING_FOR_REVIEW', 'IN_REVIEW'])('reports subscription %s without suggesting another draft', async (state) => {
+    for (const explicit of [false, true]) {
+      const result = await runCatalog({ '/v1/subscriptions/s1/versions': { data: [{ id: 'sv1', attributes: { version: 1, state } }] } }, { app: '1', subscription: 's1', ...(explicit ? { version_id: 'sv1' } : {}) });
+      expect(result.subscriptions[0].version.state).toBe(state);
+      expect(result.subscriptions[0].ready).toBe(false);
+      expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ check: 'version state', problem: expect.stringContaining(state), fixWith: 'subscription_versions__get' }));
+      expect(result.subscriptions[0].findings.some((f: any) => f.fixWith === 'subscription_versions__create')).toBe(false);
+    }
+  });
+  it.each(['REJECTED', 'WAITING_FOR_REVIEW', 'IN_REVIEW'])('reports group %s without suggesting another draft', async (state) => {
+    const result = await runCatalog({ '/v1/subscriptionGroups/g1/versions': { data: [{ id: 'gv1', attributes: { version: 1, state } }] } }, { app: '1', group: 'g1' });
+    expect(result.group.version.state).toBe(state);
+    expect(result.group.ready).toBe(false);
+    expect(result.group.findings).toContainEqual(expect.objectContaining({ check: 'group version state', problem: expect.stringContaining(state), fixWith: 'subscription_group_versions__get' }));
+    expect(result.group.findings.some((f: any) => f.fixWith === 'subscription_group_versions__create')).toBe(false);
+  });
+});
+
+describe('shared version lookup in preflight', () => {
+  it('checks a version on the second page with its included build and refuses hidden pages', async () => {
+    const http = fakeHttp({ version: { platform: 'IOS' } });
+    const original = http.get.getMockImplementation()!;
+    const versionPage = await original('/v1/apps/6636549188/appStoreVersions');
+    http.get.mockImplementation(async (path: string) => path.endsWith('/appStoreVersions')
+      ? { data: [], links: { next: '/next-version' } } as any
+      : path === '/next-version' ? versionPage : original(path));
+    expect((await executePreflightTool('preflight__check_version', { app: 'Ask Quran' }, { http }) as any).ready).toBe(true);
+    http.get.mockImplementation(async (path: string) => path.endsWith('/appStoreVersions')
+      ? { ...versionPage, meta: { paging: { total: 2 } } } as any : original(path));
+    await expect(executePreflightTool('preflight__check_version', { app: 'Ask Quran' }, { http })).rejects.toThrow(/truncated/);
   });
 });
