@@ -17,7 +17,7 @@ import {
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
 import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from './core/confirm.js';
-import { dialogText, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
+import { dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { MACRO_TOOLS } from './tools/catalog.js';
@@ -558,6 +558,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             `\`npx -y ${PACKAGE} register ${CORE_PROFILE}\` and ask them to restart their MCP client.`
         );
       }
+      if (MACRO_TOOLS.some((tool) => tool.name === name) && !macroOffered(name)) {
+        throw new Error(`Unknown tool "${name}": this server does not offer it. Nothing was changed.`);
+      }
 
       if (name === 'asc__describe' && selection) {
         const op = resolveProfileOperation(String(args.tool ?? ''));
@@ -733,7 +736,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const answer = await nativeConfirm(dialogText(what, preview.message), ctx.mcpReq.signal);
+          const dialog = dialogText(what, preview.message);
+          if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
+            return { content: [{ type: 'text' as const, text: `"${name}" was blocked: the full media preview exceeds the native macOS dialog limit. Use a client that can show the full elicitation prompt, or send fewer items. Nothing was changed.` }], isError: true };
+          }
+          const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);
           if (answer === 'unavailable') return blocked;
           if (answer !== 'approved') {
             return {

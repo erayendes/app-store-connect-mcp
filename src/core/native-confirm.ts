@@ -22,6 +22,7 @@ export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
 
 /** An alert grows with its text; past this the buttons leave the screen. */
 const MAX_BODY = 1500;
+export const nativeConfirmFits = (text: DialogText): boolean => text.body.length <= MAX_BODY;
 
 // The same path from src/core (tsx) and dist/core (published), shipped via
 // package.json "files". If it is missing the alert shows its default icon.
@@ -96,7 +97,8 @@ export const nativeConfirmAvailable = (): boolean => process.platform === 'darwi
 
 export function nativeConfirm(text: DialogText, signal?: AbortSignal): Promise<NativeAnswer> {
   if (!nativeConfirmAvailable()) return Promise.resolve('unavailable');
-  const body = text.body.length > MAX_BODY ? `${text.body.slice(0, MAX_BODY)}…` : text.body;
+  if (!nativeConfirmFits(text)) return Promise.resolve('unavailable');
+  const body = text.body;
   return new Promise((resolve) => {
     // A cancelled tool call takes its alert with it, so a late click cannot
     // run a write the agent was already told failed.

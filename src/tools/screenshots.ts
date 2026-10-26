@@ -194,7 +194,7 @@ async function resolvePage(http: AscHttpClient, app: Target['app'], target: Page
 async function resolveTarget(args: Args, http: AscHttpClient, single: boolean): Promise<Target> {
   const appName = str(args, 'app', true)!;
   const target = str(args, 'target', true)! as Target['target'];
-  if (target !== 'library' && !(target in MEDIA_TARGETS)) fail(`Unknown media target: ${target}.`);
+  if (target !== 'library' && !Object.hasOwn(MEDIA_TARGETS, target)) fail(`Unknown media target: ${target}.`);
   const pageId = str(args, 'page_id'), locale = str(args, 'locale'), version = str(args, 'version'), platform = str(args, 'platform');
   if (platform && !PLATFORMS.includes(platform)) fail(`Unknown platform: ${platform}.`);
   if (target === 'library' && (pageId || locale || version || platform)) fail('A library target cannot carry page selectors. Choose a page target to place a library file.');
@@ -224,38 +224,36 @@ async function resolveTarget(args: Args, http: AscHttpClient, single: boolean): 
 async function libraryFiles(http: AscHttpClient, target: Target, ids: string[] = [], withPlacements = false): Promise<File[]> {
   const files: File[] = [];
   for (const kind of ['image', 'video'] as const) {
-    const res = await readMediaRows(http, MEDIA_ASSETS[kind].list, target.libraryId, { ...(ids.length ? { 'filter[id]': ids.join(',') } : {}), ...(withPlacements ? { include: 'placements' } : {}), limit: 200 });
+    const res = await readMediaRows(http, MEDIA_ASSETS[kind].list, target.libraryId, { ...(ids.length ? { 'filter[id]': ids.join(',') } : {}), limit: 200 });
     for (const row of res.rows) {
       if (ids.length && !ids.includes(row.id)) continue;
-      const placementIds = withPlacements ? row.relationships?.placements?.data : [];
-      if (withPlacements && !Array.isArray(placementIds)) fail(`Missing placements relationship for ${row.id}; cannot inspect live pages.`);
-      if (placementIds.length > 200) fail(`Too many placements for ${row.id}; refusing an incomplete preview.`);
-      const placements = placementIds.map((p: Row) => res.included.find((r) => r.id === p.id && r.type === 'appAssetLibraryPlacements') ?? fail(`Missing placement ${p.id} in library response.`));
-      files.push({ id: row.id, kind, row, name: row.attributes?.referenceName || row.attributes?.fileName || row.id, placements });
+      files.push({ id: row.id, kind, row, name: row.attributes?.referenceName || row.attributes?.fileName || row.id, placements: [] });
     }
   }
   for (const id of ids) if (files.filter((f) => f.id === id).length !== 1) fail(`File ${id} is not uniquely in ${target.app.name}’s asset library. Nothing was changed.`);
-  return ids.length ? ids.map((id) => files.find((f) => f.id === id)!) : files;
+  const selected = ids.length ? ids.map((id) => files.find((f) => f.id === id)!) : files;
+  if (withPlacements) {
+    if (selected.length > 200) fail('More than 200 library files; filter asset_ids to inspect complete placement lists.');
+    for (let start = 0; start < selected.length; start += 10) {
+      await Promise.all(selected.slice(start, start + 10).map(async (file) => {
+        const res = await readMediaRows(http, MEDIA_ASSETS[file.kind].placements, file.id, { include: `image,video,${PLACEMENT_INCLUDES}`, limit: 200 });
+        if (res.rows.length > 200) fail(`More than 200 placements for ${file.name}; refusing an incomplete preview.`);
+        file.placements = res.rows;
+      }));
+    }
+  }
+  return selected;
 }
 const placementPage = (row: Row) => Object.entries(MEDIA_TARGETS).find(([, t]) => row.relationships?.[t.relationship]?.data?.id);
 const placementAsset = (row: Row) => row.relationships?.image?.data?.id ?? row.relationships?.video?.data?.id;
 const PLACEMENT_INCLUDES = Object.values(MEDIA_TARGETS).map((t) => t.relationship).join(',');
-async function placementWithPage(http: AscHttpClient, row: Row): Promise<Row> {
-  const full = await getRow(http, MEDIA_OPS.placementGet, row.id, { include: `image,video,${PLACEMENT_INCLUDES}` });
-  if (!placementPage(full) || !placementAsset(full)) fail(`Placement ${row.id} has no supported page or asset; refusing to infer ownership.`);
-  return full;
-}
 async function populatePlacementPages(http: AscHttpClient, target: Target, files: File[]) {
   const count = files.reduce((sum, f) => sum + f.placements.length, 0);
   if (count > 200) fail('More than 200 placements; refusing an incomplete page preview. Filter asset_ids.');
-  const requested = files.flatMap((f) => f.placements);
-  const rows: Row[] = [];
-  for (let start = 0; start < requested.length; start += 10) rows.push(...await Promise.all(requested.slice(start, start + 10).map((p) => placementWithPage(http, p))));
-  let index = 0;
-  const seen = new Map<string, Page>();
+  const seen = new Map<string, Page>(target.pages.map((page) => [`${page.target}/${page.id}`, page]));
   for (const file of files) {
-    file.placements = rows.slice(index, index + file.placements.length); index += file.placements.length;
     for (const row of file.placements) {
+      if (!placementPage(row) || !placementAsset(row)) fail(`Placement ${row.id} has no supported page or asset; refusing to infer ownership.`);
       if (placementAsset(row) !== file.id) fail(`Placement ${row.id} is not for ${file.name}. Nothing was changed.`);
       const found = placementPage(row)!;
       const pageId = relId(row, found[1].relationship);
@@ -263,7 +261,7 @@ async function populatePlacementPages(http: AscHttpClient, target: Target, files
       if (!seen.has(key)) seen.set(key, await resolvePage(http, target.app, found[0] as PageTarget, pageId));
     }
   }
-  target.pages.push(...seen.values());
+  target.pages = [...seen.values()];
 }
 async function pagePlacements(http: AscHttpClient, page: Page) {
   return readMediaRows(http, MEDIA_TARGETS[page.target].placements, page.id, { include: 'image,video', ...(MEDIA_TARGETS[page.target].ordered ? { sort: 'placementGroupPosition' } : {}), limit: 200 });
@@ -355,7 +353,7 @@ type MediaAction = typeof ARRANGE_ACTIONS[number] | 'delete' | 'upload';
 function mediaIntent(name: string, args: Args): { target: Target['target']; action: MediaAction } {
   if (!MEDIA_TOOL_NAMES.has(name) || name === MEDIA_NAMES.list) fail(`Unknown media write tool: ${name}`);
   const target = str(args, 'target', true)!;
-  if (target !== 'library' && !(target in MEDIA_TARGETS)) fail(`Unknown media target: ${target}.`);
+  if (target !== 'library' && !Object.hasOwn(MEDIA_TARGETS, target)) fail(`Unknown media target: ${target}.`);
   const action = name === MEDIA_NAMES.upload ? 'upload' : name === MEDIA_NAMES.delete ? (target === 'library' ? 'delete' : 'remove') : str(args, 'action', true)!;
   if (name === MEDIA_NAMES.arrange && !ARRANGE_ACTIONS.includes(action as typeof ARRANGE_ACTIONS[number])) fail(`Unknown media action: ${action}.`);
   if (name === MEDIA_NAMES.arrange && action === 'remove' && target === 'library') fail('Remove requires a named page target; library placements may be on live pages.');
@@ -393,7 +391,10 @@ async function checkedPlacements(args: Args, http: AscHttpClient, target: Target
     for (const id of ids) rows.push(await getRow(http, MEDIA_OPS.placementGet, id, { include: `image,video,${PLACEMENT_INCLUDES}` }));
   } else {
     const all = (await pagePlacements(http, target.pages[0])).rows;
-    rows = ids.map((id) => all.find((p) => p.id === id) ?? fail(`Placement ${id} is not on ${target.pages[0].label}. Nothing was changed.`));
+    rows = ids.map((id) => {
+      const row = all.find((p) => p.id === id) ?? fail(`Placement ${id} is not on ${target.pages[0].label}. Nothing was changed.`);
+      return { ...row, relationships: { ...row.relationships, [MEDIA_TARGETS[target.pages[0].target].relationship]: { data: { id: target.pages[0].id } } } };
+    });
   }
   const assetIds = [...new Set<string>(rows.map((p) => placementAsset(p) ?? fail(`Placement ${p.id} has no asset.`)))];
   const files = await libraryFiles(http, target, assetIds);
@@ -448,13 +449,15 @@ async function prepareWrite(name: string, args: Args, http: AscHttpClient): Prom
       }
     } else {
       if (args.placement_ids !== undefined) fail('Use asset_ids for this action.');
-      files = await libraryFiles(http, target, arrayIds(args, 'asset_ids'), action === 'delete');
-      if (action === 'delete') await populatePlacementPages(http, target, files);
+      const sharedUpdate = action === 'archive' || action === 'poster' || action === 'rename';
+      files = await libraryFiles(http, target, arrayIds(args, 'asset_ids'), action === 'delete' || sharedUpdate);
+      if (action === 'delete' || sharedUpdate) await populatePlacementPages(http, target, files);
       if (action !== 'place' && target.target !== 'library' && target.pages.length) {
-        const placed = (await pagePlacements(http, target.pages[0])).rows;
+        const namedPage = target.pages[0];
+        const placed = (await pagePlacements(http, namedPage)).rows;
         for (const file of files) {
-          file.placements = placed.filter((p) => placementAsset(p) === file.id);
-          if (!file.placements.length) fail(`File ${file.name} is not on ${target.pages[0].label}. Nothing was changed.`);
+          if (!placed.some((p) => placementAsset(p) === file.id)) fail(`File ${file.name} is not on ${namedPage.label}. Nothing was changed.`);
+          if (!sharedUpdate) file.placements = placed.filter((p) => placementAsset(p) === file.id);
         }
       }
       if (action === 'place' && !target.pages.length) fail('Place requires a page target. The file already belongs to the library.');
@@ -481,13 +484,29 @@ async function prepareWrite(name: string, args: Args, http: AscHttpClient): Prom
 export async function buildMediaPreview(name: string, args: Args, http: AscHttpClient) {
   const plan = await prepareWrite(name, args, http);
   const strong = STRONG_CONFIRM_LEVELS.has(plan.risk);
+  const fileLines = plan.upload ? [`- ${plan.upload.fileName} (new ${plan.upload.kind})`] : plan.files.map((file) => {
+    const groups = new Map<string, number>();
+    for (const placement of file.placements) {
+      const found = placementPage(placement)!;
+      const id = relId(placement, found[1].relationship);
+      const page = plan.target.pages.find((p) => p.id === id && p.target === found[0]);
+      const label = `${page?.label ?? id} (${id})`;
+      groups.set(label, (groups.get(label) ?? 0) + 1);
+    }
+    const pages = [...groups].map(([label, count]) => `${label} ×${count}`).join('; ') || 'no page placements';
+    return `- ${file.name} [${file.id}]: ${pages}`;
+  });
+  const writeLines = plan.writes.map((write) => {
+    const attributes = (write.body as any)?.data?.attributes;
+    const ordered = (write.body as any)?.data?.relationships?.orderedPlacements?.data;
+    return `- ${write.operation}${write.id ? ` [${write.id}]` : ''}${attributes ? ` ${JSON.stringify(attributes)}` : ''}${ordered ? ` order=${ordered.map((item: Row) => item.id).join(',')}` : ''}`;
+  });
   return { planFingerprint: plan.fingerprint, strong, message: [
     `Heimdall is about to ${name === MEDIA_NAMES.delete ? 'delete media' : plan.action === 'upload' ? 'upload media' : plan.action} — a ${plan.risk.toUpperCase()}-level write.`, '',
     `App:        ${plan.target.app.name}`,
-    `Target:     ${plan.target.target === 'library' ? `asset library (${plan.target.libraryId})` : plan.target.pages.map((p) => `${p.label} (${p.id})`).join('; ')}`,
-    `Files:      ${plan.upload?.fileName ?? plan.files.map((f) => f.name).join(', ')}`,
-    ...(plan.target.target === 'library' && plan.files.some((f) => f.placements.length) ? [`Placed on:  ${plan.files.map((f) => `${f.name}: ${f.placements.map((placement) => { const found = placementPage(placement)!; const id = relId(placement, found[1].relationship); const page = plan.target.pages.find((p) => p.id === id && p.target === found[0]); return `${page?.label ?? id} (${id})`; }).join(', ') || 'none'}`).join('; ')}`] : []),
-    `Changes:    ${plan.writes.map((w) => `${w.name}: ${w.operation}${w.id ? ` (${w.id})` : ''}${w.body ? ` ${JSON.stringify(w.body)}` : ''}`).join('\n            ')}`,
+    `Target:     ${plan.target.target === 'library' ? `asset library (${plan.target.libraryId})` : `${plan.target.pages[0].label} (${plan.target.pages[0].id})`}`,
+    `Files (${fileLines.length}):`, ...fileLines,
+    `Changes (${writeLines.length}):`, ...writeLines,
     `Risk:       ${plan.risk} — ${REVERSIBILITY[plan.risk]}`, '',
     strong ? 'Type CONFIRM in the field below to proceed.' : 'Confirm to proceed.',
   ].join('\n') };

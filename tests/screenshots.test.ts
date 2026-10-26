@@ -10,7 +10,7 @@ import { AscApiError } from '../src/core/errors.js';
 
 vi.mock('node:fs/promises', async (actual) => {
   const fs = await actual<typeof import('node:fs/promises')>();
-  return { ...fs, open: vi.fn(fs.open), stat: vi.fn(fs.stat) };
+  return { ...fs, open: vi.fn(fs.open), stat: vi.fn(fs.stat), readFile: vi.fn(fs.readFile) };
 });
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
@@ -90,7 +90,7 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       expect(result.limits[0].videoSpecs[0].maxFileSize).toBe(500000000);
       if (target === 'library') {
         expect(result.assets[0].placements[0]).toMatchObject({ pageId: 'loc', target: 'version' });
-        expect(http.get.mock.calls.filter(([p]) => p.endsWith('/img/placements') || p.endsWith('/vid/placements'))).toEqual([]);
+        expect(http.get.mock.calls.filter(([p]) => p.endsWith('/img/placements') || p.endsWith('/vid/placements'))).toHaveLength(2);
       }
       expect(http.get.mock.calls.some(([p]) => /appScreenshot|appPreview|appEventScreenshot|appEventVideo/.test(p))).toBe(false);
     });
@@ -115,7 +115,7 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       const preview = await buildMediaPreview('media__delete', request, http as any);
       expect(preview.strong).toBe(true); expect(preview.message).toContain('Hero image'); expect(preview.message).toContain('Preview video');
       expect(preview.message).toContain(target === 'library' ? 'asset library' : pages[target]);
-      if (target === 'library') expect(preview.message).toMatch(/Placed on:.*Hero image: IOS version 3.0.*Preview video: IOS version 3.0/);
+      if (target === 'library') expect(preview.message).toMatch(/Hero image \[img\]: IOS version 3.0[\s\S]*Preview video \[vid\]: IOS version 3.0/);
       const result: any = await executeMediaTool('media__delete', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
       expect(result.succeeded).toHaveLength(2); expect(http.delete).toHaveBeenCalledTimes(2);
       expect(http.delete.mock.calls[0][0]).toBe(target === 'library' ? '/v1/appAssetLibraryImages/img' : '/v1/appAssetLibraryPlacements/pi');
@@ -214,6 +214,7 @@ describe('media resolution, confirmation and file safety', () => {
   it('reads only from the opened descriptor when the path is replaced', async () => {
     const originalOpen = vi.mocked(fs.open).getMockImplementation()!;
     const readSizes: number[] = [];
+    const descriptorBytes: Buffer[] = [];
     vi.mocked(fs.open).mockImplementationOnce(async (...args: Parameters<typeof fs.open>) => {
       const fd = await originalOpen(...args);
       const read = fd.read.bind(fd);
@@ -221,6 +222,7 @@ describe('media resolution, confirmation and file safety', () => {
       fd.read = (async (buffer: Buffer, offset: number, length: number, position: number) => {
         readSizes.push(length);
         const result = await read(buffer, offset, length, position);
+        descriptorBytes.push(Buffer.from(buffer.subarray(offset, offset + result.bytesRead)));
         if (first) { first = false; await fs.rename(file, join(dir, 'original.png')); await fs.writeFile(file, 'different path content'); }
         return result;
       }) as any;
@@ -233,6 +235,10 @@ describe('media resolution, confirmation and file safety', () => {
     try { await executeMediaTool('media__upload', uploadArgs(), context(http)); } catch (err) { expect(String(err)).toMatch(/File changed/); refused = true; }
     if (refused) expect(http.uploadAssetPart).not.toHaveBeenCalled();
     else { expect(http.uploadAssetPart).toHaveBeenCalledOnce(); expect(http.uploadAssetPart.mock.calls[0][1]).toEqual(PNG); }
+    expect(descriptorBytes).toHaveLength(2);
+    expect(descriptorBytes[1]).toEqual(PNG);
+    expect(vi.mocked(fs.open)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
     expect(readSizes[0]).toBe(12); expect(Math.max(...readSizes)).toBeLessThanOrEqual(1024 * 1024);
   });
   it('checks fstat before reading a file that grew after the initial stat', async () => {
@@ -338,15 +344,69 @@ describe('media resolution, confirmation and file safety', () => {
     expect(http.get).toHaveBeenCalledWith('/v1/appAssetLibraryRefData/ref', undefined);
     await expect(executeMediaTool('media__list', { ...pageArgs('library'), library_id: 'foreign' }, context(http))).rejects.toThrow(/does not belong/);
   });
-  it('bounds library placement expansion and refuses incomplete page visibility', async () => {
+  it('ignores truncated included relationships and pages through every file placement before deletion', async () => {
     const http = fakeHttp(); const original = http.get.getMockImplementation()!;
     http.get.mockImplementation(async (path, query) => {
+      if (path === '/v1/appAssetLibraryImages/img/placements') return { data: Array.from({ length: 10 }, (_, i) => ({ ...placement('version', 'image', `p${i}`), relationships: { image: link('img'), appStoreVersionLocalization: link(`loc-${i}`) } })), links: { next: '/next-placements' }, meta: { paging: { total: 30 } } };
+      if (path === '/next-placements') return { data: Array.from({ length: 20 }, (_, i) => ({ ...placement('version', 'image', `p${i + 10}`), relationships: { image: link('img'), appStoreVersionLocalization: link(`loc-${i + 10}`) } })), meta: { paging: { total: 30 } } };
+      if (/^\/v1\/appStoreVersionLocalizations\/loc-\d+$/.test(path)) return { data: withIncludes({ id: path.split('/').at(-1), attributes: { locale: 'en-US' }, relationships: { appStoreVersion: link('v1') } }, query) };
       const result = await original(path, query);
-      if (path.endsWith('/images') && query?.include === 'placements') result.data[0].relationships.placements.data = Array.from({ length: 201 }, (_, i) => ({ id: `p${i}` }));
+      if (path.endsWith('/images')) result.data[0].relationships = { placements: { data: Array.from({ length: 10 }, (_, i) => ({ id: `p${i}` })), meta: { paging: { total: 30 } }, links: { next: '/irrelevant-included-cursor' } } };
       return result;
     });
-    await expect(executeMediaTool('media__list', pageArgs('library'), context(http))).rejects.toThrow(/Too many placements/);
-    expect(http.get.mock.calls.some(([path]) => path.endsWith('/img/placements'))).toBe(false);
+    const request = { ...pageArgs('library'), asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__delete', request, http as any);
+    expect(preview.message).toContain('(loc-29)');
+    expect(preview.message).toContain('(loc-0)');
+    expect(http.get.mock.calls.some(([path]) => path === '/next-placements')).toBe(true);
+    expect(http.get.mock.calls.some(([path]) => path === '/irrelevant-included-cursor')).toBe(false);
+    const applied: any = await executeMediaTool('media__delete', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+    expect(applied.ok).toBe(true); expect(http.delete).toHaveBeenCalledOnce();
+  });
+  it('refuses a placement list whose reported total is larger than its fetched rows', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => path === '/v1/appAssetLibraryImages/img/placements'
+      ? { data: [placement('version', 'image')], meta: { paging: { total: 30 } } }
+      : original(path, query));
+    await expect(buildMediaPreview('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, http as any)).rejects.toThrow(/Truncated/);
+    expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each(['library', 'version'] as const)('shows every page affected by %s library-file updates', async (target) => {
+    for (const action of ['archive', 'poster', 'rename'] as const) {
+      const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+      const kind = action === 'poster' ? 'video' : 'image';
+      const assetId = kind === 'video' ? 'vid' : 'img';
+      const path = `/v1/appAssetLibrary${kind === 'video' ? 'Videos/vid' : 'Images/img'}/placements`;
+      http.get.mockImplementation(async (requestPath, query) => requestPath === path
+        ? { data: [placement('version', kind), placement('cpp', kind, `cpp-${assetId}`)].map((row) => withIncludes(row, query)) }
+        : original(requestPath, query));
+      const args = { ...pageArgs(target), action, asset_ids: [assetId], reference_name: 'Updated', preview_frame_time_code: '00:00:05:00' };
+      const preview = await buildMediaPreview('media__arrange', args, http as any);
+      expect(preview.message).toContain('IOS version 3.0');
+      expect(preview.message).toContain('CPP Summer');
+      expect(preview.message).toContain(kind === 'video' ? 'Preview video' : 'Hero image');
+      const result: any = await executeMediaTool('media__arrange', args, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+      expect(result.ok).toBe(true); expect(http.patch).toHaveBeenCalledOnce();
+    }
+  });
+  it('rejects a shared-file update if another page placement changed after confirmation', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    let changed = false;
+    http.get.mockImplementation(async (path, query) => path === '/v1/appAssetLibraryImages/img/placements'
+      ? { data: [placement('version', 'image'), placement(changed ? 'event' : 'cpp', 'image', 'other')].map((row) => withIncludes(row, query)) }
+      : original(path, query));
+    const args = { ...pageArgs('version'), action: 'archive', asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__arrange', args, http as any);
+    expect(preview.message).toContain('CPP Summer');
+    changed = true;
+    await expect(executeMediaTool('media__arrange', args, context(http, { approvedPlanFingerprint: preview.planFingerprint }))).rejects.toThrow(/changed since confirmation/);
+    expect(http.patch).not.toHaveBeenCalled();
+  });
+  it.each(['toString', 'constructor'])('rejects prototype target %s before any request', async (target) => {
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__list', { app: 'Example', target }, context(http))).rejects.toThrow(/Unknown media target/);
+    await expect(buildMediaPreview('media__arrange', { app: 'Example', target, action: 'archive', asset_ids: ['img'] }, http as any)).rejects.toThrow(/Unknown media target/);
+    expect(http.get).not.toHaveBeenCalled();
   });
   it('refuses library deletion when a placement belongs to a foreign app page', async () => {
     const http = fakeHttp(); const original = http.get.getMockImplementation()!;

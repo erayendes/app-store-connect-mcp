@@ -72,13 +72,14 @@ async function connect(
     noElicitation?: boolean;
     confirmWrites?: ServerConfig['confirmWrites'];
     nativeConfirm?: boolean;
+    readOnly?: boolean;
     profile?: string;
   } = {}
 ) {
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const build = () =>
     createServer(
-      { ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites, nativeConfirm: options.nativeConfirm },
+      { ...config, readOnly: options.readOnly ?? config.readOnly, confirmWrites: options.confirmWrites ?? config.confirmWrites, nativeConfirm: options.nativeConfirm },
       resolveSelection(options.profile ?? 'testflight')
     );
   if (era === 'modern') {
@@ -557,12 +558,49 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
     const { title, body } = vi.mocked(nativeConfirm).mock.calls[0][0];
     expect(title).toBe('Delete images or videos from an app’s asset library, or remove placements from a named page?');
     expect(body).toMatch(/App:\s+Test App/);
-    expect(body).toMatch(/Files:\s+01.png \(15\), 02.png \(15\)/);
+    expect(body).toMatch(/Files \(2\):[\s\S]*01.png \(15\)[\s\S]*02.png \(15\)/);
     expect(res.isError ?? false).toBe(false);
     expect(sent.filter((s) => s.startsWith('DELETE'))).toEqual([
       'DELETE /v1/appAssetLibraryImages/img-1',
       'DELETE /v1/appAssetLibraryImages/img-2',
     ]);
+  });
+  it('refuses a 50-file native confirmation whose full preview cannot fit', async () => {
+    const ids = Array.from({ length: 50 }, (_, i) => `img-${i}`);
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      sent.push(`${init?.method ?? 'GET'} ${path}`);
+      if ((init?.method ?? 'GET') === 'DELETE') return new Response(null, { status: 204 });
+      const body = path === '/v1/apps'
+        ? { data: [{ id: 'app-1', attributes: { name: 'Test App', bundleId: 'com.example.test' } }] }
+        : path === '/v1/apps/app-1/assetLibrary'
+          ? { data: { id: 'lib-1' } }
+          : path === '/v1/appAssetLibraries/lib-1/images'
+            ? { data: ids.map((id) => ({ id, attributes: { referenceName: `Very long customer-facing campaign image name ${id} for the autumn storefront` } })) }
+            : { data: [] };
+      return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
+    }));
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'core' });
+    const result: any = await client.callTool({ name: 'media__delete', arguments: { app: 'Test App', target: 'library', asset_ids: ids } });
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/full media preview exceeds.*native macOS dialog limit.*elicitation prompt.*fewer items/);
+    expect(vi.mocked(nativeConfirm)).not.toHaveBeenCalled();
+    expect(sent.some((entry) => entry.startsWith('DELETE'))).toBe(false);
+  });
+});
+
+describe.each(['legacy', 'modern'] as const)('unoffered media writes on a %s connection', (era) => {
+  it.each([{ profile: 'core', readOnly: true }, { profile: 'testflight', readOnly: false }])('rejects before lookup or prompt in $profile (readOnly=$readOnly)', async ({ profile, readOnly }) => {
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL) => { sent.push(String(url)); throw new Error('Unexpected Apple request'); }));
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile, readOnly });
+    expect((await client.listTools()).tools.map((tool) => tool.name)).not.toContain('media__delete');
+    const result: any = await client.callTool({ name: 'media__delete', arguments: { app: 'Test App', target: 'library', asset_ids: ['img-1'] } });
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/Unknown tool.*does not offer it/);
+    expect(vi.mocked(nativeConfirm)).not.toHaveBeenCalled();
+    expect(sent).toEqual([]);
   });
 });
 

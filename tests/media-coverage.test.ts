@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MACRO_COVERED, PROFILES } from '../src/profiles.js';
-import { MEDIA_TARGETS } from '../src/tools/media-catalog.js';
+import { MEDIA_TARGETS, mediaOperation } from '../src/tools/media-catalog.js';
 import { executeMediaTool } from '../src/tools/screenshots.js';
 
 type Coverage = { target: string; action: string; macro: string; operations: string[] };
@@ -20,9 +20,9 @@ const reorder = 'app_asset_library_placement_ordering_requests.create';
 const COVERAGE: Coverage[] = [
   { target: 'library', action: 'list', macro: 'media__list', operations: [
     'apps.asset_library.get', 'app_asset_libraries.get', 'app_asset_libraries.images.list',
-    'app_asset_libraries.videos.list', 'app_asset_library_images.get', 'app_asset_library_videos.get',
+    'app_asset_libraries.videos.list',
     'app_asset_library_images.placements.list', 'app_asset_library_videos.placements.list',
-    placementGet, 'app_asset_library_ref_data.list', 'app_asset_library_ref_data.get',
+    'app_asset_library_ref_data.list', 'app_asset_library_ref_data.get',
   ] },
   { target: 'library', action: 'upload', macro: 'media__upload', operations: assetCreates },
   { target: 'library', action: 'reorder', macro: 'media__arrange', operations: [placementGet, reorder] },
@@ -38,7 +38,7 @@ const COVERAGE: Coverage[] = [
     ppo: 'app_store_version_experiment_treatment_localizations.placements.list',
     event: 'app_event_localizations.placements.list',
   }).flatMap(([target, listOp]): Coverage[] => [
-    { target, action: 'list', macro: 'media__list', operations: [listOp] },
+    { target, action: 'list', macro: 'media__list', operations: [listOp, 'app_asset_library_images.get', 'app_asset_library_videos.get'] },
     { target, action: 'upload', macro: 'media__upload', operations: [...assetCreates, placementCreate] },
     { target, action: 'place', macro: 'media__arrange', operations: [placementCreate] },
     { target, action: 'remove', macro: 'media__arrange', operations: [placementDelete] },
@@ -114,11 +114,15 @@ describe('media target × action coverage', () => {
         if (path === '/v1/appAssetLibraries/lib/images' || path === '/v1/appAssetLibraries/lib/videos') {
           const row: any = structuredClone(path.endsWith('/images') ? image : video);
           const selected = !query?.['filter[id]'] || query['filter[id]'].split(',').includes(row.id);
-          if (query?.include === 'placements') row.relationships = { placements: { data: [{ id: row.id === 'img' ? 'pi' : 'pv' }] } };
-          return { data: selected ? [row] : [], included: query?.include === 'placements' && selected ? [select(rows[row.id === 'img' ? 0 : 1], query)] : [] };
+          return { data: selected ? [row] : [] };
         }
+        if (path === '/v1/appAssetLibraryImages/img') return { data: image };
+        if (path === '/v1/appAssetLibraryVideos/vid') return { data: video };
+        if (path === '/v1/appAssetLibraryRefData/ref') return { data: { id: 'ref', attributes: {} } };
         if (path === '/v1/appAssetLibraryPlacements/pi' || path === '/v1/appAssetLibraryPlacements/pv') return { data: select(rows[path.endsWith('/pi') ? 0 : 1], query) };
-        if (path.endsWith('/placements')) return { data: rows.map((row) => select(row, query)), included: [image, video] };
+        if (path === '/v1/appAssetLibraryImages/img/placements') return { data: [select(rows[0], query)] };
+        if (path === '/v1/appAssetLibraryVideos/vid/placements') return { data: [select(rows[1], query)] };
+        if (path.endsWith('/placements')) return { data: rows.map((row) => select(row, query)), included: cell.action === 'list' ? [] : [image, video] };
         if (path === '/v1/appAssetLibraryRefData') return { data: [{ id: 'ref', attributes: {} }] };
         throw new Error(`Unexpected GET ${path}`);
       }),
@@ -135,14 +139,32 @@ describe('media target × action coverage', () => {
         await writeFile(path, Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,1,2,3,4]));
         Object.assign(args, { file_path: path, category: 'APP_SCREENSHOTS_AND_PREVIEWS', ...(cell.target === 'library' ? {} : { placement_type: 'APP_SCREENSHOT' }) });
       } else if (cell.action === 'remove' || cell.action === 'reorder' || (cell.action === 'delete' && cell.target !== 'library')) Object.assign(args, { placement_ids: cell.action === 'reorder' ? ['pv', 'pi'] : ['pi'], ...(cell.action === 'reorder' ? { placement_group: 'phone' } : {}), ...(cell.macro === 'media__arrange' ? { action: cell.action } : {}) });
-      else if (cell.action === 'delete') Object.assign(args, { asset_ids: ['img'] });
-      else if (cell.action !== 'list') Object.assign(args, { action: cell.action, asset_ids: [cell.action === 'poster' ? 'vid' : 'img'], ...(cell.action === 'place' ? { placement_type: 'APP_SCREENSHOT' } : {}), ...(cell.action === 'poster' ? { preview_frame_time_code: '00:00:05:00' } : {}), ...(cell.action === 'rename' ? { reference_name: 'New hero' } : {}) });
+      else if (cell.action === 'delete') Object.assign(args, { asset_ids: ['img', 'vid'] });
+      else if (cell.action !== 'list') Object.assign(args, { action: cell.action, asset_ids: cell.action === 'archive' ? ['img', 'vid'] : [cell.action === 'poster' ? 'vid' : 'img'], ...(cell.action === 'place' ? { placement_type: 'APP_SCREENSHOT' } : {}), ...(cell.action === 'poster' ? { preview_frame_time_code: '00:00:05:00' } : {}), ...(cell.action === 'rename' ? { reference_name: 'New hero' } : {}) });
       const result: any = await executeMediaTool(cell.macro, args, { http: http as any });
       if (cell.action === 'list') expect(result.assets.length).toBeGreaterThan(0);
       else expect(result.ok, `${cell.target}/${cell.action}`).toBe(true);
-      if (cell.action === 'upload') expect(http.uploadAssetPart).toHaveBeenCalledOnce();
-      if (cell.action === 'delete' || cell.action === 'remove') expect(http.delete).toHaveBeenCalledOnce();
-      if (cell.action === 'archive' || cell.action === 'rename' || cell.action === 'poster') expect(http.patch).toHaveBeenCalledOnce();
+      if (cell.action === 'list' && cell.target === 'library') {
+        const byIds: any = await executeMediaTool(cell.macro, { ...args, library_id: 'lib', ref_data_id: 'ref' }, { http: http as any });
+        expect(byIds.libraryId).toBe('lib'); expect(byIds.limits[0].id).toBe('ref');
+      }
+      if (cell.action === 'upload') {
+        const path = join(directory!, 'preview.mov');
+        await writeFile(path, Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x71,0x74,0x20,0x20]));
+        const uploaded: any = await executeMediaTool(cell.macro, { ...args, file_path: path, ...(cell.target === 'library' ? {} : { placement_type: 'APP_PREVIEW' }) }, { http: http as any });
+        expect(uploaded.ok).toBe(true); expect(http.uploadAssetPart).toHaveBeenCalledTimes(2);
+      }
+      if (cell.action === 'rename') {
+        const renamed: any = await executeMediaTool(cell.macro, { ...args, asset_ids: ['vid'] }, { http: http as any });
+        expect(renamed.ok).toBe(true);
+      }
+      const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      for (const operation of cell.operations) {
+        const catalog = mediaOperation(operation);
+        const pattern = new RegExp(`^${catalog.path.split('{id}').map(escape).join('[^/]+')}$`);
+        const method = catalog.method.toLowerCase() as 'get' | 'post' | 'patch' | 'delete';
+        expect(http[method].mock.calls.some(([path]) => pattern.test(path)), `${cell.target}/${cell.action} never called ${catalog.method} ${catalog.path}`).toBe(true);
+      }
     } finally { if (directory) await rm(directory, { recursive: true, force: true }); }
   });
 });
