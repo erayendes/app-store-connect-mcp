@@ -6,13 +6,19 @@ import { loadConfig } from './core/config.js';
 import { ConfigError } from './core/errors.js';
 import {
   createServer,
-  createRemovedProfileServer,
+  createUnknownProfileServer,
   servedToolCount,
   VERSION,
 } from './server.js';
 import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
-import { PROFILES, REMOVED_PROFILES, resolveSelection, toolCountFor, type ProfileSelection } from './profiles.js';
+import {
+  PROFILES,
+  resolveSelection,
+  toolCountFor,
+  unknownProfileMessage,
+  type ProfileSelection,
+} from './profiles.js';
 import { PACKAGE, serverName } from './clients.js';
 
 /** Exported so a test can prove the profile list here never drifts from the code. */
@@ -26,12 +32,15 @@ Usage:
 
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "ASC-<Profile>"). Add one entry per profile to
-your client config and pick per project. No profile = the classic combined
-server.
+your client config and pick per project. Register "core" next to them: app
+lookup, tool search and the screenshot and asset-library tools live there and
+nowhere else. No profile = the classic combined server.
 
 A profile can be narrowed to some of its sub-profiles with a colon:
+  asc-mcp core                            app lookup, search, media (ASC-Core)
   asc-mcp monetization                    everything the profile carries
-  asc-mcp monetization:subscription-pricing,subscription-offers
+  asc-mcp monetization:subscription,subscription-offers
+  asc-mcp testflight --with-core          one process: the profile plus core
 
 Profiles:
 ${PROFILES.map((p) => {
@@ -67,6 +76,8 @@ Options:
                          By default Heimdall asks (via MCP elicitation) before
                          a revenue, destructive, infrastructure or access level
                          write and stays quiet on the rest.
+  --with-core            (profile mode) Also serve the core profile's tools from
+                         this server, for a client that runs only one process.
   --include-deprecated   Also load operations Apple has marked deprecated.
   --dry-run              Writes never reach Apple: each mutating call returns
                          what WOULD have been sent (method, path, body, risk)
@@ -137,25 +148,18 @@ async function main(): Promise<void> {
     return;
   }
 
-  // A profile that no longer exists starts anyway, with a single tool that
-  // explains where its tools went — see createRemovedProfileServer.
-  const removedName = positional[0]?.split(':', 1)[0];
-  if (removedName && REMOVED_PROFILES[removedName]) {
-    serveStdio(() => createRemovedProfileServer(removedName));
-    console.error(
-      `asc-${removedName} v${VERSION}: this profile was removed. ` +
-        `${REMOVED_PROFILES[removedName].summary}`
-    );
-    return;
-  }
-
   let selection: ProfileSelection | undefined;
   if (positional.length) {
     try {
       selection = resolveSelection(positional[0]);
     } catch (err) {
-      console.error((err as Error).message);
-      process.exit(1);
+      // Someone at a terminal reads the error and fixes the argument.
+      if (process.stdin.isTTY) {
+        console.error((err as Error).message);
+        process.exit(1);
+      }
+      serveUnknownProfile(positional[0], (err as Error).message);
+      return;
     }
   }
 
@@ -195,6 +199,41 @@ async function main(): Promise<void> {
   console.error(
     `${scope} v${VERSION} ready (spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
   );
+}
+
+/**
+ * How long a tombstone waits for an MCP client before it gives up and exits.
+ * A client sends `initialize` within a second of spawning the process; ten is
+ * generous, and short enough that a script piping nothing in is not left
+ * hanging.
+ */
+export const TOMBSTONE_WAIT_MS = 10_000;
+
+/**
+ * A profile argument that does not resolve, with no terminal to report it to:
+ * almost certainly an MCP client running an entry written for an older
+ * version. Serve the one-tool tombstone (createUnknownProfileServer) so the
+ * agent can relay the fix. If no client speaks within TOMBSTONE_WAIT_MS this
+ * was not one after all, so say it on stderr and fail like the terminal path.
+ */
+function serveUnknownProfile(spec: string, reason: string): void {
+  const message = unknownProfileMessage(spec, reason);
+  let spoken = false;
+  const giveUp = () => {
+    if (spoken) return;
+    console.error(message);
+    process.exit(1);
+  };
+  const timer = setTimeout(giveUp, TOMBSTONE_WAIT_MS);
+  // Input closed before anything arrived: nothing ever will, so do not wait.
+  process.stdin.once('end', giveUp);
+  // serveStdio calls the factory on the client's opening message.
+  serveStdio(() => {
+    spoken = true;
+    clearTimeout(timer);
+    return createUnknownProfileServer(spec, reason);
+  });
+  console.error(`${serverName(spec)} v${VERSION}: unknown profile "${spec}". ${reason.split('\n')[0]}`);
 }
 
 /**

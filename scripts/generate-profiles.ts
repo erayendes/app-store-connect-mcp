@@ -22,15 +22,54 @@ import { OPERATIONS } from '../src/generated/operations.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-/**
- * The profile injected into every server. Named `core` in the sheet; it carries
- * `apps.list`/`apps.get` (nearly every call needs an app ID first) plus the four
- * relationship listings more than one profile needs.
- */
-const CORE_PROFILE = 'core';
-
 /** Rows whose tool is written by hand rather than generated from Apple's spec. */
 const MANUAL_MARKER = '(elle yazılmış)';
+
+/**
+ * The profile column for an operation that belongs to no profile. These are
+ * reverse reads (`beta_groups.app.get`: which app owns this group) that no
+ * workflow needs, because every profile reaches the same resource from the app
+ * side. They stay loadable with `--domains` and count as placed for the orphan
+ * test; nothing in profile mode serves them.
+ */
+const PROFILELESS_MARKER = '(profilsiz)';
+
+/**
+ * Apple exposes most to-many relationships from both ends:
+ * `/v1/betaGroups/{id}/relationships/betaTesters` and
+ * `/v1/betaTesters/{id}/relationships/betaGroups` make the same link. Loading
+ * both is two tools a model has to tell apart for one action, so the sheet
+ * keeps one direction and drops the other. This is the record of which one was
+ * dropped and what it was dropped in favour of — operation -> its twin.
+ *
+ * Validated below: both ends exist in the spec, and the twin is in a profile,
+ * so dropping one side can never drop the action.
+ */
+const TWIN_OF: Record<string, string> = {
+  'beta_groups.beta_testers.add': 'beta_testers.beta_groups.add',
+  'beta_groups.beta_testers.remove': 'beta_testers.beta_groups.remove',
+  'builds.beta_groups.add': 'beta_groups.builds.add',
+  'builds.beta_groups.remove': 'beta_groups.builds.remove',
+  'beta_testers.builds.add': 'builds.individual_testers.add',
+  'beta_testers.builds.remove': 'builds.individual_testers.remove',
+  'beta_testers.apps.remove': 'apps.beta_testers.remove',
+  'app_store_versions.app_clip_default_experience.set':
+    'app_clip_default_experiences.release_with_app_store_version.set',
+  'game_center_leaderboards_v2.challenge.set': 'game_center_challenges.leaderboard_v2.set',
+  'game_center_achievements_v2.activity.set': 'game_center_activities.achievements_v2.add',
+  'game_center_leaderboards_v2.activity.set': 'game_center_activities.leaderboards_v2.add',
+  // Not a relationship pair but the same read twice: the content by its own
+  // id, and the content through the in-app purchase that owns it.
+  'in_app_purchase_contents.get': 'in_app_purchases_v2.content.get',
+};
+
+/**
+ * Operations a hand-written macro replaces outright — operation -> macro name.
+ * The raw tool is then not loaded anywhere, and the orphan test counts it as
+ * placed through the macro. Empty until the media macros land; validated that
+ * the macro is a hand-written tool the sheet knows.
+ */
+const MACRO_COVERED: Record<string, string> = {};
 
 /** Hand-written tools live in these families; anything else is a typo. */
 const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__'];
@@ -126,6 +165,32 @@ function validate(rows: Row[]): void {
     seen.add(triple);
   }
 
+  const placed = new Set(
+    rows.filter((r) => r.profile !== PROFILELESS_MARKER && r.operation !== MANUAL_MARKER).map((r) => r.operation)
+  );
+  for (const [dropped, twin] of Object.entries(TWIN_OF)) {
+    if (!byName.has(dropped)) problems.push(`TWIN_OF: "${dropped}" is not in the spec.`);
+    if (!byName.has(twin)) problems.push(`TWIN_OF: twin "${twin}" of "${dropped}" is not in the spec.`);
+    else if (!placed.has(twin)) {
+      problems.push(`TWIN_OF: "${dropped}" was dropped for "${twin}", which is in no profile.`);
+    }
+    if (placed.has(dropped)) problems.push(`TWIN_OF: "${dropped}" is marked dropped but has a row.`);
+  }
+
+  for (const row of rows) {
+    if (row.profile === PROFILELESS_MARKER && placed.has(row.operation)) {
+      problems.push(`line ${row.line}: "${row.tool}" is marked ${PROFILELESS_MARKER} but also sits in a profile.`);
+    }
+  }
+
+  const macros = new Set(rows.filter((r) => r.operation === MANUAL_MARKER).map((r) => r.tool));
+  for (const [covered, macro] of Object.entries(MACRO_COVERED)) {
+    if (!byName.has(covered)) problems.push(`MACRO_COVERED: "${covered}" is not in the spec.`);
+    if (!macros.has(macro)) {
+      problems.push(`MACRO_COVERED: "${covered}" names "${macro}", which is no hand-written tool in the sheet.`);
+    }
+  }
+
   if (problems.length) {
     throw new Error(`spec/profiles.csv has ${problems.length} problem(s):\n  ` + problems.join('\n  '));
   }
@@ -144,10 +209,15 @@ interface ProfileData {
   subProfiles: SubProfileData[];
 }
 
-function build(rows: Row[]): { core: SubProfileData; profiles: ProfileData[] } {
+function build(rows: Row[]): { profiles: ProfileData[]; profileless: string[] } {
   const profiles = new Map<string, Map<string, SubProfileData>>();
+  const profileless = new Set<string>();
 
   for (const row of rows) {
+    if (row.profile === PROFILELESS_MARKER) {
+      profileless.add(row.operation);
+      continue;
+    }
     if (!profiles.has(row.profile)) profiles.set(row.profile, new Map());
     const subs = profiles.get(row.profile)!;
     if (!subs.has(row.subProfile)) {
@@ -161,30 +231,22 @@ function build(rows: Row[]): { core: SubProfileData; profiles: ProfileData[] } {
     const sub = subs.get(row.subProfile)!;
     if (row.operation === MANUAL_MARKER) sub.manualTools.push(row.tool);
     else sub.operations.push(row.operation);
-    if (row.rootResource && !sub.rootResources.includes(row.rootResource)) {
+    // A macro row names `(makro)` here: not an Apple resource, nothing to reach.
+    if (row.rootResource && row.rootResource !== '(makro)' && !sub.rootResources.includes(row.rootResource)) {
       sub.rootResources.push(row.rootResource);
     }
   }
 
-  const coreSubs = profiles.get(CORE_PROFILE);
-  if (!coreSubs) throw new Error(`spec/profiles.csv has no "${CORE_PROFILE}" profile.`);
-  const core = [...coreSubs.values()][0];
-  if (coreSubs.size !== 1) {
-    throw new Error(`"${CORE_PROFILE}" must be a flat set, but has sub-profiles: ${[...coreSubs.keys()]}`);
-  }
-  profiles.delete(CORE_PROFILE);
-
-  // Core rides along in every server, so repeating it inside a sub-profile only
-  // inflates the tool counts the picker shows.
-  const coreOps = new Set(core.operations);
-  for (const subs of profiles.values()) {
-    for (const sub of subs.values()) {
-      sub.operations = sub.operations.filter((name) => !coreOps.has(name));
+  // A profile is either flat (one unnamed sub-profile) or split into named
+  // ones. A mix would leave rows that no `profile:sub` argument can select.
+  for (const [name, subs] of profiles) {
+    if (subs.size > 1 && subs.has('')) {
+      throw new Error(`"${name}" mixes rows without a sub-profile with named sub-profiles.`);
     }
   }
 
   return {
-    core,
+    profileless: [...profileless].sort(),
     profiles: [...profiles.entries()]
       .map(([name, subs]) => ({
         name,
@@ -197,7 +259,7 @@ function build(rows: Row[]): { core: SubProfileData; profiles: ProfileData[] } {
   };
 }
 
-function emit(core: SubProfileData, profiles: ProfileData[]): string {
+function emit(profiles: ProfileData[], profileless: string[]): string {
   const sub = (s: SubProfileData): string =>
     `    {\n` +
     `      name: ${JSON.stringify(s.name)},\n` +
@@ -205,6 +267,11 @@ function emit(core: SubProfileData, profiles: ProfileData[]): string {
     `      manualTools: ${JSON.stringify(s.manualTools.sort())},\n` +
     `      rootResources: ${JSON.stringify(s.rootResources.sort())},\n` +
     `    },`;
+  const record = (r: Record<string, string>): string => {
+    const keys = Object.keys(r).sort();
+    if (!keys.length) return '{}';
+    return `{\n` + keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(r[k])},`).join('\n') + `\n}`;
+  };
 
   return (
     `// AUTO-GENERATED — do not edit by hand.\n` +
@@ -224,36 +291,36 @@ function emit(core: SubProfileData, profiles: ProfileData[]): string {
     `  name: string;\n` +
     `  subProfiles: GeneratedSubProfile[];\n` +
     `}\n\n` +
-    `/** Injected into every profile: without an app ID no workflow can start. */\n` +
-    `export const CORE: GeneratedSubProfile = {\n` +
-    `  name: ${JSON.stringify(core.name)},\n` +
-    `  operations: ${JSON.stringify(core.operations.sort())},\n` +
-    `  manualTools: ${JSON.stringify(core.manualTools.sort())},\n` +
-    `  rootResources: ${JSON.stringify(core.rootResources.sort())},\n` +
-    `};\n\n` +
     `export const PROFILE_DATA: GeneratedProfile[] = [\n` +
     profiles
       .map((p) => `  {\n    name: ${JSON.stringify(p.name)},\n    subProfiles: [\n` +
         p.subProfiles.map(sub).join('\n') + `\n    ],\n  },`)
       .join('\n') +
-    `\n];\n`
+    `\n];\n\n` +
+    `/** In no profile on purpose (reverse reads); reachable only with --domains. */\n` +
+    `export const PROFILELESS: string[] = ${JSON.stringify(profileless)};\n\n` +
+    `/** One direction of a relationship pair, dropped for its twin (operation -> twin). */\n` +
+    `export const TWIN_OF: Record<string, string> = ${record(TWIN_OF)};\n\n` +
+    `/** Operations a hand-written macro replaces outright (operation -> macro). */\n` +
+    `export const MACRO_COVERED: Record<string, string> = ${record(MACRO_COVERED)};\n`
   );
 }
 
 function main(): void {
   const rows = readRows();
   validate(rows);
-  const { core, profiles } = build(rows);
+  const { profiles, profileless } = build(rows);
 
-  writeFileSync(resolve(ROOT, 'src/generated/profiles-data.ts'), emit(core, profiles));
+  writeFileSync(resolve(ROOT, 'src/generated/profiles-data.ts'), emit(profiles, profileless));
 
-  const count = (s: SubProfileData): number => s.operations.length + s.manualTools.length;
   const named = profiles.reduce((n, p) => n + p.subProfiles.filter((s) => s.name).length, 0);
   const report = [
-    `Profiles:       ${profiles.length} (+ core: ${count(core)} tools, injected everywhere)`,
+    `Profiles:       ${profiles.length}`,
     `Sub-profiles:   ${named} named, ` +
       `${profiles.filter((p) => p.subProfiles.length === 1 && !p.subProfiles[0].name).length} profiles without`,
-    `Rows:           ${rows.length}`,
+    `Rows:           ${rows.length} (${profileless.length} profile-less; ` +
+      `${Object.keys(TWIN_OF).length} operations dropped for a twin, ` +
+      `${Object.keys(MACRO_COVERED).length} covered by a macro)`,
     '',
     ...profiles.map((p) => {
       // Union, not sum: a tool may sit in several sub-profiles on purpose, and

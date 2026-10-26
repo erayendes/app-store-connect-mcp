@@ -22,13 +22,29 @@ import type { AddressInfo } from 'node:net';
 import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
 import { loadConfig } from './core/config.js';
 import type { JwtCredentials } from './core/jwt.js';
-import { CLIENTS, OTHER_CLIENT, clientHint, isPresent, profileLabel, serverName, HEIMDALL_VERSION, claudeDesktop, PACKAGE } from './clients.js';
+import {
+  CLIENTS,
+  CORE_SERVER,
+  CORE_SPEC,
+  OTHER_CLIENT,
+  clientHint,
+  isPresent,
+  profileLabel,
+  serverName,
+  HEIMDALL_VERSION,
+  claudeDesktop,
+  PACKAGE,
+} from './clients.js';
 import { TOKENS_PER_TOOL } from './profiles.js';
 import {
+  DOES,
   KEYS_URL,
   NARROW_FIRST,
+  PLAIN,
   applyPlan,
   buildRows,
+  planBits,
+  removedLabels,
   keyIsAdmin,
   isValidIssuerId,
   isValidKeyId,
@@ -55,49 +71,22 @@ export interface WebSetupOptions {
 
 const IDLE_MS = 30 * 60_000;
 
-/** A plain name beside the profile's own, for someone who does not know the API's areas. */
-const PLAIN: Record<string, string> = {
-  access: 'Team and testers',
-  analytics: 'Sales and reports',
-  'app-clips': 'App Clips',
-  'app-info': 'App details',
-  'background-assets': 'Downloadable content',
-  distribution: 'Releases',
-  'game-center': 'Game Center',
-  marketing: 'Store page and reviews',
-  monetization: 'Prices and subscriptions',
-  provisioning: 'Certificates and devices',
-  testflight: 'Beta testing',
-  webhooks: 'Notifications to your server',
-  'xcode-cloud': 'Builds in the cloud',
-};
-
-/** What each profile is for, in the words someone setting it up would use. */
-const DOES: Record<string, string> = {
-  access: 'Invite people to your team and manage TestFlight testers and groups.',
-  analytics: 'Downloads, sales, proceeds and how the app performs.',
-  'app-clips': 'The instant, lightweight version of your app.',
-  'app-info': 'Name, category, age rating and the countries your app is sold in.',
-  'background-assets': 'Content packs your app downloads after it is installed.',
-  distribution: 'New versions, builds, sending to review and phased release.',
-  'game-center': 'Achievements, leaderboards and challenges.',
-  marketing: 'Screenshots, product pages, in-app events and customer reviews.',
-  monetization: 'Subscriptions, in-app purchases, offers and prices.',
-  provisioning: 'Signing certificates, provisioning profiles and test devices.',
-  testflight: 'Beta build details and what testers report.',
-  webhooks: 'Let App Store Connect tell your own server when something happens.',
-  'xcode-cloud': 'Build workflows and why a build failed.',
-};
-
 const MAX_BODY = 64 * 1024;
 
+/** The plan as the page shows it: the same pieces the terminal prints, kept apart. */
 export const planForPage = (steps: ClientPlan[]) => steps.map((p) => ({
   client: p.client.label,
-  add: p.toAdd.filter((s) => !p.toSwitch.includes(s)).map(serverName),
-  remove: p.toRemove,
+  add: [
+    ...p.toAdd.filter((s) => !p.toSwitch.includes(s) && s !== CORE_SPEC).map(serverName),
+    ...(p.toAdd.includes(CORE_SPEC) ? (p.coreAdded.length ? p.coreAdded : [CORE_SERVER]) : []),
+  ],
+  remove: removedLabels(p),
   quiet: p.toSwitch.length > 0,
   rewrites: p.rewrites,
   userManaged: p.userManaged,
+  coreWithheld: p.coreWithheld,
+  deadDeleted: [...p.deadDeleted.values()],
+  deadReported: p.deadReported,
 }));
 
 class HttpError extends Error {
@@ -176,7 +165,9 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           tools: Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0),
           ktokens: Math.max(1, Math.round((Number(/\((\d+)\)$/.exec(r.item.label)?.[1] ?? 0) * TOKENS_PER_TOOL) / 1000)),
           hint: r.item.hint ?? '',
-          ...(r.subProfile ? {} : { title: profileLabel(r.profile.name), plain: PLAIN[r.profile.name], does: DOES[r.profile.name] }),
+          ...(r.subProfile
+            ? { does: DOES[`${r.profile.name}:${r.subProfile.name}`] }
+            : { title: profileLabel(r.profile.name), plain: PLAIN[r.profile.name], does: DOES[r.profile.name] }),
           roles: rolesFor(r),
           parent: r.item.parent ?? null,
           vendor: r.profile.name === 'analytics',
@@ -240,15 +231,10 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
 
       if (dryRun) {
         log('Dry run — nothing was written and Apple was not contacted.');
+        // The terminal's own wording, so a dry run reads like the plan it rehearses.
         for (const p of steps) {
-          const added = p.toAdd.filter((x) => !p.toSwitch.includes(x)).map(serverName);
-          const bits = [
-            ...(added.length ? [`add ${added.join(', ')}`] : []),
-            ...(p.toRemove.length ? [`remove ${p.toRemove.join(', ')}`] : []),
-            ...(p.rewrites.length ? [`rewrite ${p.rewrites.join(', ')}`] : []),
-            ...(p.userManaged.length ? [`leave user-managed ${p.userManaged.join(', ')}`] : []),
-          ];
-          if (bits.length) log(`${p.client.label}: would ${bits.join(', ')}`);
+          const bits = planBits(p);
+          if (bits.length) log(`${p.client.label}: would ${bits.join('  ')}`);
         }
       } else {
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;

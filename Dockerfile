@@ -44,4 +44,6 @@ USER node
 # warn against. Booting bare showed introspection a shape no real install has.
 # `distribution` is representative rather than flattering — release, builds and review,
 # the most common workflow. A smaller profile would score better and prove less.
-CMD ["node", "dist/index.js", "distribution"]
+# `--with-core`: a container is one process, so app lookup, tool search and the media
+# tools that a real install gets from a separate ASC-Core server ride along here.
+CMD ["node", "dist/index.js", "distribution", "--with-core"]

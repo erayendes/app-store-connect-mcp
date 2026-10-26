@@ -59,6 +59,8 @@ jobs:
       - name: Register the profile this job needs
         # `distribution` alone: version localizations live there, and a job that
         # cannot reach the pricing tools cannot touch a price by accident.
+        # `register` adds ASC-Core beside it on its own: finding the app by name
+        # (apps__list) lives there, and nowhere else since 3.0.
         run: npx -y @erayendes/asc-mcp register distribution --clients=claude
 
       - name: Write the release notes
@@ -80,7 +82,7 @@ jobs:
         run: |
           npx -y @anthropic-ai/claude-code \
             --print \
-            --allowedTools 'mcp__asc-distribution__*' \
+            --allowedTools 'mcp__ASC-Distribution__*' 'mcp__ASC-Core__*' \
             "Here are the commits since the last release:
 
           $COMMITS

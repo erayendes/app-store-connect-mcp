@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { PROFILES, resolveSelection, toolCountFor } from '../src/profiles.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toolNameFor } from '../src/core/registry.js';
+import { serverName } from '../src/clients.js';
 
 const readme = readFileSync('examples/README.md', 'utf8');
 const workflow = readFileSync('examples/ci/release-notes.yml', 'utf8');
@@ -31,6 +32,12 @@ describe('the starter packs add up', () => {
     expect(STARTER_ROWS.length).toBe(14);
   });
 
+  // Since 3.0 a pack lists `core` like any other server: it is what puts app
+  // lookup and search in front of the model, and it costs context like one.
+  it('puts core in every pack', () => {
+    for (const m of STARTER_ROWS) expect(m[1], m[0]).toMatch(/^`core` \+ /);
+  });
+
   it.each(STARTER_ROWS.map((m) => [m[1], Number(m[2])]))(
     '%s serves %i tools',
     (spec, claimed) => {
@@ -39,6 +46,8 @@ describe('the starter packs add up', () => {
         .map((s) => s.replace(/`/g, ''))
         .reduce((sum, name) => sum + toolCountFor(resolveSelection(name)), 0);
       expect(total).toBe(claimed);
+      // And the command shown can register it.
+      for (const name of String(spec).split(' + ')) expect(() => resolveSelection(name.replace(/`/g, ''))).not.toThrow();
     }
   );
 });
@@ -67,7 +76,7 @@ describe('everything the examples name exists', () => {
       ...OPERATIONS.map((op) => toolNameFor(op)),
       // Hand-written tools are not in the generated catalogue.
       'asc__status', 'asc__search_tools', 'asc__discover_domains', 'asc__call', 'asc__describe',
-      'asc__load', 'preflight__check_version', 'preflight__check_subscription', 'listing__get_screenshots',
+      'preflight__check_version', 'preflight__check_subscription', 'listing__get_screenshots',
       'listing__upload_screenshot', 'analytics__get_report', 'ci__diagnose_run', 'reviews_ai__triage',
       'reviews_ai__daily_briefing', 'reviews_ai__draft_response',
       'pricing__get_subscription_price', 'pricing__set_subscription_price',
@@ -97,6 +106,14 @@ describe('the CI example uses settings the server reads', () => {
     // The example's whole safety story. Someone who runs it to see what it does
     // must not discover the answer on a live version.
     expect(workflow).toMatch(/dry_run:[\s\S]*?default: true/);
+  });
+
+  it('allows exactly the servers register writes, under the names it writes them', () => {
+    // register adds ASC-Core beside the profile; the agent needs it to find
+    // the app at all. Allowing a name register never writes allows nothing.
+    const spec = /register (\S+) --clients=claude/.exec(workflow)![1];
+    const allowed = [...workflow.matchAll(/'mcp__([^_']+)__\*'/g)].map((m) => m[1]).sort();
+    expect(allowed).toEqual([serverName(spec), serverName('core')].sort());
   });
 
   it('turns confirmation off explicitly rather than leaving it to fail closed', () => {

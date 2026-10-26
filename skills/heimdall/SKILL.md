@@ -184,9 +184,10 @@ a link.
   `asc__search_tools` searches all 1011 operations and names the profile that
   owns each one; the server's own error messages print the exact command to add
   it. Do not conclude the operation does not exist.
-- `asc__load` adds a sub-profile for this session, but some clients never show
-  the new tools mid-session (the Claude desktop app's Code tab among them), and
-  waiting a turn does not help. Reads work at once through `asc__call`. For the
-  tools themselves, run the `register` command its reply names — for example
-  `npx -y @erayendes/asc-mcp register access:users,beta-groups` — once the user
+- There is no way to add tools mid-session: some clients never show a changed
+  tool list (the Claude desktop app's Code tab among them), and waiting a turn
+  does not help. On a server started with only some of its sub-profiles, reads
+  from the rest work at once through `asc__call`. For the tools themselves, run
+  the `register` command the server's reply names — for example
+  `npx -y @erayendes/asc-mcp register testflight:groups,testers` — once the user
   says yes, then ask them to restart their MCP client.

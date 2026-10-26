@@ -12,7 +12,7 @@
  * — which `npm test` does not do. They skip rather than lie when dist is stale.
  */
 import { describe, it, expect } from 'vitest';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -24,6 +24,40 @@ const built = existsSync(DIST);
 
 const run = (bin: string, args: string[]): string =>
   execFileSync('node', [bin, ...args], { encoding: 'utf8', timeout: 20_000 });
+
+/**
+ * A profile argument that no longer resolves — `app-info` from a 2.x config, or
+ * a typo. With no terminal it is almost certainly an MCP client, so the server
+ * starts with one tool that tells the agent what to relay. With nothing on the
+ * other end it must still fail, not hang.
+ */
+describe.skipIf(!built)('an unknown profile', () => {
+  const runServer = (input: string) =>
+    spawnSync(process.execPath, [DIST, 'app-info'], {
+      input,
+      encoding: 'utf8',
+      timeout: 20_000,
+      env: { ...process.env, ASC_CONFIG_DIR: mkdtempSync(join(tmpdir(), 'asc-empty-')) },
+    });
+
+  it('fails at once when input closes before any client speaks', () => {
+    const res = runServer('');
+    expect(res.status).toBe(1);
+    expect(res.stderr).toContain('npx -y @erayendes/asc-mcp setup');
+    expect(res.stderr).toContain('general');
+  });
+
+  it('serves the one tool that says to run setup, to a client that does speak', () => {
+    const rpc = (msg: object) => JSON.stringify({ jsonrpc: '2.0', ...msg }) + '\n';
+    const res = runServer(
+      rpc({ id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } } }) +
+        rpc({ method: 'notifications/initialized' }) +
+        rpc({ id: 2, method: 'tools/call', params: { name: 'asc__profile_unknown', arguments: {} } })
+    );
+    expect(res.stdout).toContain('ASC-AppInfo');
+    expect(res.stdout).toContain('asc-mcp setup');
+  });
+});
 
 describe.skipIf(!built)('the binary starts', () => {
   it('answers --version when run directly', () => {
@@ -110,23 +144,25 @@ fs.writeFileSync(file, JSON.stringify(doc));
   const fakeBinIt = process.platform === 'win32' ? it.skip : it;
   it('writes the profiles it was given, sub-profile argument and all', () => {
     const { home, cursor } = sandbox();
-    const { out, code } = register(home, ['monetization:storekit', 'analytics', '--clients=cursor']);
+    const { out, code } = register(home, ['monetization:transactions', 'analytics', '--clients=cursor']);
     expect(code).toBe(0);
     expect(out).toContain('✓ added ASC-Monetization');
-    expect(servers(cursor)).toEqual(['ASC-Monetization', 'ASC-Analytics']);
+    // Core comes along: app lookup and search live nowhere else.
+    expect(out).toContain('✓ added ASC-Core');
+    expect(servers(cursor)).toEqual(['ASC-Monetization', 'ASC-Analytics', 'ASC-Core']);
     const args = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Monetization'].args;
-    expect(args.at(-1)).toBe('monetization:storekit');
+    expect(args.at(-1)).toBe('monetization:transactions');
     rmSync(home, { recursive: true, force: true });
   });
 
   fakeBinIt('registers VS Code through its real client definition with a fake code binary', () => {
     const { home } = sandbox();
-    const { out, code } = register(home, ['app-info', '--clients=vscode'], fakeCode(home));
+    const { out, code } = register(home, ['general', '--clients=vscode'], fakeCode(home));
     const path = codeConfig(home);
     expect(code).toBe(0);
-    expect(out).toContain('added ASC-AppInfo');
+    expect(out).toContain('added ASC-General');
     expect(JSON.parse(readFileSync(join(home, 'code-argv.json'), 'utf8'))[0]).toBe('--add-mcp');
-    expect(JSON.parse(readFileSync(path, 'utf8')).servers['ASC-AppInfo'].args.at(-1)).toBe('app-info');
+    expect(JSON.parse(readFileSync(path, 'utf8')).servers['ASC-General'].args.at(-1)).toBe('general');
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -138,14 +174,14 @@ fs.writeFileSync(file, JSON.stringify(doc));
     const jsonc = `{
   // A user entry with a trailing comma and a URL string.
   "servers": {
-    "ASC-AppInfo": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "app-info", "--url=https://example.test/a/*"],
+    "ASC-General": { "command": "npx", "args": ["-y", "@erayendes/asc-mcp", "general", "--url=https://example.test/a/*"],
       "env": { "ASC_KEY_ID": "test-only-secret", }, },
   },
 }`;
     writeFileSync(path, jsonc);
-    const { out, code } = register(home, ['app-info', '--clients=vscode'], env);
+    const { out, code } = register(home, ['general', '--clients=vscode'], env);
     expect(code).toBe(0);
-    expect(out).toContain('user-managed, unchanged: ASC-AppInfo');
+    expect(out).toContain('user-managed, unchanged: ASC-General');
     expect(readFileSync(path, 'utf8')).toBe(jsonc);
     expect(existsSync(join(home, 'code-argv.json'))).toBe(false);
     rmSync(home, { recursive: true, force: true });
@@ -156,12 +192,12 @@ fs.writeFileSync(file, JSON.stringify(doc));
     const env = fakeCode(home);
     const path = codeConfig(home);
     mkdirSync(resolve(path, '..'), { recursive: true });
-    writeFileSync(path, '{ "servers": { "ASC-AppInfo": ');
-    const { out, code } = register(home, ['app-info', '--clients=vscode'], env);
+    writeFileSync(path, '{ "servers": { "ASC-General": ');
+    const { out, code } = register(home, ['general', '--clients=vscode'], env);
     expect(code).toBe(0);
     expect(out).toContain('unreadable');
     expect(existsSync(join(home, 'code-argv.json'))).toBe(false);
-    expect(readFileSync(path, 'utf8')).toBe('{ "servers": { "ASC-AppInfo": ');
+    expect(readFileSync(path, 'utf8')).toBe('{ "servers": { "ASC-General": ');
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -185,18 +221,21 @@ if (args[1] === 'remove') delete doc.mcpServers[name];
 fs.writeFileSync(path, JSON.stringify(doc));
 `);
     chmodSync(bin, 0o755);
-    const old = { command: 'npx', args: ['-y', '@erayendes/asc-mcp@beta', 'app-info', '--read-only'],
+    const old = { command: 'npx', args: ['-y', '@erayendes/asc-mcp@beta', 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 19 };
-    writeFileSync(join(home, '.claude.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': old } }));
-    const { code } = register(home, ['app-info', '--clients=claude'],
+    writeFileSync(join(home, '.claude.json'), JSON.stringify({ mcpServers: { 'ASC-General': old } }));
+    const { code } = register(home, ['general', '--clients=claude'],
       { PATH: `${home}:${process.env.PATH}` });
     const calls = JSON.parse(readFileSync(join(home, 'claude-argv.json'), 'utf8'));
-    const updated = JSON.parse(readFileSync(join(home, '.claude.json'), 'utf8')).mcpServers['ASC-AppInfo'];
+    const updated = JSON.parse(readFileSync(join(home, '.claude.json'), 'utf8')).mcpServers['ASC-General'];
     expect(code).toBe(0);
-    expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json']);
+    expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json', 'add-json']);
     expect(JSON.parse(calls[2][5])).toEqual({ ...old,
-      args: ['-y', '@erayendes/asc-mcp', 'app-info', '--read-only'] });
+      args: ['-y', '@erayendes/asc-mcp', 'general', '--read-only'] });
     expect(updated).toEqual(JSON.parse(calls[2][5]));
+    // Core follows the profile's read-only, added as a whole entry too.
+    expect(calls[3][4]).toBe('ASC-Core');
+    expect(JSON.parse(calls[3][5])).toEqual({ command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'core', '--read-only'] });
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -206,7 +245,37 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const { home, cursor } = sandbox();
     register(home, ['analytics', '--clients=cursor']);
     register(home, ['webhooks', '--clients=cursor']);
-    expect(servers(cursor)).toEqual(['ASC-Analytics', 'ASC-Webhooks']);
+    expect(servers(cursor)).toEqual(['ASC-Analytics', 'ASC-Core', 'ASC-Webhooks']);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('gives core the read-only an entry has in its env', () => {
+    const { home, cursor } = sandbox();
+    writeFileSync(cursor, JSON.stringify({ mcpServers: {
+      'ASC-Analytics': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'analytics'], env: { ASC_READ_ONLY: 'true' } },
+    } }));
+    const { out } = register(home, ['webhooks', '--clients=cursor']);
+    expect(out).toContain('✓ added ASC-Core (--read-only)');
+    expect(JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Core'].args)
+      .toEqual(['-y', '@erayendes/asc-mcp', 'core', '--read-only']);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('deletes a dead entry of ours and names it, and only reports one the user manages', () => {
+    const { home, cursor } = sandbox();
+    const kept = { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'access:users'], env: { ASC_KEY_ID: 'kept-secret' } };
+    writeFileSync(cursor, JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'app-info', '--read-only'], env: { DEMO_MODE: 'demo-secret' } },
+      'ASC-Access': kept,
+    } }));
+    const { out, code } = register(home, ['general', '--clients=cursor']);
+    const entries = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers;
+    expect(code).toBe(0);
+    expect(out).toContain('✓ removed ASC-AppInfo (app-info; --read-only; env DEMO_MODE) — its profile no longer exists');
+    expect(out).toContain('dead entry left as is — ASC-Access (access:users; env ASC_KEY_ID): user-managed');
+    expect(out).not.toMatch(/demo-secret|kept-secret/);
+    expect(entries['ASC-AppInfo']).toBeUndefined();
+    expect(entries['ASC-Access']).toEqual(kept);
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -216,18 +285,23 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const guarded = { command: 'npx', args: ['-y', other, 'analytics'],
       env: { ASC_CONFIG_DIR: '/test-only/config' } };
     writeFileSync(cursor, JSON.stringify({ mcpServers: {
-      'ASC-AppInfo': { command: 'npx', args: ['-y', other, 'app-info', '--read-only'],
+      'ASC-General': { command: 'npx', args: ['-y', other, 'general', '--read-only'],
         env: { DEMO_MODE: 'yes' }, timeout: 10 },
       'ASC-Analytics': guarded,
     } }));
-    const { out, code } = register(home, ['app-info', 'analytics', '--clients=cursor']);
+    const { out, code } = register(home, ['general', 'analytics', '--clients=cursor']);
     const entries = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers;
     expect(code).toBe(0);
-    expect(entries['ASC-AppInfo']).toEqual({ command: 'npx',
-      args: ['-y', '@erayendes/asc-mcp', 'app-info', '--read-only'],
+    expect(entries['ASC-General']).toEqual({ command: 'npx',
+      args: ['-y', '@erayendes/asc-mcp', 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 10 });
     expect(entries['ASC-Analytics']).toEqual(guarded);
     expect(out).toContain('user-managed, unchanged: ASC-Analytics');
+    // One entry signs in through its own config dir, the other through the
+    // shared one: core cannot be shown to match both, so it is not added.
+    expect(out).toContain('ASC-Core not added');
+    expect(out).toContain('different App Store Connect accounts');
+    expect(entries['ASC-Core']).toBeUndefined();
     expect(out).not.toContain('/test-only/config');
     rmSync(home, { recursive: true, force: true });
   });
@@ -249,7 +323,7 @@ fs.writeFileSync(path, JSON.stringify(doc));
     register(home, ['analytics', '--clients=cursor']);
     // register never prunes: webhooks was not asked for, but it moves to the
     // new name rather than being lost.
-    expect(servers(cursor).sort()).toEqual(['ASC-Analytics', 'ASC-Webhooks', 'github'].sort());
+    expect(servers(cursor).sort()).toEqual(['ASC-Analytics', 'ASC-Core', 'ASC-Webhooks', 'github'].sort());
     rmSync(home, { recursive: true, force: true });
   });
 

@@ -36,7 +36,7 @@ import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, TYPED_BY_NAME, type RiskLevel } from '../src/core/risk.js';
 import { loadConfig } from '../src/core/config.js';
-import { createServer, SERVER_INSTRUCTIONS } from '../src/server.js';
+import { CORE_POINTER, createServer, SERVER_INSTRUCTIONS } from '../src/server.js';
 import { MUTATING_TAILS } from '../scripts/ax-breach.js';
 
 /**
@@ -180,10 +180,10 @@ const live = configured && existsSync(ENTRY);
 
 /** One write per risk level, with ids that match nothing. Every call is cancelled. */
 const SAMPLES: Array<{ profile: string; tool: string; args: Record<string, unknown>; risk: RiskLevel }> = [
-  { profile: 'access', tool: 'beta_groups__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'destructive' },
+  { profile: 'testflight', tool: 'beta_groups__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'destructive' },
   { profile: 'access', tool: 'users__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'users', id: 'gate-test-not-a-real-id', attributes: { roles: ['ADMIN'] } } } }, risk: 'access' },
   { profile: 'provisioning', tool: 'certificates__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'infrastructure' },
-  { profile: 'app-info', tool: 'apps__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'apps', id: 'gate-test-not-a-real-id', attributes: {} } } }, risk: 'public' },
+  { profile: 'general', tool: 'apps__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'apps', id: 'gate-test-not-a-real-id', attributes: {} } } }, risk: 'public' },
 ];
 
 interface Elicitation { message: string; schema: any }
@@ -251,7 +251,11 @@ function client(profile: string, args: string[] = ['--confirm']) {
       // The rules only work if the client is actually handed them. Asserting on
       // the constant would prove nothing — this is the one place the wiring is
       // visible, in the same handshake every real client performs.
-      expect(hello.result?.instructions, 'server sent no instructions').toBe(SERVER_INSTRUCTIONS);
+      // Every server here is a profile server without core, so it also says
+      // where app lookup and search went.
+      expect(hello.result?.instructions, 'server sent no instructions').toBe(
+        `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}`
+      );
       send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     },
     async call(name: string, args: Record<string, unknown>) {

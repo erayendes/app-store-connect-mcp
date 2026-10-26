@@ -40,7 +40,7 @@ describe('what a client receives', () => {
       if (path.endsWith('/subscriptions')) return { data: [{ id: 's1', attributes: { productId: 'monthly', name: 'Monthly' } }] } as any;
       return { data: path.endsWith('/appStoreReviewScreenshot') ? null : [] } as any;
     });
-    const client = await connect('monetization:subscription-catalog', { readOnly: true });
+    const client = await connect('monetization:subscription', { readOnly: true });
     try {
       // listTools registers output-schema validators in the SDK client.
       const tool = (await client.listTools()).tools.find((t) => t.name === 'preflight__check_subscription')!;
@@ -57,7 +57,7 @@ describe('what a client receives', () => {
   });
   it.each([false, true])('isolates the two preflight macros by exact profile membership (readOnly=%s)', async (readOnly) => {
     for (const [profile, offered, hidden] of [
-      ['monetization:subscription-catalog', 'preflight__check_subscription', 'preflight__check_version'],
+      ['monetization:subscription', 'preflight__check_subscription', 'preflight__check_version'],
       ['distribution:version', 'preflight__check_version', 'preflight__check_subscription'],
     ]) {
       const client = await connect(profile, { readOnly });
@@ -76,10 +76,10 @@ describe('what a client receives', () => {
     }
   });
   it('advertises the tools capability and identifies itself', async () => {
-    const client = await connect('app-info');
+    const client = await connect('general');
     expect(client.getServerCapabilities()?.tools).toBeDefined();
     const info = client.getServerVersion();
-    expect(info?.name).toBe('ASC-AppInfo');
+    expect(info?.name).toBe('ASC-General');
     // A version a client can report back is how a bug lands with a number
     // attached instead of "the App Store one".
     expect(info?.version).toMatch(/^\d+\.\d+\.\d+/);
@@ -112,7 +112,8 @@ describe('what a client receives', () => {
    * error is something the model can read and route around.
    */
   it('answers an unknown tool as a tool error, not a protocol error', async () => {
-    const client = await connect('app-info');
+    // Narrowed, so asc__call is offered and has to judge the name itself.
+    const client = await connect('general:legal');
     const res: any = await client.callTool({ name: 'asc__call', arguments: { tool: 'nope__nope' } });
     expect(res.isError).toBe(true);
     expect(String(res.content?.[0]?.text ?? '')).toMatch(/nope__nope|not a tool|Unknown/i);
@@ -127,7 +128,7 @@ describe('what a client receives', () => {
   });
 
   it.each([
-    ['iap-pricing', 'pricing__get_iap_price'],
+    ['in-app-purchases', 'pricing__get_iap_price'],
     ['app-price', 'pricing__get_app_price'],
   ])('offers only %s pricing reads in its read-only sub-profile', async (sub, expected) => {
     const client = await connect(`monetization:${sub}`, { readOnly: true });
@@ -138,16 +139,75 @@ describe('what a client receives', () => {
 
   it('offers the IAP price write only when the server can write', async () => {
     const names = async (readOnly: boolean) =>
-      (await (await connect('monetization:iap-pricing', { readOnly })).listTools()).tools
+      (await (await connect('monetization:in-app-purchases', { readOnly })).listTools()).tools
         .filter((t) => t.name.startsWith('pricing__'))
         .map((t) => t.name)
         .sort();
-    expect(await names(false)).toEqual(['pricing__get_iap_price', 'pricing__set_iap_price']);
+    expect(await names(false)).toEqual(['pricing__equalize_price', 'pricing__get_iap_price', 'pricing__set_iap_price']);
     expect(await names(true)).toEqual(['pricing__get_iap_price']);
   });
 
+  /**
+   * 3.0's split: app lookup, search and the media macros live in ASC-Core and
+   * nowhere else, so a profile server is smaller by all of them — and says so
+   * once, in its instructions, rather than leaving the model to look for
+   * apps__list here.
+   */
+  it('keeps core tools in core, and points a profile server at it', async () => {
+    const profile = await connect('testflight');
+    const names = (await profile.listTools()).tools.map((t) => t.name);
+    expect(names).toContain('asc__status');
+    for (const absent of ['apps__list', 'asc__search_tools', 'asc__discover_domains', 'listing__upload_screenshot']) {
+      expect(names).not.toContain(absent);
+    }
+    expect(profile.getInstructions()).toContain('ASC-Core');
+
+    const core = await connect('core');
+    const coreNames = (await core.listTools()).tools.map((t) => t.name);
+    expect(core.getServerVersion()?.name).toBe('ASC-Core');
+    for (const present of ['apps__list', 'asc__search_tools', 'asc__discover_domains', 'listing__upload_screenshot']) {
+      expect(coreNames).toContain(present);
+    }
+    // Listed once: core's sheet rows name it and every server adds it.
+    expect(coreNames.filter((n) => n === 'asc__status')).toHaveLength(1);
+    expect(core.getInstructions()).not.toContain('ASC-Core');
+  });
+
+  it('folds core into one server with --with-core', async () => {
+    const client = await connect('testflight', { withCore: true });
+    const names = (await client.listTools()).tools.map((t) => t.name);
+    for (const present of ['beta_groups__create', 'apps__list', 'asc__search_tools', 'listing__get_screenshots']) {
+      expect(names).toContain(present);
+    }
+    expect(names.length).toBe(new Set(names).size);
+    expect(client.getInstructions()).not.toContain('ASC-Core');
+  });
+
+  it('hides the write macros in core under --read-only', async () => {
+    const names = (await (await connect('core', { readOnly: true })).listTools()).tools.map((t) => t.name);
+    expect(names).toContain('listing__get_screenshots');
+    expect(names).not.toContain('listing__upload_screenshot');
+    expect(names).not.toContain('listing__upload_asset');
+    expect(names).not.toContain('listing__delete_assets');
+  });
+
+  it('refuses a meta tool that lives in core, naming core', async () => {
+    const client = await connect('testflight');
+    const res: any = await client.callTool({ name: 'asc__search_tools', arguments: { query: 'beta group' } });
+    expect(res.isError).toBe(true);
+    expect(String(res.content?.[0]?.text)).toMatch(/ASC-Core/);
+  });
+
+  it('answers discovery in core with every profile', async () => {
+    const client = await connect('core');
+    const res: any = await client.callTool({ name: 'asc__discover_domains', arguments: {} });
+    const body = JSON.parse(res.content[0].text);
+    expect(body.profiles.map((p: any) => p.name)).toEqual(expect.arrayContaining(['monetization', 'general', 'core']));
+    expect(body.profiles.find((p: any) => p.name === 'testflight')).toMatchObject({ server: 'ASC-TestFlight' });
+  });
+
   it('serves the same list twice — nothing is consumed by being listed', async () => {
-    const client = await connect('app-info');
+    const client = await connect('general');
     const first = (await client.listTools()).tools.map((t) => t.name).sort();
     const second = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(second).toEqual(first);

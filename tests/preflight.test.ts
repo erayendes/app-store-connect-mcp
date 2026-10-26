@@ -248,7 +248,7 @@ describe(subscriptionTool, () => {
       expect(op, fix).toBeTruthy();
       expect(op!.deprecated, fix).toBe(false);
       expect(op!.readOnly, fix).toBe(false);
-      expect(csv).toMatch(new RegExp(`monetization,subscription-(?:catalog|pricing),${fix},`));
+      expect(csv).toMatch(new RegExp(`monetization,subscription,${fix},`));
     }
   });
   it('treats only screenshot 404 as absence and propagates other API errors', async () => {

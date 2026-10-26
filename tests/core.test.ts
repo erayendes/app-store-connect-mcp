@@ -629,7 +629,8 @@ describe('AI-136: StoreKit discoverability in search', () => {
     const sk = res.matches.filter((m: any) => m.domain === 'storekit');
     expect(sk.length).toBeGreaterThan(0);
     expect(sk.every((m: any) => m.loaded === false)).toBe(true);
-    expect(res.hint).toMatch(/monetization:storekit/);
+    expect(res.hint).toMatch(/monetization:transactions/);
+    expect(sk[0]).toMatchObject({ server: 'ASC-Monetization', subProfile: 'transactions' });
   });
 
   it('marks StoreKit as loaded when the server has it enabled', async () => {

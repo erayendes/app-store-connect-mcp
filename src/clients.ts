@@ -33,6 +33,10 @@ import {
 import { delimiter, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { createRequire } from 'node:module';
+// A cycle (profiles.ts names servers through serverName), safe because
+// neither module calls into the other while it is still loading.
+import { resolveSelection } from './profiles.js';
+import { readOnlyFromArgs, readOnlyFromEnv } from './core/config.js';
 
 /** `npx` rather than an absolute path: portable, and survives a reinstall. */
 export const SERVER_COMMAND = 'npx';
@@ -334,7 +338,7 @@ export const isPresent = (client: McpClient): boolean => presentTargets(client).
  * is a reasonable thing to want — and a JSON config is created as easily as it
  * is edited. A CLI target still needs its binary: there is nothing to run.
  */
-const writableTargets = (client: McpClient): Target[] =>
+export const writableTargets = (client: McpClient): Target[] =>
   client.targets.filter((t) => (t.kind === 'cli' ? hasBinary(t.bin) : true));
 
 /**
@@ -365,12 +369,115 @@ export interface Registration {
   pkg?: string;
 }
 
+/** Env keys that pick which App Store Connect account a server signs in as. */
+const isCredentialKey = (key: string): boolean =>
+  key === 'ASC_KEY_ID' || key === 'ASC_ISSUER_ID' || key === 'ASC_CONFIG_DIR' || key.startsWith('ASC_PRIVATE_KEY');
+
+const envOf = (reg: Registration): Record<string, unknown> => {
+  const env = reg.entry?.env;
+  return typeof env === 'object' && env !== null && !Array.isArray(env) ? env as Record<string, unknown> : {};
+};
+
 /** The sole rule for entries that setup must leave in the user's hands. */
 export function isUserManaged(reg: Registration): boolean {
-  const env = reg.entry?.env;
   return !reg.entry || !reg.pkg || !reg.spec || 'envFile' in reg.entry ||
-    (typeof env === 'object' && env !== null && Object.keys(env).some((key) =>
-      key === 'ASC_KEY_ID' || key === 'ASC_ISSUER_ID' || key === 'ASC_CONFIG_DIR' || key.startsWith('ASC_PRIVATE_KEY')));
+    Object.keys(envOf(reg)).some(isCredentialKey);
+}
+
+/** The profile the core server runs: app lookup, tool search, the media tools. */
+export const CORE_SPEC = 'core';
+export const CORE_SERVER = serverName(CORE_SPEC);
+
+/**
+ * An entry as setup prints it: name, then spec, flags and env KEYS. Values
+ * never: a flag's value may be a path, and an env value may be a secret.
+ */
+export function describeEntry(reg: Registration): string {
+  const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && arg !== '-y')
+    .map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
+  const env = Object.keys(envOf(reg));
+  const parts = [...(reg.spec ? [reg.spec] : []), ...flags, ...(env.length ? [`env ${env.join(', ')}`] : [])];
+  return `${reg.name}${parts.length ? ` (${parts.join('; ')})` : ''}`;
+}
+
+/** Whether a profile argument still names something this release serves. */
+export function specResolves(spec: string): boolean {
+  try {
+    resolveSelection(spec);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * An entry of ours whose profile argument no longer resolves: `app-info`,
+ * `access:users` — names 3.0 renamed. Started, it serves the one-tool
+ * tombstone; it is never what the user meant to keep.
+ */
+export const isDead = (reg: Registration): boolean => reg.spec !== undefined && !specResolves(reg.spec);
+
+/**
+ * The one rule for deleting a dead entry, shared by planning, unticking and
+ * the write itself: dead, ours, read in full, and not user-managed — so
+ * PR-A's registrationBlock still has the last word. Anything else that is
+ * dead is reported and left where it is.
+ */
+export function deadAndDeletable(reg: Registration, block: ReturnType<typeof registrationBlock>): boolean {
+  return isDead(reg) && !isUserManaged(reg) && block.canRemove(reg.name);
+}
+
+/** Whether an entry runs read-only, by flag or by env — exactly as the server decides it. */
+export const isReadOnly = (reg: Registration): boolean => {
+  const args = reg.entry?.args;
+  return (Array.isArray(args) && readOnlyFromArgs(args)) || readOnlyFromEnv(envOf(reg).ASC_READ_ONLY);
+};
+
+export type CoreDecision = { add: true; readOnly: boolean } | { add: false; reason: string };
+
+/**
+ * Whether ASC-Core may be registered into one config target, and how.
+ *
+ * Decided per target (Claude Code and Claude Desktop are two), over the full
+ * entries: core is the server every profile there leans on for app lookup, so
+ * it must not quietly open up what those profiles keep closed, nor sign in as
+ * a different account than they do. So it takes the most restrictive setting
+ * among them (one read-only entry makes core read-only), and it is withheld —
+ * with the reason said — wherever the account cannot be shown to be the same:
+ * entries that disagree, entries with credentials of their own (core would use
+ * the shared config), or a config that could not be read in full.
+ */
+export function coreDecision(regs: Registration[]): CoreDecision {
+  if (regs.some((r) => r.name === '*')) {
+    return { add: false, reason: 'the config could not be read, so the account its servers use is unknown' };
+  }
+  // Every ASC-named entry that stays, ours or not — the same set coreActionFor
+  // counts as a profile. A local checkout (`node dist/index.js general
+  // --read-only`) is Heimdall too: its read-only binds core, and its account
+  // has to match like any other. A dead entry serves no tools, so core has
+  // nothing to match it on.
+  const heimdall = regs.filter((r) => !isDead(r));
+  const partial = heimdall.filter((r) => !r.entry || 'envFile' in r.entry);
+  if (partial.length) {
+    return {
+      add: false,
+      reason: `${partial.map((r) => r.name).join(', ')} could not be read in full, so the account it uses is unknown`,
+    };
+  }
+  // Compared in memory and never printed: these are credential values.
+  const accounts = new Set(heimdall.map((r) =>
+    JSON.stringify(Object.entries(envOf(r)).filter(([k]) => isCredentialKey(k)).sort(([a], [b]) => a.localeCompare(b)))));
+  if (accounts.size > 1) {
+    return { add: false, reason: 'its Heimdall servers use different App Store Connect accounts' };
+  }
+  if (accounts.size === 1 && [...accounts][0] !== '[]') {
+    return {
+      add: false,
+      reason: 'its Heimdall servers carry their own credentials and ASC-Core would use the shared ones, ' +
+        'so they cannot be shown to be the same account',
+    };
+  }
+  return { add: true, readOnly: heimdall.some(isReadOnly) };
 }
 
 /** Shared decision for planning, unticking and the final write. */
@@ -386,6 +493,105 @@ export function registrationBlock(entries: Registration[]) {
       !profiles.has(spec.split(':', 1)[0]),
     canRemove: (name: string) => !names.has('*') && !names.has(name),
   };
+}
+
+/**
+ * Whether a target already holds a profile the way a run asks for it: ours,
+ * live, this spec, this release, and not halfway through a rename.
+ */
+export function holdsAsAsked(here: Registration[], spec: string, migrations: Map<string, string> = new Map()): boolean {
+  const held = here.find((r) => r.name === serverName(spec) && !isDead(r));
+  const legacy = migrations.get(serverName(spec));
+  return held !== undefined && !isUserManaged(held) && held.spec === spec && held.pkg === PACKAGE &&
+    !(legacy !== undefined && here.some((r) => r.name === legacy));
+}
+
+/**
+ * The profiles a run writes into one target: every one asked for that the
+ * target may take and does not already hold as asked. Per target, because
+ * Claude Code holding a profile says nothing about Claude Desktop.
+ */
+export function targetAdds(here: Registration[], specs: string[], migrations: Map<string, string> = new Map()): string[] {
+  const block = registrationBlock(here);
+  return specs.filter((spec) => spec.split(':', 1)[0] !== CORE_SPEC && block.canAdd(spec) &&
+    !holdsAsAsked(here, spec, migrations));
+}
+
+/**
+ * The names a run actually deletes from one target: held there, removable by
+ * that target's own block, and — for a dead entry — still deletable. A name
+ * that is a user-managed entry here stays, whatever another target does.
+ */
+export function targetRemoves(here: Registration[], names: string[], dead: { has(name: string): boolean } = new Set()): string[] {
+  const block = registrationBlock(here);
+  return names.filter((name) => {
+    const reg = here.find((r) => r.name === name);
+    if (!reg || isUserManaged(reg) || !block.canRemove(name)) return false;
+    return !dead.has(name) || deadAndDeletable(reg, block);
+  });
+}
+
+/** What happens to ASC-Core in one config target. */
+export type CoreAction =
+  | { kind: 'add'; readOnly: boolean }
+  | { kind: 'settled' }
+  | { kind: 'withheld'; reason: string }
+  | { kind: 'remove' }
+  | { kind: 'none' };
+
+/**
+ * ASC-Core for one target, from that target's own entries — never the
+ * client's. Claude is two targets (Code and Desktop), and deciding for the
+ * client put a read-write core alone into a Desktop config that held no
+ * profile at all, next to a read-only one in Code.
+ *
+ * Core belongs in a target only while the target keeps or gets a Heimdall
+ * profile (or core was asked for by name); a target left with none loses an
+ * ASC-Core we own. Where it belongs, coreDecision says whether and how, and an
+ * ASC-Core already matching that is settled — left alone, not re-added. The
+ * plan and the write both call this, so they cannot disagree about a target.
+ *
+ * `adds` are the profile specs this run writes to the target (targetAdds),
+ * `removes` the names it actually deletes from it (targetRemoves) — not the
+ * client's lists, which name entries other targets hold.
+ */
+export function coreActionFor(
+  regs: Registration[],
+  adds: string[],
+  removes: string[],
+  explicit = false,
+  /** Renames this run makes here: new name -> old name. */
+  migrations: Map<string, string> = new Map()
+): CoreAction {
+  const block = registrationBlock(regs);
+  // A rename moves an entry, it does not remove it: the old name goes, but
+  // its flags and env go on under the new one, so they still bind core.
+  const moved = new Set([...migrations]
+    .filter(([to, from]) => adds.some((spec) => serverName(spec) === to) && regs.some((r) => r.name === from))
+    .map(([, from]) => from));
+  const isCoreName = (name: string): boolean => profileOfServer(name) === CORE_SPEC;
+  // Any ASC-named entry that stays counts, ours or not: one run through a
+  // local checkout (`node dist/index.js general`) is Heimdall all the same.
+  // A target that could not be read counts as getting what is asked of it,
+  // so coreDecision can say it was withheld rather than nothing at all.
+  const unknown = regs.some((r) => r.name === '*');
+  const keeps = regs.some((r) => r.name !== '*' && !isCoreName(r.name) && !isDead(r) && !removes.includes(r.name)) ||
+    adds.some((spec) => spec.split(':', 1)[0] !== CORE_SPEC && (unknown || block.canAdd(spec)));
+  const existing = regs.find((r) => r.name === CORE_SERVER);
+  if (!keeps && !explicit) {
+    return existing && !isUserManaged(existing) && block.canRemove(CORE_SERVER) ? { kind: 'remove' } : { kind: 'none' };
+  }
+  // Decided on what stays: an entry this run deletes binds nothing; one it
+  // moves binds as the entry it becomes.
+  const decision = coreDecision(regs.filter((r) => !removes.includes(r.name) || moved.has(r.name)));
+  if (!decision.add) return { kind: 'withheld', reason: decision.reason };
+  // A user-managed ASC-Core is the user's; it is reported as such elsewhere.
+  if (!block.canAdd(CORE_SPEC)) return { kind: 'none' };
+  // Read-only where none is needed is stricter, not wrong: it stays.
+  if (existing && existing.spec === CORE_SPEC && existing.pkg === PACKAGE && (!decision.readOnly || isReadOnly(existing))) {
+    return { kind: 'settled' };
+  }
+  return { kind: 'add', readOnly: decision.readOnly };
 }
 
 /** The first non-option argument after our package is the profile spec. */
@@ -541,6 +747,11 @@ function readJsonServers(t: Extract<Target, { kind: 'json' }>, jsonc = false): R
 export interface ChangeResult {
   ok: boolean;
   message: string;
+  /**
+   * Deliberately not done — ASC-Core held back by its safety rule, a dead
+   * entry left for the user. Not a failure: no paste-in block follows it.
+   */
+  withheld?: boolean;
 }
 
 /**
@@ -561,26 +772,98 @@ export function applyToClient(
   client: McpClient,
   toAdd: string[],
   toRemove: string[],
-  migrations: Map<string, string> = new Map()
+  migrations: Map<string, string> = new Map(),
+  {
+    dead = new Map(),
+    explicitCore = false,
+  }: {
+    /** Dead entries planned for deletion, name -> how the plan described them. */
+    dead?: Map<string, string>;
+    /** ASC-Core was asked for by name (`register core`), not only brought along. */
+    explicitCore?: boolean;
+  } = {}
 ): { results: ChangeResult[]; needsManual: boolean } {
   // Keyed by the change, so two targets doing the same thing collapse to one
   // line. Insertion order is the order the user picked, which is the order
   // they expect to read back.
-  const outcomes = new Map<string, { label: string; ok: boolean; why: string[] }>();
+  const outcomes = new Map<string, { label: string; ok: boolean; why: string[]; withheld?: boolean }>();
   const record = (key: string, label: string, ok: boolean, why?: string): void => {
     const prev = outcomes.get(key) ?? { label, ok: true, why: [] };
     prev.ok &&= ok;
     if (why) prev.why.push(why);
     outcomes.set(key, prev);
   };
-  const addLabel = (spec: string): string => {
-    const name = serverName(spec);
-    return `added ${name}${spec.includes(':') ? ` (${spec})` : ''}`;
+  const withhold = (key: string, label: string): void => {
+    outcomes.set(key, { label, ok: false, why: [], withheld: true });
   };
+  const addLabel = (spec: string, readOnly = false): string => {
+    const name = serverName(spec);
+    return `added ${name}${spec.includes(':') ? ` (${spec})` : ''}${readOnly ? ' (--read-only)' : ''}`;
+  };
+  const removeLabel = (name: string): string =>
+    dead.has(name) ? `removed ${dead.get(name)} — its profile no longer exists` : `removed ${name}`;
 
   for (const t of writableTargets(client)) {
     const current = readRegistrations({ ...client, targets: [t] });
     const block = registrationBlock(current);
+    // Each target removes what it has. A name only another target held is no
+    // change here — and not a failure, which a second `mcp remove` of it was.
+    // An unreadable target cannot say what it has, so it is still asked, and
+    // refuses through registrationBlock as before.
+    const unknown = current.some((r) => r.name === '*');
+    const has = (name: string): boolean => unknown || current.some((r) => r.name === name);
+    // A dead entry is deleted only if it still is dead, ours and clean.
+    const deadKept = new Set([...dead.keys()].filter((name) => {
+      const reg = current.find((r) => r.name === name);
+      return reg !== undefined && !deadAndDeletable(reg, block);
+    }));
+    for (const name of deadKept) {
+      withhold(`dead:${name}`, `${dead.get(name)} left in place: it is no longer ours to delete`);
+    }
+    // A rename moves an old entry's content to the new name and deletes the
+    // old one, so its source is checked again here with this target's block:
+    // one that became user-managed since the plan stays where it is (its
+    // removal is refused and reported below), and nothing of it is copied.
+    const moves = new Map([...migrations].filter(([, from]) => {
+      const reg = current.find((r) => r.name === from);
+      return reg !== undefined && !isUserManaged(reg) && block.canRemove(from);
+    }));
+    // A target that already holds the profile as asked is left alone — the
+    // other target may be why it is in the plan. Re-adding it here made the
+    // CLI refuse the duplicate and remove and re-add a working server.
+    const profileAdds = toAdd.filter((spec) => spec !== CORE_SPEC && !holdsAsAsked(current, spec, moves));
+    // What this target actually deletes. A name it holds as a user-managed
+    // entry — kept here though another target deletes its copy, or turned
+    // user-managed since the plan — stays, and is said to, not failed.
+    const named = toRemove.filter((name) => name !== CORE_SERVER && !deadKept.has(name));
+    const actual = targetRemoves(current, named, dead);
+    if (!unknown) {
+      for (const name of named.filter((n) => has(n) && !actual.includes(n))) {
+        withhold(`kept:${name}:${t.where}`, `${name} left in place in ${t.where}: it is user-managed there`);
+      }
+    }
+    // An unreadable target is still asked, so registrationBlock refuses and reports it.
+    const profileRemoves = unknown ? named : actual;
+    // Decided again here, on what this target holds now, by the same helpers
+    // the plan used — the file may have changed since the confirmation. A
+    // target that could not be read is asked with everything, so its core is
+    // reported withheld rather than silently skipped.
+    const core: CoreAction = toAdd.includes(CORE_SPEC) || toRemove.includes(CORE_SERVER)
+      ? coreActionFor(current, unknown ? profileAdds : targetAdds(current, profileAdds, moves), actual, explicitCore, moves)
+      : { kind: 'none' };
+    const coreReadOnly = core.kind === 'add' && core.readOnly;
+    const extra = (spec: string): string[] => (spec === CORE_SPEC && coreReadOnly ? ['--read-only'] : []);
+    // Core is recorded per target: its form can differ between them
+    // (read-only beside a read-only profile in one, not in the other), and
+    // one line per change would keep whichever target came first.
+    const label = (spec: string): string =>
+      addLabel(spec, spec === CORE_SPEC && coreReadOnly) + (spec === CORE_SPEC ? ` in ${t.where}` : '');
+    const addKey = (spec: string): string => (spec === CORE_SPEC ? `add:${spec}:${t.where}` : `add:${spec}`);
+    if (core.kind === 'withheld' && toAdd.includes(CORE_SPEC)) {
+      withhold(`core:${t.where}`, `${CORE_SERVER} not added to ${t.where}: ${core.reason}`);
+    }
+    const adding = [...profileAdds, ...(core.kind === 'add' ? [CORE_SPEC] : [])];
+    const removing = [...profileRemoves, ...(core.kind === 'remove' ? [CORE_SERVER] : [])];
     if (t.kind === 'cli') {
       const failedMigrations = new Set<string>();
       const addEntry = (name: string, spec: string, entry: Record<string, unknown>): void => {
@@ -594,15 +877,14 @@ export function applyToClient(
         // JSON CLI arguments can expose non-credential env values in process listings.
         execFileSync(t.bin, args, { stdio: 'ignore' });
       };
-      for (const spec of toAdd) {
+      for (const spec of adding) {
         const name = serverName(spec);
         if (!block.canAdd(spec)) {
-          record(`add:${spec}`, addLabel(spec), false, 'user-managed entry left unchanged');
+          record(addKey(spec), label(spec), false, 'user-managed entry left unchanged');
           continue;
         }
-        const old = current.find((r) => r.name === name || r.name === migrations.get(name));
-        const next = old?.entry ? rewrittenEntry(old.entry, spec)
-          : { command: SERVER_COMMAND, args: serverArgs(spec) };
+        const old = current.find((r) => r.name === name) ?? current.find((r) => r.name === moves.get(name));
+        const next = nextEntry(old?.entry, spec, extra(spec));
         try {
           // Keep the old registration until the new add has actually failed.
           try {
@@ -621,27 +903,27 @@ export function applyToClient(
               throw retryError;
             }
           }
-          record(`add:${spec}`, addLabel(spec), true);
+          record(addKey(spec), label(spec), true);
         } catch (err) {
           if (old && old.name !== name) failedMigrations.add(old.name);
-          record(`add:${spec}`, addLabel(spec), false, cliError(err));
+          record(addKey(spec), label(spec), false, cliError(err));
         }
       }
-      for (const name of toRemove) {
+      for (const name of removing) {
         if (!block.canRemove(name) || failedMigrations.has(name)) {
-          record(`rm:${name}`, `removed ${name}`, false,
+          record(`rm:${name}`, removeLabel(name), false,
             failedMigrations.has(name) ? 'new entry failed; old entry left unchanged' : 'user-managed entry left unchanged');
           continue;
         }
         if (!t.remove) {
-          record(`rm:${name}`, `removed ${name}`, false, `${client.label} has no remove command — edit ${t.where}`);
+          record(`rm:${name}`, removeLabel(name), false, `${client.label} has no remove command — edit ${t.where}`);
           continue;
         }
         try {
           execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
-          record(`rm:${name}`, `removed ${name}`, true);
+          record(`rm:${name}`, removeLabel(name), true);
         } catch (err) {
-          record(`rm:${name}`, `removed ${name}`, false, cliError(err));
+          record(`rm:${name}`, removeLabel(name), false, cliError(err));
         }
       }
       continue;
@@ -661,25 +943,57 @@ export function applyToClient(
     }
     if (!failure) {
       try {
-        const adds = toAdd.filter(block.canAdd);
-        const removes = toRemove.filter(block.canRemove);
-        if (adds.length || removes.length) writeJsonServers(t, adds, removes, migrations);
+        const adds = adding.filter(block.canAdd);
+        const removes = removing.filter(block.canRemove);
+        if (adds.length || removes.length) {
+          writeJsonServers(t, adds, removes, moves, new Map(adds.map((spec) => [spec, extra(spec)])));
+        }
       } catch (err) {
         failure = `${t.where}: ${firstLine(err)}`;
       }
     }
-    for (const spec of toAdd) record(`add:${spec}`, addLabel(spec), !failure && block.canAdd(spec),
+    for (const spec of adding) record(addKey(spec), label(spec), !failure && block.canAdd(spec),
       failure ?? (!block.canAdd(spec) ? 'user-managed entry left unchanged' : undefined));
-    for (const name of toRemove) record(`rm:${name}`, `removed ${name}`, !failure && block.canRemove(name),
+    for (const name of removing) record(`rm:${name}`, removeLabel(name), !failure && block.canRemove(name),
       failure ?? (!block.canRemove(name) ? 'user-managed entry left unchanged' : undefined));
   }
 
-  const results = [...outcomes.values()].map(({ label, ok, why }) => ({
+  // Core per target, as the plan labels it: one line when every target got
+  // the same form, otherwise each target with its own (planCore does the same).
+  const coreKeys = [...outcomes.keys()].filter((k) => k.startsWith(`add:${CORE_SPEC}:`));
+  // The target is in the key; cut exactly its suffix (a path may hold spaces).
+  const formOf = (k: string): string => {
+    const label = outcomes.get(k)!.label;
+    return label.slice(0, label.length - ` in ${k.slice(`add:${CORE_SPEC}:`.length)}`.length);
+  };
+  const forms = new Set(coreKeys.map(formOf));
+  if (coreKeys.length && coreKeys.length === writableTargets(client).length && forms.size === 1) {
+    const merged = coreKeys.map((k) => outcomes.get(k)!);
+    const one = { label: [...forms][0], ok: merged.every((o) => o.ok), why: merged.flatMap((o) => o.why) };
+    const rebuilt = new Map<string, typeof one>();
+    for (const [k, v] of outcomes) {
+      if (k === coreKeys[0]) rebuilt.set(`add:${CORE_SPEC}`, one);
+      else if (!coreKeys.includes(k)) rebuilt.set(k, v);
+    }
+    outcomes.clear();
+    for (const [k, v] of rebuilt) outcomes.set(k, v);
+  }
+
+  const results: ChangeResult[] = [...outcomes.values()].map(({ label, ok, why, withheld }) => ({
     ok,
     // Deduplicate: two targets failing the same way should say it once.
-    message: ok ? label : `${label}: ${[...new Set(why)].join('; ')}`,
+    message: ok || withheld ? label : `${label}: ${[...new Set(why)].join('; ')}`,
+    ...(withheld ? { withheld } : {}),
   }));
-  return { results, needsManual: results.some((r) => !r.ok) };
+  return { results, needsManual: results.some((r) => !r.ok && !r.withheld) };
+}
+
+/** The entry to write: the old one with package and spec moved, or a new one, plus any flags it must carry. */
+function nextEntry(old: Record<string, unknown> | undefined, spec: string, extra: string[] = []): Record<string, unknown> {
+  const base = old ? rewrittenEntry(old, spec) : { command: SERVER_COMMAND, args: serverArgs(spec) };
+  const args = [...base.args as string[]];
+  for (const flag of extra) if (!args.includes(flag)) args.push(flag);
+  return { ...base, args };
 }
 
 /**
@@ -693,7 +1007,8 @@ function writeJsonServers(
   t: Extract<Target, { kind: 'json' }>,
   toAdd: string[],
   toRemove: string[],
-  migrations: Map<string, string> = new Map()
+  migrations: Map<string, string> = new Map(),
+  extras: Map<string, string[]> = new Map()
 ): void {
   let doc: Record<string, unknown> = {};
   if (existsSync(t.path)) {
@@ -708,9 +1023,12 @@ function writeJsonServers(
   for (const spec of toAdd) {
     const name = serverName(spec);
     const existing = servers[name] ?? migrated.get(name);
-    servers[name] = typeof existing === 'object' && existing !== null && !Array.isArray(existing)
-      ? rewrittenEntry(existing as Record<string, unknown>, spec)
-      : { command: SERVER_COMMAND, args: serverArgs(spec) };
+    servers[name] = nextEntry(
+      typeof existing === 'object' && existing !== null && !Array.isArray(existing)
+        ? existing as Record<string, unknown> : undefined,
+      spec,
+      extras.get(spec)
+    );
   }
   doc[t.key] = servers;
   writeAtomic(t.path, `${JSON.stringify(doc, null, 2)}\n`);

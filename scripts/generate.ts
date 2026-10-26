@@ -193,7 +193,7 @@ const PARAM_NOTES: Array<[RegExp, string]> = [
   // knows an app by is the bundle ID, which matches nothing here.
   [
     /^filter\[app\]$/,
-    'The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches ' +
+    'The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches ' +
       'nothing and comes back as 200 with an empty list.',
   ],
 ];

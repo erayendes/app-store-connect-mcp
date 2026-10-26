@@ -47,17 +47,18 @@ import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } from './core/risk.js';
 import {
-  CORE_OPERATIONS,
+  CORE_PROFILE,
   manualToolsFor,
   deprecatedOperationsFor,
   operationsFor,
-  CORE_MANUAL_TOOLS,
   profilesForOperation,
   registerCommand,
-  removedProfileMessage,
+  resolveProfile,
+  resolveSelection,
   subProfileOwning,
   toolCountFor,
   TOKENS_PER_TOOL,
+  unknownProfileMessage,
   type ProfileSelection,
   type SubProfile,
 } from './profiles.js';
@@ -116,6 +117,15 @@ export const SERVER_INSTRUCTIONS = [
 ].join('\n');
 
 /**
+ * Added to a profile server that does not carry core. Without it the model
+ * looks for `apps__list` here, finds a tool list with no way to turn an app
+ * name into an id, and concludes the server cannot do the task.
+ */
+export const CORE_POINTER =
+  'App lookup (apps__list), tool search (asc__search_tools) and the screenshot and ' +
+  'asset-library tools live in the ASC-Core server, not here.';
+
+/**
  * How many tools each server actually serves, by server.
  *
  * A WeakMap rather than a field on the SDK's `Server`: the count has to be read
@@ -135,6 +145,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   // host-pinning then pins to that origin instead of Apple's.
   const http = new AscHttpClient(tokens, { baseUrl: config.baseUrl, rateLimit: config.rateLimit });
 
+  const isCore = selection?.profile.name === CORE_PROFILE;
+  /**
+   * The core profile's tools — app lookup, the meta tools, the media macros.
+   * Served by ASC-Core itself, and folded into a profile server started with
+   * `--with-core`, for a channel that can run only one process.
+   */
+  const core = selection && (isCore || config.withCore) ? resolveSelection(CORE_PROFILE) : undefined;
+
   // In profile mode, "how do I reach that tool" answers name the sibling MCP
   // server; the --domains flag only makes sense on the monolithic server.
   const missingToolHint = selection
@@ -145,10 +163,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           // argument here, not a different server.
           return (
             `It belongs to this profile's "${ownSub.name}" sub-profile, which this server ` +
-            `did not load. Restart it as \`${selection.profile.name}\` for everything, or ` +
-            `\`${selection.profile.name}:${[...selection.subProfiles.map((s) => s.name), ownSub.name]
-              .filter(Boolean)
-              .join(',')}\` to add just this one.`
+            `did not load. Read it now through asc__call. For the tool itself, with the ` +
+            `user's yes run \`${registerWith(ownSub)}\` and ask them to restart their MCP client.`
           );
         }
         const homes = profilesForOperation(op.name).filter((n) => n !== selection.profile.name);
@@ -161,11 +177,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     : undefined;
 
   const registry = new ToolRegistry({
-    // A profile carries an explicit, hand-curated list; core (apps.list/get and
-    // the four shared relationship listings) is already folded into it.
+    // A profile carries an explicit, hand-curated list, plus core's when it
+    // rides along.
     operations: selection
       ? [
           ...operationsFor(selection),
+          ...(core && !isCore ? operationsFor(core) : []),
           // Deprecated operations are in no profile, so without this the flag
           // was a no-op in profile mode — see deprecatedOperationsFor.
           ...(config.includeDeprecated ? deprecatedOperationsFor(selection) : []),
@@ -187,17 +204,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       ? config.domains
       : [...DEFAULT_DOMAINS];
 
-  // Which sub-profiles are live right now. Mutable because `asc__load` can add
-  // one mid-session; everything that reports or gates on the selection reads
-  // this rather than the startup argument.
   const loadedSubs = new Set(selection?.subProfiles ?? []);
   const unloadedSubs = (): SubProfile[] =>
     selection ? selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s)) : [];
   /**
-   * The command that makes `sub` part of this server for good. asc__load only
-   * changes this session, and only for a client that re-reads the tool list
-   * when told to — Claude Code in the desktop app does not — so this is the
-   * path that works everywhere: rewrite the config, restart the client.
+   * The command that makes `sub` part of this server. There is no way to add
+   * it mid-session that works everywhere: a server may revise its tool list,
+   * but some clients never hand the revision to the model (the Claude desktop
+   * app's Code tab among them). Rewriting the config and restarting does.
    */
   const registerWith = (sub: SubProfile): string =>
     selection
@@ -224,8 +238,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         ...(unloadedSubs().length
           ? {
               hint:
-                `Some sub-profiles are not loaded. Call asc__load to add one for this ` +
-                `session, or restart as \`${selection.profile.name}\` for all of them.`,
+                `Some sub-profiles are not loaded. Reads work through asc__call. For the ` +
+                `tools themselves, register \`npx -y ${PACKAGE} register ${selection.profile.name}\` ` +
+                `and restart the client.`,
             }
           : {}),
       })
@@ -233,13 +248,30 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   // Which hand-written tool families this selection carries. The curation
   // sheet decides — a sub-profile listing `storekit__*` is what turns them on,
-  // so unchecking that sub-profile turns them off with no second switch. The
-  // core rows are in every selection by definition, and leaving them out here
-  // is how a core macro ships unreachable from every profile-mode server while
-  // the sheet says otherwise.
+  // so unchecking that sub-profile turns them off with no second switch. Core's
+  // rows count when core rides along; leaving them out here is how a core
+  // macro ships unreachable while the sheet says otherwise.
   const manualTools = selection
-    ? new Set([...manualToolsFor(selection), ...CORE_MANUAL_TOOLS])
+    ? new Set([...manualToolsFor(selection), ...(core ? manualToolsFor(core) : [])])
     : undefined;
+
+  /**
+   * The meta tools. Search and discovery answer for the whole catalogue, so
+   * they live in core and are not repeated in every profile server; each
+   * server keeps `asc__status`, which reports on that server itself. Filtered
+   * from one list, so core cannot register `asc__status` twice.
+   */
+  const metaTools = META_TOOLS.filter(
+    (t) => !manualTools || manualTools.has(t.name) || t.name === 'asc__status'
+  );
+  const metaOffered = (name: string): boolean => metaTools.some((t) => t.name === name);
+
+  /**
+   * asc__call and asc__describe stand in for the sub-profiles a server left
+   * out, so they exist only where something was left out. On a full profile
+   * every tool they could reach is already in the list.
+   */
+  const proxyOffered = Boolean(selection?.partial);
   const wantsFamily = (prefix: string): boolean =>
     manualTools ? [...manualTools].some((t) => t.startsWith(prefix)) : true;
 
@@ -283,14 +315,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const server = new Server(
     { name: selection ? serverName(selection.profile.name) : 'app-store-connect-mcp', version: VERSION },
     {
-      // listChanged: the tool list can grow mid-session via asc__load, and a
-      // resource appears whenever a response is too big to send whole.
+      // listChanged: the tool list can grow mid-session when asc__call loads
+      // the operation it proxied, and a resource appears whenever a response
+      // is too big to send whole.
       capabilities: {
         tools: { listChanged: true },
         resources: { listChanged: true },
         prompts: {},
       },
-      instructions: SERVER_INSTRUCTIONS,
+      instructions: selection && !core ? `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}` : SERVER_INSTRUCTIONS,
       // A confirmation's state comes back through the client: forged, expired
       // or tampered state is refused before the handler ever sees it.
       requestState: { verify: gate.verify },
@@ -324,8 +357,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /**
    * Whether a tool mutates, so the write guard knows what to confirm. Computed
-   * per call rather than once: `asc__load` can add write tools after startup,
-   * and a set captured at boot would wave them through unconfirmed.
+   * per call rather than once, so a tool added after startup can never be
+   * waved through on a set captured at boot.
    */
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
@@ -339,40 +372,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   };
 
   /**
-   * On-demand loading, kept deliberately minimal while we find out whether
-   * clients hand a revised tool list to the model within the same turn. If they
-   * do, a profile can start small and grow; if they don't, the agent has to say
-   * "loaded, ask again", which is worse than starting wide.
-   */
-  const loadTool = (): McpToolDefinition | undefined => {
-    const available = unloadedSubs().filter((s) => s.operations.length);
-    if (!available.length) return undefined;
-    return {
-      name: 'asc__load',
-      description:
-        `Add one of this server's unloaded sub-profiles to the tool list for the rest of ` +
-        `this session, without restarting. Use it when the tool you need belongs to this ` +
-        `profile but is not loaded. Available: ` +
-        available.map((s) => `${s.name} (${s.operations.length} tools — ${s.description})`).join(' '),
-      inputSchema: {
-        type: 'object' as const,
-        properties: {
-          sub_profile: { type: 'string', description: 'Sub-profile to load.', enum: available.map((s) => s.name) },
-        },
-        required: ['sub_profile'],
-      },
-      annotations: { readOnlyHint: true },
-    };
-  };
-
-  /**
    * Every operation this profile owns, whether its sub-profile is loaded or
-   * not — the reachable set for the proxy below.
+   * not — the reachable set for the proxy below. Its own profile only: core's
+   * tools and a sibling profile's are another server's to serve.
    */
   const profileOperations = (): string[] =>
-    selection
-      ? [...new Set([...CORE_OPERATIONS, ...selection.profile.subProfiles.flatMap((s) => s.operations)])]
-      : [];
+    selection ? [...new Set(selection.profile.subProfiles.flatMap((s) => s.operations))] : [];
 
   /** Accepts either the dotted operation name or the public `a__b` tool name. */
   const resolveProfileOperation = (raw: string): Operation | undefined => {
@@ -386,11 +391,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   /**
    * The escape hatch that does not depend on the client.
    *
-   * asc__load revises the tool list, and MCP lets a server do that — but the
-   * spec says nothing about when a client hands the revised list to the model.
-   * Measured: Claude Code in a terminal does it inside the turn, Codex only
-   * between turns, and Claude Code in the desktop app's Code tab not at all —
-   * the model is left naming tools it cannot call and the work stalls.
+   * MCP lets a server revise its tool list, but the spec says nothing about
+   * when a client hands the revised list to the model. Measured: Claude Code in
+   * a terminal does it inside the turn, Codex only between turns, and Claude
+   * Code in the desktop app's Code tab not at all — the model is left naming
+   * tools it cannot call and the work stalls. That is why `asc__load` is gone.
    *
    * These two tools sidestep the question entirely. They are in the list from
    * the start, so any operation this profile owns is one call away on any
@@ -399,14 +404,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * validation, dry-run, risk level, typed confirmation — and loads the
    * operation on the way, so it also becomes a native tool for whoever refreshes.
    */
-  const PROXY_TOOLS: McpToolDefinition[] = selection
+  const PROXY_TOOLS: McpToolDefinition[] = proxyOffered && selection
     ? [
         {
           name: 'asc__describe',
           description:
-            `Show the exact input schema of any tool this profile owns, including ones not ` +
-            `currently loaded. Use it before asc__call to build valid arguments. Find tool ` +
-            `names with asc__search_tools.`,
+            `Show the exact input schema of any tool this profile owns, including ones in ` +
+            `sub-profiles this server did not load. Use it before asc__call to build valid ` +
+            `arguments.`,
           inputSchema: {
             type: 'object' as const,
             properties: { tool: { type: 'string', description: 'Tool or operation name.' } },
@@ -419,9 +424,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           description:
             `Read through any tool this profile owns, even one that is not in your tool list — ` +
             `its sub-profile does not have to be loaded and nothing needs a restart. Use this ` +
-            `whenever asc__search_tools names a tool you cannot see. Get its arguments from ` +
-            `asc__describe first. Read-only: to change something, load the sub-profile with ` +
-            `asc__load and call the tool itself, so the confirmation prompt reaches the user.`,
+            `whenever a tool of this profile is named that you cannot see. Get its arguments ` +
+            `from asc__describe first. Read-only: to change something, the tool itself has to ` +
+            `be registered — with the user's yes run \`npx -y ${PACKAGE} register ` +
+            `${selection.profile.name}\` and ask them to restart their MCP client, so the ` +
+            `confirmation prompt reaches the user.`,
           inputSchema: {
             type: 'object' as const,
             properties: {
@@ -446,7 +453,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const unreachableMessage = (raw: string): string => {
     const known = OPERATIONS.find((op) => op.name === raw || toolNameFor(op) === raw);
     if (!known) {
-      return `Unknown tool "${raw}". Use asc__search_tools to find the right name.`;
+      return `Unknown tool "${raw}". Use asc__search_tools (on ASC-Core) to find the right name.`;
     }
     const homes = profilesForOperation(known.name).filter((n) => n !== selection?.profile.name);
     return (
@@ -464,16 +471,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * client receives. It used to quote `toolCountFor`, which counts the
    * operations the profile MAPS — a number that is stable, easy to put in a
    * changelog, and wrong in every client: `asc__call` and `asc__describe` are
-   * always served and mapped nowhere, StoreKit only loads with a bundle id, and
+   * served and mapped nowhere, StoreKit only loads with a bundle id, and
    * since #66 `--include-deprecated` adds tools too. Someone reading "24" and
    * seeing 29 has no way to tell whether they misconfigured something.
    */
   const servedTools = (): McpToolDefinition[] => {
-    const onDemand = loadTool();
     const tools: McpToolDefinition[] = [
-      ...META_TOOLS,
+      ...metaTools,
       ...PROXY_TOOLS,
-      ...(onDemand ? [onDemand] : []),
       ...(reviewsAiWanted ? REVIEWS_AI_TOOLS : []),
       ...macroTools,
       ...registry.listTools(),
@@ -535,6 +540,25 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     let args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
     try {
+      // Refused by name, not left to fall through: the generic "unknown tool"
+      // would send the model looking for a spelling mistake.
+      if ((name === 'asc__describe' || name === 'asc__call') && !proxyOffered) {
+        throw new Error(
+          selection
+            ? `${name} is not offered here: this server loads every sub-profile of ` +
+                `"${selection.profile.name}", so call the tool itself. Tools of other profiles ` +
+                `are served by their own ASC server.`
+            : `${name} exists only on a profile server started with some of its sub-profiles.`
+        );
+      }
+      if (META_TOOL_NAMES.has(name) && !metaOffered(name)) {
+        throw new Error(
+          `${name} is served by the ASC-Core server, not this one. If it is in your tool ` +
+            `list, call it there; otherwise, with the user's yes, run ` +
+            `\`npx -y ${PACKAGE} register ${CORE_PROFILE}\` and ask them to restart their MCP client.`
+        );
+      }
+
       if (name === 'asc__describe' && selection) {
         const op = resolveProfileOperation(String(args.tool ?? ''));
         if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
@@ -563,21 +587,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           throw new Error(
             `"${op.name}" changes data, and asc__call is read-only.\n` +
               (sub && !loadedSubs.has(sub)
-                ? `Load its sub-profile first — asc__load({ sub_profile: "${sub.name}" }) — then call ` +
-                  `${toolNameFor(op)} directly. If it does not appear in your tool list, your client ` +
-                  `is not picking up the change and waiting a turn will not help: with the user's ` +
-                  `yes, run \`${registerWith(sub)}\` and ask them to restart their MCP client.`
+                ? `Its sub-profile "${sub.name}" is not loaded on this server. With the user's ` +
+                  `yes, run \`${registerWith(sub)}\` and ask them to restart their MCP client, ` +
+                  `then call ${toolNameFor(op)} directly.`
                 : `Call ${toolNameFor(op)} directly.`)
           );
         }
         // Load it as well: the call works either way, but a client that does
         // refresh gets the real tool with its own schema from here on.
-        registry.loadOperations([op.name]);
-        const sub = subProfileOwning(selection.profile, op.name);
-        if (sub && !loadedSubs.has(sub)) {
-          loadedSubs.add(sub);
-          await server.sendToolListChanged();
-        }
+        if (registry.loadOperations([op.name]).length) await server.sendToolListChanged();
         name = toolNameFor(op);
         args = (args.arguments ?? {}) as Record<string, unknown>;
       }
@@ -748,49 +766,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       let uncapped: unknown;
       let structured = false;
 
-      if (name === 'asc__load' && selection) {
-        const wanted = String(args.sub_profile ?? '');
-        const sub = unloadedSubs().find((s) => s.name === wanted);
-        if (!sub) {
-          const available = unloadedSubs().filter((s) => s.operations.length).map((s) => s.name);
-          throw new Error(
-            selection.profile.subProfiles.some((s) => s.name === wanted)
-              ? `"${wanted}" is already loaded.`
-              : `Unknown sub-profile "${wanted}" for "${selection.profile.name}". ` +
-                (available.length ? `Available to load: ${available.join(', ')}.` : 'Everything is loaded.')
-          );
-        }
-        const added = registry.loadOperations(sub.operations);
-        loadedSubs.add(sub);
-        await server.sendToolListChanged();
-
-        // Measured: Claude Code in a terminal hands the revised list to the
-        // model inside the same turn, Codex only between turns, and Claude
-        // Code in the desktop app's Code tab never (2.7.0-beta.7) — though the
-        // notification reaches it, as tests/proxy.test.ts proves for both
-        // eras. So the reply carries the tools itself, and does not promise
-        // they will show up later: it names the fix that works on any client.
-        const SHOWN = 25;
-        result = {
-          loaded: sub.name,
-          description: sub.description,
-          toolsAdded: added.length,
-          tools: added.slice(0, SHOWN).map((name) => ({
-            name,
-            description: registry.get(name)?.description ?? '',
-          })),
-          ...(added.length > SHOWN ? { andMore: added.length - SHOWN } : {}),
-          nextStep:
-            `These tools are live on this server now. If they are in your tool list, use them. ` +
-            `If not, your client is not picking up the change, and they will not appear next ` +
-            `turn either. Reads work now through asc__call. To get the tools themselves, tell ` +
-            `the user the fix and, with their yes, run \`${registerWith(sub)}\` — then ask them ` +
-            `to restart their MCP client. Do not call a tool you cannot see.`,
-          ...(sub.manualTools.length
-            ? { note: `${sub.manualTools.join(', ')} need a restart — they are not spec operations.` }
-            : {}),
-        };
-      } else if (META_TOOL_NAMES.has(name)) {
+      if (META_TOOL_NAMES.has(name)) {
         result = await executeMetaTool(name, args, {
           registry,
           http,
@@ -801,33 +777,45 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           macroOffered,
           includeDeprecated: config.includeDeprecated,
           profileReport,
+          ownProfile: selection?.profile.name,
+          // Core answers for the whole catalogue: it is the one server every
+          // setup registers, so "what else is there" is its question to answer.
+          catalogue: Boolean(core),
           missingToolsHint: selection
             ? (ops) => {
                 const own = ops
-                  .map((op) => subProfileOwning(selection.profile, op.name)?.name)
-                  .filter((n): n is string => Boolean(n));
-                const homes = [
+                  .map((op) => subProfileOwning(selection.profile, op.name))
+                  .filter((s): s is SubProfile => Boolean(s) && !loadedSubs.has(s!));
+                // profile:sub, so the command registers the slice that has the
+                // tool rather than a whole profile.
+                const specs = [
                   ...new Set(
-                    ops.flatMap((op) => profilesForOperation(op.name)).filter((n) => n !== selection.profile.name)
+                    ops
+                      .filter((op) => !subProfileOwning(selection.profile, op.name))
+                      .map((op) => {
+                        const home = profilesForOperation(op.name)[0];
+                        const sub = home ? subProfileOwning(resolveProfile(home)!, op.name) : undefined;
+                        return home ? (sub?.name ? `${home}:${sub.name}` : home) : undefined;
+                      })
+                      .filter((s): s is string => Boolean(s))
                   ),
                 ];
                 const lines: string[] = [];
                 if (own.length) {
                   lines.push(
-                    `Some are in sub-profiles this server did not load ` +
-                      `(${[...new Set(own)].join(', ')}) — restart it as ` +
-                      `\`${selection.profile.name}\` to load all of them.`
+                    `Some are in this profile's sub-profiles this server did not load ` +
+                      `(${[...new Set(own.map((s) => s.name))].join(', ')}): read them through ` +
+                      `asc__call, or register \`npx -y ${PACKAGE} register ${selection.profile.name}\` ` +
+                      `for the tools themselves.`
                   );
                 }
-                if (homes.length) {
+                if (specs.length) {
                   lines.push(
-                    `The rest live on sibling MCP servers. Register the ones you need — ` +
-                      `the command is the same everywhere:\n` +
-                      homes.map((n) => `  ${serverName(n)}  ->  npx -y ${PACKAGE} ${n}`).join('\n') +
-                      `\nFor example, in Claude Code:\n` +
-                      homes.map((n) => `  ${registerCommand(n)}`).join('\n') +
-                      `\nOn other clients (Codex, Antigravity, Claude Desktop, …) add the same ` +
-                      `command/args to their config. Then restart your client.`
+                    `The rest are served by other ASC servers ` +
+                      `(${[...new Set(specs.map((s) => serverName(s)))].join(', ')}). If one is in ` +
+                      `your tool list, call it there; otherwise, with the user's yes, run ` +
+                      `\`npx -y ${PACKAGE} register ${specs.join(' ')}\` and ask them to restart ` +
+                      `their MCP client.`
                   );
                 }
                 return lines.join('\n') || `Run the server without a profile to combine domains freely.`;
@@ -960,31 +948,31 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 }
 
 /**
- * A server for a profile that no longer exists. It starts normally and serves
- * exactly one tool, which explains the split.
+ * A server for a profile argument that does not resolve — a name from an
+ * earlier version (`app-info`) or a typo. It starts normally and serves exactly
+ * one tool, which says to run setup and lists the current profiles.
  *
  * Exiting with an error would be more honest to a script and useless to a
  * person: the message goes to stderr and all the user sees in their client is
- * `asc-user-management ✗ failed`. Starting instead means the next time they ask
- * for something that profile used to do, the agent calls the one tool available
+ * `ASC-AppInfo ✗ failed`. Starting instead means the next time they ask for
+ * something that profile used to do, the agent calls the one tool available
  * and relays the answer as a sentence. It needs no credentials — a config error
  * would put us back where we started.
  */
-export function createRemovedProfileServer(name: string): Server {
-  const message = removedProfileMessage(name);
-  if (!message) throw new Error(`"${name}" is not a removed profile.`);
+export function createUnknownProfileServer(spec: string, reason?: string): Server {
+  const message = unknownProfileMessage(spec, reason);
 
   const server = new Server(
-    { name: `asc-${name}`, version: VERSION },
+    { name: serverName(spec), version: VERSION },
     { capabilities: { tools: {} } }
   );
 
   const tool = {
-    name: 'asc__profile_removed',
+    name: 'asc__profile_unknown',
     description:
-      `This MCP server is configured for the App Store Connect profile "${name}", which was ` +
-      `removed and split into smaller profiles. It carries no other tools. Call this for the ` +
-      `replacement list and the exact config change to tell the user about.`,
+      `This MCP server is configured for the App Store Connect profile "${spec}", which does ` +
+      `not exist — renamed, removed or mistyped. It carries no other tools. Call this for the ` +
+      `current profiles and the fix to tell the user about.`,
     inputSchema: { type: 'object' as const, properties: {} },
     annotations: { readOnlyHint: true },
   };

@@ -144,7 +144,7 @@ describe('testflight__assign_build_to_groups', () => {
     const server = createServer({
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
       readOnly: true, confirmWrites: 'off', includeDeprecated: false, dryRun: true,
-    }, resolveSelection('access:beta-groups'));
+    }, resolveSelection('testflight:groups'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
     await Promise.all([server.connect(st), client.connect(ct)]);
@@ -157,7 +157,7 @@ describe('testflight__assign_build_to_groups', () => {
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
       baseUrl: 'http://127.0.0.1:1', readOnly: false, confirmWrites: 'all',
       includeDeprecated: false, dryRun: false,
-    }, resolveSelection('access:beta-groups'));
+    }, resolveSelection('testflight:groups'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
     await Promise.all([server.connect(st), client.connect(ct)]);

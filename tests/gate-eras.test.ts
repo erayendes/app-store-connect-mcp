@@ -79,7 +79,7 @@ async function connect(
   const build = () =>
     createServer(
       { ...config, confirmWrites: options.confirmWrites ?? config.confirmWrites, nativeConfirm: options.nativeConfirm },
-      resolveSelection(options.profile ?? 'access')
+      resolveSelection(options.profile ?? 'testflight')
     );
   if (era === 'modern') {
     serveStdio(build, { transport: st });
@@ -381,14 +381,14 @@ describe.each(['legacy', 'modern'] as const)('live writes outside the release pi
   it.each([
     {
       what: 'opening or closing the app in a country',
-      profile: 'app-info',
+      profile: 'general',
       name: 'territory_availabilities__update',
       arguments: { id: 't-1', body: body('territoryAvailabilities', { available: false }, 't-1') },
       typed: false,
     },
     {
       what: 'setting where the app is sold',
-      profile: 'app-info',
+      profile: 'general',
       name: 'app_availabilities_v2__create',
       arguments: { body: body('appAvailabilities', { availableInNewTerritories: true }) },
       typed: false,
@@ -396,7 +396,7 @@ describe.each(['legacy', 'modern'] as const)('live writes outside the release pi
     {
       // A pre-order cannot be reopened once ended.
       what: 'ending a pre-order',
-      profile: 'app-info',
+      profile: 'general',
       name: 'end_app_availability_pre_orders__create',
       arguments: { body: { data: { type: 'endAppAvailabilityPreOrders' } } },
       typed: true,
@@ -454,21 +454,21 @@ describe.each(['legacy', 'modern'] as const)('live writes outside the release pi
     {
       // Store text's class: reversible by editing again, left to the client.
       what: 'editing the age rating declaration',
-      profile: 'app-info',
+      profile: 'general',
       name: 'age_rating_declarations__update',
       arguments: { id: 'ar-1', body: body('ageRatingDeclarations', { advertising: false }, 'ar-1') },
       sent: 'PATCH /v1/ageRatingDeclarations/ar-1',
     },
     {
       what: 'editing the license agreement',
-      profile: 'app-info',
+      profile: 'general',
       name: 'end_user_license_agreements__update',
       arguments: { id: 'eula-1', body: body('endUserLicenseAgreements', { agreementText: 'Terms' }, 'eula-1') },
       sent: 'PATCH /v1/endUserLicenseAgreements/eula-1',
     },
     {
       what: 'editing the accessibility declaration',
-      profile: 'app-info',
+      profile: 'general',
       name: 'accessibility_declarations__update',
       arguments: { id: 'ax-1', body: body('accessibilityDeclarations', { supportsVoiceover: true }, 'ax-1') },
       sent: 'PATCH /v1/accessibilityDeclarations/ax-1',
@@ -546,7 +546,7 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
       })
     );
     vi.mocked(nativeConfirm).mockResolvedValueOnce('approved');
-    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'marketing:asset-library' });
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'core' });
 
     const res: any = await client.callTool({
       name: 'listing__delete_assets',

@@ -34,7 +34,7 @@ const config: ServerConfig = {
 };
 
 async function connect() {
-  const server = createServer(config, resolveSelection('app-info'));
+  const server = createServer(config, resolveSelection('general'));
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'resources', version: '0' }, { capabilities: {} });
   await Promise.all([server.connect(st), client.connect(ct)]);

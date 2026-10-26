@@ -91,14 +91,22 @@ describe('asc__search_tools finds the macros', () => {
     );
   });
 
-  it('finds subscription preflight and routes an unloaded match to subscription-catalog', async () => {
+  it('finds subscription preflight and routes an unloaded match to its server and sub-profile', async () => {
     expect(await search('subscription review readiness')).toContain('preflight__check_subscription');
     const result: any = await executeMetaTool('asc__search_tools',
       { query: 'subscription review readiness', limit: 3 }, { ...ctx(), macroOffered: () => false });
     const hit = result.matches.find((m: any) => m.tool === 'preflight__check_subscription');
-    expect(hit.loaded).toBe(false);
-    expect(JSON.stringify(result)).toContain('monetization');
-    expect(JSON.stringify(result)).toContain('subscription-catalog');
+    expect(hit).toMatchObject({ loaded: false, server: 'ASC-Monetization', subProfile: 'subscription' });
+    expect(result.hint).toMatch(/register monetization:subscription/);
+    // A sibling server the client already runs comes first; registering is the fallback.
+    expect(result.hint).toMatch(/if that tool is in your tool list, call it there; otherwise register/);
+  });
+
+  it('names the server and sub-profile on a generated match, preferring its own profile', async () => {
+    const result: any = await executeMetaTool('asc__search_tools',
+      { query: 'create beta group', limit: 5 }, { ...ctx(), ownProfile: 'testflight' });
+    const hit = result.matches.find((m: any) => m.tool === 'beta_groups.create');
+    expect(hit).toMatchObject({ server: 'ASC-TestFlight', subProfile: 'groups' });
   });
 
   it('finds the Xcode Cloud diagnosis macro from a failure question', async () => {
