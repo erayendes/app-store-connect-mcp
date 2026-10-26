@@ -1,5 +1,7 @@
 # Media file targets (3.0)
 
+🇬🇧 English · 🇹🇷 [Türkçe](MEDIA_TARGETS_tr.md)
+
 Use the existing `media__list`, `media__upload` and `media__delete` tools with
 these `target` values. `page_id` is the exact owning resource ID in the table;
 it is not the image/file ID. `media__list` returns file IDs, names, processing

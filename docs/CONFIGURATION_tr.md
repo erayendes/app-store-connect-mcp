@@ -7,9 +7,9 @@
 İki tür ayar var. **Bayraklar**, uygulamanızın MCP ayarlarında `args` listesinin sonuna yazılır. **Ortam değişkenleri** ise yanındaki `env` bloğuna:
 
 ```json
-"ASC-AppInfo": {
+"ASC-General": {
   "command": "npx",
-  "args": ["-y", "@erayendes/asc-mcp", "app-info", "--read-only"],
+  "args": ["-y", "@erayendes/asc-mcp@beta", "general", "--read-only"],
   "env": { "ASC_RATE_LIMIT_PER_HOUR": "1200" }
 }
 ```
@@ -21,15 +21,23 @@
 | Bayrak | Ne yapar |
 |:--|:--|
 | `--read-only` | Bir şeyi değiştirebilecek bütün araçları kaldırır. Yapay zekâ onları göremez, dolayısıyla çağıramaz. |
-| `--dry-run` | Apple'a hiçbir şey gitmez. Her değişiklik, gönderilecek olanı risk seviyesiyle birlikte döndürür. Okumalar her zamanki gibi çalışır. |
+| `--dry-run` | Apple'a hiçbir değişiklik gönderilmez. Her değişiklik, gönderilecek olanı risk seviyesiyle birlikte döndürür. Okumalar her zamanki gibi çalışır. |
 | `--confirm` | Sadece riskli olanlardan değil, **her** değişiklikten önce sorar. |
-| `--no-confirm` | Hiç sormaz. Geriye yalnızca uygulamanızın kendi araç onayı kalır. |
-| `--include-deprecated` | Apple'ın kullanımdan kaldırdığı 123 işlemi de yükler (102'si Game Center). |
+| `--no-confirm` | Sormayı bırakır, tek istisnayla: `release__submit` ve `release__submit_items` her zaman sorar. Bunun dışında geriye yalnızca yapay zekâ uygulamanızın kendi araç onayı kalır. |
+| `--with-core` | ASC-Core araçlarını (uygulama bulma, araç arama, medya araçları) bu sunucudan da sunar; yalnızca tek sunucu çalıştırabilen yapay zekâ uygulamaları için. Setup'ın buna ihtiyacı yoktur: ASC-Core'u profillerinizin yanına kendisi kaydeder. |
+| `--include-deprecated` | Apple'ın kullanımdan kaldırdığı ya da yenisiyle değiştirdiği işlemleri de, profilin kapsadığı alanlarda yükler: toplam 185, 102'si Game Center. Eski (v1) abonelik ve uygulama içi satın alma araçları da bunlara dahildir. |
 | `--domains=<liste>` | Yalnızca profilsiz kullanımda: virgülle ayrılmış alanları ya da `all` ile hepsini yükler. |
 
-Varsayılan olarak Heimdall gelir, silme, altyapı ve erişim değişikliklerinden ve kullanıcıya ulaşan yayın adımlarından önce sorar: sürümü incelemeye göndermek, yayınlamak, kademeli yayını değiştirmek, bir build'i dış test kullanıcılarına açmak. Yayınlamak için CONFIRM yazmanızı ister. Sürüm oluşturmak ya da build seçmek gibi hazırlık adımlarını ve geri kalan her şeyi uygulamanızın onayına bırakır.
+**ASC-Core en sıkı ayarınıza uyar.** Setup ya da `register` bir uygulamaya ASC-Core eklerken, o uygulamadaki Heimdall sunucularından biri bayrakla ya da `ASC_READ_ONLY` ile salt okunursa ASC-Core'u da salt okunur ekler. Sonradan bir profili elle salt okunur yapmak ASC-Core'u değiştirmez; setup'ı yeniden çalıştırın ya da `--read-only`'yi ASC-Core'un kaydına da ekleyin.
 
-Bazı uygulamalar Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak Allow'a (ya da Enter'a) basarsanız yapılır. Don't Allow ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
+Heimdall varsayılan olarak iki şekilde sorar:
+
+- **CONFIRM yazmanızı ister:** gelir, silme (`destructive`), altyapı ya da erişim seviyesindeki her değişiklikte — fiyatlar ve teklifler, silmeler, sertifikalar ve iş akışları, kullanıcılar ve sandbox hesapları — ve geri alınamayan üç adımda: bir sürümü yayınlamak, ön siparişi bitirmek ve bir build'in süresini bitirmek (`expired: true` ile `builds__update`; silme sayılır). Fiyat makroları ve `testflight__assign_build_to_groups` da böyle sorar.
+- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan adımlarda: bir şeyi incelemeye göndermek (`release__submit`, `release__submit_items`, bir inceleme başvurusu), yeni bir abonelik, abonelik grubu ya da uygulama içi satın alma sürümü oluşturmak, kademeli yayını değiştirmek, bir build'i dış beta incelemesine göndermek, bir ülkede satışa açmak ya da satış durumunu değiştirmek, ürün sayfası denemesini başlatmak ya da değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
+
+Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_build_to_groups` CONFIRM ister. Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, diğer TestFlight ayarları ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek herkese açık seviyededir ve sormaz; birini kaldırmak ya da önce mevcut dosyayı silen `replace: true` ile yüklemek silme sayılır ve CONFIRM ister.
+
+Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak Allow'a (ya da Enter'a) basarsanız yapılır. Don't Allow ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
 
 ## Ortam değişkenleri
 
@@ -50,9 +58,9 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 
 | Değişken | Ne için |
 |:--|:--|
-| `ASC_READ_ONLY` | `true` = `--read-only` |
+| `ASC_READ_ONLY` | `true`, `1` ya da `yes` (büyük/küçük harf fark etmez) = `--read-only`. `false`, `0` ve boş dahil başka her değer yazmayı açık bırakır. |
 | `ASC_DRY_RUN` | `1` ya da `true` = `--dry-run` |
-| `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` |
+| `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (yayın araçları yine sorar) |
 | `ASC_NATIVE_CONFIRM` | `0` = uygulama soramıyorsa Mac penceresi açılmaz; bu değişiklikler reddedilir |
 | `ASC_INCLUDE_DEPRECATED` | `true` = `--include-deprecated` |
 | `ASC_DOMAINS` | `--domains` ile aynı |
@@ -119,7 +127,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
   ```json
   "ASC-ClientB": {
     "command": "npx",
-    "args": ["-y", "@erayendes/asc-mcp", "app-info"],
+    "args": ["-y", "@erayendes/asc-mcp@beta", "general"],
     "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/path/AuthKey_B.p8" }
   }
   ```
@@ -127,9 +135,11 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 - **Ayrı bir ayar klasörü.** İkinci hesap için setup'ı kendi klasörüyle bir kez çalıştırın:
 
   ```bash
-  ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp setup
+  ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp@beta setup
   ```
 
-  Hangi uygulamalara kaydedeceğini sorduğunda hiçbirini seçmeyin; böylece ilk hesabınızın sunucularına dokunmaz. Sonra aynı `ASC_CONFIG_DIR`'ı ikinci sunucunun `env` bloğuna yazın. Her klasör kendi anahtarını, Vendor number'ını ve Bundle ID'sini tutar.
+  Setup, işaretini kaldırdığınız her uygulamadan Heimdall'ı siler; bu yüzden işaretleri kaldırmayın. Sorduğunda terminali seçin ve *Apply these changes?* sorusuna **n** deyin: anahtar o noktada kaydedilmiştir ve ilk hesabınızın sunucuları olduğu gibi kalır. Sonra aynı `ASC_CONFIG_DIR`'ı ikinci sunucunun `env` bloğuna yazın. Her klasör kendi anahtarını, Vendor number'ını ve Bundle ID'sini tutar.
 
 Uygulamanızda ayırt edebilmek için sunuculara hesabın adını verin.
+
+ASC-Core kayıtlı ayarlarla oturum açar; bu yüzden iki hesabı bir arada kullanan bir uygulamada setup, ASC-Core'un hangi hesabı kullanacağını bilemez. Orada ASC-Core eklemez ve nedenini söyler. Bunun yerine her sunucunun `args` listesine `--with-core` ekleyin; böylece her sunucu çekirdek araçların kendi kopyasını kendi hesabıyla taşır.

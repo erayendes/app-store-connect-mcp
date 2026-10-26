@@ -18,8 +18,11 @@ Hesapta ilk kez API anahtarı oluşturuluyorsa API erişimini önce Account Hold
 
 Terminali açın.
 ```bash
-npx -y @erayendes/asc-mcp setup
+npx -y @erayendes/asc-mcp@beta setup
 ```
+
+> [!NOTE]
+> Bu sayfa 3.0 betasını anlatıyor; bu yüzden buradaki her komut `@erayendes/asc-mcp@beta` kullanır. Yalın `@erayendes/asc-mcp`, 3.0.0 yayınlanana kadar hâlâ 2.x'tir.
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, Issuer ID, Apple doğrulaması, profil ve alt profil seçimi, anahtarın Keychain'e kaydı" width="720">
@@ -33,7 +36,7 @@ Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 3. **Yapay zekâ uygulamalarınız.** Cihazınızda kurulu olanları bulur. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır. Claude Desktop açıkken kendi ayarlarını geri yazdığı için kurulum önce onu kapatmanızı ister. Kurulumu Claude Desktop'ın içinden çalıştırıyorsanız, Desktop'ı da kapsaması için Desktop'ı kapatıp kurulumu Terminal'den çalıştırın.
 4. **Plan.** Her uygulamada neyin değişeceği gösterilir ve bir kez onay istenir.
 
-Anahtar bilgileri Apple'a doğrulandıktan sonra kaydedilir. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
+Setup anahtar bilgilerini kaydetmeden önce Apple'a doğrular. Apple'ın reddettiği anahtar kaydedilmez; Apple'a ulaşılamazsa setup bunu söyler ve bilgileri yine de kaydeder. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
 Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantısını kontrol et"* deyin.
 
@@ -43,9 +46,17 @@ Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantıs
 > - **Xcode 27** eklentileri Git URL'sinden kurduğu için bir config dosyası yoktur. Bu yüzden setup sihirbazından kurulamıyor; [kendi bölümü](#xcode-27de-heimdall-kullanmak) var.
 > - **Heimdall'ı yapay zekânıza kurduracaksanız** o yalnızca profilleri `register` ile ekleyebilir. Anahtar için `setup`'ı siz çalıştırırsınız; kurulum sırasında anahtarınız yapay zekâya hiç gösterilmez. Kurallar [AGENTS.md](../AGENTS.md)'de.
 
+### ASC-Core da gelir
+
+Uygulamalarınızı bulmak, bütün araçlarda aramak, ekran görüntüsü ve video araçları her profilin içinde değil, tek bir sunucuda durur: **ASC-Core**. Setup ve `register` onu her uygulamada profillerinizin yanına ekler; siz seçmezsiniz.
+
+- Bir uygulamadaki Heimdall sunucularından biri salt okunursa ASC-Core da salt okunur eklenir.
+- ASC-Core, oradaki sunucularınızla aynı hesabı kullandığı gösterilemeyen bir yapay zekâ uygulamasına eklenmez: sunucular farklı App Store Connect hesapları kullanıyorsa, `env`'lerinde kendi kimlik bilgilerini taşıyorsa ya da ayar dosyası veya kayıtlarından biri tam okunamıyorsa (`envFile` yükleyen bir kayıt da buna girer). Plan bunu nedeniyle birlikte söyler.
+- Bir uygulamadan son profil de çıkınca ASC-Core da çıkar.
+
 ### Nereye kaydedilir
 
-Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`, profillerinizi bulduğu her uygulamaya kaydeder. Böylece her defasında ayrı ayrı işlem yapmanıza gerek kalmaz.
+Hiçbir yapay zekâ uygulaması ortak bir config dosyasını paylaşmaz. `setup`, profillerinizi ASC-Core'la birlikte bulduğu her uygulamaya kaydeder. Böylece her defasında ayrı ayrı işlem yapmanıza gerek kalmaz.
 
 | Uygulama | Nereye | Nasıl yazılır |
 |:--|:--|:--|
@@ -71,9 +82,10 @@ Adımlar aynı, yalnızca daha rahat: neye ihtiyacınız olduğunu seçersiniz, 
 
 Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birkaç profille başlayın, proje ihtiyaç duydukça daha fazlasını ekleyin.
 
-- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`.
+- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp@beta setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
 - Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
+- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir.
 
 ## Yüklü olmayan bir araç gerekirse
 
@@ -81,14 +93,14 @@ Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini sö
 
 ## Xcode 27'de Heimdall kullanmak
 
-1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir.
+1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir.
 2. Xcode → Settings → Intelligence → Plug-ins → **Add Plug-in…**
 3. **Add from URL** seçin, `https://github.com/erayendes/app-store-connect-mcp` yapıştırın.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo adresi girilmiş" width="560">
 
-4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin.
+4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin. Xcode her eklentiyi ayrı çalıştırdığı için her biri ASC-Core araçlarını kendi içinde taşır; ayrı bir çekirdek eklentisi yoktur.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall profilleri, her biri onay kutulu" width="560">
@@ -110,9 +122,11 @@ Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect
 |:--|:--|:--|
 | **Kurdum ama Claude'da görünmüyor** | Claude, profilleri yalnızca açılışta yükler. Setup, **Claude (Code & Desktop)** seçeneğiyle iki uygulamaya birlikte yazar; biri başarısız olursa bunu sonundaki özette söyler. | Claude'u tamamen kapatıp yeniden açın. Özette hata varsa `setup`'ı yeniden çalıştırın. Windows ve Linux'ta Claude masaüstü uygulamasına otomatik kayıt henüz yok. |
 | **`401 Unauthorized`** | Key ID, Issuer ID ve `.p8` aynı anahtara ait değil ya da anahtar iptal edilmiş. | `setup`'ı yeniden çalıştırın ve kayıtlı bilgileri yeniden kullanmak isteyip istemediğinizi sorduğunda **n** deyin. Anahtarı yeniden girin; setup kaydetmeden önce Apple'a doğrular. |
-| **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli değil. | Yapay zekâya *"Anahtarımın yetkilerini kontrol et"* deyin. Hangi rolün gerektiği [Roller](ROLES_tr.md)'de. |
+| **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli değil ya da bir App Store Connect sözleşmesi imzalanmamış veya süresi dolmuş. | Yapay zekâya *"Anahtarımın yetkilerini kontrol et"* deyin. Hangi rolün gerektiği [Roller](ROLES_tr.md)'de. Sözleşmeyi yalnızca Account Holder App Store Connect'te kabul edebilir; hiçbir anahtar bunu çözmez. |
 | **Sürüm güncellemesinde `409 Conflict`** | App Store Connect düzenlemelere yalnızca belirli sürüm durumlarında izin verir. | İncelemede olan veya yayınlanmış bir sürüm kilitlidir. |
 | **İhtiyacım olan araç listede yok** | Başka bir profilde. | Yapay zekâya sorun: *"X için bir araç var mı?"* |
+| **Bir sunucuda, profilinin olmadığını söyleyen tek bir araç var** | Ayarları, önceki bir sürümden kalma bir profil adı içeriyor; örneğin `app-info`. | `setup`'ı yeniden çalıştırıp profillerinizi seçin; eski kaydı siler (`app-info` artık `general`). |
+| **Uygulama bulma, araç arama ya da ekran görüntüsü araçları yok** | Bu uygulamada ASC-Core kayıtlı değil. Setup, uygulamadaki sunucular farklı hesaplar kullanıyorsa onu eklemez. | `setup`'ı yeniden çalıştırıp plana bakın; ASC-Core'un neden eklenmediğini söyler. |
 | **`429 Too Many Requests`** | Apple her anahtar için saatlik bir istek sınırı uygular (şu an 3.600); bu sınır dolmuş. | Heimdall kısa bir süre bekleyip kendisi tekrar dener. Sık görüyorsanız aynı anahtarı başka bir araç da kullanıyordur (ör. CI'daki Fastlane); ona ayrı bir anahtar oluşturun. |
 | **Yeni uygulama oluşturulamıyor** | Apple'ın API'si yeni uygulama oluşturmaya izin vermez. | Uygulamayı bir kez App Store Connect web sayfasından oluşturun; sonrasını Heimdall'la yönetebilirsiniz. |
 

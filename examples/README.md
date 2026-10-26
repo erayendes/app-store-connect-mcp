@@ -12,10 +12,11 @@ part that usually goes wrong.
 
 ### Starter packs
 
-Register only what the project uses, plus `core`. Core is its own server
-(ASC-Core) with app lookup (`apps__list`, `apps__get`), tool search
-(`asc__search_tools`) and the screenshot and asset-library tools; the other
-profiles leave those out, so it goes next to whichever ones you install.
+Register only what the project uses. `register` and `setup` add `core` beside
+it on their own: core is its own server (ASC-Core) with app lookup
+(`apps__list`, `apps__get`), tool search (`asc__search_tools`) and the media
+tools for screenshots, images and files. The other profiles leave those out,
+so every pack below counts it.
 
 | You are | Install | Tools |
 |:--|:--|--:|
@@ -28,13 +29,16 @@ profiles leave those out, so it goes next to whichever ones you install.
 | Build & signing | `core` + `provisioning` + `xcode-cloud` | 101 |
 
 ```bash
-npx -y @erayendes/asc-mcp register core distribution general
+npx -y @erayendes/asc-mcp@beta register distribution general
 ```
+
+While 3.0 is in beta the package is `@erayendes/asc-mcp@beta`; from 3.0.0 on,
+drop `@beta`.
 
 Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
 Narrower is better than broader: `monetization:subscription-offers` is 17
-tools where `monetization` is 197, and the reads in the sub-profiles you
+tools where `monetization` is 152, and the reads in the sub-profiles you
 skipped are one `asc__call` away — the proxy reaches any operation of its own
 profile, loaded or not.
 
@@ -151,7 +155,7 @@ whole, and the useful answer is one row of it.
 > Clear the purchase history for our sandbox account and set its territory to
 > Turkey.
 
-Needs `monetization`. Sandbox testers are accounts you create in App Store
+Needs `access:sandbox`. Sandbox testers are accounts you create in App Store
 Connect, not real Apple IDs; clearing purchase history is what makes a
 subscription purchasable again in testing, and it is a separate call from
 editing the tester.
@@ -169,16 +173,18 @@ Three things about credentials and flags in CI:
 - **`ASC_PRIVATE_KEY` as an inline PEM** is the right form here. The Keychain
   does not exist on a runner and a key file on disk is one more thing to clean
   up.
-- **`--no-confirm`** is required for any write, and it is honest rather than
-  reckless: there is no user to answer a prompt, so the default `strong` gate
-  would refuse the write and report it as a refusal. Say so explicitly instead
-  of appearing to hang.
+- **`--no-confirm`** (or `ASC_CONFIRM_WRITES=0`) says out loud that no one is
+  there to answer. By default Heimdall asks before revenue, deletion,
+  infrastructure and access writes and before a list of release steps; with no
+  one to answer, those are refused and the log reads like a bug. Two tools ask
+  even under `--no-confirm`: `release__submit` and `release__submit_items`, so
+  submitting for review cannot run unattended.
 - **`--read-only`** for anything that only reports. A job that cannot write
   cannot write by accident, which is worth more than a careful prompt.
 
 Run the whole thing under **`--dry-run`** first. Every write comes back as what
 *would* have been sent — method, path, body, risk level — after validation, and
-nothing reaches Apple.
+no change is sent to Apple. Reads still go to Apple.
 
 ---
 
@@ -186,11 +192,11 @@ nothing reaches Apple.
 
 ### Başlangıç paketleri
 
-Yalnızca projenin kullandığını, bir de `core`'u kaydedin. Core kendi başına bir
-sunucu (ASC-Core): uygulama arama (`apps__list`, `apps__get`), araç arama
-(`asc__search_tools`), ekran görüntüsü ve varlık kütüphanesi araçları onda.
-Diğer profiller bunları taşımıyor; o yüzden hangilerini kurarsanız kurun,
-yanına core'u da ekleyin.
+Yalnızca projenin kullandığını kaydedin. `register` ve `setup`, `core`'u
+yanına kendiliğinden ekler: core kendi başına bir sunucu (ASC-Core); uygulama
+arama (`apps__list`, `apps__get`), araç arama (`asc__search_tools`) ve ekran
+görüntüsü, görsel ve dosya için medya araçları onda. Diğer profiller bunları
+taşımıyor; bu yüzden aşağıdaki her paket onu da sayar.
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
@@ -203,18 +209,21 @@ yanına core'u da ekleyin.
 | Build ve imzalama | `core` + `provisioning` + `xcode-cloud` | 101 |
 
 ```bash
-npx -y @erayendes/asc-mcp register core distribution general
+npx -y @erayendes/asc-mcp@beta register distribution general
 ```
+
+3.0 beta aşamasındayken paket `@erayendes/asc-mcp@beta`; 3.0.0'dan sonra
+`@beta`'yı kaldırın.
 
 “Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
 Dar olan geniş olandan iyidir: `monetization:subscription-offers` 17 araç,
-`monetization` 197. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
+`monetization` 152. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
 uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her işleme ulaşır.
 
 ---
 
-### Satış veya finans raporu çek
+### Satış veya finans raporu çekmek
 
 > Geçen ayın satış raporunu indir ve adet bazında ilk beş ülkeyi söyle.
 
@@ -229,7 +238,7 @@ uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her işleme ula�
 
 ---
 
-### TestFlight geri bildirimlerini özetle
+### TestFlight geri bildirimlerini özetlemek
 
 > TestFlight testçileri bu hafta 2026100412 build'i için ne bildiriyor?
 
@@ -237,7 +246,7 @@ uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her işleme ula�
 
 ---
 
-### TestFlight testçisi davet et
+### TestFlight testçisi davet etmek
 
 > sara@example.com'u Insiders grubuna ekle ve en son build'i ver.
 
@@ -255,7 +264,7 @@ gerekmez. Testçiler "hiçbir şey görünmüyor" diyorsa sebep genelde budur.
 
 ---
 
-### İnceleme öncesi aboneliği denetleyin
+### İnceleme öncesi aboneliği denetlemek
 
 > Example uygulamasının Monthly aboneliğini inceleme öncesi kontrol et, katalog eksiklerini listele.
 > Ardından Premium grubundaki bütün abonelikleri denetle.
@@ -268,7 +277,7 @@ katalog eksiği olmadığı anlamına gelir; Apple onayını tahmin etmez. `--re
 
 ---
 
-### Sürüm oluştur ve build bağla
+### Sürüm oluşturmak ve build bağlamak
 
 > 3.2 sürümünü başlat, 412 build'ini bağla ve göndermeden önce ne eksik söyle.
 
@@ -285,7 +294,7 @@ Bilinmeye değer iki arıza, ikisi de kendini bildirmiyor:
 
 ---
 
-### Yorumları triyaj et ve cevap taslağı yaz
+### Yorumları sınıflamak ve cevap taslağı yazmak
 
 > Bu haftanın cevapsız 1 yıldızlı yorumlarını göster ve yorumun dilinde cevap
 > taslağı yaz.
@@ -301,7 +310,7 @@ Cevaplar bir dil modeli gibi değil ekibiniz gibi konuşsun istiyorsanız
 
 ---
 
-### Tek dilin anahtar kelimelerini güncelle
+### Tek dilin anahtar kelimelerini güncellemek
 
 > Türkçe anahtar kelimeleri bunlarla değiştir, diğer dillere dokunma.
 
@@ -315,18 +324,18 @@ yarayan cevap onun tek satırı.
 
 ---
 
-### Sandbox test kullanıcılarını yönet
+### Sandbox test kullanıcılarını yönetmek
 
 > Sandbox hesabımızın satın alma geçmişini temizle ve ülkesini Türkiye yap.
 
-`monetization` gerekir. Sandbox testçileri App Store Connect'te oluşturduğunuz
+`access:sandbox` gerekir. Sandbox testçileri App Store Connect'te oluşturduğunuz
 hesaplar, gerçek Apple ID değil; satın alma geçmişini temizlemek testte bir
 aboneliği yeniden satın alınabilir yapan şey ve testçiyi düzenlemekten ayrı bir
 çağrı.
 
 ---
 
-### CI'da çalıştır
+### CI'da çalıştırmak
 
 [`ci/release-notes.yml`](ci/release-notes.yml) çalışan bir GitHub Actions
 workflow'u: bir ajan son tag'den beri gelen commit'leri okuyor, sürüm notu
@@ -336,12 +345,15 @@ CI'da kimlik ve bayraklar için üç not:
 
 - **`ASC_PRIVATE_KEY` satır içi PEM olarak** buradaki doğru biçim. Runner'da
   Keychain yok ve diskteki bir anahtar dosyası temizlenecek bir şey daha.
-- **`--no-confirm`** her yazma için gerekli, ve pervasız değil dürüst: istemi
-  cevaplayacak kullanıcı yok, yani varsayılan `strong` kapı yazmayı reddeder ve
-  bunu ret olarak bildirir. Takılıyormuş gibi görünmektense açıkça söyleyin.
+- **`--no-confirm`** (ya da `ASC_CONFIRM_WRITES=0`), soruyu cevaplayacak kimsenin
+  olmadığını açıkça söyler. Heimdall varsayılan olarak gelir, silme, altyapı ve
+  erişim yazmalarından ve bir dizi yayın adımından önce sorar; cevaplayan
+  olmayınca bunlar reddedilir ve günlükte hata gibi görünür. İki araç
+  `--no-confirm` ile de sorar: `release__submit` ve `release__submit_items`;
+  yani incelemeye gönderim gözetimsiz çalışamaz.
 - **`--read-only`** yalnızca rapor üreten her iş için. Yazamayan bir iş yanlışlıkla
   da yazamaz; bu, dikkatli bir istemden daha değerli.
 
 Önce hepsini **`--dry-run`** ile koşturun. Her yazma, doğrulamadan geçtikten
 sonra ne *gönderilecekti* onu döndürür — metot, yol, gövde, risk seviyesi — ve
-Apple'a hiçbir şey ulaşmaz.
+Apple'a hiçbir değişiklik gönderilmez. Okumalar yine Apple'a gider.

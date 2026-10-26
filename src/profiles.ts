@@ -49,8 +49,8 @@ export interface Profile {
  */
 const DESCRIPTIONS: Record<string, string> = {
   core:
-    'App lookup, tool search, account status and the screenshot and asset-library upload tools — ' +
-    'register it next to any other profile.',
+    'App lookup, tool search, account status and the media tools for every screenshot, video, ' +
+    'image and file — register it next to any other profile.',
 
   access: 'Your App Store Connect team: members and roles, invitations, sandbox test accounts.',
   'access/sandbox': 'Sandbox test accounts for in-app purchase testing, and clearing their purchase history.',
@@ -83,8 +83,8 @@ const DESCRIPTIONS: Record<string, string> = {
     'Submitting for review and releasing: review submissions and their items, release requests, ' +
     'the one-call submit macro.',
   'distribution/version':
-    'App Store versions and their localizations: what is new, keywords, screenshot and preview ' +
-    'sets, the version preflight and the translation tools.',
+    'App Store versions and their localizations: what is new, keywords, the version preflight ' +
+    "and the translation tools. Screenshots and previews go through ASC-Core's media tools.",
 
   'game-center': 'Game Center: achievements, leaderboards, activities, challenges, groups, matchmaking.',
   'game-center/achievements': 'Achievements: versions, localizations, images, player submissions.',
@@ -112,9 +112,10 @@ const DESCRIPTIONS: Record<string, string> = {
   marketing:
     'Store presence beyond the version page: custom product pages, product page optimization, ' +
     'in-app events, customer reviews, nominations.',
-  'marketing/app-events': 'In-app events: localizations, screenshots, video clips.',
+  'marketing/app-events':
+    "In-app events and their localizations. Their images and videos go through ASC-Core's media tools.",
   'marketing/custom-pp':
-    'Custom product pages: versions, localizations, keywords, screenshot and preview sets.',
+    "Custom product pages: versions, localizations, keywords. Screenshots and previews go through ASC-Core's media tools.",
   'marketing/customer-reviews':
     'Customer reviews, responses, summaries, and the AI triage and reply-draft tools.',
   'marketing/nominations': 'Nominations submitted to Apple for editorial featuring.',
@@ -333,8 +334,9 @@ export function registerCommand(spec: string): string {
  * config error only reaches stderr and all the user sees is `ASC-AppInfo ✗
  * failed`. A tool the agent can call turns an invisible log line into a
  * sentence in the conversation. Generic on purpose: a list of renamed profiles
- * is one more table to keep in step, and `setup` already knows how to rewrite
- * the config to the current names.
+ * is one more table to keep in step. `setup` does not map an old name to a new
+ * one: it removes the dead entry (when it is ours and clean) and the user picks
+ * from the current profiles listed below.
  */
 export function unknownProfileMessage(spec: string, reason?: string): string {
   return (
@@ -342,8 +344,9 @@ export function unknownProfileMessage(spec: string, reason?: string): string {
     `not exist in Heimdall — it was renamed or removed, or it is a typo.` +
     (reason ? `\n${reason.split('\n')[0]}` : '') +
     `\n\nThis server carries no App Store Connect tools. Tell the user to run ` +
-    `\`npx -y @erayendes/asc-mcp setup\` in a terminal, which rewrites their MCP client ` +
-    `config to the current profiles, and then restart the client.\n\nCurrent profiles:\n` +
+    `\`npx -y ${PACKAGE} setup\` in a terminal: it removes entries whose profile no ` +
+    `longer exists and lets them pick from the current profiles below. Then restart ` +
+    `the client.\n\nCurrent profiles:\n` +
     PROFILES.map((p) => `  ${p.name.padEnd(18)} ${p.description}`).join('\n')
   );
 }

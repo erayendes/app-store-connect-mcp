@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@erayendes/asc-mcp",
+        "@erayendes/asc-mcp@beta",
         "provisioning",
         "--with-core"
       ]

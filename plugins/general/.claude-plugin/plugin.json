@@ -1,6 +1,6 @@
 {
   "name": "asc-general",
-  "version": "2.8.0",
+  "version": "3.0.0-beta.1",
   "description": "The app's identity and store facts: names and subtitles, categories, availability by country, age rating, EULA, accessibility labels, tags.",
   "author": {
     "name": "Eray Endes",

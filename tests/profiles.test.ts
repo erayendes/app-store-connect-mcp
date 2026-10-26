@@ -237,12 +237,14 @@ describe('classifyVerifyError (offline saves, 401 re-prompts)', () => {
 });
 
 import { registerCommand } from '../src/profiles.js';
+import { PACKAGE } from '../src/clients.js';
 import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 
 describe('AI-136 improvements', () => {
   it('registerCommand emits a runnable claude mcp add line', () => {
+    // PACKAGE carries @beta on a prerelease, so the line runs the same channel.
     expect(registerCommand('monetization')).toBe(
-      'claude mcp add -s user ASC-Monetization -- npx -y @erayendes/asc-mcp monetization'
+      `claude mcp add -s user ASC-Monetization -- npx -y ${PACKAGE} monetization`
     );
   });
 

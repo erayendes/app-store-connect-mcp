@@ -13,7 +13,7 @@ The best habit, with this project or any other, is to check a tool before you tr
 > [!TIP]
 > **Ask your own AI to review it.** Point it at this repository or the npm package and ask: *"Does this send my key or my data anywhere other than Apple? Any telemetry, any calls to other servers?"* The code is small: every App Store Connect request goes through a single file (`src/core/http.ts`), and customer-transaction (StoreKit) calls use Apple's official library.
 
-- **Almost every tool is generated, not hand-written.** They come from Apple's own OpenAPI specification (`spec/openapi.json`) via `scripts/generate.ts`, so what you review is what runs. The 38 hand-written ones (pricing, store listing, release checks, TestFlight, reviews, StoreKit…) are in the same open code, under `src/tools/` and `src/storekit/`.
+- **Almost every tool is generated, not hand-written.** They come from Apple's own OpenAPI specification (`spec/openapi.json`) via `scripts/generate.ts`, so what you review is what runs. The 41 hand-written ones (pricing, screenshots and videos, release checks, TestFlight, reviews, StoreKit…) are in the same open code, under `src/tools/` and `src/storekit/`.
 
 ### How the package reaches you
 
@@ -57,7 +57,7 @@ Heimdall has **no server of its own and no telemetry**. There is nothing to turn
 
 Letting an AI work on a live App Store listing deserves some care.
 
-- **Risky changes ask first (on by default).** Before changing a price, giving someone Admin access, deleting something or touching certificates, Heimdall opens a confirmation in the app you use and shows what would change. A misread instruction can't run unchecked. If the app can't show that confirmation, the change doesn't run.
+- **Risky changes ask first (on by default).** Before changing a price, giving someone Admin access, deleting something or touching certificates, Heimdall opens a confirmation in the app you use and shows what would change. A misread instruction can't run unchecked. If the app can't show that confirmation, Heimdall opens a dialog of its own on a Mac, which the AI can neither see nor answer; where there is no such dialog, the change doesn't run.
 - **Other changes** go through the app's own tool approval, which every app has.
 - **Read-only mode** removes every tool that can change something. The AI can't see them, so it can't call them. [How to turn it on](../docs/CONFIGURATION_en.md#flags).
 - **Labels on every tool.** Each tool tells the app whether it only reads, or makes a change that's hard to undo (a price, a release, a deletion, access, certificates), so the app can ask for approval where it matters.
@@ -88,7 +88,7 @@ En iyi alışkanlık, bu projede ya da başka herhangi birinde, bir araca güven
 > [!TIP]
 > **Kullandığınız yapay zekâya incelettirin.** Ona bu depoyu ya da npm paketini gösterin ve sorun: *"Bu, anahtarımı ya da verimi Apple dışında bir yere gönderiyor mu? Telemetri ya da başka sunuculara istek var mı?"* Kod küçük: App Store Connect'e giden her istek tek bir dosyadan geçiyor (`src/core/http.ts`), müşteri işlemleri (StoreKit) ise Apple'ın resmî kütüphanesini kullanıyor.
 
-- **Araçların neredeyse tamamı elle yazılmıyor, üretiliyor.** Apple'ın kendi OpenAPI spesifikasyonundan (`spec/openapi.json`) `scripts/generate.ts` ile üretiliyorlar; yani incelediğiniz şey, çalışan şeydir. Elle yazılan 38 araç (fiyat, mağaza sayfası, sürüm kontrolleri, TestFlight, yorumlar, StoreKit…) da aynı açık kodun içinde: `src/tools/` ve `src/storekit/`.
+- **Araçların neredeyse tamamı elle yazılmıyor, üretiliyor.** Apple'ın kendi OpenAPI spesifikasyonundan (`spec/openapi.json`) `scripts/generate.ts` ile üretiliyorlar; yani incelediğiniz şey, çalışan şeydir. Elle yazılan 41 araç (fiyat, ekran görüntüsü ve video, sürüm kontrolleri, TestFlight, yorumlar, StoreKit…) da aynı açık kodun içinde: `src/tools/` ve `src/storekit/`.
 
 ### Paket size nasıl ulaşıyor
 
@@ -132,7 +132,7 @@ Heimdall'ın **kendine ait bir sunucusu ve telemetrisi yok**. Kapatmanız gereke
 
 Canlı bir App Store sayfasında bir yapay zekâyı çalıştırmak biraz özen ister.
 
-- **Riskli değişikliklerden önce onay (varsayılan olarak açık).** Fiyat değiştirmek, birine Admin yetkisi vermek, bir şeyi silmek ya da sertifikalara dokunmak gibi işlemlerden önce Heimdall, kullandığınız uygulamada bir onay penceresi açar ve neyin değişeceğini gösterir. Yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Uygulama bu onay penceresini gösteremiyorsa değişiklik hiç yapılmaz.
+- **Riskli değişikliklerden önce onay (varsayılan olarak açık).** Fiyat değiştirmek, birine Admin yetkisi vermek, bir şeyi silmek ya da sertifikalara dokunmak gibi işlemlerden önce Heimdall, kullandığınız uygulamada bir onay penceresi açar ve neyin değişeceğini gösterir. Yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Uygulama bu onay penceresini gösteremiyorsa Heimdall, Mac'te yapay zekânın göremeyeceği ve cevaplayamayacağı kendi penceresini açar; böyle bir pencere yoksa değişiklik hiç yapılmaz.
 - **Diğer değişiklikler** uygulamanın kendi araç onayından geçer; her uygulamada bu onay vardır.
 - **Salt okunur mod**, bir şeyi değiştirebilecek bütün araçları kaldırır. Yapay zekâ onları göremez, dolayısıyla çağıramaz. [Nasıl açılır](../docs/CONFIGURATION_tr.md#bayraklar).
 - **Her araçta etiket.** Her araç uygulamaya yalnızca okuyup okumadığını ya da geri alması zor bir değişiklik yapıp yapmadığını (fiyat, yayın, silme, erişim, sertifika) bildirir; uygulama da gereken yerde onay ister.

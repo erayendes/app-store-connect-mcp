@@ -8,29 +8,58 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [2.8.0] — 2026-10-25
+### [3.0.0-beta.1] — 2026-10-26
 
-**An image and video library for your app.** Apple added an image and video library to App Store Connect. You upload an image or video to your app's library and use it wherever you like. 24 new tools in the `marketing:asset-library` sub-profile cover it. You can now tell the AI "upload this image or video to the library", and it can place it on a page in the same step if you want.
+The first beta of 3.0. The first number changed because your AI app's settings need to change too: profile names are new, and so are some server names. You run `setup` once and pick your profiles again.
 
-**Delete several files from the asset library with one confirmation.** `listing__delete_assets` takes the app and the files to delete. Before it deletes anything, it checks that every file is in that app's library. If even one isn't, it deletes nothing. Then it asks you once, and the window names the app and every file. Before, you got one window per file.
+**Profiles follow the work you do.** The profiles were cut again from scratch. There are 13 to pick from, and 50 sub-profiles: `general` replaces `app-info`, sandbox accounts moved to `access:sandbox`, beta groups and testers to `testflight`, and the money tools split into `monetization:subscription`, `in-app-purchases`, `subscription-offers`, `transactions` and more. [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) lists every profile and sub-profile, with every tool in it ([#187](https://github.com/erayendes/app-store-connect-mcp/pull/187)).
 
-The window for deleting a single library image or video now also says which app it belongs to, when the file is used on a page, for example `01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT`. A file that isn't used on any page says so instead. Apple doesn't record which app an unused file belongs to, so its app can't be shown.
+**ASC-Core.** Finding your apps, searching every tool and the screenshot and video tools used to be copied into every server. Now they are one server of their own, `ASC-Core`, which setup registers next to your profiles in each AI app. If one of your Heimdall servers in an AI app is read-only, ASC-Core is too. Setup doesn't add ASC-Core to an AI app, and says why, when it can't show that ASC-Core would sign in as the same account: the servers there use different App Store Connect accounts, one of them carries credentials of its own (in its `env`, or through an `envFile`), or that AI app's settings can't be read in full. An AI app that runs only one server can fold ASC-Core in with `--with-core`; the Xcode plug-ins do. With every profile registered, the AI reads nearly a fifth fewer tokens of tool descriptions than before.
 
-**Make a subscription offer in every country at once.** `pricing__make_offer` makes a win-back or promotional offer from one country and one price, or as a free trial. Apple works out the price in every other country the subscription is sold in. The whole offer goes to Apple in one request, so it is made complete or not at all. If any country is missing a price, nothing is sent. Apple doesn't let you change an offer's countries or prices afterwards, so try it with `--dry-run` first to see every country's price.
+**Four tools for every screenshot, video, image and file.** `media__list`, `media__upload`, `media__arrange` and `media__delete` work through your app's image and video library on the version page, custom product pages, product page tests and in-app events. Upload a file and place it in one step, reorder or remove it, set a video's poster frame, archive or rename it. Deleting checks that every file belongs to that app and page before it deletes any, and asks you once. They replace the `listing__*` screenshot and library tools, and the temporary `marketing:asset-library` sub-profile is gone ([#189](https://github.com/erayendes/app-store-connect-mcp/pull/189)).
 
-It makes introductory offers too. Apple takes those one country at a time, so Heimdall checks every country first and only then starts writing. If something fails partway, it tells you which countries are done, and running the same call again carries on from there. `undo: true` takes the offer back from every country.
+The same tools now also take the other images and files App Store Connect holds: App Clip header and advanced experience images, Game Center achievement, leaderboard, leaderboard set, activity and challenge images, in-app purchase and subscription images and review screenshots, export compliance documents, App Review attachments, routing coverage, background asset files and build upload files. Each upload checks the file and who owns it before anything is sent, and an owner that holds one file is only replaced when you ask for it. The 73 raw tools they replace for these files are no longer listed, and `distribution:routing-coverage` is gone. Every target and its rules: [Media targets](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/MEDIA_TARGETS_en.md) ([#191](https://github.com/erayendes/app-store-connect-mcp/pull/191)).
 
-Creating a win-back offer with the raw tool works now. It used to refuse a request in the exact shape Apple's own documentation shows, before sending it.
+**Send anything to review in one call.** `release__submit_items` submits in-app purchases, subscriptions, in-app events, custom product pages, product page tests, Game Center items and background assets. It reads what is already in the submission, lists every item before you confirm, and can add the app's version when the item has to go with it, as an app's first subscription does. `release__submit` still sends an App Store version ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
 
-The "are you sure?" window for a screenshot or app preview now says which one it is. It used to show only the file name, such as `02.png`. Now it also shows the app, the version, the language and the device size, such as `02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67`.
+**Subscriptions and in-app purchases use Apple's new (v2) tools only.** Apple retired the old localization, image and submission tools in its 4.4.1 API, and Heimdall no longer serves them; `--include-deprecated` brings them back. `preflight__check_subscription` now checks the draft version. Creating a new version of a subscription or in-app purchase asks you first ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
 
-The window for sending a version to review now names the app and the platform, such as `App: Ask Quran (6636549188), Version: 2.1.3, Platform: iOS`. It used to show only the Apple ID. When an app has an editable version on more than one platform, `release__submit` and `preflight__check_version` now ask which one instead of taking whichever Apple listed first ([#179](https://github.com/erayendes/app-store-connect-mcp/pull/179)).
+**`asc__load` is gone.** A server started with some of its sub-profiles still reads the rest through `asc__call`. For the tools themselves, the AI runs the `register` command the server names, with your yes.
 
-Fewer "are you sure?" windows. Changing the name, description or image of a subscription or in-app purchase used to ask as if you were changing its price, once for every language. It doesn't ask anymore. Deleting one still asks, and so does changing a price.
+**Try it.** Run `npx -y @erayendes/asc-mcp@beta setup` and pick your profiles again; old names are not carried over (`app-info` is now `general`). Setup removes the entries whose profile no longer exists when they are Heimdall's own and carry no credentials or `envFile` of their own; others it lists and leaves alone. It moves the entries you keep to the beta and adds ASC-Core. Until then, a server whose settings still name an old profile shows one tool telling the AI to run setup.
 
-The browser setup page shows other projects from Milowda in a column beside the steps ([#180](https://github.com/erayendes/app-store-connect-mcp/pull/180)).
+**Your permission rules need the new names.** Rules in your AI app that allow Heimdall tools by server name, such as `mcp__ASC-AppInfo__*` or `mcp__ASC-Marketing__listing__upload_asset`, no longer match: `ASC-AppInfo` is now `ASC-General`, app lookup and the media tools live in `ASC-Core`, and the media tools have new names. Your AI app will ask again for those tools until you update the rules.
 
-Heimdall now has 929 tools.
+**Going back.** Run `npx -y @erayendes/asc-mcp@2.8.0 setup` and pick your profiles again. If an `ASC-Core` entry or another 3.0 name is left in an AI app, delete it from that app's MCP settings.
+
+Heimdall now has 751 tools.
+
+### [2.8.0] — 2026-10-26
+
+Hi,
+
+The 3.x I'm working on now is the biggest change to Heimdall since I started building it. It will ship as a beta for a while, then replace 2.x. Profiles are reorganised around the work you do, the shared tools every server used to carry move into one server, and multi-step jobs become single-call macros. Moving to 3.x takes one more run of `setup`.
+
+During the beta and for a while after, I'll keep 2.x alive with maintenance fixes. My advice is still to move to 3.x. If you'd rather stay on 2.x no matter what, forking it is in your hands :)
+
+Here's what's in 2.8, the last big 2.x release:
+
+- **Asset Library**
+  - An image and video library for your app: upload once, use it on any page. 24 tools in `marketing:asset-library`.
+  - Delete several library files with one confirmation (`listing__delete_assets`). The window for deleting a single file also shows which app it belongs to.
+- **Subscription offers**
+  - `pricing__make_offer` sets up an offer in every country in one go.
+  - Introductory offers go country by country; if one stops halfway it picks up where it left off, and `undo` takes it back.
+  - Creating a win-back offer with the raw tool works now.
+- **Clearer confirmations**
+  - Sending a version to review names the app and the platform. If more than one platform is in play, it asks instead of guessing.
+  - Deleting a screenshot says which app, version, language and device it is.
+  - Changing the name, description or image of a subscription or in-app purchase no longer asks.
+  - Some actions now ask first: making the app available or unavailable in a country, ending a pre-order, a product page test, changing a Game Center set, posting a score or achievement for a player. Ending a pre-order and expiring a build can't be undone, so for those you type CONFIRM.
+- **Setup**
+  - It leaves entries you added yourself alone and only tells you they're there. When it updates its own entries it keeps your settings, such as read-only.
+  - The setup page shows Milowda's other projects.
+- **Tool count:** Heimdall 2.8 has 929 tools.
 
 ### [2.7.1] — 2026-10-16
 
@@ -259,29 +288,58 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [2.8.0] — 2026-10-25
+### [3.0.0-beta.1] — 2026-10-26
 
-**Uygulamanız için bir görsel ve video kütüphanesi.** Apple, App Store Connect’e bir görsel/video kütüphanesi ekledi. Bir görseli ya da videoyu uygulamanın kütüphanesine yükleyip istediğiniz yerde kullanıyorsunuz. `marketing:asset-library` alt profilindeki 24 yeni araç bunu kapsıyor. Artık yapay zekâya “şu görseli ya da videoyu kütüphaneye yükle” diyebilirsiniz; isterseniz aynı anda bir sayfaya da yerleştiriyor.
+3.0'ın ilk betası. İlk sayı değişti, çünkü yapay zekâ uygulamanızın ayarlarının da değişmesi gerekiyor: profil adları yeni, bazı sunucu adları da. `setup`'ı bir kez çalıştırıp profillerinizi yeniden seçersiniz.
 
-**Kütüphaneden birden çok dosyayı tek onayla silin.** `listing__delete_assets` uygulamayı ve silinecek dosyaları alıyor. Bir şey silmeden önce her dosyanın o uygulamanın kütüphanesinde olduğunu kontrol ediyor. Biri bile yoksa hiçbir şey silmiyor. Sonra size bir kez soruyor; pencerede uygulama ve her dosyanın adı yazıyor. Önceden her dosya için ayrı bir pencere açılıyordu.
+**Profiller yaptığınız işe göre.** Profiller baştan yeniden bölündü. Seçebileceğiniz 13 profil ve 50 alt profil var: `app-info`'nun yerini `general` aldı, sandbox hesapları `access:sandbox`'a, beta grupları ve testçiler `testflight`'a taşındı, gelirle ilgili araçlar da `monetization:subscription`, `in-app-purchases`, `subscription-offers`, `transactions` gibi parçalara ayrıldı. [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfası her profili ve alt profili, içindeki bütün araçlarla listeliyor ([#187](https://github.com/erayendes/app-store-connect-mcp/pull/187)).
 
-Tek bir kütüphane görselini ya da videosunu silerken açılan pencere de artık, dosya bir sayfada kullanılıyorsa hangi uygulamaya ait olduğunu söylüyor: `01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT` gibi. Hiçbir sayfada kullanılmayan dosyada bunun yerine bunu yazıyor. Apple, kullanılmayan bir dosyanın hangi uygulamaya ait olduğunu kaydetmiyor; bu yüzden onun uygulaması gösterilemiyor.
+**ASC-Core.** Uygulamalarınızı bulmak, bütün araçlarda aramak, ekran görüntüsü ve video araçları önceden her sunucuya ayrı ayrı kopyalanıyordu. Artık kendi başlarına tek bir sunucu: `ASC-Core`. Setup onu her yapay zekâ uygulamasında profillerinizin yanına kaydediyor. Bir yapay zekâ uygulamasındaki Heimdall sunucularınızdan biri salt okunursa ASC-Core da salt okunur oluyor. ASC-Core'un aynı hesapla oturum açacağını gösteremediği yerde setup onu eklemiyor ve nedenini söylüyor: oradaki sunucular farklı App Store Connect hesapları kullanıyorsa, biri kendi kimlik bilgilerini taşıyorsa (`env` içinde ya da bir `envFile` ile) ya da o yapay zekâ uygulamasının ayarları tam okunamıyorsa. Tek sunucu çalıştırabilen bir yapay zekâ uygulaması ASC-Core'u `--with-core` ile profilin içine alabiliyor; Xcode eklentileri böyle yapıyor. Bütün profiller kayıtlıyken yapay zekânın okuduğu araç açıklamaları öncekinden beşte bire yakın daha az token tutuyor.
 
-**Abonelik teklifini tüm ülkelerde bir kerede kurun.** `pricing__make_offer`, bir ülke ve bir fiyattan (ya da ücretsiz deneme olarak) win-back veya promosyon teklifi kuruyor; aboneliğin satıldığı diğer bütün ülkelerin fiyatını Apple hesaplıyor. Teklifin tamamı Apple'a tek istekte gidiyor: ya eksiksiz kuruluyor ya hiç kurulmuyor. Bir ülkenin bile fiyatı eksikse hiçbir şey gönderilmiyor. Apple bir teklifin ülkelerini ve fiyatlarını sonradan değiştirmeye izin vermediği için önce `--dry-run` ile deneyin; her ülkenin fiyatını görürsünüz.
+**Her ekran görüntüsü, video, görsel ve dosya için dört araç.** `media__list`, `media__upload`, `media__arrange` ve `media__delete`; sürüm sayfasında, özel ürün sayfalarında, ürün sayfası denemelerinde ve uygulama içi etkinliklerde uygulamanızın görsel ve video kütüphanesi üzerinden çalışıyor. Bir dosyayı yükleyip tek adımda yerleştirebilir, sıralayabilir, kaldırabilir, bir videonun kapak karesini seçebilir, arşivleyebilir ya da yeniden adlandırabilirsiniz. Silmeden önce her dosyanın o uygulamaya ve sayfaya ait olduğunu kontrol ediyor ve size bir kez soruyor. `listing__*` ekran görüntüsü ve kütüphane araçlarının yerini aldılar; geçici `marketing:asset-library` alt profili de kalktı ([#189](https://github.com/erayendes/app-store-connect-mcp/pull/189)).
 
-Tanıtım tekliflerini de kuruyor. Apple bunları ülke ülke kabul ettiği için Heimdall önce her ülkeyi kontrol ediyor, sonra yazmaya başlıyor. Yarıda bir hata çıkarsa hangi ülkelerin bittiğini söylüyor; aynı çağrıyı tekrar çalıştırdığınızda kaldığı yerden devam ediyor. `undo: true` teklifi bütün ülkelerden geri alıyor.
+Aynı araçlar artık App Store Connect'teki diğer görselleri ve dosyaları da alıyor: App Clip başlık ve gelişmiş deneyim görselleri; Game Center başarım, sıralama tablosu, tablo seti, etkinlik ve meydan okuma görselleri; uygulama içi satın alma ve abonelik görselleri ile inceleme ekran görüntüleri; ihracat uyumluluğu belgeleri, App Review ekleri, yol tarifi kapsamı, background asset dosyaları ve build yükleme dosyaları. Her yükleme, hiçbir şey gönderilmeden önce dosyayı ve sahibini kontrol ediyor; tek dosya tutan bir sahibin dosyası ancak siz isterseniz değiştiriliyor. Bu dosyalar için yerini aldıkları 73 ham araç artık listelenmiyor, `distribution:routing-coverage` da kalktı. Bütün hedefler ve kuralları: [Medya hedefleri](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/MEDIA_TARGETS_tr.md) ([#191](https://github.com/erayendes/app-store-connect-mcp/pull/191)).
 
-Ham araçla win-back teklifi kurmak artık çalışıyor. Önceden, Apple'ın kendi belgesindeki biçimde bir isteği göndermeden reddediyordu.
+**Her şeyi tek çağrıyla incelemeye gönderin.** `release__submit_items`; uygulama içi satın almaları, abonelikleri, uygulama içi etkinlikleri, özel ürün sayfalarını, ürün sayfası denemelerini, Game Center öğelerini ve background asset'leri gönderiyor. Başvuruda zaten ne olduğunu okuyor, onaylamadan önce her öğeyi listeliyor ve öğenin sürümle gitmesi gerekiyorsa (bir uygulamanın ilk aboneliği gibi) uygulamanın sürümünü de ekleyebiliyor. App Store sürümünü göndermek için yine `release__submit` var ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
 
-Bir ekran görüntüsü ya da önizleme videosu için açılan "emin misiniz?" penceresi artık hangisi olduğunu söylüyor. Önceden yalnızca `02.png` gibi dosya adını gösteriyordu. Artık uygulamayı, sürümü, dili ve cihaz boyutunu da gösteriyor: `02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67` gibi.
+**Abonelikler ve uygulama içi satın almalar yalnızca Apple'ın yeni (v2) araçlarıyla.** Apple eski dil, görsel ve gönderim araçlarını 4.4.1 API'sinde kullanımdan kaldırdı; Heimdall da artık onları sunmuyor. `--include-deprecated` geri getiriyor. `preflight__check_subscription` artık taslak sürümü kontrol ediyor. Bir aboneliğin ya da uygulama içi satın almanın yeni sürümünü oluşturmak önce size soruyor ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
 
-Bir sürümü incelemeye gönderirken açılan pencere artık uygulamanın adını ve platformu söylüyor: `App: Ask Quran (6636549188), Version: 2.1.3, Platform: iOS` gibi. Önceden yalnızca Apple ID'yi gösteriyordu. Bir uygulamanın birden çok platformda düzenlenebilir sürümü varsa `release__submit` ve `preflight__check_version` artık Apple'ın ilk listelediğini almak yerine hangisi olduğunu soruyor ([#179](https://github.com/erayendes/app-store-connect-mcp/pull/179)).
+**`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
 
-Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
+**Denemek için** `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırıp profillerinizi yeniden seçin; eski adlar taşınmıyor (`app-info` artık `general`). Setup, profili artık olmayan kayıtları Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siliyor; diğerlerini listeleyip olduğu gibi bırakıyor. Tuttuğunuz kayıtları betaya geçiriyor ve ASC-Core'u ekliyor. O zamana kadar ayarlarında eski bir profil adı geçen bir sunucu, yapay zekâya setup'ı çalıştırmasını söyleyen tek bir araç gösteriyor.
 
-Tarayıcıdaki kurulum sayfası, adımların yanındaki bir sütunda Milowda'nın diğer projelerini gösteriyor ([#180](https://github.com/erayendes/app-store-connect-mcp/pull/180)).
+**İzin kurallarınızın yeni adlara geçmesi gerekiyor.** Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren `mcp__ASC-AppInfo__*` ya da `mcp__ASC-Marketing__listing__upload_asset` gibi kurallar artık eşleşmiyor: `ASC-AppInfo` artık `ASC-General`, uygulama bulma ve medya araçları `ASC-Core`'da, medya araçlarının adları da değişti. Kuralları güncelleyene kadar yapay zekâ uygulamanız bu araçlar için yeniden onay isteyecek.
 
-Heimdall artık 929 araç içeriyor.
+**Geri dönmek için** `npx -y @erayendes/asc-mcp@2.8.0 setup` komutunu çalıştırıp profillerinizi yeniden seçin. Bir yapay zekâ uygulamasında `ASC-Core` ya da başka bir 3.0 adı kalırsa onu o uygulamanın MCP ayarlarından silin.
+
+Heimdall artık 751 araç içeriyor.
+
+### [2.8.0] — 2026-10-26
+
+Selam,
+
+Şu an üzerinde çalıştığım 3.x, Heimdall'ı geliştirmeye başladığımdan bu yana gelen en büyük değişiklik. Bir süre beta olarak yayınlanacak, sonra 2.x'in yerini alacak. Profiller işinize göre yeniden düzenleniyor; her sunucunun taşıdığı ortak araçlar tek bir sunucuda toplanıyor; çok adımlı işler tek çağrılık makrolara dönüşüyor. 3.x'e geçerken `setup`'ı bir kez yeniden çalıştırmanız yetecek.
+
+Beta süresince ve sonrasında 2.x'i bir süre daha bakım kapsamında ayakta tutacağım. Ama önerim 3.x'e geçmeniz. Yok, illa 2.x ile devam edeceğim diyorsanız, forklamak sizin elinizde :)
+
+Son büyük 2.x sürümü olan 2.8'de neler var:
+
+- **Asset Library**
+  - Uygulamanız için bir görsel ve video kütüphanesi: bir kez yükleyip istediğiniz sayfada kullanıyorsunuz. `marketing:asset-library`'de 24 araç var.
+  - Kütüphaneden birden çok dosyayı tek onayla silebilirsiniz (`listing__delete_assets`). Tek dosya silerken açılan pencere dosyanın hangi uygulamaya ait olduğunu da gösteriyor.
+- **Abonelik teklifleri**
+  - `pricing__make_offer` bir teklifi tüm ülkelerde tek seferde kuruyor.
+  - Tanıtım teklifleri ülke ülke kuruluyor. Yarıda kalırsa kaldığı yerden devam ediyor, `undo` ile geri alınabiliyor.
+  - Ham araçla win-back teklifi kurmak artık çalışıyor.
+- **Daha net onay pencereleri**
+  - İncelemeye gönderirken pencere uygulamanın adını ve platformu gösteriyor. Birden çok platform varsa tahmin etmek yerine soruyor.
+  - Ekran görüntüsü silerken hangi uygulama, sürüm, dil ve cihaz olduğu yazıyor.
+  - Abonelik ve uygulama içi satın alımın adını, açıklamasını ya da görselini değiştirirken artık onay sorulmuyor.
+  - Bazı işlemler artık önce soruyor: uygulamayı bir ülkede satışa açmak ya da kapatmak, ön siparişi bitirmek, ürün sayfası testi, Game Center setini değiştirmek, oyuncu adına skor ya da başarım göndermek. Ön siparişi bitirmek ve bir build'in süresini doldurmak geri alınamadığı için CONFIRM yazmanız gerekiyor.
+- **Kurulum**
+  - Kendi elinizle eklediğiniz girdilere dokunmuyor; yalnızca orada olduklarını söylüyor. Kendi eklediği girdileri güncellerken salt okunur gibi ayarlarınızı koruyor.
+  - Kurulum sayfasında Milowda'nın diğer projeleri var.
+- **Araç sayısı:** Heimdall 2.8 ile 929 araç içeriyor.
 
 ### [2.7.1] — 2026-10-16
 

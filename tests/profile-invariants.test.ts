@@ -21,6 +21,7 @@ import {
   unknownProfileMessage,
 } from '../src/profiles.js';
 import { OPERATIONS } from '../src/generated/operations.js';
+import { PACKAGE } from '../src/clients.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
 import { ToolRegistry } from '../src/core/registry.js';
 import { FILE_TARGETS, type FileAdapter } from '../src/tools/media-catalog.js';
@@ -430,7 +431,8 @@ describe('unknown profiles', () => {
   it('writes a message an agent can relay verbatim', () => {
     const message = unknownProfileMessage('app-info');
     expect(message).toContain('"app-info"');
-    expect(message).toContain('npx -y @erayendes/asc-mcp setup');
+    // The same channel as this server: a beta's setup, not the stable one's.
+    expect(message).toContain(`npx -y ${PACKAGE} setup`);
     // Generic: every live profile, and no table of renames to keep in step.
     for (const p of PROFILES) expect(message).toContain(p.name);
   });

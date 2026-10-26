@@ -17,10 +17,14 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSyn
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
+import { PACKAGE } from '../src/clients.js';
 
 const DIST = resolve(__dirname, '../dist/index.js');
 const VERSION = createRequire(import.meta.url)('../package.json').version;
 const built = existsSync(DIST);
+// The channel this version registers, and the one a rewrite moves away from:
+// a beta writes `@beta`, a stable release the bare name.
+const OTHER_CHANNEL = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
 
 const run = (bin: string, args: string[]): string =>
   execFileSync('node', [bin, ...args], { encoding: 'utf8', timeout: 20_000 });
@@ -43,7 +47,7 @@ describe.skipIf(!built)('an unknown profile', () => {
   it('fails at once when input closes before any client speaks', () => {
     const res = runServer('');
     expect(res.status).toBe(1);
-    expect(res.stderr).toContain('npx -y @erayendes/asc-mcp setup');
+    expect(res.stderr).toContain(`npx -y ${PACKAGE} setup`);
     expect(res.stderr).toContain('general');
   });
 
@@ -55,7 +59,7 @@ describe.skipIf(!built)('an unknown profile', () => {
         rpc({ id: 2, method: 'tools/call', params: { name: 'asc__profile_unknown', arguments: {} } })
     );
     expect(res.stdout).toContain('ASC-AppInfo');
-    expect(res.stdout).toContain('asc-mcp setup');
+    expect(res.stdout).toContain(`${PACKAGE} setup`);
   });
 });
 
@@ -221,7 +225,7 @@ if (args[1] === 'remove') delete doc.mcpServers[name];
 fs.writeFileSync(path, JSON.stringify(doc));
 `);
     chmodSync(bin, 0o755);
-    const old = { command: 'npx', args: ['-y', '@erayendes/asc-mcp@beta', 'general', '--read-only'],
+    const old = { command: 'npx', args: ['-y', OTHER_CHANNEL, 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 19 };
     writeFileSync(join(home, '.claude.json'), JSON.stringify({ mcpServers: { 'ASC-General': old } }));
     const { code } = register(home, ['general', '--clients=claude'],
@@ -231,11 +235,11 @@ fs.writeFileSync(path, JSON.stringify(doc));
     expect(code).toBe(0);
     expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json', 'add-json']);
     expect(JSON.parse(calls[2][5])).toEqual({ ...old,
-      args: ['-y', '@erayendes/asc-mcp', 'general', '--read-only'] });
+      args: ['-y', PACKAGE, 'general', '--read-only'] });
     expect(updated).toEqual(JSON.parse(calls[2][5]));
     // Core follows the profile's read-only, added as a whole entry too.
     expect(calls[3][4]).toBe('ASC-Core');
-    expect(JSON.parse(calls[3][5])).toEqual({ command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'core', '--read-only'] });
+    expect(JSON.parse(calls[3][5])).toEqual({ command: 'npx', args: ['-y', PACKAGE, 'core', '--read-only'] });
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -252,12 +256,12 @@ fs.writeFileSync(path, JSON.stringify(doc));
   it('gives core the read-only an entry has in its env', () => {
     const { home, cursor } = sandbox();
     writeFileSync(cursor, JSON.stringify({ mcpServers: {
-      'ASC-Analytics': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'analytics'], env: { ASC_READ_ONLY: 'true' } },
+      'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'], env: { ASC_READ_ONLY: 'true' } },
     } }));
     const { out } = register(home, ['webhooks', '--clients=cursor']);
     expect(out).toContain('✓ added ASC-Core (--read-only)');
     expect(JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Core'].args)
-      .toEqual(['-y', '@erayendes/asc-mcp', 'core', '--read-only']);
+      .toEqual(['-y', PACKAGE, 'core', '--read-only']);
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -281,7 +285,7 @@ fs.writeFileSync(path, JSON.stringify(doc));
 
   it('keeps read-only flags and env on a channel rewrite, and reports credential entries', () => {
     const { home, cursor } = sandbox();
-    const other = '@erayendes/asc-mcp@beta';
+    const other = OTHER_CHANNEL;
     const guarded = { command: 'npx', args: ['-y', other, 'analytics'],
       env: { ASC_CONFIG_DIR: '/test-only/config' } };
     writeFileSync(cursor, JSON.stringify({ mcpServers: {
@@ -293,7 +297,7 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const entries = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers;
     expect(code).toBe(0);
     expect(entries['ASC-General']).toEqual({ command: 'npx',
-      args: ['-y', '@erayendes/asc-mcp', 'general', '--read-only'],
+      args: ['-y', PACKAGE, 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 10 });
     expect(entries['ASC-Analytics']).toEqual(guarded);
     expect(out).toContain('user-managed, unchanged: ASC-Analytics');
@@ -361,7 +365,7 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const { home } = sandbox();
     const { out } = register(home, ['analytics', '--clients=cursor']);
     expect(out).toMatch(/No credentials stored yet/);
-    expect(out).toContain('asc-mcp setup');
+    expect(out).toContain(`${PACKAGE} setup`);
     rmSync(home, { recursive: true, force: true });
   });
 });

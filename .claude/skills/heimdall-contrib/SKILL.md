@@ -5,7 +5,11 @@ description: Work on the Heimdall repository itself (@erayendes/asc-mcp) — the
 
 Two files are the source of truth and nothing else is: `spec/openapi.json`
 (Apple's, fetched) and `spec/profiles.csv` (hand-curated, the owner's
-spreadsheet). Everything in `src/generated/` is output.
+spreadsheet). Everything in `src/generated/` is output. A third, small one
+corrects the first: `spec/deprecated-overrides.json` lists operations Apple
+retired in its release notes but still leaves unflagged in the spec (the v1
+subscription and in-app purchase tools, the 4.5.1 screenshot/preview sets),
+and the generator treats them as deprecated.
 
 ## Never edit `src/generated/`
 
@@ -40,8 +44,8 @@ npm run ax:report
 
 ## Curating a description is the highest-leverage change here
 
-Descriptions are what a model reads when choosing among 987 tools, and roughly
-700 are still Apple's own one-line summary. Add entries to `CURATED` in
+Descriptions are what a model reads when choosing among hundreds of tools, and
+most are still Apple's own one-line summary (`npm run ax:report` has the number). Add entries to `CURATED` in
 `scripts/describe.ts`. What earns the space is what comes back, what narrows
 it, and which neighbouring tool this one is *not*.
 
@@ -65,7 +69,32 @@ change did it — not to force the ranking back.
 
 ## Moving a tool between profiles
 
-Edit `spec/profiles.csv`, then regenerate. `tests/profile-invariants.test.ts`
+Edit `spec/profiles.csv`, then regenerate.
+
+How the structure works since 3.0:
+
+- **`core` is a profile like the others**, flat, served as `ASC-Core`. It is
+  not folded into every server any more; `register` and `setup` add it beside
+  the profiles (read-only if any entry there is, withheld when the accounts
+  cannot be shown to match), and `--with-core` folds it into one process for
+  clients that run a single server — the Xcode plug-ins do. A tool every
+  profile needs goes in `core`, once.
+- **Every operation is accounted for, and not every one is placed.**
+  `scripts/generate-profiles.ts` emits three lists beside the profiles:
+  `PROFILELESS` (CSV rows marked `(profilsiz)`: reverse reads no workflow
+  needs, reachable only with `--domains`), `TWIN_OF` (one side of a
+  relationship Apple exposes from both ends, dropped for its twin, which must
+  be placed) and `MACRO_COVERED` (operations a hand-written macro replaces
+  outright, such as the asset library under `media__*`). An operation in none
+  of these and in no profile fails the orphan test.
+- **The tool counts are pinned** in the `counts` block of
+  `tests/profile-invariants.test.ts`; a membership change moves them on purpose.
+
+`docs/PROFILES_en.md` and `docs/PROFILES_tr.md` list every tool of every
+sub-profile with a one-line description (the Turkish lines come from the
+owner's sheet, the English ones translate them). `tests/docs-drift.test.ts`
+fails when membership and those lists, or any advertised count, disagree: a
+tool moved or added needs its line in both files. `tests/profile-invariants.test.ts`
 will reject the result if a profile cannot reach its own root resources from an
 app, or if a write's `{id}` has no read that produces it. Both were real bugs
 before they were tests.
@@ -76,7 +105,8 @@ in `scripts/generate-profiles.ts` or the row is rejected as a typo. Forgetting
 that is why `listing__get_screenshots` shipped in 2.0.0 unreachable from every
 profile-mode server.
 
-A new macro also has to be registered in three test-side places, or it looks
+The macro itself goes in `src/tools/catalog.ts`, the one list the server's
+macro lists, search and the gate's write set derive from. A new macro also has to be registered in three test-side places, or it looks
 like a typo there instead: `macroNames` in `tests/eval-intents.test.ts`, the
 `macros` array in `tests/macro-output-schema.test.ts`, and the pinned counts in
 `tests/profile-invariants.test.ts`.
@@ -140,3 +170,10 @@ to carry a comparison.
 A spec bump that introduces a resource `scripts/domains.ts` does not know about
 lands it in `misc`, and CI fails. Add it there deliberately rather than letting
 the fallback absorb it.
+
+## Retiring an operation Apple has not flagged
+
+Add it to `spec/deprecated-overrides.json` with the release-notes URL and API
+version. The guard cuts both ways: an entry for an operation that is gone, or
+that Apple has since flagged itself, fails generation — so the file only ever
+holds what Apple's spec still gets wrong.
