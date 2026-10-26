@@ -264,6 +264,24 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
     const a = res?.data?.attributes;
     return a?.name ? `${a.name}${a.productId ? ` (${a.productId})` : ''}` : undefined;
   },
+  subscriptionVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionVersions/${encodeURIComponent(id)}`, { include: 'subscription' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'subscriptions')?.attributes?.name;
+    return `${product ?? 'Subscription'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  subscriptionGroupVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionGroupVersions/${encodeURIComponent(id)}`, { include: 'subscriptionGroup' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'subscriptionGroups')?.attributes?.referenceName;
+    return `${product ?? 'Subscription group'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  inAppPurchaseVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/inAppPurchaseVersions/${encodeURIComponent(id)}`, { include: 'inAppPurchase' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'inAppPurchases')?.attributes?.name;
+    return `${product ?? 'In-app purchase'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
   apps: async (http, id) => {
     const res: any = await http.get(`/v1/apps/${encodeURIComponent(id)}`);
     const a = res?.data?.attributes;
@@ -329,6 +347,7 @@ const LABEL_ATTRIBUTES = [
   'referenceName',
   'title',
   'versionString',
+  'version',
   'productId',
   'bundleId',
   'fileName',
@@ -598,9 +617,18 @@ export async function buildWritePreview(
       for (const c of flat.slice(0, MAX_CHANGE_LINES)) lines.push(`  ${c}`);
       if (flat.length > MAX_CHANGE_LINES) lines.push('  …');
     }
+    if (Array.isArray(args.items)) {
+      lines.push('Items in submission:');
+      for (const item of args.items as Array<{ type?: string; id?: string }>) {
+        lines.push(`  ${item.type ?? 'unknown'}: ${item.id ?? 'unknown'}`);
+      }
+    }
   }
 
   lines.push(`Risk:       ${risk} — ${REVERSIBILITY[risk]}`);
+  if (/^(subscription_versions|subscription_group_versions|in_app_purchase_versions)(__|\.)create$/.test(toolName)) {
+    lines.push('A draft version cannot be deleted.');
+  }
   if (strong) lines.push('', 'Type CONFIRM in the field below to proceed.');
 
   return { message: lines.join('\n'), strong };

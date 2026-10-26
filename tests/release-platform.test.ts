@@ -39,7 +39,7 @@ describe('pickVersion', () => {
 describe('the release prompt', () => {
   const http = {
     get: async (path: string) =>
-      path === '/v1/apps/6636549188'
+      path.includes('/reviewSubmissions') ? { data: [] } : path === '/v1/apps/6636549188'
         ? { data: { id: '6636549188', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } } }
         : { data: both },
   } as any;
@@ -49,6 +49,7 @@ describe('the release prompt', () => {
       app: 'Ask Quran (6636549188)',
       version: '2.1.3',
       platform: 'iOS',
+      items: [{ type: 'appStoreVersion', id: both[0].id }],
     });
   });
 

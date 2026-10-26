@@ -22824,9 +22824,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "POST",
     "path": "/v1/inAppPurchaseImages",
-    "description": "Create an in-app purchase image.",
+    "description": "Create an in-app purchase image. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22838,9 +22838,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "DELETE",
     "path": "/v1/inAppPurchaseImages/{id}",
-    "description": "Delete an in-app purchase image.",
+    "description": "Delete an in-app purchase image. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -22853,9 +22853,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "GET",
     "path": "/v1/inAppPurchaseImages/{id}",
-    "description": "Read one in-app purchase image by ID.",
+    "description": "Read one in-app purchase image by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -22891,9 +22891,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "PATCH",
     "path": "/v1/inAppPurchaseImages/{id}",
-    "description": "Update an in-app purchase image.",
+    "description": "Update an in-app purchase image. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -22907,7 +22907,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "POST",
     "path": "/v2/inAppPurchaseLocalizations",
-    "description": "Create an in-app purchase localizations (v2).",
+    "description": "Create a in-app purchase localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -22936,7 +22936,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "GET",
     "path": "/v2/inAppPurchaseLocalizations/{id}",
-    "description": "Read one in-app purchase localizations (v2) by ID.",
+    "description": "Read a in-app purchase localization by ID and see its version relationship.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -22970,7 +22970,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "PATCH",
     "path": "/v2/inAppPurchaseLocalizations/{id}",
-    "description": "Update an in-app purchase localizations (v2).",
+    "description": "Update a in-app purchase localization by ID on its editable version draft.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [
@@ -22986,9 +22986,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "POST",
     "path": "/v1/inAppPurchaseLocalizations",
-    "description": "Create an in-app purchase localization.",
+    "description": "Create an in-app purchase localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23000,9 +23000,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "DELETE",
     "path": "/v1/inAppPurchaseLocalizations/{id}",
-    "description": "Delete an in-app purchase localization.",
+    "description": "Delete an in-app purchase localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -23015,9 +23015,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "GET",
     "path": "/v1/inAppPurchaseLocalizations/{id}",
-    "description": "Read one in-app purchase localization by ID.",
+    "description": "Read one in-app purchase localization by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -23050,9 +23050,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "PATCH",
     "path": "/v1/inAppPurchaseLocalizations/{id}",
-    "description": "Update an in-app purchase localization.",
+    "description": "Update an in-app purchase localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -23549,9 +23549,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "POST",
     "path": "/v1/inAppPurchaseSubmissions",
-    "description": "Create an in-app purchase submission.",
+    "description": "Create an in-app purchase submission. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23563,21 +23563,21 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "POST",
     "path": "/v1/inAppPurchaseVersions",
-    "description": "Create an in-app purchase version.",
+    "description": "Create one editable in-app purchase review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "InAppPurchaseVersionCreateRequest",
-    "risk": "revenue"
+    "risk": "release"
   },
   {
     "name": "in_app_purchase_versions.get",
     "domain": "iap",
     "method": "GET",
     "path": "/v1/inAppPurchaseVersions/{id}",
-    "description": "Read one in-app purchase version by ID.",
+    "description": "Read a in-app purchase review version by ID, including its version number and review state.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -23834,9 +23834,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "GET",
     "path": "/v2/inAppPurchases/{id}/images",
-    "description": "List the images belonging to an in-app purchases (v2).",
+    "description": "List the images belonging to an in-app purchases (v2). DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -23885,9 +23885,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "iap",
     "method": "GET",
     "path": "/v2/inAppPurchases/{id}/inAppPurchaseLocalizations",
-    "description": "List the in-app purchase localizations belonging to an in-app purchases (v2).",
+    "description": "List the in-app purchase localizations belonging to an in-app purchases (v2). DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -26411,7 +26411,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v2/subscriptionGroupLocalizations",
-    "description": "Create a subscription group localizations (v2).",
+    "description": "Create a subscription group localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -26440,7 +26440,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v2/subscriptionGroupLocalizations/{id}",
-    "description": "Read one subscription group localizations (v2) by ID.",
+    "description": "Read a subscription group localization by ID and see its version relationship.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -26474,7 +26474,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v2/subscriptionGroupLocalizations/{id}",
-    "description": "Update a subscription group localizations (v2).",
+    "description": "Update a subscription group localization by ID on its editable version draft.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [
@@ -26490,9 +26490,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionGroupLocalizations",
-    "description": "Create a subscription group localization.",
+    "description": "Create a subscription group localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26504,9 +26504,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "DELETE",
     "path": "/v1/subscriptionGroupLocalizations/{id}",
-    "description": "Delete a subscription group localization.",
+    "description": "Delete a subscription group localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -26519,9 +26519,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionGroupLocalizations/{id}",
-    "description": "Read one subscription group localization by ID.",
+    "description": "Read one subscription group localization by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -26554,9 +26554,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v1/subscriptionGroupLocalizations/{id}",
-    "description": "Update a subscription group localization.",
+    "description": "Update a subscription group localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -26570,9 +26570,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionGroupSubmissions",
-    "description": "Create a subscription group submission.",
+    "description": "Create a subscription group submission. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26584,21 +26584,21 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionGroupVersions",
-    "description": "Create a subscription group version.",
+    "description": "Create one editable subscription group review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionGroupVersionCreateRequest",
-    "risk": "revenue"
+    "risk": "release"
   },
   {
     "name": "subscription_group_versions.get",
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionGroupVersions/{id}",
-    "description": "Read one subscription group version by ID.",
+    "description": "Read a subscription group review version by ID, including its version number and review state.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -26726,9 +26726,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations",
-    "description": "List the subscription group localizations belonging to a subscription group.",
+    "description": "List the subscription group localizations belonging to a subscription group. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27006,9 +27006,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionImages",
-    "description": "Create a subscription image.",
+    "description": "Create a subscription image. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27020,9 +27020,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "DELETE",
     "path": "/v1/subscriptionImages/{id}",
-    "description": "Delete a subscription image.",
+    "description": "Delete a subscription image. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27035,9 +27035,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionImages/{id}",
-    "description": "Read one subscription image by ID.",
+    "description": "Read one subscription image by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27073,9 +27073,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v1/subscriptionImages/{id}",
-    "description": "Update a subscription image.",
+    "description": "Update a subscription image. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27134,7 +27134,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v2/subscriptionLocalizations",
-    "description": "Create a subscription localizations (v2).",
+    "description": "Create a subscription localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
@@ -27163,7 +27163,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v2/subscriptionLocalizations/{id}",
-    "description": "Read one subscription localizations (v2) by ID.",
+    "description": "Read a subscription localization by ID and see its version relationship.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -27197,7 +27197,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v2/subscriptionLocalizations/{id}",
-    "description": "Update a subscription localizations (v2).",
+    "description": "Update a subscription localization by ID on its editable version draft.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [
@@ -27213,9 +27213,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionLocalizations",
-    "description": "Create a subscription localization.",
+    "description": "Create a subscription localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27227,9 +27227,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "DELETE",
     "path": "/v1/subscriptionLocalizations/{id}",
-    "description": "Delete a subscription localization.",
+    "description": "Delete a subscription localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27242,9 +27242,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionLocalizations/{id}",
-    "description": "Read one subscription localization by ID.",
+    "description": "Read one subscription localization by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27277,9 +27277,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v1/subscriptionLocalizations/{id}",
-    "description": "Update a subscription localization.",
+    "description": "Update a subscription localization. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -27989,9 +27989,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionSubmissions",
-    "description": "Create a subscription submission.",
+    "description": "Create a subscription submission. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -28003,21 +28003,21 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionVersions",
-    "description": "Create a subscription version.",
+    "description": "Create one editable subscription review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.",
     "readOnly": false,
     "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionVersionCreateRequest",
-    "risk": "revenue"
+    "risk": "release"
   },
   {
     "name": "subscription_versions.get",
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionVersions/{id}",
-    "description": "Read one subscription version by ID.",
+    "description": "Read a subscription review version by ID, including its version number and review state.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [
@@ -28235,9 +28235,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptions/{id}/images",
-    "description": "List the images belonging to a subscription.",
+    "description": "List the images belonging to a subscription. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -28566,9 +28566,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptions/{id}/subscriptionLocalizations",
-    "description": "List the subscription localizations belonging to a subscription.",
+    "description": "List the subscription localizations belonging to a subscription. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],

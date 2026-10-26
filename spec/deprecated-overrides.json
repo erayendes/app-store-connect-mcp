@@ -1,0 +1,142 @@
+[
+  {
+    "operationId": "subscriptionLocalizations_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionLocalizations_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionLocalizations_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionLocalizations_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionGroupLocalizations_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionGroupLocalizations_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionGroupLocalizations_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionGroupLocalizations_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseLocalizations_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseLocalizations_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseLocalizations_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseLocalizations_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionImages_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionImages_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionImages_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionImages_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseImages_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseImages_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseImages_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseImages_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionSubmissions_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionGroupSubmissions_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchaseSubmissions_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptions_subscriptionLocalizations_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptionGroups_subscriptionGroupLocalizations_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchasesV2_inAppPurchaseLocalizations_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "subscriptions_images_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "inAppPurchasesV2_images_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
+    "apiVersion": "4.4.1"
+  }
+]

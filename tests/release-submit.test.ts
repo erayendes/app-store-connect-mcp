@@ -12,13 +12,14 @@
  * of raw calls remembers.
  */
 import { describe, it, expect } from 'vitest';
-import { executeReleaseTool, RELEASE_TOOLS } from '../src/tools/release.js';
+import { executeReleaseTool, RELEASE_TOOLS, releasePreviewArgs } from '../src/tools/release.js';
 
 interface Options {
   build?: Record<string, unknown> | null;
   state?: string;
   openSubmission?: boolean;
   itemAlreadyThere?: boolean;
+  extraItem?: boolean;
   /** null models Apple answering with no platform at all. */
   platform?: string | null;
   /** Which platform the already-open submission belongs to. */
@@ -81,6 +82,9 @@ function fakeHttp(o: Options = {}) {
     }
     if (path.includes('/appScreenshots')) {
       return { data: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } }] };
+    }
+    if (path === '/v1/reviewSubmissions/sub-1/items') {
+      return { data: o.extraItem ? [{ id: 'extra-1', type: 'reviewSubmissionItems', relationships: { appEvent: { data: { id: 'event-7' } } } }] : [] };
     }
     if (path.includes('/reviewSubmissions')) {
       // Apple filters by platform here, so the fake must too: an app on iOS and
@@ -174,6 +178,17 @@ describe('release__submit', () => {
     const res = await run({ app: 'Ask Quran' }, http);
     expect(writes.map((w) => w.method)).toEqual(['POST', 'PATCH']);
     expect(res.steps[0]).toContain('Reused');
+  });
+
+  it('previews every reused submission item and submits the same set', async () => {
+    const { http } = fakeHttp({ openSubmission: true, extraItem: true });
+    const preview = await releasePreviewArgs({ app: 'Ask Quran' }, http);
+    expect(preview.items).toEqual([
+      { type: 'appEvent', id: 'event-7' },
+      { type: 'appStoreVersion', id: 'v-320' },
+    ]);
+    const result = await run({ app: 'Ask Quran' }, http);
+    expect(result.items).toEqual(preview.items);
   });
 
   it('does not add the version twice when it is already an item', async () => {

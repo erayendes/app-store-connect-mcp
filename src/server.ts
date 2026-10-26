@@ -38,7 +38,7 @@ import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js
 import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs } from './tools/release.js';
+import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
 import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
 import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
@@ -686,7 +686,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           const shown = op
             ? args
             : RELEASE_TOOL_NAMES.has(name)
-              ? await releasePreviewArgs(args, http)
+              ? await (name === 'release__submit_items' ? releaseItemsPreviewArgs(args, http) : releasePreviewArgs(args, http))
               : await withAppName(args, http);
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.

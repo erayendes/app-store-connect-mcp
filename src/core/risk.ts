@@ -50,6 +50,10 @@ export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
   // Hands the version to Apple's review queue.
   'review_submissions__update',
   'release__submit',
+  'release__submit_items',
+  'subscription_versions__create',
+  'subscription_group_versions__create',
+  'in_app_purchase_versions__create',
   // Pauses, resumes or completes a rollout that real customers are on.
   'app_store_version_phased_releases__update',
   // Sends a build to Apple for external TestFlight review.
@@ -114,6 +118,11 @@ interface RiskRule {
 
 /** Ordered, hand-reviewed rules. First match wins. */
 export const RULES: RiskRule[] = [
+  {
+    pattern: /^(subscription_versions|subscription_group_versions|in_app_purchase_versions)\.create$/,
+    level: 'release',
+    why: 'creates a draft review version that cannot be deleted',
+  },
   // --- words and pictures around a product, not its price ---------------
   // These carry "subscription" or "in_app_purchase" in their names, so the
   // money rule below used to claim them: renaming a weekly plan in Portuguese
