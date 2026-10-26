@@ -36,7 +36,7 @@ Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 3. **Yapay zekâ uygulamalarınız.** Cihazınızda kurulu olanları bulur. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır. Claude Desktop açıkken kendi ayarlarını geri yazdığı için kurulum önce onu kapatmanızı ister. Kurulumu Claude Desktop'ın içinden çalıştırıyorsanız, Desktop'ı da kapsaması için Desktop'ı kapatıp kurulumu Terminal'den çalıştırın.
 4. **Plan.** Her uygulamada neyin değişeceği gösterilir ve bir kez onay istenir.
 
-Anahtar bilgileri Apple'a doğrulandıktan sonra kaydedilir. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
+Setup anahtar bilgilerini kaydetmeden önce Apple'a doğrular. Apple'ın reddettiği anahtar kaydedilmez; Apple'a ulaşılamazsa setup bunu söyler ve bilgileri yine de kaydeder. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
 Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantısını kontrol et"* deyin.
 
@@ -122,7 +122,7 @@ Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect
 |:--|:--|:--|
 | **Kurdum ama Claude'da görünmüyor** | Claude, profilleri yalnızca açılışta yükler. Setup, **Claude (Code & Desktop)** seçeneğiyle iki uygulamaya birlikte yazar; biri başarısız olursa bunu sonundaki özette söyler. | Claude'u tamamen kapatıp yeniden açın. Özette hata varsa `setup`'ı yeniden çalıştırın. Windows ve Linux'ta Claude masaüstü uygulamasına otomatik kayıt henüz yok. |
 | **`401 Unauthorized`** | Key ID, Issuer ID ve `.p8` aynı anahtara ait değil ya da anahtar iptal edilmiş. | `setup`'ı yeniden çalıştırın ve kayıtlı bilgileri yeniden kullanmak isteyip istemediğinizi sorduğunda **n** deyin. Anahtarı yeniden girin; setup kaydetmeden önce Apple'a doğrular. |
-| **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli değil. | Yapay zekâya *"Anahtarımın yetkilerini kontrol et"* deyin. Hangi rolün gerektiği [Roller](ROLES_tr.md)'de. |
+| **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli değil ya da bir App Store Connect sözleşmesi imzalanmamış veya süresi dolmuş. | Yapay zekâya *"Anahtarımın yetkilerini kontrol et"* deyin. Hangi rolün gerektiği [Roller](ROLES_tr.md)'de. Sözleşmeyi yalnızca Account Holder App Store Connect'te kabul edebilir; hiçbir anahtar bunu çözmez. |
 | **Sürüm güncellemesinde `409 Conflict`** | App Store Connect düzenlemelere yalnızca belirli sürüm durumlarında izin verir. | İncelemede olan veya yayınlanmış bir sürüm kilitlidir. |
 | **İhtiyacım olan araç listede yok** | Başka bir profilde. | Yapay zekâya sorun: *"X için bir araç var mı?"* |
 | **Bir sunucuda, profilinin olmadığını söyleyen tek bir araç var** | Ayarları, önceki bir sürümden kalma bir profil adı içeriyor; örneğin `app-info`. | `setup`'ı yeniden çalıştırıp profillerinizi seçin; eski kaydı siler (`app-info` artık `general`). |

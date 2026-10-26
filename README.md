@@ -58,8 +58,8 @@ Most MCP guides recommend remote HTTP servers.
 
 Before changing a price, giving someone Admin access or deleting something, Heimdall asks you to confirm and shows what will change. By default it asks in two ways:
 
-- **You type CONFIRM** for changes to revenue, deletions, code signing and access, and for the few steps that cannot be walked back: releasing a version, ending a pre-order, expiring a build.
-- **You answer yes or no** for the other steps that reach customers, players or testers: sending something to review, starting a new subscription or in-app purchase version, changing a phased rollout, sending a build to external review or to beta groups, selling in a country, changing a product page test, sending a score or achievement for a player.
+- **You type CONFIRM** for changes to revenue, deletions, code signing and access, and for the few steps that cannot be walked back: releasing a version, ending a pre-order, expiring a build. Assigning a build to beta groups in one call (`testflight__assign_build_to_groups`) asks for CONFIRM too.
+- **You answer yes or no** for the other steps that reach customers, players or testers: sending something to review, starting a new subscription or in-app purchase version, changing a phased rollout, sending a build to external review, selling in a country, changing a product page test, sending a score or achievement for a player.
 
 Everything else goes through your AI app's own approval.
 

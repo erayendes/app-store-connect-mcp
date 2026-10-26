@@ -240,8 +240,8 @@ the report, where the raw chain ends holding a link.
   tool that is not loaded, not a permission problem.
 - A tool that is not in this session's list may still belong to this account.
   `asc__search_tools` (on ASC-Core) covers the 826 operations Apple has not
-  deprecated (all of them with `--include-deprecated`), plus the StoreKit and
-  hand-written tools; under `--read-only` it leaves out the writes. It names
+  deprecated (all of them with `--include-deprecated`), plus the StoreKit tools
+  and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names
   the profile that owns each one, and the server's own error messages print the
   exact command to add it. Do not conclude the operation does not exist.
 - StoreKit / customer transactions live on `monetization:transactions`. Each

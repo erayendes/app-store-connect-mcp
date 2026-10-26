@@ -9,7 +9,7 @@
 ```json
 "ASC-General": {
   "command": "npx",
-  "args": ["-y", "@erayendes/asc-mcp", "general", "--read-only"],
+  "args": ["-y", "@erayendes/asc-mcp@beta", "general", "--read-only"],
   "env": { "ASC_RATE_LIMIT_PER_HOUR": "1200" }
 }
 ```
@@ -21,7 +21,7 @@
 | Bayrak | Ne yapar |
 |:--|:--|
 | `--read-only` | Bir şeyi değiştirebilecek bütün araçları kaldırır. Yapay zekâ onları göremez, dolayısıyla çağıramaz. |
-| `--dry-run` | Apple'a hiçbir şey gitmez. Her değişiklik, gönderilecek olanı risk seviyesiyle birlikte döndürür. Okumalar her zamanki gibi çalışır. |
+| `--dry-run` | Apple'a hiçbir değişiklik gönderilmez. Her değişiklik, gönderilecek olanı risk seviyesiyle birlikte döndürür. Okumalar her zamanki gibi çalışır. |
 | `--confirm` | Sadece riskli olanlardan değil, **her** değişiklikten önce sorar. |
 | `--no-confirm` | Sormayı bırakır, tek istisnayla: `release__submit` ve `release__submit_items` her zaman sorar. Bunun dışında geriye yalnızca yapay zekâ uygulamanızın kendi araç onayı kalır. |
 | `--with-core` | ASC-Core araçlarını (uygulama bulma, araç arama, medya araçları) bu sunucudan da sunar; yalnızca tek sunucu çalıştırabilen yapay zekâ uygulamaları için. Setup'ın buna ihtiyacı yoktur: ASC-Core'u profillerinizin yanına kendisi kaydeder. |
@@ -35,7 +35,7 @@ Heimdall varsayılan olarak iki şekilde sorar:
 - **CONFIRM yazmanızı ister:** gelir, silme (`destructive`), altyapı ya da erişim seviyesindeki her değişiklikte — fiyatlar ve teklifler, silmeler, sertifikalar ve iş akışları, kullanıcılar ve sandbox hesapları — ve geri alınamayan üç adımda: bir sürümü yayınlamak, ön siparişi bitirmek ve bir build'in süresini bitirmek (`expired: true` ile `builds__update`; silme sayılır). Fiyat makroları ve `testflight__assign_build_to_groups` da böyle sorar.
 - **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan adımlarda: bir şeyi incelemeye göndermek (`release__submit`, `release__submit_items`, bir inceleme başvurusu), yeni bir abonelik, abonelik grubu ya da uygulama içi satın alma sürümü oluşturmak, kademeli yayını değiştirmek, bir build'i dış beta incelemesine göndermek, bir ülkede satışa açmak ya da satış durumunu değiştirmek, ürün sayfası denemesini başlatmak ya da değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
 
-Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, TestFlight ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek herkese açık seviyededir ve sormaz; birini kaldırmak ya da değiştirmek silme sayılır ve CONFIRM ister.
+Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_build_to_groups` CONFIRM ister. Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, diğer TestFlight ayarları ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek herkese açık seviyededir ve sormaz; birini kaldırmak ya da değiştirmek silme sayılır ve CONFIRM ister.
 
 Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak Allow'a (ya da Enter'a) basarsanız yapılır. Don't Allow ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
 
@@ -127,7 +127,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
   ```json
   "ASC-ClientB": {
     "command": "npx",
-    "args": ["-y", "@erayendes/asc-mcp", "general"],
+    "args": ["-y", "@erayendes/asc-mcp@beta", "general"],
     "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/path/AuthKey_B.p8" }
   }
   ```
@@ -135,7 +135,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 - **Ayrı bir ayar klasörü.** İkinci hesap için setup'ı kendi klasörüyle bir kez çalıştırın:
 
   ```bash
-  ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp setup
+  ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp@beta setup
   ```
 
   Hangi uygulamalara kaydedeceğini sorduğunda hiçbirini seçmeyin; böylece ilk hesabınızın sunucularına dokunmaz. Sonra aynı `ASC_CONFIG_DIR`'ı ikinci sunucunun `env` bloğuna yazın. Her klasör kendi anahtarını, Vendor number'ını ve Bundle ID'sini tutar.

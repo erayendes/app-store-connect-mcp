@@ -36,7 +36,7 @@ The wizard asks in the order you'd think it through, in the browser and the term
 3. **Your AI apps.** It finds the ones installed on your machine. Settings files it edits directly are backed up first. Claude Desktop writes its own settings back while it is open, so setup asks you to quit it first. If setup itself runs inside Claude Desktop, quit Desktop and run setup from Terminal to include it.
 4. **The plan.** What will change in each app, confirmed once.
 
-Your credentials are saved once Apple has accepted them. Before the profiles are written to your apps, the wizard shows the plan and asks you to confirm once.
+Setup checks your credentials with Apple before saving them. A key Apple rejects is not saved; if Apple cannot be reached, setup says so and saves it anyway. Before the profiles are written to your apps, the wizard shows the plan and asks you to confirm once.
 
 When it's done, restart your app and say *"Check my App Store Connect connection."*
 
@@ -122,7 +122,7 @@ Read-only mode, trying changes without making them, a second App Store Connect a
 |:--|:--|:--|
 | **Installed, but it doesn't show up in Claude** | Claude only loads profiles at startup. Setup writes to both Claude apps through the **Claude (Code & Desktop)** option and says in its summary if one of them failed. | Quit Claude completely and reopen it. If the summary showed an error, run `setup` again. On Windows and Linux, automatic registration with the Claude desktop app isn't available yet. |
 | **`401 Unauthorized`** | The Key ID, Issuer ID and `.p8` file don't belong to the same key, or the key was revoked. | Run `setup` again and answer **n** when it asks whether to reuse your saved credentials. Enter the key again; setup checks it with Apple before saving. |
-| **`403 Forbidden`** | The key's role isn't enough for that action. | Ask the AI: *"Check my key's permissions."* Which role you need is in [Roles](ROLES_en.md). |
+| **`403 Forbidden`** | The key's role isn't enough for that action, or an App Store Connect agreement is unsigned or expired. | Ask the AI: *"Check my key's permissions."* Which role you need is in [Roles](ROLES_en.md). Only the Account Holder can accept an agreement, in App Store Connect; no key fixes it. |
 | **`409 Conflict` when updating a version** | App Store Connect only allows edits in certain version states. | A version that's in review or already released is locked. |
 | **A tool I need isn't there** | It's in another profile. | Ask the AI: *"Is there a tool for X?"* |
 | **A server has one tool that says its profile doesn't exist** | Its settings name a profile from an earlier version, such as `app-info`. | Run `setup` again and pick your profiles; it removes the old entry (`app-info` is now `general`). |

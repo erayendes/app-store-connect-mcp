@@ -59,8 +59,8 @@ MCP rehberleri genelde uzak HTTP sunucularını önerir.
 
 Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğinizde önce onay ister ve neyin değişeceğini gösterir. Varsayılan olarak iki şekilde sorar:
 
-- **CONFIRM yazmanızı ister:** gelir, silme, kod imzalama ve erişim değişikliklerinde ve geri alınamayan birkaç adımda: bir sürümü yayınlamak, ön siparişi bitirmek, bir build'in süresini bitirmek.
-- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan diğer adımlarda: bir şeyi incelemeye göndermek, yeni bir abonelik ya da uygulama içi satın alma sürümü başlatmak, kademeli yayını değiştirmek, bir build'i dış incelemeye ya da beta gruplarına göndermek, bir ülkede satışa açmak, ürün sayfası denemesini değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
+- **CONFIRM yazmanızı ister:** gelir, silme, kod imzalama ve erişim değişikliklerinde ve geri alınamayan birkaç adımda: bir sürümü yayınlamak, ön siparişi bitirmek, bir build'in süresini bitirmek. Bir build'i tek çağrıda beta gruplarına atamak (`testflight__assign_build_to_groups`) da CONFIRM ister.
+- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan diğer adımlarda: bir şeyi incelemeye göndermek, yeni bir abonelik ya da uygulama içi satın alma sürümü başlatmak, kademeli yayını değiştirmek, bir build'i dış incelemeye göndermek, bir ülkede satışa açmak, ürün sayfası denemesini değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
 
 Geri kalan her şeyde kullandığınız yapay zekâ uygulamasının kendi onay sistemi devrededir.
 
@@ -82,7 +82,7 @@ npx -y @erayendes/asc-mcp setup
 
 3.0 betasını denemek için bunun yerine `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırın.
 
-Ama öncesinde App Store Connect'ten bir [API anahtarı oluşturun](SETUP_tr.md#api-anahtarı-oluşturun) ve cihazınızda Node.js 20.19 veya üstünün kurulu olduğundan emin olun.
+Tarayıcıda (önerilen) ya da terminalde devam etmek isteyip istemediğinizi sorar. Bir [App Store Connect API anahtarı](SETUP_tr.md#api-anahtarı-oluşturun) gerekir; tarayıcı sayfası seçtiklerinize göre anahtara hangi rolü vermeniz gerektiğini söyler, yani anahtarı oluşturmadan da setup'ı başlatabilirsiniz. Node.js 20.19 veya üstü gerekir.
 
 Setup iki iş yapar: anahtarınızı kaydeder ve seçtiğiniz profilleri, yanlarına ASC-Core'u da ekleyerek bulduğu her yapay zekâ uygulamasına kaydeder. İkinci kısmı yapay zekânız `register` ile sizin yerinize yapabilir; anahtarı ise her zaman siz, `setup` ile verirsiniz.
 
