@@ -104,6 +104,7 @@ describe('write-gate annotations (offline)', () => {
       'listing__delete_assets',
       'metadata_ai__apply_localizations',
       'release__submit',
+      'release__submit_items',
       'testflight__assign_build_to_groups',
     ].sort());
     // The listing and analytics families were outside this check until the

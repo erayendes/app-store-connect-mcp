@@ -10,6 +10,7 @@ import { PREFLIGHT_TOOL_NAMES } from '../src/tools/preflight.js';
 import { METADATA_TOOL_NAMES } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES } from '../src/tools/account.js';
 import { TESTFLIGHT_TOOL_NAMES } from '../src/tools/testflight.js';
+import { RELEASE_TOOL_NAMES } from '../src/tools/release.js';
 import { INTENTS } from './eval/intents.js';
 
 const operationNames = new Set(OPERATIONS.map((operation) => operation.name));
@@ -24,6 +25,7 @@ const macroNames = new Set([
   ...METADATA_TOOL_NAMES,
   ...ACCOUNT_TOOL_NAMES,
   ...TESTFLIGHT_TOOL_NAMES,
+  ...RELEASE_TOOL_NAMES,
 ]);
 const SHARED_NORMAL_ADVERSARIAL_TOOLS = [
   'app_store_version_release_requests.create',

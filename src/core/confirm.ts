@@ -35,9 +35,12 @@ import {
 } from '@modelcontextprotocol/server';
 import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, TYPED_BY_NAME, type RiskLevel } from './risk.js';
 import { OPERATIONS } from '../generated/operations.js';
+import { REVIEW_RESOURCE_TYPES } from '../tools/release.js';
 
 export interface ConfirmDecision {
   allowed: boolean;
+  /** Signed review-item snapshot approved by the user, when this is a release macro. */
+  planFingerprint?: string;
   /** Present when blocked: the client's action ('decline', 'cancel'), what the answer lacked, or why a stale answer was refused. */
   reason?: string;
   /** The answer was for another call, or already spent: ask again rather than blame the user. */
@@ -264,6 +267,24 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
     const a = res?.data?.attributes;
     return a?.name ? `${a.name}${a.productId ? ` (${a.productId})` : ''}` : undefined;
   },
+  subscriptionVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionVersions/${encodeURIComponent(id)}`, { include: 'subscription' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'subscriptions')?.attributes?.name;
+    return `${product ?? 'Subscription'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  subscriptionGroupVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionGroupVersions/${encodeURIComponent(id)}`, { include: 'subscriptionGroup' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'subscriptionGroups')?.attributes?.referenceName;
+    return `${product ?? 'Subscription group'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  inAppPurchaseVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/inAppPurchaseVersions/${encodeURIComponent(id)}`, { include: 'inAppPurchase' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'inAppPurchases')?.attributes?.name;
+    return `${product ?? 'In-app purchase'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
   apps: async (http, id) => {
     const res: any = await http.get(`/v1/apps/${encodeURIComponent(id)}`);
     const a = res?.data?.attributes;
@@ -329,6 +350,7 @@ const LABEL_ATTRIBUTES = [
   'referenceName',
   'title',
   'versionString',
+  'version',
   'productId',
   'bundleId',
   'fileName',
@@ -558,6 +580,12 @@ export async function buildWritePreview(
   const targets = pathTargets(op.path, args);
   const bodyRefs: Array<{ type: string; id: string }> = [];
   if (body) collectRefs(body, bodyRefs);
+  const submissionItems = Array.isArray(args.items) ? args.items as Array<{ type: string; id: string }> : [];
+  const itemNames = (args.itemNames ?? {}) as Record<string, string>;
+  for (const item of submissionItems) {
+    const type = REVIEW_RESOURCE_TYPES[item.type];
+    if (type && !itemNames[`${item.type}/${item.id}`]) bodyRefs.push({ type, id: item.id });
+  }
   const labels = http ? await resolveRefs(http, [...targets, ...bodyRefs]) : new Map<string, string>();
 
   const ids = Object.entries(args)
@@ -598,9 +626,21 @@ export async function buildWritePreview(
       for (const c of flat.slice(0, MAX_CHANGE_LINES)) lines.push(`  ${c}`);
       if (flat.length > MAX_CHANGE_LINES) lines.push('  …');
     }
+    if (Array.isArray(args.items)) {
+      lines.push('Items in submission:');
+      const existing = new Set((Array.isArray(args.existingItems) ? args.existingItems : []).map((i: any) => `${i.type}/${i.id}`));
+      for (const item of submissionItems) {
+        const key = `${item.type}/${item.id}`;
+        const label = itemNames[key] ?? labels.get(`${REVIEW_RESOURCE_TYPES[item.type]}/${item.id}`);
+        lines.push(`  ${item.type ?? 'unknown'}: ${item.id ?? 'unknown'}${label ? ` (${label})` : ''} — ${existing.has(key) ? 'already in submission' : 'will be added'}`);
+      }
+    }
   }
 
   lines.push(`Risk:       ${risk} — ${REVERSIBILITY[risk]}`);
+  if (/^(subscription_versions|subscription_group_versions|in_app_purchase_versions)(__|\.)create$/.test(toolName)) {
+    lines.push('A draft version cannot be deleted.');
+  }
   if (strong) lines.push('', 'Type CONFIRM in the field below to proceed.');
 
   return { message: lines.join('\n'), strong };
@@ -612,6 +652,7 @@ interface PendingWrite {
   call: string;
   nonce: string;
   strong: boolean;
+  planFingerprint?: string;
 }
 
 /** Key order is not meaning: a client that re-serializes the arguments still matches. */
@@ -664,7 +705,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
     verify: codec.verify,
 
     /** The question, as a result the client answers by calling again. */
-    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview): Promise<InputRequiredResult> {
+    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview, planFingerprint?: string): Promise<InputRequiredResult> {
       const now = Date.now();
       for (const [n, expiry] of open) if (expiry < now) open.delete(n);
       const nonce = randomUUID();
@@ -693,7 +734,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
             requestedSchema: { type: 'object', properties: field, required: Object.keys(field) },
           }),
         },
-        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong }, ctx),
+        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong, planFingerprint }, ctx),
       });
     },
 
@@ -732,7 +773,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
       const confirmed = state.strong
         ? typeof content?.confirmation === 'string' && /^confirm$/i.test(content.confirmation.trim())
         : content?.confirm === true;
-      if (confirmed) return { allowed: true };
+      if (confirmed) return { allowed: true, planFingerprint: state.planFingerprint };
       const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
       const unconfirmed = state.strong ? 'the answer was not CONFIRM' : 'the box was left unticked';
       return { allowed: false, reason: content ? unconfirmed : (action ?? 'no answer') };

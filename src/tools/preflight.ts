@@ -18,9 +18,10 @@
  * because that is the one with a factual answer.
  */
 import type { McpToolDefinition } from '../core/registry.js';
-import type { AscHttpClient } from '../core/http.js';
+import type { AscHttpClient, Query } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
+import { APPROVED_STATES } from '../core/review-states.js';
 
 const subscriptionFindingsSchema = {
   type: 'array',
@@ -123,6 +124,7 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
         app: { type: 'string', minLength: 1, description: 'App name, bundle ID or numeric Apple ID.' },
         subscription: { type: 'string', minLength: 1, description: 'Exact product ID, name or subscription ID. Cannot be combined with group.' },
         group: { type: 'string', minLength: 1, description: 'Exact reference name or group ID. Check up to 20 subscriptions in this group.' },
+        version_id: { type: 'string', minLength: 1, description: 'Specific subscription version ID. Valid only with subscription.' },
       },
       required: ['app'],
     },
@@ -137,6 +139,8 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
             properties: {
               id: { type: 'string' }, productId: { type: 'string' }, name: { type: 'string' },
               state: { type: 'string' }, ready: { type: 'boolean' },
+              version: { type: ['object', 'null'], properties: { id: { type: 'string' }, number: { type: 'integer' }, state: { type: 'string' } } },
+              otherVersions: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, number: { type: 'integer' }, state: { type: 'string' } } } },
               findings: subscriptionFindingsSchema, truncated: truncatedSchema,
             },
             required: ['id', 'productId', 'name', 'state', 'ready', 'findings', 'truncated'],
@@ -146,6 +150,8 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
           type: 'object',
           properties: {
             id: { type: 'string' }, referenceName: { type: 'string' }, ready: { type: 'boolean' },
+            version: { type: ['object', 'null'], properties: { id: { type: 'string' }, number: { type: 'integer' }, state: { type: 'string' } } },
+            otherVersions: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, number: { type: 'integer' }, state: { type: 'string' } } } },
             checkedSubscriptions: { type: 'integer' },
             findings: subscriptionFindingsSchema, truncated: truncatedSchema,
           },
@@ -169,7 +175,7 @@ export const PREFLIGHT_TOOL_NAMES: ReadonlySet<string> = new Set(
  * on sale, replaced — is not a submission to check, and saying so beats
  * reporting every field as fine on a version nobody can edit.
  */
-const EDITABLE_STATES = new Set([
+export const EDITABLE_STATES = new Set([
   'PREPARE_FOR_SUBMISSION',
   'DEVELOPER_REJECTED',
   'REJECTED',
@@ -177,6 +183,41 @@ const EDITABLE_STATES = new Set([
   'INVALID_BINARY',
   'WAITING_FOR_EXPORT_COMPLIANCE',
 ]);
+
+/** Shared by previews, release and preflight. Filters avoid walking years of
+ * released versions; pagination still checks every candidate for ambiguity. */
+export async function readAppStoreVersions(http: AscHttpClient, appId: string, wanted?: string, platform?: string, fields: Query = {}): Promise<{ data: any[]; included: any[] }> {
+  const path = `/v1/apps/${encodeURIComponent(appId)}/appStoreVersions`;
+  const read = async (editableOnly: boolean) => {
+    const query: Query = {
+      'fields[appStoreVersions]': 'versionString,appStoreState,platform', ...fields,
+      ...(platform ? { 'filter[platform]': platform } : {}),
+      ...(wanted ? { 'filter[versionString]': wanted } : editableOnly ? { 'filter[appStoreState]': [...EDITABLE_STATES].join(',') } : {}),
+      limit: 200,
+    };
+    const data: any[] = [], included: any[] = [];
+    const seen = new Set<string>();
+    let next: string | undefined = path;
+    let total = 0;
+    for (let page = 0; next && page < 10; page++) {
+      if (seen.has(next)) throw new AscApiError('App Store versions response is truncated: repeated pagination cursor.', 0);
+      seen.add(next);
+      const res: any = await http.get(next, page === 0 ? query : undefined);
+      if (!Array.isArray(res?.data)) throw new AscApiError('App Store versions response is missing; refusing to choose.', 0);
+      data.push(...res.data);
+      included.push(...(res.included ?? []));
+      total = Math.max(total, Number(res.meta?.paging?.total ?? 0));
+      next = res.links?.next || undefined;
+    }
+    const unique = [...new Map(data.map((v) => [v.id, v])).values()];
+    if (next || total > unique.length) throw new AscApiError('App Store versions response is truncated after at most 10 pages; refusing to choose.', 0);
+    return { data: unique, included };
+  };
+  const versions = await read(!wanted);
+  // Preserve the useful "already in review/on sale" preflight result when no
+  // editable version exists, without making an incomplete platform choice.
+  return !wanted && !versions.data.length ? read(false) : versions;
+}
 
 /**
  * The version a version-scoped macro means. An app sold on iOS and tvOS has a
@@ -190,6 +231,9 @@ export function pickVersion(appName: string, all: any[], wanted?: string, platfo
   const matches = wanted
     ? onPlatform.filter((v) => String(v.attributes?.versionString ?? '') === wanted)
     : onPlatform.filter((v) => EDITABLE_STATES.has(String(v.attributes?.appStoreState ?? '')));
+  if (!wanted && !matches.length && new Set(onPlatform.map((v) => v.attributes?.platform)).size > 1) {
+    throw new AscApiError(`${appName} has no editable version and has versions on more than one platform. Say which with platform: ${PLATFORMS.join(', ')}.`, 0);
+  }
   if (new Set(matches.map((v) => v.attributes?.platform)).size > 1) {
     const found = matches.map((v) => `${PLATFORM_NAMES[v.attributes?.platform] ?? v.attributes?.platform} ${v.attributes?.versionString}`);
     throw new AscApiError(
@@ -220,7 +264,7 @@ interface Gap {
 export async function executePreflightTool(
   name: string,
   args: Record<string, unknown>,
-  ctx: { http: AscHttpClient }
+  ctx: { http: AscHttpClient; expectedVersionId?: string }
 ): Promise<unknown> {
   if (name === 'preflight__check_subscription') return checkSubscription(args, ctx.http);
   if (name !== 'preflight__check_version') {
@@ -236,13 +280,14 @@ export async function executePreflightTool(
   // One call for the version and the two things hanging off it that carry
   // fields Apple enforces. The alternative is three round trips to assemble
   // what `include` returns in one.
-  const versions: any = await http.get(`/v1/apps/${encodeURIComponent(app.id)}/appStoreVersions`, {
+  const versions = await readAppStoreVersions(http, app.id,
+    args.version ? String(args.version).trim() : undefined,
+    args.platform ? String(args.platform) : undefined, {
     'fields[appStoreVersions]': 'versionString,appStoreState,platform,copyright,build,appStoreReviewDetail',
     include: 'build,appStoreReviewDetail',
     'fields[builds]': 'version,processingState,expired,usesNonExemptEncryption',
     'fields[appStoreReviewDetails]':
       'contactFirstName,contactLastName,contactPhone,contactEmail,demoAccountName,demoAccountPassword,demoAccountRequired,notes',
-    limit: 20,
   });
 
   const version = pickVersion(
@@ -251,6 +296,9 @@ export async function executePreflightTool(
     args.version ? String(args.version).trim() : undefined,
     args.platform ? String(args.platform) : undefined
   );
+  if (ctx.expectedVersionId && String(version.id) !== ctx.expectedVersionId) {
+    throw new AscApiError('App Store version changed during preflight; retry with the current version.', 0);
+  }
 
   const included = (versions?.included ?? []) as any[];
   const byId = (type: string, id?: string) =>
@@ -282,6 +330,10 @@ export async function executePreflightTool(
   }
 
   // --- build ---------------------------------------------------------------
+  if (state === 'INVALID_BINARY' || state === 'WAITING_FOR_EXPORT_COMPLIANCE') {
+    blocking.push({ check: 'version state', problem: `Version is ${state}; resolve this state before submitting.`,
+      fixWith: state === 'INVALID_BINARY' ? 'app_store_versions__build__set' : 'builds__update' });
+  }
   checked.push('build attached and processed');
   if (!build) {
     blocking.push({
@@ -502,19 +554,20 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
   }
   const wanted = selector.trim();
   const groupMode = args.group !== undefined;
+  if (args.version_id !== undefined && (groupMode || typeof args.version_id !== 'string' || !args.version_id.trim())) {
+    throw new AscApiError('version_id requires one subscription and a non-empty version ID.', 0);
+  }
   const app = await resolveApp(http, args.app);
   const truncated: string[] = [];
 
-  // One page per read, with explicit caps even for existence checks. Retain
-  // next/total before response shaping so an unseen row never becomes "missing".
-  // `exists` reads answer only "is there at least one": a row settles that, so
-  // more rows behind it are not a gap worth reporting.
-  const page = async (path: string, limit: number, notes: string[], params: Record<string, string> = {}, exists = false) => {
+  // Presence is conclusive after one row. Other checks need every row within
+  // their cap; an empty partial page cannot establish absence in either case.
+  const page = async (path: string, limit: number, notes: string[], params: Record<string, string> = {}, presenceOnly = false) => {
     const res: any = await http.get(path, { ...params, limit });
     const rows: any[] = (res?.data ?? []).slice(0, limit);
     const more = Boolean(res?.links?.next) || Number(res?.meta?.paging?.total ?? 0) > rows.length ||
       (res?.data ?? []).length > limit;
-    if (more && !(exists && rows.length)) notes.push(`${path}: truncated at one page (${limit} rows); additional rows were not inspected.`);
+    if (more && !(presenceOnly && rows.length)) notes.push(`${path}: truncated at one page (${limit} rows); additional rows were not inspected.`);
     return { rows, more };
   };
   const groups = await page(`/v1/apps/${encodeURIComponent(app.id)}/subscriptionGroups`, 20, truncated, {
@@ -540,6 +593,7 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
   let selected: any[];
   let subscriptionsTruncated = false;
   const groupTruncated: string[] = [];
+  const versionStates = new Map<string, Array<{ id: string; number: number; state: string }>>();
   if (groupMode) {
     group = choose(groups.rows.filter((g) => g.id === wanted || same(g.attributes?.referenceName)), 'group', groups.more);
     const subs = await page(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptions`, 20, groupTruncated, {
@@ -564,19 +618,45 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     selected = [sub];
   }
 
-  // Both v1 catalog and v2 version-localization operations are current in the
-  // checked-in spec. Prefer v1 here: this macro audits the catalog, as pricing
-  // does, and takes no version selector. It does not grade a v2 version draft.
-  const groupLocs = await page(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptionGroupLocalizations`, 200, groupTruncated, {
-    'fields[subscriptionGroupLocalizations]': 'locale,name',
-  });
+  // Apple 4.4.1 moved editable group localization to a version resource.
+  const selectDraft = async (path: string, kind: string, notes: string[], explicit?: string) => {
+    const versions = await page(path, 100, notes, { [`fields[${kind}]`]: 'version,state' });
+    versionStates.set(path, versions.rows.map((v) => ({ id: String(v.id), number: Number(v.attributes?.version), state: String(v.attributes?.state ?? 'UNKNOWN') })));
+    // These enums also contain rejected and queued versions. They are existing
+    // drafts/submissions, not permission to create another undeletable draft.
+    const editable = versions.rows.filter((v) => ['PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'DEVELOPER_REJECTED', 'REJECTED'].includes(v.attributes?.state));
+    const pending = versions.rows.filter((v) => !APPROVED_STATES.has(v.attributes?.state) && !editable.includes(v));
+    if (explicit) {
+      const found = versions.rows.find((v) => v.id === explicit);
+      if (!found && versions.more) throw new AscApiError(`Version ${explicit} may be beyond the inspected page; cannot verify ownership.`, 0);
+      if (!found) throw new AscApiError(`Version ${explicit} does not belong to this product.`, 0);
+      return found;
+    }
+    if (versions.more) throw new AscApiError(`Version list for ${path} was truncated; cannot choose a draft safely.`, 0);
+    if (editable.length > 1) throw new AscApiError(`Multiple editable ${kind} drafts: ${editable.map((v) => v.id).join(', ')}. ${kind === 'subscriptionGroupVersions' ? 'Resolve the duplicate group drafts in App Store Connect before checking this group.' : 'Pass version_id.'}`, 0);
+    return editable[0] ?? pending[0];
+  };
+  const groupVersion = await selectDraft(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/versions`, 'subscriptionGroupVersions', groupTruncated);
+  const groupLocs = groupVersion
+    ? await page(`/v1/subscriptionGroupVersions/${encodeURIComponent(groupVersion.id)}/localizations`, 200, groupTruncated, {
+      'fields[subscriptionGroupLocalizations]': 'locale,name',
+    })
+    : { rows: [], more: false };
   const groupFindings: SubscriptionFinding[] = [];
-  if (!groupLocs.rows.length && !groupLocs.more) {
-    groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: 'The subscription group has no localization.', fixWith: 'subscription_group_localizations__create' });
+  const groupVersions = versionStates.get(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/versions`) ?? [];
+  const approvedGroupExists = groupVersions.some((v) => APPROVED_STATES.has(v.state));
+  if (!groupVersion && !approvedGroupExists) {
+    groupFindings.push({ check: 'group version', severity: 'blocking', problem: 'The group has no editable draft version; in-review and approved versions are separate.', fixWith: 'subscription_group_versions__create' });
+  }
+  if (groupVersion && !['PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'DEVELOPER_REJECTED'].includes(groupVersion.attributes?.state)) {
+    groupFindings.push({ check: 'group version state', severity: approvedGroupExists ? 'warning' : 'blocking',
+      problem: `Group version ${groupVersion.id} is ${groupVersion.attributes?.state}. Resolve the rejection or wait for review in App Store Connect; reuse this version.`, fixWith: 'subscription_group_versions__get' });
+  } else if (groupVersion && !groupLocs.rows.length && !groupLocs.more) {
+    groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: 'The group draft has no localization.', fixWith: 'subscription_group_localizations_v2__create' });
   }
   for (const loc of groupLocs.rows) {
     if (!String(loc.attributes?.name ?? '').trim()) {
-      groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: `Group localization ${loc.attributes?.locale ?? loc.id} has no display name.`, fixWith: 'subscription_group_localizations__update' });
+      groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: `Group localization ${loc.attributes?.locale ?? loc.id} has no display name.`, fixWith: 'subscription_group_localizations_v2__update' });
     }
   }
   if (groupMode && !selected.length && !subscriptionsTruncated) {
@@ -601,22 +681,29 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     if (a.familySharable == null) add('family sharing', 'warning', 'Subscription familySharable is unset.', 'subscriptions__update');
     if (!String(a.reviewNote ?? '').trim()) add('review note', 'warning', 'Subscription reviewNote is empty.', 'subscriptions__update');
 
-    // Apple lists a locale twice while a draft sits beside the approved copy,
-    // so 200 rows is 100 locales at worst — more than the store offers.
-    const locs = await page(`${base}/subscriptionLocalizations`, 200, notes, {
-      'fields[subscriptionLocalizations]': 'locale,name,description',
-    });
-    if (!locs.rows.length && !locs.more) {
-      add('localizations', 'blocking', 'The subscription has no localization with a display name and description.', 'subscription_localizations__create');
+    const selectedVersion = await selectDraft(`${base}/versions`, 'subscriptionVersions', notes,
+      typeof args.version_id === 'string' ? args.version_id : undefined);
+    if (!selectedVersion) {
+      add('version', 'blocking', 'No editable draft version; in-review and approved versions are reported separately.', 'subscription_versions__create');
+    } else if (!['PREPARE_FOR_SUBMISSION', 'READY_FOR_REVIEW', 'DEVELOPER_REJECTED'].includes(selectedVersion.attributes?.state)) {
+      add('version state', 'blocking', `Version ${selectedVersion.id} is ${selectedVersion.attributes?.state}. Resolve the rejection or wait for review in App Store Connect; reuse this version.`, 'subscription_versions__get');
+    }
+    const locs = selectedVersion
+      ? await page(`/v1/subscriptionVersions/${encodeURIComponent(selectedVersion.id)}/localizations`, 200, notes, {
+        'fields[subscriptionLocalizations]': 'locale,name,description',
+      })
+      : { rows: [], more: false };
+    if (selectedVersion && !locs.rows.length && !locs.more) {
+      add('localizations', 'blocking', 'The subscription draft has no localization with a display name and description.', 'subscription_localizations_v2__create');
     }
     for (const loc of locs.rows) {
       const missing = ['name', 'description'].filter((f) => !String(loc.attributes?.[f] ?? '').trim());
-      if (missing.length) add('localizations', 'blocking', `Localization ${loc.attributes?.locale ?? loc.id} is missing ${missing.join(' and ')}.`, 'subscription_localizations__update');
+      if (missing.length) add('localizations', 'blocking', `Localization ${loc.attributes?.locale ?? loc.id} is missing ${missing.join(' and ')}.`, 'subscription_localizations_v2__update');
     }
-    if (!locs.more) {
+    if (selectedVersion && !locs.more) {
       const locales = new Set(locs.rows.map((l) => l.attributes?.locale));
       const missing = [...new Set(groupLocs.rows.map((l) => l.attributes?.locale))].filter((l) => l && !locales.has(l));
-      if (missing.length) add('locale coverage', 'warning', `Group locales missing on the subscription: ${missing.join(', ')}.`, 'subscription_localizations__create');
+      if (missing.length) add('locale coverage', 'warning', `Group locales missing on the subscription: ${missing.join(', ')}.`, 'subscription_localizations_v2__create');
     }
 
     const prices = await page(`${base}/prices`, 1, notes, { 'fields[subscriptionPrices]': 'startDate' }, true);
@@ -652,7 +739,10 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     }
     subscriptions.push({
       id: String(sub.id), productId: String(a.productId ?? ''), name: String(a.name ?? ''),
-      state: String(a.state ?? 'UNKNOWN'), ready: !findings.some((f) => f.severity === 'blocking'),
+      state: String(a.state ?? 'UNKNOWN'),
+      version: selectedVersion ? { id: String(selectedVersion.id), number: Number(selectedVersion.attributes?.version), state: String(selectedVersion.attributes?.state) } : null,
+      otherVersions: (versionStates.get(`${base}/versions`) ?? []).filter((v) => v.id !== selectedVersion?.id),
+      ready: !findings.some((f) => f.severity === 'blocking') && !notes.length && !truncated.length,
       findings, truncated: notes,
     });
   }
@@ -660,10 +750,12 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     app: `${app.name} (${app.id})`, subscriptions,
     ...(groupMode ? { group: {
       id: String(group.id), referenceName: String(group.attributes?.referenceName ?? ''),
-      ready: !groupFindings.some((f) => f.severity === 'blocking') && subscriptions.every((s) => s.ready),
+      version: groupVersion ? { id: String(groupVersion.id), number: Number(groupVersion.attributes?.version), state: String(groupVersion.attributes?.state) } : null,
+      otherVersions: (versionStates.get(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/versions`) ?? []).filter((v) => v.id !== groupVersion?.id),
+      ready: !groupFindings.some((f) => f.severity === 'blocking') && subscriptions.every((s) => s.ready) && !groupTruncated.length && !truncated.length,
       checkedSubscriptions: subscriptions.length, findings: groupFindings, truncated: groupTruncated,
     } } : {}),
     truncated,
-    note: 'Catalog check using current v1 localizations, not v2 version drafts. ready means no observed blocking gaps in the inspected data; read truncated notes for omitted data. State is reported, not a submission eligibility verdict. Price and territory reads establish presence only, not an active price in every storefront. Apple approval is not predicted.',
+    note: 'Checks editable v2 version drafts. In-review and approved versions are separate from the draft. Truncated reads cannot be ready. Price and territory reads establish presence only, not an active price in every storefront. Apple approval is not predicted.',
   };
 }

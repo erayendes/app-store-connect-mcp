@@ -431,16 +431,25 @@ describe('counts — curation output, not something that drifts on its own', () 
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 989 CSV rows - 7 profile-less ones. Not a count of distinct tools: the
+    // 971 CSV rows - 7 profile-less ones. Not a count of distinct tools: the
     // screenshot and preview tools sit under all three pages that can list a
     // set, and a few entry reads are deliberately in two slices.
-    expect(tools.length).toBe(982);
+    expect(tools.length).toBe(964);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 5 listing, 1
-    // analytics, 2 preflight, 1 account, 3 metadata_ai, 1 release, 2
-    // testflight, 1 ci, and core's 3 meta tools — 38.
+    // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 2
+    // testflight, 1 ci, and core's 3 meta tools — 39.
     const placed = loadable.length - PROFILELESS.length - Object.keys(TWIN_OF).length;
-    expect(new Set(tools).size).toBe(placed + 38);
+    expect(new Set(tools).size).toBe(placed + 39);
+  });
+  it('places release__submit_items in exactly the ten approved slices', () => {
+    const actual = SUBS.filter(({ sub }) => sub.manualTools.includes('release__submit_items')).map(({ label }) => label).sort();
+    expect(actual).toEqual([
+      'background-assets/-', 'game-center/achievements', 'game-center/activities',
+      'game-center/challenges', 'game-center/leaderboards', 'marketing/app-events',
+      'marketing/custom-pp', 'marketing/pp-optimization',
+      'monetization/in-app-purchases', 'monetization/subscription',
+    ]);
   });
 });
 

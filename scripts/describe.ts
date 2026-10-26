@@ -109,6 +109,36 @@ export const CURATED: Record<string, string> = {
     'List customer reviews for an app. Filter by rating or territory; sort by -createdDate for the newest.',
   'app_store_versions.create':
     'Start the next release: create a new App Store version to prepare. Do this before attaching a build and submitting for review.',
+  'subscription_versions.create':
+    'Create one editable subscription review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.',
+  'subscription_versions.get':
+    'Read a subscription review version by ID, including its version number and review state.',
+  'subscription_group_versions.create':
+    'Create one editable subscription group review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.',
+  'subscription_group_versions.get':
+    'Read a subscription group review version by ID, including its version number and review state.',
+  'in_app_purchase_versions.create':
+    'Create one editable in-app purchase review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.',
+  'in_app_purchase_versions.get':
+    'Read a in-app purchase review version by ID, including its version number and review state.',
+  'subscription_localizations_v2.create':
+    'Create a subscription localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.',
+  'subscription_localizations_v2.update':
+    'Update a subscription localization by ID on its editable version draft.',
+  'subscription_localizations_v2.get':
+    'Read a subscription localization by ID and see its version relationship.',
+  'subscription_group_localizations_v2.create':
+    'Create a subscription group localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.',
+  'subscription_group_localizations_v2.update':
+    'Update a subscription group localization by ID on its editable version draft.',
+  'subscription_group_localizations_v2.get':
+    'Read a subscription group localization by ID and see its version relationship.',
+  'in_app_purchase_localizations_v2.create':
+    'Create a in-app purchase localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.',
+  'in_app_purchase_localizations_v2.update':
+    'Update a in-app purchase localization by ID on its editable version draft.',
+  'in_app_purchase_localizations_v2.get':
+    'Read a in-app purchase localization by ID and see its version relationship.',
   'app_store_versions.update':
     'Update an App Store version, including its release type and earliest release date.',
   // Apple's names hide a three-step dance, and the old description here got it

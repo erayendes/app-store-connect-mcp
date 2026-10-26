@@ -565,3 +565,41 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
     ]);
   });
 });
+
+describe.each(['legacy', 'modern'] as const)('release confirmation regressions on a %s connection', (era) => {
+  it.each(['release__submit', 'release__submit_items'])('gives usable confirmation advice for declined %s and labels every item', async (name) => {
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      sent.push(`${init?.method ?? 'GET'} ${path}`);
+      const body = path === '/v1/apps'
+        ? { data: [{ id: '1', attributes: { name: 'Example', bundleId: 'com.example' } }] }
+        : path === '/v1/apps/1/appStoreVersions'
+          ? { data: [{ id: 'av1', attributes: { versionString: '3.0', platform: 'IOS', appStoreState: 'PREPARE_FOR_SUBMISSION' } }] }
+          : path === '/v1/apps/1/reviewSubmissions'
+            ? { data: [{ id: 'open' }] }
+            : path === '/v1/reviewSubmissions/open/items'
+              ? { data: [{ id: 'item', relationships: { appStoreVersion: { data: { id: 'av1' } } } }] }
+              : path === '/v1/appStoreVersions/av1'
+                ? { data: { id: 'av1', attributes: { versionString: '3.0' } } }
+                : path === '/v1/inAppPurchaseVersions/iap1'
+                  ? { data: { id: 'iap1', attributes: { version: 1, state: 'READY_FOR_REVIEW' }, relationships: { inAppPurchase: { data: { id: 'product1' } } } }, included: [{ id: 'product1', type: 'inAppPurchases', attributes: { name: 'Gold Pack', state: 'APPROVED' } }] }
+                  : { data: [] };
+      return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
+    }));
+    const { client, prompts } = await connect(era, { action: 'decline' }, { profile: name === 'release__submit' ? 'distribution' : 'monetization', confirmWrites: 'off' });
+    try {
+      const res: any = await client.callTool({ name, arguments: { app: 'Example', platform: 'IOS', ...(name === 'release__submit_items' ? { items: [{ type: 'inAppPurchaseVersion', id: 'iap1' }] } : {}) } });
+      expect(prompts).toHaveLength(1);
+      expect(prompts[0]).toContain('already in submission');
+      if (name === 'release__submit_items') {
+        expect(prompts[0]).toContain('Gold Pack');
+        expect(prompts[0]).toContain('will be added');
+      }
+      expect(res.isError).toBe(true);
+      expect(textOf(res)).toContain('Release tools always require this confirmation');
+      expect(textOf(res)).not.toMatch(/ASC_CONFIRM_WRITES=0|--no-confirm/);
+      expect(sent.every((s) => s.startsWith('GET'))).toBe(true);
+    } finally { await client.close(); }
+  });
+});

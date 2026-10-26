@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { riskByBody, riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
+import { riskByBody, riskFor, STRONG_CONFIRM_LEVELS, ASK_BY_DEFAULT } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { buildWritePreview, resolveBodyRefs } from '../src/core/confirm.js';
 import { ToolRegistry, toMcpTool } from '../src/core/registry.js';
@@ -19,6 +19,17 @@ const creds = {
 };
 
 describe('risk manifest', () => {
+  it('treats draft version creation as an irreversible release step that asks by default', async () => {
+    for (const name of ['subscription_versions', 'subscription_group_versions', 'in_app_purchase_versions']) {
+      expect(riskFor(`${name}.create`, 'POST')).toBe('release');
+      expect(ASK_BY_DEFAULT.has(`${name}__create`)).toBe(true);
+      const op = OPERATIONS.find((o) => o.name === `${name}.create`)!;
+      expect(op.risk).toBe('release');
+      const preview = await buildWritePreview(`${name}__create`, op, { body: { data: { type: 'x' } } });
+      expect(preview.message).toContain('A draft version cannot be deleted.');
+    }
+    expect(ASK_BY_DEFAULT.has('release__submit_items')).toBe(true);
+  });
   it('classifies representative operations correctly', () => {
     expect(riskFor('subscription_prices.create', 'POST')).toBe('revenue');
     expect(riskFor('apps.update', 'PATCH')).toBe('public');

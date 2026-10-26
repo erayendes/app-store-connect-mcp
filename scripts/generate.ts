@@ -11,6 +11,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { domainFor } from './domains.js';
 import { describe } from './describe.js';
+import { validateDeprecatedOverrides, type DeprecatedOverride } from './deprecated-overrides.js';
 import { riskFor } from '../src/core/risk.js';
 import { estimateTokens, measureSchema, sharedDefsCeiling } from './schema-defs.js';
 
@@ -492,6 +493,9 @@ function patchSpecGaps(schemas: Record<string, any>): void {
 function main(): void {
   const specPath = resolve(ROOT, 'spec/openapi.json');
   const spec = JSON.parse(readFileSync(specPath, 'utf8'));
+  const overrides: DeprecatedOverride[] =
+    JSON.parse(readFileSync(resolve(ROOT, 'spec/deprecated-overrides.json'), 'utf8'));
+  const overrideIds = validateDeprecatedOverrides(spec, overrides);
 
   const tools: GeneratedTool[] = [];
   const seen = new Set<string>();
@@ -576,13 +580,13 @@ function main(): void {
             method: method.toUpperCase(),
             path,
             toolName: name,
-            deprecated: Boolean(op.deprecated),
+            deprecated: Boolean(op.deprecated) || overrideIds.has(op.operationId),
           }),
         ]
           .filter(Boolean)
           .join(' '),
         readOnly: method === 'get',
-        deprecated: Boolean(op.deprecated),
+        deprecated: Boolean(op.deprecated) || overrideIds.has(op.operationId),
         pathParams,
         queryParams,
         hasBody: Boolean(bodySchema),

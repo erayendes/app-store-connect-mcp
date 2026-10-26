@@ -38,7 +38,7 @@ import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js
 import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs } from './tools/release.js';
+import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
 import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
 import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
@@ -615,7 +615,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         };
       }
 
-      if (config.confirmWrites !== 'off' && !config.dryRun && isWriteTool(name)) {
+      let approvedPlanFingerprint: string | undefined;
+      if ((config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) && !config.dryRun && isWriteTool(name)) {
         const op = registry.get(name);
         // Decided from the risk level alone, before the preview is built:
         // buildWritePreview resolves reference ids over the network, and a
@@ -674,8 +675,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                   `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and no ` +
                   `confirmation prompt could be shown to the user here. Nothing was changed. ` +
                   `A yes in chat does not count, because this server cannot see the chat. Tell ` +
-                  `the user to make this change in App Store Connect, or to change Heimdall's ` +
-                  `confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit ` +
+                  (RELEASE_TOOL_NAMES.has(name)
+                    ? `the user to use a client with confirmation forms or enable native confirmation on macOS, then retry and approve the item list; they can also submit in App Store Connect. Release tools always require this confirmation. Do not edit `
+                    : `the user to make this change in App Store Connect, or to change Heimdall's confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit `) +
                   `client config, set ASC_CONFIRM_WRITES, or call Apple another way.`,
               },
             ],
@@ -683,11 +685,13 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           };
           if (!canElicit && !canDialog) return blocked;
           // What the prompt shows; the fingerprint stays on the arguments as sent.
-          const shown = op
+          const shownWithPlan = op
             ? args
             : RELEASE_TOOL_NAMES.has(name)
-              ? await releasePreviewArgs(args, http)
+              ? await (name === 'release__submit_items' ? releaseItemsPreviewArgs(args, http) : releasePreviewArgs(args, http))
               : await withAppName(args, http);
+          const planFingerprint = typeof shownWithPlan.planFingerprint === 'string' ? shownWithPlan.planFingerprint : undefined;
+          const { planFingerprint: _internalPlanFingerprint, ...shown } = shownWithPlan;
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
               { message: buildPricingPreview(shown, name), strong: true }
@@ -700,14 +704,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             : op
             ? await buildWritePreview(name, bodyRisk ? { ...op, risk: bodyRisk } : op, args, config.credentials.keyId, http)
             : macroOffered(name)
-            ? // Other write macros: no spec operation behind them, but their
-              // arguments are already the human-readable facts, so the generic
-              // preview renders them without any lookups.
+            ? // Macros carry readable arguments; review item references still
+              // use the same bounded name resolvers as raw writes.
               await buildWritePreview(
                 name,
                 { method: 'POST', path: `${name} (macro)`, risk },
                 shown,
-                config.credentials.keyId
+                config.credentials.keyId,
+                http
               )
             : await buildWritePreview(
                 name,
@@ -720,7 +724,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 },
                 shown
               );
-          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
           const what = servedTools()
             .find((t) => t.name === name)
@@ -742,6 +746,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               isError: true,
             };
           }
+          approvedPlanFingerprint = planFingerprint;
           // Approved in the dialog: fall through and run the write.
         }
         if (decision && !decision.allowed) {
@@ -751,13 +756,16 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
               `this client declared elicitation support but cannot actually show the ` +
               `form, and answered for you — the protocol reports that identically to a ` +
-              `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
-              `let the client's own tool approval be the gate.`;
+              `real refusal. ` +
+              (RELEASE_TOOL_NAMES.has(name)
+                ? `Use a client that can display Heimdall's confirmation form, or a macOS client with native confirmation enabled, then retry and approve the displayed item list. Release tools always require this confirmation. You can also submit in App Store Connect.`
+                : `In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and let the client's own tool approval be the gate.`);
           return {
             content: [{ type: 'text' as const, text }],
             isError: true,
           };
         }
+        if (decision?.allowed) approvedPlanFingerprint = decision.planFingerprint;
         }
       }
 
@@ -844,7 +852,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           : METADATA_I18N_WRITE_TOOLS.has(name)
           ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
           : RELEASE_TOOL_NAMES.has(name)
-          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun })
+          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint,
+              requireApprovedPlan: !config.dryRun })
           : TESTFLIGHT_TOOL_NAMES.has(name)
           ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });

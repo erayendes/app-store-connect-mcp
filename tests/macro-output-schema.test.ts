@@ -17,10 +17,11 @@ import { PREFLIGHT_TOOLS, executePreflightTool } from '../src/tools/preflight.js
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOLS } from '../src/tools/account.js';
 import { TESTFLIGHT_TOOLS, executeTestflightTool } from '../src/tools/testflight.js';
+import { RELEASE_TOOLS } from '../src/tools/release.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
-const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS];
+const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS, ...RELEASE_TOOLS];
 const byName = (name: string) => macros.find((t) => t.name === name);
 
 /** Every property a schema declares, at any depth, as dotted paths. */
@@ -56,13 +57,13 @@ function actualPaths(value: unknown, path = '', out = new Set<string>()): Set<st
 }
 
 describe('read macros declare an outputSchema', () => {
-  it('covers exactly the read macros, and no write macro', () => {
+  it('covers read macros and release submission writes', () => {
     for (const tool of macros) {
       const isRead = tool.annotations?.readOnlyHint === true;
       expect(
         Boolean(tool.outputSchema),
         `${tool.name} (readOnlyHint=${isRead}) outputSchema presence`
-      ).toBe(isRead);
+      ).toBe(isRead || tool.name.startsWith('release__'));
     }
   });
 

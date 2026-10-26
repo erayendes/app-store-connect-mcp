@@ -4,8 +4,8 @@ Tools:          1011
   id-only twins dropped: 292
   read-only:    534
   mutating:     477
-  deprecated:   123
-Risk levels:    low:155 destructive:141 public:91 revenue:52 release:16 infrastructure:16 access:6
+  deprecated:   151
+Risk levels:    low:155 destructive:141 public:91 revenue:49 release:19 infrastructure:16 access:6
 Body schemas:   342 (311 KB resolved, avg 931 chars)
 
 By domain:
