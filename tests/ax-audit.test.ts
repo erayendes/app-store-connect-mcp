@@ -24,8 +24,8 @@ import type { Operation } from '../src/core/types.js';
 const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
   // Spec 4.5 (+5 tools, Apple's own summaries) raised four ceilings by 2–4.
-  // PR-V2 hides 28 unflagged v1 operations and curates v2 version/localization descriptions.
-  boilerplate: 655,
+  // PR-V2 hides 28 unflagged v1 operations; PR-D1 hides six legacy media families.
+  boilerplate: 632,
   /**
    * AXIS2 — silent empty results: id-valued filters with no format hint.
    *
@@ -51,9 +51,9 @@ const CEILING = {
   /** AXIS4 — path length: writes that need a lookup call first. */
   // Spec 4.5.1 (+5): update and delete for asset library images, videos and
   // placements. Changing a file means naming it, so these cannot avoid the id.
-  writesNeedingLookup: 253,
+  writesNeedingLookup: 241,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
-  unfilterableLists: 94,
+  unfilterableLists: 90,
 };
 
 const debt = auditAx();

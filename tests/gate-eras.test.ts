@@ -549,20 +549,42 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
     const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'core' });
 
     const res: any = await client.callTool({
-      name: 'listing__delete_assets',
-      arguments: { app: 'Test App', asset_ids: ['img-1', 'img-2'] },
+      name: 'media__delete',
+      arguments: { app: 'Test App', target: 'library', asset_ids: ['img-1', 'img-2'] },
     });
 
     expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
     const { title, body } = vi.mocked(nativeConfirm).mock.calls[0][0];
-    expect(title).toBe('Delete images or videos from an app’s asset library?');
-    expect(body).toContain('App: Test App');
-    expect(body).toContain('Files: 01.png (15), 02.png (15)');
+    expect(title).toBe('Delete images or videos from an app’s asset library, or remove placements from a named page?');
+    expect(body).toMatch(/App:\s+Test App/);
+    expect(body).toMatch(/Files:\s+01.png \(15\), 02.png \(15\)/);
     expect(res.isError ?? false).toBe(false);
     expect(sent.filter((s) => s.startsWith('DELETE'))).toEqual([
       'DELETE /v1/appAssetLibraryImages/img-1',
       'DELETE /v1/appAssetLibraryImages/img-2',
     ]);
+  });
+});
+
+describe.each(['legacy', 'modern'] as const)('media writes without a confirmation channel on a %s connection', (era) => {
+  it.each([
+    { name: 'media__upload', arguments: { app: 'Test App', target: 'version', file_path: '/tmp/image.png', category: 'APP_SCREENSHOTS_AND_PREVIEWS' } },
+    { name: 'media__arrange', arguments: { app: 'Test App', target: 'library', action: 'archive', asset_ids: ['img-1'] } },
+    { name: 'media__delete', arguments: { app: 'Test App', target: 'library', asset_ids: ['img-1'] } },
+  ])('blocks $name before any Apple request when confirmation is required', async (call) => {
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL) => {
+      sent.push(String(url));
+      throw new Error('Unexpected Apple request');
+    }));
+    // Public page uploads ask in --confirm=all; destructive actions ask in
+    // the default strong mode.
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: false,
+      confirmWrites: call.name === 'media__upload' ? 'all' : 'strong', profile: 'core' });
+    const result: any = await client.callTool(call);
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/no confirmation prompt could be shown/);
+    expect(sent).toEqual([]);
   });
 });
 

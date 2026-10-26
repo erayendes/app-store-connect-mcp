@@ -1,3 +1,4 @@
+import { MACRO_COVERED } from '../generated/profiles-data.js';
 /**
  * Turns generated operations into MCP tool definitions and executes them.
  */
@@ -346,6 +347,7 @@ export class ToolRegistry {
 
   /** Returns the public tool name if the operation was added, undefined if filtered out. */
   private add(op: Operation): string | undefined {
+    if (MACRO_COVERED[op.name]) return undefined;
     if (op.deprecated && !this.options.includeDeprecated) return undefined;
     if (this.options.readOnly && !op.readOnly) return undefined;
     this.ops.set(op.name, op);
@@ -449,6 +451,7 @@ export class ToolRegistry {
       // tell them apart. Each one points at a different fix.
       const known = OPERATIONS.find((o) => toolNameFor(o) === name || o.name === decodeToolName(name));
       if (!known) throw new AscApiError(`Unknown tool: ${name}`, 0);
+      if (MACRO_COVERED[known.name]) throw new AscApiError(`Use ${MACRO_COVERED[known.name]} on ASC-Core; it replaces ${name}.`, 0);
 
       if (this.options.readOnly && !known.readOnly) {
         throw new AscApiError(

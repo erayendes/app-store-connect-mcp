@@ -26,6 +26,7 @@ function fake(options: { open?: boolean; existing?: any[]; platforms?: string[];
       return { ...response, data: all.slice(0, query?.limit ?? 20), ...(all.length > (query?.limit ?? 20) ? { links: { next: '/unread' } } : {}) };
     }
     if (path.endsWith('/appStoreVersionLocalizations')) return { data: [{ id: 'locale', attributes: { locale: 'en-US', description: 'Example' }, relationships: { appScreenshotSets: { data: [{ id: 'set' }] } } }] };
+    if (path === '/v1/appStoreVersionLocalizations/locale/placements') return { data: [] };
     if (path === '/v1/appScreenshotSets/set/appScreenshots') return { data: [{ id: 'shot' }] };
     if (path === '/v1/apps/1/inAppPurchasesV2') return { data: options.catalogApproved ? [{ id: 'older-product', attributes: { state: 'APPROVED', inAppPurchaseType: options.catalogProductType ?? options.productType ?? 'CONSUMABLE' } }] : [], ...(options.catalogTruncated ? { links: { next: '/unread' } } : {}) };
     if (path === '/v1/apps/1/subscriptionGroups') return { data: options.catalogApproved ? [{ id: 'older-group' }] : [], ...(options.catalogTruncated ? { links: { next: '/unread' } } : {}) };

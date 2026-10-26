@@ -145,10 +145,10 @@ right choice for anything the macro does not cover.
 | rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:iap-pricing`) — keeps every other price |
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
 | looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers`) — win-back, promotional or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
-| version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` |
-| reserving a screenshot, then uploading bytes yourself | `listing__upload_screenshot` |
-| reserving an asset library image or video, uploading it, then placing it | `listing__upload_asset` |
-| deleting several asset library files, under one confirmation | `listing__delete_assets` |
+| version → localizations → library placements → images and videos | `media__list` |
+| reserving a library image or video, uploading it, then placing it | `media__upload` |
+| placing, reordering, removing, archiving or renaming media | `media__arrange` |
+| deleting several library files or page placements under one confirmation | `media__delete` |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` — build counts, devices/OS, newest comments and bounded crash excerpts |
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |
@@ -160,10 +160,9 @@ right choice for anything the macro does not cover.
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` |
 | pasting a translation into each locale | `metadata_ai__apply_localizations` |
 
-Three of these do something the raw tools cannot do at all, not merely faster:
-`listing__upload_screenshot` and `listing__upload_asset` perform Apple's
-reserve/upload/commit sequence (the raw tools only reserve a slot and move no
-bytes), and
+Two of these do something the raw tools cannot do at all, not merely faster:
+`media__upload` performs Apple's reserve/upload/commit sequence through the
+asset library (the raw tools only reserve a slot and move no bytes), and
 `analytics__get_report` downloads the report, where the raw chain ends holding
 a link.
 

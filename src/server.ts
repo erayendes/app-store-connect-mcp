@@ -33,7 +33,7 @@ import {
   executePricingTool,
   buildPricingPreview,
 } from './tools/pricing.js';
-import { buildAssetDeletePreview, executeScreenshotTool } from './tools/screenshots.js';
+import { buildMediaPreview, executeMediaTool, MEDIA_TOOL_NAMES, mediaRisk } from './tools/screenshots.js';
 import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
 import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
@@ -627,8 +627,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? bodyRisk
           : PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
-          : name === 'listing__delete_assets'
-            ? 'destructive'
+          : MEDIA_TOOL_NAMES.has(name)
+            ? mediaRisk(name, args)
           : RELEASE_TOOL_NAMES.has(name) || TESTFLIGHT_TOOL_NAMES.has(name)
             ? // A macro that moves a build or version toward users carries
               // the same release risk as its raw calls.
@@ -685,7 +685,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           };
           if (!canElicit && !canDialog) return blocked;
           // What the prompt shows; the fingerprint stays on the arguments as sent.
-          const shownWithPlan = op
+          const mediaPreview = MEDIA_TOOL_NAMES.has(name) ? await buildMediaPreview(name, args, http) : undefined;
+          const shownWithPlan = mediaPreview
+            ? { ...args, planFingerprint: mediaPreview.planFingerprint }
+            : op
             ? args
             : RELEASE_TOOL_NAMES.has(name)
               ? await (name === 'release__submit_items' ? releaseItemsPreviewArgs(args, http) : releasePreviewArgs(args, http))
@@ -698,9 +701,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
               { message: buildTestflightPreview(shown), strong: true }
-            : name === 'listing__delete_assets'
-            ? // The arguments are bare ids; the prompt names the app and each file.
-              await buildAssetDeletePreview(args, http)
+            : mediaPreview
+            ? mediaPreview
             : op
             ? await buildWritePreview(name, bodyRisk ? { ...op, risk: bodyRisk } : op, args, config.credentials.keyId, http)
             : macroOffered(name)
@@ -856,7 +858,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               requireApprovedPlan: !config.dryRun })
           : TESTFLIGHT_TOOL_NAMES.has(name)
           ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
-          : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
+          : await executeMediaTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
         // payloads cannot: they are reshaped on the way out (stripApiNoise,

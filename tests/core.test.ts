@@ -5,6 +5,7 @@ import { RateLimiter } from '../src/core/rate-limit.js';
 import { AscHttpClient, backoffMs } from '../src/core/http.js';
 import { ToolRegistry, encodeToolName, decodeToolName, toMcpTool, toolNameFor } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
+import { MACRO_COVERED } from '../src/profiles.js';
 
 const { privateKey, publicKey } = generateKeyPairSync('ec', {
   namedCurve: 'P-256',
@@ -309,7 +310,8 @@ describe('ToolRegistry', () => {
       readOnly: false,
       includeDeprecated: true,
     });
-    expect(registry.size).toBe(OPERATIONS.length);
+    // Profile-less "all" still hides operations replaced by media macros.
+    expect(registry.size).toBe(OPERATIONS.length - Object.keys(MACRO_COVERED).length);
   });
 
   it('excludes deprecated operations by default', () => {

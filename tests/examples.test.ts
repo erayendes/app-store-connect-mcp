@@ -76,8 +76,8 @@ describe('everything the examples name exists', () => {
       ...OPERATIONS.map((op) => toolNameFor(op)),
       // Hand-written tools are not in the generated catalogue.
       'asc__status', 'asc__search_tools', 'asc__discover_domains', 'asc__call', 'asc__describe',
-      'preflight__check_version', 'preflight__check_subscription', 'listing__get_screenshots',
-      'listing__upload_screenshot', 'analytics__get_report', 'ci__diagnose_run', 'reviews_ai__triage',
+      'preflight__check_version', 'preflight__check_subscription', 'media__list',
+      'media__upload', 'media__arrange', 'media__delete', 'analytics__get_report', 'ci__diagnose_run', 'reviews_ai__triage',
       'reviews_ai__daily_briefing', 'reviews_ai__draft_response',
       'pricing__get_subscription_price', 'pricing__set_subscription_price',
       'pricing__equalize_price',

@@ -157,15 +157,7 @@ describe('reachability — every sub-profile reaches its own resources from an a
    * the wrong person. Each entry is `profile/sub: resource`, and the test below
    * fails when an entry stops being a gap, so the list can only shrink.
    */
-  const KNOWN_GAPS = new Set<string>([
-    // The raw library tools list placements per page localization, and this
-    // slice reads no localizations. Temporary: the media macros replace the
-    // whole sub-profile.
-    'marketing/asset-library: app_custom_product_page_localizations',
-    'marketing/asset-library: app_event_localizations',
-    'marketing/asset-library: app_store_version_experiment_treatment_localizations',
-    'marketing/asset-library: app_store_version_localizations',
-  ]);
+  const KNOWN_GAPS = new Set<string>([]);
 
   it('finds entry points at all (guards the walk, not the data)', () => {
     expect(matches(norm('subscriptionGroups'), edgesFrom(coreOps))).toBe(true);
@@ -349,7 +341,10 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
 
   const gapsOf = (label: string): string[] => {
     const { sub } = SUBS.find((s) => s.label === label)!;
-    const reads = new Set([...readCollections(sub.operations), ...readCollections(coreOps), ...INCLUDE_ONLY]);
+    // Core media__arrange can create a placement ID, which a custom product
+    // page may reference when it is created. Its raw producer is macro-covered.
+    const reads = new Set([...readCollections(sub.operations), ...readCollections(coreOps),
+      ...readCollections(['app_asset_library_placements.get']), ...INCLUDE_ONLY]);
     const satisfiedBy = (collection: string) =>
       [...reads].some((r) => collection.endsWith(r) || r.endsWith(collection));
     const satisfied = (collection: string) =>
@@ -421,26 +416,25 @@ describe('help text', () => {
 describe('counts — curation output, not something that drifts on its own', () => {
   it('matches the numbers the sheet was signed off with', () => {
     expect(PROFILES.length).toBe(14);
-    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(52);
+    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(51);
     const core = resolveSelection(CORE_PROFILE);
     expect(operationsFor(core).length).toBe(8);
     expect(manualToolsFor(core).length).toBe(8);
     expect(PROFILELESS.length).toBe(7);
     expect(Object.keys(TWIN_OF).length).toBe(12);
-    expect(Object.keys(MACRO_COVERED).length).toBe(0);
+    expect(Object.keys(MACRO_COVERED).length).toBe(24);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 971 CSV rows - 7 profile-less ones. Not a count of distinct tools: the
-    // screenshot and preview tools sit under all three pages that can list a
-    // set, and a few entry reads are deliberately in two slices.
-    expect(tools.length).toBe(964);
+    // 873 CSV rows - 7 profile-less ones. Not a count of distinct tools:
+    // a few entry reads deliberately sit in more than one slice.
+    expect(tools.length).toBe(866);
     // Placed operations plus the hand-written tools in the sheet, which are
-    // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 5 listing, 1
+    // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 2
     // testflight, 1 ci, and core's 3 meta tools — 39.
     const placed = loadable.length - PROFILELESS.length - Object.keys(TWIN_OF).length;
-    expect(new Set(tools).size).toBe(placed + 39);
+    expect(new Set(tools).size).toBe(placed - Object.keys(MACRO_COVERED).length + 39);
   });
   it('places release__submit_items in exactly the ten approved slices', () => {
     const actual = SUBS.filter(({ sub }) => sub.manualTools.includes('release__submit_items')).map(({ label }) => label).sort();

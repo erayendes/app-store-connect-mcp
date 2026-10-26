@@ -157,7 +157,7 @@ describe('what a client receives', () => {
     const profile = await connect('testflight');
     const names = (await profile.listTools()).tools.map((t) => t.name);
     expect(names).toContain('asc__status');
-    for (const absent of ['apps__list', 'asc__search_tools', 'asc__discover_domains', 'listing__upload_screenshot']) {
+    for (const absent of ['apps__list', 'asc__search_tools', 'asc__discover_domains', 'media__upload']) {
       expect(names).not.toContain(absent);
     }
     expect(profile.getInstructions()).toContain('ASC-Core');
@@ -165,7 +165,7 @@ describe('what a client receives', () => {
     const core = await connect('core');
     const coreNames = (await core.listTools()).tools.map((t) => t.name);
     expect(core.getServerVersion()?.name).toBe('ASC-Core');
-    for (const present of ['apps__list', 'asc__search_tools', 'asc__discover_domains', 'listing__upload_screenshot']) {
+    for (const present of ['apps__list', 'asc__search_tools', 'asc__discover_domains', 'media__upload']) {
       expect(coreNames).toContain(present);
     }
     // Listed once: core's sheet rows name it and every server adds it.
@@ -176,7 +176,7 @@ describe('what a client receives', () => {
   it('folds core into one server with --with-core', async () => {
     const client = await connect('testflight', { withCore: true });
     const names = (await client.listTools()).tools.map((t) => t.name);
-    for (const present of ['beta_groups__create', 'apps__list', 'asc__search_tools', 'listing__get_screenshots']) {
+    for (const present of ['beta_groups__create', 'apps__list', 'asc__search_tools', 'media__list']) {
       expect(names).toContain(present);
     }
     expect(names.length).toBe(new Set(names).size);
@@ -185,10 +185,12 @@ describe('what a client receives', () => {
 
   it('hides the write macros in core under --read-only', async () => {
     const names = (await (await connect('core', { readOnly: true })).listTools()).tools.map((t) => t.name);
-    expect(names).toContain('listing__get_screenshots');
-    expect(names).not.toContain('listing__upload_screenshot');
-    expect(names).not.toContain('listing__upload_asset');
-    expect(names).not.toContain('listing__delete_assets');
+    expect(names).toContain('media__list');
+    for (const write of ['media__upload', 'media__arrange', 'media__delete']) {
+      expect(names).not.toContain(write);
+      const refused: any = await (await connect('core', { readOnly: true })).callTool({ name: write, arguments: {} });
+      expect(refused.isError).toBe(true);
+    }
   });
 
   it('refuses a meta tool that lives in core, naming core', async () => {

@@ -3,7 +3,7 @@ import { riskFor } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { PRICING_TOOL_NAMES } from '../src/tools/pricing.js';
 import { REVIEWS_AI_TOOL_NAMES } from '../src/tools/reviews-ai.js';
-import { SCREENSHOT_TOOL_NAMES } from '../src/tools/screenshots.js';
+import { MEDIA_TOOL_NAMES } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOL_NAMES } from '../src/tools/analytics.js';
 import { CI_TOOL_NAMES } from '../src/tools/ci.js';
 import { PREFLIGHT_TOOL_NAMES } from '../src/tools/preflight.js';
@@ -18,7 +18,7 @@ const operationsByName = new Map(OPERATIONS.map((operation) => [operation.name, 
 const macroNames = new Set([
   ...PRICING_TOOL_NAMES,
   ...REVIEWS_AI_TOOL_NAMES,
-  ...SCREENSHOT_TOOL_NAMES,
+  ...MEDIA_TOOL_NAMES,
   ...ANALYTICS_TOOL_NAMES,
   ...CI_TOOL_NAMES,
   ...PREFLIGHT_TOOL_NAMES,
@@ -92,7 +92,7 @@ describe('AX evaluation intent corpus', () => {
   it('has the frozen core, adversarial, and corpus sizes', () => {
     expect(INTENTS.filter((intent) => intent.core).length).toBe(15);
     expect(INTENTS.filter((intent) => intent.adversarial).length).toBe(8);
-    expect(INTENTS).toHaveLength(52);
+    expect(INTENTS).toHaveLength(55);
   });
 
   it('does not repeat every expected-tool token in a search query', () => {
