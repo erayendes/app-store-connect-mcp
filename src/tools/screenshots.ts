@@ -1,4 +1,4 @@
-/** Library-backed media macros: resolve once, verify ownership, then write. */
+/** Media macros: resolve the library, page or file owner, then verify and write. */
 import { createHash } from 'node:crypto';
 import { constants } from 'node:fs';
 import { open, stat } from 'node:fs/promises';
@@ -10,8 +10,9 @@ import { resolveApp } from '../core/resolve-app.js';
 import { REVERSIBILITY, STRONG_CONFIRM_LEVELS, type RiskLevel } from '../core/risk.js';
 import { pickVersion, readAppStoreVersions, PLATFORMS, EDITABLE_STATES } from './preflight.js';
 import {
-  MEDIA_NAMES, MEDIA_OPS, MEDIA_ASSETS, MEDIA_TARGETS, MEDIA_CATEGORIES, MEDIA_PLACEMENT_TYPES,
-  mediaBody, mediaDataSchema, mediaPath, mediaRelationship, type MediaKind, type PageTarget,
+  MEDIA_NAMES, MEDIA_OPS, MEDIA_ASSETS, MEDIA_TARGETS, PAGE_TARGETS, FILE_TARGETS, MEDIA_CATEGORIES, MEDIA_PLACEMENT_TYPES,
+  MEDIA_FILE_ASSET_TYPES, MEDIA_BUILD_UTIS,
+  mediaBody, mediaDataSchema, mediaPath, mediaRelationship, type MediaKind, type PageTarget, type FileTarget, type FileAdapter,
 } from './media-catalog.js';
 
 const MAX_ITEMS = 50;
@@ -21,8 +22,8 @@ const textField = { type: 'string', minLength: 1 };
 const idsField = { type: 'array', items: textField, minItems: 1, maxItems: MAX_ITEMS, uniqueItems: true };
 const targetFields = {
   app: { ...textField, description: 'App name, bundle ID or Apple ID.' },
-  target: { type: 'string', enum: ['library', ...Object.keys(MEDIA_TARGETS)], description: 'library, version page, custom product page (cpp), optimization treatment (ppo), or in-app event.' },
-  page_id: { ...textField, description: 'Localization ID for cpp, ppo or event. For version use locale, or its localization ID.' },
+  target: { type: 'string', enum: ['library', ...Object.keys(MEDIA_TARGETS)], description: 'Library, page, or a named image/file target.' },
+  page_id: { ...textField, description: 'Page localization ID, or the owning resource ID for an image/file target.' },
   locale: { ...textField, description: 'Version locale, e.g. en-US. Omit on list to inspect all locales.' },
   version: { ...textField, description: 'Version string. Required if multiple versions match.' },
   platform: { type: 'string', enum: PLATFORMS, description: 'Required if multiple platforms match.' },
@@ -41,7 +42,7 @@ const placementSchema = {
 };
 const assetSchema = {
   type: 'object', properties: {
-    id: textField, kind: { type: 'string', enum: ['image', 'video'] }, name: textField,
+    id: textField, kind: { type: 'string', enum: ['image', 'video', 'file'] }, name: textField,
     fileName: nullableText, state: nullableText, errors: errorsSchema,
     width: { type: ['number', 'null'] }, height: { type: ['number', 'null'] },
     placements: { type: 'array', items: placementSchema },
@@ -51,11 +52,11 @@ const assetSchema = {
 export const MEDIA_TOOLS: McpToolDefinition[] = [
   {
     name: MEDIA_NAMES.list,
-    description: 'List library and page media with asset, placement and page IDs, groups, states, errors and Apple’s count/size limits.',
-    inputSchema: { type: 'object', properties: { ...targetFields, asset_ids: { ...idsField, description: 'Optional library file IDs to inspect.' }, library_id: { ...textField, description: 'Optional library ID to verify against the app.' }, ref_data_id: { ...textField, description: 'Optional reference data ID.' } }, required: ['app', 'target'] },
+    description: 'List library, page and file-target media with owner and file IDs, states and errors.',
+    inputSchema: { type: 'object', properties: { ...targetFields, asset_ids: { ...idsField, description: 'Optional library file IDs to inspect.' }, file_ids: { ...idsField, description: 'Optional image/file target IDs to inspect.' }, library_id: { ...textField, description: 'Optional library ID to verify against the app.' }, ref_data_id: { ...textField, description: 'Optional reference data ID.' } }, required: ['app', 'target'] },
     outputSchema: {
       type: 'object', properties: {
-        app: textField, target: textField, libraryId: textField,
+        app: textField, target: textField, libraryId: nullableText,
         assets: { type: 'array', items: assetSchema },
         pages: { type: 'array', items: { type: 'object', properties: {
           id: textField, target: textField, label: textField, locale: nullableText, state: nullableText,
@@ -76,18 +77,22 @@ export const MEDIA_TOOLS: McpToolDefinition[] = [
   },
   {
     name: MEDIA_NAMES.upload,
-    description: 'Upload a PNG/JPEG image or MP4/MOV video: reserve, send bytes, commit to the app’s library. A page target also places it there. Returns processing/review state and any placement failure. PUBLIC-level write on a page; library-only upload is low risk.',
+    description: 'Upload library, page or file-target media: check a local file, reserve, send bytes and commit. File targets use owner page_id; omit it to start a build upload. Customer-facing images are PUBLIC-level; private files are low risk.',
     inputSchema: { type: 'object', properties: {
       ...targetFields, ...placementFields,
-      file_path: { ...textField, description: 'Absolute local file path. Regular files only; image limit 50 MiB, video 500 MiB.' },
+      file_path: { ...textField, description: 'Absolute local regular file. Images ≤50 MiB; videos and other files ≤500 MiB.' },
       category: { type: 'string', enum: MEDIA_CATEGORIES }, reference_name: textField,
       preview_frame_time_code: { ...textField, description: 'Video poster frame, e.g. 00:00:05:00.' },
-    }, required: ['app', 'target', 'file_path', 'category'] },
+      asset_type: { type: 'string', enum: MEDIA_FILE_ASSET_TYPES, description: 'Background: ASSET or MANIFEST. Build: ASSET, ASSET_DESCRIPTION or ASSET_SPI.' },
+      uti: { type: 'string', enum: MEDIA_BUILD_UTIS, description: 'Required for build upload files.' },
+      build_version: { ...textField, description: 'For a new build upload: CFBundleVersion.' },
+      build_short_version: { ...textField, description: 'For a new build upload: CFBundleShortVersionString.' },
+    }, required: ['app', 'target', 'file_path'] },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
   {
     name: MEDIA_NAMES.arrange,
-    description: 'Place, reorder or remove page media; set video posters, rename or archive files. Remove needs a named page; library reorder infers its page. Events have no order. Remove/archive are DESTRUCTIVE-level writes with file and page previews.',
+    description: 'Place, reorder or remove page media; set video posters, rename or archive library files. Single-image and file targets have no ordering and cannot use this tool.',
     inputSchema: { type: 'object', properties: {
       ...targetFields, ...placementFields,
       action: { type: 'string', enum: ['reorder', 'place', 'remove', 'poster', 'archive', 'rename'] },
@@ -100,10 +105,11 @@ export const MEDIA_TOOLS: McpToolDefinition[] = [
   },
   {
     name: MEDIA_NAMES.delete,
-    description: 'Delete images or videos from an app’s asset library, or remove placements from a named page. Verifies every item belongs to the app/page before deleting any; previews file names and reports partial success. At most 50 items. DESTRUCTIVE-level write.',
+    description: 'Delete images or videos from an app’s asset library, or remove placements from a named page. File targets can delete owned assets where Apple offers DELETE. Verifies all IDs before any write. DESTRUCTIVE-level write.',
     inputSchema: { type: 'object', properties: {
       ...targetFields, asset_ids: { ...idsField, description: 'Library target: file IDs to permanently delete.' },
       placement_ids: { ...idsField, description: 'Page target: placement IDs to remove; the files remain in the library.' },
+      file_ids: { ...idsField, description: 'Image/file target: IDs to delete after app and parent ownership checks.' },
     }, required: ['app', 'target'] },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
@@ -161,7 +167,7 @@ async function getRow(http: AscHttpClient, operation: string, id: string, query?
 
 /** A localization ID is not proof that it belongs to the named app. */
 async function resolvePage(http: AscHttpClient, app: Target['app'], target: PageTarget, id: string): Promise<Page> {
-  const adapter = MEDIA_TARGETS[target];
+  const adapter = PAGE_TARGETS[target];
   const loc = await getRow(http, adapter.get, id, { include: target === 'cpp' ? 'appCustomProductPageVersion' : target === 'ppo' ? 'appStoreVersionExperimentTreatment' : target === 'event' ? 'appEvent' : 'appStoreVersion' });
   let parent: Row, label: string, owner: string;
   if (target === 'cpp') {
@@ -244,9 +250,9 @@ async function libraryFiles(http: AscHttpClient, target: Target, ids: string[] =
   }
   return selected;
 }
-const placementPage = (row: Row) => Object.entries(MEDIA_TARGETS).find(([, t]) => row.relationships?.[t.relationship]?.data?.id);
+const placementPage = (row: Row) => Object.entries(PAGE_TARGETS).find(([, t]) => row.relationships?.[t.relationship]?.data?.id);
 const placementAsset = (row: Row) => row.relationships?.image?.data?.id ?? row.relationships?.video?.data?.id;
-const PLACEMENT_INCLUDES = Object.values(MEDIA_TARGETS).map((t) => t.relationship).join(',');
+const PLACEMENT_INCLUDES = Object.values(PAGE_TARGETS).map((t) => t.relationship).join(',');
 async function populatePlacementPages(http: AscHttpClient, target: Target, files: File[]) {
   const count = files.reduce((sum, f) => sum + f.placements.length, 0);
   if (count > 200) fail('More than 200 placements; refusing an incomplete page preview. Filter asset_ids.');
@@ -264,7 +270,7 @@ async function populatePlacementPages(http: AscHttpClient, target: Target, files
   target.pages = [...seen.values()];
 }
 async function pagePlacements(http: AscHttpClient, page: Page) {
-  return readMediaRows(http, MEDIA_TARGETS[page.target].placements, page.id, { include: 'image,video', ...(MEDIA_TARGETS[page.target].ordered ? { sort: 'placementGroupPosition' } : {}), limit: 200 });
+  return readMediaRows(http, PAGE_TARGETS[page.target].placements, page.id, { include: 'image,video', ...(PAGE_TARGETS[page.target].ordered ? { sort: 'placementGroupPosition' } : {}), limit: 200 });
 }
 const errorsOf = (row: Row): string[] => (row.attributes?.stateDetails ?? row.attributes?.assetDeliveryState?.errors ?? []).map((e: any) => [e.code, e.description ?? e.detail].filter(Boolean).join(': '));
 const showPlacement = (row: Row, page?: Page) => {
@@ -277,6 +283,7 @@ const showFile = (file: File) => {
 };
 
 async function listMedia(args: Args, http: AscHttpClient) {
+  if (Object.hasOwn(FILE_TARGETS, str(args, 'target', true)!)) return listFileMedia(args, http);
   const target = await resolveTarget(args, http, false);
   const ids = arrayIds(args, 'asset_ids', false);
   const libraryId = str(args, 'library_id');
@@ -302,7 +309,7 @@ async function listMedia(args: Args, http: AscHttpClient) {
           file = { id: assetId, kind, row, name: row.attributes?.referenceName || row.attributes?.fileName || assetId, placements: [] };
           files.push(file);
         }
-        const enriched = { ...p, relationships: { ...p.relationships, [MEDIA_TARGETS[page.target].relationship]: { data: { id: page.id } } } };
+        const enriched = { ...p, relationships: { ...p.relationships, [PAGE_TARGETS[page.target].relationship]: { data: { id: page.id } } } };
         file.placements.push(enriched);
         const shaped = showPlacement(p, page);
         const key = JSON.stringify([kind, shaped.placementType, shaped.placementGroup]);
@@ -318,11 +325,12 @@ async function listMedia(args: Args, http: AscHttpClient) {
 
 /** Stat before reading, then fstat + bounded reads from that same descriptor.
  * O_NONBLOCK prevents a swapped FIFO from hanging open; fstat rejects it. */
-async function readUpload(filePath: string): Promise<{ bytes: Buffer; kind: MediaKind; fileName: string }> {
+async function readUpload(filePath: string, format: FileAdapter['format'] | 'library' = 'library', uti?: string): Promise<{ bytes: Buffer; kind: MediaKind; fileName: string }> {
   if (!isAbsolute(filePath)) fail('file_path must be absolute.');
   const check = (s: NonNullable<Awaited<ReturnType<typeof stat>>>) => {
     if (!s.isFile()) fail('Upload requires a regular file.');
-    if (s.size < 1 || s.size > MAX_VIDEO_BYTES) fail(`File size must be 1–${MAX_VIDEO_BYTES} bytes.`);
+    const max = format === 'image' ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
+    if (s.size < 1 || s.size > max) fail(`File size must be 1–${max} bytes.`);
   };
   const before = await stat(filePath); check(before);
   const fd = await open(filePath, constants.O_RDONLY | constants.O_NONBLOCK);
@@ -334,8 +342,9 @@ async function readUpload(filePath: string): Promise<{ bytes: Buffer; kind: Medi
     const brand = bytesRead >= 12 && head.subarray(4, 8).toString('latin1') === 'ftyp' ? head.subarray(8, 12).toString('latin1') : '';
     const video = ['qt  ', 'isom', 'iso2', 'mp41', 'mp42', 'avc1', 'M4V '].includes(brand);
     const image = (bytesRead >= 8 && head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) || (bytesRead >= 4 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff && head[3] !== 0xff && head[3] !== 0x00);
-    if (!video && !image) fail('File is not a PNG, JPEG, MP4 or MOV; no bytes were sent.');
-    if (!video && info.size > MAX_IMAGE_BYTES) fail(`Image exceeds the ${MAX_IMAGE_BYTES}-byte limit.`);
+    if (format === 'image' && !image) fail('Image target requires PNG or JPEG; no bytes were sent.');
+    if (format === 'library' && !video && !image) fail('File is not a PNG, JPEG, MP4 or MOV; no bytes were sent.');
+    if (format === 'library' && !video && info.size > MAX_IMAGE_BYTES) fail(`Image exceeds the ${MAX_IMAGE_BYTES}-byte limit.`);
     const bytes = Buffer.alloc(info.size);
     for (let offset = 0; offset < bytes.length;) {
       const read = await fd.read(bytes, offset, Math.min(1024 * 1024, bytes.length - offset), offset);
@@ -344,16 +353,197 @@ async function readUpload(filePath: string): Promise<{ bytes: Buffer; kind: Medi
     }
     const after = await fd.stat();
     if (after.size !== info.size || after.mtimeMs !== info.mtimeMs || after.ctimeMs !== info.ctimeMs || !bytes.subarray(0, Math.min(12, bytes.length)).equals(head.subarray(0, Math.min(12, bytes.length)))) fail('File changed during read; retry.');
+    // The spec gives documents, review attachments and background assets no
+    // MIME/extension enum. Do not turn a PDF example into a PDF-only rule.
+    if (format === 'geojson') {
+      let parsed: any;
+      try { parsed = JSON.parse(bytes.toString('utf8')); } catch { fail('Routing coverage must be valid GeoJSON.'); }
+      if (!validGeoJson(parsed)) fail('Routing coverage must be valid GeoJSON with geometry coordinates.');
+    }
+    if (format === 'build') {
+      const zip = bytes.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+      const xml = uti === 'com.apple.xml-property-list' && /^(?:\uFEFF)?\s*(?:<\?xml[^?]*\?>\s*)?(?:<!DOCTYPE[^>]*>\s*)?<plist(?:\s[^>]*)?>[\s\S]*<\/plist>\s*$/.test(bytes.toString('utf8'));
+      const plist = bytes.subarray(0, 8).toString('latin1') === 'bplist00';
+      if ((uti === 'com.apple.ipa' || uti === 'com.pkware.zip-archive') && !zip) fail('Build file UTI requires a ZIP/IPA signature.');
+      if (uti === 'com.apple.binary-property-list' && !plist) fail('Build file UTI requires a binary plist.');
+      if (uti === 'com.apple.xml-property-list' && !xml) fail('Build file UTI requires an XML plist.');
+      if (uti === 'com.apple.pkg' && bytes.subarray(0, 4).toString('latin1') !== 'xar!') fail('Build file UTI requires a pkg archive.');
+    }
     return { bytes, kind: video ? 'video' : 'image', fileName: basename(filePath) };
   } finally { await fd.close(); }
 }
 
+/** Validate GeoJSON structure without imposing an undocumented area/type policy. */
+function validGeoJson(value: any, depth = 0): boolean {
+  if (!value || typeof value !== 'object' || depth > 20) return false;
+  const all = (items: any, check: (item: any) => boolean) => Array.isArray(items) && items.every(check);
+  const position = (p: any) => Array.isArray(p) && p.length >= 2 && p.every((n: any) => typeof n === 'number' && Number.isFinite(n));
+  const line = (p: any) => Array.isArray(p) && p.length >= 2 && p.every(position);
+  const ring = (p: any) => line(p) && p.length >= 4 && JSON.stringify(p[0]) === JSON.stringify(p.at(-1));
+  const polygon = (p: any) => all(p, ring);
+  const geometry = (g: any) => g && !['Feature', 'FeatureCollection'].includes(g.type) && validGeoJson(g, depth + 1);
+  switch (value.type) {
+    case 'FeatureCollection': return all(value.features, (f) => f?.type === 'Feature' && validGeoJson(f, depth + 1));
+    case 'Feature': return Object.hasOwn(value, 'properties') && (value.properties === null || (typeof value.properties === 'object' && !Array.isArray(value.properties))) && (value.geometry === null || geometry(value.geometry));
+    case 'GeometryCollection': return all(value.geometries, geometry);
+    case 'Point': return position(value.coordinates);
+    case 'MultiPoint': return all(value.coordinates, position);
+    case 'LineString': return line(value.coordinates);
+    case 'MultiLineString': return all(value.coordinates, line);
+    case 'Polygon': return polygon(value.coordinates);
+    case 'MultiPolygon': return all(value.coordinates, polygon);
+    default: return false;
+  }
+}
+
+interface FilePlan {
+  adapter: FileAdapter; target: FileTarget; app: { id: string; name: string };
+  parentId: string; parentLabel: string; parentFiles: string[]; ownerIds: string[];
+  files: Row[]; writes: Write[]; risk: RiskLevel; fingerprint: string;
+  upload?: { bytes: Buffer; fileName: string };
+  createBuild?: unknown;
+}
+const fileAdapter = (target: string): FileAdapter => (FILE_TARGETS as Record<string, FileAdapter>)[target] ?? fail(`Unknown file target: ${target}.`);
+const relationshipIds = (row: Row, key: string): string[] => {
+  const relationship = row?.relationships?.[key];
+  if (!relationship || !Object.hasOwn(relationship, 'data')) fail(`Missing ${key} relationship; cannot verify ownership.`);
+  const data = relationship.data;
+  const ids = data === null ? [] : (Array.isArray(data) ? data : [data]).map((item: Row) => item.id);
+  if (ids.some((id: unknown) => typeof id !== 'string' || !id)) fail(`Invalid ${key} relationship; cannot verify ownership.`);
+  if (relationship.links?.next || Number(relationship.meta?.paging?.total ?? 0) > ids.length) fail(`Truncated ${key} relationship; cannot verify all files.`);
+  return ids;
+};
+
+async function resolveFileParent(args: Args, http: AscHttpClient) {
+  const name = str(args, 'target', true)!;
+  const adapter = fileAdapter(name);
+  const parentId = str(args, 'page_id', true)!;
+  if (args.locale !== undefined || args.version !== undefined || args.platform !== undefined) fail('File targets require an exact page_id; version/platform selectors cannot identify a unique owner.');
+  const app = await resolveApp(http, str(args, 'app', true)!);
+  const include = [adapter.read ? undefined : adapter.files, adapter.chain[0]?.via].filter(Boolean).join(',');
+  let row = await getRow(http, adapter.parentGet, parentId, include ? { include } : undefined);
+  const parent = row;
+  const labels: string[] = [];
+  const label = (r: Row) => [r.attributes?.referenceName ?? r.attributes?.name ?? r.attributes?.fileName,
+    r.attributes?.platform, r.attributes?.versionString ?? r.attributes?.version ?? r.attributes?.cfBundleVersion, r.attributes?.locale].filter((v) => v !== undefined).join(', ');
+  if (label(row)) labels.push(label(row));
+  const ownerIds = [parentId];
+  for (let i = 0; i < adapter.chain.length; i++) {
+    const step = adapter.chain[i];
+    const id = relId(row, step.via);
+    ownerIds.push(id);
+    if (step.get === 'apps.get') {
+      if (id !== app.id) fail(`${parentId} does not belong to ${app.name}. Nothing was changed.`);
+    } else {
+      const via = adapter.chain[i + 1]?.via;
+      row = await getRow(http, step.get, id, via ? { include: via } : undefined);
+      if (label(row)) labels.push(label(row));
+    }
+  }
+  if (adapter.appList) {
+    const owned = await readMediaRows(http, adapter.appList, app.id, { limit: 200 });
+    if (!owned.rows.some((entry) => entry.id === ownerIds.at(-1))) fail(`${parentId} does not belong to ${app.name}. Nothing was changed.`);
+  }
+  // These scoped endpoints also work for link-only relationships (build and
+  // background upload files), where include cannot produce linkage data.
+  let parentFiles: string[];
+  if (adapter.read?.endsWith('.list')) {
+    parentFiles = (await readMediaRows(http, adapter.read, parentId, { limit: 200 })).rows.map((file) => file.id);
+  } else if (adapter.read) {
+    const res: any = await http.get(mediaPath(adapter.read, parentId));
+    if (res?.data !== null && (typeof res?.data?.id !== 'string' || !res.data.id)) fail(`Missing ${adapter.read} response; cannot verify files.`);
+    parentFiles = res.data === null ? [] : [res.data.id];
+  } else parentFiles = relationshipIds(parent, adapter.files);
+  if (parentFiles.length > 200) fail('More than 200 files on this resource; refusing an incomplete preview.');
+  return { adapter, app, parentId, parentLabel: labels.join(' / ') || parentId, parentFiles, ownerIds };
+}
+
+async function fileRows(http: AscHttpClient, adapter: FileAdapter, ids: string[]) {
+  return Promise.all(ids.map((id) => getRow(http, adapter.get, id)));
+}
+
+async function listFileMedia(args: Args, http: AscHttpClient) {
+  if (args.library_id !== undefined || args.ref_data_id !== undefined) fail('File targets do not use the asset library.');
+  if (args.asset_ids !== undefined) fail('Use file_ids to filter a file target.');
+  const resolved = await resolveFileParent(args, http);
+  const filter = arrayIds(args, 'file_ids', false);
+  for (const id of filter) if (!resolved.parentFiles.includes(id)) fail(`File ${id} is not on ${resolved.parentId}.`);
+  const rows = await fileRows(http, resolved.adapter, filter.length ? filter : resolved.parentFiles);
+  return { app: `${resolved.app.name} (${resolved.app.id})`, target: str(args, 'target', true)!, libraryId: null,
+    assets: rows.map((row) => ({ id: row.id, kind: resolved.adapter.format === 'image' ? 'image' : 'file',
+      name: row.attributes?.fileName ?? row.id, fileName: row.attributes?.fileName ?? null,
+      state: row.attributes?.assetDeliveryState?.state ?? null, errors: errorsOf(row),
+      width: row.attributes?.imageAsset?.width ?? null, height: row.attributes?.imageAsset?.height ?? null, placements: [] })),
+    pages: [{ id: resolved.parentId, target: str(args, 'target', true)!, label: resolved.parentLabel, locale: null, state: null, sets: [] }], limits: [] };
+}
+
+async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): Promise<FilePlan> {
+  const target = str(args, 'target', true)! as FileTarget;
+  const adapter = fileAdapter(target);
+  if (name === MEDIA_NAMES.arrange) fail(`${target} has no ordering or placements; media__arrange is unavailable.`);
+  if (name === MEDIA_NAMES.delete && !adapter.delete && target !== 'build_upload_file') fail(`Apple does not offer DELETE for ${target}.`);
+  for (const key of ['asset_ids', 'placement_ids', 'placement_type', 'placement_group', 'category', 'reference_name', 'preview_frame_time_code']) {
+    if (args[key] !== undefined) fail(`${key} is not supported for ${target}.`);
+  }
+  if (name === MEDIA_NAMES.upload && args.file_ids !== undefined) fail('file_ids is only for listing or deleting existing files.');
+  const uti = str(args, 'uti');
+  const upload = name === MEDIA_NAMES.upload ? await readUpload(str(args, 'file_path', true)!, adapter.format, uti) : undefined;
+  const newBuild = target === 'build_upload_file' && name === MEDIA_NAMES.upload && args.page_id === undefined;
+  if (newBuild && (args.locale !== undefined || args.version !== undefined)) fail('A new build upload uses build_version, build_short_version and platform.');
+  const buildApp = newBuild ? await resolveApp(http, str(args, 'app', true)!) : undefined;
+  const createBuild = newBuild ? mediaBody('build_uploads.create', {
+    attributes: { cfBundleVersion: str(args, 'build_version', true), cfBundleShortVersionString: str(args, 'build_short_version', true), platform: str(args, 'platform', true) },
+    relationships: { app: mediaRelationship('build_uploads.create', 'app', buildApp!.id) },
+  }) : undefined;
+  const resolved = newBuild ? { adapter, app: buildApp!, parentId: '(new build upload)', parentLabel: `${args.platform} ${args.build_short_version} (${args.build_version})`, parentFiles: [], ownerIds: [buildApp!.id] } : await resolveFileParent(args, http);
+  const ids = name === MEDIA_NAMES.delete && target !== 'build_upload_file' ? arrayIds(args, 'file_ids') : resolved.parentFiles;
+  for (const id of ids) if (!resolved.parentFiles.includes(id)) fail(`File ${id} is not on ${resolved.parentId}. Nothing was changed.`);
+  const files = await fileRows(http, adapter, ids);
+  const writes: Write[] = [];
+  if (upload) {
+    if (createBuild) writes.push({ operation: 'build_uploads.create', name: upload.fileName, body: createBuild });
+    const attrs: Record<string, unknown> = { fileName: upload.fileName, fileSize: upload.bytes.length };
+    if (adapter.format === 'asset' || adapter.format === 'build') attrs.assetType = str(args, 'asset_type', true);
+    if (adapter.format === 'build') attrs.uti = uti ?? fail('"uti" is required for build upload files.');
+    writes.push({ operation: adapter.create, name: upload.fileName, body: mediaBody(adapter.create, {
+      attributes: attrs, ...(adapter.createParent ? { relationships: { [adapter.createParent]: mediaRelationship(adapter.create, adapter.createParent, resolved.parentId) } } : {}),
+    }) });
+    const commitAttributes = mediaDataSchema(adapter.update).properties.attributes.properties;
+    const attributes = { uploaded: true,
+      ...(commitAttributes.sourceFileChecksums ? { sourceFileChecksums: { file: { algorithm: 'SHA_256', hash: createHash('sha256').update(upload.bytes).digest('hex') } } }
+        : commitAttributes.sourceFileChecksum ? { sourceFileChecksum: createHash('md5').update(upload.bytes).digest('hex') } : {}),
+    };
+    writes.push({ operation: adapter.update, id: '(reserved file)', name: upload.fileName,
+      body: mediaBody(adapter.update, { id: '(reserved file)', attributes }) });
+    if (adapter.attach) writes.push({ operation: adapter.attach, id: resolved.parentId, name: upload.fileName,
+      body: mediaBody(adapter.attach, { id: resolved.parentId, relationships: { headerImage: mediaRelationship(adapter.attach, 'headerImage', '(reserved file)') } }) });
+  } else {
+    if (target === 'build_upload_file') {
+      if (args.file_ids !== undefined) fail('Build uploads delete as a whole; omit file_ids.');
+      writes.push({ operation: 'build_uploads.delete', id: resolved.parentId, name: `Build upload ${resolved.parentId}` });
+    } else for (const file of files) writes.push({ operation: adapter.delete!, id: file.id, name: file.attributes?.fileName ?? file.id });
+  }
+  const risk: RiskLevel = writes.some((write) => write.operation.endsWith('.delete')) ? 'destructive' : adapter.risk;
+  if (risk !== intentRisk(mediaIntent(name, args))) fail('Media plan risk differs from the preflight confirmation risk. Nothing was changed.');
+  const fingerprint = createHash('sha256').update(JSON.stringify({ app: resolved.app.id, target, parentId: resolved.parentId,
+    parentLabel: resolved.parentLabel, parentFiles: resolved.parentFiles, ownerIds: resolved.ownerIds, files: files.map((file) => ({ id: file.id, attributes: file.attributes })), writes,
+    upload: upload && createHash('sha256').update(upload.bytes).digest('hex'), createBuild,
+  })).digest('hex');
+  return { ...resolved, target, files, writes, risk, fingerprint,
+    upload: upload && { bytes: upload.bytes, fileName: upload.fileName }, createBuild };
+}
+
 const ARRANGE_ACTIONS = ['reorder', 'place', 'remove', 'poster', 'archive', 'rename'] as const;
 type MediaAction = typeof ARRANGE_ACTIONS[number] | 'delete' | 'upload';
-function mediaIntent(name: string, args: Args): { target: Target['target']; action: MediaAction } {
+function mediaIntent(name: string, args: Args): { target: Target['target'] | FileTarget; action: MediaAction } {
   if (!MEDIA_TOOL_NAMES.has(name) || name === MEDIA_NAMES.list) fail(`Unknown media write tool: ${name}`);
   const target = str(args, 'target', true)!;
   if (target !== 'library' && !Object.hasOwn(MEDIA_TARGETS, target)) fail(`Unknown media target: ${target}.`);
+  if (Object.hasOwn(FILE_TARGETS, target)) {
+    if (name === MEDIA_NAMES.arrange) fail(`${target} has no ordering or placements; media__arrange is unavailable.`);
+    if (name === MEDIA_NAMES.delete && target !== 'build_upload_file' && !(FILE_TARGETS as Record<string, FileAdapter>)[target].delete) fail(`Apple does not offer DELETE for ${target}.`);
+    return { target: target as FileTarget, action: name === MEDIA_NAMES.upload ? 'upload' : 'delete' };
+  }
   const action = name === MEDIA_NAMES.upload ? 'upload' : name === MEDIA_NAMES.delete ? (target === 'library' ? 'delete' : 'remove') : str(args, 'action', true)!;
   if (name === MEDIA_NAMES.arrange && !ARRANGE_ACTIONS.includes(action as typeof ARRANGE_ACTIONS[number])) fail(`Unknown media action: ${action}.`);
   if (name === MEDIA_NAMES.arrange && action === 'remove' && target === 'library') fail('Remove requires a named page target; library placements may be on live pages.');
@@ -361,6 +551,7 @@ function mediaIntent(name: string, args: Args): { target: Target['target']; acti
 }
 function intentRisk(intent: ReturnType<typeof mediaIntent>): RiskLevel {
   if (['delete', 'remove', 'archive'].includes(intent.action)) return 'destructive';
+  if (Object.hasOwn(FILE_TARGETS, intent.target)) return (FILE_TARGETS as Record<string, FileAdapter>)[intent.target].risk;
   if (intent.target === 'library' && ['upload', 'rename'].includes(intent.action)) return 'low';
   return 'public';
 }
@@ -379,7 +570,7 @@ function placeBody(args: Args, page: Page, kind: MediaKind, id: string) {
   const group = str(args, 'placement_group');
   return mediaBody(MEDIA_OPS.placement, { attributes: { placementType, ...(group ? { placementGroup: group } : {}) }, relationships: {
     [kind]: mediaRelationship(MEDIA_OPS.placement, kind, id),
-    [MEDIA_TARGETS[page.target].relationship]: mediaRelationship(MEDIA_OPS.placement, MEDIA_TARGETS[page.target].relationship, page.id),
+    [PAGE_TARGETS[page.target].relationship]: mediaRelationship(MEDIA_OPS.placement, PAGE_TARGETS[page.target].relationship, page.id),
   } });
 }
 
@@ -393,7 +584,7 @@ async function checkedPlacements(args: Args, http: AscHttpClient, target: Target
     const all = (await pagePlacements(http, target.pages[0])).rows;
     rows = ids.map((id) => {
       const row = all.find((p) => p.id === id) ?? fail(`Placement ${id} is not on ${target.pages[0].label}. Nothing was changed.`);
-      return { ...row, relationships: { ...row.relationships, [MEDIA_TARGETS[target.pages[0].target].relationship]: { data: { id: target.pages[0].id } } } };
+      return { ...row, relationships: { ...row.relationships, [PAGE_TARGETS[target.pages[0].target].relationship]: { data: { id: target.pages[0].id } } } };
     });
   }
   const assetIds = [...new Set<string>(rows.map((p) => placementAsset(p) ?? fail(`Placement ${p.id} has no asset.`)))];
@@ -435,7 +626,7 @@ async function prepareWrite(name: string, args: Args, http: AscHttpClient): Prom
           page = await resolvePage(http, target.app, found[0] as PageTarget, relId(checked.rows[0], found[1].relationship));
           target.pages.push(page);
         }
-        if (!MEDIA_TARGETS[page.target].ordered) fail('Event placements have no order in Apple’s schema.');
+        if (!PAGE_TARGETS[page.target].ordered) fail('Event placements have no order in Apple’s schema.');
         const group = str(args, 'placement_group', true)!;
         const all = (await pagePlacements(http, page)).rows.filter((p) => p.attributes?.placementGroup === group);
         const ids = checked.rows.map((p) => p.id);
@@ -444,7 +635,7 @@ async function prepareWrite(name: string, args: Args, http: AscHttpClient): Prom
         const itemType = mediaDataSchema(op).properties.relationships.properties.orderedPlacements.properties.data.items.properties.type.enum[0];
         writes.push({ operation: op, name: files.map((f) => f.name).join(', '), body: mediaBody(op, { attributes: { placementGroup: group }, relationships: {
           orderedPlacements: { data: ids.map((id) => ({ type: itemType, id })) },
-          [MEDIA_TARGETS[page.target].relationship]: mediaRelationship(op, MEDIA_TARGETS[page.target].relationship, page.id),
+          [PAGE_TARGETS[page.target].relationship]: mediaRelationship(op, PAGE_TARGETS[page.target].relationship, page.id),
         } }) });
       }
     } else {
@@ -482,6 +673,19 @@ async function prepareWrite(name: string, args: Args, http: AscHttpClient): Prom
 }
 
 export async function buildMediaPreview(name: string, args: Args, http: AscHttpClient) {
+  if (Object.hasOwn(FILE_TARGETS, str(args, 'target', true)!)) {
+    const plan = await prepareFileWrite(name, args, http);
+    const affected = plan.files.map((row) => `- ${row.attributes?.fileName ?? row.id} [${row.id}]`);
+    return { planFingerprint: plan.fingerprint, strong: STRONG_CONFIRM_LEVELS.has(plan.risk), message: [
+      `Heimdall is about to ${plan.upload ? 'upload' : 'delete'} ${plan.target} — a ${plan.risk.toUpperCase()}-level write.`, '',
+      `App:        ${plan.app.name}`, `Target:     ${plan.target}, ${plan.parentLabel} [${plan.parentId}]`,
+      `Existing files (${affected.length}):`, ...affected,
+      ...(plan.upload ? [`New file:   ${plan.upload.fileName}`] : []),
+      `Changes (${plan.writes.length}):`, ...plan.writes.map((write) => `- ${write.name}: ${write.operation}${write.id ? ` [${write.id}]` : ''}`),
+      `Risk:       ${plan.risk} — ${REVERSIBILITY[plan.risk]}`, '',
+      STRONG_CONFIRM_LEVELS.has(plan.risk) ? 'Type CONFIRM in the field below to proceed.' : 'Confirm to proceed.',
+    ].join('\n') };
+  }
   const plan = await prepareWrite(name, args, http);
   const strong = STRONG_CONFIRM_LEVELS.has(plan.risk);
   const fileLines = plan.upload ? [`- ${plan.upload.fileName} (new ${plan.upload.kind})`] : plan.files.map((file) => {
@@ -520,9 +724,70 @@ async function applyWrite(http: AscHttpClient, write: Write): Promise<any> {
 }
 const errorText = (err: unknown) => err instanceof Error ? err.message : String(err);
 
+async function uploadParts(ctx: MediaContext, reserved: any, bytes: Buffer) {
+  const ops: any[] = reserved.data.attributes?.uploadOperations ?? [];
+  if (!ops.length) fail('Apple returned no upload operations.');
+  const ranges = ops.map((o) => ({ start: o.offset, end: o.offset + o.length })).sort((a, b) => a.start - b.start);
+  let end = 0;
+  for (const r of ranges) { if (!Number.isSafeInteger(r.start) || !Number.isSafeInteger(r.end) || r.start !== end || r.end <= r.start || r.end > bytes.length) fail('Invalid upload byte ranges.'); end = r.end; }
+  if (end !== bytes.length) fail('Upload operations do not cover the complete file.');
+  for (const op of ops) await ctx.http.uploadAssetPart(op, bytes.subarray(op.offset, op.offset + op.length));
+  return ops.length;
+}
+
+async function executeFileWrite(name: string, args: Args, ctx: MediaContext) {
+  const plan = await prepareFileWrite(name, args, ctx.http);
+  if (ctx.approvedPlanFingerprint && plan.fingerprint !== ctx.approvedPlanFingerprint) fail('Media target or files changed since confirmation; retry and approve the current plan. Nothing was changed.');
+  const summary = { app: `${plan.app.name} (${plan.app.id})`, target: plan.target, ownerId: plan.parentId, risk: plan.risk };
+  if (ctx.dryRun) return { ...summary, dryRun: true, wouldSend: plan.writes.map((write) => ({
+    method: write.operation.endsWith('.delete') ? 'DELETE' : write.operation.endsWith('.update') ? 'PATCH' : 'POST',
+    path: mediaPath(write.operation, write.id), body: write.body, name: write.name,
+  })), note: 'Resolved and checked; no bytes were sent.' };
+  if (plan.upload) {
+    let ownerId = plan.parentId;
+    if (plan.createBuild) {
+      const created: any = await ctx.http.post(mediaPath('build_uploads.create'), plan.createBuild);
+      ownerId = created?.data?.id ?? fail('Apple created no build upload ID.');
+    }
+    const create = plan.writes.find((write) => write.operation === plan.adapter.create)!;
+    const createBody = plan.createBuild ? mediaBody(plan.adapter.create, {
+      attributes: (create.body as any).data.attributes,
+      relationships: { buildUpload: mediaRelationship(plan.adapter.create, 'buildUpload', ownerId) },
+    }) : create.body;
+    let reserved: any;
+    try { reserved = await ctx.http.post(mediaPath(plan.adapter.create), createBody); }
+    catch (err) { return { ...summary, ownerId, ok: false, fileName: plan.upload.fileName, failedPhase: 'reserve', error: errorText(err), inspectWith: MEDIA_NAMES.list }; }
+    const id: string = reserved?.data?.id ?? fail('Apple reserved no file ID.');
+    let phase = 'upload';
+    try {
+      const parts = await uploadParts(ctx, reserved, plan.upload.bytes);
+      phase = 'commit';
+      const commit = plan.writes.find((write) => write.operation === plan.adapter.update)!;
+      const committed: any = await ctx.http.patch(mediaPath(plan.adapter.update, id), mediaBody(plan.adapter.update, { id, attributes: (commit.body as any).data.attributes }));
+      const state = committed?.data?.attributes?.assetDeliveryState?.state ?? null;
+      if (state === 'FAILED' || state === 'AWAITING_UPLOAD') return { ...summary, ownerId, ok: false, fileId: id, fileName: plan.upload.fileName, state, errors: errorsOf(committed?.data ?? {}), parts };
+      if (plan.adapter.attach) {
+        phase = 'attach';
+        await ctx.http.patch(mediaPath(plan.adapter.attach, plan.parentId), mediaBody(plan.adapter.attach, { id: plan.parentId,
+          relationships: { headerImage: mediaRelationship(plan.adapter.attach, 'headerImage', id) },
+        }));
+      }
+      return { ...summary, ownerId, ok: true, fileId: id, fileName: plan.upload.fileName, state, errors: errorsOf(committed?.data ?? {}), parts,
+        note: 'Committed; inspect media__list for subsequent processing state.' };
+    } catch (err) { return { ...summary, ownerId, ok: false, fileId: id, fileName: plan.upload.fileName, failedPhase: phase, error: errorText(err), inspectWith: MEDIA_NAMES.list }; }
+  }
+  const succeeded = [], failed = [];
+  for (const write of plan.writes) {
+    try { await applyWrite(ctx.http, write); succeeded.push({ id: write.id, name: write.name }); }
+    catch (err) { failed.push({ id: write.id, name: write.name, error: errorText(err) }); }
+  }
+  return { ...summary, ok: !failed.length, succeeded, failed };
+}
+
 export async function executeMediaTool(name: string, args: Args, ctx: MediaContext): Promise<unknown> {
   if (!MEDIA_TOOL_NAMES.has(name)) throw new Error(`Unknown media tool: ${name}`);
   if (name === MEDIA_NAMES.list) return listMedia(args, ctx.http);
+  if (Object.hasOwn(FILE_TARGETS, str(args, 'target', true)!)) return executeFileWrite(name, args, ctx);
   const plan = await prepareWrite(name, args, ctx.http);
   if (ctx.approvedPlanFingerprint && plan.fingerprint !== ctx.approvedPlanFingerprint) fail('Media target or files changed since confirmation; retry and approve the current plan. Nothing was changed.');
   const summary = { app: `${plan.target.app.name} (${plan.target.app.id})`, target: plan.target.target, libraryId: plan.target.libraryId, pages: plan.target.pages, risk: plan.risk };
@@ -533,19 +798,11 @@ export async function executeMediaTool(name: string, args: Args, ctx: MediaConte
     const id: string = reserved?.data?.id ?? fail('Apple reserved no asset ID.');
     let phase = 'upload';
     try {
-      const ops: any[] = reserved.data.attributes?.uploadOperations ?? [];
-      if (!ops.length) fail('Apple returned no upload operations.');
-      // Check all ranges before sending the first byte. A malformed response
-      // must not silently commit a truncated or overlapping upload.
-      const ranges = ops.map((o) => ({ start: o.offset, end: o.offset + o.length })).sort((a, b) => a.start - b.start);
-      let end = 0;
-      for (const r of ranges) { if (!Number.isSafeInteger(r.start) || !Number.isSafeInteger(r.end) || r.start !== end || r.end <= r.start || r.end > bytes.length) fail('Invalid upload byte ranges.'); end = r.end; }
-      if (end !== bytes.length) fail('Upload operations do not cover the complete file.');
-      for (const op of ops) await ctx.http.uploadAssetPart(op, bytes.subarray(op.offset, op.offset + op.length));
+      const parts = await uploadParts(ctx, reserved, bytes);
       phase = 'commit';
       const committed: any = await ctx.http.patch(mediaPath(MEDIA_ASSETS[kind].update, id), mediaBody(MEDIA_ASSETS[kind].update, { id, attributes: { uploaded: true } }));
       const state: string | null = committed?.data?.attributes?.state ?? null;
-      const result = { ...summary, assetId: id, fileName, kind, state, errors: errorsOf(committed?.data ?? {}), parts: ops.length };
+      const result = { ...summary, assetId: id, fileName, kind, state, errors: errorsOf(committed?.data ?? {}), parts };
       if (plan.writes.length === 1) return { ...result, ok: state !== 'FAILED', note: 'Committed to the library; inspect media__list for subsequent processing/review state.' };
       if (state === 'FAILED' || state === 'AWAITING_UPLOAD') return { ...result, ok: false, placed: false, note: 'Apple has not accepted the upload. Inspect media__list before placing.' };
       phase = 'placement';

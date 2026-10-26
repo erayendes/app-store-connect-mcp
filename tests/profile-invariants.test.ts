@@ -28,6 +28,10 @@ import { helpText } from '../src/index.js';
 const loadable = OPERATIONS.filter((o) => !o.deprecated);
 const byName = new Map(OPERATIONS.map((o) => [o.name, o]));
 const coreOps = PROFILES.find((p) => p.name === CORE_PROFILE)!.subProfiles.flatMap((s) => s.operations);
+// Core macros are available next to each slice. Their covered reads still
+// produce IDs; media-coverage.test.ts executes every such target/read cell.
+const coreMacros = new Set(PROFILES.find((p) => p.name === CORE_PROFILE)!.subProfiles.flatMap((s) => s.manualTools));
+const coreMacroReads = Object.entries(MACRO_COVERED).filter(([operation, macro]) => coreMacros.has(macro) && byName.get(operation)?.method === 'GET').map(([operation]) => operation);
 
 /** Every sub-profile, flat profiles included as `profile/-`. */
 const SUBS = PROFILES.flatMap((p) =>
@@ -178,7 +182,7 @@ describe('reachability — every sub-profile reaches its own resources from an a
 
   const gapsOf = (label: string): string[] => {
     const { sub } = SUBS.find((s) => s.label === label)!;
-    const edges = edgesFrom([...sub.operations, ...coreOps]);
+    const edges = edgesFrom([...sub.operations, ...coreOps, ...coreMacroReads]);
     return sub.rootResources
       .filter((r) => {
         const c = collectionOf(r);
@@ -341,10 +345,10 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
 
   const gapsOf = (label: string): string[] => {
     const { sub } = SUBS.find((s) => s.label === label)!;
-    // Core media__arrange can create a placement ID, which a custom product
-    // page may reference when it is created. Its raw producer is macro-covered.
+    // Core media__list returns file and placement IDs for the raw writes
+    // retained in slices (e.g. checksum repairs outside an upload).
     const reads = new Set([...readCollections(sub.operations), ...readCollections(coreOps),
-      ...readCollections(['app_asset_library_placements.get']), ...INCLUDE_ONLY]);
+      ...readCollections(coreMacroReads), ...INCLUDE_ONLY]);
     const satisfiedBy = (collection: string) =>
       [...reads].some((r) => collection.endsWith(r) || r.endsWith(collection));
     const satisfied = (collection: string) =>
@@ -422,13 +426,13 @@ describe('counts — curation output, not something that drifts on its own', () 
     expect(manualToolsFor(core).length).toBe(8);
     expect(PROFILELESS.length).toBe(7);
     expect(Object.keys(TWIN_OF).length).toBe(12);
-    expect(Object.keys(MACRO_COVERED).length).toBe(24);
+    expect(Object.keys(MACRO_COVERED).length).toBe(92);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 873 CSV rows - 7 profile-less ones. Not a count of distinct tools:
+    // 805 CSV rows - 7 profile-less ones. Not a count of distinct tools:
     // a few entry reads deliberately sit in more than one slice.
-    expect(tools.length).toBe(866);
+    expect(tools.length).toBe(798);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 2
