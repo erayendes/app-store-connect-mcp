@@ -45,7 +45,7 @@ import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
-import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, type RiskLevel } from './core/risk.js';
+import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } from './core/risk.js';
 import {
   CORE_OPERATIONS,
   manualToolsFor,
@@ -603,7 +603,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         // buildWritePreview resolves reference ids over the network, and a
         // `low` write under the default mode must not pay for a prompt it is
         // never going to show.
-        const risk: RiskLevel = PRICING_TOOL_NAMES.has(name)
+        const bodyRisk = riskByBody(name, args);
+        const risk: RiskLevel = bodyRisk
+          ? bodyRisk
+          : PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
           : name === 'listing__delete_assets'
             ? 'destructive'
@@ -624,7 +627,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                     macroOffered(name)
                     ? 'public'
                     : 'low')) as RiskLevel);
-        if (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name)) {
+        if (
+          config.confirmWrites === 'all' ||
+          STRONG_CONFIRM_LEVELS.has(risk) ||
+          ASK_BY_DEFAULT.has(name)
+        ) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.
         const decision = gate.settle(ctx, request.params.name, request.params.arguments);
@@ -673,7 +680,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             ? // The arguments are bare ids; the prompt names the app and each file.
               await buildAssetDeletePreview(args, http)
             : op
-            ? await buildWritePreview(name, op, args, config.credentials.keyId, http)
+            ? await buildWritePreview(name, bodyRisk ? { ...op, risk: bodyRisk } : op, args, config.credentials.keyId, http)
             : macroOffered(name)
             ? // Other write macros: no spec operation behind them, but their
               // arguments are already the human-readable facts, so the generic

@@ -196,9 +196,16 @@ function describeOperation(op: Operation): string {
   //
   // Appended here rather than in the generator so `op.description` stays
   // Apple's text — AXIS1 measures that.
-  return op.risk && ANNOUNCED_RISKS.has(op.risk)
-    ? `${base} ${op.risk.toUpperCase()}-level write.`
-    : base;
+  return announcesRisk(op) ? `${base} ${op.risk!.toUpperCase()}-level write.` : base;
+}
+
+/**
+ * A Game Center relationship replace is `destructive` and a PATCH, so the
+ * method does not say it there and the level has to.
+ */
+function announcesRisk(op: Operation): boolean {
+  if (!op.risk) return false;
+  return ANNOUNCED_RISKS.has(op.risk) || (op.risk === 'destructive' && op.method !== 'DELETE');
 }
 
 export function toMcpTool(
@@ -303,8 +310,7 @@ export function toMcpTool(
       // Moving existing subscribers to a new price and handing someone Admin
       // are destructive updates that happen to be a POST and a PATCH; a client
       // that gates on this hint was previously waving them through.
-      destructiveHint:
-        op.method === 'DELETE' || Boolean(op.risk && ANNOUNCED_RISKS.has(op.risk)),
+      destructiveHint: op.method === 'DELETE' || announcesRisk(op),
       idempotentHint: op.method === 'GET' || op.method === 'PATCH' || op.method === 'DELETE',
     },
   };

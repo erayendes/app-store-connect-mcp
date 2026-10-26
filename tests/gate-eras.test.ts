@@ -354,6 +354,144 @@ describe.each(['legacy', 'modern'] as const)('release steps in the default mode,
   });
 });
 
+/**
+ * Writes that used to fall through to `low` and pass with no prompt, though
+ * each reaches customers, players or testers (risk.ts).
+ */
+describe.each(['legacy', 'modern'] as const)('live writes outside the release pipeline, %s connection', (era) => {
+  const sent: string[] = [];
+  const stubOk = () => {
+    sent.length = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL, init?: RequestInit) => {
+        sent.push(`${init?.method ?? 'GET'} ${new URL(String(url)).pathname}`);
+        return new Response(JSON.stringify({ data: { type: 'x', id: 'x-1', attributes: {} } }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      })
+    );
+  };
+  const writes = () => sent.filter((r) => !r.startsWith('GET'));
+  const body = (type: string, attributes: Record<string, unknown>, id?: string) => ({
+    data: { type, ...(id ? { id } : {}), attributes },
+  });
+
+  it.each([
+    {
+      what: 'opening or closing the app in a country',
+      profile: 'app-info',
+      name: 'territory_availabilities__update',
+      arguments: { id: 't-1', body: body('territoryAvailabilities', { available: false }, 't-1') },
+      typed: false,
+    },
+    {
+      what: 'setting where the app is sold',
+      profile: 'app-info',
+      name: 'app_availabilities_v2__create',
+      arguments: { body: body('appAvailabilities', { availableInNewTerritories: true }) },
+      typed: false,
+    },
+    {
+      // A pre-order cannot be reopened once ended.
+      what: 'ending a pre-order',
+      profile: 'app-info',
+      name: 'end_app_availability_pre_orders__create',
+      arguments: { body: { data: { type: 'endAppAvailabilityPreOrders' } } },
+      typed: true,
+    },
+    {
+      what: 'starting a product page experiment',
+      profile: 'marketing',
+      name: 'app_store_version_experiments_v2__update',
+      arguments: { id: 'e-1', body: body('appStoreVersionExperiments', { started: true, trafficProportion: 50 }, 'e-1') },
+      typed: false,
+    },
+    {
+      // Replacing the set detaches every leaderboard left out of the list.
+      what: 'replacing a Game Center leaderboard set',
+      profile: 'game-center',
+      name: 'game_center_details__game_center_leaderboards_v2__replace',
+      arguments: { id: 'gc-1', body: { data: [{ type: 'gameCenterLeaderboards', id: 'lb-1' }] } },
+      typed: true,
+    },
+    {
+      what: 'submitting a score for a player',
+      profile: 'game-center',
+      name: 'game_center_leaderboard_entry_submissions__create',
+      arguments: { body: body('gameCenterLeaderboardEntrySubmissions', { score: '100', scopedPlayerId: 'p-1' }) },
+      typed: false,
+    },
+    {
+      what: 'submitting an achievement for a player',
+      profile: 'game-center',
+      name: 'game_center_player_achievement_submissions__create',
+      arguments: { body: body('gameCenterPlayerAchievementSubmissions', { percentageAchieved: 100, scopedPlayerId: 'p-1' }) },
+      typed: false,
+    },
+    {
+      what: 'expiring a build',
+      profile: 'distribution',
+      name: 'builds__update',
+      // Expiring cannot be undone: the build leaves every tester for good.
+      arguments: { id: 'b-1', body: body('builds', { expired: true }, 'b-1') },
+      typed: true,
+    },
+  ])('asks before $what', async ({ profile, name, arguments: args, typed }) => {
+    stubOk();
+    const { client, prompts } = await connect(era, { action: 'cancel' }, { profile });
+
+    await client.callTool({ name, arguments: args });
+
+    expect(prompts).toHaveLength(1);
+    if (typed) expect(prompts[0]).toMatch(/Type CONFIRM/);
+    else expect(prompts[0]).not.toMatch(/Type CONFIRM/);
+    expect(writes()).toEqual([]);
+  });
+
+  it.each([
+    {
+      // Store text's class: reversible by editing again, left to the client.
+      what: 'editing the age rating declaration',
+      profile: 'app-info',
+      name: 'age_rating_declarations__update',
+      arguments: { id: 'ar-1', body: body('ageRatingDeclarations', { advertising: false }, 'ar-1') },
+      sent: 'PATCH /v1/ageRatingDeclarations/ar-1',
+    },
+    {
+      what: 'editing the license agreement',
+      profile: 'app-info',
+      name: 'end_user_license_agreements__update',
+      arguments: { id: 'eula-1', body: body('endUserLicenseAgreements', { agreementText: 'Terms' }, 'eula-1') },
+      sent: 'PATCH /v1/endUserLicenseAgreements/eula-1',
+    },
+    {
+      what: 'editing the accessibility declaration',
+      profile: 'app-info',
+      name: 'accessibility_declarations__update',
+      arguments: { id: 'ax-1', body: body('accessibilityDeclarations', { supportsVoiceover: true }, 'ax-1') },
+      sent: 'PATCH /v1/accessibilityDeclarations/ax-1',
+    },
+    {
+      // The same tool as expiring, and the reason the exception reads the body.
+      what: 'recording a build’s encryption answer',
+      profile: 'distribution',
+      name: 'builds__update',
+      arguments: { id: 'b-1', body: body('builds', { usesNonExemptEncryption: false }, 'b-1') },
+      sent: 'PATCH /v1/builds/b-1',
+    },
+  ])('does not ask before $what', async ({ profile, name, arguments: args, sent: request }) => {
+    stubOk();
+    const { client, prompts } = await connect(era, CONFIRM, { profile });
+
+    await client.callTool({ name, arguments: args });
+
+    expect(prompts).toEqual([]);
+    expect(sent).toContain(request);
+  });
+});
+
 describe('the macOS dialog text', () => {
   it('says what will happen and what cannot be undone, without the form-only lines', async () => {
     const preview = [

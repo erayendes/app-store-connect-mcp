@@ -19,7 +19,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AccessibilityDeclarationCreateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "accessibility_declarations.delete",
@@ -83,7 +83,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AccessibilityDeclarationUpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "actors.get",
@@ -162,7 +162,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AgeRatingDeclarationUpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "alternative_distribution_domains.create",
@@ -1630,7 +1630,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AppAvailabilityV2CreateRequest",
-    "risk": "low"
+    "risk": "release"
   },
   {
     "name": "app_availabilities_v2.get",
@@ -5914,7 +5914,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AppStoreVersionExperimentV2UpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "app_store_version_experiments.app_store_version_experiment_treatments.list",
@@ -6042,7 +6042,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AppStoreVersionExperimentUpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "app_store_version_localizations.app_preview_sets.list",
@@ -15184,7 +15184,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "EndAppAvailabilityPreOrderCreateRequest",
-    "risk": "low"
+    "risk": "release"
   },
   {
     "name": "end_user_license_agreements.create",
@@ -15198,7 +15198,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "EndUserLicenseAgreementCreateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "end_user_license_agreements.delete",
@@ -15291,7 +15291,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "EndUserLicenseAgreementUpdateRequest",
-    "risk": "low"
+    "risk": "public"
   },
   {
     "name": "finance_reports.list",
@@ -17610,7 +17610,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailChallengesMinimumPlatformVersionsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.classic_matchmaking_requests.metrics",
@@ -17750,7 +17750,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailGameCenterAchievementsV2LinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.game_center_achievements.list",
@@ -17834,7 +17834,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailGameCenterAchievementsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.game_center_activities.list",
@@ -18086,7 +18086,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsV2LinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.game_center_leaderboard_sets.list",
@@ -18160,7 +18160,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.game_center_leaderboards_v2.list",
@@ -18224,7 +18224,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailGameCenterLeaderboardsV2LinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.game_center_leaderboards.list",
@@ -18318,7 +18318,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterDetailGameCenterLeaderboardsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_details.get",
@@ -18662,7 +18662,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.create",
@@ -18753,7 +18753,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterGroupGameCenterAchievementsV2LinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.game_center_achievements.list",
@@ -18837,7 +18837,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterGroupGameCenterAchievementsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.game_center_activities.list",
@@ -19098,7 +19098,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsV2LinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.game_center_leaderboard_sets.list",
@@ -19172,7 +19172,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.game_center_leaderboards_v2.list",
@@ -19236,7 +19236,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterGroupGameCenterLeaderboardsV2LinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.game_center_leaderboards.list",
@@ -19330,7 +19330,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterGroupGameCenterLeaderboardsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_groups.get",
@@ -20717,7 +20717,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterLeaderboardSetV2GameCenterLeaderboardsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_sets_v2.get",
@@ -20956,7 +20956,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
-    "risk": "low"
+    "risk": "destructive"
   },
   {
     "name": "game_center_leaderboard_sets.get",
@@ -28753,7 +28753,7 @@ export const OPERATIONS: Operation[] = [
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "TerritoryAvailabilityUpdateRequest",
-    "risk": "low"
+    "risk": "release"
   },
   {
     "name": "user_invitations.create",
