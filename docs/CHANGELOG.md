@@ -30,6 +30,10 @@ Fewer "are you sure?" windows. Changing the name, description or image of a subs
 
 The browser setup page shows other projects from Milowda in a column beside the steps ([#180](https://github.com/erayendes/app-store-connect-mcp/pull/180)).
 
+**Setup leaves your own MCP entries alone.** An entry that carries its own credentials, runs something other than Heimdall's package, or could not be read in full is now only reported, never rewritten or removed. When setup does rewrite an entry, it changes only the package and profile and keeps your flags (such as `--read-only`) and environment variables. The confirmation lists every entry it will rewrite, with its flags; values stay hidden. `app-info --read-only` no longer crashes setup ([#183](https://github.com/erayendes/app-store-connect-mcp/pull/183)).
+
+**More writes ask first.** Opening or closing the app in a country, changing where it is sold, ending a pre-order (you type CONFIRM, since it cannot be undone), starting or changing a product page test, replacing a Game Center set and submitting a player's score or achievement now ask before they run. Expiring a build asks too, with a typed CONFIRM; recording a build's encryption answer still does not ([#186](https://github.com/erayendes/app-store-connect-mcp/pull/186)).
+
 Heimdall now has 929 tools.
 
 ### [2.7.1] — 2026-10-16
@@ -280,6 +284,10 @@ Bir sürümü incelemeye gönderirken açılan pencere artık uygulamanın adın
 Daha az "emin misiniz?" penceresi. Bir aboneliğin ya da uygulama içi satın alımın adını, açıklamasını veya görselini değiştirmek, fiyatını değiştiriyormuşsunuz gibi onay istiyordu, hem de her dil için ayrı ayrı. Artık sormuyor. Silmek hâlâ soruyor, fiyat değiştirmek de.
 
 Tarayıcıdaki kurulum sayfası, adımların yanındaki bir sütunda Milowda'nın diğer projelerini gösteriyor ([#180](https://github.com/erayendes/app-store-connect-mcp/pull/180)).
+
+**Kurulum, kendi eklediğiniz MCP girdilerine dokunmuyor.** Kendi kimlik bilgilerini taşıyan, Heimdall dışında bir şey çalıştıran ya da tam okunamayan bir girdi artık yalnızca raporlanıyor; yeniden yazılmıyor, silinmiyor. Kurulum bir girdiyi yeniden yazdığında yalnızca paketi ve profili değiştiriyor; `--read-only` gibi bayraklarınızı ve ortam değişkenlerinizi koruyor. Onay ekranı yeniden yazılacak her girdiyi bayraklarıyla listeliyor; değerler gizli kalıyor. `app-info --read-only` artık kurulumu çökertmiyor ([#183](https://github.com/erayendes/app-store-connect-mcp/pull/183)).
+
+**Daha çok yazma işlemi önce soruyor.** Uygulamayı bir ülkede satışa açmak ya da kapatmak, satıldığı yerleri değiştirmek, ön siparişi bitirmek (geri alınamadığı için CONFIRM yazmanız gerekiyor), ürün sayfası testini başlatmak ya da değiştirmek, bir Game Center setini değiştirmek ve oyuncu adına skor ya da başarım göndermek artık çalışmadan önce onay istiyor. Bir build'i süresi dolmuş yapmak da CONFIRM yazılarak onaylanıyor; build'in şifreleme cevabını kaydetmek ise hâlâ sormuyor ([#186](https://github.com/erayendes/app-store-connect-mcp/pull/186)).
 
 Heimdall artık 929 araç içeriyor.
 
