@@ -30,6 +30,10 @@ describe('pickVersion', () => {
   it('refuses the same version string on two platforms', () => {
     expect(() => pickVersion('Ask Quran', [v('3.0', 'IOS'), v('3.0', 'TV_OS')], '3.0')).toThrow(/more than one platform/);
   });
+  it('refuses the first-version fallback when no editable version spans multiple platforms', () => {
+    expect(() => pickVersion('Ask Quran', [v('2.0', 'IOS', 'READY_FOR_SALE'), v('1.0', 'MAC_OS', 'READY_FOR_SALE')]))
+      .toThrow(/no editable version and has versions on more than one platform/);
+  });
 
   it('says when the platform has no such version', () => {
     expect(() => pickVersion('Ask Quran', both, '2.1.3', 'TV_OS')).toThrow(/no version "2\.1\.3" on tvOS\. Found: 1\.8\.1/);
@@ -45,7 +49,7 @@ describe('the release prompt', () => {
   } as any;
 
   it('names the app, version and platform it will submit', async () => {
-    expect(await releasePreviewArgs({ app: '6636549188', platform: 'IOS' }, http)).toEqual({
+    expect(await releasePreviewArgs({ app: '6636549188', platform: 'IOS' }, http)).toMatchObject({
       app: 'Ask Quran (6636549188)',
       version: '2.1.3',
       platform: 'iOS',

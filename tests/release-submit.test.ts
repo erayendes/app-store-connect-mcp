@@ -20,6 +20,7 @@ interface Options {
   openSubmission?: boolean;
   itemAlreadyThere?: boolean;
   extraItem?: boolean;
+  extraUnknown?: boolean;
   /** null models Apple answering with no platform at all. */
   platform?: string | null;
   /** Which platform the already-open submission belongs to. */
@@ -28,6 +29,11 @@ interface Options {
 
 function fakeHttp(o: Options = {}) {
   const writes: Array<{ method: string; path: string; body?: any }> = [];
+  const currentItems: any[] = [
+    ...(o.itemAlreadyThere ? [{ type: 'reviewSubmissionItems', id: 'i-1', relationships: { appStoreVersion: { data: { id: 'v-320' } } } }] : []),
+    ...(o.extraItem ? [{ type: 'reviewSubmissionItems', id: 'extra-1', relationships: { appEvent: { data: { id: 'event-7' } } } }] : []),
+    ...(o.extraUnknown ? [{ type: 'reviewSubmissionItems', id: 'unknown-1' }] : []),
+  ];
   const included: any[] = [
     {
       type: 'builds',
@@ -83,8 +89,8 @@ function fakeHttp(o: Options = {}) {
     if (path.includes('/appScreenshots')) {
       return { data: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } }] };
     }
-    if (path === '/v1/reviewSubmissions/sub-1/items') {
-      return { data: o.extraItem ? [{ id: 'extra-1', type: 'reviewSubmissionItems', relationships: { appEvent: { data: { id: 'event-7' } } } }] : [] };
+    if (path === '/v1/reviewSubmissions/sub-1/items' || path === '/v1/reviewSubmissions/sub-new/items') {
+      return { data: currentItems.map((row) => query?.include ? row : { id: row.id, type: row.type }) };
     }
     if (path.includes('/reviewSubmissions')) {
       // Apple filters by platform here, so the fake must too: an app on iOS and
@@ -127,9 +133,10 @@ function fakeHttp(o: Options = {}) {
   const request = async (method: string, path: string, opts?: { body?: unknown }) => {
     writes.push({ method, path, body: opts?.body });
     if (path === '/v1/reviewSubmissions') return { data: { id: 'sub-new' } };
+    if (path === '/v1/reviewSubmissionItems') currentItems.push({ type: 'reviewSubmissionItems', id: `added-${currentItems.length}`, relationships: (opts?.body as any)?.data?.relationships });
     return { data: { id: 'sub-1', attributes: { state: 'WAITING_FOR_REVIEW' } } };
   };
-  return { writes, http: { get, request } as never };
+  return { writes, currentItems, http: { get, request } as never };
 }
 
 const run = (args: Record<string, unknown>, http: never, dryRun = false) =>
@@ -189,6 +196,18 @@ describe('release__submit', () => {
     ]);
     const result = await run({ app: 'Ask Quran' }, http);
     expect(result.items).toEqual(preview.items);
+  });
+  it('refuses an unidentified existing item in the app-version preview', async () => {
+    const { http, writes } = fakeHttp({ openSubmission: true, extraUnknown: true });
+    await expect(releasePreviewArgs({ app: 'Ask Quran' }, http)).rejects.toThrow(/unknown-1/);
+    expect(writes).toEqual([]);
+  });
+  it('refuses a changed app-version submission after approval', async () => {
+    const { http, writes, currentItems } = fakeHttp({ openSubmission: true });
+    const preview = await releasePreviewArgs({ app: 'Ask Quran' }, http);
+    currentItems.push({ type: 'reviewSubmissionItems', id: 'added-later', relationships: { appEvent: { data: { id: 'event-9' } } } });
+    await expect(executeReleaseTool('release__submit', { app: 'Ask Quran' }, { http, approvedPlanFingerprint: preview.planFingerprint as string, requireApprovedPlan: true })).rejects.toThrow(/changed since confirmation/);
+    expect(writes).toEqual([]);
   });
 
   it('does not add the version twice when it is already an item', async () => {

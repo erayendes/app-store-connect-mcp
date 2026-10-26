@@ -38,6 +38,8 @@ import { OPERATIONS } from '../generated/operations.js';
 
 export interface ConfirmDecision {
   allowed: boolean;
+  /** Signed review-item snapshot approved by the user, when this is a release macro. */
+  planFingerprint?: string;
   /** Present when blocked: the client's action ('decline', 'cancel'), what the answer lacked, or why a stale answer was refused. */
   reason?: string;
   /** The answer was for another call, or already spent: ask again rather than blame the user. */
@@ -640,6 +642,7 @@ interface PendingWrite {
   call: string;
   nonce: string;
   strong: boolean;
+  planFingerprint?: string;
 }
 
 /** Key order is not meaning: a client that re-serializes the arguments still matches. */
@@ -692,7 +695,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
     verify: codec.verify,
 
     /** The question, as a result the client answers by calling again. */
-    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview): Promise<InputRequiredResult> {
+    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview, planFingerprint?: string): Promise<InputRequiredResult> {
       const now = Date.now();
       for (const [n, expiry] of open) if (expiry < now) open.delete(n);
       const nonce = randomUUID();
@@ -721,7 +724,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
             requestedSchema: { type: 'object', properties: field, required: Object.keys(field) },
           }),
         },
-        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong }, ctx),
+        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong, planFingerprint }, ctx),
       });
     },
 
@@ -760,7 +763,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
       const confirmed = state.strong
         ? typeof content?.confirmation === 'string' && /^confirm$/i.test(content.confirmation.trim())
         : content?.confirm === true;
-      if (confirmed) return { allowed: true };
+      if (confirmed) return { allowed: true, planFingerprint: state.planFingerprint };
       const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
       const unconfirmed = state.strong ? 'the answer was not CONFIRM' : 'the box was left unticked';
       return { allowed: false, reason: content ? unconfirmed : (action ?? 'no answer') };

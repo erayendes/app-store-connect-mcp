@@ -195,6 +195,9 @@ export function pickVersion(appName: string, all: any[], wanted?: string, platfo
   const matches = wanted
     ? onPlatform.filter((v) => String(v.attributes?.versionString ?? '') === wanted)
     : onPlatform.filter((v) => EDITABLE_STATES.has(String(v.attributes?.appStoreState ?? '')));
+  if (!wanted && !matches.length && new Set(onPlatform.map((v) => v.attributes?.platform)).size > 1) {
+    throw new AscApiError(`${appName} has no editable version and has versions on more than one platform. Say which with platform: ${PLATFORMS.join(', ')}.`, 0);
+  }
   if (new Set(matches.map((v) => v.attributes?.platform)).size > 1) {
     const found = matches.map((v) => `${PLATFORM_NAMES[v.attributes?.platform] ?? v.attributes?.platform} ${v.attributes?.versionString}`);
     throw new AscApiError(
@@ -585,7 +588,7 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
       return found;
     }
     if (versions.more) throw new AscApiError(`Version list for ${path} was truncated; cannot choose a draft safely.`, 0);
-    if (editable.length > 1) throw new AscApiError(`Multiple editable ${kind} drafts: ${editable.map((v) => v.id).join(', ')}. Pass version_id.`, 0);
+    if (editable.length > 1) throw new AscApiError(`Multiple editable ${kind} drafts: ${editable.map((v) => v.id).join(', ')}. ${kind === 'subscriptionGroupVersions' ? 'Resolve the duplicate group drafts in App Store Connect before checking this group.' : 'Pass version_id.'}`, 0);
     return editable[0];
   };
   const groupVersion = await selectDraft(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/versions`, 'subscriptionGroupVersions', groupTruncated);
@@ -595,9 +598,11 @@ async function checkSubscription(args: Record<string, unknown>, http: AscHttpCli
     })
     : { rows: [], more: false };
   const groupFindings: SubscriptionFinding[] = [];
-  if (!groupVersion) {
+  const groupVersions = versionStates.get(`/v1/subscriptionGroups/${encodeURIComponent(group.id)}/versions`) ?? [];
+  const approvedGroupExists = groupVersions.some((v) => ['APPROVED', 'ACCEPTED', 'REPLACED_WITH_NEW_VERSION'].includes(v.state));
+  if (!groupVersion && !approvedGroupExists) {
     groupFindings.push({ check: 'group version', severity: 'blocking', problem: 'The group has no editable draft version; in-review and approved versions are separate.', fixWith: 'subscription_group_versions__create' });
-  } else if (!groupLocs.rows.length && !groupLocs.more) {
+  } else if (groupVersion && !groupLocs.rows.length && !groupLocs.more) {
     groupFindings.push({ check: 'group localizations', severity: 'blocking', problem: 'The group draft has no localization.', fixWith: 'subscription_group_localizations_v2__create' });
   }
   for (const loc of groupLocs.rows) {

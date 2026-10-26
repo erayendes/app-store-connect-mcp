@@ -211,6 +211,21 @@ const runCatalog = (overrides: Record<string, any> = {}, args: Record<string, un
   executePreflightTool(subscriptionTool, args, { http: catalogHttp(overrides) }) as Promise<any>;
 
 describe(subscriptionTool, () => {
+  it('does not tell an approved group to create an undeletable new draft', async () => {
+    const result = await runCatalog({ '/v1/subscriptionGroups/g1/versions': { data: [{ id: 'approved-group', attributes: { version: 1, state: 'APPROVED' } }] } });
+    expect(result.subscriptions[0].findings.some((f: any) => f.fixWith === 'subscription_group_versions__create')).toBe(false);
+    expect(result.subscriptions[0].ready).toBe(true);
+  });
+  it('gives an actionable group-draft ambiguity error without suggesting version_id', async () => {
+    const versions = { data: [
+      { id: 'gv1', attributes: { version: 1, state: 'PREPARE_FOR_SUBMISSION' } },
+      { id: 'gv2', attributes: { version: 2, state: 'DEVELOPER_REJECTED' } },
+    ] };
+    await expect(runCatalog({ '/v1/subscriptionGroups/g1/versions': versions }, { app: '1', group: 'g1' }))
+      .rejects.toThrow(/Resolve the duplicate group drafts in App Store Connect/);
+    await expect(runCatalog({ '/v1/subscriptionGroups/g1/versions': versions }, { app: '1', group: 'g1' }))
+      .rejects.not.toThrow(/Pass version_id/);
+  });
   it('uses current spec endpoints, valid sparse fields and explicit one-page limits', async () => {
     const http = catalogHttp();
     await executePreflightTool(subscriptionTool, { app: '1', group: 'g1' }, { http });

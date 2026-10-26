@@ -21,6 +21,7 @@ import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
+import { createHash } from 'node:crypto';
 import { PLATFORMS, PLATFORM_NAMES, executePreflightTool, pickVersion } from './preflight.js';
 
 /** Relationship names accepted by Apple's ReviewSubmissionItemCreateRequest. */
@@ -31,6 +32,7 @@ export const REVIEW_ITEM_TYPES = [
   'gameCenterLeaderboardVersion', 'gameCenterLeaderboardSetVersion',
   'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion',
 ] as const;
+const ITEM_INCLUDES = ['appStoreVersion', ...REVIEW_ITEM_TYPES].join(',');
 type ReviewItem = { type: string; id: string };
 const RESOURCE_TYPES: Record<string, string> = {
   appCustomProductPageVersion: 'appCustomProductPageVersions',
@@ -53,11 +55,29 @@ const VERSIONED_ITEMS = new Set([
 ]);
 function itemKey(item: ReviewItem): string { return `${item.type}/${item.id}`; }
 function itemFromResource(row: any): ReviewItem | undefined {
+  const found: ReviewItem[] = [];
   for (const type of ['appStoreVersion', ...REVIEW_ITEM_TYPES]) {
     const id = row?.relationships?.[type]?.data?.id;
-    if (id) return { type, id: String(id) };
+    if (id) found.push({ type, id: String(id) });
   }
-  return undefined;
+  return found.length === 1 ? found[0] : undefined;
+}
+function listedItems(rows: any[]): ReviewItem[] {
+  return rows.map((row) => {
+    const item = itemFromResource(row);
+    if (!item) throw new AscApiError(`Review submission item ${row?.id ?? '(no id)'} has no unique included relationship; refusing to submit unseen content.`, 0);
+    return item;
+  });
+}
+function planFingerprint(appId: string, platform: string, submissionId: string | undefined, items: ReviewItem[]): string {
+  return createHash('sha256').update(JSON.stringify([appId, platform, submissionId ?? null, items.map(itemKey).sort()])).digest('base64url');
+}
+function completeRows(res: any, what: string): any[] {
+  const rows = res?.data;
+  if (!Array.isArray(rows) || res?.links?.next || Number(res?.meta?.paging?.total ?? 0) > rows.length) {
+    throw new AscApiError(`${what} response is missing or truncated; refusing to choose or submit.`, 0);
+  }
+  return rows;
 }
 
 export const RELEASE_TOOLS: McpToolDefinition[] = [
@@ -110,12 +130,13 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'release__submit_items',
-    description: 'Submit reviewable product, marketing, Game Center or asset versions to Apple in one call. Reuses the open submission for the platform, checks companion items, then sends every item for review.',
+    description: 'Submit reviewable product, marketing, Game Center or asset versions to Apple in one call. Set with_app_version=true when the first item needs the platform’s editable App Store version in the same submission. The confirmation lists every existing and new item before submission.',
     inputSchema: {
       type: 'object',
       properties: {
         app: { type: 'string', description: 'App name, bundle ID or numeric Apple ID.' },
         platform: { type: 'string', enum: PLATFORMS, description: 'Review platform. Required when the app has more than one eligible platform.' },
+        with_app_version: { type: 'boolean', description: 'Add the platform’s single editable App Store version to the same submission.' },
         items: { type: 'array', minItems: 1, items: {
           type: 'object', properties: {
             type: { type: 'string', enum: [...REVIEW_ITEM_TYPES] },
@@ -139,7 +160,7 @@ export const RELEASE_TOOL_NAMES: ReadonlySet<string> = new Set(RELEASE_TOOLS.map
 export async function executeReleaseTool(
   name: string,
   args: Record<string, unknown>,
-  ctx: { http: AscHttpClient; dryRun?: boolean }
+  ctx: { http: AscHttpClient; dryRun?: boolean; approvedPlanFingerprint?: string; requireApprovedPlan?: boolean }
 ): Promise<unknown> {
   if (!RELEASE_TOOL_NAMES.has(name)) throw new Error(`Unknown release tool: ${name}`);
   if (!args.app || typeof args.app !== 'string') throw new AscApiError('"app" is required.', 0);
@@ -180,7 +201,7 @@ export async function executeReleaseTool(
     'fields[appStoreVersions]': 'versionString,appStoreState,platform',
     limit: 20,
   });
-  const version = (versions?.data ?? []).find(
+  const version = completeRows(versions, 'App Store versions').find(
     (v: any) =>
       String(v.attributes?.versionString ?? '') === preflight.version && v.attributes?.platform === preflight.platform
   );
@@ -202,7 +223,7 @@ export async function executeReleaseTool(
   }
 
   const plan = await planSubmission(http, app.id, versionPlatform, [{ type: 'appStoreVersion', id: String(version.id) }]);
-  const submitted = await submitPlan(http, app.id, versionPlatform, plan, Boolean(ctx.dryRun));
+  const submitted = await submitPlan(http, app.id, versionPlatform, plan, Boolean(ctx.dryRun), ctx.approvedPlanFingerprint, ctx.requireApprovedPlan);
   return {
     ...submitted, app: `${app.name} (${app.id})`, version: preflight.version,
     preflight: { ready: preflight.ready, warnings: (preflight as any).warnings ?? [] },
@@ -226,17 +247,19 @@ export async function releasePreviewArgs(
   });
   const version = pickVersion(
     app.name,
-    versions?.data ?? [],
+    completeRows(versions, 'App Store versions'),
     args.version ? String(args.version).trim() : undefined,
     args.platform ? String(args.platform) : undefined
   );
   const platform = String(version.attributes?.platform ?? '');
   const plan = await planSubmission(http, app.id, platform, [{ type: 'appStoreVersion', id: String(version.id) }]);
+  await checkCompanions(http, app.id, platform, plan);
   return {
     app: `${app.name} (${app.id})`,
     version: version.attributes?.versionString,
     platform: PLATFORM_NAMES[platform] ?? platform,
     items: plan.items,
+    planFingerprint: planFingerprint(app.id, platform, plan.submission?.id, plan.items),
     ...(args.skip_preflight === true ? { skip_preflight: true } : {}),
   };
 }
@@ -251,17 +274,24 @@ async function planSubmission(http: AscHttpClient, appId: string, platform: stri
   const open: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/reviewSubmissions`, {
     'filter[state]': 'READY_FOR_REVIEW', 'filter[platform]': platform, include: 'items', limit: 5,
   });
-  if (open?.links?.next || (open?.data ?? []).length > 1) throw new AscApiError('Open review submissions are ambiguous or truncated.', 0);
-  const submission = open?.data?.[0];
-  let rows: any[] = (open?.included ?? []).filter((i: any) => i.type === 'reviewSubmissionItems');
+  const openRows = completeRows(open, 'Open review submissions');
+  if (openRows.length > 1) throw new AscApiError('Open review submissions are ambiguous.', 0);
+  const submission = openRows[0];
+  let rows: any[] = [];
   if (submission) {
-    const listed: any = await http.get(`/v1/reviewSubmissions/${encodeURIComponent(submission.id)}/items`, { limit: 200 });
-    if (listed?.links?.next || Number(listed?.meta?.paging?.total ?? 0) > (listed?.data ?? []).length) {
-      throw new AscApiError('Review submission items were truncated; cannot preview every item safely.', 0);
+    const listed: any = await http.get(`/v1/reviewSubmissions/${encodeURIComponent(submission.id)}/items`, { include: ITEM_INCLUDES, limit: 200 });
+    rows = completeRows(listed, 'Review submission items');
+    const linked = submission.relationships?.items?.data;
+    if (Array.isArray(linked) && linked.some((i: any) => !rows.some((r) => String(r.id) === String(i.id)))) {
+      throw new AscApiError(`Review submission ${submission.id} lists an item absent from its items response.`, 0);
     }
-    rows = [...rows, ...(listed?.data ?? [])];
   }
-  const existing = [...new Map(rows.map(itemFromResource).filter(Boolean).map((i: any) => [itemKey(i), i])).values()] as ReviewItem[];
+  const existing = [...new Map(listedItems(rows).map((i) => [itemKey(i), i])).values()];
+  const oldAppVersion = existing.find((i) => i.type === 'appStoreVersion');
+  const newAppVersion = requested.find((i) => i.type === 'appStoreVersion');
+  if (oldAppVersion && newAppVersion && oldAppVersion.id !== newAppVersion.id) {
+    throw new AscApiError(`Open submission ${submission.id} already contains app version ${oldAppVersion.id}; refusing to add a different app version ${newAppVersion.id}.`, 0);
+  }
   const items = [...new Map([...existing, ...requested].map((i) => [itemKey(i), i])).values()];
   return { submission, existing, requested, items };
 }
@@ -271,53 +301,93 @@ async function planSubmission(http: AscHttpClient, appId: string, platform: stri
  * item of a type accompanies a new app version; a first subscription also
  * accompanies its group version. These reads precede every POST, including
  * when a submission is reused. */
-async function previouslySubmitted(http: AscHttpClient, appId: string, currentId: string | undefined, type: string): Promise<boolean> {
-  const history: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/reviewSubmissions`, { limit: 200 });
-  if (history?.links?.next || Number(history?.meta?.paging?.total ?? 0) > (history?.data ?? []).length) {
-    throw new AscApiError(`Review submission history is truncated; cannot verify whether ${type} is the first item of its type.`, 0);
-  }
-  for (const submission of history?.data ?? []) {
-    if (String(submission.id) === currentId) continue;
-    const prior: any = await http.get(`/v1/reviewSubmissions/${encodeURIComponent(submission.id)}/items`, { limit: 200 });
-    if (prior?.links?.next || Number(prior?.meta?.paging?.total ?? 0) > (prior?.data ?? []).length) {
-      throw new AscApiError(`Prior review submission ${submission.id} has truncated items; cannot verify ${type}.`, 0);
-    }
-    if ((prior?.data ?? []).some((row: any) => itemFromResource(row)?.type === type)) return true;
-  }
-  return false;
+const HISTORICAL_STATES = 'WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES,COMPLETING,COMPLETE';
+const APPROVED_STATES = new Set(['APPROVED', 'ACCEPTED', 'READY_FOR_SALE', 'REMOVED_FROM_SALE', 'DEVELOPER_REMOVED_FROM_SALE']);
+const VERSION_PARENTS: Record<string, { relationship: string; path: string }> = {
+  appCustomProductPageVersion: { relationship: 'appCustomProductPage', path: '/v1/appCustomProductPages/{id}/appCustomProductPageVersions' },
+  backgroundAssetVersion: { relationship: 'backgroundAsset', path: '/v1/backgroundAssets/{id}/versions' },
+  inAppPurchaseVersion: { relationship: 'inAppPurchase', path: '/v2/inAppPurchases/{id}/versions' },
+  subscriptionVersion: { relationship: 'subscription', path: '/v1/subscriptions/{id}/versions' },
+  subscriptionGroupVersion: { relationship: 'subscriptionGroup', path: '/v1/subscriptionGroups/{id}/versions' },
+};
+async function hasEarlierApprovedVersion(http: AscHttpClient, type: string, current: any): Promise<boolean | undefined> {
+  const parent = VERSION_PARENTS[type];
+  const id = parent && current?.relationships?.[parent.relationship]?.data?.id;
+  if (!id) return undefined;
+  const path = parent.path.replace('{id}', encodeURIComponent(id));
+  const res: any = await http.get(path, { limit: 100 });
+  return completeRows(res, 'Earlier product versions').some((row) => row.id !== current.id && APPROVED_STATES.has(String(row.attributes?.state ?? '')));
 }
-async function checkCompanions(http: AscHttpClient, appId: string, plan: SubmissionPlan): Promise<void> {
+async function previouslySubmitted(http: AscHttpClient, appId: string, platform: string, currentId: string | undefined, type: string): Promise<boolean | undefined> {
+  const history: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/reviewSubmissions`, {
+    'filter[platform]': platform, 'filter[state]': HISTORICAL_STATES, include: 'items', limit: 200,
+  });
+  const submissions = completeRows(history, 'Filtered review submission history')
+    .filter((row) => String(row.id) !== currentId && HISTORICAL_STATES.split(',').includes(row.attributes?.state)
+      && row.attributes?.platform === platform && Boolean(row.attributes?.submittedDate));
+  const included = new Map((history?.included ?? []).filter((row: any) => row.type === 'reviewSubmissionItems').map((row: any) => [String(row.id), row]));
+  // Apple may omit nested relationship data from included items. Read only the
+  // first few eligible submissions, stopping at the first accepted match.
+  const MAX_HISTORY_READS = 10;
+  for (const [index, submission] of submissions.entries()) {
+    if (index >= MAX_HISTORY_READS) throw new AscApiError(`More than ${MAX_HISTORY_READS} historical submissions; cannot determine whether ${type} was previously submitted.`, 0);
+    const linked: any[] | undefined = submission.relationships?.items?.data;
+    const embedded = linked?.map((ref) => included.get(String(ref.id)));
+    const rows = linked && embedded?.every((row) => row && itemFromResource(row))
+      ? embedded
+      : completeRows(await http.get(`/v1/reviewSubmissions/${encodeURIComponent(submission.id)}/items`, { include: ITEM_INCLUDES, limit: 200 }), 'Historical review submission items');
+    for (const row of rows ?? []) {
+      const item = itemFromResource(row);
+      if (!item) throw new AscApiError(`Historical review submission item ${row?.id ?? '(no id)'} cannot be identified.`, 0);
+      if (!row.attributes?.state) throw new AscApiError(`Historical review submission item ${row.id} has no state; cannot use it as first-submission evidence.`, 0);
+      if (item.type === type && !['REMOVED', 'REJECTED'].includes(row.attributes?.state)) return true;
+    }
+  }
+  // An empty v2 history is not proof that a product was never approved through
+  // Apple's older submission resources.
+  return undefined;
+}
+async function checkCompanions(http: AscHttpClient, appId: string, platform: string, plan: SubmissionPlan): Promise<void> {
   const hasAppVersion = plan.items.some((i) => i.type === 'appStoreVersion');
-  const seenTypes = new Map<string, boolean>();
-  for (const item of plan.requested) {
-    if (!VERSIONED_ITEMS.has(item.type)) {
-      if (!hasAppVersion) {
-        if (!seenTypes.has(item.type)) {
-          seenTypes.set(item.type, await previouslySubmitted(http, appId, plan.submission?.id, item.type));
-        }
-        if (!seenTypes.get(item.type)) {
-          throw new AscApiError(`First ${item.type} requires a new app version in the same review submission.`, 0);
-        }
+  const historyByType = new Map<string, boolean | undefined>();
+  for (const item of plan.items) {
+    if (item.type === 'appStoreVersion') continue;
+    let first: boolean | undefined;
+    let version: any;
+    let product: any;
+    if (VERSIONED_ITEMS.has(item.type)) {
+      const include = VERSION_PARENTS[item.type]?.relationship;
+      version = await http.get(`/v1/${RESOURCE_TYPES[item.type]}/${encodeURIComponent(item.id)}`, include ? { include } : undefined);
+      const raw = version?.data?.attributes?.version;
+      // CPP and background-asset versions are strings: even "2" is a label,
+      // not proof that an earlier version was approved.
+      const numeric = typeof raw === 'number' && Number.isInteger(raw) ? raw : undefined;
+      product = (version?.included ?? []).find((row: any) => row.id === version?.data?.relationships?.[include ?? '']?.data?.id);
+      if (numeric && numeric > 1) first = false;
+      else if (APPROVED_STATES.has(String(product?.attributes?.state ?? '')) ||
+        APPROVED_STATES.has(String(version?.data?.attributes?.state ?? ''))) first = false;
+      else {
+        const earlier = await hasEarlierApprovedVersion(http, item.type, version?.data);
+        if (earlier) first = false;
+        else if (numeric === 1) first = true;
       }
-      continue;
     }
-    const type = RESOURCE_TYPES[item.type];
-    const version: any = await http.get(`/v1/${type}/${encodeURIComponent(item.id)}`);
-    const number = Number(version?.data?.attributes?.version);
-    if (!Number.isFinite(number)) throw new AscApiError(`Cannot determine whether ${item.type} ${item.id} is its first version.`, 0);
-    if (!hasAppVersion) {
-      const previouslySeen = number > 1 && await previouslySubmitted(http, appId, plan.submission?.id, item.type);
-      if (!previouslySeen) throw new AscApiError(`First ${item.type} ${item.id} requires a new app version in the same review submission.`, 0);
+    if (first === undefined && !hasAppVersion) {
+      if (!historyByType.has(item.type)) historyByType.set(item.type, await previouslySubmitted(http, appId, platform, plan.submission?.id, item.type));
+      if (historyByType.get(item.type) === true) first = false;
     }
-    if (item.type === 'subscriptionVersion' && number === 1) {
+    if (first === undefined && !hasAppVersion) {
+      throw new AscApiError(`Cannot establish whether ${itemKey(item)} is the first of its type. Add with_app_version=true or provide an open submission containing an editable app version.`, 0);
+    }
+    if (first && !hasAppVersion) throw new AscApiError(`First ${itemKey(item)} requires a new app version in the same review submission. Use with_app_version=true.`, 0);
+    if (item.type === 'subscriptionVersion' && first) {
       const subscriptionId = version?.data?.relationships?.subscription?.data?.id;
       if (!subscriptionId) throw new AscApiError(`Cannot verify the group for subscription version ${item.id}.`, 0);
-      const subscription: any = await http.get(`/v1/subscriptions/${encodeURIComponent(subscriptionId)}`);
+      const subscription: any = await http.get(`/v1/subscriptions/${encodeURIComponent(subscriptionId)}`, { include: 'group' });
       const groupId = subscription?.data?.relationships?.group?.data?.id;
       if (!groupId) throw new AscApiError(`Cannot verify the group for subscription version ${item.id}.`, 0);
       const groupVersions: any = await http.get(`/v1/subscriptionGroups/${encodeURIComponent(groupId)}/versions`, { limit: 100 });
-      if (groupVersions?.links?.next) throw new AscApiError('Group versions truncated; cannot verify required companion.', 0);
-      const groupIds = new Set((groupVersions?.data ?? []).map((v: any) => String(v.id)));
+      const groupIds = new Set(completeRows(groupVersions, 'Subscription group versions').map((v: any) => String(v.id)));
       if (!plan.items.some((i) => i.type === 'subscriptionGroupVersion' && groupIds.has(i.id))) {
         throw new AscApiError(`First subscription version ${item.id} requires its subscription group version in the same review submission.`, 0);
       }
@@ -325,8 +395,12 @@ async function checkCompanions(http: AscHttpClient, appId: string, plan: Submiss
   }
 }
 
-async function submitPlan(http: AscHttpClient, appId: string, platform: string, plan: SubmissionPlan, dryRun: boolean) {
-  await checkCompanions(http, appId, plan);
+async function submitPlan(http: AscHttpClient, appId: string, platform: string, plan: SubmissionPlan, dryRun: boolean, approvedFingerprint?: string, requireApproval = false) {
+  if (requireApproval && !approvedFingerprint) throw new AscApiError('The approved review item snapshot is missing; no write was sent.', 0);
+  if (approvedFingerprint && approvedFingerprint !== planFingerprint(appId, platform, plan.submission?.id, plan.items)) {
+    throw new AscApiError('Review submission changed since confirmation; no write was sent. Confirm the current item list again.', 0);
+  }
+  await checkCompanions(http, appId, platform, plan);
   const steps: string[] = [];
   if (dryRun) return {
     dryRun: true, platform, items: plan.items,
@@ -337,33 +411,55 @@ async function submitPlan(http: AscHttpClient, appId: string, platform: string, 
     ], steps,
   };
   let submission = plan.submission;
-  if (submission) steps.push(`Reused the open review submission ${submission.id}.`);
-  else {
-    const created: any = await http.request('POST', '/v1/reviewSubmissions', {
-      body: { data: { type: 'reviewSubmissions', attributes: { platform }, relationships: { app: { data: { type: 'apps', id: appId } } } } },
-    });
-    submission = created?.data;
-    if (!submission?.id) throw new AscApiError('Apple accepted the submission POST and returned no id.', 0);
-    steps.push(`Opened review submission ${submission.id} — empty, and nothing sent yet.`);
-  }
-  for (const item of plan.requested) {
-    if (plan.existing.some((e) => itemKey(e) === itemKey(item))) {
-      steps.push(`${item.type} ${item.id} was already an item on it.`);
-      continue;
+  const added: ReviewItem[] = [];
+  let stoppedAt = 'opening the review submission';
+  try {
+    if (submission) steps.push(`Reused the open review submission ${submission.id}.`);
+    else {
+      const created: any = await http.request('POST', '/v1/reviewSubmissions', {
+        body: { data: { type: 'reviewSubmissions', attributes: { platform }, relationships: { app: { data: { type: 'apps', id: appId } } } } },
+      });
+      submission = created?.data;
+      if (!submission?.id) throw new AscApiError('Apple accepted the submission POST and returned no id.', 0);
+      steps.push(`Opened review submission ${submission.id} — empty, and nothing sent yet.`);
     }
-    await http.request('POST', '/v1/reviewSubmissionItems', {
-      body: { data: { type: 'reviewSubmissionItems', relationships: {
-        reviewSubmission: { data: { type: 'reviewSubmissions', id: submission.id } },
-        [item.type]: { data: { type: RESOURCE_TYPES[item.type], id: item.id } },
-      } } },
+    for (const item of plan.requested) {
+      if (plan.existing.some((e) => itemKey(e) === itemKey(item))) {
+        steps.push(`${item.type} ${item.id} was already an item on it.`);
+        continue;
+      }
+      stoppedAt = `adding ${itemKey(item)}`;
+      await http.request('POST', '/v1/reviewSubmissionItems', {
+        body: { data: { type: 'reviewSubmissionItems', relationships: {
+          reviewSubmission: { data: { type: 'reviewSubmissions', id: submission.id } },
+          [item.type]: { data: { type: RESOURCE_TYPES[item.type], id: item.id } },
+        } } },
+      });
+      added.push(item);
+      steps.push(`Added ${item.type} ${item.id} to it. Still nothing sent.`);
+    }
+    stoppedAt = 'verifying the final item list';
+    const finalRead: any = await http.get(`/v1/reviewSubmissions/${encodeURIComponent(submission.id)}/items`, { include: ITEM_INCLUDES, limit: 200 });
+    const actual = listedItems(completeRows(finalRead, 'Final review submission items')).map(itemKey).sort();
+    const expected = plan.items.map(itemKey).sort();
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      throw new AscApiError(`Final item list changed: expected ${expected.join(', ') || 'none'}; found ${actual.join(', ') || 'none'}.`, 0);
+    }
+    stoppedAt = 'setting submitted=true';
+    const handed: any = await http.request('PATCH', `/v1/reviewSubmissions/${encodeURIComponent(submission.id)}`, {
+      body: { data: { type: 'reviewSubmissions', id: submission.id, attributes: { submitted: true } } },
     });
-    steps.push(`Added ${item.type} ${item.id} to it. Still nothing sent.`);
+    steps.push('Handed it to Apple (submitted=true). This is the step that starts the queue.');
+    return { platform, items: plan.items, submissionId: String(submission.id), state: handed?.data?.attributes?.state ?? 'SUBMITTED', steps };
+  } catch (err) {
+    throw new AscApiError(
+      `Review submission ${submission?.id ?? '(id not returned)'} stopped while ${stoppedAt}. ` +
+      `Items confirmed added: ${added.map(itemKey).join(', ') || 'none'}. ` +
+      `Steps: ${steps.join(' ') || 'none'}. The failed request may have reached Apple; inspect this submission before retrying. ` +
+      `Cause: ${err instanceof Error ? err.message : String(err)}`,
+      0
+    );
   }
-  const handed: any = await http.request('PATCH', `/v1/reviewSubmissions/${encodeURIComponent(submission.id)}`, {
-    body: { data: { type: 'reviewSubmissions', id: submission.id, attributes: { submitted: true } } },
-  });
-  steps.push('Handed it to Apple (submitted=true). This is the step that starts the queue.');
-  return { platform, items: plan.items, submissionId: String(submission.id), state: handed?.data?.attributes?.state ?? 'SUBMITTED', steps };
 }
 
 function parseRequested(value: unknown): ReviewItem[] {
@@ -376,33 +472,39 @@ function parseRequested(value: unknown): ReviewItem[] {
   });
   return [...new Map(parsed.map((item: ReviewItem) => [itemKey(item), item])).values()] as ReviewItem[];
 }
-async function itemPlatform(http: AscHttpClient, appId: string, requested?: string): Promise<string> {
-  if (requested) {
-    if (!PLATFORMS.includes(requested)) throw new AscApiError(`Unknown platform ${requested}.`, 0);
-    return requested;
-  }
-  const versions: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/appStoreVersions`, {
+async function itemTarget(http: AscHttpClient, appId: string, requested: string | undefined, withAppVersion: boolean): Promise<{ platform: string; appVersion?: ReviewItem }> {
+  if (requested && !PLATFORMS.includes(requested)) throw new AscApiError(`Unknown platform ${requested}.`, 0);
+  if (requested && !withAppVersion) return { platform: requested };
+  const res: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/appStoreVersions`, {
     'fields[appStoreVersions]': 'versionString,appStoreState,platform', limit: 20,
   });
-  const version = pickVersion(appId, versions?.data ?? []);
-  const platform = String(version.attributes?.platform ?? '');
+  const versions = completeRows(res, 'App Store versions');
+  const selected = pickVersion(appId, versions, undefined, requested);
+  const platform = String(requested ?? selected.attributes?.platform ?? '');
   if (!platform) throw new AscApiError('Platform is missing; pass platform explicitly.', 0);
-  return platform;
+  if (!withAppVersion) return { platform };
+  const editable = versions.filter((v: any) => v.attributes?.platform === platform &&
+    ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY', 'WAITING_FOR_EXPORT_COMPLIANCE'].includes(v.attributes?.appStoreState));
+  if (editable.length !== 1) throw new AscApiError(`Expected exactly one editable App Store version on ${platform}; found ${editable.length}. Pass a platform with one editable version or prepare one first.`, 0);
+  return { platform, appVersion: { type: 'appStoreVersion', id: String(editable[0].id) } };
 }
-async function submitItems(args: Record<string, unknown>, ctx: { http: AscHttpClient; dryRun?: boolean }) {
+async function submitItems(args: Record<string, unknown>, ctx: { http: AscHttpClient; dryRun?: boolean; approvedPlanFingerprint?: string; requireApprovedPlan?: boolean }) {
   const requested = parseRequested(args.items);
   const app = await resolveApp(ctx.http, String(args.app));
-  const platform = await itemPlatform(ctx.http, app.id, args.platform ? String(args.platform) : undefined);
-  const plan = await planSubmission(ctx.http, app.id, platform, requested);
-  const result = await submitPlan(ctx.http, app.id, platform, plan, Boolean(ctx.dryRun));
+  const target = await itemTarget(ctx.http, app.id, args.platform ? String(args.platform) : undefined, args.with_app_version === true);
+  if (target.appVersion) requested.unshift(target.appVersion);
+  const plan = await planSubmission(ctx.http, app.id, target.platform, requested);
+  const result = await submitPlan(ctx.http, app.id, target.platform, plan, Boolean(ctx.dryRun), ctx.approvedPlanFingerprint, ctx.requireApprovedPlan);
   return { ...result, app: `${app.name} (${app.id})` };
 }
 
 export async function releaseItemsPreviewArgs(args: Record<string, unknown>, http: AscHttpClient): Promise<Record<string, unknown>> {
   const requested = parseRequested(args.items);
   const app = await resolveApp(http, String(args.app ?? ''));
-  const platform = await itemPlatform(http, app.id, args.platform ? String(args.platform) : undefined);
-  const plan = await planSubmission(http, app.id, platform, requested);
-  await checkCompanions(http, app.id, plan);
-  return { app: `${app.name} (${app.id})`, platform: PLATFORM_NAMES[platform] ?? platform, items: plan.items };
+  const target = await itemTarget(http, app.id, args.platform ? String(args.platform) : undefined, args.with_app_version === true);
+  if (target.appVersion) requested.unshift(target.appVersion);
+  const plan = await planSubmission(http, app.id, target.platform, requested);
+  await checkCompanions(http, app.id, target.platform, plan);
+  return { app: `${app.name} (${app.id})`, platform: PLATFORM_NAMES[target.platform] ?? target.platform, items: plan.items,
+    planFingerprint: planFingerprint(app.id, target.platform, plan.submission?.id, plan.items) };
 }

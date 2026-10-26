@@ -615,7 +615,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         };
       }
 
-      if (config.confirmWrites !== 'off' && !config.dryRun && isWriteTool(name)) {
+      let approvedPlanFingerprint: string | undefined;
+      if ((config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) && !config.dryRun && isWriteTool(name)) {
         const op = registry.get(name);
         // Decided from the risk level alone, before the preview is built:
         // buildWritePreview resolves reference ids over the network, and a
@@ -683,11 +684,13 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           };
           if (!canElicit && !canDialog) return blocked;
           // What the prompt shows; the fingerprint stays on the arguments as sent.
-          const shown = op
+          const shownWithPlan = op
             ? args
             : RELEASE_TOOL_NAMES.has(name)
               ? await (name === 'release__submit_items' ? releaseItemsPreviewArgs(args, http) : releasePreviewArgs(args, http))
               : await withAppName(args, http);
+          const planFingerprint = typeof shownWithPlan.planFingerprint === 'string' ? shownWithPlan.planFingerprint : undefined;
+          const { planFingerprint: _internalPlanFingerprint, ...shown } = shownWithPlan;
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
               { message: buildPricingPreview(shown, name), strong: true }
@@ -720,7 +723,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 },
                 shown
               );
-          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
           const what = servedTools()
             .find((t) => t.name === name)
@@ -742,6 +745,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               isError: true,
             };
           }
+          approvedPlanFingerprint = planFingerprint;
           // Approved in the dialog: fall through and run the write.
         }
         if (decision && !decision.allowed) {
@@ -758,6 +762,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             isError: true,
           };
         }
+        if (decision?.allowed) approvedPlanFingerprint = decision.planFingerprint;
         }
       }
 
@@ -844,7 +849,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           : METADATA_I18N_WRITE_TOOLS.has(name)
           ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
           : RELEASE_TOOL_NAMES.has(name)
-          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun })
+          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint,
+              requireApprovedPlan: !config.dryRun })
           : TESTFLIGHT_TOOL_NAMES.has(name)
           ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
           : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
