@@ -106,6 +106,8 @@ fs.writeFileSync(file, JSON.stringify(doc));
     return { PATH: `${home}:${process.env.PATH}`, APPDATA: join(home, 'AppData', 'Roaming') };
   };
 
+  // shortcut: the fake CLIs are shebang scripts, which Windows will not execute; give them a .cmd shim if Windows CI should cover these.
+  const fakeBinIt = process.platform === 'win32' ? it.skip : it;
   it('writes the profiles it was given, sub-profile argument and all', () => {
     const { home, cursor } = sandbox();
     const { out, code } = register(home, ['monetization:storekit', 'analytics', '--clients=cursor']);
@@ -117,7 +119,7 @@ fs.writeFileSync(file, JSON.stringify(doc));
     rmSync(home, { recursive: true, force: true });
   });
 
-  it('registers VS Code through its real client definition with a fake code binary', () => {
+  fakeBinIt('registers VS Code through its real client definition with a fake code binary', () => {
     const { home } = sandbox();
     const { out, code } = register(home, ['app-info', '--clients=vscode'], fakeCode(home));
     const path = codeConfig(home);
@@ -128,7 +130,7 @@ fs.writeFileSync(file, JSON.stringify(doc));
     rmSync(home, { recursive: true, force: true });
   });
 
-  it('reads VS Code JSONC and leaves a credential entry untouched', () => {
+  fakeBinIt('reads VS Code JSONC and leaves a credential entry untouched', () => {
     const { home } = sandbox();
     const env = fakeCode(home);
     const path = codeConfig(home);
@@ -149,7 +151,7 @@ fs.writeFileSync(file, JSON.stringify(doc));
     rmSync(home, { recursive: true, force: true });
   });
 
-  it('reports an unreadable VS Code target without calling add', () => {
+  fakeBinIt('reports an unreadable VS Code target without calling add', () => {
     const { home } = sandbox();
     const env = fakeCode(home);
     const path = codeConfig(home);
@@ -163,7 +165,7 @@ fs.writeFileSync(file, JSON.stringify(doc));
     rmSync(home, { recursive: true, force: true });
   });
 
-  it('uses Claude Code add-json with the full entry as a single argument', () => {
+  fakeBinIt('uses Claude Code add-json with the full entry as a single argument', () => {
     const { home } = sandbox();
     const bin = join(home, 'claude');
     writeFileSync(bin, `#!/usr/bin/env node
