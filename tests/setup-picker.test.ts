@@ -7,7 +7,17 @@
  * change that breaks the round-trip fails here instead of in someone's config.
  */
 import { describe, it, expect } from 'vitest';
-import { buildRows, preselect, selectionToSpecs, leafRows, neededRole, ROLES } from '../src/setup.js';
+import {
+  DOES,
+  NARROW_FIRST,
+  PLAIN,
+  ROLES,
+  buildRows,
+  leafRows,
+  neededRole,
+  preselect,
+  selectionToSpecs,
+} from '../src/setup.js';
 import {
   PROFILES,
   resolveSelection,
@@ -20,12 +30,15 @@ const rows = buildRows();
 const rowFor = (profile: string, sub?: string) =>
   rows.find((r) => r.profile.name === profile && (sub ? r.subProfile?.name === sub : !r.subProfile))!;
 const allIndices = rows.map((r) => r.index);
+/** Core is never a row: it comes with whatever is picked. */
+const PICKABLE = PROFILES.filter((p) => p.name !== CORE_PROFILE);
 
 describe('the picker rows', () => {
-  it('lists every profile once, with its named sub-profiles under it', () => {
+  it('lists every profile but core once, with its named sub-profiles under it', () => {
     const parents = rows.filter((r) => !r.subProfile);
-    expect(parents).toHaveLength(PROFILES.length);
-    for (const p of PROFILES) {
+    expect(parents).toHaveLength(PICKABLE.length);
+    expect(rows.some((r) => r.profile.name === CORE_PROFILE)).toBe(false);
+    for (const p of PICKABLE) {
       const children = rows.filter((r) => r.profile.name === p.name && r.subProfile);
       expect(children).toHaveLength(p.subProfiles.filter((s) => s.name).length);
       // A child must point at its own parent row, not at whatever came before it.
@@ -45,9 +58,7 @@ describe('the picker rows', () => {
     // preview tools sit under every page that can list a set. Summing the rows
     // counts those twice, and the number the user picks by stops matching the
     // number of tools the server loads.
-    // Core is left out: it is registered with every setup rather than picked,
-    // and the registration rewrite decides how the picker shows it.
-    for (const p of PROFILES.filter((p) => p.name !== CORE_PROFILE)) {
+    for (const p of PICKABLE) {
       const sel = resolveSelection(p.name);
       const served = operationsFor(sel).length + manualToolsFor(sel).length;
       const shown = Number(rowFor(p.name).item.label.match(/\((\d+)\)$/)![1]);
@@ -59,7 +70,7 @@ describe('the picker rows', () => {
 describe('selection -> config argument', () => {
   it('writes a bare profile name when everything under it is checked', () => {
     // The common case has to produce exactly today's config: no colon, no diff.
-    expect(selectionToSpecs(rows, allIndices)).toEqual(PROFILES.map((p) => p.name));
+    expect(selectionToSpecs(rows, allIndices)).toEqual(PICKABLE.map((p) => p.name));
   });
 
   it('writes profile:sub,sub when some are unchecked', () => {
@@ -157,5 +168,28 @@ describe('the key role the picks need', () => {
   // which is how `access:users` outlived its sub-profile when 3.0 renamed it.
   it('keys roles only by profiles and sub-profiles that exist', () => {
     for (const key of Object.keys(ROLES)) expect(() => resolveSelection(key), key).not.toThrow();
+  });
+});
+
+/**
+ * Setup describes every choice three ways: the key role it needs, a plain
+ * name, and what it is for. A profile or sub-profile missing from any of them
+ * falls back to a guess (App Manager) or to nothing on the page — so each one
+ * has to be written down, and a new sub-profile fails here until it is.
+ */
+describe('every choice is described', () => {
+  const keys = PROFILES.flatMap((p) => [p.name, ...p.subProfiles.filter((s) => s.name).map((s) => `${p.name}:${s.name}`)]);
+
+  it.each([['ROLES', ROLES], ['PLAIN', PLAIN], ['DOES', DOES]] as const)('%s covers every profile and sub-profile', (_name, table) => {
+    expect(keys.filter((k) => !(k in table))).toEqual([]);
+    expect(Object.keys(table).filter((k) => !keys.includes(k))).toEqual([]);
+    for (const k of keys) expect((table as Record<string, unknown>)[k], k).toBeTruthy();
+  });
+
+  it('names only real roles', () => {
+    for (const [key, roles] of Object.entries(ROLES)) {
+      expect(roles.length, key).toBeGreaterThan(0);
+      for (const r of roles) expect(NARROW_FIRST, `${key}: ${r}`).toContain(r);
+    }
   });
 });

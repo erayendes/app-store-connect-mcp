@@ -304,7 +304,10 @@ a { color: var(--fg); }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq || applying || finished) return;
       list.innerHTML = '';
-      var shown = r.plan.filter(function (p) { return p.add.length || p.remove.length || p.rewrites.length || p.userManaged.length; });
+      var shown = r.plan.filter(function (p) {
+        return p.add.length || p.remove.length || p.rewrites.length || p.userManaged.length ||
+          p.coreWithheld.length || p.deadDeleted.length || p.deadReported.length;
+      });
       if (!shown.length) {
         list.appendChild(el('li', '', r.plan.length
           ? 'Your profiles stay as they are.'
@@ -316,13 +319,16 @@ a { color: var(--fg); }
         var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
         if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
         if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ') + ' '));
+        if (p.deadDeleted.length) li.appendChild(el('span', 'rm', 'delete dead ' + p.deadDeleted.join(', ') + ' '));
         if (p.rewrites.length) li.appendChild(el('span', 'mv', 'rewrite ' + p.rewrites.join(', ') + ' '));
+        if (p.coreWithheld.length) li.appendChild(el('span', 'mv', 'ASC-Core not added (' + p.coreWithheld.join('; ') + ') '));
+        if (p.deadReported.length) li.appendChild(el('span', 'mv', 'dead, left as is: ' + p.deadReported.join(', ') + ' '));
         if (p.userManaged.length) li.appendChild(el('span', 'mv', 'user-managed, unchanged: ' + p.userManaged.join(', ') + ' '));
         list.appendChild(li);
       });
       // Nothing to change and nothing new to save: Apply would do nothing.
       $('apply').disabled = reuse && !vendorChanged() && !r.plan.some(function (p) {
-        return p.add.length || p.remove.length || p.rewrites.length;
+        return p.add.length || p.remove.length || p.rewrites.length || p.deadDeleted.length;
       });
     }).catch(function (e) { if (seq === planSeq && !applying && !finished) list.textContent = e.message; });
   }
@@ -394,7 +400,7 @@ a { color: var(--fg); }
           t.appendChild(document.createTextNode(' '));
           t.appendChild(el('span', 'count', size(c)));
           var cp = pills(c); if (cp) t.appendChild(cp);
-          txt.appendChild(t); txt.appendChild(el('div', 'h', c.hint.replace(/^~[0-9]+k · /, '')));
+          txt.appendChild(t); txt.appendChild(el('div', 'h', c.does || c.hint.replace(/^~[0-9]+k · /, '')));
           line.appendChild(cb); line.appendChild(txt); list.appendChild(line);
           cb.addEventListener('change', function () {
             // Ticking a part picks its profile; unticking the last one drops it.

@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { PROFILES, resolveSelection, toolCountFor } from '../src/profiles.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toolNameFor } from '../src/core/registry.js';
+import { serverName } from '../src/clients.js';
 
 const readme = readFileSync('examples/README.md', 'utf8');
 const workflow = readFileSync('examples/ci/release-notes.yml', 'utf8');
@@ -105,6 +106,14 @@ describe('the CI example uses settings the server reads', () => {
     // The example's whole safety story. Someone who runs it to see what it does
     // must not discover the answer on a live version.
     expect(workflow).toMatch(/dry_run:[\s\S]*?default: true/);
+  });
+
+  it('allows exactly the servers register writes, under the names it writes them', () => {
+    // register adds ASC-Core beside the profile; the agent needs it to find
+    // the app at all. Allowing a name register never writes allows nothing.
+    const spec = /register (\S+) --clients=claude/.exec(workflow)![1];
+    const allowed = [...workflow.matchAll(/'mcp__([^_']+)__\*'/g)].map((m) => m[1]).sort();
+    expect(allowed).toEqual([serverName(spec), serverName('core')].sort());
   });
 
   it('turns confirmation off explicitly rather than leaving it to fail closed', () => {

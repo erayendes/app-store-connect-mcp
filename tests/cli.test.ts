@@ -147,7 +147,9 @@ fs.writeFileSync(file, JSON.stringify(doc));
     const { out, code } = register(home, ['monetization:transactions', 'analytics', '--clients=cursor']);
     expect(code).toBe(0);
     expect(out).toContain('✓ added ASC-Monetization');
-    expect(servers(cursor)).toEqual(['ASC-Monetization', 'ASC-Analytics']);
+    // Core comes along: app lookup and search live nowhere else.
+    expect(out).toContain('✓ added ASC-Core');
+    expect(servers(cursor)).toEqual(['ASC-Monetization', 'ASC-Analytics', 'ASC-Core']);
     const args = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Monetization'].args;
     expect(args.at(-1)).toBe('monetization:transactions');
     rmSync(home, { recursive: true, force: true });
@@ -227,10 +229,13 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const calls = JSON.parse(readFileSync(join(home, 'claude-argv.json'), 'utf8'));
     const updated = JSON.parse(readFileSync(join(home, '.claude.json'), 'utf8')).mcpServers['ASC-General'];
     expect(code).toBe(0);
-    expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json']);
+    expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json', 'add-json']);
     expect(JSON.parse(calls[2][5])).toEqual({ ...old,
       args: ['-y', '@erayendes/asc-mcp', 'general', '--read-only'] });
     expect(updated).toEqual(JSON.parse(calls[2][5]));
+    // Core follows the profile's read-only, added as a whole entry too.
+    expect(calls[3][4]).toBe('ASC-Core');
+    expect(JSON.parse(calls[3][5])).toEqual({ command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'core', '--read-only'] });
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -240,7 +245,37 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const { home, cursor } = sandbox();
     register(home, ['analytics', '--clients=cursor']);
     register(home, ['webhooks', '--clients=cursor']);
-    expect(servers(cursor)).toEqual(['ASC-Analytics', 'ASC-Webhooks']);
+    expect(servers(cursor)).toEqual(['ASC-Analytics', 'ASC-Core', 'ASC-Webhooks']);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('gives core the read-only an entry has in its env', () => {
+    const { home, cursor } = sandbox();
+    writeFileSync(cursor, JSON.stringify({ mcpServers: {
+      'ASC-Analytics': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'analytics'], env: { ASC_READ_ONLY: 'true' } },
+    } }));
+    const { out } = register(home, ['webhooks', '--clients=cursor']);
+    expect(out).toContain('✓ added ASC-Core (--read-only)');
+    expect(JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Core'].args)
+      .toEqual(['-y', '@erayendes/asc-mcp', 'core', '--read-only']);
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('deletes a dead entry of ours and names it, and only reports one the user manages', () => {
+    const { home, cursor } = sandbox();
+    const kept = { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'access:users'], env: { ASC_KEY_ID: 'kept-secret' } };
+    writeFileSync(cursor, JSON.stringify({ mcpServers: {
+      'ASC-AppInfo': { command: 'npx', args: ['-y', '@erayendes/asc-mcp', 'app-info', '--read-only'], env: { DEMO_MODE: 'demo-secret' } },
+      'ASC-Access': kept,
+    } }));
+    const { out, code } = register(home, ['general', '--clients=cursor']);
+    const entries = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers;
+    expect(code).toBe(0);
+    expect(out).toContain('✓ removed ASC-AppInfo (app-info; --read-only; env DEMO_MODE) — its profile no longer exists');
+    expect(out).toContain('dead entry left as is — ASC-Access (access:users; env ASC_KEY_ID): user-managed');
+    expect(out).not.toMatch(/demo-secret|kept-secret/);
+    expect(entries['ASC-AppInfo']).toBeUndefined();
+    expect(entries['ASC-Access']).toEqual(kept);
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -262,6 +297,11 @@ fs.writeFileSync(path, JSON.stringify(doc));
       env: { DEMO_MODE: 'yes' }, timeout: 10 });
     expect(entries['ASC-Analytics']).toEqual(guarded);
     expect(out).toContain('user-managed, unchanged: ASC-Analytics');
+    // One entry signs in through its own config dir, the other through the
+    // shared one: core cannot be shown to match both, so it is not added.
+    expect(out).toContain('ASC-Core not added');
+    expect(out).toContain('different App Store Connect accounts');
+    expect(entries['ASC-Core']).toBeUndefined();
     expect(out).not.toContain('/test-only/config');
     rmSync(home, { recursive: true, force: true });
   });
@@ -283,7 +323,7 @@ fs.writeFileSync(path, JSON.stringify(doc));
     register(home, ['analytics', '--clients=cursor']);
     // register never prunes: webhooks was not asked for, but it moves to the
     // new name rather than being lost.
-    expect(servers(cursor).sort()).toEqual(['ASC-Analytics', 'ASC-Webhooks', 'github'].sort());
+    expect(servers(cursor).sort()).toEqual(['ASC-Analytics', 'ASC-Core', 'ASC-Webhooks', 'github'].sort());
     rmSync(home, { recursive: true, force: true });
   });
 

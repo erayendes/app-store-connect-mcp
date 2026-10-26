@@ -286,44 +286,46 @@ describe('reading back what is registered', () => {
 
   it('preserves flags, env and other fields when changing release channel', () => {
     const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
-    const entry = { command: 'npx', args: ['-y', other, 'app-info', '--read-only', '--x=private-value'],
+    const entry = { command: 'npx', args: ['-y', other, 'general', '--read-only', '--x=private-value'],
       env: { DEMO_MODE: 'yes' }, timeout: 12 };
-    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-General': entry } }));
     const found = readRegistrations(jsonClient());
-    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', found]]), { prune: false,
-      stale: new Map([['temp', new Set(['ASC-AppInfo'])]]) });
-    expect(plan[0].rewrites).toEqual(['ASC-AppInfo (--read-only --x=<hidden>)']);
+    const plan = planChanges([jsonClient()], ['general'], new Map([['temp', found]]), { prune: false,
+      stale: new Map([['temp', new Set(['ASC-General'])]]) });
+    expect(plan[0].rewrites).toEqual(['ASC-General (--read-only --x=<hidden>)']);
     const lines: string[] = [];
     printPlan(plan, (line) => lines.push(line));
-    expect(lines.join('\n')).toContain('rewrite ASC-AppInfo (--read-only --x=<hidden>)');
+    expect(lines.join('\n')).toContain('rewrite ASC-General (--read-only --x=<hidden>)');
     expect(lines.join('\n')).not.toContain('private-value');
     expect(lines.join('\n')).not.toContain('yes');
     applyPlan(plan, () => {});
-    const after = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo'];
-    expect(after).toEqual({ ...entry, args: ['-y', PACKAGE, 'app-info', '--read-only', '--x=private-value'] });
+    const after = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-General'];
+    expect(after).toEqual({ ...entry, args: ['-y', PACKAGE, 'general', '--read-only', '--x=private-value'] });
   });
 
   it('reports and leaves a credential-carrying entry untouched in planning and writing', () => {
-    const entry = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'],
+    const entry = { command: 'npx', args: ['-y', PACKAGE, 'general', '--read-only'],
       env: { ASC_KEY_ID: 'test-only-secret' }, note: 'mine' };
-    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
-    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', readRegistrations(jsonClient())]]),
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-General': entry } }));
+    const plan = planChanges([jsonClient()], ['general'], new Map([['temp', readRegistrations(jsonClient())]]),
       { prune: true });
-    expect(plan[0].userManaged).toEqual(['ASC-AppInfo (--read-only)']);
+    expect(plan[0].userManaged).toEqual(['ASC-General (--read-only)']);
     expect(plan[0].toAdd).toEqual([]);
     expect(plan[0].toRemove).toEqual([]);
     applyPlan(plan, () => {});
-    applyToClient(jsonClient(), ['app-info'], ['ASC-AppInfo']);
-    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo']).toEqual(entry);
-    expect(plansForUnticked([], [jsonClient()])[0].userManaged).toEqual(['ASC-AppInfo (--read-only)']);
+    applyToClient(jsonClient(), ['general'], ['ASC-General']);
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-General']).toEqual(entry);
+    expect(plansForUnticked([], [jsonClient()])[0].userManaged).toEqual(['ASC-General (--read-only)']);
   });
 
   it('does not ask to apply a terminal plan that only reports user-managed entries', async () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
-      'ASC-AppInfo': { command: 'node', args: ['custom.js'] },
+      'ASC-General': { command: 'node', args: ['custom.js'] },
+      // Core already there, so nothing is left to add.
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
     } }));
     const client = jsonClient();
-    await reconcileRegistration([client], ['app-info'], registeredAcross([client]),
+    await reconcileRegistration([client], ['general'], registeredAcross([client]),
       async () => { throw new Error('unexpected Apply prompt'); }, [client]);
   });
 
@@ -332,15 +334,17 @@ describe('reading back what is registered', () => {
     { env: { ASC_PRIVATE_KEY_PATH: '/test/key' } },
     { envFile: '/test/env' },
   ])('protects credential settings in %j', (extra) => {
-    const entry = { command: 'npx', args: serverArgs('app-info'), ...extra };
-    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-AppInfo': entry } }));
-    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', readRegistrations(jsonClient())]]),
+    const entry = { command: 'npx', args: serverArgs('general'), ...extra };
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-General': entry } }));
+    const plan = planChanges([jsonClient()], ['general'], new Map([['temp', readRegistrations(jsonClient())]]),
       { prune: true });
-    expect(plan[0].userManaged).toEqual(['ASC-AppInfo']);
+    expect(plan[0].userManaged).toEqual(['ASC-General']);
+    // Core would sign in with the shared key, the entry with its own: held back.
     expect(plan[0].toAdd).toEqual([]);
+    expect(plan[0].coreWithheld).toHaveLength(1);
     expect(plansForUnticked([], [jsonClient()])[0].toRemove).toEqual([]);
-    applyToClient(jsonClient(), ['app-info'], ['ASC-AppInfo']);
-    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-AppInfo']).toEqual(entry);
+    applyToClient(jsonClient(), ['general'], ['ASC-General']);
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-General']).toEqual(entry);
   });
 
   it('never prunes or unticks an ASC-named entry without our package', () => {
@@ -355,16 +359,16 @@ describe('reading back what is registered', () => {
   });
 
   it('migrates a legacy name while preserving flags, env and other fields', () => {
-    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'],
+    const old = { command: 'npx', args: ['-y', PACKAGE, 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 14 };
-    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'asc-app-info': old } }));
-    const plan = planChanges([jsonClient()], ['app-info'], new Map([['temp', readRegistrations(jsonClient())]]),
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'asc-general': old } }));
+    const plan = planChanges([jsonClient()], ['general'], new Map([['temp', readRegistrations(jsonClient())]]),
       { prune: false });
-    expect(plan[0].toRemove).toEqual(['asc-app-info']);
+    expect(plan[0].toRemove).toEqual(['asc-general']);
     applyPlan(plan, () => {});
     const entries = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers;
-    expect(entries['asc-app-info']).toBeUndefined();
-    expect(entries['ASC-AppInfo']).toEqual(old);
+    expect(entries['asc-general']).toBeUndefined();
+    expect(entries['ASC-General']).toEqual(old);
   });
 
   it('reports an unreadable config and refuses to overwrite its file', () => {
@@ -560,25 +564,41 @@ fs.writeFileSync(path, JSON.stringify(data));
 
   it('plans and performs a Codex channel switch, then allows unticking it', () => {
     const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
-    state({ 'ASC-AppInfo': { command: 'npx', args: ['-y', other, 'app-info', '--read-only'] } });
+    state({ 'ASC-General': { command: 'npx', args: ['-y', other, 'general', '--read-only'] } });
     const entries = readRegistrations(client());
     expect(entries[0].entry).toBeDefined();
-    const plan = planChanges([client()], ['app-info'], new Map([['fake', entries]]),
-      { prune: true, stale: new Map([['fake', new Set(['ASC-AppInfo'])]]) });
-    expect(plan[0].toAdd).toEqual(['app-info']);
+    const plan = planChanges([client()], ['general'], new Map([['fake', entries]]),
+      { prune: true, stale: new Map([['fake', new Set(['ASC-General'])]]) });
+    expect(plan[0].toAdd).toEqual(['general', 'core']);
+    expect(plan[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
     applyPlan(plan, () => {});
-    expect(result().servers['ASC-AppInfo'].args).toEqual(['-y', PACKAGE, 'app-info', '--read-only']);
-    expect(plansForUnticked([], [client()])[0].toRemove).toEqual(['ASC-AppInfo']);
+    expect(result().servers['ASC-General'].args).toEqual(['-y', PACKAGE, 'general', '--read-only']);
+    // Core takes the profile's read-only, through Codex's own add as well.
+    expect(result().servers['ASC-Core'].args).toEqual(['-y', PACKAGE, 'core', '--read-only']);
+    expect(plansForUnticked([], [client()])[0].toRemove).toEqual(['ASC-General', 'ASC-Core']);
   });
 
   it('plans a Codex legacy rename without losing the old entry on a failed add', () => {
-    state({ 'asc-app-info': { command: 'npx', args: serverArgs('app-info') } }, 2);
+    state({ 'asc-general': { command: 'npx', args: serverArgs('general') } }, 2);
     const entries = readRegistrations(client());
-    const plan = planChanges([client()], ['app-info'], new Map([['fake', entries]]), { prune: false });
-    expect(plan[0].toAdd).toEqual(['app-info']);
-    expect(plan[0].toRemove).toEqual(['asc-app-info']);
+    const plan = planChanges([client()], ['general'], new Map([['fake', entries]]), { prune: false });
+    expect(plan[0].toAdd).toEqual(['general', 'core']);
+    expect(plan[0].toRemove).toEqual(['asc-general']);
     applyPlan(plan, () => {});
-    expect(result().servers['asc-app-info']).toBeDefined();
+    expect(result().servers['asc-general']).toBeDefined();
+  });
+
+  it('withholds core from a target it cannot read, and says so', () => {
+    state({});
+    writeFileSync(join(dir, 'state.json'), JSON.stringify({ ...result(), failList: true }));
+    const plan = planChanges([client()], ['general'], new Map([['fake', readRegistrations(client())]]),
+      { prune: false });
+    expect(plan[0].toAdd).toEqual([]);
+    expect(plan[0].coreWithheld).toEqual(['fake: the config could not be read, so the account its servers use is unknown']);
+    const lines: string[] = [];
+    applyPlan(plan, (l) => lines.push(l));
+    expect(lines.join('\n')).toContain('ASC-Core not added — fake: the config could not be read');
+    expect(result().servers).toEqual({});
   });
 
   it('reports explicitly when the restore also fails', () => {
@@ -650,7 +670,8 @@ describe('release channel of a registration', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
       mcpServers: {
         'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] },
-        'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info'] },
+        'ASC-General': { command: 'npx', args: ['-y', PACKAGE, 'general'] },
+        'ASC-Core': { command: 'npx', args: ['-y', PACKAGE, 'core'] },
       },
     }));
     const stale = new Set<string>();
@@ -659,7 +680,7 @@ describe('release channel of a registration', () => {
     expect(found.find((r) => r.name === 'ASC-Analytics')?.spec).toBe('analytics');
     expect([...stale]).toEqual(['ASC-Analytics']);
 
-    const plan = planChanges([jsonClient()], ['analytics', 'app-info'], new Map([['temp', found]]), {
+    const plan = planChanges([jsonClient()], ['analytics', 'general'], new Map([['temp', found]]), {
       prune: true,
       stale: new Map([['temp', stale]]),
     });
@@ -705,7 +726,10 @@ describe('a channel move alone', () => {
   it('still restarts the app, without listing anything for it', () => {
     const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
-      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] } },
+      mcpServers: {
+        'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] },
+        'ASC-Core': { command: 'npx', args: ['-y', PACKAGE, 'core'] },
+      },
     }));
     const stale = new Set<string>();
     const found = readRegistrations(jsonClient());
@@ -748,5 +772,153 @@ describe('an app the user unticked', () => {
       mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'] } },
     }));
     expect(plansForUnticked([jsonClient()], [jsonClient()])).toEqual([]);
+  });
+});
+
+/**
+ * 3.0: app lookup and search live only in ASC-Core, so it comes with any
+ * profile — but never wider open than the profiles beside it, never under an
+ * account they might not share, and never into a config nobody could read.
+ */
+describe('ASC-Core comes with the profiles', () => {
+  const file = () => JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers;
+  const seed = (servers: Record<string, unknown>) =>
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: servers }));
+  const plan = (chosen: string[], prune = true, client = jsonClient()) =>
+    planChanges([client], chosen, new Map([[client.id, readRegistrations(client)]]), { prune });
+
+  it('is added beside the first profile, plainly', () => {
+    const p = plan(['general']);
+    expect(p[0].toAdd).toEqual(['general', 'core']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core']);
+    applyPlan(p, () => {});
+    expect(file()['ASC-Core']).toEqual({ command: 'npx', args: serverArgs('core') });
+  });
+
+  it.each([
+    ['a --read-only flag', { command: 'npx', args: [...serverArgs('analytics'), '--read-only'] }],
+    ['ASC_READ_ONLY in the env', { command: 'npx', args: serverArgs('analytics'), env: { ASC_READ_ONLY: 'true' } }],
+  ])('turns read-only when one entry has %s', (_why, entry) => {
+    seed({ 'ASC-Analytics': entry });
+    const p = plan(['analytics', 'general']);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
+    const lines: string[] = [];
+    printPlan(p, (l) => lines.push(l));
+    expect(lines.join('\n')).toContain('+ ASC-General, ASC-Core (--read-only)');
+    applyPlan(p, () => {});
+    expect(file()['ASC-Core'].args).toEqual([...serverArgs('core'), '--read-only']);
+  });
+
+  it('decides per target: read-only where one is, plain where none is', () => {
+    const two: McpClient = { id: 'two', label: 'Two', targets: [
+      { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
+      { kind: 'json', path: join(dir, 'desktop.json'), where: 'desktop.json', key: 'mcpServers' },
+    ] };
+    writeFileSync(join(dir, 'code.json'), JSON.stringify({ mcpServers: {
+      'ASC-Analytics': { command: 'npx', args: [...serverArgs('analytics'), '--read-only'] } } }));
+    applyPlan(plan(['analytics'], true, two), () => {});
+    const read = (f: string) => JSON.parse(readFileSync(join(dir, f), 'utf8')).mcpServers['ASC-Core'];
+    expect(read('code.json').args).toEqual([...serverArgs('core'), '--read-only']);
+    expect(read('desktop.json').args).toEqual(serverArgs('core'));
+  });
+
+  it('is withheld, and says why, when the entries use different accounts', () => {
+    seed({
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics'), env: { ASC_KEY_ID: 'key-one-secret' } },
+      'ASC-Webhooks': { command: 'npx', args: serverArgs('webhooks'), env: { ASC_KEY_ID: 'key-two-secret' } },
+    });
+    const p = plan(['analytics', 'webhooks']);
+    expect(p[0].toAdd).toEqual([]);
+    expect(p[0].coreWithheld).toEqual(['mcp.json: its Heimdall servers use different App Store Connect accounts']);
+    // The write decides again on its own, and says it too.
+    const { results, needsManual } = applyToClient(jsonClient(), ['core'], []);
+    expect(results).toEqual([{ ok: false, withheld: true,
+      message: 'ASC-Core not added to mcp.json: its Heimdall servers use different App Store Connect accounts' }]);
+    expect(needsManual).toBe(false);
+    expect(file()['ASC-Core']).toBeUndefined();
+    expect(JSON.stringify([p, results])).not.toMatch(/key-(one|two)-secret/);
+  });
+
+  it('is withheld from a config that cannot be parsed', () => {
+    writeFileSync(join(dir, 'mcp.json'), '{ "mcpServers": { /* hand-edited */ } }');
+    expect(plan(['general'])[0].coreWithheld).toEqual(
+      ['mcp.json: the config could not be read, so the account its servers use is unknown']);
+  });
+
+  it('stays while any profile stays, and goes when none does', () => {
+    seed({
+      'ASC-General': { command: 'npx', args: serverArgs('general') },
+      'ASC-Analytics': { command: 'npx', args: serverArgs('analytics') },
+      'ASC-Core': { command: 'npx', args: serverArgs('core') },
+    });
+    expect(plan(['general'])[0]).toMatchObject({ toAdd: [], toRemove: ['ASC-Analytics'] });
+    expect(plan([])[0].toRemove.sort()).toEqual(['ASC-Analytics', 'ASC-Core', 'ASC-General']);
+    expect(plansForUnticked([], [jsonClient()])[0].toRemove).toContain('ASC-Core');
+  });
+
+  it('leaves a user-managed core alone and reports it', () => {
+    seed({ 'ASC-Core': { command: 'node', args: ['my-core.js'] } });
+    const p = plan(['general']);
+    expect(p[0].toAdd).toEqual(['general']);
+    expect(p[0].userManaged).toEqual(['ASC-Core']);
+  });
+});
+
+describe('dead entries — profile arguments 3.0 no longer serves', () => {
+  const file = () => JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers;
+  const seed = (servers: Record<string, unknown>) =>
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: servers }));
+  const plan = (chosen: string[], prune: boolean) =>
+    planChanges([jsonClient()], chosen, new Map([['temp', readRegistrations(jsonClient())]]), { prune });
+
+  it.each([true, false])('deletes one that is ours and clean, naming its flags and env keys (prune=%s)', (prune) => {
+    seed({ 'ASC-AppInfo': { command: 'npx', args: [...serverArgs('app-info'), '--read-only'], env: { DEMO_MODE: 'demo-secret' } } });
+    const p = plan(['general'], prune);
+    expect(p[0].toRemove).toEqual(['ASC-AppInfo']);
+    expect([...p[0].deadDeleted.values()]).toEqual(['ASC-AppInfo (app-info; --read-only; env DEMO_MODE)']);
+    // A dead entry's read-only does not carry over: it serves nothing.
+    expect(p[0].coreAdded).toEqual(['ASC-Core']);
+    const lines: string[] = [];
+    printPlan(p, (l) => lines.push(l));
+    applyPlan(p, (l) => lines.push(l));
+    const out = lines.join('\n');
+    expect(out).toContain('delete dead ASC-AppInfo (app-info; --read-only; env DEMO_MODE)');
+    expect(out).toContain('✓ removed ASC-AppInfo (app-info; --read-only; env DEMO_MODE) — its profile no longer exists');
+    expect(out).not.toContain('demo-secret');
+    expect(file()['ASC-AppInfo']).toBeUndefined();
+  });
+
+  it('only reports one that is user-managed, and leaves it as it is', () => {
+    const entry = { command: 'npx', args: serverArgs('access:users'), env: { ASC_KEY_ID: 'kept-secret' } };
+    seed({ 'ASC-Access': entry });
+    const p = plan(['general'], true);
+    expect(p[0].toRemove).toEqual([]);
+    expect(p[0].deadReported).toEqual(['ASC-Access (access:users; env ASC_KEY_ID): user-managed']);
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(lines.join('\n')).toContain('dead entry left as is — ASC-Access (access:users; env ASC_KEY_ID): user-managed');
+    expect(lines.join('\n')).not.toContain('kept-secret');
+    expect(file()['ASC-Access']).toEqual(entry);
+    const unticked = plansForUnticked([], [jsonClient()])[0];
+    expect(unticked.toRemove).not.toContain('ASC-Access');
+    expect(unticked.deadReported).toEqual(p[0].deadReported);
+  });
+
+  it('checks again at write time, and keeps one that stopped being ours to delete', () => {
+    seed({ 'ASC-AppInfo': { command: 'npx', args: serverArgs('app-info') } });
+    const p = plan(['general'], true);
+    // Between the confirmation and the write, the user gave it their own key.
+    seed({ 'ASC-AppInfo': { command: 'npx', args: serverArgs('app-info'), env: { ASC_KEY_ID: 'late-secret' } } });
+    const lines: string[] = [];
+    applyPlan(p, (l) => lines.push(l));
+    expect(lines.join('\n')).toContain('– ASC-AppInfo (app-info) left in place: it is no longer ours to delete');
+    expect(file()['ASC-AppInfo'].env).toEqual({ ASC_KEY_ID: 'late-secret' });
+  });
+
+  it('deletes it when the app is unticked, through the same rule', () => {
+    seed({ 'ASC-AppInfo': { command: 'npx', args: serverArgs('app-info') } });
+    const p = plansForUnticked([], [jsonClient()]);
+    expect(p[0].toRemove).toEqual(['ASC-AppInfo']);
+    expect([...p[0].deadDeleted.keys()]).toEqual(['ASC-AppInfo']);
   });
 });
