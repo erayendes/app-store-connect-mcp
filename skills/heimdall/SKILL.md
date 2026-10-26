@@ -9,6 +9,12 @@ Apple's API is 1011 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
 
+Profiles are cut by job. What every job needs — app lookup, `asc__search_tools`,
+`asc__status`, `asc__account_status` and the `media__*` tools — is in none of
+them: it is **ASC-Core**, a server of its own registered beside the profiles.
+If those tools are missing from the session, ASC-Core is not registered for
+this client; the fix is `register` or `setup` (below), not another profile.
+
 ## The credential boundary
 
 Going after the API key is the single most common way a session goes wrong: in
@@ -81,12 +87,22 @@ user did not open, usually more than the one you are talking through, and the
 command has no prompt of its own:
 
 ```bash
-npx -y @erayendes/asc-mcp register monetization:subscription-pricing analytics
+npx -y @erayendes/asc-mcp register monetization:subscription,subscription-offers analytics
 ```
+
+On a prerelease the package is `@erayendes/asc-mcp@beta`, here and in `setup`;
+the commands the server prints already carry it.
 
 `register` only adds; re-running it changes nothing. `--clients=claude,codex`
 limits which configs it touches (ids: `claude`, `codex`, `antigravity`,
 `vscode`, `cursor`, `windsurf`).
+
+It adds `ASC-Core` beside the profiles in each client, with the strictest
+setting there: one read-only Heimdall entry (`--read-only`, or `ASC_READ_ONLY`
+in its env) makes ASC-Core `--read-only` too. Where the entries use different
+App Store Connect accounts, carry their own credentials, or the config could
+not be read in full, it leaves ASC-Core out and says why. Relay the reason; do
+not add ASC-Core by hand to get around it.
 
 **2. Send the user to `setup`.**
 
@@ -104,33 +120,40 @@ the first prompt having done nothing, which reads exactly like success.
 Store Connect connection"* — that calls `asc__status`.
 
 If the user would rather do it all themselves, `setup` alone covers both: it
-collects credentials *and* registers with every client it finds.
+collects credentials *and* registers with every client it finds, ASC-Core
+included.
+
+A config from 2.x names profiles that no longer exist (`app-info`,
+`monetization:subscription-pricing`). Such a server starts with one tool that
+says so; the fix is the user running `setup` again, which rewrites the entries.
 
 ## Choosing profiles
 
 | The job | Profile |
 |---|---|
-| Store listing text, names, categories, availability, age ratings | `app-info` |
-| Versions, screenshots, submitting and releasing | `distribution` |
-| Prices, subscriptions, in-app purchases, offers, customer transactions | `monetization` |
-| Screenshots, custom product pages, in-app events, customer reviews | `marketing` |
-| Beta groups, testers, team members | `access` |
-| TestFlight build metadata, crash feedback | `testflight` |
+| App name and subtitle, categories, countries, age rating, license, accessibility labels | `general` |
+| Versions and their text, builds, export compliance, submitting and releasing | `distribution` |
+| Subscriptions, in-app purchases, offers and codes, prices, customer transactions | `monetization` |
+| Custom product pages, product page tests, in-app events, customer reviews | `marketing` |
+| Builds under test, beta groups, testers, external testing, tester feedback | `testflight` |
+| Team members, invitations, sandbox test accounts | `access` |
 | Sales, finance and analytics reports | `analytics` |
 | Certificates, bundle IDs, devices, provisioning profiles | `provisioning` |
-| Achievements, leaderboards, matchmaking | `game-center` |
-| Workflows and build runs | `xcode-cloud` |
+| Achievements, leaderboards, challenges, matchmaking | `game-center` |
+| Workflows, build runs and repositories | `xcode-cloud` |
 | App Clips · Background Assets · event webhooks | `app-clips` · `background-assets` · `webhooks` |
+| Screenshots and videos on any page, finding apps, searching tools | ASC-Core (added with every profile) |
 
-No strong preference: `analytics`, `marketing` and `app-info` is a reasonable
+No strong preference: `analytics`, `marketing` and `general` is a reasonable
 default.
 
 A large profile takes a colon and a list of sub-profiles —
-`monetization:subscription-pricing,subscription-offers` is 56 tools where
-`monetization` is 212. Worth suggesting for `monetization`, `game-center`,
-`distribution`, `marketing` and `access`. The server is still `ASC-Monetization`.
+`monetization:subscription,subscription-offers` is 73 tools where
+`monetization` is 170. Worth suggesting for `monetization`, `game-center`,
+`distribution`, `testflight`, `general` and `marketing`. The server is still
+`ASC-Monetization`.
 
-Heimdall serves 929 distinct tools across 13 profiles: 888 reachable Apple operations plus 41 hand-written tools. The `testflight` profile serves 56 tools including core.
+Heimdall serves 824 distinct tools across 14 profiles: 783 reachable Apple operations plus 41 hand-written tools. Subscriptions and in-app purchases are v2 only: the v1 localization, image and submission tools Apple retired are not served.
 
 ## Prefer the macro over the chain
 
@@ -140,23 +163,24 @@ right choice for anything the macro does not cover.
 
 | Instead of | Call |
 |---|---|
-| app → group → subscription → price points | `pricing__get_subscription_price` / `pricing__set_subscription_price` |
-| app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:iap-pricing`) |
-| rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:iap-pricing`) — keeps every other price |
+| app → group → subscription → price points | `pricing__get_subscription_price` / `pricing__set_subscription_price` (`monetization:subscription`) |
+| app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:in-app-purchases`) |
+| rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:in-app-purchases`) — keeps every other price |
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
-| looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers`) — win-back, promotional or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
-| version → localizations → library placements → images and videos | `media__list` |
-| reserving a library image or video, uploading it, then placing it | `media__upload` |
-| placing, reordering, removing, archiving or renaming media | `media__arrange` |
-| deleting several library files or page placements under one confirmation | `media__delete` |
+| looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers` or `subscription-win-back`) — win-back, promotional or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
+| page → localizations → library placements → images and videos | `media__list` (ASC-Core) — the version page, a custom product page, a product page test, an in-app event or the library itself |
+| reserving a library image or video, uploading it, then placing it | `media__upload` (ASC-Core) |
+| placing, reordering, removing, archiving or renaming media | `media__arrange` (ASC-Core) |
+| deleting several library files or page placements under one confirmation | `media__delete` (ASC-Core) |
 | request → report → instance → segment → a URL | `analytics__get_report` |
-| app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` — build counts, devices/OS, newest comments and bounded crash excerpts |
-| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud`, 53 tools; newest failed or errored run among newest 40 by default) |
-| fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` |
-| checking a version by hand before submitting it | `preflight__check_version` |
-| checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription-catalog`, read-only, capped, no approval prediction |
-| open a submission, add the version, hand it over | `release__submit` |
-| resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`access:beta-groups`); give the build number or ID |
+| app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` (`testflight:feedbacks`) — build counts, devices/OS, newest comments and bounded crash excerpts |
+| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud:workflows`; newest failed or errored run among newest 40 by default) |
+| fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` (`marketing:customer-reviews`) |
+| checking a version by hand before submitting it | `preflight__check_version` (`distribution:version`) |
+| checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription`, read-only, capped, no approval prediction |
+| open a submission, add the version, hand it over | `release__submit` (`distribution:publish`) |
+| the same for an in-app purchase, subscription, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — on each of those sub-profiles; `with_app_version: true` when the item has to go in with the app's editable version, as an app's first in-app purchase or subscription does |
+| resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`testflight:groups`); give the build number or ID |
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` |
 | pasting a translation into each locale | `metadata_ai__apply_localizations` |
 

@@ -1,6 +1,6 @@
 {
   "name": "asc-xcode-cloud",
-  "version": "2.8.0",
+  "version": "3.0.0-beta.1",
   "description": "Apple's CI/CD: workflows, build runs, artifacts, test results, source control.",
   "author": {
     "name": "Eray Endes",

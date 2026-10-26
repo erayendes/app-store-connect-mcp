@@ -17,29 +17,30 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Siz b
 
 | Çok adımlı akış | Tek iş akışı | Gerekli olan profil |
 |:--|:--|:--|
-| uygulama → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da ülke verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription-pricing` |
-| uygulama → IAP → fiyat takvimi → fiyatlar | `pricing__get_iap_price` — ülkeye göre güncel ve planlanmış fiyatlar | `monetization:iap-pricing` |
+| uygulama → grup → abonelik → fiyat noktaları | `pricing__get_subscription_price` — tek ülke, ya da ülke verilmezse ~175 ülke fiyata göre gruplanmış | `monetization:subscription` |
+| uygulama → IAP → fiyat takvimi → fiyatlar | `pricing__get_iap_price` — ülkeye göre güncel ve planlanmış fiyatlar | `monetization:in-app-purchases` |
 | uygulama → fiyat takvimi → fiyatlar | `pricing__get_app_price` — ülkeye göre güncel ve planlanmış fiyatlar | `monetization:app-price` |
-| aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
-| IAP → fiyat noktaları → elle kurulan yepyeni bir fiyat takvimi | `pricing__set_iap_price` — tek ülkenin fiyatı; diğer elle girilmiş ve planlanmış fiyatlar aynen korunur | `monetization:iap-pricing` |
-| ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:subscription-pricing` |
-| win-back, promosyon ya da tanıtım teklifini ülke ülke fiyatlamak | `pricing__make_offer` — tek çapa fiyat (ya da ücretsiz deneme), teklif aboneliğin satıldığı her ülkede kurulur; tanıtım teklifi ülke ülke yazılır ve kaldığı yerden devam eder | `monetization:subscription-offers` |
-| submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` | `distribution:submission` |
-| build'i bul, beta gruplarını çözümle, eksik bağlantıları ekle | `testflight__assign_build_to_groups` | `access:beta-groups` |
+| aynı zincir artı yazma | `pricing__set_subscription_price` | `monetization:subscription` |
+| IAP → fiyat noktaları → elle kurulan yepyeni bir fiyat takvimi | `pricing__set_iap_price` — tek ülkenin fiyatı; diğer elle girilmiş ve planlanmış fiyatlar aynen korunur | `monetization:in-app-purchases` |
+| ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:app-price`, `in-app-purchases` ya da `subscription` |
+| win-back, promosyon ya da tanıtım teklifini ülke ülke fiyatlamak | `pricing__make_offer` — tek çapa fiyat (ya da ücretsiz deneme), teklif aboneliğin satıldığı her ülkede kurulur; tanıtım teklifi ülke ülke yazılır ve kaldığı yerden devam eder | `monetization:subscription-offers` ya da `subscription-win-back` |
+| submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` | `distribution:publish` |
+| aynısını bir IAP, abonelik, uygulama içi etkinlik, özel ürün sayfası, ürün sayfası denemesi, Game Center öğesi ya da background asset için yapmak | `release__submit_items` — birden çok öğe tek başvuruda; başvuruda zaten ne olduğunu okur, onaydan önce hepsini listeler, öğenin sürümle gitmesi gerekiyorsa uygulamanın sürümünü de ekleyebilir | öğenin kendi alt profili, örneğin `monetization:in-app-purchases` |
+| build'i bul, beta gruplarını çözümle, eksik bağlantıları ekle | `testflight__assign_build_to_groups` | `testflight:groups` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
-| abonelik + grup yerelleştirmeleri + fiyatlar + kullanılabilirlik + inceleme ekran görüntüsü | `preflight__check_subscription` — inceleme öncesi katalog eksikleri | `monetization:subscription-catalog` |
+| abonelik + grup yerelleştirmeleri + fiyatlar + kullanılabilirlik + inceleme ekran görüntüsü | `preflight__check_subscription` — inceleme öncesi katalog eksikleri | `monetization:subscription` |
 | iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
-| sürüm → 50 yerelleştirme → ekran görüntüsü setleri → görüntüler | `listing__get_screenshots` | `distribution:version` |
-| ekran görüntüsü için yer ayırıp baytları kendiniz taşımak | `listing__upload_screenshot` | `distribution:version` |
-| kütüphaneye görsel ya da video için yer ayırıp yüklemek, sonra bir sayfaya yerleştirmek | `listing__upload_asset` | `marketing:asset-library` |
-| kütüphaneden birden çok görseli ya da videoyu, tek onayla silmek | `listing__delete_assets` | `marketing:asset-library` |
+| sayfa → yerelleştirmeler → kütüphane yerleşimleri → görseller ve videolar | `media__list` — sürüm sayfası, özel ürün sayfası, ürün sayfası denemesi, uygulama içi etkinlik ya da kütüphanenin kendisi; Apple'ın adet ve boyut sınırlarıyla | ASC-Core, yani her profilde |
+| kütüphanede görsel ya da video için yer ayırmak, baytları yüklemek, sonra bir sayfaya yerleştirmek | `media__upload` — kütüphaneye, sayfa verirseniz o sayfaya da | ASC-Core |
+| sayfaya yerleştirmek, sıralamak, sayfadan kaldırmak, videonun kapak karesini seçmek, arşivlemek ya da yeniden adlandırmak | `media__arrange` | ASC-Core |
+| kütüphaneden birden çok dosyayı silmek ya da bir sayfadan kaldırmak, tek onayla | `media__delete` — silmeden önce her dosyanın o uygulamaya ve sayfaya ait olduğunu kontrol eder | ASC-Core |
 | istek → rapor → örnek → segment → imzalı URL | `analytics__get_report` — bağlantı değil, satır döndürür | `analytics` |
-| uygulama → kilitlenme ve ekran görüntüsü bildirimleri → crash log'lar | `testflight__feedback_digest` — build bazında sayılar, cihaz/OS, yorumlar ve kısa crash log alıntıları | `testflight` |
-| uygulama → Xcode Cloud ürünü → koşu → adımlar → sorunlar ve testler | `ci__diagnose_run` — en yeni 40 koşu içinde en son patlayanı bulur, sorunları ve başarısız testleri listeler | `xcode-cloud` |
-| yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
-| uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | çekirdek, yani her profilde |
+| uygulama → kilitlenme ve ekran görüntüsü bildirimleri → crash log'lar | `testflight__feedback_digest` — build bazında sayılar, cihaz/OS, yorumlar ve kısa crash log alıntıları | `testflight:feedbacks` |
+| uygulama → Xcode Cloud ürünü → koşu → adımlar → sorunlar ve testler | `ci__diagnose_run` — en yeni 40 koşu içinde en son patlayanı bulur, sorunları ve başarısız testleri listeler | `xcode-cloud:workflows` |
+| yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-reviews` |
+| uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | ASC-Core |
 
 `pricing__equalize_price` yaklaşık 175 ülkede fiyatı birden değiştirir, yani doğrudan gelirinize dokunur. Bu yüzden çalışmadan önce mutlaka onayınızı ister.
 
@@ -51,7 +52,7 @@ Bu kolaylık yalnızca uygulamalar için geçerli. Diğer kayıtlarda bu genel b
 ## StoreKit 2 — müşteri işlemleri
 
 App Store Server API mağaza sayfanızla değil, tek tek müşterilerle ilgili soruları yanıtlar: satın alma geçmişi, hak sahipliği, iadeler, abonelik durumu.
-`monetization:storekit` ile gelir. İsteğinizde uygulamanın adını söyleyin (*"Ask Quran'da bu işlemin iadeleri"*), bundle ID'sini Heimdall bulur. Hesapta tek uygulama varsa adını söylemenize de gerek yok.
+`monetization:transactions` ile gelir. İsteğinizde uygulamanın adını söyleyin (*"Ask Quran'da bu işlemin iadeleri"*), bundle ID'sini Heimdall bulur. Hesapta tek uygulama varsa adını söylemenize de gerek yok.
 
 ## Prompt'lar
 
@@ -60,8 +61,8 @@ App Store Server API mağaza sayfanızla değil, tek tek müşterilerle ilgili s
 | Prompt | Ne çalıştırır | Ne zaman sunulur |
 |:--|:--|:--|
 | `release-readiness` | `preflight__check_version`, ardından `listing__diff_metadata`, sonuçta GO ya da NO-GO | `distribution:version` |
-| `review-triage` | brifing → triyaj → yorum başına taslak yanıt, hiçbiri gönderilmeden | `marketing:customer-review` |
-| `price-check` | tek çağrıda dünya fiyatları, ardından yanlışlıkla girilmiş gibi görünen fiyatlar | `monetization:subscription-pricing` |
+| `review-triage` | brifing → triyaj → yorum başına taslak yanıt, hiçbiri gönderilmeden | `marketing:customer-reviews` |
+| `price-check` | tek çağrıda dünya fiyatları, ardından yanlışlıkla girilmiş gibi görünen fiyatlar | `monetization:subscription` |
 
 Bir prompt yalnızca kullandığı araçların hepsi yüklüyse görünür. Her biri yazmadan önce durur: gönderim, yanıt ve fiyat değişikliği sizin kararınızdır.
 
@@ -77,7 +78,7 @@ Bir prompt yalnızca kullandığı araçların hepsi yüklüyse görünür. Her 
 
 > **Siz:** Uygulama içi etkinlikleri yönetecek bir araç var mı? *(`marketing`'i yüklememişsiniz)*
 >
-> **Yapay zekâ:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `ASC-Marketing`'te. Eklemek için `setup`'ı yeniden çalıştırıp `marketing` profilini seçin.
+> **Yapay zekâ:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `marketing:app-events`'te. Eklemek için `setup`'ı yeniden çalıştırıp `marketing` profilini ya da yalnızca `app-events` kısmını seçin.
 
 > - 3.2 sürümünü incelemeye gönder, onaylandıktan sonra kademeli yayına başla.
 > - Son bir haftadaki TestFlight crash gönderimlerini cihaz modeline göre grupla göster.

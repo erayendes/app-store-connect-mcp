@@ -485,7 +485,7 @@ export async function executeMetaTool(
             ? {
                 profiles: catalogue(),
                 register:
-                  'Add a profile with `npx -y @erayendes/asc-mcp register <profile>` or ' +
+                  `Add a profile with \`npx -y ${PACKAGE} register <profile>\` or ` +
                   '`<profile>:<sub-profile>,…`, with the user\'s yes, then restart the client.',
               }
             : {}),

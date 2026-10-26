@@ -83,8 +83,8 @@ const DESCRIPTIONS: Record<string, string> = {
     'Submitting for review and releasing: review submissions and their items, release requests, ' +
     'the one-call submit macro.',
   'distribution/version':
-    'App Store versions and their localizations: what is new, keywords, screenshot and preview ' +
-    'sets, the version preflight and the translation tools.',
+    'App Store versions and their localizations: what is new, keywords, the version preflight ' +
+    "and the translation tools. Screenshots and previews go through ASC-Core's media tools.",
 
   'game-center': 'Game Center: achievements, leaderboards, activities, challenges, groups, matchmaking.',
   'game-center/achievements': 'Achievements: versions, localizations, images, player submissions.',
@@ -112,9 +112,10 @@ const DESCRIPTIONS: Record<string, string> = {
   marketing:
     'Store presence beyond the version page: custom product pages, product page optimization, ' +
     'in-app events, customer reviews, nominations.',
-  'marketing/app-events': 'In-app events: localizations, screenshots, video clips.',
+  'marketing/app-events':
+    "In-app events and their localizations. Their images and videos go through ASC-Core's media tools.",
   'marketing/custom-pp':
-    'Custom product pages: versions, localizations, keywords, screenshot and preview sets.',
+    "Custom product pages: versions, localizations, keywords. Screenshots and previews go through ASC-Core's media tools.",
   'marketing/customer-reviews':
     'Customer reviews, responses, summaries, and the AI triage and reply-draft tools.',
   'marketing/nominations': 'Nominations submitted to Apple for editorial featuring.',
@@ -342,7 +343,7 @@ export function unknownProfileMessage(spec: string, reason?: string): string {
     `not exist in Heimdall — it was renamed or removed, or it is a typo.` +
     (reason ? `\n${reason.split('\n')[0]}` : '') +
     `\n\nThis server carries no App Store Connect tools. Tell the user to run ` +
-    `\`npx -y @erayendes/asc-mcp setup\` in a terminal, which rewrites their MCP client ` +
+    `\`npx -y ${PACKAGE} setup\` in a terminal, which rewrites their MCP client ` +
     `config to the current profiles, and then restart the client.\n\nCurrent profiles:\n` +
     PROFILES.map((p) => `  ${p.name.padEnd(18)} ${p.description}`).join('\n')
   );

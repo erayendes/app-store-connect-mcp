@@ -1,6 +1,6 @@
 {
   "name": "asc-provisioning",
-  "version": "2.8.0",
+  "version": "3.0.0-beta.1",
   "description": "Code signing: bundle IDs and capabilities, certificates, devices, provisioning profiles, merchant and pass type IDs.",
   "author": {
     "name": "Eray Endes",

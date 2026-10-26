@@ -8,6 +8,34 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [3.0.0-beta.1] — 2026-10-26
+
+The first beta of 3.0. The first number changed because your app's settings need to change too: profile names are new, and so are some server names. Running `setup` once takes care of it.
+
+**Profiles follow the work you do.** The profiles were cut again from scratch. There are 13 to pick from, and 51 sub-profiles: `general` replaces `app-info`, sandbox accounts moved to `access:sandbox`, beta groups and testers to `testflight`, and the money tools split into `monetization:subscription`, `in-app-purchases`, `subscription-offers`, `transactions` and more. [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) lists every profile and sub-profile, with every tool in it ([#187](https://github.com/erayendes/app-store-connect-mcp/pull/187)).
+
+**ASC-Core.** Finding your apps, searching every tool and the screenshot and video tools used to be copied into every server. Now they are one server of their own, `ASC-Core`, which setup registers next to your profiles. If one of your servers in an app is read-only, ASC-Core is too. If the servers in an app use different App Store Connect accounts, setup doesn't add it there and says why. An app that runs only one server can fold it in with `--with-core`; the Xcode plug-ins do. With every profile registered, the AI reads nearly a fifth fewer tokens of tool descriptions than before.
+
+**Four tools for screenshots and videos, for every page.** `media__list`, `media__upload`, `media__arrange` and `media__delete` work through your app's image and video library on the version page, custom product pages, product page tests and in-app events. Upload a file and place it in one step, reorder or remove it, set a video's poster frame, archive or rename it. Deleting checks that every file belongs to that app and page before it deletes any, and asks you once. They replace the `listing__*` screenshot and library tools, and the temporary `marketing:asset-library` sub-profile is gone ([#189](https://github.com/erayendes/app-store-connect-mcp/pull/189)).
+
+**Send anything to review in one call.** `release__submit_items` submits in-app purchases, subscriptions, in-app events, custom product pages, product page tests, Game Center items and background assets. It reads what is already in the submission, lists every item before you confirm, and can add the app's version when the item has to go with it, as an app's first subscription does. `release__submit` still sends an App Store version ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+
+**Subscriptions and in-app purchases use Apple's new (v2) tools only.** Apple retired the old localization, image and submission tools in its 4.4.1 API, and Heimdall no longer serves them; `--include-deprecated` brings them back. `preflight__check_subscription` now checks the draft version. Creating a new version of a subscription or in-app purchase asks you first ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+
+**More changes that reach customers ask first.** Selling in a country, changing availability and ending a pre-order now ask by default; ending a pre-order asks you to type CONFIRM. So does expiring a build. Changing a product page test, and sending scores and achievements for a player, ask too ([#186](https://github.com/erayendes/app-store-connect-mcp/pull/186)).
+
+**Setup leaves your own entries alone.** An entry you wrote yourself, with its own credentials or another package, is listed and left as it is, never rewritten or removed. When setup rewrites one of its own entries, your flags and env stay ([#183](https://github.com/erayendes/app-store-connect-mcp/pull/183)).
+
+**`asc__load` is gone.** A server started with some of its sub-profiles still reads the rest through `asc__call`. For the tools themselves, the AI runs the `register` command the server names, with your yes.
+
+**Try it.** Run `npx -y @erayendes/asc-mcp@beta setup`. It moves your entries to the new names and to the beta, and adds ASC-Core. A server whose settings still name an old profile, such as `app-info`, shows one tool telling the AI to run setup.
+
+**Your permission rules need the new names.** Rules in your app that allow Heimdall tools by server name, such as `mcp__ASC-AppInfo__*` or `mcp__ASC-Marketing__listing__upload_asset`, no longer match: `ASC-AppInfo` is now `ASC-General`, app lookup and the media tools live in `ASC-Core`, and the media tools have new names. Your app will ask again for those tools until you update the rules.
+
+**Going back.** Run `npx -y @erayendes/asc-mcp@2.8.0 setup` and pick your profiles again. If an `ASC-Core` entry or another 3.0 name is left in an app, delete it from that app's MCP settings.
+
+Heimdall now has 824 tools.
+
 ### [2.8.0] — 2026-10-25
 
 **An image and video library for your app.** Apple added an image and video library to App Store Connect. You upload an image or video to your app's library and use it wherever you like. 24 new tools in the `marketing:asset-library` sub-profile cover it. You can now tell the AI "upload this image or video to the library", and it can place it on a page in the same step if you want.
@@ -258,6 +286,34 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [3.0.0-beta.1] — 2026-10-26
+
+3.0'ın ilk betası. İlk sayı değişti, çünkü uygulamanızın ayarlarının da değişmesi gerekiyor: profil adları yeni, bazı sunucu adları da. `setup`'ı bir kez çalıştırmanız yeterli.
+
+**Profiller yaptığınız işe göre.** Profiller baştan yeniden bölündü. Seçebileceğiniz 13 profil ve 51 alt profil var: `app-info`'nun yerini `general` aldı, sandbox hesapları `access:sandbox`'a, beta grupları ve testçiler `testflight`'a taşındı, gelirle ilgili araçlar da `monetization:subscription`, `in-app-purchases`, `subscription-offers`, `transactions` gibi parçalara ayrıldı. [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfası her profili ve alt profili, içindeki bütün araçlarla listeliyor ([#187](https://github.com/erayendes/app-store-connect-mcp/pull/187)).
+
+**ASC-Core.** Uygulamalarınızı bulmak, bütün araçlarda aramak, ekran görüntüsü ve video araçları önceden her sunucuya ayrı ayrı kopyalanıyordu. Artık kendi başlarına tek bir sunucu: `ASC-Core`. Setup onu profillerinizin yanına kaydediyor. Bir uygulamadaki sunucularınızdan biri salt okunursa ASC-Core da salt okunur oluyor. Bir uygulamadaki sunucular farklı App Store Connect hesapları kullanıyorsa setup onu oraya eklemiyor ve nedenini söylüyor. Tek sunucu çalıştırabilen bir uygulama onu `--with-core` ile profilin içine alabiliyor; Xcode eklentileri böyle yapıyor. Bütün profiller kayıtlıyken yapay zekânın okuduğu araç açıklamaları öncekinden beşte bire yakın daha az token tutuyor.
+
+**Her sayfa için dört ekran görüntüsü ve video aracı.** `media__list`, `media__upload`, `media__arrange` ve `media__delete`; sürüm sayfasında, özel ürün sayfalarında, ürün sayfası denemelerinde ve uygulama içi etkinliklerde uygulamanızın görsel ve video kütüphanesi üzerinden çalışıyor. Bir dosyayı yükleyip tek adımda yerleştirebilir, sıralayabilir, kaldırabilir, bir videonun kapak karesini seçebilir, arşivleyebilir ya da yeniden adlandırabilirsiniz. Silmeden önce her dosyanın o uygulamaya ve sayfaya ait olduğunu kontrol ediyor ve size bir kez soruyor. `listing__*` ekran görüntüsü ve kütüphane araçlarının yerini aldılar; geçici `marketing:asset-library` alt profili de kalktı ([#189](https://github.com/erayendes/app-store-connect-mcp/pull/189)).
+
+**Her şeyi tek çağrıyla incelemeye gönderin.** `release__submit_items`; uygulama içi satın almaları, abonelikleri, uygulama içi etkinlikleri, özel ürün sayfalarını, ürün sayfası denemelerini, Game Center öğelerini ve background asset'leri gönderiyor. Başvuruda zaten ne olduğunu okuyor, onaylamadan önce her öğeyi listeliyor ve öğenin sürümle gitmesi gerekiyorsa (bir uygulamanın ilk aboneliği gibi) uygulamanın sürümünü de ekleyebiliyor. App Store sürümünü göndermek için yine `release__submit` var ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+
+**Abonelikler ve uygulama içi satın almalar yalnızca Apple'ın yeni (v2) araçlarıyla.** Apple eski dil, görsel ve gönderim araçlarını 4.4.1 API'sinde kullanımdan kaldırdı; Heimdall da artık onları sunmuyor. `--include-deprecated` geri getiriyor. `preflight__check_subscription` artık taslak sürümü kontrol ediyor. Bir aboneliğin ya da uygulama içi satın almanın yeni sürümünü oluşturmak önce size soruyor ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+
+**Müşteriye ulaşan daha fazla değişiklik önce soruyor.** Bir ülkede satışa açmak, satış durumunu değiştirmek ve ön siparişi bitirmek artık varsayılan olarak soruyor; ön siparişi bitirmek için CONFIRM yazmanız gerekiyor. Bir build'in süresini bitirmek de öyle. Ürün sayfası denemesini değiştirmek ve bir oyuncu adına skor ya da başarım göndermek de soruyor ([#186](https://github.com/erayendes/app-store-connect-mcp/pull/186)).
+
+**Setup kendi yazdığınız kayıtlara dokunmuyor.** Kendi kimlik bilgileriyle ya da başka bir paketle elle yazdığınız bir kayıt listeleniyor ve olduğu gibi bırakılıyor; ne yeniden yazılıyor ne siliniyor. Setup kendi kayıtlarından birini yeniden yazarken bayraklarınız ve env değerleriniz korunuyor ([#183](https://github.com/erayendes/app-store-connect-mcp/pull/183)).
+
+**`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
+
+**Denemek için** `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırın. Kayıtlarınızı yeni adlara ve betaya taşıyor, ASC-Core'u ekliyor. Ayarlarında hâlâ `app-info` gibi eski bir profil adı geçen bir sunucu, yapay zekâya setup'ı çalıştırmasını söyleyen tek bir araç gösteriyor.
+
+**İzin kurallarınızın yeni adlara geçmesi gerekiyor.** Uygulamanızda Heimdall araçlarına sunucu adıyla izin veren `mcp__ASC-AppInfo__*` ya da `mcp__ASC-Marketing__listing__upload_asset` gibi kurallar artık eşleşmiyor: `ASC-AppInfo` artık `ASC-General`, uygulama bulma ve medya araçları `ASC-Core`'da, medya araçlarının adları da değişti. Kuralları güncelleyene kadar uygulamanız bu araçlar için yeniden onay isteyecek.
+
+**Geri dönmek için** `npx -y @erayendes/asc-mcp@2.8.0 setup` komutunu çalıştırıp profillerinizi yeniden seçin. Bir uygulamada `ASC-Core` ya da başka bir 3.0 adı kalırsa onu o uygulamanın MCP ayarlarından silin.
+
+Heimdall artık 824 araç içeriyor.
 
 ### [2.8.0] — 2026-10-25
 
