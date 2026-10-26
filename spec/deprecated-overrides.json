@@ -138,5 +138,225 @@
     "operationId": "inAppPurchasesV2_images_getToManyRelated",
     "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-1-release-notes",
     "apiVersion": "4.4.1"
+  },
+  {
+    "operationId": "appEventScreenshots_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventScreenshots_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventScreenshots_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventScreenshots_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventVideoClips_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventVideoClips_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventVideoClips_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventVideoClips_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviewSets_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviewSets_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviewSets_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviews_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviews_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviews_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviews_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshotSets_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshotSets_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshotSets_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshots_createInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshots_getInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshots_updateInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshots_deleteInstance",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appCustomProductPageLocalizations_appPreviewSets_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appCustomProductPageLocalizations_appPreviewSets_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appCustomProductPageLocalizations_appScreenshotSets_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appCustomProductPageLocalizations_appScreenshotSets_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventLocalizations_appEventScreenshots_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventLocalizations_appEventScreenshots_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventLocalizations_appEventVideoClips_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appEventLocalizations_appEventVideoClips_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviewSets_appPreviews_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviewSets_appPreviews_replaceToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appPreviewSets_appPreviews_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshotSets_appScreenshots_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshotSets_appScreenshots_replaceToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appScreenshotSets_appScreenshots_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionExperimentTreatmentLocalizations_appPreviewSets_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionExperimentTreatmentLocalizations_appPreviewSets_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionExperimentTreatmentLocalizations_appScreenshotSets_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionExperimentTreatmentLocalizations_appScreenshotSets_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionLocalizations_appPreviewSets_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionLocalizations_appPreviewSets_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionLocalizations_appScreenshotSets_getToManyRelationship",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
+  },
+  {
+    "operationId": "appStoreVersionLocalizations_appScreenshotSets_getToManyRelated",
+    "url": "https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-5-1-release-notes",
+    "apiVersion": "4.5.1"
   }
 ]

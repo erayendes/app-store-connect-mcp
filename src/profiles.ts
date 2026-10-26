@@ -114,8 +114,6 @@ const DESCRIPTIONS: Record<string, string> = {
     'Store presence beyond the version page: custom product pages, product page optimization, ' +
     'in-app events, customer reviews, nominations.',
   'marketing/app-events': 'In-app events: localizations, screenshots, video clips.',
-  'marketing/asset-library':
-    'Raw asset library tools: files, placements and their order. The upload tools live in core.',
   'marketing/custom-pp':
     'Custom product pages: versions, localizations, keywords, screenshot and preview sets.',
   'marketing/customer-reviews':

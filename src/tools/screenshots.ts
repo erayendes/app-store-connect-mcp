@@ -1,987 +1,572 @@
-/**
- * Store-listing macro — the one-call answer to "what screenshots are up?".
- *
- * Asking it through the raw tools is a chain and then a fan-out: app → version
- * → 50 localizations → screenshot sets for each → screenshots for each set.
- * Measured on a live app, that is 53 HTTP calls to discover that one locale of
- * fifty carries any screenshots at all, and the localizations response alone is
- * 264 KB before shaping. Nine agent sessions were recorded on this question and
- * every one of them ended up writing the response to a file and running `jq`
- * over it.
- *
- * Both halves are fixed here rather than explained to the model: the fan-out
- * collapses into one `include`, and the columns are narrowed with `fields`.
- * Measured against the same live app, the whole question costs four calls
- * inside this function — app, versions, every locale with its sets, and one per
- * set that actually holds screenshots — and returns about 1 KB.
- *
- * The write half, `listing__upload_screenshot`, exists for a different reason.
- * Reading is merely expensive through the raw tools; uploading is impossible.
- * Apple's asset flow is reserve → PUT the bytes at server-dictated offsets →
- * commit with an MD5 of the whole file, and only the first and last steps are
- * API calls. `uploadOperations` appears in the generated spec purely as a
- * `fields[...]` enum value: an agent can read the instructions and cannot
- * execute them.
- *
- * Which is why this is code and not documentation. An agent told how the
- * protocol works has to shell out to `curl` against Apple's upload hosts and
- * do byte-offset arithmetic and an MD5 by hand — and `scripts/ax-agent.ts`
- * classifies "called Apple directly" as the second-worst thing a session can
- * do, right after reaching for the private key. Worse, that arithmetic fails
- * silently: a wrong `sourceFileChecksum` leaves the asset stuck in a failed
- * delivery state that only shows up in `listing__get_screenshots`, which is to
- * say we would have shipped the diagnostic for a problem we caused.
- *
- * The raw tools stay untouched — this is an opt-in layer, like pricing and
- * reviews-ai.
- */
+/** Library-backed media macros: resolve once, verify ownership, then write. */
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { constants } from 'node:fs';
+import { open, stat } from 'node:fs/promises';
+import { basename, isAbsolute } from 'node:path';
 import type { McpToolDefinition } from '../core/registry.js';
-import type { AscHttpClient } from '../core/http.js';
-import { BODY_SCHEMAS } from '../generated/body-schemas.js';
+import type { AscHttpClient, Query } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
-import { REVERSIBILITY } from '../core/risk.js';
+import { REVERSIBILITY, STRONG_CONFIRM_LEVELS, type RiskLevel } from '../core/risk.js';
+import { pickVersion, readAppStoreVersions, PLATFORMS, EDITABLE_STATES } from './preflight.js';
+import {
+  MEDIA_NAMES, MEDIA_OPS, MEDIA_ASSETS, MEDIA_TARGETS, MEDIA_CATEGORIES, MEDIA_PLACEMENT_TYPES,
+  mediaBody, mediaDataSchema, mediaPath, mediaRelationship, type MediaKind, type PageTarget,
+} from './media-catalog.js';
 
-/**
- * Pulled off the generated schema rather than retyped: 33 device sizes that
- * Apple adds to every year, and a hand-copied list goes stale silently — the
- * tool would simply stop offering whatever phone shipped last autumn.
- */
-const DISPLAY_TYPES: string[] =
-  ((BODY_SCHEMAS['AppScreenshotSetCreateRequest'] as any)?.properties?.data?.properties?.attributes
-    ?.properties?.screenshotDisplayType?.enum as string[]) ?? [];
+const MAX_ITEMS = 50;
+const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+const textField = { type: 'string', minLength: 1 };
+const idsField = { type: 'array', items: textField, minItems: 1, maxItems: MAX_ITEMS, uniqueItems: true };
+const targetFields = {
+  app: { ...textField, description: 'App name, bundle ID or Apple ID.' },
+  target: { type: 'string', enum: ['library', ...Object.keys(MEDIA_TARGETS)], description: 'library, version page, custom product page (cpp), optimization treatment (ppo), or in-app event.' },
+  page_id: { ...textField, description: 'Localization ID for cpp, ppo or event. For version use locale, or its localization ID.' },
+  locale: { ...textField, description: 'Version locale, e.g. en-US. Omit on list to inspect all locales.' },
+  version: { ...textField, description: 'Version string. Required if multiple versions match.' },
+  platform: { type: 'string', enum: PLATFORMS, description: 'Required if multiple platforms match.' },
+};
+const placementFields = {
+  placement_type: { type: 'string', enum: MEDIA_PLACEMENT_TYPES, description: 'Required to place; use media__list limits for allowed groups and sizes.' },
+  placement_group: { ...textField, description: 'Device/group ID from reference data. Required for reorder.' },
+};
+const nullableText = { type: ['string', 'null'] };
+const errorsSchema = { type: 'array', items: { type: 'string' } };
+const placementSchema = {
+  type: 'object', properties: {
+    id: textField, assetId: nullableText, pageId: nullableText, target: nullableText,
+    placementType: nullableText, placementGroup: nullableText, state: nullableText, errors: errorsSchema,
+  }, required: ['id', 'assetId', 'pageId', 'target', 'placementType', 'placementGroup', 'state', 'errors'],
+};
+const assetSchema = {
+  type: 'object', properties: {
+    id: textField, kind: { type: 'string', enum: ['image', 'video'] }, name: textField,
+    fileName: nullableText, state: nullableText, errors: errorsSchema,
+    width: { type: ['number', 'null'] }, height: { type: ['number', 'null'] },
+    placements: { type: 'array', items: placementSchema },
+  }, required: ['id', 'kind', 'name', 'fileName', 'state', 'errors', 'width', 'height', 'placements'],
+};
 
-/** Same reasoning for the asset library: Apple's own lists, read off the schema. */
-const ASSET_CATEGORIES: string[] =
-  ((BODY_SCHEMAS['AppAssetLibraryImageCreateRequest'] as any)?.properties?.data?.properties?.attributes
-    ?.properties?.category?.enum as string[]) ?? [];
-const PLACEMENT_TYPES: string[] =
-  ((BODY_SCHEMAS['AppAssetLibraryPlacementCreateRequest'] as any)?.properties?.data?.properties?.attributes
-    ?.properties?.placementType?.enum as string[]) ?? [];
-
-/**
- * Where a placement can go: the relationship name Apple's placement body takes,
- * its JSON:API type, and the argument that carries its id. The version page is
- * also reachable by locale, like the screenshot upload, so it has no id here.
- */
-const PLACEMENT_TARGETS = [
-  { arg: 'custom_product_page_localization_id', rel: 'appCustomProductPageLocalization', type: 'appCustomProductPageLocalizations' },
-  { arg: 'experiment_treatment_localization_id', rel: 'appStoreVersionExperimentTreatmentLocalization', type: 'appStoreVersionExperimentTreatmentLocalizations' },
-  { arg: 'app_event_localization_id', rel: 'appEventLocalization', type: 'appEventLocalizations' },
-] as const;
-
-/** One `filter[id]` request per kind has to hold them all; Apple pages at 200. */
-const MAX_ASSET_DELETES = 50;
-
-export const SCREENSHOT_TOOLS: McpToolDefinition[] = [
+export const MEDIA_TOOLS: McpToolDefinition[] = [
   {
-    name: 'listing__get_screenshots',
-    description:
-      'List the screenshots on an app’s store listing in one step: which locales ' +
-      'have them, which device sizes, how many, and their dimensions. Give the app ' +
-      '(name, bundle ID or Apple ID). Use this instead of chaining app_store_versions ' +
-      '/ localizations / screenshot_sets / screenshots — most locales carry no ' +
-      'screenshots of their own, so walking that chain costs one call per locale.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        app: {
-          type: 'string',
-          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
-        },
-        locale: {
-          type: 'string',
-          description: 'Optional. Restrict to one locale, e.g. en-US or tr.',
-        },
-        version: {
-          type: 'string',
-          description:
-            'Optional version string, e.g. "2.4". Defaults to the most recent version.',
-        },
-      },
-      required: ['app'],
-    },
+    name: MEDIA_NAMES.list,
+    description: 'List library and page media with asset, placement and page IDs, groups, states, errors and Apple’s count/size limits.',
+    inputSchema: { type: 'object', properties: { ...targetFields, asset_ids: { ...idsField, description: 'Optional library file IDs to inspect.' }, library_id: { ...textField, description: 'Optional library ID to verify against the app.' }, ref_data_id: { ...textField, description: 'Optional reference data ID.' } }, required: ['app', 'target'] },
     outputSchema: {
-      type: 'object',
-      properties: {
-        app: { type: 'string', description: 'Resolved app, as "Name (id)".' },
-        version: { type: 'string' },
-        state: { type: 'string', description: 'App Store state of that version, e.g. READY_FOR_SALE.' },
-        locales: {
-          type: 'array',
-          description: 'Only locales carrying screenshots of their own; the rest inherit.',
-          items: {
-            type: 'object',
-            properties: {
-              locale: { type: 'string' },
-              sets: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    displayType: { type: 'string', description: 'Device size, e.g. APP_IPHONE_67.' },
-                    count: { type: 'number' },
-                    screenshots: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          fileName: { type: ['string', 'null'] },
-                          width: { type: ['number', 'null'] },
-                          height: { type: ['number', 'null'] },
-                          state: { type: ['string', 'null'], description: 'Asset delivery state.' },
-                        },
-                      },
-                    },
-                  },
-                  required: ['displayType', 'count'],
-                },
-              },
-            },
-            required: ['locale', 'sets'],
-          },
-        },
-        localesWithOwnScreenshots: {
-          type: 'string',
-          description: 'Reads as "1 of 50; the rest inherit from the primary locale".',
-        },
-        note: { type: 'string', description: 'Present when no locale carries its own screenshots.' },
-      },
-      required: ['app', 'locales', 'localesWithOwnScreenshots'],
+      type: 'object', properties: {
+        app: textField, target: textField, libraryId: textField,
+        assets: { type: 'array', items: assetSchema },
+        pages: { type: 'array', items: { type: 'object', properties: {
+          id: textField, target: textField, label: textField, locale: nullableText, state: nullableText,
+          sets: { type: 'array', items: { type: 'object', properties: {
+            kind: textField, placementType: nullableText, placementGroup: nullableText,
+            count: { type: 'integer' }, placements: { type: 'array', items: placementSchema },
+          }, required: ['kind', 'placementType', 'placementGroup', 'count', 'placements'] } },
+        }, required: ['id', 'target', 'label', 'locale', 'state', 'sets'] } },
+        limits: { type: 'array', description: 'Apple reference entries: placement policies with maxCount, group mappings, image/video specs with dimensions and maxFileSize.', items: { type: 'object', properties: {
+          id: textField, features: { type: 'array', items: { type: 'object' } },
+          placementTypes: { type: 'array', items: { type: 'object' } },
+          placementProfileGroups: { type: 'array', items: { type: 'object' } },
+          imageSpecs: { type: 'array', items: { type: 'object' } }, videoSpecs: { type: 'array', items: { type: 'object' } },
+        }, required: ['id', 'features', 'placementTypes', 'placementProfileGroups', 'imageSpecs', 'videoSpecs'] } },
+      }, required: ['app', 'target', 'libraryId', 'assets', 'pages', 'limits'],
     },
     annotations: { readOnlyHint: true, idempotentHint: true },
   },
   {
-    name: 'listing__upload_screenshot',
-    description:
-      'Upload a screenshot image file to an app’s store listing in one step. Give the app ' +
-      '(name, bundle ID or Apple ID), the locale, the device size and a path to the file on ' +
-      'this machine. Handles Apple’s reserve/upload/commit sequence and the checksum — the ' +
-      // Naming the raw tool here made this the top hit for "create certificate":
-      // `app_screenshots__create` carries the token "create", and search matches
-      // three-character tokens as substrings. Describe the neighbour, do not name it.
-      'raw screenshot tool reserves a slot and moves no bytes. ' +
-      'PUBLIC-level write: the image appears on the store listing once Apple processes it.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        app: {
-          type: 'string',
-          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
-        },
-        locale: {
-          type: 'string',
-          description: 'Listing locale the screenshot belongs to, e.g. en-US or tr.',
-        },
-        display_type: {
-          type: 'string',
-          description:
-            'Device size the image is sized for, e.g. APP_IPHONE_67. A wrong one is rejected ' +
-            'by Apple on commit, not on upload.',
-          ...(DISPLAY_TYPES.length ? { enum: DISPLAY_TYPES } : {}),
-        },
-        file_path: {
-          type: 'string',
-          description: 'Absolute path to the PNG or JPEG on this machine.',
-        },
-        version: {
-          type: 'string',
-          description: 'Optional version string, e.g. "2.4". Defaults to the most recent version.',
-        },
-      },
-      required: ['app', 'locale', 'display_type', 'file_path'],
-    },
-    // No outputSchema, like the other write macro: the dry-run result and the
-    // live one are different shapes (`wouldSend` versus `screenshotId` and a
-    // delivery state), and one schema covering both describes neither.
+    name: MEDIA_NAMES.upload,
+    description: 'Upload a PNG/JPEG image or MP4/MOV video: reserve, send bytes, commit to the app’s library. A page target also places it there. Returns processing/review state and any placement failure. PUBLIC-level write on a page; library-only upload is low risk.',
+    inputSchema: { type: 'object', properties: {
+      ...targetFields, ...placementFields,
+      file_path: { ...textField, description: 'Absolute local file path. Regular files only; image limit 50 MiB, video 500 MiB.' },
+      category: { type: 'string', enum: MEDIA_CATEGORIES }, reference_name: textField,
+      preview_frame_time_code: { ...textField, description: 'Video poster frame, e.g. 00:00:05:00.' },
+    }, required: ['app', 'target', 'file_path', 'category'] },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
   {
-    name: 'listing__upload_asset',
-    description:
-      'Upload an image or video file into an app’s asset library in one step, and optionally ' +
-      'place it on a store page in the same call. Give the app, the file path and the category; ' +
-      'to place it, add a placement type and either a locale (the version page) or the id of a ' +
-      'custom product page, experiment or in-app event localization. Handles Apple’s ' +
-      'reserve/upload/commit sequence, which the raw library tools cannot finish. ' +
-      'PUBLIC-level write when it places the file; the upload alone shows nowhere.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        app: {
-          type: 'string',
-          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
-        },
-        file_path: {
-          type: 'string',
-          description: 'Absolute path to a PNG or JPEG image, or an MP4 or MOV video, on this machine.',
-        },
-        category: {
-          type: 'string',
-          description: 'What the file is for in the library.',
-          ...(ASSET_CATEGORIES.length ? { enum: ASSET_CATEGORIES } : {}),
-        },
-        reference_name: {
-          type: 'string',
-          description: 'Optional name to find the file by in the library. Defaults to the file name.',
-        },
-        preview_frame_time_code: {
-          type: 'string',
-          description: 'Videos only, optional: the frame shown before playback, e.g. "00:00:05:00".',
-        },
-        placement_type: {
-          type: 'string',
-          description: 'Optional. Place the uploaded file as this. Leave out to upload without placing.',
-          ...(PLACEMENT_TYPES.length ? { enum: PLACEMENT_TYPES } : {}),
-        },
-        placement_group: {
-          type: 'string',
-          description:
-            'Optional placement group, e.g. a device class. The allowed groups per type come from the ' +
-            'asset library reference data.',
-        },
-        locale: {
-          type: 'string',
-          description: 'Place on this locale of the version page, e.g. en-US or tr.',
-        },
-        version: {
-          type: 'string',
-          description: 'With locale: version string, e.g. "2.4". Defaults to the most recent version.',
-        },
-        custom_product_page_localization_id: {
-          type: 'string',
-          description: 'Place on this custom product page localization instead.',
-        },
-        experiment_treatment_localization_id: {
-          type: 'string',
-          description: 'Place on this product page optimization treatment localization instead.',
-        },
-        app_event_localization_id: {
-          type: 'string',
-          description: 'Place on this in-app event localization instead.',
-        },
-      },
-      required: ['app', 'file_path', 'category'],
-    },
-    // No outputSchema, for the reason given on the screenshot upload.
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    name: MEDIA_NAMES.arrange,
+    description: 'Place, reorder or remove page media; set video posters, rename or archive files. Remove needs a named page; library reorder infers its page. Events have no order. Remove/archive are DESTRUCTIVE-level writes with file and page previews.',
+    inputSchema: { type: 'object', properties: {
+      ...targetFields, ...placementFields,
+      action: { type: 'string', enum: ['reorder', 'place', 'remove', 'poster', 'archive', 'rename'] },
+      asset_ids: { ...idsField, description: 'Library file IDs for place, poster, archive or rename. Page targets verify the files are placed there, except place.' },
+      placement_ids: { ...idsField, description: 'Placement IDs for remove or reorder; reorder supplies the complete group in desired order.' },
+      reference_name: { ...textField, description: 'Rename one file.' }, preview_frame_time_code: textField,
+      archived: { type: 'boolean', description: 'Archive action; defaults to true. False restores the file.' },
+    }, required: ['app', 'target', 'action'] },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   {
-    name: 'listing__delete_assets',
-    description:
-      'Delete images or videos from an app’s asset library. One confirmation covers them all and ' +
-      'names each file. Give the app and the ids of the files; every id is checked against that ' +
-      'app’s library before anything is deleted. DESTRUCTIVE-level write: deletion is not reversible.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        app: {
-          type: 'string',
-          description: 'App name, bundle ID (com.example.app) or numeric Apple ID.',
-        },
-        asset_ids: {
-          type: 'array',
-          items: { type: 'string' },
-          minItems: 1,
-          maxItems: MAX_ASSET_DELETES,
-          description: 'Ids of the library images or videos to delete, from the library’s image and video lists.',
-        },
-      },
-      required: ['app', 'asset_ids'],
-    },
+    name: MEDIA_NAMES.delete,
+    description: 'Delete images or videos from an app’s asset library, or remove placements from a named page. Verifies every item belongs to the app/page before deleting any; previews file names and reports partial success. At most 50 items. DESTRUCTIVE-level write.',
+    inputSchema: { type: 'object', properties: {
+      ...targetFields, asset_ids: { ...idsField, description: 'Library target: file IDs to permanently delete.' },
+      placement_ids: { ...idsField, description: 'Page target: placement IDs to remove; the files remain in the library.' },
+    }, required: ['app', 'target'] },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
 ];
+export const MEDIA_TOOL_NAMES = new Set(MEDIA_TOOLS.map((t) => t.name));
 
-export const SCREENSHOT_TOOL_NAMES = new Set(SCREENSHOT_TOOLS.map((t) => t.name));
+export interface MediaContext { http: AscHttpClient; dryRun?: boolean; approvedPlanFingerprint?: string }
+type Args = Record<string, unknown>;
+type Row = any;
+interface Page { target: PageTarget; id: string; label: string; locale: string | null; state: string | null }
+interface Target { app: { id: string; name: string }; libraryId: string; target: 'library' | PageTarget; pages: Page[] }
+interface File { id: string; kind: MediaKind; name: string; row: Row; placements: Row[] }
+interface Write { operation: string; id?: string; body?: unknown; name: string }
+interface Plan { target: Target; action: MediaAction; files: File[]; writes: Write[]; risk: RiskLevel; fingerprint: string; upload?: { bytes: Buffer; kind: MediaKind; fileName: string } }
+const fail = (message: string): never => { throw new AscApiError(message, 0); };
+const str = (args: Args, key: string, required = false): string | undefined => {
+  const value = args[key];
+  if (value === undefined && !required) return undefined;
+  if (typeof value !== 'string' || !value.trim()) fail(`"${key}" must be a non-empty string.`);
+  return (value as string).trim();
+};
+const relId = (row: Row, key: string): string => row?.relationships?.[key]?.data?.id || fail(`Missing ${key} relationship; cannot verify ownership.`);
+const arrayIds = (args: Args, key: string, required = true): string[] => {
+  if (args[key] === undefined && !required) return [];
+  const value = args[key];
+  if (!Array.isArray(value) || !value.length || value.length > MAX_ITEMS || value.some((v) => typeof v !== 'string' || !v.trim())) fail(`"${key}" needs 1–${MAX_ITEMS} non-empty IDs.`);
+  const ids = (value as string[]).map((v) => v.trim());
+  if (new Set(ids).size !== ids.length) fail(`"${key}" contains duplicate IDs.`);
+  return ids;
+};
 
-export interface ScreenshotContext {
-  http: AscHttpClient;
-  dryRun?: boolean;
+/** Bounded pagination fails closed: partial data cannot establish ownership or order. */
+export async function readMediaRows(http: AscHttpClient, operation: string, id?: string, query: Query = {}) {
+  let next: string | undefined = mediaPath(operation, id);
+  const seen = new Set<string>(), rows = new Map<string, Row>(), included = new Map<string, Row>();
+  let total = 0;
+  for (let page = 0; next && page < 10; page++) {
+    if (seen.has(next)) fail(`Truncated ${operation}: repeated cursor.`);
+    seen.add(next);
+    const res: any = await http.get(next, page === 0 ? query : undefined);
+    if (!Array.isArray(res?.data)) fail(`Missing list response for ${operation}; refusing to choose.`);
+    for (const row of res.data) rows.set(row.id, row);
+    for (const row of res.included ?? []) included.set(`${row.type}/${row.id}`, row);
+    total = Math.max(total, Number(res.meta?.paging?.total ?? 0));
+    next = res.links?.next || undefined;
+  }
+  if (next || total > rows.size) fail(`Truncated ${operation} after at most 10 pages; refusing to choose.`);
+  return { rows: [...rows.values()], included: [...included.values()] };
+}
+async function getRow(http: AscHttpClient, operation: string, id: string, query?: Query): Promise<Row> {
+  const res: any = await http.get(mediaPath(operation, id), query);
+  if (!res?.data?.id || res.data.id !== id) fail(`Missing ${operation} ${id}; cannot verify ownership.`);
+  return res.data;
 }
 
-/** One slice Apple wants PUT somewhere, as returned in `uploadOperations`. */
-interface UploadOperation {
-  method: string;
-  url: string;
-  offset: number;
-  length: number;
-  requestHeaders?: Array<{ name?: string; value?: string }>;
+/** A localization ID is not proof that it belongs to the named app. */
+async function resolvePage(http: AscHttpClient, app: Target['app'], target: PageTarget, id: string): Promise<Page> {
+  const adapter = MEDIA_TARGETS[target];
+  const loc = await getRow(http, adapter.get, id, { include: target === 'cpp' ? 'appCustomProductPageVersion' : target === 'ppo' ? 'appStoreVersionExperimentTreatment' : target === 'event' ? 'appEvent' : 'appStoreVersion' });
+  let parent: Row, label: string, owner: string;
+  if (target === 'cpp') {
+    const version = await getRow(http, 'app_custom_product_page_versions.get', relId(loc, 'appCustomProductPageVersion'), { include: 'appCustomProductPage' });
+    parent = await getRow(http, 'app_custom_product_pages.get', relId(version, 'appCustomProductPage'), { include: 'app' });
+    owner = relId(parent, 'app');
+    label = `CPP ${parent.attributes?.name ?? parent.id}, version ${version.attributes?.version ?? version.id}`;
+    parent = version;
+  } else if (target === 'ppo') {
+    const treatment = await getRow(http, 'app_store_version_experiment_treatments.get', relId(loc, 'appStoreVersionExperimentTreatment'), { include: 'appStoreVersionExperiment,appStoreVersionExperimentV2' });
+    const v2 = treatment.relationships?.appStoreVersionExperimentV2?.data?.id;
+    parent = await getRow(http, v2 ? 'app_store_version_experiments_v2.get' : 'app_store_version_experiments.get', v2 ?? relId(treatment, 'appStoreVersionExperiment'), { include: v2 ? 'app' : 'appStoreVersion' });
+    owner = v2 ? relId(parent, 'app') : relId(await getRow(http, 'app_store_versions.get', relId(parent, 'appStoreVersion'), { include: 'app' }), 'app');
+    label = `PPO ${parent.attributes?.name ?? parent.id}, treatment ${treatment.attributes?.name ?? treatment.id}`;
+  } else if (target === 'event') {
+    const eventId = relId(loc, 'appEvent');
+    const events = await readMediaRows(http, 'apps.app_events.list', app.id, { 'filter[id]': eventId, limit: 200 });
+    parent = events.rows.find((e) => e.id === eventId) ?? fail(`Event ${eventId} does not belong to ${app.name}.`);
+    owner = app.id;
+    label = `event ${parent.attributes?.referenceName ?? eventId}`;
+  } else {
+    parent = await getRow(http, 'app_store_versions.get', relId(loc, 'appStoreVersion'), { include: 'app' });
+    owner = relId(parent, 'app');
+    label = `${parent.attributes?.platform ?? ''} version ${parent.attributes?.versionString ?? parent.id}`;
+  }
+  if (owner !== app.id) fail(`Page ${id} does not belong to ${app.name}. Nothing was changed.`);
+  return { target, id, label: `${label}, ${loc.attributes?.locale ?? id}`, locale: loc.attributes?.locale ?? null, state: parent.attributes?.appStoreState ?? parent.attributes?.eventState ?? parent.attributes?.state ?? null };
 }
 
-
-async function resolveVersion(
-  http: AscHttpClient,
-  appId: string,
-  wanted?: string
-): Promise<any> {
-  const versions: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/appStoreVersions`, {
-    'fields[appStoreVersions]': 'versionString,appStoreState,platform',
-    limit: 20,
-  });
-  const version = wanted
-    ? (versions?.data ?? []).find((v: any) => v.attributes?.versionString === wanted)
-    : versions?.data?.[0];
-  if (!version) {
-    const available = (versions?.data ?? []).map((v: any) => v.attributes?.versionString).join(', ');
-    throw new AscApiError(
-      `No version "${wanted}" on this app. Available: ${available || 'none'}.`,
-      0
-    );
+async function resolveTarget(args: Args, http: AscHttpClient, single: boolean): Promise<Target> {
+  const appName = str(args, 'app', true)!;
+  const target = str(args, 'target', true)! as Target['target'];
+  if (target !== 'library' && !Object.hasOwn(MEDIA_TARGETS, target)) fail(`Unknown media target: ${target}.`);
+  const pageId = str(args, 'page_id'), locale = str(args, 'locale'), version = str(args, 'version'), platform = str(args, 'platform');
+  if (platform && !PLATFORMS.includes(platform)) fail(`Unknown platform: ${platform}.`);
+  if (target === 'library' && (pageId || locale || version || platform)) fail('A library target cannot carry page selectors. Choose a page target to place a library file.');
+  if (target !== 'library' && target !== 'version' && (locale || version || platform)) fail('For cpp, ppo and event, use page_id (localization ID) only.');
+  if (pageId && (locale || version || platform)) fail('Use page_id or version/platform/locale, not both.');
+  if (target !== 'library' && target !== 'version' && !pageId) fail('"page_id" (localization ID) is required for this target.');
+  const app = await resolveApp(http, appName);
+  const library: any = await http.get(mediaPath(MEDIA_OPS.library, app.id));
+  const libraryId: string = library?.data?.id ?? fail(`${app.name} has no asset library.`);
+  const pages: Page[] = [];
+  if (target !== 'library' && pageId) pages.push(await resolvePage(http, app, target, pageId));
+  else if (target === 'version') {
+    const versions = await readAppStoreVersions(http, app.id, version, platform);
+    const chosen = pickVersion(app.name, versions.data, version, platform);
+    const onPlatform = versions.data.filter((v) => !platform || v.attributes?.platform === platform);
+    const matches = version ? onPlatform.filter((v) => v.attributes?.versionString === version) : onPlatform.filter((v) => EDITABLE_STATES.has(v.attributes?.appStoreState));
+    if ((matches.length ? matches : onPlatform).length > 1) fail(`Ambiguous version on ${app.name}; specify version and platform, or page_id.`);
+    const locs = await readMediaRows(http, 'app_store_versions.app_store_version_localizations.list', chosen.id, { 'fields[appStoreVersionLocalizations]': 'locale', limit: 200 });
+    const found = locs.rows.filter((l) => !locale || l.attributes?.locale?.toLowerCase() === locale.toLowerCase());
+    if (locale && found.length !== 1) fail(`No unique "${locale}" localization on version ${chosen.attributes?.versionString}.`);
+    for (const loc of found) pages.push({ target, id: loc.id, locale: loc.attributes?.locale ?? null, state: chosen.attributes?.appStoreState ?? null, label: `${chosen.attributes?.platform} version ${chosen.attributes?.versionString}, ${loc.attributes?.locale ?? loc.id}` });
   }
-  return version;
+  if (single && target !== 'library' && pages.length !== 1) fail('Choose exactly one page using locale or page_id.');
+  return { app, libraryId, target, pages };
 }
 
-export async function executeScreenshotTool(
-  name: string,
-  args: Record<string, unknown>,
-  ctx: ScreenshotContext
-): Promise<unknown> {
-  if (name === 'listing__upload_screenshot') return uploadScreenshot(args, ctx);
-  if (name === 'listing__upload_asset') return uploadAsset(args, ctx);
-  if (name === 'listing__delete_assets') return deleteAssets(args, ctx);
-  if (name !== 'listing__get_screenshots') {
-    throw new Error(`Unknown listing tool: ${name}`);
-  }
-  if (!args.app || typeof args.app !== 'string') {
-    throw new AscApiError('"app" is required.', 0);
-  }
-
-  const app = await resolveApp(ctx.http, String(args.app));
-  const version = await resolveVersion(
-    ctx.http,
-    app.id,
-    args.version ? String(args.version).trim() : undefined
-  );
-
-  // One call for all locales and their sets. Without the include this is a
-  // call per locale, and only a handful of locales ever have their own
-  // screenshots — the rest inherit, and each costs a round trip to learn that.
-  const locs: any = await ctx.http.get(
-    `/v1/appStoreVersions/${encodeURIComponent(version.id)}/appStoreVersionLocalizations`,
-    {
-      'fields[appStoreVersionLocalizations]': 'locale,appScreenshotSets',
-      include: 'appScreenshotSets',
-      'fields[appScreenshotSets]': 'screenshotDisplayType',
-      limit: 200,
+async function libraryFiles(http: AscHttpClient, target: Target, ids: string[] = [], withPlacements = false): Promise<File[]> {
+  const files: File[] = [];
+  for (const kind of ['image', 'video'] as const) {
+    const res = await readMediaRows(http, MEDIA_ASSETS[kind].list, target.libraryId, { ...(ids.length ? { 'filter[id]': ids.join(',') } : {}), limit: 200 });
+    for (const row of res.rows) {
+      if (ids.length && !ids.includes(row.id)) continue;
+      files.push({ id: row.id, kind, row, name: row.attributes?.referenceName || row.attributes?.fileName || row.id, placements: [] });
     }
-  );
-
-  const setType = new Map<string, string>(
-    (locs?.included ?? [])
-      .filter((i: any) => i.type === 'appScreenshotSets')
-      .map((s: any) => [String(s.id), String(s.attributes?.screenshotDisplayType ?? '')])
-  );
-
-  const wantedLocale = args.locale ? String(args.locale).trim().toLowerCase() : undefined;
-  const carrying = (locs?.data ?? []).filter((l: any) => {
-    if (!(l.relationships?.appScreenshotSets?.data ?? []).length) return false;
-    return !wantedLocale || String(l.attributes?.locale ?? '').toLowerCase() === wantedLocale;
-  });
-
-  const locales: unknown[] = [];
-  for (const loc of carrying) {
-    const sets = [];
-    for (const ref of loc.relationships.appScreenshotSets.data) {
-      const shots: any = await ctx.http.get(
-        `/v1/appScreenshotSets/${encodeURIComponent(String(ref.id))}/appScreenshots`,
-        { 'fields[appScreenshots]': 'fileName,imageAsset,assetDeliveryState', limit: 50 }
-      );
-      sets.push({
-        displayType: setType.get(String(ref.id)) ?? 'unknown',
-        count: shots?.data?.length ?? 0,
-        screenshots: (shots?.data ?? []).map((s: any) => ({
-          fileName: s.attributes?.fileName ?? null,
-          // Dimensions live on the asset, not on the screenshot record.
-          width: s.attributes?.imageAsset?.width ?? null,
-          height: s.attributes?.imageAsset?.height ?? null,
-          state: s.attributes?.assetDeliveryState?.state ?? null,
-        })),
-      });
-    }
-    locales.push({ locale: loc.attributes?.locale, sets });
   }
+  for (const id of ids) if (files.filter((f) => f.id === id).length !== 1) fail(`File ${id} is not uniquely in ${target.app.name}’s asset library. Nothing was changed.`);
+  const selected = ids.length ? ids.map((id) => files.find((f) => f.id === id)!) : files;
+  if (withPlacements) {
+    if (selected.length > 200) fail('More than 200 library files; filter asset_ids to inspect complete placement lists.');
+    for (let start = 0; start < selected.length; start += 10) {
+      await Promise.all(selected.slice(start, start + 10).map(async (file) => {
+        const res = await readMediaRows(http, MEDIA_ASSETS[file.kind].placements, file.id, { include: `image,video,${PLACEMENT_INCLUDES}`, limit: 200 });
+        if (res.rows.length > 200) fail(`More than 200 placements for ${file.name}; refusing an incomplete preview.`);
+        file.placements = res.rows;
+      }));
+    }
+  }
+  return selected;
+}
+const placementPage = (row: Row) => Object.entries(MEDIA_TARGETS).find(([, t]) => row.relationships?.[t.relationship]?.data?.id);
+const placementAsset = (row: Row) => row.relationships?.image?.data?.id ?? row.relationships?.video?.data?.id;
+const PLACEMENT_INCLUDES = Object.values(MEDIA_TARGETS).map((t) => t.relationship).join(',');
+async function populatePlacementPages(http: AscHttpClient, target: Target, files: File[]) {
+  const count = files.reduce((sum, f) => sum + f.placements.length, 0);
+  if (count > 200) fail('More than 200 placements; refusing an incomplete page preview. Filter asset_ids.');
+  const seen = new Map<string, Page>(target.pages.map((page) => [`${page.target}/${page.id}`, page]));
+  for (const file of files) {
+    for (const row of file.placements) {
+      if (!placementPage(row) || !placementAsset(row)) fail(`Placement ${row.id} has no supported page or asset; refusing to infer ownership.`);
+      if (placementAsset(row) !== file.id) fail(`Placement ${row.id} is not for ${file.name}. Nothing was changed.`);
+      const found = placementPage(row)!;
+      const pageId = relId(row, found[1].relationship);
+      const key = `${found[0]}/${pageId}`;
+      if (!seen.has(key)) seen.set(key, await resolvePage(http, target.app, found[0] as PageTarget, pageId));
+    }
+  }
+  target.pages = [...seen.values()];
+}
+async function pagePlacements(http: AscHttpClient, page: Page) {
+  return readMediaRows(http, MEDIA_TARGETS[page.target].placements, page.id, { include: 'image,video', ...(MEDIA_TARGETS[page.target].ordered ? { sort: 'placementGroupPosition' } : {}), limit: 200 });
+}
+const errorsOf = (row: Row): string[] => (row.attributes?.stateDetails ?? row.attributes?.assetDeliveryState?.errors ?? []).map((e: any) => [e.code, e.description ?? e.detail].filter(Boolean).join(': '));
+const showPlacement = (row: Row, page?: Page) => {
+  const found = placementPage(row);
+  return { id: String(row.id), assetId: placementAsset(row) ?? null, pageId: page?.id ?? (found ? row.relationships[found[1].relationship].data.id : null), target: page?.target ?? found?.[0] ?? null, placementType: row.attributes?.placementType ?? null, placementGroup: row.attributes?.placementGroup ?? null, state: row.attributes?.state ?? null, errors: errorsOf(row) };
+};
+const showFile = (file: File) => {
+  const a = file.row.attributes ?? {}, dimensions = a.imageAsset ?? a.videoAsset ?? {};
+  return { id: file.id, kind: file.kind, name: file.name, fileName: a.fileName ?? null, state: a.state ?? null, errors: errorsOf(file.row), width: dimensions.width ?? null, height: dimensions.height ?? null, placements: file.placements.map((p) => showPlacement(p)) };
+};
 
-  // A locale with no sets of its own is not missing screenshots — it falls back
-  // to the primary locale's. Saying so is the difference between an answer and
-  // an alarm.
-  const total = (locs?.data ?? []).length;
-  return {
-    app: `${app.name} (${app.id})`,
-    version: version.attributes?.versionString,
-    state: version.attributes?.appStoreState,
-    locales,
-    ...(locales.length
-      ? {}
-      : { note: wantedLocale ? `Locale "${args.locale}" has no screenshots of its own.` : 'No locale has its own screenshots.' }),
-    localesWithOwnScreenshots: `${carrying.length} of ${total}; the rest inherit from the primary locale`,
+async function listMedia(args: Args, http: AscHttpClient) {
+  const target = await resolveTarget(args, http, false);
+  const ids = arrayIds(args, 'asset_ids', false);
+  const libraryId = str(args, 'library_id');
+  const refDataId = str(args, 'ref_data_id');
+  if (libraryId && libraryId !== target.libraryId) fail(`Library ${libraryId} does not belong to ${target.app.name}.`);
+  if (libraryId) await getRow(http, MEDIA_OPS.libraryGet, libraryId);
+  if (ids.length && target.target !== 'library') fail('asset_ids filters the library only.');
+  const files: File[] = [], pages = [];
+  if (target.target === 'library') {
+    files.push(...await libraryFiles(http, target, ids, true));
+    await populatePlacementPages(http, target, files);
+  } else {
+    for (const page of target.pages) {
+      const res = await pagePlacements(http, page);
+      const sets = new Map<string, { kind: string; placementType: string | null; placementGroup: string | null; count: number; placements: ReturnType<typeof showPlacement>[] }>();
+      for (const p of res.rows) {
+        const kind: MediaKind = p.relationships?.video?.data ? 'video' : 'image';
+        const assetId = placementAsset(p) ?? fail(`Placement ${p.id} has no asset relationship.`);
+        let file = files.find((f) => f.id === assetId && f.kind === kind);
+        if (!file) {
+          const type = mediaDataSchema(MEDIA_ASSETS[kind].create).properties.type.enum[0];
+          const row = res.included.find((r) => r.id === assetId && r.type === type) ?? await getRow(http, MEDIA_ASSETS[kind].get, assetId);
+          file = { id: assetId, kind, row, name: row.attributes?.referenceName || row.attributes?.fileName || assetId, placements: [] };
+          files.push(file);
+        }
+        const enriched = { ...p, relationships: { ...p.relationships, [MEDIA_TARGETS[page.target].relationship]: { data: { id: page.id } } } };
+        file.placements.push(enriched);
+        const shaped = showPlacement(p, page);
+        const key = JSON.stringify([kind, shaped.placementType, shaped.placementGroup]);
+        if (!sets.has(key)) sets.set(key, { kind, placementType: shaped.placementType, placementGroup: shaped.placementGroup, count: 0, placements: [] });
+        const set = sets.get(key)!; set.count++; set.placements.push(shaped);
+      }
+      pages.push({ ...page, sets: [...sets.values()] });
+    }
+  }
+  const refs = refDataId ? { rows: [await getRow(http, MEDIA_OPS.referenceGet, refDataId)] } : await readMediaRows(http, MEDIA_OPS.reference, undefined, { 'fields[appAssetLibraryRefData]': 'features,placementTypes,placementProfileGroups,imageSpecs,videoSpecs' });
+  return { app: `${target.app.name} (${target.app.id})`, target: target.target, libraryId: target.libraryId, assets: files.map(showFile), pages: target.target === 'library' ? target.pages.map((p) => ({ ...p, sets: [] })) : pages, limits: refs.rows.map((r) => ({ id: r.id, ...Object.fromEntries(['features', 'placementTypes', 'placementProfileGroups', 'imageSpecs', 'videoSpecs'].map((k) => [k, r.attributes?.[k] ?? []])) })) };
+}
+
+/** Stat before reading, then fstat + bounded reads from that same descriptor.
+ * O_NONBLOCK prevents a swapped FIFO from hanging open; fstat rejects it. */
+async function readUpload(filePath: string): Promise<{ bytes: Buffer; kind: MediaKind; fileName: string }> {
+  if (!isAbsolute(filePath)) fail('file_path must be absolute.');
+  const check = (s: NonNullable<Awaited<ReturnType<typeof stat>>>) => {
+    if (!s.isFile()) fail('Upload requires a regular file.');
+    if (s.size < 1 || s.size > MAX_VIDEO_BYTES) fail(`File size must be 1–${MAX_VIDEO_BYTES} bytes.`);
   };
-}
-
-/**
- * Reserve → upload → commit, the whole of Apple's asset flow.
- *
- * The three phases are not interchangeable and only the first and last are API
- * calls: `POST /v1/appScreenshots` reserves a row and answers with a list of
- * byte ranges and pre-signed URLs, the bytes go straight to those URLs with the
- * headers Apple supplied, and `PATCH` with `uploaded: true` plus an MD5 of the
- * *whole* file is what tells Apple to accept what it just received.
- *
- * Two failure modes are worth knowing about because neither one raises:
- * skipping the commit leaves a reserved row holding no image, and committing a
- * wrong checksum leaves the asset in a failed delivery state. Both look like
- * success at the call site, which is exactly why this is not a set of
- * instructions for someone else to follow.
- */
-/** Apple's own ceiling for a screenshot asset, with room to spare. */
-const MAX_SCREENSHOT_BYTES = 50 * 1024 * 1024;
-
-/**
- * The path comes from the model, and everything after this reads the file and
- * PUTs it to Apple. Without a check on the *contents*, `file_path` is a request
- * to exfiltrate any file this process can read — a `.p8`, an SSH key, a config
- * — and Apple rejecting it as not-an-image happens after the bytes have already
- * left. The first eight bytes settle it before any network call.
- */
-function assertUploadableImage(bytes: Buffer, filePath: string): void {
-  const isPng = bytes
-    .subarray(0, 8)
-    .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  if (!isPng && !isJpeg) {
-    throw new AscApiError(
-      `"${filePath}" is not a PNG or JPEG. Screenshots are uploaded byte for byte, so ` +
-        `anything else is refused here rather than sent to Apple to be rejected.`,
-      0
-    );
-  }
-  if (bytes.length > MAX_SCREENSHOT_BYTES) {
-    throw new AscApiError(
-      `"${filePath}" is ${bytes.length} bytes, over the ${MAX_SCREENSHOT_BYTES}-byte limit.`,
-      0
-    );
-  }
-}
-
-async function uploadScreenshot(
-  args: Record<string, unknown>,
-  ctx: ScreenshotContext
-): Promise<unknown> {
-  for (const key of ['app', 'locale', 'display_type', 'file_path'] as const) {
-    if (!args[key] || typeof args[key] !== 'string') {
-      throw new AscApiError(`"${key}" is required.`, 0);
-    }
-  }
-  const locale = String(args.locale).trim();
-  const displayType = String(args.display_type).trim().toUpperCase();
-  const filePath = String(args.file_path).trim();
-
-  if (DISPLAY_TYPES.length && !DISPLAY_TYPES.includes(displayType)) {
-    throw new AscApiError(
-      `"${displayType}" is not a device size Apple accepts. One of: ${DISPLAY_TYPES.join(', ')}.`,
-      0
-    );
-  }
-
-  // Read before touching the network: a missing file should cost nothing and
-  // must never leave a reserved-but-empty screenshot row behind.
-  let bytes: Buffer;
+  const before = await stat(filePath); check(before);
+  const fd = await open(filePath, constants.O_RDONLY | constants.O_NONBLOCK);
   try {
-    bytes = await readFile(filePath);
-  } catch (err) {
-    throw new AscApiError(`Cannot read "${filePath}": ${(err as Error).message}`, 0);
-  }
-  if (!bytes.length) throw new AscApiError(`"${filePath}" is empty.`, 0);
-  assertUploadableImage(bytes, filePath);
-  const fileName = basename(filePath);
-  const checksum = createHash('md5').update(bytes).digest('hex');
+    const info = await fd.stat(); check(info);
+    if (info.dev !== before.dev || info.ino !== before.ino) fail('File changed before opening; retry.');
+    const head = Buffer.alloc(12);
+    const { bytesRead } = await fd.read(head, 0, head.length, 0);
+    const brand = bytesRead >= 12 && head.subarray(4, 8).toString('latin1') === 'ftyp' ? head.subarray(8, 12).toString('latin1') : '';
+    const video = ['qt  ', 'isom', 'iso2', 'mp41', 'mp42', 'avc1', 'M4V '].includes(brand);
+    const image = (bytesRead >= 8 && head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) || (bytesRead >= 4 && head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff && head[3] !== 0xff && head[3] !== 0x00);
+    if (!video && !image) fail('File is not a PNG, JPEG, MP4 or MOV; no bytes were sent.');
+    if (!video && info.size > MAX_IMAGE_BYTES) fail(`Image exceeds the ${MAX_IMAGE_BYTES}-byte limit.`);
+    const bytes = Buffer.alloc(info.size);
+    for (let offset = 0; offset < bytes.length;) {
+      const read = await fd.read(bytes, offset, Math.min(1024 * 1024, bytes.length - offset), offset);
+      if (!read.bytesRead) fail('File shrank during read; retry.');
+      offset += read.bytesRead;
+    }
+    const after = await fd.stat();
+    if (after.size !== info.size || after.mtimeMs !== info.mtimeMs || after.ctimeMs !== info.ctimeMs || !bytes.subarray(0, Math.min(12, bytes.length)).equals(head.subarray(0, Math.min(12, bytes.length)))) fail('File changed during read; retry.');
+    return { bytes, kind: video ? 'video' : 'image', fileName: basename(filePath) };
+  } finally { await fd.close(); }
+}
 
-  const app = await resolveApp(ctx.http, String(args.app));
-  const version = await resolveVersion(
-    ctx.http,
-    app.id,
-    args.version ? String(args.version).trim() : undefined
-  );
+const ARRANGE_ACTIONS = ['reorder', 'place', 'remove', 'poster', 'archive', 'rename'] as const;
+type MediaAction = typeof ARRANGE_ACTIONS[number] | 'delete' | 'upload';
+function mediaIntent(name: string, args: Args): { target: Target['target']; action: MediaAction } {
+  if (!MEDIA_TOOL_NAMES.has(name) || name === MEDIA_NAMES.list) fail(`Unknown media write tool: ${name}`);
+  const target = str(args, 'target', true)!;
+  if (target !== 'library' && !Object.hasOwn(MEDIA_TARGETS, target)) fail(`Unknown media target: ${target}.`);
+  const action = name === MEDIA_NAMES.upload ? 'upload' : name === MEDIA_NAMES.delete ? (target === 'library' ? 'delete' : 'remove') : str(args, 'action', true)!;
+  if (name === MEDIA_NAMES.arrange && !ARRANGE_ACTIONS.includes(action as typeof ARRANGE_ACTIONS[number])) fail(`Unknown media action: ${action}.`);
+  if (name === MEDIA_NAMES.arrange && action === 'remove' && target === 'library') fail('Remove requires a named page target; library placements may be on live pages.');
+  return { target: target as Target['target'], action: action as MediaAction };
+}
+function intentRisk(intent: ReturnType<typeof mediaIntent>): RiskLevel {
+  if (['delete', 'remove', 'archive'].includes(intent.action)) return 'destructive';
+  if (intent.target === 'library' && ['upload', 'rename'].includes(intent.action)) return 'low';
+  return 'public';
+}
+function plannedRisk(intent: ReturnType<typeof mediaIntent>, writes: Write[]): RiskLevel {
+  if (writes.some((w) => w.operation.endsWith('.delete') || Object.hasOwn((w.body as any)?.data?.attributes ?? {}, 'archived')) || intent.action === 'archive') return 'destructive';
+  return intentRisk(intent);
+}
+export function mediaRisk(name: string, args: Args): RiskLevel {
+  return intentRisk(mediaIntent(name, args));
+}
+function placeBody(args: Args, page: Page, kind: MediaKind, id: string) {
+  const placementType = str(args, 'placement_type', true)!;
+  if (!MEDIA_PLACEMENT_TYPES.includes(placementType)) fail(`Unknown placement_type: ${placementType}.`);
+  const expectedKind = placementType === 'APP_PREVIEW' ? 'video' : placementType.endsWith('SCREENSHOT') ? 'image' : undefined;
+  if (expectedKind && kind !== expectedKind) fail(`${placementType} requires a ${expectedKind}; ${id} is a ${kind}.`);
+  const group = str(args, 'placement_group');
+  return mediaBody(MEDIA_OPS.placement, { attributes: { placementType, ...(group ? { placementGroup: group } : {}) }, relationships: {
+    [kind]: mediaRelationship(MEDIA_OPS.placement, kind, id),
+    [MEDIA_TARGETS[page.target].relationship]: mediaRelationship(MEDIA_OPS.placement, MEDIA_TARGETS[page.target].relationship, page.id),
+  } });
+}
 
-  const locs: any = await ctx.http.get(
-    `/v1/appStoreVersions/${encodeURIComponent(version.id)}/appStoreVersionLocalizations`,
-    { 'fields[appStoreVersionLocalizations]': 'locale', limit: 200 }
-  );
-  const loc = (locs?.data ?? []).find(
-    (l: any) => String(l.attributes?.locale ?? '').toLowerCase() === locale.toLowerCase()
-  );
-  if (!loc) {
-    const have = (locs?.data ?? []).map((l: any) => l.attributes?.locale).join(', ');
-    throw new AscApiError(
-      `Version ${version.attributes?.versionString} has no "${locale}" localization. ` +
-        `It has: ${have || 'none'}. Create one with app_store_version_localizations__create first.`,
-      0
-    );
-  }
-
-  // A device size with no set yet is the normal case for a new screenshot, so
-  // create it rather than making the caller discover a second tool.
-  const sets: any = await ctx.http.get(
-    `/v1/appStoreVersionLocalizations/${encodeURIComponent(loc.id)}/appScreenshotSets`,
-    { 'fields[appScreenshotSets]': 'screenshotDisplayType', limit: 100 }
-  );
-  let set = (sets?.data ?? []).find(
-    (s: any) => s.attributes?.screenshotDisplayType === displayType
-  );
-  const createdSet = !set;
-
-  const resolved = {
-    app: `${app.name} (${app.id})`,
-    version: version.attributes?.versionString,
-    locale: loc.attributes?.locale,
-    displayType,
-    fileName,
-    fileSize: bytes.length,
-  };
-
-  if (ctx.dryRun) {
-    return {
-      dryRun: true,
-      note:
-        'Dry-run mode: the target was fully resolved but nothing was reserved, uploaded or ' +
-        'committed.',
-      ...resolved,
-      createdSet,
-      wouldSend: {
-        method: 'POST',
-        path: '/v1/appScreenshots',
-        body: {
-          data: {
-            type: 'appScreenshots',
-            attributes: { fileName, fileSize: bytes.length },
-            relationships: {
-              appScreenshotSet: {
-                data: { type: 'appScreenshotSets', id: set?.id ?? '(a new set for ' + displayType + ')' },
-              },
-            },
-          },
-        },
-      },
-      risk: 'public',
-    };
-  }
-
-  if (!set) {
-    const made: any = await ctx.http.post('/v1/appScreenshotSets', {
-      data: {
-        type: 'appScreenshotSets',
-        attributes: { screenshotDisplayType: displayType },
-        relationships: {
-          appStoreVersionLocalization: {
-            data: { type: 'appStoreVersionLocalizations', id: loc.id },
-          },
-        },
-      },
+async function checkedPlacements(args: Args, http: AscHttpClient, target: Target): Promise<{ rows: Row[]; files: File[] }> {
+  const ids = arrayIds(args, 'placement_ids');
+  let rows: Row[];
+  if (target.target === 'library') {
+    rows = [];
+    for (const id of ids) rows.push(await getRow(http, MEDIA_OPS.placementGet, id, { include: `image,video,${PLACEMENT_INCLUDES}` }));
+  } else {
+    const all = (await pagePlacements(http, target.pages[0])).rows;
+    rows = ids.map((id) => {
+      const row = all.find((p) => p.id === id) ?? fail(`Placement ${id} is not on ${target.pages[0].label}. Nothing was changed.`);
+      return { ...row, relationships: { ...row.relationships, [MEDIA_TARGETS[target.pages[0].target].relationship]: { data: { id: target.pages[0].id } } } };
     });
-    set = made?.data;
-    if (!set?.id) throw new AscApiError(`Could not create a ${displayType} screenshot set.`, 0);
   }
+  const assetIds = [...new Set<string>(rows.map((p) => placementAsset(p) ?? fail(`Placement ${p.id} has no asset.`)))];
+  const files = await libraryFiles(http, target, assetIds);
+  for (const file of files) file.placements = rows.filter((p) => placementAsset(p) === file.id);
+  return { rows, files };
+}
 
-  // Phase 1 — reserve. The response, not the request, decides how the bytes
-  // are cut up.
-  const reserved: any = await ctx.http.post('/v1/appScreenshots', {
-    data: {
-      type: 'appScreenshots',
-      attributes: { fileName, fileSize: bytes.length },
-      relationships: {
-        appScreenshotSet: { data: { type: 'appScreenshotSets', id: set.id } },
-      },
-    },
+async function prepareWrite(name: string, args: Args, http: AscHttpClient): Promise<Plan> {
+  const intent = mediaIntent(name, args);
+  // Do file safety before any network request or reservation.
+  const upload = name === MEDIA_NAMES.upload ? await readUpload(str(args, 'file_path', true)!) : undefined;
+  const target = await resolveTarget(args, http, true);
+  const writes: Write[] = [];
+  let files: File[] = [];
+  if (upload) {
+    const category = str(args, 'category', true)!;
+    if (!MEDIA_CATEGORIES.includes(category)) fail(`Unknown category: ${category}.`);
+    if (target.target === 'library' && (args.placement_type !== undefined || args.placement_group !== undefined)) fail('Choose a page target to place the uploaded library file.');
+    const poster = str(args, 'preview_frame_time_code');
+    if (poster && upload.kind !== 'video') fail('Poster frames require a video.');
+    const operation = MEDIA_ASSETS[upload.kind].create;
+    writes.push({ operation, name: upload.fileName, body: mediaBody(operation, {
+      attributes: { fileName: upload.fileName, fileSize: upload.bytes.length, category, ...(args.reference_name !== undefined ? { referenceName: str(args, 'reference_name', true) } : {}), ...(poster ? { previewFrameTimeCode: poster } : {}) },
+      relationships: { assetLibrary: mediaRelationship(operation, 'assetLibrary', target.libraryId) },
+    }) });
+    if (target.pages.length) writes.push({ operation: MEDIA_OPS.placement, name: upload.fileName, body: placeBody(args, target.pages[0], upload.kind, '(new asset)') });
+  } else {
+    const action = intent.action;
+    if (action === 'remove' || action === 'reorder') {
+      if (args.asset_ids !== undefined) fail('Use placement_ids for remove/reorder.');
+      const checked = await checkedPlacements(args, http, target); files = checked.files;
+      if (action === 'remove') {
+        for (const row of checked.rows) writes.push({ operation: MEDIA_OPS.placementDelete, id: row.id, name: files.find((f) => f.id === placementAsset(row))!.name });
+      } else {
+        let page = target.pages[0];
+        if (!page) {
+          const found = placementPage(checked.rows[0]) ?? fail('Placement has no supported page.');
+          page = await resolvePage(http, target.app, found[0] as PageTarget, relId(checked.rows[0], found[1].relationship));
+          target.pages.push(page);
+        }
+        if (!MEDIA_TARGETS[page.target].ordered) fail('Event placements have no order in Apple’s schema.');
+        const group = str(args, 'placement_group', true)!;
+        const all = (await pagePlacements(http, page)).rows.filter((p) => p.attributes?.placementGroup === group);
+        const ids = checked.rows.map((p) => p.id);
+        if (all.length !== ids.length || all.some((p) => !ids.includes(p.id))) fail('Reorder requires every placement in exactly one page/group; no omissions or foreign IDs.');
+        const op = MEDIA_OPS.reorder;
+        const itemType = mediaDataSchema(op).properties.relationships.properties.orderedPlacements.properties.data.items.properties.type.enum[0];
+        writes.push({ operation: op, name: files.map((f) => f.name).join(', '), body: mediaBody(op, { attributes: { placementGroup: group }, relationships: {
+          orderedPlacements: { data: ids.map((id) => ({ type: itemType, id })) },
+          [MEDIA_TARGETS[page.target].relationship]: mediaRelationship(op, MEDIA_TARGETS[page.target].relationship, page.id),
+        } }) });
+      }
+    } else {
+      if (args.placement_ids !== undefined) fail('Use asset_ids for this action.');
+      const sharedUpdate = action === 'archive' || action === 'poster' || action === 'rename';
+      files = await libraryFiles(http, target, arrayIds(args, 'asset_ids'), action === 'delete' || sharedUpdate);
+      if (action === 'delete' || sharedUpdate) await populatePlacementPages(http, target, files);
+      if (action !== 'place' && target.target !== 'library' && target.pages.length) {
+        const namedPage = target.pages[0];
+        const placed = (await pagePlacements(http, namedPage)).rows;
+        for (const file of files) {
+          if (!placed.some((p) => placementAsset(p) === file.id)) fail(`File ${file.name} is not on ${namedPage.label}. Nothing was changed.`);
+          if (!sharedUpdate) file.placements = placed.filter((p) => placementAsset(p) === file.id);
+        }
+      }
+      if (action === 'place' && !target.pages.length) fail('Place requires a page target. The file already belongs to the library.');
+      if (action === 'rename' && files.length !== 1) fail('Rename accepts exactly one file.');
+      if (action === 'poster' && files.some((f) => f.kind !== 'video')) fail('Poster frames require videos. Nothing was changed.');
+      if (action === 'archive' && args.archived !== undefined && typeof args.archived !== 'boolean') fail('archived must be boolean.');
+      for (const file of files) {
+        if (action === 'delete') writes.push({ operation: MEDIA_ASSETS[file.kind].delete, id: file.id, name: file.name });
+        else if (action === 'place') writes.push({ operation: MEDIA_OPS.placement, name: file.name, body: placeBody(args, target.pages[0], file.kind, file.id) });
+        else {
+          const operation = MEDIA_ASSETS[file.kind].update;
+          const attributes = action === 'rename' ? { referenceName: str(args, 'reference_name', true) } : action === 'poster' ? { previewFrameTimeCode: str(args, 'preview_frame_time_code', true) } : { archived: args.archived ?? true };
+          writes.push({ operation, id: file.id, name: file.name, body: mediaBody(operation, { id: file.id, attributes }) });
+        }
+      }
+    }
+  }
+  const risk = plannedRisk(intent, writes);
+  if (risk !== intentRisk(intent)) fail('Media plan risk differs from the preflight confirmation risk. Nothing was changed.');
+  const fingerprint = createHash('sha256').update(JSON.stringify({ app: target.app, libraryId: target.libraryId, target: target.target, pages: target.pages.map(({ state: _state, ...p }) => p), placements: files.map((f) => ({ id: f.id, placements: f.placements.map((p) => ({ id: p.id, page: placementPage(p)?.[1].relationship, pageId: placementPage(p) && relId(p, placementPage(p)![1].relationship) })) })), writes, upload: upload && createHash('sha256').update(upload.bytes).digest('hex') })).digest('hex');
+  return { target, action: intent.action, files, writes, risk, fingerprint, upload };
+}
+
+export async function buildMediaPreview(name: string, args: Args, http: AscHttpClient) {
+  const plan = await prepareWrite(name, args, http);
+  const strong = STRONG_CONFIRM_LEVELS.has(plan.risk);
+  const fileLines = plan.upload ? [`- ${plan.upload.fileName} (new ${plan.upload.kind})`] : plan.files.map((file) => {
+    const groups = new Map<string, number>();
+    for (const placement of file.placements) {
+      const found = placementPage(placement)!;
+      const id = relId(placement, found[1].relationship);
+      const page = plan.target.pages.find((p) => p.id === id && p.target === found[0]);
+      const label = `${page?.label ?? id} (${id})`;
+      groups.set(label, (groups.get(label) ?? 0) + 1);
+    }
+    const pages = [...groups].map(([label, count]) => `${label} ×${count}`).join('; ') || 'no page placements';
+    return `- ${file.name} [${file.id}]: ${pages}`;
   });
-  const screenshotId: string = reserved?.data?.id;
-  const operations: UploadOperation[] = reserved?.data?.attributes?.uploadOperations ?? [];
-  if (!screenshotId) throw new AscApiError('Apple reserved no screenshot id.', 0);
-  if (!operations.length) {
-    throw new AscApiError(
-      `Apple returned no uploadOperations for "${fileName}", so there is nowhere to send the ` +
-        `bytes. The reserved screenshot ${screenshotId} holds no image — delete it with ` +
-        `app_screenshots__delete.`,
-      0
-    );
-  }
-
-  // Phase 2 — the bytes, in the slices Apple asked for. Sequential on purpose:
-  // these are large bodies and the point of the macro is a predictable upload,
-  // not the fastest one.
-  for (const op of operations) {
-    const start = op.offset ?? 0;
-    const end = start + (op.length ?? bytes.length);
-    await ctx.http.uploadAssetPart(op, bytes.subarray(start, end));
-  }
-
-  // Phase 3 — commit. Without this the row stays reserved and empty; with the
-  // wrong checksum the asset lands in a failed delivery state.
-  const committed: any = await ctx.http.patch(
-    `/v1/appScreenshots/${encodeURIComponent(screenshotId)}`,
-    {
-      data: {
-        type: 'appScreenshots',
-        id: screenshotId,
-        attributes: { uploaded: true, sourceFileChecksum: checksum },
-      },
-    }
-  );
-
-  return {
-    ok: true,
-    ...resolved,
-    screenshotId,
-    parts: operations.length,
-    createdSet,
-    deliveryState: committed?.data?.attributes?.assetDeliveryState?.state ?? null,
-    note:
-      'Uploaded and committed. Apple processes the image asynchronously — check the delivery ' +
-      'state with listing__get_screenshots; anything other than COMPLETE means it is still ' +
-      'being processed or was rejected.',
-  };
-}
-
-/** Apple's own ceiling for an App Store preview video, which the library shares. */
-const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
-
-/**
- * Image or video, from the first bytes, for the same reason the screenshot
- * upload checks them: `file_path` comes from the model, and without this it
- * would send any file this process can read. MP4 and MOV both carry `ftyp`
- * at byte 4.
- */
-function assetKind(bytes: Buffer, filePath: string): 'image' | 'video' {
-  if (bytes.subarray(4, 8).toString('latin1') === 'ftyp') {
-    if (bytes.length > MAX_VIDEO_BYTES) {
-      throw new AscApiError(`"${filePath}" is ${bytes.length} bytes, over the ${MAX_VIDEO_BYTES}-byte limit.`, 0);
-    }
-    return 'video';
-  }
-  try {
-    assertUploadableImage(bytes, filePath);
-  } catch {
-    throw new AscApiError(
-      `"${filePath}" is not a PNG, JPEG, MP4 or MOV file. The asset library takes images and videos ` +
-        `only, so anything else is refused here rather than sent to Apple.`,
-      0
-    );
-  }
-  return 'image';
-}
-
-/**
- * Reserve → upload → commit into the asset library, then optionally place.
- *
- * The same three phases as a screenshot, with two differences in Apple's API:
- * the commit takes `uploaded: true` and no checksum, and the reserved file
- * belongs to the app's library rather than to a page. Placing it is a separate
- * resource, so an upload that worked and a placement that failed are reported
- * apart — the file is in the library either way.
- */
-async function uploadAsset(args: Record<string, unknown>, ctx: ScreenshotContext): Promise<unknown> {
-  for (const key of ['app', 'file_path', 'category'] as const) {
-    if (!args[key] || typeof args[key] !== 'string') {
-      throw new AscApiError(`"${key}" is required.`, 0);
-    }
-  }
-  const filePath = String(args.file_path).trim();
-  const category = String(args.category).trim().toUpperCase();
-  if (ASSET_CATEGORIES.length && !ASSET_CATEGORIES.includes(category)) {
-    throw new AscApiError(`"${category}" is not a category Apple accepts. One of: ${ASSET_CATEGORIES.join(', ')}.`, 0);
-  }
-
-  const placementType = args.placement_type ? String(args.placement_type).trim().toUpperCase() : undefined;
-  const targetArgs = PLACEMENT_TARGETS.filter((t) => typeof args[t.arg] === 'string' && String(args[t.arg]).trim());
-  const locale = args.locale ? String(args.locale).trim() : undefined;
-  const targetCount = targetArgs.length + (locale ? 1 : 0);
-  if (placementType) {
-    if (PLACEMENT_TYPES.length && !PLACEMENT_TYPES.includes(placementType)) {
-      throw new AscApiError(`"${placementType}" is not a placement type Apple accepts. One of: ${PLACEMENT_TYPES.join(', ')}.`, 0);
-    }
-    if (targetCount !== 1) {
-      throw new AscApiError(
-        'To place the file, give exactly one target: locale (the version page) or one of ' +
-          `${PLACEMENT_TARGETS.map((t) => t.arg).join(', ')}.`,
-        0
-      );
-    }
-  } else if (targetCount) {
-    throw new AscApiError('A placement target was given without placement_type. Add one, or leave the target out to upload only.', 0);
-  }
-
-  // Read before touching the network: a bad file must not leave a reserved,
-  // empty asset behind in the library.
-  let bytes: Buffer;
-  try {
-    bytes = await readFile(filePath);
-  } catch (err) {
-    throw new AscApiError(`Cannot read "${filePath}": ${(err as Error).message}`, 0);
-  }
-  if (!bytes.length) throw new AscApiError(`"${filePath}" is empty.`, 0);
-  const kind = assetKind(bytes, filePath);
-  const fileName = basename(filePath);
-
-  const app = await resolveApp(ctx.http, String(args.app));
-  const library: any = await ctx.http.get(`/v1/apps/${encodeURIComponent(app.id)}/assetLibrary`, {});
-  const libraryId: string | undefined = library?.data?.id;
-  if (!libraryId) throw new AscApiError(`${app.name} has no asset library Apple will hand out.`, 0);
-
-  let target: { rel: string; type: string; id: string; label: string } | undefined;
-  if (placementType && locale) {
-    const version = await resolveVersion(ctx.http, app.id, args.version ? String(args.version).trim() : undefined);
-    const locs: any = await ctx.http.get(
-      `/v1/appStoreVersions/${encodeURIComponent(version.id)}/appStoreVersionLocalizations`,
-      { 'fields[appStoreVersionLocalizations]': 'locale', limit: 200 }
-    );
-    const loc = (locs?.data ?? []).find(
-      (l: any) => String(l.attributes?.locale ?? '').toLowerCase() === locale.toLowerCase()
-    );
-    if (!loc) {
-      const have = (locs?.data ?? []).map((l: any) => l.attributes?.locale).join(', ');
-      throw new AscApiError(`Version ${version.attributes?.versionString} has no "${locale}" localization. It has: ${have || 'none'}.`, 0);
-    }
-    target = {
-      rel: 'appStoreVersionLocalization',
-      type: 'appStoreVersionLocalizations',
-      id: loc.id,
-      label: `version ${version.attributes?.versionString}, ${loc.attributes?.locale}`,
-    };
-  } else if (placementType) {
-    const t = targetArgs[0];
-    target = { rel: t.rel, type: t.type, id: String(args[t.arg]).trim(), label: `${t.type} ${String(args[t.arg]).trim()}` };
-  }
-
-  const collection = kind === 'image' ? 'appAssetLibraryImages' : 'appAssetLibraryVideos';
-  const attributes: Record<string, unknown> = { fileName, fileSize: bytes.length, category };
-  if (args.reference_name) attributes.referenceName = String(args.reference_name);
-  if (kind === 'video' && args.preview_frame_time_code) attributes.previewFrameTimeCode = String(args.preview_frame_time_code);
-  const reserveBody = {
-    data: {
-      type: collection,
-      attributes,
-      relationships: { assetLibrary: { data: { type: 'appAssetLibraries', id: libraryId } } },
-    },
-  };
-  const placementBody = (assetId: string) => ({
-    data: {
-      type: 'appAssetLibraryPlacements',
-      attributes: {
-        placementType,
-        ...(args.placement_group ? { placementGroup: String(args.placement_group) } : {}),
-      },
-      relationships: {
-        [kind]: { data: { type: collection, id: assetId } },
-        [target!.rel]: { data: { type: target!.type, id: target!.id } },
-      },
-    },
+  const writeLines = plan.writes.map((write) => {
+    const attributes = (write.body as any)?.data?.attributes;
+    const ordered = (write.body as any)?.data?.relationships?.orderedPlacements?.data;
+    return `- ${write.operation}${write.id ? ` [${write.id}]` : ''}${attributes ? ` ${JSON.stringify(attributes)}` : ''}${ordered ? ` order=${ordered.map((item: Row) => item.id).join(',')}` : ''}`;
   });
-
-  const resolved = {
-    app: `${app.name} (${app.id})`,
-    kind,
-    fileName,
-    fileSize: bytes.length,
-    category,
-    ...(target ? { placeAs: placementType, placeOn: target.label } : {}),
-  };
-
-  if (ctx.dryRun) {
-    return {
-      dryRun: true,
-      note: 'Dry-run mode: the library and target were resolved but nothing was reserved, uploaded, committed or placed.',
-      ...resolved,
-      wouldSend: [
-        { method: 'POST', path: `/v1/${collection}`, body: reserveBody },
-        ...(target ? [{ method: 'POST', path: '/v1/appAssetLibraryPlacements', body: placementBody('(the new asset)') }] : []),
-      ],
-      risk: target ? 'public' : 'low',
-    };
-  }
-
-  // Phase 1 — reserve.
-  const reserved: any = await ctx.http.post(`/v1/${collection}`, reserveBody);
-  const assetId: string = reserved?.data?.id;
-  const operations: UploadOperation[] = reserved?.data?.attributes?.uploadOperations ?? [];
-  if (!assetId) throw new AscApiError('Apple reserved no asset id.', 0);
-  if (!operations.length) {
-    throw new AscApiError(
-      `Apple returned no uploadOperations for "${fileName}", so there is nowhere to send the bytes. ` +
-        `The reserved ${kind} ${assetId} holds nothing — delete it from the asset library.`,
-      0
-    );
-  }
-
-  // Phase 2 — the bytes, in Apple's slices, one after another.
-  for (const op of operations) {
-    const start = op.offset ?? 0;
-    const end = start + (op.length ?? bytes.length);
-    await ctx.http.uploadAssetPart(op, bytes.subarray(start, end));
-  }
-
-  // Phase 3 — commit. The library takes no checksum, unlike a screenshot.
-  const committed: any = await ctx.http.patch(`/v1/${collection}/${encodeURIComponent(assetId)}`, {
-    data: { type: collection, id: assetId, attributes: { uploaded: true } },
-  });
-  const uploaded = {
-    ok: true,
-    ...resolved,
-    assetId,
-    parts: operations.length,
-    state: committed?.data?.attributes?.state ?? null,
-  };
-  if (!target) {
-    return {
-      ...uploaded,
-      note: 'Uploaded and committed to the asset library. Apple processes and reviews it; it shows nowhere until it is placed.',
-    };
-  }
-
-  try {
-    const placed: any = await ctx.http.post('/v1/appAssetLibraryPlacements', placementBody(assetId));
-    return {
-      ...uploaded,
-      placementId: placed?.data?.id ?? null,
-      placementState: placed?.data?.attributes?.state ?? null,
-      note: 'Uploaded, committed and placed. Apple reviews the asset before customers see it.',
-    };
-  } catch (err) {
-    // The upload stands; only the placement failed. Say which, so a retry
-    // places the asset instead of uploading a second copy.
-    return {
-      ...uploaded,
-      placed: false,
-      placementError: err instanceof Error ? err.message : String(err),
-      note: `The ${kind} is in the asset library (${assetId}) but was not placed. Place it with the asset library placement tool rather than uploading again.`,
-    };
-  }
+  return { planFingerprint: plan.fingerprint, strong, message: [
+    `Heimdall is about to ${name === MEDIA_NAMES.delete ? 'delete media' : plan.action === 'upload' ? 'upload media' : plan.action} — a ${plan.risk.toUpperCase()}-level write.`, '',
+    `App:        ${plan.target.app.name}`,
+    `Target:     ${plan.target.target === 'library' ? `asset library (${plan.target.libraryId})` : `${plan.target.pages[0].label} (${plan.target.pages[0].id})`}`,
+    `Files (${fileLines.length}):`, ...fileLines,
+    `Changes (${writeLines.length}):`, ...writeLines,
+    `Risk:       ${plan.risk} — ${REVERSIBILITY[plan.risk]}`, '',
+    strong ? 'Type CONFIRM in the field below to proceed.' : 'Confirm to proceed.',
+  ].join('\n') };
 }
 
-/** A library file the delete was asked for, as found in the app's own library. */
-interface LibraryFile {
-  id: string;
-  collection: 'appAssetLibraryImages' | 'appAssetLibraryVideos';
-  name: string;
-  placements: number;
+async function applyWrite(http: AscHttpClient, write: Write): Promise<any> {
+  const path = mediaPath(write.operation, write.id);
+  if (write.operation.endsWith('.delete')) return http.delete(path);
+  if (write.operation.endsWith('.update')) return http.patch(path, write.body);
+  return http.post(path, write.body);
 }
+const errorText = (err: unknown) => err instanceof Error ? err.message : String(err);
 
-/**
- * Looks the ids up in the app's own library, images and videos, one request
- * each. Apple's library links down to its files and never back up, so this is
- * the only way to know a file belongs to the app the user named.
- */
-async function findLibraryFiles(
-  http: AscHttpClient,
-  appId: string,
-  ids: string[]
-): Promise<LibraryFile[]> {
-  const library: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/assetLibrary`);
-  const libraryId: string | undefined = library?.data?.id;
-  if (!libraryId) throw new AscApiError('This app has no asset library.', 0);
-  const found: LibraryFile[] = [];
-  for (const [kind, collection] of [
-    ['images', 'appAssetLibraryImages'],
-    ['videos', 'appAssetLibraryVideos'],
-  ] as const) {
-    const res: any = await http.get(`/v1/appAssetLibraries/${encodeURIComponent(libraryId)}/${kind}`, {
-      'filter[id]': ids.join(','),
-      [`fields[${collection}]`]: 'referenceName,fileName,placements',
-      limit: 200,
-    });
-    for (const f of res?.data ?? []) {
-      found.push({
-        id: f.id,
-        collection,
-        name: f.attributes?.referenceName || f.attributes?.fileName || f.id,
-        placements: f.relationships?.placements?.data?.length ?? 0,
-      });
-    }
-  }
-  return found;
-}
-
-/**
- * The app and the files it was asked to delete, every id checked against that
- * app's library. All or nothing: an id from another app's library, or a typo,
- * stops the call before the prompt and before the first delete.
- */
-async function checkedFiles(
-  http: AscHttpClient,
-  args: Record<string, unknown>
-): Promise<{ app: { id: string; name: string }; files: LibraryFile[] }> {
-  if (!args.app || typeof args.app !== 'string') throw new AscApiError('"app" is required.', 0);
-  const ids = Array.isArray(args.asset_ids) ? [...new Set(args.asset_ids.map(String).filter(Boolean))] : [];
-  if (!ids.length) throw new AscApiError('"asset_ids" needs at least one id.', 0);
-  if (ids.length > MAX_ASSET_DELETES) {
-    throw new AscApiError(`At most ${MAX_ASSET_DELETES} files per call; got ${ids.length}.`, 0);
-  }
-  const app = await resolveApp(http, args.app);
-  const files = await findLibraryFiles(http, app.id, ids);
-  const missing = ids.filter((id) => !files.some((f) => f.id === id));
-  if (missing.length) {
-    throw new AscApiError(`Not in ${app.name}’s asset library: ${missing.join(', ')}. Nothing was deleted.`, 0);
-  }
-  return { app, files };
-}
-
-const describeFile = (f: LibraryFile): string =>
-  f.placements ? `${f.name} (on ${f.placements} page${f.placements > 1 ? 's' : ''})` : f.name;
-
-/**
- * The confirmation for `listing__delete_assets`: the app and every file by
- * name, so one prompt stands in for one per file. Looked up here because the
- * arguments carry only ids — the exact prompt this tool exists to replace.
- */
-export async function buildAssetDeletePreview(
-  args: Record<string, unknown>,
-  http: AscHttpClient
-): Promise<{ message: string; strong: boolean }> {
-  const { app, files } = await checkedFiles(http, args);
-  return {
-    message: [
-      `Heimdall is about to delete ${files.length} file${files.length > 1 ? 's' : ''} from an app’s asset library — a DESTRUCTIVE-level write.`,
-      '',
-      `App:        ${app.name}`,
-      `Files:      ${files.map(describeFile).join(', ')}`,
-      `Risk:       destructive — ${REVERSIBILITY.destructive}`,
-      '',
-      'Type CONFIRM in the field below to proceed.',
-    ].join('\n'),
-    strong: true,
-  };
-}
-
-async function deleteAssets(args: Record<string, unknown>, ctx: ScreenshotContext): Promise<unknown> {
-  const { app, files } = await checkedFiles(ctx.http, args);
-  if (ctx.dryRun) {
-    return {
-      dryRun: true,
-      note: 'Dry-run mode: every file was found in the library; nothing was deleted.',
-      app: `${app.name} (${app.id})`,
-      wouldDelete: files.map((f) => ({ id: f.id, name: f.name, placements: f.placements })),
-      risk: 'destructive',
-    };
-  }
-
-  const deleted: Array<{ id: string; name: string }> = [];
-  const failed: Array<{ id: string; name: string; error: string }> = [];
-  for (const f of files) {
+export async function executeMediaTool(name: string, args: Args, ctx: MediaContext): Promise<unknown> {
+  if (!MEDIA_TOOL_NAMES.has(name)) throw new Error(`Unknown media tool: ${name}`);
+  if (name === MEDIA_NAMES.list) return listMedia(args, ctx.http);
+  const plan = await prepareWrite(name, args, ctx.http);
+  if (ctx.approvedPlanFingerprint && plan.fingerprint !== ctx.approvedPlanFingerprint) fail('Media target or files changed since confirmation; retry and approve the current plan. Nothing was changed.');
+  const summary = { app: `${plan.target.app.name} (${plan.target.app.id})`, target: plan.target.target, libraryId: plan.target.libraryId, pages: plan.target.pages, risk: plan.risk };
+  if (ctx.dryRun) return { ...summary, dryRun: true, wouldSend: plan.writes.map((w) => ({ method: w.operation.endsWith('.delete') ? 'DELETE' : w.operation.endsWith('.update') ? 'PATCH' : 'POST', path: mediaPath(w.operation, w.id), body: w.body, name: w.name })), note: 'Resolved and checked; nothing was reserved, uploaded, committed, placed or deleted.' };
+  if (plan.upload) {
+    const { bytes, kind, fileName } = plan.upload;
+    const reserved = await applyWrite(ctx.http, plan.writes[0]);
+    const id: string = reserved?.data?.id ?? fail('Apple reserved no asset ID.');
+    let phase = 'upload';
     try {
-      await ctx.http.delete(`/v1/${f.collection}/${encodeURIComponent(f.id)}`);
-      deleted.push({ id: f.id, name: f.name });
-    } catch (err) {
-      failed.push({ id: f.id, name: f.name, error: err instanceof Error ? err.message : String(err) });
-    }
+      const ops: any[] = reserved.data.attributes?.uploadOperations ?? [];
+      if (!ops.length) fail('Apple returned no upload operations.');
+      // Check all ranges before sending the first byte. A malformed response
+      // must not silently commit a truncated or overlapping upload.
+      const ranges = ops.map((o) => ({ start: o.offset, end: o.offset + o.length })).sort((a, b) => a.start - b.start);
+      let end = 0;
+      for (const r of ranges) { if (!Number.isSafeInteger(r.start) || !Number.isSafeInteger(r.end) || r.start !== end || r.end <= r.start || r.end > bytes.length) fail('Invalid upload byte ranges.'); end = r.end; }
+      if (end !== bytes.length) fail('Upload operations do not cover the complete file.');
+      for (const op of ops) await ctx.http.uploadAssetPart(op, bytes.subarray(op.offset, op.offset + op.length));
+      phase = 'commit';
+      const committed: any = await ctx.http.patch(mediaPath(MEDIA_ASSETS[kind].update, id), mediaBody(MEDIA_ASSETS[kind].update, { id, attributes: { uploaded: true } }));
+      const state: string | null = committed?.data?.attributes?.state ?? null;
+      const result = { ...summary, assetId: id, fileName, kind, state, errors: errorsOf(committed?.data ?? {}), parts: ops.length };
+      if (plan.writes.length === 1) return { ...result, ok: state !== 'FAILED', note: 'Committed to the library; inspect media__list for subsequent processing/review state.' };
+      if (state === 'FAILED' || state === 'AWAITING_UPLOAD') return { ...result, ok: false, placed: false, note: 'Apple has not accepted the upload. Inspect media__list before placing.' };
+      phase = 'placement';
+      try {
+        const placed: any = await ctx.http.post(mediaPath(MEDIA_OPS.placement), placeBody(args, plan.target.pages[0], kind, id));
+        const placementState: string | null = placed?.data?.attributes?.state ?? null;
+        const placementId: string | null = placed?.data?.id ?? null;
+        const placedOk = Boolean(placementId) && placementState !== 'FAILED';
+        return { ...result, ok: placedOk, placed: placedOk, placementId, placementState,
+          placementErrors: errorsOf(placed?.data ?? {}),
+          ...(!placementId ? { placementError: 'Apple returned no placement ID; inspect media__list before retrying.' } : {}),
+          ...(placedOk && (state === 'PREPARE_FOR_SUBMISSION' || state === 'READY_FOR_REVIEW')
+            ? { review: { required: true, state, submitWith: 'release__submit_items', item: { type: kind === 'image' ? 'appAssetLibraryImage' : 'appAssetLibraryVideo', id } } } : {}),
+        };
+      } catch (err) { return { ...result, ok: false, placed: false, placementError: errorText(err), retryWith: MEDIA_NAMES.arrange, note: `Upload stands. Call media__arrange with action: place, asset_ids: ["${id}"], the same page target and placement_type to retry.` }; }
+    } catch (err) { return { ...summary, ok: false, assetId: id, fileName, failedPhase: phase, error: errorText(err), inspectWith: MEDIA_NAMES.list, deleteWith: MEDIA_NAMES.delete }; }
   }
-  return {
-    ok: failed.length === 0,
-    app: `${app.name} (${app.id})`,
-    deleted,
-    ...(failed.length ? { failed } : {}),
-    note: failed.length
-      ? `${deleted.length} deleted, ${failed.length} failed. Calling again with the failed ids retries only those.`
-      : `Deleted ${deleted.length} file${deleted.length > 1 ? 's' : ''} from the asset library.`,
-  };
+  const succeeded = [], failed = [];
+  for (const write of plan.writes) {
+    try { const res = await applyWrite(ctx.http, write); succeeded.push({ id: write.id ?? res?.data?.id ?? null, name: write.name }); }
+    catch (err) { failed.push({ id: write.id ?? null, name: write.name, error: errorText(err) }); }
+  }
+  return { ...summary, ok: !failed.length, succeeded, failed, note: failed.length ? `${succeeded.length} succeeded; ${failed.length} failed. Retry only failed items.` : `${succeeded.length} operation(s) completed.` };
 }

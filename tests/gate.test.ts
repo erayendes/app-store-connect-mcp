@@ -99,15 +99,15 @@ describe('write-gate annotations (offline)', () => {
       'pricing__equalize_price',
       'pricing__set_iap_price',
       'pricing__make_offer',
-      'listing__upload_screenshot',
-      'listing__upload_asset',
-      'listing__delete_assets',
+      'media__upload',
+      'media__arrange',
+      'media__delete',
       'metadata_ai__apply_localizations',
       'release__submit',
       'release__submit_items',
       'testflight__assign_build_to_groups',
     ].sort());
-    // The listing and analytics families were outside this check until the
+    // The media and analytics families were outside this check until the
     // upload macro made one of them a write — an unchecked family is exactly
     // where a mislabelled write hides.
     const wrong = [

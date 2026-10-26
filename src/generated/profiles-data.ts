@@ -81,7 +81,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "",
       operations: ["actors.get","actors.list","apps.app_store_versions.list","apps.builds.list","apps.get","apps.in_app_purchases_v2.list","apps.list","apps.subscription_groups.list"],
-      manualTools: ["asc__account_status","asc__discover_domains","asc__search_tools","asc__status","listing__delete_assets","listing__get_screenshots","listing__upload_asset","listing__upload_screenshot"],
+      manualTools: ["asc__account_status","asc__discover_domains","asc__search_tools","asc__status","media__arrange","media__delete","media__list","media__upload"],
       rootResources: ["actors","apps"],
     },
     ],
@@ -133,9 +133,9 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     },
     {
       name: "version",
-      operations: ["app_preview_sets.app_previews.list","app_preview_sets.app_previews.replace","app_preview_sets.create","app_preview_sets.delete","app_preview_sets.get","app_previews.create","app_previews.delete","app_previews.get","app_previews.update","app_screenshot_sets.app_screenshots.list","app_screenshot_sets.app_screenshots.replace","app_screenshot_sets.create","app_screenshot_sets.delete","app_screenshot_sets.get","app_screenshots.create","app_screenshots.delete","app_screenshots.get","app_screenshots.update","app_store_version_localizations.app_preview_sets.list","app_store_version_localizations.app_screenshot_sets.list","app_store_version_localizations.create","app_store_version_localizations.delete","app_store_version_localizations.get","app_store_version_localizations.placements.list","app_store_version_localizations.search_keywords.add","app_store_version_localizations.search_keywords.list","app_store_version_localizations.search_keywords.remove","app_store_version_localizations.update","app_store_versions.app_store_review_detail.get","app_store_versions.app_store_version_localizations.list","app_store_versions.build.get","app_store_versions.build.set","app_store_versions.create","app_store_versions.delete","app_store_versions.get","app_store_versions.update","apps.search_keywords.list"],
+      operations: ["app_store_version_localizations.create","app_store_version_localizations.delete","app_store_version_localizations.get","app_store_version_localizations.search_keywords.add","app_store_version_localizations.search_keywords.list","app_store_version_localizations.search_keywords.remove","app_store_version_localizations.update","app_store_versions.app_store_review_detail.get","app_store_versions.app_store_version_localizations.list","app_store_versions.build.get","app_store_versions.build.set","app_store_versions.create","app_store_versions.delete","app_store_versions.get","app_store_versions.update","apps.search_keywords.list"],
       manualTools: ["listing__diff_metadata","metadata_ai__apply_localizations","metadata_ai__audit_localizations","metadata_ai__draft_translation","preflight__check_version"],
-      rootResources: ["app_preview_sets","app_previews","app_screenshot_sets","app_screenshots","app_store_version_localizations","app_store_versions","apps"],
+      rootResources: ["app_store_version_localizations","app_store_versions","apps"],
     },
     ],
   },
@@ -238,21 +238,15 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     subProfiles: [
     {
       name: "app-events",
-      operations: ["app_event_localizations.app_event_screenshots.list","app_event_localizations.app_event_video_clips.list","app_event_localizations.create","app_event_localizations.delete","app_event_localizations.get","app_event_localizations.placements.list","app_event_localizations.update","app_event_screenshots.create","app_event_screenshots.delete","app_event_screenshots.get","app_event_screenshots.update","app_event_video_clips.create","app_event_video_clips.delete","app_event_video_clips.get","app_event_video_clips.update","app_events.create","app_events.delete","app_events.get","app_events.localizations.list","app_events.update","apps.app_events.list"],
+      operations: ["app_event_localizations.create","app_event_localizations.delete","app_event_localizations.get","app_event_localizations.update","app_events.create","app_events.delete","app_events.get","app_events.localizations.list","app_events.update","apps.app_events.list"],
       manualTools: ["release__submit_items"],
-      rootResources: ["app_event_localizations","app_event_screenshots","app_event_video_clips","app_events","apps"],
-    },
-    {
-      name: "asset-library",
-      operations: ["app_asset_libraries.get","app_asset_libraries.images.list","app_asset_libraries.videos.list","app_asset_library_images.create","app_asset_library_images.delete","app_asset_library_images.get","app_asset_library_images.placements.list","app_asset_library_images.update","app_asset_library_placement_ordering_requests.create","app_asset_library_placements.create","app_asset_library_placements.delete","app_asset_library_placements.get","app_asset_library_ref_data.get","app_asset_library_ref_data.list","app_asset_library_videos.create","app_asset_library_videos.delete","app_asset_library_videos.get","app_asset_library_videos.placements.list","app_asset_library_videos.update","app_custom_product_page_localizations.placements.list","app_event_localizations.placements.list","app_store_version_experiment_treatment_localizations.placements.list","app_store_version_localizations.placements.list","apps.asset_library.get"],
-      manualTools: [],
-      rootResources: ["app_asset_libraries","app_asset_library_images","app_asset_library_placement_ordering_requests","app_asset_library_placements","app_asset_library_ref_data","app_asset_library_videos","app_custom_product_page_localizations","app_event_localizations","app_store_version_experiment_treatment_localizations","app_store_version_localizations","apps"],
+      rootResources: ["app_event_localizations","app_events","apps"],
     },
     {
       name: "custom-pp",
-      operations: ["app_custom_product_page_localizations.app_preview_sets.list","app_custom_product_page_localizations.app_screenshot_sets.list","app_custom_product_page_localizations.create","app_custom_product_page_localizations.delete","app_custom_product_page_localizations.get","app_custom_product_page_localizations.placements.list","app_custom_product_page_localizations.search_keywords.add","app_custom_product_page_localizations.search_keywords.list","app_custom_product_page_localizations.search_keywords.remove","app_custom_product_page_localizations.update","app_custom_product_page_versions.app_custom_product_page_localizations.list","app_custom_product_page_versions.create","app_custom_product_page_versions.get","app_custom_product_page_versions.update","app_custom_product_pages.app_custom_product_page_versions.list","app_custom_product_pages.create","app_custom_product_pages.delete","app_custom_product_pages.get","app_custom_product_pages.update","app_preview_sets.app_previews.list","app_preview_sets.app_previews.replace","app_preview_sets.create","app_preview_sets.delete","app_preview_sets.get","app_previews.create","app_previews.delete","app_previews.get","app_previews.update","app_screenshot_sets.app_screenshots.list","app_screenshot_sets.app_screenshots.replace","app_screenshot_sets.create","app_screenshot_sets.delete","app_screenshot_sets.get","app_screenshots.create","app_screenshots.delete","app_screenshots.get","app_screenshots.update","apps.app_custom_product_pages.list"],
+      operations: ["app_custom_product_page_localizations.create","app_custom_product_page_localizations.delete","app_custom_product_page_localizations.get","app_custom_product_page_localizations.search_keywords.add","app_custom_product_page_localizations.search_keywords.list","app_custom_product_page_localizations.search_keywords.remove","app_custom_product_page_localizations.update","app_custom_product_page_versions.app_custom_product_page_localizations.list","app_custom_product_page_versions.create","app_custom_product_page_versions.get","app_custom_product_page_versions.update","app_custom_product_pages.app_custom_product_page_versions.list","app_custom_product_pages.create","app_custom_product_pages.delete","app_custom_product_pages.get","app_custom_product_pages.update","apps.app_custom_product_pages.list"],
       manualTools: ["release__submit_items"],
-      rootResources: ["app_custom_product_page_localizations","app_custom_product_page_versions","app_custom_product_pages","app_preview_sets","app_previews","app_screenshot_sets","app_screenshots","apps"],
+      rootResources: ["app_custom_product_page_localizations","app_custom_product_page_versions","app_custom_product_pages","apps"],
     },
     {
       name: "customer-reviews",
@@ -268,9 +262,9 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     },
     {
       name: "pp-optimization",
-      operations: ["app_preview_sets.app_previews.list","app_preview_sets.app_previews.replace","app_preview_sets.create","app_preview_sets.delete","app_preview_sets.get","app_previews.create","app_previews.delete","app_previews.get","app_previews.update","app_screenshot_sets.app_screenshots.list","app_screenshot_sets.app_screenshots.replace","app_screenshot_sets.create","app_screenshot_sets.delete","app_screenshot_sets.get","app_screenshots.create","app_screenshots.delete","app_screenshots.get","app_screenshots.update","app_store_version_experiment_treatment_localizations.app_preview_sets.list","app_store_version_experiment_treatment_localizations.app_screenshot_sets.list","app_store_version_experiment_treatment_localizations.create","app_store_version_experiment_treatment_localizations.delete","app_store_version_experiment_treatment_localizations.get","app_store_version_experiment_treatment_localizations.placements.list","app_store_version_experiment_treatments.app_store_version_experiment_treatment_localizations.list","app_store_version_experiment_treatments.create","app_store_version_experiment_treatments.delete","app_store_version_experiment_treatments.get","app_store_version_experiment_treatments.update","app_store_version_experiments_v2.app_store_version_experiment_treatments.list","app_store_version_experiments_v2.create","app_store_version_experiments_v2.delete","app_store_version_experiments_v2.get","app_store_version_experiments_v2.update","app_store_version_promotions.create","app_store_versions.app_store_version_experiments_v2.list","apps.app_store_version_experiments_v2.list"],
+      operations: ["app_store_version_experiment_treatment_localizations.create","app_store_version_experiment_treatment_localizations.delete","app_store_version_experiment_treatment_localizations.get","app_store_version_experiment_treatments.app_store_version_experiment_treatment_localizations.list","app_store_version_experiment_treatments.create","app_store_version_experiment_treatments.delete","app_store_version_experiment_treatments.get","app_store_version_experiment_treatments.update","app_store_version_experiments_v2.app_store_version_experiment_treatments.list","app_store_version_experiments_v2.create","app_store_version_experiments_v2.delete","app_store_version_experiments_v2.get","app_store_version_experiments_v2.update","app_store_version_promotions.create","app_store_versions.app_store_version_experiments_v2.list","apps.app_store_version_experiments_v2.list"],
       manualTools: ["release__submit_items"],
-      rootResources: ["app_preview_sets","app_previews","app_screenshot_sets","app_screenshots","app_store_version_experiment_treatment_localizations","app_store_version_experiment_treatments","app_store_version_experiments_v2","app_store_version_promotions","app_store_versions","apps"],
+      rootResources: ["app_store_version_experiment_treatment_localizations","app_store_version_experiment_treatments","app_store_version_experiments_v2","app_store_version_promotions","app_store_versions","apps"],
     },
     ],
   },
@@ -453,4 +447,29 @@ export const TWIN_OF: Record<string, string> = {
 };
 
 /** Operations a hand-written macro replaces outright (operation -> macro). */
-export const MACRO_COVERED: Record<string, string> = {};
+export const MACRO_COVERED: Record<string, string> = {
+  "app_asset_libraries.get": "media__list",
+  "app_asset_libraries.images.list": "media__list",
+  "app_asset_libraries.videos.list": "media__list",
+  "app_asset_library_images.create": "media__upload",
+  "app_asset_library_images.delete": "media__delete",
+  "app_asset_library_images.get": "media__list",
+  "app_asset_library_images.placements.list": "media__list",
+  "app_asset_library_images.update": "media__arrange",
+  "app_asset_library_placement_ordering_requests.create": "media__arrange",
+  "app_asset_library_placements.create": "media__arrange",
+  "app_asset_library_placements.delete": "media__delete",
+  "app_asset_library_placements.get": "media__list",
+  "app_asset_library_ref_data.get": "media__list",
+  "app_asset_library_ref_data.list": "media__list",
+  "app_asset_library_videos.create": "media__upload",
+  "app_asset_library_videos.delete": "media__delete",
+  "app_asset_library_videos.get": "media__list",
+  "app_asset_library_videos.placements.list": "media__list",
+  "app_asset_library_videos.update": "media__arrange",
+  "app_custom_product_page_localizations.placements.list": "media__list",
+  "app_event_localizations.placements.list": "media__list",
+  "app_store_version_experiment_treatment_localizations.placements.list": "media__list",
+  "app_store_version_localizations.placements.list": "media__list",
+  "apps.asset_library.get": "media__list",
+};

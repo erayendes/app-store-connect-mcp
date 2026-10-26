@@ -1,530 +1,434 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  SCREENSHOT_TOOLS,
-  buildAssetDeletePreview,
-  executeScreenshotTool,
-  type ScreenshotContext,
-} from '../src/tools/screenshots.js';
+import { MEDIA_TOOLS, executeMediaTool, buildMediaPreview, mediaRisk, type MediaContext } from '../src/tools/screenshots.js';
+import { MEDIA_ASSETS, MEDIA_TARGETS, MEDIA_OPS, mediaOperation } from '../src/tools/media-catalog.js';
+import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
+import { validateBody } from '../src/core/validate.js';
+import { AscApiError } from '../src/core/errors.js';
 
-/**
- * A listing with fifty locales and screenshots in exactly one of them — the
- * live shape. Walking it with the raw tools takes 53 calls to learn that, and
- * the localizations response alone is 264 KB before any of them.
- */
-function fakeHttp() {
-  const locales = Array.from({ length: 50 }, (_, i) => `loc-${i}`);
-  const get = vi.fn(async (path: string, query?: any) => {
-    if (path === '/v1/apps') {
-      return { data: [{ id: '6636549188', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } }] };
-    }
-    // Matched before /appStoreVersions — the localizations path contains it.
-    if (path.includes('/appStoreVersionLocalizations')) {
-      return {
-        data: locales.map((id, i) => ({
-          id,
-          attributes: { locale: i === 0 ? 'en-US' : `xx-${i}` },
-          relationships: { appScreenshotSets: { data: i === 0 ? [{ id: 'set-1' }] : [] } },
-        })),
-        included: [
-          { type: 'appScreenshotSets', id: 'set-1', attributes: { screenshotDisplayType: 'APP_IPHONE_67' } },
-        ],
-      };
-    }
-    if (path.includes('/appStoreVersions')) {
-      return {
-        data: [
-          { id: 'v-161', attributes: { versionString: '1.6.1', appStoreState: 'READY_FOR_SALE' } },
-          { id: 'v-160', attributes: { versionString: '1.6.0', appStoreState: 'REPLACED_WITH_NEW_VERSION' } },
-        ],
-      };
-    }
-    if (path.includes('/appScreenshots')) {
-      return {
-        data: [
-          {
-            id: 'shot-1',
-            attributes: {
-              fileName: 'one.png',
-              imageAsset: { width: 1320, height: 2868 },
-              assetDeliveryState: { state: 'COMPLETE' },
-            },
-          },
-        ],
-      };
-    }
-    return {};
-  });
-  return { get };
-}
-
-const ctx = (): ScreenshotContext & { http: any } => ({ http: fakeHttp() }) as any;
-const run = (args: Record<string, unknown>, c = ctx()) =>
-  executeScreenshotTool('listing__get_screenshots', args, c);
-
-describe('listing__get_screenshots', () => {
-  it('answers in four calls, not one per locale', async () => {
-    const c = ctx();
-    await run({ app: 'com.milowda.askquranai' }, c);
-    expect(c.http.get).toHaveBeenCalledTimes(4);
-  });
-
-  /**
-   * The include is what makes that possible. Without it the relationship comes
-   * back as a link and every one of the fifty locales costs a round trip to
-   * learn it has nothing.
-   */
-  it('asks for the screenshot sets in the same call as the locales', async () => {
-    const c = ctx();
-    await run({ app: 'com.milowda.askquranai' }, c);
-    const call = c.http.get.mock.calls.find(([p]: [string]) => p.includes('/appStoreVersionLocalizations'));
-    expect(call?.[1]).toMatchObject({ include: 'appScreenshotSets' });
-    expect(call?.[1]['fields[appStoreVersionLocalizations]']).toContain('locale');
-  });
-
-  it('returns the sizes, and only the locales that carry their own', async () => {
-    const result: any = await run({ app: 'com.milowda.askquranai' });
-    expect(result.version).toBe('1.6.1');
-    expect(result.locales).toHaveLength(1);
-    expect(result.locales[0]).toMatchObject({ locale: 'en-US' });
-    expect(result.locales[0].sets[0]).toMatchObject({ displayType: 'APP_IPHONE_67', count: 1 });
-    expect(result.locales[0].sets[0].screenshots[0]).toMatchObject({ width: 1320, height: 2868 });
-  });
-
-  /**
-   * Forty-nine locales with no sets are not forty-nine problems — they inherit
-   * from the primary locale. A bare count would read as missing artwork.
-   */
-  it('says the other locales inherit rather than lack', async () => {
-    const result: any = await run({ app: 'com.milowda.askquranai' });
-    expect(result.localesWithOwnScreenshots).toMatch(/1 of 50/);
-    expect(result.localesWithOwnScreenshots).toMatch(/inherit/);
-  });
-
-  it('narrows to one locale on request', async () => {
-    const result: any = await run({ app: 'com.milowda.askquranai', locale: 'en-US' });
-    expect(result.locales).toHaveLength(1);
-    const empty: any = await run({ app: 'com.milowda.askquranai', locale: 'de-DE' });
-    expect(empty.locales).toHaveLength(0);
-    expect(empty.note).toMatch(/no screenshots of its own/);
-  });
-
-  it('picks a named version and lists the choices when it is missing', async () => {
-    const older: any = await run({ app: 'com.milowda.askquranai', version: '1.6.0' });
-    expect(older.version).toBe('1.6.0');
-    await expect(run({ app: 'com.milowda.askquranai', version: '9.9' })).rejects.toThrow(/1\.6\.1, 1\.6\.0/);
-  });
-
-  it('is marked read-only, so it never asks for a write confirmation', () => {
-    const tool = SCREENSHOT_TOOLS.find((t) => t.name === 'listing__get_screenshots');
-    expect(tool?.annotations?.readOnlyHint).toBe(true);
-  });
+vi.mock('node:fs/promises', async (actual) => {
+  const fs = await actual<typeof import('node:fs/promises')>();
+  return { ...fs, open: vi.fn(fs.open), stat: vi.fn(fs.stat), readFile: vi.fn(fs.readFile) };
 });
 
-/**
- * The upload half. What matters is not that a call was made but that the three
- * phases happened in order and carried the right numbers: a reserve that
- * declares the true byte length, one PUT per slice cut at Apple's offsets, and
- * a commit whose checksum is the MD5 of the whole file. Any of those wrong
- * leaves an asset Apple silently refuses to deliver.
- */
-function fakeUploadHttp(operations?: unknown) {
-  const puts: Array<{ url: string; length: number; first: number }> = [];
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+const VIDEO = Buffer.from([0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20]);
+const link = (id: string) => ({ data: { id } });
+const withIncludes = (row: any, query?: any) => {
+  const copy = structuredClone(row);
+  if (copy.relationships) copy.relationships = Object.fromEntries(Object.entries(copy.relationships).filter(([key]) => String(query?.include ?? '').split(',').includes(key)));
+  return copy;
+};
+const pages = { version: 'loc', cpp: 'cpp-loc', ppo: 'ppo-loc', event: 'event-loc' } as const;
+type Page = keyof typeof pages;
+const pageArgs = (target: 'library' | Page) => ({ app: 'Example', target, ...(target === 'version' ? { locale: 'en-US' } : target !== 'library' ? { page_id: pages[target] } : {}) });
+const imageRow = { type: 'appAssetLibraryImages', id: 'img', attributes: { fileName: 'hero.png', referenceName: 'Hero image', state: 'COMPLETE', imageAsset: { width: 1200, height: 2400 } } };
+const videoRow = { type: 'appAssetLibraryVideos', id: 'vid', attributes: { fileName: 'preview.mov', referenceName: 'Preview video', state: 'READY_FOR_REVIEW' } };
+const placement = (target: Page, kind: 'image' | 'video', id = kind === 'image' ? 'pi' : 'pv') => ({
+  type: 'appAssetLibraryPlacements', id, attributes: { placementType: kind === 'image' ? 'APP_SCREENSHOT' : 'APP_PREVIEW', placementGroup: 'phone', state: 'PARENT_APPROVED' },
+  relationships: { [kind]: link(kind === 'image' ? 'img' : 'vid'), [MEDIA_TARGETS[target].relationship]: link(pages[target]) },
+});
+
+function fakeHttp(target: Page = 'version') {
+  const rows = [placement(target, 'image'), placement(target, 'video')];
   const http = {
-    get: vi.fn(async (path: string) => {
-      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
-      // Order matters and the paths nest: the sets path ends in
-      // /appScreenshotSets but *contains* /appStoreVersionLocalizations, which
-      // in turn contains /appStoreVersions. Longest suffix first.
-      if (path.endsWith('/appScreenshotSets'))
-        return { data: [{ id: 'set-67', attributes: { screenshotDisplayType: 'APP_IPHONE_67' } }] };
-      if (path.includes('/appStoreVersionLocalizations'))
-        return { data: [{ id: 'loc-en', attributes: { locale: 'en-US' } }] };
-      if (path.includes('/appStoreVersions'))
-        return { data: [{ id: 'v-1', attributes: { versionString: '1.6.1' } }] };
-      return { data: [] };
-    }),
-    post: vi.fn(async (path: string, body: any) => {
-      if (path === '/v1/appScreenshots') {
-        return {
-          data: {
-            id: 'shot-1',
-            attributes: {
-              uploadOperations:
-                operations ?? [
-                  { method: 'PUT', url: 'https://upload.apple.com/a', offset: 0, length: 4 },
-                  { method: 'PUT', url: 'https://upload.apple.com/b', offset: 4, length: 3 },
-                ],
-            },
-          },
-          _sent: body,
-        };
+    get: vi.fn(async (path: string, query?: any): Promise<any> => {
+      if (path === '/v1/apps') return { data: [{ id: 'app', attributes: { name: 'Example', bundleId: 'example.app' } }] };
+      if (path === '/v1/apps/app/assetLibrary') return { data: { id: 'lib' } };
+      if (path === '/v1/apps/app/appStoreVersions') return { data: [{ id: 'v1', attributes: { versionString: '3.0', platform: 'IOS', appStoreState: 'PREPARE_FOR_SUBMISSION' } }] };
+      if (path === '/v1/appStoreVersions/v1/appStoreVersionLocalizations') return { data: [{ id: 'loc', attributes: { locale: 'en-US' } }] };
+      if (path === '/v1/appStoreVersionLocalizations/loc') return { data: withIncludes({ id: 'loc', attributes: { locale: 'en-US' }, relationships: { appStoreVersion: link('v1') } }, query) };
+      if (path === '/v1/appStoreVersions/v1') return { data: withIncludes({ id: 'v1', attributes: { versionString: '3.0', platform: 'IOS' }, relationships: { app: link('app') } }, query) };
+      if (path === '/v1/appCustomProductPageLocalizations/cpp-loc') return { data: withIncludes({ id: 'cpp-loc', attributes: { locale: 'tr' }, relationships: { appCustomProductPageVersion: link('cpp-v') } }, query) };
+      if (path === '/v1/appCustomProductPageVersions/cpp-v') return { data: withIncludes({ id: 'cpp-v', attributes: { version: '2', state: 'APPROVED' }, relationships: { appCustomProductPage: link('cpp') } }, query) };
+      if (path === '/v1/appCustomProductPages/cpp') return { data: withIncludes({ id: 'cpp', attributes: { name: 'Summer' }, relationships: { app: link('app') } }, query) };
+      if (path === '/v1/appStoreVersionExperimentTreatmentLocalizations/ppo-loc') return { data: withIncludes({ id: 'ppo-loc', attributes: { locale: 'en-US' }, relationships: { appStoreVersionExperimentTreatment: link('treatment') } }, query) };
+      if (path === '/v1/appStoreVersionExperimentTreatments/treatment') return { data: withIncludes({ id: 'treatment', attributes: { name: 'Blue' }, relationships: { appStoreVersionExperimentV2: link('experiment') } }, query) };
+      if (path === '/v2/appStoreVersionExperiments/experiment') return { data: withIncludes({ id: 'experiment', attributes: { name: 'Color', state: 'APPROVED' }, relationships: { app: link('app') } }, query) };
+      if (path === '/v1/appEventLocalizations/event-loc') return { data: withIncludes({ id: 'event-loc', attributes: { locale: 'en-US' }, relationships: { appEvent: link('event') } }, query) };
+      if (path === '/v1/apps/app/appEvents') return { data: [{ id: 'event', attributes: { referenceName: 'Launch event', eventState: 'PUBLISHED' } }] };
+      if (path === '/v1/appAssetLibraries/lib/images' || path === '/v1/appAssetLibraries/lib/videos') {
+        const row = path.endsWith('images') ? structuredClone(imageRow) : structuredClone(videoRow);
+        const selected = !query?.['filter[id]'] || query['filter[id]'].split(',').includes(row.id);
+        if (query?.include === 'placements') row.relationships = { placements: { data: selected ? [{ id: row.id === 'img' ? 'pi' : 'pv' }] : [] } };
+        return { data: selected ? [row] : [], included: query?.include === 'placements' && selected ? [withIncludes(rows[row.id === 'img' ? 0 : 1], query)] : [] };
       }
-      return { data: { id: 'set-new', attributes: {} } };
+      if (path === '/v1/appAssetLibraries/lib') return { data: { id: 'lib' } };
+      if (path === '/v1/appAssetLibraryImages/img') return { data: structuredClone(imageRow) };
+      if (path === '/v1/appAssetLibraryVideos/vid') return { data: structuredClone(videoRow) };
+      if (path === '/v1/appAssetLibraryPlacements/pi' || path === '/v1/appAssetLibraryPlacements/pv') return { data: withIncludes(rows.find((p) => path.endsWith(p.id)), query) };
+      if (path === '/v1/appAssetLibraryImages/img/placements') return { data: [rows[0]] };
+      if (path === '/v1/appAssetLibraryVideos/vid/placements') return { data: [rows[1]] };
+      if (path.endsWith('/placements')) return { data: rows.map((row) => withIncludes(row, query)), included: [structuredClone(imageRow), structuredClone(videoRow)] };
+      if (path === '/v1/appAssetLibraryRefData' || path === '/v1/appAssetLibraryRefData/ref') return { data: path.endsWith('/ref') ? { id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } } : [{ id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } }] };
+      throw new Error(`Unexpected GET ${path}`);
     }),
-    patch: vi.fn(async () => ({
-      data: { attributes: { assetDeliveryState: { state: 'COMPLETE' } } },
-    })),
-    uploadAssetPart: vi.fn(async (op: any, part: Uint8Array) => {
-      puts.push({ url: op.url, length: part.length, first: part[0] });
-    }),
+    post: vi.fn(async (path: string, body: any) => path === '/v1/appAssetLibraryPlacements' ? { data: { id: 'placed', attributes: { state: 'ASSET_PROCESSING' } } } : { data: { id: 'new', attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.invalid/part', offset: 0, length: body.data.attributes?.fileSize ?? 12 }] } } }),
+    patch: vi.fn(async () => ({ data: { id: 'new', attributes: { state: 'UPLOAD_COMPLETE' } } })),
+    delete: vi.fn(async () => undefined), uploadAssetPart: vi.fn(async () => undefined),
   };
-  return { http, puts };
+  return http;
+}
+const context = (http: ReturnType<typeof fakeHttp>, options = {}): MediaContext => ({ http: http as any, ...options });
+let dir: string, file: string;
+beforeEach(async () => { dir = await fs.mkdtemp(join(tmpdir(), 'heimdall-media-')); file = join(dir, 'hero.png'); await fs.writeFile(file, PNG); });
+afterEach(async () => { vi.restoreAllMocks(); await fs.rm(dir, { recursive: true, force: true }); });
+
+for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
+  describe(`media on ${target}`, () => {
+    const args = pageArgs(target);
+    it('lists image and video IDs, states, placements and reference count/size limits', async () => {
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      const result: any = await executeMediaTool('media__list', args, context(http));
+      expect(result.assets.map((a: any) => a.id)).toEqual(['img', 'vid']);
+      expect(result.assets[0]).toMatchObject({ name: 'Hero image', state: 'COMPLETE', width: 1200 });
+      expect(result.assets[1].placements[0]).toMatchObject({ id: 'pv', assetId: 'vid', pageId: pages[target === 'library' ? 'version' : target] });
+      if (target !== 'library') expect(result.pages[0].sets.map((s: any) => s.kind)).toEqual(['image', 'video']);
+      expect(result.limits[0].features[0].placementPolicies[0].groupLimits[0].maxCount).toBe(10);
+      expect(result.limits[0].videoSpecs[0].maxFileSize).toBe(500000000);
+      if (target === 'library') {
+        expect(result.assets[0].placements[0]).toMatchObject({ pageId: 'loc', target: 'version' });
+        expect(http.get.mock.calls.filter(([p]) => p.endsWith('/img/placements') || p.endsWith('/vid/placements'))).toHaveLength(2);
+      }
+      expect(http.get.mock.calls.some(([p]) => /appScreenshot|appPreview|appEventScreenshot|appEventVideo/.test(p))).toBe(false);
+    });
+    it.each(['image', 'video'] as const)('uploads a %s via reserve/bytes/commit and optional placement', async (kind) => {
+      await fs.writeFile(file, kind === 'video' ? VIDEO : PNG);
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      const result: any = await executeMediaTool('media__upload', { ...args, file_path: file, category: 'APP_SCREENSHOTS_AND_PREVIEWS', ...(target === 'library' ? {} : { placement_type: kind === 'image' ? 'APP_SCREENSHOT' : 'APP_PREVIEW' }) }, context(http));
+      expect(result.ok).toBe(true);
+      expect(http.uploadAssetPart.mock.calls[0][1]).toEqual(kind === 'video' ? VIDEO : PNG);
+      expect(http.patch.mock.calls[0][0]).toBe(kind === 'image' ? '/v1/appAssetLibraryImages/new' : '/v1/appAssetLibraryVideos/new');
+      expect(http.post.mock.calls).toHaveLength(target === 'library' ? 1 : 2);
+      if (target !== 'library') expect(http.post.mock.calls[1][1].data.relationships[MEDIA_TARGETS[target].relationship].data.id).toBe(pages[target]);
+      // Check every sent body against the same generated catalog the raw tools use.
+      for (const [path, body] of [...http.post.mock.calls, ...http.patch.mock.calls] as any[]) {
+        const operation = path.endsWith('/new') ? MEDIA_ASSETS[kind].update : path.endsWith('Placements') ? MEDIA_OPS.placement : MEDIA_ASSETS[kind].create;
+        expect(validateBody(BODY_SCHEMAS[mediaOperation(operation).bodyRef!], body)).toEqual([]);
+      }
+    });
+    it('deletes only owned files/placements and names the target in the preview', async () => {
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      const request = { ...args, ...(target === 'library' ? { asset_ids: ['img', 'vid'] } : { placement_ids: ['pi', 'pv'] }) };
+      const preview = await buildMediaPreview('media__delete', request, http as any);
+      expect(preview.strong).toBe(true); expect(preview.message).toContain('Hero image'); expect(preview.message).toContain('Preview video');
+      expect(preview.message).toContain(target === 'library' ? 'asset library' : pages[target]);
+      if (target === 'library') expect(preview.message).toMatch(/Hero image \[img\]: IOS version 3.0[\s\S]*Preview video \[vid\]: IOS version 3.0/);
+      const result: any = await executeMediaTool('media__delete', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+      expect(result.succeeded).toHaveLength(2); expect(http.delete).toHaveBeenCalledTimes(2);
+      expect(http.delete.mock.calls[0][0]).toBe(target === 'library' ? '/v1/appAssetLibraryImages/img' : '/v1/appAssetLibraryPlacements/pi');
+    });
+    it('rejects one foreign ID before deleting anything', async () => {
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      await expect(executeMediaTool('media__delete', { ...args, ...(target === 'library' ? { asset_ids: ['img', 'foreign'] } : { placement_ids: ['pi', 'foreign'] }) }, context(http))).rejects.toThrow(/Nothing was changed/);
+      expect(http.delete).not.toHaveBeenCalled();
+    });
+    it('reports partial deletion without discarding successful IDs', async () => {
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      http.delete.mockRejectedValueOnce(new AscApiError('In use', 409));
+      const result: any = await executeMediaTool('media__delete', { ...args, ...(target === 'library' ? { asset_ids: ['img', 'vid'] } : { placement_ids: ['pi', 'pv'] }) }, context(http));
+      expect(result.ok).toBe(false); expect(result.succeeded).toHaveLength(1); expect(result.failed[0]).toMatchObject({ name: 'Hero image', error: 'In use' });
+    });
+    it.each(['rename', 'poster', 'archive'] as const)('supports %s with checked library ownership', async (action) => {
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      const result: any = await executeMediaTool('media__arrange', { ...args, action, asset_ids: [action === 'poster' ? 'vid' : 'img'], reference_name: 'New name', preview_frame_time_code: '00:00:05:00' }, context(http));
+      expect(result.ok).toBe(true); expect(http.patch).toHaveBeenCalledOnce();
+    });
+    it('reorders only a complete group where Apple supports order', async () => {
+      const http = fakeHttp(target === 'library' ? 'version' : target);
+      const request = executeMediaTool('media__arrange', { ...args, action: 'reorder', placement_ids: ['pv', 'pi'], placement_group: 'phone' }, context(http));
+      if (target === 'event') { await expect(request).rejects.toThrow(/no order/); expect(http.post).not.toHaveBeenCalled(); }
+      else {
+        expect((await request as any).ok).toBe(true);
+        expect(http.post.mock.calls[0][1].data.relationships.orderedPlacements.data.map((r: any) => r.id)).toEqual(['pv', 'pi']);
+      }
+    });
+    if (target !== 'library') it('places an existing file without uploading another copy', async () => {
+      const http = fakeHttp(target);
+      await executeMediaTool('media__arrange', { ...args, action: 'place', asset_ids: ['img'], placement_type: 'APP_SCREENSHOT' }, context(http));
+      expect(http.post.mock.calls[0][0]).toBe('/v1/appAssetLibraryPlacements'); expect(http.uploadAssetPart).not.toHaveBeenCalled();
+    });
+    if (target !== 'library') it('removes a placement only from the named page after showing its file', async () => {
+      const http = fakeHttp(target);
+      const request = { ...args, action: 'remove', placement_ids: ['pi'] };
+      const preview = await buildMediaPreview('media__arrange', request, http as any);
+      expect(preview.strong).toBe(true);
+      expect(preview.message).toContain('Hero image');
+      expect(preview.message).toContain(pages[target]);
+      await executeMediaTool('media__arrange', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+      expect(http.delete).toHaveBeenCalledWith('/v1/appAssetLibraryPlacements/pi');
+    });
+  });
 }
 
-describe('listing__upload_screenshot', () => {
-  const args = {
-    app: 'Ask Quran',
-    locale: 'en-US',
-    display_type: 'APP_IPHONE_67',
-    // tmpdir(), not a literal: `/private/tmp` is macOS's real path behind the
-    // /tmp symlink and does not exist on Linux, so these three passed on the
-    // author's machine and failed every CI runner.
-    file_path: join(tmpdir(), 'heimdall-upload-test.jpg'),
-  };
-
-  it('reserves, uploads every slice at Apple’s offsets, then commits the MD5', async () => {
-    const { writeFile, rm } = await import('node:fs/promises');
-    const { createHash } = await import('node:crypto');
-    // Real JPEG magic bytes: the upload refuses anything that is not an image,
-    // so a fixture of plain text would be rejected before it reached Apple.
-    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0x61, 0x62, 0x63, 0x64]);
-    await writeFile(args.file_path, bytes);
-    try {
-      const { http, puts } = fakeUploadHttp();
-      const result: any = await executeScreenshotTool(
-        'listing__upload_screenshot',
-        args,
-        { http } as unknown as ScreenshotContext
-      );
-
-      // Reserve declares the real size — Apple cuts the slices from this.
-      const reserve = http.post.mock.calls.find((c: any[]) => c[0] === '/v1/appScreenshots')!;
-      expect(reserve[1].data.attributes.fileSize).toBe(7);
-      expect(reserve[1].data.attributes.fileName).toBe('heimdall-upload-test.jpg');
-      expect(reserve[1].data.relationships.appScreenshotSet.data.id).toBe('set-67');
-
-      // One PUT per operation, sliced at the offsets Apple gave, not guessed.
-      expect(puts).toEqual([
-        { url: 'https://upload.apple.com/a', length: 4, first: 0xff },
-        { url: 'https://upload.apple.com/b', length: 3, first: 'b'.charCodeAt(0) },
-      ]);
-
-      // Commit carries the checksum of the WHOLE file, not of the last slice.
-      const commit = http.patch.mock.calls[0];
-      expect(commit[0]).toBe('/v1/appScreenshots/shot-1');
-      expect(commit[1].data.attributes.uploaded).toBe(true);
-      expect(commit[1].data.attributes.sourceFileChecksum).toBe(
-        createHash('md5').update(bytes).digest('hex')
-      );
-
-      expect(result.ok).toBe(true);
-      expect(result.parts).toBe(2);
-      expect(result.deliveryState).toBe('COMPLETE');
-    } finally {
-      await rm(args.file_path, { force: true });
-    }
-  });
-
-  it('refuses a missing file before reserving anything', async () => {
-    const { http } = fakeUploadHttp();
-    await expect(
-      executeScreenshotTool(
-        'listing__upload_screenshot',
-        { ...args, file_path: join(tmpdir(), 'heimdall-does-not-exist.png') },
-        { http } as unknown as ScreenshotContext
-      )
-    ).rejects.toThrow(/Cannot read/);
-    // The point of reading first: no reserved-but-empty screenshot row.
+describe('media resolution, confirmation and file safety', () => {
+  const uploadArgs = () => ({ ...pageArgs('version'), file_path: file, category: 'APP_SCREENSHOTS_AND_PREVIEWS', placement_type: 'APP_SCREENSHOT' });
+  it.each(['platform', 'version'])('refuses ambiguous %s for both preview and apply', async (ambiguous) => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => path.endsWith('/appStoreVersions') ? { data: ['v1', 'v2'].map((id, i) => ({ id, attributes: { platform: ambiguous === 'platform' && i ? 'MAC_OS' : 'IOS', versionString: ambiguous === 'version' && i ? '4.0' : '3.0', appStoreState: 'PREPARE_FOR_SUBMISSION' } })) } : original(path, query));
+    await expect(buildMediaPreview('media__upload', uploadArgs(), http as any)).rejects.toThrow(/platform|Ambiguous/);
+    await expect(executeMediaTool('media__upload', uploadArgs(), context(http))).rejects.toThrow(/platform|Ambiguous/);
     expect(http.post).not.toHaveBeenCalled();
   });
-
-  it('says the reserved row is empty when Apple returns nowhere to upload', async () => {
-    const { writeFile, rm } = await import('node:fs/promises');
-    await writeFile(args.file_path, Buffer.from([0xff, 0xd8, 0xff, 0x61]));
-    try {
-      const { http } = fakeUploadHttp([]);
-      await expect(
-        executeScreenshotTool('listing__upload_screenshot', args, { http } as unknown as ScreenshotContext)
-      ).rejects.toThrow(/holds no image/);
-      expect(http.patch).not.toHaveBeenCalled();
-    } finally {
-      await rm(args.file_path, { force: true });
-    }
-  });
-
-  it('refuses a file that is not an image before any of it leaves the machine', async () => {
-    // file_path is chosen by the model. Without this check it is a request to
-    // upload any readable file — a private key reaches Apple and only then
-    // comes back rejected.
-    const { writeFile, rm } = await import('node:fs/promises');
-    const key = join(tmpdir(), 'heimdall-not-an-image.p8');
-    await writeFile(key, '-----BEGIN PRIVATE KEY-----\nnope\n-----END PRIVATE KEY-----\n');
-    try {
-      const { http, puts } = fakeUploadHttp();
-      await expect(
-        executeScreenshotTool(
-          'listing__upload_screenshot',
-          { ...args, file_path: key },
-          { http } as unknown as ScreenshotContext
-        )
-      ).rejects.toThrow(/not a PNG or JPEG/);
-      expect(http.post).not.toHaveBeenCalled();
-      expect(puts).toEqual([]);
-    } finally {
-      await rm(key, { force: true });
-    }
-  });
-
-  it('rejects a device size Apple does not have', async () => {
-    const { http } = fakeUploadHttp();
-    await expect(
-      executeScreenshotTool(
-        'listing__upload_screenshot',
-        { ...args, display_type: 'APP_IPHONE_99' },
-        { http } as unknown as ScreenshotContext
-      )
-    ).rejects.toThrow(/not a device size/);
-  });
-
-  it('dry-run resolves the target and sends nothing', async () => {
-    const { writeFile, rm } = await import('node:fs/promises');
-    await writeFile(args.file_path, Buffer.from([0xff, 0xd8, 0xff, 0x61]));
-    try {
-      const { http, puts } = fakeUploadHttp();
-      const result: any = await executeScreenshotTool('listing__upload_screenshot', args, {
-        http,
-        dryRun: true,
-      } as unknown as ScreenshotContext);
-      expect(result.dryRun).toBe(true);
-      expect(result.wouldSend.path).toBe('/v1/appScreenshots');
-      expect(http.post).not.toHaveBeenCalled();
-      expect(http.patch).not.toHaveBeenCalled();
-      expect(puts).toEqual([]);
-    } finally {
-      await rm(args.file_path, { force: true });
-    }
-  });
-});
-
-/** The asset library's API: one library per app, reserve → PUT → commit, then place. */
-function fakeAssetHttp(operations = [{ method: 'PUT', url: 'https://upload.apple.com/x', offset: 0, length: 8 }]) {
-  const puts: Array<{ url: string; length: number }> = [];
-  const http = {
-    get: vi.fn(async (path: string) => {
-      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Test App', bundleId: 'com.example.test' } }] };
-      if (path === '/v1/apps/app-1/assetLibrary') return { data: { id: 'lib-1', type: 'appAssetLibraries' } };
-      if (path.includes('/appStoreVersionLocalizations')) return { data: [{ id: 'loc-tr', attributes: { locale: 'tr' } }] };
-      if (path.includes('/appStoreVersions')) return { data: [{ id: 'v-1', attributes: { versionString: '1.0' } }] };
-      return {};
-    }),
-    post: vi.fn(async (path: string, body: any) => {
-      if (path === '/v1/appAssetLibraryPlacements') return { data: { id: 'pl-1', attributes: { state: 'PENDING' } } };
-      return { data: { id: `${body.data.type}-1`, attributes: { uploadOperations: operations } } };
-    }),
-    patch: vi.fn(async (path: string) => ({ data: { id: path.split('/').pop(), attributes: { state: 'UPLOAD_COMPLETE' } } })),
-    uploadAssetPart: vi.fn(async (op: { url: string }, part: Buffer) => {
-      puts.push({ url: op.url, length: part.length });
-    }),
-  };
-  return { http, puts };
-}
-
-describe('listing__upload_asset', () => {
-  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const file = join(tmpdir(), 'heimdall-asset-test.png');
-  const base = { app: 'Test App', file_path: file, category: 'CREATIVE_ASSETS' };
-  const withFile = async (bytes: Buffer, body: () => Promise<void>) => {
-    const { writeFile, rm } = await import('node:fs/promises');
-    await writeFile(file, bytes);
-    try { await body(); } finally { await rm(file, { force: true }); }
-  };
-
-  it('is a write, offered beside the screenshot upload', () => {
-    const tool = SCREENSHOT_TOOLS.find((t) => t.name === 'listing__upload_asset')!;
-    expect(tool.annotations?.readOnlyHint).toBe(false);
-    expect((tool.inputSchema.properties as any).category.enum).toContain('CREATIVE_ASSETS');
-    expect((tool.inputSchema.properties as any).placement_type.enum).toContain('APP_SCREENSHOT');
-  });
-
-  it('reserves in the app’s library, uploads, and commits without a checksum', async () => {
-    await withFile(png, async () => {
-      const { http, puts } = fakeAssetHttp();
-      const result: any = await executeScreenshotTool('listing__upload_asset', base, { http } as unknown as ScreenshotContext);
-      const reserve = http.post.mock.calls[0];
-      expect(reserve[0]).toBe('/v1/appAssetLibraryImages');
-      expect(reserve[1].data.attributes).toEqual({ fileName: 'heimdall-asset-test.png', fileSize: 8, category: 'CREATIVE_ASSETS' });
-      expect(reserve[1].data.relationships.assetLibrary.data.id).toBe('lib-1');
-      expect(puts).toEqual([{ url: 'https://upload.apple.com/x', length: 8 }]);
-      const commit = http.patch.mock.calls[0];
-      expect(commit[0]).toBe('/v1/appAssetLibraryImages/appAssetLibraryImages-1');
-      expect(commit[1].data.attributes).toEqual({ uploaded: true });
-      // No target: nothing is placed, so nothing reaches a store page.
-      expect(http.post).toHaveBeenCalledTimes(1);
-      expect(result.state).toBe('UPLOAD_COMPLETE');
+  it.each(['cpp', 'ppo', 'event'] as const)('refuses a %s localization owned by another app', async (target) => {
+    const http = fakeHttp(target); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => {
+      const result = await original(path, query);
+      if (path === '/v1/apps/app/appEvents') return { data: [] };
+      if (result.data?.relationships?.app) result.data.relationships.app = link('foreign-app');
+      return result;
     });
-  });
-
-  it('places the upload on a version locale when asked', async () => {
-    await withFile(png, async () => {
-      const { http } = fakeAssetHttp();
-      const result: any = await executeScreenshotTool(
-        'listing__upload_asset',
-        { ...base, placement_type: 'APP_SCREENSHOT', locale: 'tr' },
-        { http } as unknown as ScreenshotContext
-      );
-      const place = http.post.mock.calls[1];
-      expect(place[0]).toBe('/v1/appAssetLibraryPlacements');
-      expect(place[1].data.attributes.placementType).toBe('APP_SCREENSHOT');
-      expect(place[1].data.relationships.image.data.id).toBe('appAssetLibraryImages-1');
-      expect(place[1].data.relationships.appStoreVersionLocalization.data.id).toBe('loc-tr');
-      expect(result.placementId).toBe('pl-1');
-    });
-  });
-
-  it('treats an MP4 as a video', async () => {
-    const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom')]);
-    await withFile(mp4, async () => {
-      const { http } = fakeAssetHttp([{ method: 'PUT', url: 'https://upload.apple.com/v', offset: 0, length: 12 }]);
-      await executeScreenshotTool('listing__upload_asset', base, { http } as unknown as ScreenshotContext);
-      expect(http.post.mock.calls[0][0]).toBe('/v1/appAssetLibraryVideos');
-    });
-  });
-
-  it('refuses a file that is neither image nor video before any network call', async () => {
-    await withFile(Buffer.from('-----BEGIN PRIVATE KEY-----'), async () => {
-      const { http, puts } = fakeAssetHttp();
-      await expect(
-        executeScreenshotTool('listing__upload_asset', base, { http } as unknown as ScreenshotContext)
-      ).rejects.toThrow(/not a PNG, JPEG, MP4 or MOV/);
-      expect(http.get).not.toHaveBeenCalled();
-      expect(puts).toEqual([]);
-    });
-  });
-
-  it('wants exactly one target with a placement type, and a type with a target', async () => {
-    const { http } = fakeAssetHttp();
-    const ctx = { http } as unknown as ScreenshotContext;
-    await expect(
-      executeScreenshotTool('listing__upload_asset', { ...base, placement_type: 'APP_SCREENSHOT' }, ctx)
-    ).rejects.toThrow(/exactly one target/);
-    await expect(
-      executeScreenshotTool('listing__upload_asset', { ...base, placement_type: 'APP_SCREENSHOT', locale: 'tr', app_event_localization_id: 'e1' }, ctx)
-    ).rejects.toThrow(/exactly one target/);
-    await expect(executeScreenshotTool('listing__upload_asset', { ...base, locale: 'tr' }, ctx)).rejects.toThrow(/without placement_type/);
+    await expect(executeMediaTool('media__upload', { ...uploadArgs(), ...pageArgs(target), locale: undefined }, context(http))).rejects.toThrow(/does not belong/);
     expect(http.post).not.toHaveBeenCalled();
   });
-
-  it('keeps the upload when only the placement fails, and says so', async () => {
-    await withFile(png, async () => {
-      const { http } = fakeAssetHttp();
-      http.post.mockImplementationOnce(async (_p: string, body: any) => ({
-        data: { id: `${body.data.type}-1`, attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.apple.com/x', offset: 0, length: 8 }] } },
-      }));
-      http.post.mockImplementationOnce(async () => { throw new Error('placement limit reached'); });
-      const result: any = await executeScreenshotTool(
-        'listing__upload_asset',
-        { ...base, placement_type: 'EVENT_CARD_ASSET', app_event_localization_id: 'ev-1' },
-        { http } as unknown as ScreenshotContext
-      );
-      expect(result.ok).toBe(true);
-      expect(result.placed).toBe(false);
-      expect(result.placementError).toMatch(/placement limit/);
-    });
-  });
-
-  it('dry-run resolves library and target and sends nothing', async () => {
-    await withFile(png, async () => {
-      const { http, puts } = fakeAssetHttp();
-      const result: any = await executeScreenshotTool(
-        'listing__upload_asset',
-        { ...base, placement_type: 'APP_SCREENSHOT', locale: 'tr' },
-        { http, dryRun: true } as unknown as ScreenshotContext
-      );
-      expect(result.dryRun).toBe(true);
-      expect(result.risk).toBe('public');
-      expect(result.wouldSend.map((w: any) => w.path)).toEqual(['/v1/appAssetLibraryImages', '/v1/appAssetLibraryPlacements']);
-      expect(http.post).not.toHaveBeenCalled();
-      expect(puts).toEqual([]);
-    });
-  });
-});
-
-/** An app's library holding two images, one placed, and a video. */
-function fakeLibraryHttp(failOn?: string) {
-  const files: Record<string, any[]> = {
-    images: [
-      { id: 'img-1', attributes: { referenceName: '01.png (15)' }, relationships: { placements: { data: [] } } },
-      { id: 'img-2', attributes: { referenceName: '05.png (14)' }, relationships: { placements: { data: [{ id: 'p-1' }] } } },
-    ],
-    videos: [{ id: 'vid-1', attributes: { fileName: 'intro.mp4' }, relationships: { placements: { data: [] } } }],
-  };
-  return {
-    get: vi.fn(async (path: string, query?: any) => {
-      if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Test App', bundleId: 'com.example.test' } }] };
-      if (path === '/v1/apps/app-1/assetLibrary') return { data: { id: 'lib-1', type: 'appAssetLibraries' } };
-      const kind = /^\/v1\/appAssetLibraries\/lib-1\/(images|videos)$/.exec(path)?.[1];
-      if (kind) {
-        const wanted = String(query?.['filter[id]'] ?? '').split(',');
-        return { data: files[kind].filter((f) => wanted.includes(f.id)) };
-      }
-      return {};
-    }),
-    delete: vi.fn(async (path: string) => {
-      if (failOn && path.endsWith(failOn)) throw new Error('409 conflict');
-      return undefined;
-    }),
-  };
-}
-
-describe('listing__delete_assets', () => {
-  const args = { app: 'Test App', asset_ids: ['img-1', 'img-2', 'vid-1'] };
-
-  it('is a destructive write', () => {
-    const tool = SCREENSHOT_TOOLS.find((t) => t.name === 'listing__delete_assets')!;
-    expect(tool.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true });
-  });
-
-  it('asks once, naming the app and every file', async () => {
-    const preview = await buildAssetDeletePreview(args, fakeLibraryHttp() as any);
-    expect(preview.strong).toBe(true);
-    expect(preview.message).toContain('App:        Test App');
-    expect(preview.message).toContain('Files:      01.png (15), 05.png (14) (on 1 page), intro.mp4');
-  });
-
-  it('deletes each file at its own kind’s path', async () => {
-    const http = fakeLibraryHttp();
-    const result: any = await executeScreenshotTool('listing__delete_assets', args, { http } as unknown as ScreenshotContext);
-    expect(http.delete.mock.calls.map((c) => c[0])).toEqual([
-      '/v1/appAssetLibraryImages/img-1',
-      '/v1/appAssetLibraryImages/img-2',
-      '/v1/appAssetLibraryVideos/vid-1',
-    ]);
-    expect(result.ok).toBe(true);
-  });
-
-  it('deletes nothing when an id is not in this app’s library', async () => {
-    const http = fakeLibraryHttp();
-    await expect(
-      executeScreenshotTool('listing__delete_assets', { ...args, asset_ids: ['img-1', 'other-app-img'] }, { http } as unknown as ScreenshotContext)
-    ).rejects.toThrow(/Not in Test App’s asset library: other-app-img\. Nothing was deleted/);
+  it('rejects truncated ownership lists', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => { const res = await original(path, query); return path.endsWith('/images') ? { ...res, meta: { paging: { total: 2 } } } : res; });
+    await expect(executeMediaTool('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, context(http))).rejects.toThrow(/Truncated/);
     expect(http.delete).not.toHaveBeenCalled();
-    await expect(buildAssetDeletePreview({ ...args, asset_ids: ['other-app-img'] }, http as any)).rejects.toThrow(/Nothing was deleted/);
   });
-
-  it('carries on past a failure and says which ones to retry', async () => {
-    const http = fakeLibraryHttp('img-2');
-    const result: any = await executeScreenshotTool('listing__delete_assets', args, { http } as unknown as ScreenshotContext);
-    expect(result.ok).toBe(false);
-    expect(result.deleted.map((d: any) => d.id)).toEqual(['img-1', 'vid-1']);
-    expect(result.failed).toEqual([{ id: 'img-2', name: '05.png (14)', error: '409 conflict' }]);
+  it('follows list pagination rather than silently missing a later file', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => path.endsWith('/images') ? { data: [], links: { next: '/next-image' } } : path === '/next-image' ? { data: [{ ...structuredClone(imageRow), relationships: { placements: { data: [{ id: 'pi' }] } } }], included: [withIncludes(placement('version', 'image'), { include: 'placements' })] } : original(path, query));
+    const res: any = await executeMediaTool('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, context(http, { dryRun: true }));
+    expect(res.wouldSend[0].name).toBe('Hero image'); expect(http.delete).not.toHaveBeenCalled();
   });
-
-  it('touches nothing in dry-run', async () => {
-    const http = fakeLibraryHttp();
-    const result: any = await executeScreenshotTool('listing__delete_assets', args, { http, dryRun: true } as unknown as ScreenshotContext);
-    expect(result.wouldDelete).toHaveLength(3);
+  it('detects a changed target after approval', async () => {
+    const http = fakeHttp(); const args = { ...pageArgs('library'), asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__delete', args, http as any);
+    const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => { const result = await original(path, query); if (path.endsWith('/images')) result.data[0].attributes.referenceName = 'Changed file'; return result; });
+    await expect(executeMediaTool('media__delete', args, context(http, { approvedPlanFingerprint: preview.planFingerprint }))).rejects.toThrow(/changed since confirmation/);
     expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each(['directory', 'empty', 'secret', 'large-image', 'large-video'] as const)('refuses %s before network access', async (bad) => {
+    if (bad === 'empty') await fs.writeFile(file, '');
+    if (bad === 'secret') await fs.writeFile(file, 'not media, not a real credential');
+    if (bad.startsWith('large')) { const fd = await fs.open(file, 'r+'); await fd.truncate((bad === 'large-image' ? 51 : 501) * 1024 * 1024); await fd.close(); }
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__upload', { ...uploadArgs(), file_path: bad === 'directory' ? dir : file }, context(http))).rejects.toThrow();
+    expect(http.get).not.toHaveBeenCalled(); expect(http.post).not.toHaveBeenCalled();
+  });
+  it('reads only from the opened descriptor when the path is replaced', async () => {
+    const originalOpen = vi.mocked(fs.open).getMockImplementation()!;
+    const readSizes: number[] = [];
+    const descriptorBytes: Buffer[] = [];
+    vi.mocked(fs.open).mockImplementationOnce(async (...args: Parameters<typeof fs.open>) => {
+      const fd = await originalOpen(...args);
+      const read = fd.read.bind(fd);
+      let first = true;
+      fd.read = (async (buffer: Buffer, offset: number, length: number, position: number) => {
+        readSizes.push(length);
+        const result = await read(buffer, offset, length, position);
+        descriptorBytes.push(Buffer.from(buffer.subarray(offset, offset + result.bytesRead)));
+        if (first) { first = false; await fs.rename(file, join(dir, 'original.png')); await fs.writeFile(file, 'different path content'); }
+        return result;
+      }) as any;
+      return fd;
+    });
+    const http = fakeHttp();
+    // Rename changes ctime on some filesystems; either safe refusal or the
+    // original descriptor's bytes is acceptable, never replacement content.
+    let refused = false;
+    try { await executeMediaTool('media__upload', uploadArgs(), context(http)); } catch (err) { expect(String(err)).toMatch(/File changed/); refused = true; }
+    if (refused) expect(http.uploadAssetPart).not.toHaveBeenCalled();
+    else { expect(http.uploadAssetPart).toHaveBeenCalledOnce(); expect(http.uploadAssetPart.mock.calls[0][1]).toEqual(PNG); }
+    expect(descriptorBytes).toHaveLength(2);
+    expect(descriptorBytes[1]).toEqual(PNG);
+    expect(vi.mocked(fs.open)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
+    expect(readSizes[0]).toBe(12); expect(Math.max(...readSizes)).toBeLessThanOrEqual(1024 * 1024);
+  });
+  it('checks fstat before reading a file that grew after the initial stat', async () => {
+    const originalOpen = vi.mocked(fs.open).getMockImplementation()!;
+    vi.mocked(fs.open).mockImplementationOnce(async (...args: Parameters<typeof fs.open>) => {
+      const fd = await originalOpen(...args); const info = await fd.stat();
+      vi.spyOn(fd, 'stat').mockResolvedValue({ ...info, size: 501 * 1024 * 1024, isFile: () => true } as any);
+      vi.spyOn(fd, 'read').mockImplementation(() => { throw new Error('must not read'); });
+      return fd;
+    });
+    await expect(executeMediaTool('media__upload', uploadArgs(), context(fakeHttp()))).rejects.toThrow(/File size/);
+  });
+  it('keeps dry-run free of reserve, byte transfer, commit and placement', async () => {
+    const http = fakeHttp(); const res: any = await executeMediaTool('media__upload', uploadArgs(), context(http, { dryRun: true }));
+    expect(res.wouldSend).toHaveLength(2); expect(res.risk).toBe('public');
+    expect(http.post).not.toHaveBeenCalled(); expect(http.patch).not.toHaveBeenCalled(); expect(http.uploadAssetPart).not.toHaveBeenCalled();
+  });
+  it('reports upload success and placement failure separately', async () => {
+    const http = fakeHttp(); const original = http.post.getMockImplementation()!;
+    http.post.mockImplementation(async (path, body) => { if (path.endsWith('Placements')) throw new Error('Wrong size'); return original(path, body); });
+    const result: any = await executeMediaTool('media__upload', uploadArgs(), context(http));
+    expect(result).toMatchObject({ ok: false, placed: false, assetId: 'new', placementError: 'Wrong size', retryWith: 'media__arrange' });
+    expect(http.patch).toHaveBeenCalledOnce();
+  });
+  it.each(['UPLOAD_COMPLETE', 'READY_FOR_REVIEW', 'PREPARE_FOR_SUBMISSION', 'APPROVED', 'FAILED'])('reports review submission only when Apple says %s', async (state) => {
+    const http = fakeHttp(); http.patch.mockResolvedValue({ data: { id: 'new', attributes: { state } } });
+    const result: any = await executeMediaTool('media__upload', uploadArgs(), context(http));
+    if (['READY_FOR_REVIEW', 'PREPARE_FOR_SUBMISSION'].includes(state)) expect(result.review).toMatchObject({ required: true, submitWith: 'release__submit_items', item: { type: 'appAssetLibraryImage', id: 'new' } });
+    else expect(result.review).toBeUndefined();
+    if (state === 'FAILED') { expect(result.placed).toBe(false); expect(http.post).toHaveBeenCalledOnce(); }
+  });
+  it('does not claim a review submission for an unplaced or failed placement', async () => {
+    const library = fakeHttp(); library.patch.mockResolvedValue({ data: { id: 'new', attributes: { state: 'READY_FOR_REVIEW' } } });
+    const stored: any = await executeMediaTool('media__upload', { ...uploadArgs(), target: 'library', locale: undefined, placement_type: undefined }, context(library));
+    expect(stored.review).toBeUndefined();
+
+    const failed = fakeHttp(); failed.patch.mockResolvedValue({ data: { id: 'new', attributes: { state: 'READY_FOR_REVIEW' } } });
+    failed.post.mockImplementation(async (path: string) => path.endsWith('/appAssetLibraryPlacements')
+      ? { data: { id: 'placement-1', attributes: { state: 'FAILED' } } }
+      : { data: { id: 'new', attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.invalid/part', offset: 0, length: PNG.length }] } } });
+    const placed: any = await executeMediaTool('media__upload', uploadArgs(), context(failed));
+    expect(placed).toMatchObject({ ok: false, placed: false, placementState: 'FAILED' });
+    expect(placed.review).toBeUndefined();
+  });
+  it('reports a reserved ID when byte transfer fails', async () => {
+    const http = fakeHttp(); http.uploadAssetPart.mockRejectedValue(new Error('Upload failed'));
+    const result: any = await executeMediaTool('media__upload', uploadArgs(), context(http));
+    expect(result).toMatchObject({ ok: false, assetId: 'new', failedPhase: 'upload' }); expect(http.patch).not.toHaveBeenCalled();
+  });
+  it('rejects incomplete byte ranges before upload or commit', async () => {
+    const http = fakeHttp(); http.post.mockResolvedValue({ data: { id: 'new', attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.invalid/part', offset: 0, length: 3 }] } } });
+    const result: any = await executeMediaTool('media__upload', uploadArgs(), context(http));
+    expect(result.error).toMatch(/complete file/); expect(http.uploadAssetPart).not.toHaveBeenCalled(); expect(http.patch).not.toHaveBeenCalled();
+  });
+  it.each([[], Array.from({ length: 51 }, (_, i) => String(i)), ['img', 'img'], [123]])('rejects invalid deletion IDs %#', async (ids) => {
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__delete', { ...pageArgs('library'), asset_ids: ids }, context(http))).rejects.toThrow();
+    expect(http.delete).not.toHaveBeenCalled();
+  });
+  it('refuses a partial reorder and mixed image/video poster changes before any write', async () => {
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__arrange', { ...pageArgs('version'), action: 'reorder', placement_ids: ['pi'], placement_group: 'phone' }, context(http))).rejects.toThrow(/every placement/);
+    await expect(executeMediaTool('media__arrange', { ...pageArgs('library'), action: 'poster', asset_ids: ['vid', 'img'], preview_frame_time_code: '00:00:01:00' }, context(http))).rejects.toThrow(/require videos/);
+    expect(http.post).not.toHaveBeenCalled(); expect(http.patch).not.toHaveBeenCalled();
+  });
+  it('uses action/target risk and exposes exactly four tools without legacy aliases', async () => {
+    expect(MEDIA_TOOLS.map((t) => t.name)).toEqual(['media__list', 'media__upload', 'media__arrange', 'media__delete']);
+    expect(mediaRisk('media__upload', { target: 'library' })).toBe('low');
+    expect(mediaRisk('media__upload', { target: 'version' })).toBe('public');
+    for (const action of ['remove', 'archive', 'remove ', 'archive\n']) expect(mediaRisk('media__arrange', { target: 'version', action })).toBe('destructive');
+    await expect(executeMediaTool('listing__get_screenshots', pageArgs('version'), context(fakeHttp()))).rejects.toThrow(/Unknown media tool/);
+  });
+  it('rejects undeclared arrange actions before resolution or any write', async () => {
+    const http = fakeHttp();
+    for (const action of ['delete', 'DELETE', 'archive-now']) {
+      const request = { ...pageArgs('library'), action, asset_ids: action === 'delete' ? Array.from({ length: 50 }, (_, i) => `asset-${i}`) : ['img'] };
+      await expect(buildMediaPreview('media__arrange', request, http as any)).rejects.toThrow(/Unknown media action/);
+      await expect(executeMediaTool('media__arrange', request, context(http))).rejects.toThrow(/Unknown media action/);
+    }
+    expect(http.get).not.toHaveBeenCalled(); expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each(['remove ', 'archive\n'])('normalizes %j before risk and uses one destructive preview/apply plan', async (action) => {
+    const http = fakeHttp();
+    const request = action.startsWith('remove') ? { ...pageArgs('version'), action, placement_ids: ['pi'] } : { ...pageArgs('library'), action, asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__arrange', request, http as any);
+    expect(preview.strong).toBe(true); expect(preview.message).toContain('DESTRUCTIVE');
+    const result: any = await executeMediaTool('media__arrange', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+    expect(result.risk).toBe('destructive');
+    if (action.startsWith('remove')) expect(http.delete).toHaveBeenCalledOnce(); else expect(http.patch).toHaveBeenCalledOnce();
+  });
+  it('refuses a library-target remove before reading a live placement', async () => {
+    const http = fakeHttp();
+    const request = { ...pageArgs('library'), action: 'remove', placement_ids: ['pi'] };
+    await expect(buildMediaPreview('media__arrange', request, http as any)).rejects.toThrow(/named page/);
+    await expect(executeMediaTool('media__arrange', request, context(http))).rejects.toThrow(/named page/);
+    expect(http.get).not.toHaveBeenCalled(); expect(http.delete).not.toHaveBeenCalled();
+  });
+  it('exposes library and reference IDs through media__list and verifies ownership', async () => {
+    const http = fakeHttp();
+    const result: any = await executeMediaTool('media__list', { ...pageArgs('library'), library_id: 'lib', ref_data_id: 'ref' }, context(http));
+    expect(result.libraryId).toBe('lib'); expect(result.limits.map((r: any) => r.id)).toEqual(['ref']);
+    expect(http.get).toHaveBeenCalledWith('/v1/appAssetLibraries/lib', undefined);
+    expect(http.get).toHaveBeenCalledWith('/v1/appAssetLibraryRefData/ref', undefined);
+    await expect(executeMediaTool('media__list', { ...pageArgs('library'), library_id: 'foreign' }, context(http))).rejects.toThrow(/does not belong/);
+  });
+  it('ignores truncated included relationships and pages through every file placement before deletion', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => {
+      if (path === '/v1/appAssetLibraryImages/img/placements') return { data: Array.from({ length: 10 }, (_, i) => ({ ...placement('version', 'image', `p${i}`), relationships: { image: link('img'), appStoreVersionLocalization: link(`loc-${i}`) } })), links: { next: '/next-placements' }, meta: { paging: { total: 30 } } };
+      if (path === '/next-placements') return { data: Array.from({ length: 20 }, (_, i) => ({ ...placement('version', 'image', `p${i + 10}`), relationships: { image: link('img'), appStoreVersionLocalization: link(`loc-${i + 10}`) } })), meta: { paging: { total: 30 } } };
+      if (/^\/v1\/appStoreVersionLocalizations\/loc-\d+$/.test(path)) return { data: withIncludes({ id: path.split('/').at(-1), attributes: { locale: 'en-US' }, relationships: { appStoreVersion: link('v1') } }, query) };
+      const result = await original(path, query);
+      if (path.endsWith('/images')) result.data[0].relationships = { placements: { data: Array.from({ length: 10 }, (_, i) => ({ id: `p${i}` })), meta: { paging: { total: 30 } }, links: { next: '/irrelevant-included-cursor' } } };
+      return result;
+    });
+    const request = { ...pageArgs('library'), asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__delete', request, http as any);
+    expect(preview.message).toContain('(loc-29)');
+    expect(preview.message).toContain('(loc-0)');
+    expect(http.get.mock.calls.some(([path]) => path === '/next-placements')).toBe(true);
+    expect(http.get.mock.calls.some(([path]) => path === '/irrelevant-included-cursor')).toBe(false);
+    const applied: any = await executeMediaTool('media__delete', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+    expect(applied.ok).toBe(true); expect(http.delete).toHaveBeenCalledOnce();
+  });
+  it('refuses a placement list whose reported total is larger than its fetched rows', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => path === '/v1/appAssetLibraryImages/img/placements'
+      ? { data: [placement('version', 'image')], meta: { paging: { total: 30 } } }
+      : original(path, query));
+    await expect(buildMediaPreview('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, http as any)).rejects.toThrow(/Truncated/);
+    expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each(['library', 'version'] as const)('shows every page affected by %s library-file updates', async (target) => {
+    for (const action of ['archive', 'poster', 'rename'] as const) {
+      const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+      const kind = action === 'poster' ? 'video' : 'image';
+      const assetId = kind === 'video' ? 'vid' : 'img';
+      const path = `/v1/appAssetLibrary${kind === 'video' ? 'Videos/vid' : 'Images/img'}/placements`;
+      http.get.mockImplementation(async (requestPath, query) => requestPath === path
+        ? { data: [placement('version', kind), placement('cpp', kind, `cpp-${assetId}`)].map((row) => withIncludes(row, query)) }
+        : original(requestPath, query));
+      const args = { ...pageArgs(target), action, asset_ids: [assetId], reference_name: 'Updated', preview_frame_time_code: '00:00:05:00' };
+      const preview = await buildMediaPreview('media__arrange', args, http as any);
+      expect(preview.message).toContain('IOS version 3.0');
+      expect(preview.message).toContain('CPP Summer');
+      expect(preview.message).toContain(kind === 'video' ? 'Preview video' : 'Hero image');
+      const result: any = await executeMediaTool('media__arrange', args, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+      expect(result.ok).toBe(true); expect(http.patch).toHaveBeenCalledOnce();
+    }
+  });
+  it('rejects a shared-file update if another page placement changed after confirmation', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    let changed = false;
+    http.get.mockImplementation(async (path, query) => path === '/v1/appAssetLibraryImages/img/placements'
+      ? { data: [placement('version', 'image'), placement(changed ? 'event' : 'cpp', 'image', 'other')].map((row) => withIncludes(row, query)) }
+      : original(path, query));
+    const args = { ...pageArgs('version'), action: 'archive', asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__arrange', args, http as any);
+    expect(preview.message).toContain('CPP Summer');
+    changed = true;
+    await expect(executeMediaTool('media__arrange', args, context(http, { approvedPlanFingerprint: preview.planFingerprint }))).rejects.toThrow(/changed since confirmation/);
+    expect(http.patch).not.toHaveBeenCalled();
+  });
+  it.each(['toString', 'constructor'])('rejects prototype target %s before any request', async (target) => {
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__list', { app: 'Example', target }, context(http))).rejects.toThrow(/Unknown media target/);
+    await expect(buildMediaPreview('media__arrange', { app: 'Example', target, action: 'archive', asset_ids: ['img'] }, http as any)).rejects.toThrow(/Unknown media target/);
+    expect(http.get).not.toHaveBeenCalled();
+  });
+  it('refuses library deletion when a placement belongs to a foreign app page', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => {
+      const result = await original(path, query);
+      if (path === '/v1/appStoreVersions/v1') result.data.relationships.app = link('foreign');
+      return result;
+    });
+    await expect(buildMediaPreview('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, http as any)).rejects.toThrow(/does not belong/);
+    expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each([Buffer.from([0xff, 0xd8, 0xff]), Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x68,0x65,0x69,0x63]), Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x61,0x76,0x69,0x66]), Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x4d,0x34,0x41,0x20])])('rejects a short or non-video brand before network', async (bytes) => {
+    await fs.writeFile(file, bytes);
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__upload', uploadArgs(), context(http))).rejects.toThrow(/not a PNG, JPEG, MP4 or MOV/);
+    expect(http.get).not.toHaveBeenCalled(); expect(http.post).not.toHaveBeenCalled();
+  });
+  it('rejects a video in a screenshot placement before reserve or placement', async () => {
+    await fs.writeFile(file, VIDEO);
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__upload', uploadArgs(), context(http))).rejects.toThrow(/requires a image/);
+    expect(http.post).not.toHaveBeenCalled();
+    await expect(executeMediaTool('media__arrange', { ...pageArgs('version'), action: 'place', asset_ids: ['vid'], placement_type: 'APP_SCREENSHOT' }, context(http))).rejects.toThrow(/requires a image/);
   });
 });

@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { PRICING_TOOLS, executePricingTool, type PricingContext } from '../src/tools/pricing.js';
-import { SCREENSHOT_TOOLS } from '../src/tools/screenshots.js';
+import { MEDIA_TOOLS } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOLS } from '../src/tools/analytics.js';
 import { CI_TOOLS, executeCiTool } from '../src/tools/ci.js';
 import { PREFLIGHT_TOOLS, executePreflightTool } from '../src/tools/preflight.js';
@@ -21,7 +21,7 @@ import { RELEASE_TOOLS } from '../src/tools/release.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
-const macros = [...PRICING_TOOLS, ...SCREENSHOT_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS, ...RELEASE_TOOLS];
+const macros = [...PRICING_TOOLS, ...MEDIA_TOOLS, ...ANALYTICS_TOOLS, ...CI_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...ACCOUNT_TOOLS, ...TESTFLIGHT_TOOLS, ...RELEASE_TOOLS];
 const byName = (name: string) => macros.find((t) => t.name === name);
 
 /** Every property a schema declares, at any depth, as dotted paths. */
@@ -211,26 +211,19 @@ describe('the schema matches what the macro actually returns', () => {
     expect(undeclared, 'keys returned but not in outputSchema').toEqual([]);
   });
 
-  it('declares the fields listing__get_screenshots is documented to return', () => {
+  it('declares the fields media__list is documented to return', () => {
     // The macro's own call chain is pinned in tests/screenshots.test.ts; here
     // only the contract matters.
-    const declared = declaredPaths(byName('listing__get_screenshots')!.outputSchema);
+    const declared = declaredPaths(byName('media__list')!.outputSchema);
     for (const path of [
       'app',
-      'version',
-      'state',
-      'locales',
-      'locales[].locale',
-      'locales[].sets',
-      'locales[].sets[].displayType',
-      'locales[].sets[].count',
-      'locales[].sets[].screenshots',
-      'locales[].sets[].screenshots[].fileName',
-      'locales[].sets[].screenshots[].width',
-      'locales[].sets[].screenshots[].height',
-      'locales[].sets[].screenshots[].state',
-      'localesWithOwnScreenshots',
-      'note',
+      'target', 'libraryId', 'assets', 'assets[].id', 'assets[].kind',
+      'assets[].name', 'assets[].state', 'assets[].errors',
+      'assets[].placements', 'assets[].placements[].id',
+      'assets[].placements[].pageId', 'pages', 'pages[].sets',
+      'pages[].sets[].kind', 'pages[].sets[].count',
+      'pages[].sets[].placements', 'limits', 'limits[].features',
+      'limits[].imageSpecs', 'limits[].videoSpecs',
     ]) {
       expect(declared.has(path), `outputSchema declares ${path}`).toBe(true);
     }

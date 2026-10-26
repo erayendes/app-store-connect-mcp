@@ -21,6 +21,7 @@ import type { McpToolDefinition } from '../core/registry.js';
 import type { AscHttpClient, Query } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
+import { MEDIA_NAMES, MEDIA_TARGETS, mediaPath } from './media-catalog.js';
 import { APPROVED_STATES } from '../core/review-states.js';
 
 const subscriptionFindingsSchema = {
@@ -452,56 +453,48 @@ export async function executePreflightTool(
   }
 
   // --- screenshots ---------------------------------------------------------
-  // Only the locales that carry their own sets are worth walking: the rest
-  // inherit from the primary locale, so an empty relationship is not a gap.
-  // One locale settles whether the version has screenshots at all, which is the
-  // question a preflight can answer — Apple's *required* device sizes are
-  // policy, not API, and a hardcoded list of them goes stale every autumn.
+  // Library placements and legacy sets coexist on existing versions. Inspect
+  // every locale: a failed first locale must not hide a usable later one.
   checked.push('screenshots exist');
-  const withSets = localizations.filter(
-    (l) => (l.relationships?.appScreenshotSets?.data ?? []).length
-  );
-  if (!withSets.length) {
-    blocking.push({
-      check: 'screenshots',
-      problem: 'No locale has any screenshot set.',
-      fixWith: 'listing__upload_screenshot',
-    });
-  } else {
-    const setIds: string[] = withSets[0].relationships.appScreenshotSets.data.map((r: any) =>
-      String(r.id)
-    );
-    let images = 0;
-    for (const id of setIds) {
-      const shots: any = await http.get(
-        `/v1/appScreenshotSets/${encodeURIComponent(id)}/appScreenshots`,
-        { 'fields[appScreenshots]': 'assetDeliveryState', limit: 50 }
-      );
-      images += (shots?.data ?? []).length;
-      const failed = (shots?.data ?? []).filter(
-        (s: any) => s.attributes?.assetDeliveryState?.state === 'FAILED'
-      ).length;
-      if (failed) {
-        blocking.push({
-          check: 'screenshots',
-          problem: `${failed} screenshot(s) in ${withSets[0].attributes?.locale} failed to deliver and will not appear.`,
-          fixWith: 'listing__upload_screenshot (re-upload; check listing__get_screenshots first)',
+  let images = 0;
+  let carrying = 0;
+  for (const loc of localizations) {
+    let localImages = 0;
+    const path = mediaPath(MEDIA_TARGETS.version.placements, loc.id);
+    let next: string | undefined = path;
+    const seen = new Set<string>();
+    let inspected = 0, total = 0;
+    for (let page = 0; next && page < 10; page++) {
+      if (seen.has(next)) throw new AscApiError('Screenshot placements response has a repeated cursor.', 0);
+      seen.add(next);
+      const placements: any = await http.get(next, page === 0 ? { include: 'image', limit: 200 } : undefined);
+      if (!Array.isArray(placements?.data)) throw new AscApiError('Screenshot placements response is missing.', 0);
+      inspected += placements.data.length;
+      total = Math.max(total, Number(placements.meta?.paging?.total ?? 0));
+      for (const p of placements.data) {
+        if (!['APP_SCREENSHOT', 'IMESSAGE_APP_SCREENSHOT'].includes(p.attributes?.placementType) || !p.relationships?.image?.data?.id) continue;
+        const asset = (placements.included ?? []).find((a: any) => a.type === 'appAssetLibraryImages' && a.id === p.relationships.image.data.id);
+        localImages++;
+        if (p.attributes?.state === 'FAILED' || asset?.attributes?.state === 'FAILED') blocking.push({
+          check: 'screenshots', problem: `Screenshot placement ${p.id} in ${loc.attributes?.locale} failed.`, fixWith: MEDIA_NAMES.upload,
         });
       }
+      next = placements.links?.next || undefined;
     }
-    if (!images) {
-      blocking.push({
-        check: 'screenshots',
-        problem: `${withSets[0].attributes?.locale} has ${setIds.length} screenshot set(s) holding no images.`,
-        fixWith: 'listing__upload_screenshot',
+    if (next || total > inspected) throw new AscApiError('Screenshot placements response is truncated; cannot check readiness.', 0);
+    for (const ref of loc.relationships?.appScreenshotSets?.data ?? []) {
+      const shots: any = await http.get(`/v1/appScreenshotSets/${encodeURIComponent(ref.id)}/appScreenshots`, {
+        'fields[appScreenshots]': 'assetDeliveryState', limit: 50,
       });
+      localImages += (shots?.data ?? []).length;
+      const failed = (shots?.data ?? []).filter((s: any) => s.attributes?.assetDeliveryState?.state === 'FAILED').length;
+      if (failed) blocking.push({ check: 'screenshots', problem: `${failed} screenshot(s) in ${loc.attributes?.locale} failed to deliver.`, fixWith: MEDIA_NAMES.upload });
     }
-    if (withSets.length < localizations.length) {
-      warnings.push(
-        `${withSets.length} of ${localizations.length} locales carry their own screenshots; the rest inherit from the primary locale.`
-      );
-    }
+    images += localImages;
+    if (localImages) carrying++;
   }
+  if (!images) blocking.push({ check: 'screenshots', problem: 'No locale has screenshot images in sets or asset library placements.', fixWith: MEDIA_NAMES.upload });
+  if (carrying && carrying < localizations.length) warnings.push(`${carrying} of ${localizations.length} locales carry their own screenshots; the rest inherit from the primary locale.`);
 
   // --- open review submission ---------------------------------------------
   // Submitting is its own object now, and a version added to it without the

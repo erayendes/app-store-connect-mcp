@@ -66,13 +66,38 @@ const TWIN_OF: Record<string, string> = {
 /**
  * Operations a hand-written macro replaces outright — operation -> macro name.
  * The raw tool is then not loaded anywhere, and the orphan test counts it as
- * placed through the macro. Empty until the media macros land; validated that
+ * placed through the macro. Validated that
  * the macro is a hand-written tool the sheet knows.
  */
-const MACRO_COVERED: Record<string, string> = {};
+const MACRO_COVERED: Record<string, string> = {
+  "apps.asset_library.get": "media__list",
+  "app_asset_libraries.get": "media__list",
+  "app_asset_libraries.images.list": "media__list",
+  "app_asset_libraries.videos.list": "media__list",
+  "app_asset_library_images.create": "media__upload",
+  "app_asset_library_images.get": "media__list",
+  "app_asset_library_images.update": "media__arrange",
+  "app_asset_library_images.delete": "media__delete",
+  "app_asset_library_images.placements.list": "media__list",
+  "app_asset_library_videos.create": "media__upload",
+  "app_asset_library_videos.get": "media__list",
+  "app_asset_library_videos.update": "media__arrange",
+  "app_asset_library_videos.delete": "media__delete",
+  "app_asset_library_videos.placements.list": "media__list",
+  "app_asset_library_placements.create": "media__arrange",
+  "app_asset_library_placements.get": "media__list",
+  "app_asset_library_placements.delete": "media__delete",
+  "app_asset_library_placement_ordering_requests.create": "media__arrange",
+  "app_asset_library_ref_data.list": "media__list",
+  "app_asset_library_ref_data.get": "media__list",
+  "app_store_version_localizations.placements.list": "media__list",
+  "app_custom_product_page_localizations.placements.list": "media__list",
+  "app_store_version_experiment_treatment_localizations.placements.list": "media__list",
+  "app_event_localizations.placements.list": "media__list"
+};
 
 /** Hand-written tools live in these families; anything else is a typo. */
-const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__'];
+const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'media__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__'];
 
 interface Row {
   profile: string;
@@ -185,6 +210,7 @@ function validate(rows: Row[]): void {
 
   const macros = new Set(rows.filter((r) => r.operation === MANUAL_MARKER).map((r) => r.tool));
   for (const [covered, macro] of Object.entries(MACRO_COVERED)) {
+    if (placed.has(covered)) problems.push(`MACRO_COVERED: "${covered}" still has a profile row.`);
     if (!byName.has(covered)) problems.push(`MACRO_COVERED: "${covered}" is not in the spec.`);
     if (!macros.has(macro)) {
       problems.push(`MACRO_COVERED: "${covered}" names "${macro}", which is no hand-written tool in the sheet.`);

@@ -1,6 +1,6 @@
 /** Hand-written App Store Connect macros shared by registration and discovery. */
 import { PRICING_TOOLS } from './pricing.js';
-import { SCREENSHOT_TOOLS } from './screenshots.js';
+import { MEDIA_TOOLS } from './screenshots.js';
 import { ANALYTICS_TOOLS } from './analytics.js';
 import { CI_TOOLS } from './ci.js';
 import { PREFLIGHT_TOOLS } from './preflight.js';
@@ -12,7 +12,7 @@ import { TESTFLIGHT_TOOLS } from './testflight.js';
 
 export const MACRO_TOOLS = [
   ...PRICING_TOOLS,
-  ...SCREENSHOT_TOOLS,
+  ...MEDIA_TOOLS,
   ...ANALYTICS_TOOLS,
   ...CI_TOOLS,
   ...PREFLIGHT_TOOLS,

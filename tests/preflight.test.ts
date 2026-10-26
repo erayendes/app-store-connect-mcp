@@ -19,6 +19,7 @@ interface Overrides {
   review?: Record<string, unknown> | null;
   localizations?: Record<string, unknown>[];
   screenshots?: Record<string, unknown>[];
+  placements?: Record<string, unknown>[];
   submission?: boolean;
 }
 
@@ -56,6 +57,7 @@ function fakeHttp(o: Overrides = {}) {
     if (path === '/v1/apps') {
       return { data: [{ id: '6636549188', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } }] };
     }
+    if (path.endsWith('/placements')) return { data: o.placements ?? [] };
     if (path.includes('/appStoreVersionLocalizations')) {
       return {
         data: localizations.map((l, i) => ({
@@ -146,10 +148,18 @@ describe('preflight__check_version', () => {
 
   it('catches a screenshot set that holds no images, and one that failed to deliver', async () => {
     const empty = await run({ screenshots: [] });
-    expect(empty.blocking.map((b: any) => b.problem).join()).toContain('no images');
+    expect(empty.blocking.map((b: any) => b.problem).join()).toMatch(/No locale has screenshot images/);
 
     const failed = await run({ screenshots: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'FAILED' } } }] });
     expect(failed.blocking.map((b: any) => b.problem).join()).toContain('failed to deliver');
+  });
+
+  it('counts library image placements and reports a failed placement', async () => {
+    const image = { id: 'placement-1', attributes: { placementType: 'APP_SCREENSHOT', state: 'PARENT_APPROVED' }, relationships: { image: { data: { id: 'asset-1' } } } };
+    const ready = await run({ screenshots: [], placements: [image] });
+    expect(ready.blocking.filter((b: any) => b.check === 'screenshots')).toEqual([]);
+    const failed = await run({ screenshots: [], placements: [{ ...image, attributes: { ...image.attributes, state: 'FAILED' } }] });
+    expect(failed.blocking).toEqual(expect.arrayContaining([expect.objectContaining({ check: 'screenshots', fixWith: 'media__upload' })]));
   });
 
   it('says an open review submission does not carry this version', async () => {

@@ -2573,9 +2573,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appCustomProductPageLocalizations/{id}/appPreviewSets",
-    "description": "List the app preview sets belonging to an app custom product page localization.",
+    "description": "List the app preview sets belonging to an app custom product page localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -2649,9 +2649,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appCustomProductPageLocalizations/{id}/appScreenshotSets",
-    "description": "List the app screenshot sets belonging to an app custom product page localization.",
+    "description": "List the app screenshot sets belonging to an app custom product page localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3495,9 +3495,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appEventLocalizations/{id}/appEventScreenshots",
-    "description": "List the app event screenshots belonging to an app event localization.",
+    "description": "List the app event screenshots belonging to an app event localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3538,9 +3538,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appEventLocalizations/{id}/appEventVideoClips",
-    "description": "List the app event video clips belonging to an app event localization.",
+    "description": "List the app event video clips belonging to an app event localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3782,9 +3782,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appEventScreenshots",
-    "description": "Create an app event screenshot.",
+    "description": "Create an app event screenshot. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3796,9 +3796,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "DELETE",
     "path": "/v1/appEventScreenshots/{id}",
-    "description": "Delete an app event screenshot.",
+    "description": "Delete an app event screenshot. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3811,9 +3811,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appEventScreenshots/{id}",
-    "description": "Read one app event screenshot by ID.",
+    "description": "Read one app event screenshot by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3849,9 +3849,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "PATCH",
     "path": "/v1/appEventScreenshots/{id}",
-    "description": "Update an app event screenshot.",
+    "description": "Update an app event screenshot. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3865,9 +3865,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appEventVideoClips",
-    "description": "Create an app event video clip.",
+    "description": "Create an app event video clip. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3879,9 +3879,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "DELETE",
     "path": "/v1/appEventVideoClips/{id}",
-    "description": "Delete an app event video clip.",
+    "description": "Delete an app event video clip. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3894,9 +3894,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appEventVideoClips/{id}",
-    "description": "Read one app event video clip by ID.",
+    "description": "Read one app event video clip by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -3935,9 +3935,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "PATCH",
     "path": "/v1/appEventVideoClips/{id}",
-    "description": "Update an app event video clip.",
+    "description": "Update an app event video clip. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4464,9 +4464,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appPreviewSets/{id}/appPreviews",
-    "description": "List the app previews belonging to an app preview set.",
+    "description": "List the app previews belonging to an app preview set. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4511,9 +4511,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "PATCH",
     "path": "/v1/appPreviewSets/{id}/relationships/appPreviews",
-    "description": "Replace the full set of app previews linked to an app preview set.",
+    "description": "Replace the full set of app previews linked to an app preview set. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4527,9 +4527,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appPreviewSets",
-    "description": "Create an app preview set.",
+    "description": "Create an app preview set. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -4541,9 +4541,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "DELETE",
     "path": "/v1/appPreviewSets/{id}",
-    "description": "Delete an app preview set.",
+    "description": "Delete an app preview set. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4556,9 +4556,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appPreviewSets/{id}",
-    "description": "Read one app preview set by ID.",
+    "description": "Read one app preview set by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4594,9 +4594,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appPreviews",
-    "description": "Create an app preview.",
+    "description": "Create an app preview. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -4608,9 +4608,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "DELETE",
     "path": "/v1/appPreviews/{id}",
-    "description": "Delete an app preview.",
+    "description": "Delete an app preview. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4623,9 +4623,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appPreviews/{id}",
-    "description": "Read one app preview by ID.",
+    "description": "Read one app preview by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4665,9 +4665,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "PATCH",
     "path": "/v1/appPreviews/{id}",
-    "description": "Update an app preview.",
+    "description": "Update an app preview. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4904,9 +4904,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appScreenshotSets/{id}/appScreenshots",
-    "description": "List the app screenshots belonging to an app screenshot set.",
+    "description": "List the app screenshots belonging to an app screenshot set. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4948,9 +4948,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "PATCH",
     "path": "/v1/appScreenshotSets/{id}/relationships/appScreenshots",
-    "description": "Replace the full set of app screenshots linked to an app screenshot set.",
+    "description": "Replace the full set of app screenshots linked to an app screenshot set. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4964,9 +4964,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appScreenshotSets",
-    "description": "Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version localization, then upload screenshots into it.",
+    "description": "Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version localization, then upload screenshots into it. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -4978,9 +4978,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "DELETE",
     "path": "/v1/appScreenshotSets/{id}",
-    "description": "Delete an app screenshot set.",
+    "description": "Delete an app screenshot set. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -4993,9 +4993,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appScreenshotSets/{id}",
-    "description": "Read one app screenshot set by ID.",
+    "description": "Read one app screenshot set by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -5031,9 +5031,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appScreenshots",
-    "description": "Upload a store listing screenshot: reserve the upload for a screenshot set, then transfer the image data. These are the screenshots customers see on the App Store page.",
+    "description": "Upload a store listing screenshot: reserve the upload for a screenshot set, then transfer the image data. These are the screenshots customers see on the App Store page. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -5045,9 +5045,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "DELETE",
     "path": "/v1/appScreenshots/{id}",
-    "description": "Delete an app screenshot.",
+    "description": "Delete an app screenshot. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -5060,9 +5060,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "GET",
     "path": "/v1/appScreenshots/{id}",
-    "description": "Read one app screenshot by ID.",
+    "description": "Read one app screenshot by ID. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -5099,9 +5099,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "marketing",
     "method": "PATCH",
     "path": "/v1/appScreenshots/{id}",
-    "description": "Update an app screenshot.",
+    "description": "Update an app screenshot. DEPRECATED by Apple.",
     "readOnly": false,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -5308,9 +5308,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/appPreviewSets",
-    "description": "List the app preview sets belonging to an App Store version experiment treatment localization.",
+    "description": "List the app preview sets belonging to an App Store version experiment treatment localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -5384,9 +5384,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/appScreenshotSets",
-    "description": "List the app screenshot sets belonging to an App Store version experiment treatment localization.",
+    "description": "List the app screenshot sets belonging to an App Store version experiment treatment localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -6049,9 +6049,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersionLocalizations/{id}/appPreviewSets",
-    "description": "List the app preview sets belonging to an App Store version localization.",
+    "description": "List the app preview sets belonging to an App Store version localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
@@ -6125,9 +6125,9 @@ export const OPERATIONS: Operation[] = [
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersionLocalizations/{id}/appScreenshotSets",
-    "description": "List the app screenshot sets belonging to an App Store version localization.",
+    "description": "List the app screenshot sets belonging to an App Store version localization. DEPRECATED by Apple.",
     "readOnly": true,
-    "deprecated": false,
+    "deprecated": true,
     "pathParams": [
       "id"
     ],
