@@ -21,7 +21,9 @@ export function mediaPath(name: string, id?: string): string {
 
 export const MEDIA_OPS = {
   library: 'apps.asset_library.get',
+  libraryGet: 'app_asset_libraries.get',
   reference: 'app_asset_library_ref_data.list',
+  referenceGet: 'app_asset_library_ref_data.get',
   placement: 'app_asset_library_placements.create',
   placementGet: 'app_asset_library_placements.get',
   placementDelete: 'app_asset_library_placements.delete',

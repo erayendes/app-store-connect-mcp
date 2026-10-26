@@ -586,6 +586,24 @@ describe.each(['legacy', 'modern'] as const)('media writes without a confirmatio
     expect(textOf(result)).toMatch(/no confirmation prompt could be shown/);
     expect(sent).toEqual([]);
   });
+  it.each(['remove ', 'archive\n'])('treats normalized %j as destructive in default confirmation mode', async (action) => {
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL) => { sent.push(String(url)); throw new Error('Unexpected Apple request'); }));
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: false, profile: 'core' });
+    const result: any = await client.callTool({ name: 'media__arrange', arguments: { app: 'Test App', target: 'version', page_id: 'loc', action, ...(action.startsWith('remove') ? { placement_ids: ['pi'] } : { asset_ids: ['img'] }) } });
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/no confirmation prompt could be shown/);
+    expect(sent).toEqual([]);
+  });
+  it('rejects an undeclared delete action before any Apple request', async () => {
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL) => { sent.push(String(url)); throw new Error('Unexpected Apple request'); }));
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: false, profile: 'core' });
+    const result: any = await client.callTool({ name: 'media__arrange', arguments: { app: 'Test App', target: 'library', action: 'delete', asset_ids: ['img'] } });
+    expect(result.isError).toBe(true);
+    expect(textOf(result)).toMatch(/Unknown media action/);
+    expect(sent).toEqual([]);
+  });
 });
 
 describe.each(['legacy', 'modern'] as const)('release confirmation regressions on a %s connection', (era) => {

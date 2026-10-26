@@ -16,6 +16,11 @@ vi.mock('node:fs/promises', async (actual) => {
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
 const VIDEO = Buffer.from([0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20]);
 const link = (id: string) => ({ data: { id } });
+const withIncludes = (row: any, query?: any) => {
+  const copy = structuredClone(row);
+  if (copy.relationships) copy.relationships = Object.fromEntries(Object.entries(copy.relationships).filter(([key]) => String(query?.include ?? '').split(',').includes(key)));
+  return copy;
+};
 const pages = { version: 'loc', cpp: 'cpp-loc', ppo: 'ppo-loc', event: 'event-loc' } as const;
 type Page = keyof typeof pages;
 const pageArgs = (target: 'library' | Page) => ({ app: 'Example', target, ...(target === 'version' ? { locale: 'en-US' } : target !== 'library' ? { page_id: pages[target] } : {}) });
@@ -34,27 +39,30 @@ function fakeHttp(target: Page = 'version') {
       if (path === '/v1/apps/app/assetLibrary') return { data: { id: 'lib' } };
       if (path === '/v1/apps/app/appStoreVersions') return { data: [{ id: 'v1', attributes: { versionString: '3.0', platform: 'IOS', appStoreState: 'PREPARE_FOR_SUBMISSION' } }] };
       if (path === '/v1/appStoreVersions/v1/appStoreVersionLocalizations') return { data: [{ id: 'loc', attributes: { locale: 'en-US' } }] };
-      if (path === '/v1/appStoreVersionLocalizations/loc') return { data: { id: 'loc', attributes: { locale: 'en-US' }, relationships: { appStoreVersion: link('v1') } } };
-      if (path === '/v1/appStoreVersions/v1') return { data: { id: 'v1', attributes: { versionString: '3.0', platform: 'IOS' }, relationships: { app: link('app') } } };
-      if (path === '/v1/appCustomProductPageLocalizations/cpp-loc') return { data: { id: 'cpp-loc', attributes: { locale: 'tr' }, relationships: { appCustomProductPageVersion: link('cpp-v') } } };
-      if (path === '/v1/appCustomProductPageVersions/cpp-v') return { data: { id: 'cpp-v', attributes: { version: '2', state: 'APPROVED' }, relationships: { appCustomProductPage: link('cpp') } } };
-      if (path === '/v1/appCustomProductPages/cpp') return { data: { id: 'cpp', attributes: { name: 'Summer' }, relationships: { app: link('app') } } };
-      if (path === '/v1/appStoreVersionExperimentTreatmentLocalizations/ppo-loc') return { data: { id: 'ppo-loc', attributes: { locale: 'en-US' }, relationships: { appStoreVersionExperimentTreatment: link('treatment') } } };
-      if (path === '/v1/appStoreVersionExperimentTreatments/treatment') return { data: { id: 'treatment', attributes: { name: 'Blue' }, relationships: { appStoreVersionExperimentV2: link('experiment') } } };
-      if (path === '/v2/appStoreVersionExperiments/experiment') return { data: { id: 'experiment', attributes: { name: 'Color', state: 'APPROVED' }, relationships: { app: link('app') } } };
-      if (path === '/v1/appEventLocalizations/event-loc') return { data: { id: 'event-loc', attributes: { locale: 'en-US' }, relationships: { appEvent: link('event') } } };
+      if (path === '/v1/appStoreVersionLocalizations/loc') return { data: withIncludes({ id: 'loc', attributes: { locale: 'en-US' }, relationships: { appStoreVersion: link('v1') } }, query) };
+      if (path === '/v1/appStoreVersions/v1') return { data: withIncludes({ id: 'v1', attributes: { versionString: '3.0', platform: 'IOS' }, relationships: { app: link('app') } }, query) };
+      if (path === '/v1/appCustomProductPageLocalizations/cpp-loc') return { data: withIncludes({ id: 'cpp-loc', attributes: { locale: 'tr' }, relationships: { appCustomProductPageVersion: link('cpp-v') } }, query) };
+      if (path === '/v1/appCustomProductPageVersions/cpp-v') return { data: withIncludes({ id: 'cpp-v', attributes: { version: '2', state: 'APPROVED' }, relationships: { appCustomProductPage: link('cpp') } }, query) };
+      if (path === '/v1/appCustomProductPages/cpp') return { data: withIncludes({ id: 'cpp', attributes: { name: 'Summer' }, relationships: { app: link('app') } }, query) };
+      if (path === '/v1/appStoreVersionExperimentTreatmentLocalizations/ppo-loc') return { data: withIncludes({ id: 'ppo-loc', attributes: { locale: 'en-US' }, relationships: { appStoreVersionExperimentTreatment: link('treatment') } }, query) };
+      if (path === '/v1/appStoreVersionExperimentTreatments/treatment') return { data: withIncludes({ id: 'treatment', attributes: { name: 'Blue' }, relationships: { appStoreVersionExperimentV2: link('experiment') } }, query) };
+      if (path === '/v2/appStoreVersionExperiments/experiment') return { data: withIncludes({ id: 'experiment', attributes: { name: 'Color', state: 'APPROVED' }, relationships: { app: link('app') } }, query) };
+      if (path === '/v1/appEventLocalizations/event-loc') return { data: withIncludes({ id: 'event-loc', attributes: { locale: 'en-US' }, relationships: { appEvent: link('event') } }, query) };
       if (path === '/v1/apps/app/appEvents') return { data: [{ id: 'event', attributes: { referenceName: 'Launch event', eventState: 'PUBLISHED' } }] };
       if (path === '/v1/appAssetLibraries/lib/images' || path === '/v1/appAssetLibraries/lib/videos') {
         const row = path.endsWith('images') ? structuredClone(imageRow) : structuredClone(videoRow);
-        return { data: !query?.['filter[id]'] || query['filter[id]'].split(',').includes(row.id) ? [row] : [] };
+        const selected = !query?.['filter[id]'] || query['filter[id]'].split(',').includes(row.id);
+        if (query?.include === 'placements') row.relationships = { placements: { data: selected ? [{ id: row.id === 'img' ? 'pi' : 'pv' }] : [] } };
+        return { data: selected ? [row] : [], included: query?.include === 'placements' && selected ? [withIncludes(rows[row.id === 'img' ? 0 : 1], query)] : [] };
       }
+      if (path === '/v1/appAssetLibraries/lib') return { data: { id: 'lib' } };
       if (path === '/v1/appAssetLibraryImages/img') return { data: structuredClone(imageRow) };
       if (path === '/v1/appAssetLibraryVideos/vid') return { data: structuredClone(videoRow) };
-      if (path === '/v1/appAssetLibraryPlacements/pi' || path === '/v1/appAssetLibraryPlacements/pv') return { data: rows.find((p) => path.endsWith(p.id)) };
+      if (path === '/v1/appAssetLibraryPlacements/pi' || path === '/v1/appAssetLibraryPlacements/pv') return { data: withIncludes(rows.find((p) => path.endsWith(p.id)), query) };
       if (path === '/v1/appAssetLibraryImages/img/placements') return { data: [rows[0]] };
       if (path === '/v1/appAssetLibraryVideos/vid/placements') return { data: [rows[1]] };
-      if (path.endsWith('/placements')) return { data: structuredClone(rows), included: [structuredClone(imageRow), structuredClone(videoRow)] };
-      if (path === '/v1/appAssetLibraryRefData') return { data: [{ id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } }] };
+      if (path.endsWith('/placements')) return { data: rows.map((row) => withIncludes(row, query)), included: [structuredClone(imageRow), structuredClone(videoRow)] };
+      if (path === '/v1/appAssetLibraryRefData' || path === '/v1/appAssetLibraryRefData/ref') return { data: path.endsWith('/ref') ? { id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } } : [{ id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } }] };
       throw new Error(`Unexpected GET ${path}`);
     }),
     post: vi.fn(async (path: string, body: any) => path === '/v1/appAssetLibraryPlacements' ? { data: { id: 'placed', attributes: { state: 'ASSET_PROCESSING' } } } : { data: { id: 'new', attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.invalid/part', offset: 0, length: body.data.attributes?.fileSize ?? 12 }] } } }),
@@ -80,6 +88,10 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       if (target !== 'library') expect(result.pages[0].sets.map((s: any) => s.kind)).toEqual(['image', 'video']);
       expect(result.limits[0].features[0].placementPolicies[0].groupLimits[0].maxCount).toBe(10);
       expect(result.limits[0].videoSpecs[0].maxFileSize).toBe(500000000);
+      if (target === 'library') {
+        expect(result.assets[0].placements[0]).toMatchObject({ pageId: 'loc', target: 'version' });
+        expect(http.get.mock.calls.filter(([p]) => p.endsWith('/img/placements') || p.endsWith('/vid/placements'))).toEqual([]);
+      }
       expect(http.get.mock.calls.some(([p]) => /appScreenshot|appPreview|appEventScreenshot|appEventVideo/.test(p))).toBe(false);
     });
     it.each(['image', 'video'] as const)('uploads a %s via reserve/bytes/commit and optional placement', async (kind) => {
@@ -103,6 +115,7 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       const preview = await buildMediaPreview('media__delete', request, http as any);
       expect(preview.strong).toBe(true); expect(preview.message).toContain('Hero image'); expect(preview.message).toContain('Preview video');
       expect(preview.message).toContain(target === 'library' ? 'asset library' : pages[target]);
+      if (target === 'library') expect(preview.message).toMatch(/Placed on:.*Hero image: IOS version 3.0.*Preview video: IOS version 3.0/);
       const result: any = await executeMediaTool('media__delete', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
       expect(result.succeeded).toHaveLength(2); expect(http.delete).toHaveBeenCalledTimes(2);
       expect(http.delete.mock.calls[0][0]).toBe(target === 'library' ? '/v1/appAssetLibraryImages/img' : '/v1/appAssetLibraryPlacements/pi');
@@ -137,6 +150,16 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       await executeMediaTool('media__arrange', { ...args, action: 'place', asset_ids: ['img'], placement_type: 'APP_SCREENSHOT' }, context(http));
       expect(http.post.mock.calls[0][0]).toBe('/v1/appAssetLibraryPlacements'); expect(http.uploadAssetPart).not.toHaveBeenCalled();
     });
+    if (target !== 'library') it('removes a placement only from the named page after showing its file', async () => {
+      const http = fakeHttp(target);
+      const request = { ...args, action: 'remove', placement_ids: ['pi'] };
+      const preview = await buildMediaPreview('media__arrange', request, http as any);
+      expect(preview.strong).toBe(true);
+      expect(preview.message).toContain('Hero image');
+      expect(preview.message).toContain(pages[target]);
+      await executeMediaTool('media__arrange', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+      expect(http.delete).toHaveBeenCalledWith('/v1/appAssetLibraryPlacements/pi');
+    });
   });
 }
 
@@ -168,7 +191,7 @@ describe('media resolution, confirmation and file safety', () => {
   });
   it('follows list pagination rather than silently missing a later file', async () => {
     const http = fakeHttp(); const original = http.get.getMockImplementation()!;
-    http.get.mockImplementation(async (path, query) => path.endsWith('/images') ? { data: [], links: { next: '/next-image' } } : path === '/next-image' ? { data: [structuredClone(imageRow)] } : original(path, query));
+    http.get.mockImplementation(async (path, query) => path.endsWith('/images') ? { data: [], links: { next: '/next-image' } } : path === '/next-image' ? { data: [{ ...structuredClone(imageRow), relationships: { placements: { data: [{ id: 'pi' }] } } }], included: [withIncludes(placement('version', 'image'), { include: 'placements' })] } : original(path, query));
     const res: any = await executeMediaTool('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, context(http, { dryRun: true }));
     expect(res.wouldSend[0].name).toBe('Hero image'); expect(http.delete).not.toHaveBeenCalled();
   });
@@ -206,8 +229,10 @@ describe('media resolution, confirmation and file safety', () => {
     const http = fakeHttp();
     // Rename changes ctime on some filesystems; either safe refusal or the
     // original descriptor's bytes is acceptable, never replacement content.
-    try { await executeMediaTool('media__upload', uploadArgs(), context(http)); } catch (err) { expect(String(err)).toMatch(/File changed/); }
-    for (const call of http.uploadAssetPart.mock.calls as any[]) expect(call[1]).toEqual(PNG);
+    let refused = false;
+    try { await executeMediaTool('media__upload', uploadArgs(), context(http)); } catch (err) { expect(String(err)).toMatch(/File changed/); refused = true; }
+    if (refused) expect(http.uploadAssetPart).not.toHaveBeenCalled();
+    else { expect(http.uploadAssetPart).toHaveBeenCalledOnce(); expect(http.uploadAssetPart.mock.calls[0][1]).toEqual(PNG); }
     expect(readSizes[0]).toBe(12); expect(Math.max(...readSizes)).toBeLessThanOrEqual(1024 * 1024);
   });
   it('checks fstat before reading a file that grew after the initial stat', async () => {
@@ -277,7 +302,73 @@ describe('media resolution, confirmation and file safety', () => {
     expect(MEDIA_TOOLS.map((t) => t.name)).toEqual(['media__list', 'media__upload', 'media__arrange', 'media__delete']);
     expect(mediaRisk('media__upload', { target: 'library' })).toBe('low');
     expect(mediaRisk('media__upload', { target: 'version' })).toBe('public');
-    for (const action of ['remove', 'archive']) expect(mediaRisk('media__arrange', { action })).toBe('destructive');
+    for (const action of ['remove', 'archive', 'remove ', 'archive\n']) expect(mediaRisk('media__arrange', { target: 'version', action })).toBe('destructive');
     await expect(executeMediaTool('listing__get_screenshots', pageArgs('version'), context(fakeHttp()))).rejects.toThrow(/Unknown media tool/);
+  });
+  it('rejects undeclared arrange actions before resolution or any write', async () => {
+    const http = fakeHttp();
+    for (const action of ['delete', 'DELETE', 'archive-now']) {
+      const request = { ...pageArgs('library'), action, asset_ids: action === 'delete' ? Array.from({ length: 50 }, (_, i) => `asset-${i}`) : ['img'] };
+      await expect(buildMediaPreview('media__arrange', request, http as any)).rejects.toThrow(/Unknown media action/);
+      await expect(executeMediaTool('media__arrange', request, context(http))).rejects.toThrow(/Unknown media action/);
+    }
+    expect(http.get).not.toHaveBeenCalled(); expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each(['remove ', 'archive\n'])('normalizes %j before risk and uses one destructive preview/apply plan', async (action) => {
+    const http = fakeHttp();
+    const request = action.startsWith('remove') ? { ...pageArgs('version'), action, placement_ids: ['pi'] } : { ...pageArgs('library'), action, asset_ids: ['img'] };
+    const preview = await buildMediaPreview('media__arrange', request, http as any);
+    expect(preview.strong).toBe(true); expect(preview.message).toContain('DESTRUCTIVE');
+    const result: any = await executeMediaTool('media__arrange', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
+    expect(result.risk).toBe('destructive');
+    if (action.startsWith('remove')) expect(http.delete).toHaveBeenCalledOnce(); else expect(http.patch).toHaveBeenCalledOnce();
+  });
+  it('refuses a library-target remove before reading a live placement', async () => {
+    const http = fakeHttp();
+    const request = { ...pageArgs('library'), action: 'remove', placement_ids: ['pi'] };
+    await expect(buildMediaPreview('media__arrange', request, http as any)).rejects.toThrow(/named page/);
+    await expect(executeMediaTool('media__arrange', request, context(http))).rejects.toThrow(/named page/);
+    expect(http.get).not.toHaveBeenCalled(); expect(http.delete).not.toHaveBeenCalled();
+  });
+  it('exposes library and reference IDs through media__list and verifies ownership', async () => {
+    const http = fakeHttp();
+    const result: any = await executeMediaTool('media__list', { ...pageArgs('library'), library_id: 'lib', ref_data_id: 'ref' }, context(http));
+    expect(result.libraryId).toBe('lib'); expect(result.limits.map((r: any) => r.id)).toEqual(['ref']);
+    expect(http.get).toHaveBeenCalledWith('/v1/appAssetLibraries/lib', undefined);
+    expect(http.get).toHaveBeenCalledWith('/v1/appAssetLibraryRefData/ref', undefined);
+    await expect(executeMediaTool('media__list', { ...pageArgs('library'), library_id: 'foreign' }, context(http))).rejects.toThrow(/does not belong/);
+  });
+  it('bounds library placement expansion and refuses incomplete page visibility', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => {
+      const result = await original(path, query);
+      if (path.endsWith('/images') && query?.include === 'placements') result.data[0].relationships.placements.data = Array.from({ length: 201 }, (_, i) => ({ id: `p${i}` }));
+      return result;
+    });
+    await expect(executeMediaTool('media__list', pageArgs('library'), context(http))).rejects.toThrow(/Too many placements/);
+    expect(http.get.mock.calls.some(([path]) => path.endsWith('/img/placements'))).toBe(false);
+  });
+  it('refuses library deletion when a placement belongs to a foreign app page', async () => {
+    const http = fakeHttp(); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => {
+      const result = await original(path, query);
+      if (path === '/v1/appStoreVersions/v1') result.data.relationships.app = link('foreign');
+      return result;
+    });
+    await expect(buildMediaPreview('media__delete', { ...pageArgs('library'), asset_ids: ['img'] }, http as any)).rejects.toThrow(/does not belong/);
+    expect(http.delete).not.toHaveBeenCalled();
+  });
+  it.each([Buffer.from([0xff, 0xd8, 0xff]), Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x68,0x65,0x69,0x63]), Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x61,0x76,0x69,0x66]), Buffer.from([0,0,0,20,0x66,0x74,0x79,0x70,0x4d,0x34,0x41,0x20])])('rejects a short or non-video brand before network', async (bytes) => {
+    await fs.writeFile(file, bytes);
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__upload', uploadArgs(), context(http))).rejects.toThrow(/not a PNG, JPEG, MP4 or MOV/);
+    expect(http.get).not.toHaveBeenCalled(); expect(http.post).not.toHaveBeenCalled();
+  });
+  it('rejects a video in a screenshot placement before reserve or placement', async () => {
+    await fs.writeFile(file, VIDEO);
+    const http = fakeHttp();
+    await expect(executeMediaTool('media__upload', uploadArgs(), context(http))).rejects.toThrow(/requires a image/);
+    expect(http.post).not.toHaveBeenCalled();
+    await expect(executeMediaTool('media__arrange', { ...pageArgs('version'), action: 'place', asset_ids: ['vid'], placement_type: 'APP_SCREENSHOT' }, context(http))).rejects.toThrow(/requires a image/);
   });
 });

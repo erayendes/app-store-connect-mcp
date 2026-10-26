@@ -15,8 +15,8 @@ import { describe, it, expect } from 'vitest';
 import { measureServers } from '../scripts/measure-tokens.js';
 
 // PR-D1: four page/library media macros replace four listing macros. The
-// measured core definition cost rose 6,983 → 7,836 tokens (+853), chiefly
-// from target, action and output schemas. Keep only 14 tokens of headroom.
+// measured core definition cost is 6,983 → 7,837 tokens (+854), chiefly
+// from target, action and output schemas. Keep only 13 tokens of headroom.
 const CORE_CEILING = 7_850;
 
 describe('what ASC-Core costs every session', () => {
