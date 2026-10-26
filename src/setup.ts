@@ -966,7 +966,7 @@ function planCore(
     const { here } = inTarget(entries, t.where);
     // What this target itself gets and loses — the write computes the same.
     const adds = here.some((r) => r.name === '*') ? asked : targetAdds(here, profileAdds, migrations);
-    const action = coreActionFor(here, adds, targetRemoves(here, profileRemoves, dead), explicit);
+    const action = coreActionFor(here, adds, targetRemoves(here, profileRemoves, dead), explicit, migrations);
     if (action.kind === 'add') {
       out.add = true;
       out.added.push(`${CORE_SERVER}${action.readOnly ? ' (--read-only)' : ''}${where(t.where)}`);

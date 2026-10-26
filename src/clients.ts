@@ -559,9 +559,16 @@ export function coreActionFor(
   regs: Registration[],
   adds: string[],
   removes: string[],
-  explicit = false
+  explicit = false,
+  /** Renames this run makes here: new name -> old name. */
+  migrations: Map<string, string> = new Map()
 ): CoreAction {
   const block = registrationBlock(regs);
+  // A rename moves an entry, it does not remove it: the old name goes, but
+  // its flags and env go on under the new one, so they still bind core.
+  const moved = new Set([...migrations]
+    .filter(([to, from]) => adds.some((spec) => serverName(spec) === to) && regs.some((r) => r.name === from))
+    .map(([, from]) => from));
   const isCoreName = (name: string): boolean => profileOfServer(name) === CORE_SPEC;
   // Any ASC-named entry that stays counts, ours or not: one run through a
   // local checkout (`node dist/index.js general`) is Heimdall all the same.
@@ -574,8 +581,9 @@ export function coreActionFor(
   if (!keeps && !explicit) {
     return existing && !isUserManaged(existing) && block.canRemove(CORE_SERVER) ? { kind: 'remove' } : { kind: 'none' };
   }
-  // Decided on what stays: an entry this run deletes binds nothing.
-  const decision = coreDecision(regs.filter((r) => !removes.includes(r.name)));
+  // Decided on what stays: an entry this run deletes binds nothing; one it
+  // moves binds as the entry it becomes.
+  const decision = coreDecision(regs.filter((r) => !removes.includes(r.name) || moved.has(r.name)));
   if (!decision.add) return { kind: 'withheld', reason: decision.reason };
   // A user-managed ASC-Core is the user's; it is reported as such elsewhere.
   if (!block.canAdd(CORE_SPEC)) return { kind: 'none' };
@@ -841,11 +849,16 @@ export function applyToClient(
     // target that could not be read is asked with everything, so its core is
     // reported withheld rather than silently skipped.
     const core: CoreAction = toAdd.includes(CORE_SPEC) || toRemove.includes(CORE_SERVER)
-      ? coreActionFor(current, unknown ? profileAdds : targetAdds(current, profileAdds, moves), actual, explicitCore)
+      ? coreActionFor(current, unknown ? profileAdds : targetAdds(current, profileAdds, moves), actual, explicitCore, moves)
       : { kind: 'none' };
     const coreReadOnly = core.kind === 'add' && core.readOnly;
     const extra = (spec: string): string[] => (spec === CORE_SPEC && coreReadOnly ? ['--read-only'] : []);
-    const label = (spec: string): string => addLabel(spec, spec === CORE_SPEC && coreReadOnly);
+    // Core is recorded per target: its form can differ between them
+    // (read-only beside a read-only profile in one, not in the other), and
+    // one line per change would keep whichever target came first.
+    const label = (spec: string): string =>
+      addLabel(spec, spec === CORE_SPEC && coreReadOnly) + (spec === CORE_SPEC ? ` in ${t.where}` : '');
+    const addKey = (spec: string): string => (spec === CORE_SPEC ? `add:${spec}:${t.where}` : `add:${spec}`);
     if (core.kind === 'withheld' && toAdd.includes(CORE_SPEC)) {
       withhold(`core:${t.where}`, `${CORE_SERVER} not added to ${t.where}: ${core.reason}`);
     }
@@ -867,7 +880,7 @@ export function applyToClient(
       for (const spec of adding) {
         const name = serverName(spec);
         if (!block.canAdd(spec)) {
-          record(`add:${spec}`, label(spec), false, 'user-managed entry left unchanged');
+          record(addKey(spec), label(spec), false, 'user-managed entry left unchanged');
           continue;
         }
         const old = current.find((r) => r.name === name) ?? current.find((r) => r.name === moves.get(name));
@@ -890,10 +903,10 @@ export function applyToClient(
               throw retryError;
             }
           }
-          record(`add:${spec}`, label(spec), true);
+          record(addKey(spec), label(spec), true);
         } catch (err) {
           if (old && old.name !== name) failedMigrations.add(old.name);
-          record(`add:${spec}`, label(spec), false, cliError(err));
+          record(addKey(spec), label(spec), false, cliError(err));
         }
       }
       for (const name of removing) {
@@ -939,10 +952,31 @@ export function applyToClient(
         failure = `${t.where}: ${firstLine(err)}`;
       }
     }
-    for (const spec of adding) record(`add:${spec}`, label(spec), !failure && block.canAdd(spec),
+    for (const spec of adding) record(addKey(spec), label(spec), !failure && block.canAdd(spec),
       failure ?? (!block.canAdd(spec) ? 'user-managed entry left unchanged' : undefined));
     for (const name of removing) record(`rm:${name}`, removeLabel(name), !failure && block.canRemove(name),
       failure ?? (!block.canRemove(name) ? 'user-managed entry left unchanged' : undefined));
+  }
+
+  // Core per target, as the plan labels it: one line when every target got
+  // the same form, otherwise each target with its own (planCore does the same).
+  const coreKeys = [...outcomes.keys()].filter((k) => k.startsWith(`add:${CORE_SPEC}:`));
+  // The target is in the key; cut exactly its suffix (a path may hold spaces).
+  const formOf = (k: string): string => {
+    const label = outcomes.get(k)!.label;
+    return label.slice(0, label.length - ` in ${k.slice(`add:${CORE_SPEC}:`.length)}`.length);
+  };
+  const forms = new Set(coreKeys.map(formOf));
+  if (coreKeys.length && coreKeys.length === writableTargets(client).length && forms.size === 1) {
+    const merged = coreKeys.map((k) => outcomes.get(k)!);
+    const one = { label: [...forms][0], ok: merged.every((o) => o.ok), why: merged.flatMap((o) => o.why) };
+    const rebuilt = new Map<string, typeof one>();
+    for (const [k, v] of outcomes) {
+      if (k === coreKeys[0]) rebuilt.set(`add:${CORE_SPEC}`, one);
+      else if (!coreKeys.includes(k)) rebuilt.set(k, v);
+    }
+    outcomes.clear();
+    for (const [k, v] of rebuilt) outcomes.set(k, v);
   }
 
   const results: ChangeResult[] = [...outcomes.values()].map(({ label, ok, why, withheld }) => ({

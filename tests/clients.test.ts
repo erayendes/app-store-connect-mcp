@@ -367,10 +367,15 @@ describe('reading back what is registered', () => {
     const plan = planChanges([jsonClient()], ['general'], new Map([['temp', readRegistrations(jsonClient())]]),
       { prune: false });
     expect(plan[0].toRemove).toEqual(['asc-general']);
-    applyPlan(plan, () => {});
+    // Moved, not removed: the read-only it carries to its new name binds core.
+    expect(plan[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
+    const lines: string[] = [];
+    applyPlan(plan, (l) => lines.push(l));
     const entries = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers;
     expect(entries['asc-general']).toBeUndefined();
     expect(entries['ASC-General']).toEqual(old);
+    expect(entries['ASC-Core']).toEqual({ command: 'npx', args: [...serverArgs('core'), '--read-only'] });
+    expect(lines.join('\n')).toContain('✓ added ASC-Core (--read-only)');
   });
 
   it('reports an unreadable config and refuses to overwrite its file', () => {
@@ -831,6 +836,32 @@ describe('ASC-Core comes with the profiles', () => {
     // Desktop's own entries, never alone.
     expect(readIn('desktop.json')['ASC-Analytics'].args).toEqual(serverArgs('analytics'));
     expect(readIn('desktop.json')['ASC-Core'].args).toEqual(serverArgs('core'));
+  });
+
+  it('reports each target\'s core in its own form when they differ, and once when they agree', () => {
+    writeFileSync(join(dir, 'code.json'), JSON.stringify({ mcpServers: {
+      'ASC-Analytics': { command: 'npx', args: [...serverArgs('analytics'), '--read-only'] } } }));
+    const p = plan(['analytics'], true, twoJson());
+    const lines: string[] = [];
+    printPlan(p, (l) => lines.push(l));
+    applyPlan(p, (l) => lines.push(l));
+    const out = lines.join('\n');
+    // The result says what the plan said, target by target.
+    expect(out).toContain('+ ASC-Analytics, ASC-Core (--read-only) in code.json, ASC-Core in desktop.json');
+    expect(out).toContain('✓ added ASC-Core (--read-only) in code.json');
+    expect(out).toContain('✓ added ASC-Core in desktop.json');
+    expect(out).not.toMatch(/added ASC-Core \(--read-only\)\n/);
+
+    // Same form everywhere: one line, no target named — even for a path with spaces.
+    rmSync(join(dir, 'code.json'));
+    rmSync(join(dir, 'desktop.json'));
+    const spaced: McpClient = { id: 'spaced', label: 'Spaced', targets: [
+      { kind: 'json', path: join(dir, 'code.json'), where: 'code.json', key: 'mcpServers' },
+      { kind: 'json', path: join(dir, 'desktop.json'), where: '~/Library/Application Support/Claude/desktop.json', key: 'mcpServers' },
+    ] };
+    const same: string[] = [];
+    applyPlan(plan(['analytics'], true, spaced), (l) => same.push(l));
+    expect(same.filter((l) => l.includes('added ASC-Core'))).toEqual(['  ✓ added ASC-Core']);
   });
 
   it('removes our core from a target left with no profile, and keeps it beside a user-managed one', () => {
