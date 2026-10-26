@@ -9,11 +9,18 @@ Apple's API is 1011 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
 
-Profiles are cut by job. What every job needs — app lookup, `asc__search_tools`,
-`asc__status`, `asc__account_status` and the `media__*` tools — is in none of
-them: it is **ASC-Core**, a server of its own registered beside the profiles.
-If those tools are missing from the session, ASC-Core is not registered for
-this client; the fix is `register` or `setup` (below), not another profile.
+Profiles are cut by job. App lookup, `asc__search_tools`,
+`asc__discover_domains`, `asc__account_status` and the `media__*` tools are in
+none of them: they live in **ASC-Core**, a server of its own that `register` and
+`setup` add beside the profiles. A profile server carries them itself only when
+started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or
+not, has its own `asc__status`. If app lookup or search is missing from the
+session, ASC-Core is not registered for this client; the fix is `register` or
+`setup` (below), not another profile.
+
+**This is the 3.0 beta.** Every command below uses `@erayendes/asc-mcp@beta`;
+the stable `@erayendes/asc-mcp` is still 2.x and knows none of these profiles.
+The commands the server itself prints already carry the right one.
 
 ## The credential boundary
 
@@ -87,27 +94,44 @@ user did not open, usually more than the one you are talking through, and the
 command has no prompt of its own:
 
 ```bash
-npx -y @erayendes/asc-mcp register monetization:subscription,subscription-offers analytics
+npx -y @erayendes/asc-mcp@beta register monetization:subscription,subscription-offers analytics
 ```
 
-On a prerelease the package is `@erayendes/asc-mcp@beta`, here and in `setup`;
-the commands the server prints already carry it.
+`--clients=claude,codex` limits which configs it touches (ids: `claude`,
+`codex`, `antigravity`, `vscode`, `cursor`, `windsurf`).
 
-`register` only adds; re-running it changes nothing. `--clients=claude,codex`
-limits which configs it touches (ids: `claude`, `codex`, `antigravity`,
-`vscode`, `cursor`, `windsurf`).
+What `register` changes, which is what the user is saying yes to:
 
-It adds `ASC-Core` beside the profiles in each client, with the strictest
-setting there: one read-only Heimdall entry (`--read-only`, or `ASC_READ_ONLY`
-in its env) makes ASC-Core `--read-only` too. Where the entries use different
-App Store Connect accounts, carry their own credentials, or the config could
-not be read in full, it leaves ASC-Core out and says why. Relay the reason; do
-not add ASC-Core by hand to get around it.
+- **It adds** the profiles you name, and `ASC-Core` beside them.
+- **It never removes a live profile** the user set up earlier, and re-running
+  it with the same arguments changes nothing.
+- **It does remove or rewrite three kinds of entry.** A server name from before
+  2.5 (`asc-analytics`) moves to the current name. An entry whose profile no
+  longer exists (`app-info`, `monetization:subscription-pricing` from 2.x) is
+  deleted, if it is Heimdall's own, carries no credentials of its own and could
+  be read in full; any other such entry is reported and left as it is. An
+  entry on the other release channel (stable or beta) is rewritten to this one,
+  keeping its flags and env. ASC-Core goes too from a client where no profile
+  is left.
+
+ASC-Core takes the strictest setting in each client: if any Heimdall entry
+there is read-only (`--read-only`, or `ASC_READ_ONLY` in its env), ASC-Core is
+registered `--read-only` too. It is **not added** where it cannot be shown to
+sign in as the same account, and the output says why:
+
+- the Heimdall entries there use different App Store Connect accounts;
+- they carry credentials of their own in their `env`, while ASC-Core would use
+  the shared config;
+- the config, or one of its entries, could not be read in full — an entry that
+  loads its environment from an `envFile` counts, since what it signs in with
+  cannot be seen.
+
+Relay that reason; do not add ASC-Core by hand to get around it.
 
 **2. Send the user to `setup`.**
 
 ```bash
-npx -y @erayendes/asc-mcp setup
+npx -y @erayendes/asc-mcp@beta setup
 ```
 
 **Never run this yourself, and never ask for the `.p8`.** It is an App Store
@@ -123,9 +147,14 @@ If the user would rather do it all themselves, `setup` alone covers both: it
 collects credentials *and* registers with every client it finds, ASC-Core
 included.
 
-A config from 2.x names profiles that no longer exist (`app-info`,
-`monetization:subscription-pricing`). Such a server starts with one tool that
-says so; the fix is the user running `setup` again, which rewrites the entries.
+**Coming from 2.x.** A config from 2.x names profiles that no longer exist
+(`app-info`, `monetization:subscription-pricing`). Such a server starts with a
+single tool that says so. Neither `setup` nor `register` maps an old profile to
+a new one: they delete such entries (when they are Heimdall's own and clean,
+as above; others are reported), and the user picks the profiles again —
+`app-info` is now `general`, the old money sub-profiles are
+`monetization:subscription`, `in-app-purchases`, `subscription-offers` and the
+rest.
 
 ## Choosing profiles
 
@@ -142,18 +171,18 @@ says so; the fix is the user running `setup` again, which rewrites the entries.
 | Achievements, leaderboards, challenges, matchmaking | `game-center` |
 | Workflows, build runs and repositories | `xcode-cloud` |
 | App Clips · Background Assets · event webhooks | `app-clips` · `background-assets` · `webhooks` |
-| Screenshots and videos on any page, finding apps, searching tools | ASC-Core (added with every profile) |
+| Screenshots, videos, images and files for any page or product, finding apps, searching tools | ASC-Core (added with every profile) |
 
 No strong preference: `analytics`, `marketing` and `general` is a reasonable
 default.
 
 A large profile takes a colon and a list of sub-profiles —
-`monetization:subscription,subscription-offers` is 73 tools where
-`monetization` is 170. Worth suggesting for `monetization`, `game-center`,
+`monetization:subscription,subscription-offers` is 64 tools where
+`monetization` is 152. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `testflight`, `general` and `marketing`. The server is still
 `ASC-Monetization`.
 
-Heimdall serves 824 distinct tools across 14 profiles: 783 reachable Apple operations plus 41 hand-written tools. Subscriptions and in-app purchases are v2 only: the v1 localization, image and submission tools Apple retired are not served.
+Heimdall serves 751 distinct tools across 14 profiles: 710 reachable Apple operations plus 41 hand-written tools.
 
 ## Prefer the macro over the chain
 
@@ -167,28 +196,31 @@ right choice for anything the macro does not cover.
 | app → IAP → price schedule → prices | `pricing__get_iap_price` (`monetization:in-app-purchases`) |
 | rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:in-app-purchases`) — keeps every other price |
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
+| setting a price country by country | `pricing__equalize_price` (`monetization:app-price`, `in-app-purchases` or `subscription`) — one anchor price, Apple derives the rest |
 | looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers` or `subscription-win-back`) — win-back, promotional or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
 | page → localizations → library placements → images and videos | `media__list` (ASC-Core) — the version page, a custom product page, a product page test, an in-app event or the library itself |
+| an owner → its image or file → reserve, upload, commit | `media__list` / `media__upload` / `media__delete` (ASC-Core) with a file `target`: App Clip header and advanced experience images, Game Center achievement, leaderboard, leaderboard set, activity and challenge images, in-app purchase and subscription images and review screenshots, encryption documents, App Review attachments, routing coverage, background asset files, build upload files — the targets and their rules are in [MEDIA_TARGETS_en.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/MEDIA_TARGETS_en.md) |
 | reserving a library image or video, uploading it, then placing it | `media__upload` (ASC-Core) |
-| placing, reordering, removing, archiving or renaming media | `media__arrange` (ASC-Core) |
-| deleting several library files or page placements under one confirmation | `media__delete` (ASC-Core) |
+| placing, reordering, removing, archiving or renaming page media | `media__arrange` (ASC-Core) |
+| deleting several files or page placements under one confirmation | `media__delete` (ASC-Core) |
 | request → report → instance → segment → a URL | `analytics__get_report` |
 | app → crash/screenshot feedback → crash logs | `testflight__feedback_digest` (`testflight:feedbacks`) — build counts, devices/OS, newest comments and bounded crash excerpts |
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` (`xcode-cloud:workflows`; newest failed or errored run among newest 40 by default) |
-| fetching reviews and grouping them by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` (`marketing:customer-reviews`) |
+| fetching reviews, grouping them and writing replies by hand | `reviews_ai__triage` / `reviews_ai__daily_briefing` / `reviews_ai__draft_response` (`marketing:customer-reviews`) |
 | checking a version by hand before submitting it | `preflight__check_version` (`distribution:version`) |
+| comparing two versions' store text language by language | `listing__diff_metadata` (`distribution:version`) |
 | checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription`, read-only, capped, no approval prediction |
 | open a submission, add the version, hand it over | `release__submit` (`distribution:publish`) |
 | the same for an in-app purchase, subscription, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — on each of those sub-profiles; `with_app_version: true` when the item has to go in with the app's editable version, as an app's first in-app purchase or subscription does |
 | resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`testflight:groups`); give the build number or ID |
-| comparing store text across languages by eye | `metadata_ai__audit_localizations` |
-| pasting a translation into each locale | `metadata_ai__apply_localizations` |
+| comparing store text across languages by eye | `metadata_ai__audit_localizations` (`distribution:version`) |
+| drafting the store text for the languages asked for | `metadata_ai__draft_translation` (`distribution:version`) — your own model drafts it |
+| pasting a translation into each locale | `metadata_ai__apply_localizations` (`distribution:version`) |
 
 Two of these do something the raw tools cannot do at all, not merely faster:
-`media__upload` performs Apple's reserve/upload/commit sequence through the
-asset library (the raw tools only reserve a slot and move no bytes), and
-`analytics__get_report` downloads the report, where the raw chain ends holding
-a link.
+`media__upload` performs Apple's reserve/upload/commit sequence (the raw tools
+only reserve a slot and move no bytes), and `analytics__get_report` downloads
+the report, where the raw chain ends holding a link.
 
 ## Reading a tool before calling it
 
@@ -203,14 +235,27 @@ a link.
 - Territories are ISO-3166 **alpha-3**: `USA`, `TUR`, `DEU` — never `US`, `TR`,
   `DE`. The two-letter form is not rejected; it returns 200 and an empty list
   that reads as "no data here".
+- A server started with `--read-only` (or `ASC_READ_ONLY=true`) does not list
+  any tool that can change something; asking for a write there is asking for a
+  tool that is not loaded, not a permission problem.
 - A tool that is not in this session's list may still belong to this account.
-  `asc__search_tools` searches all 1011 operations and names the profile that
-  owns each one; the server's own error messages print the exact command to add
-  it. Do not conclude the operation does not exist.
+  `asc__search_tools` (on ASC-Core) covers the 826 operations Apple has not
+  deprecated (all of them with `--include-deprecated`), plus the StoreKit and
+  hand-written tools; under `--read-only` it leaves out the writes. It names
+  the profile that owns each one, and the server's own error messages print the
+  exact command to add it. Do not conclude the operation does not exist.
+- StoreKit / customer transactions live on `monetization:transactions`. Each
+  tool takes an optional `app` (name, bundle ID or Apple ID) and looks the
+  bundle ID up; it can be left out when the account has one app or
+  `ASC_BUNDLE_ID` is set. `environment` (`Production` by default, or
+  `Sandbox`) is optional too.
+- Subscriptions and in-app purchases are v2 only. The v1 localization, image
+  and submission tools Apple retired are not served; use the `*_v2` tools and
+  their versions.
 - There is no way to add tools mid-session: some clients never show a changed
   tool list (the Claude desktop app's Code tab among them), and waiting a turn
   does not help. On a server started with only some of its sub-profiles, reads
   from the rest work at once through `asc__call`. For the tools themselves, run
   the `register` command the server's reply names — for example
-  `npx -y @erayendes/asc-mcp register testflight:groups,testers` — once the user
+  `npx -y @erayendes/asc-mcp@beta register testflight:groups,testers` — once the user
   says yes, then ask them to restart their MCP client.

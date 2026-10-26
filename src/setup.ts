@@ -241,7 +241,7 @@ export const PLAIN: Record<string, string> = {
 
 /** What each choice is for, in the words someone setting it up would use. */
 export const DOES: Record<string, string> = {
-  core: 'Finds your apps, searches every tool, and uploads screenshots — added with every pick.',
+  core: 'Finds your apps, searches every tool, and uploads screenshots, images and files — added with every pick.',
   access: 'Invite people to your team, set their roles, and manage sandbox test accounts.',
   'access:sandbox': 'Sandbox Apple Accounts for testing purchases, and clearing their history.',
   'access:user-invitations': 'Invite someone to your team and see who has not accepted yet.',

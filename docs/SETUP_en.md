@@ -18,8 +18,11 @@ If this is the first API key on the account, the Account Holder has to enable AP
 
 Open a terminal:
 ```bash
-npx -y @erayendes/asc-mcp setup
+npx -y @erayendes/asc-mcp@beta setup
 ```
+
+> [!NOTE]
+> This page describes the 3.0 beta, so every command here uses `@erayendes/asc-mcp@beta`. The bare `@erayendes/asc-mcp` is still 2.x until 3.0.0 is released.
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
@@ -48,7 +51,7 @@ When it's done, restart your app and say *"Check my App Store Connect connection
 Finding your apps, searching every tool, and the screenshot and video tools live in one server, **ASC-Core**, not inside each profile. Setup and `register` add it next to your profiles in every app; you don't pick it.
 
 - If any Heimdall server in an app is read-only, ASC-Core is added read-only too.
-- If the servers in an app use different App Store Connect accounts or carry their own credentials, or the app's settings file can't be read in full, ASC-Core isn't added there. The plan says so and why.
+- ASC-Core isn't added to an AI app where it can't be shown to use the same account as your servers there: when they use different App Store Connect accounts, when they carry credentials of their own in their `env`, or when the settings file, or one of its entries, can't be read in full (an entry that loads an `envFile` counts). The plan says so and why.
 - When the last profile leaves an app, ASC-Core goes with it.
 
 ### Where it registers
@@ -79,10 +82,10 @@ The steps are the same, just easier: you pick what you need, the page tells you 
 
 You don't have to install everything up front. Start with the few profiles you need and add more as your project grows.
 
-- **Run setup again**: `npx -y @erayendes/asc-mcp setup`.
+- **Run setup again**: `npx -y @erayendes/asc-mcp@beta setup`.
 - It reuses your credentials and shows the pickers again.
 - Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected. An app you untick loses Heimdall.
-- Coming from 2.x? Profile names changed in 3.0 (`app-info` is now `general`, and most sub-profiles were cut again). Run setup once: it moves your entries to the new names. Until then, a server with an old name shows a single tool that says so.
+- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no settings you added yourself; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so.
 
 ## When you need a tool you haven't installed
 
@@ -90,7 +93,7 @@ Ask the AI. Heimdall finds the tool and, if needed, tells you how to add it. So 
 
 ## Using Heimdall in Xcode 27
 
-1. If you haven't yet, run `npx -y @erayendes/asc-mcp setup` once. Your key goes into the Keychain.
+1. If you haven't yet, run `npx -y @erayendes/asc-mcp@beta setup` once. Your key goes into the Keychain.
 2. Xcode → Settings → Intelligence → Plug-ins → **Add Plug-in…**
 3. Choose **Add from URL** and paste `https://github.com/erayendes/app-store-connect-mcp`.
 
@@ -122,7 +125,7 @@ Read-only mode, trying changes without making them, a second App Store Connect a
 | **`403 Forbidden`** | The key's role isn't enough for that action. | Ask the AI: *"Check my key's permissions."* Which role you need is in [Roles](ROLES_en.md). |
 | **`409 Conflict` when updating a version** | App Store Connect only allows edits in certain version states. | A version that's in review or already released is locked. |
 | **A tool I need isn't there** | It's in another profile. | Ask the AI: *"Is there a tool for X?"* |
-| **A server has one tool that says its profile doesn't exist** | Its settings name a profile from an earlier version, such as `app-info`. | Run `setup` again; it rewrites the entry to the current name. |
+| **A server has one tool that says its profile doesn't exist** | Its settings name a profile from an earlier version, such as `app-info`. | Run `setup` again and pick your profiles; it removes the old entry (`app-info` is now `general`). |
 | **No app lookup, tool search or screenshot tools** | ASC-Core isn't registered in this app. Setup leaves it out when the app's servers use different accounts. | Run `setup` again and read the plan; it says why ASC-Core was left out. |
 | **`429 Too Many Requests`** | Apple applies an hourly request limit per key (currently 3,600), and it has been reached. | Heimdall waits a moment and retries on its own. If you see this often, another tool is using the same key (Fastlane in CI, for example); give it a key of its own. |
 | **Can't create a new app** | Apple's API doesn't allow creating new apps. | Create the app once on the App Store Connect website; from then on you can manage it with Heimdall. |

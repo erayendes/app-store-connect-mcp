@@ -2,21 +2,21 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](PROFILES_tr.md)
 
-Heimdall cuts App Store Connect by the work you do. You pick from 13 profiles, and each one is its own small MCP server: name a profile, and only that job's tools are loaded. A large profile splits further into sub-profiles, 51 in all.
+Heimdall cuts App Store Connect by the work you do. You pick from 13 profiles, and each one is its own small MCP server: name a profile, and only that job's tools are loaded. A large profile splits further into sub-profiles, 50 in all.
 
-Next to whatever you pick, setup registers **ASC-Core**: finding your apps, searching every tool, and the screenshot and video tools. It is the same for every profile, so it runs once instead of inside each server.
+Next to whatever you pick, setup registers **ASC-Core**: finding your apps, searching every tool, and the media tools. It is the same for every profile, so it runs once instead of inside each server.
 
 | Profile | Server | What it is for | Tools | Sub-profiles |
 |:--|:--|:--|--:|:--|
 | `access` | `ASC-Access` | Your team | 17 | sandbox, user-invitations, user-management |
 | `analytics` | `ASC-Analytics` | Sales and reports | 19 | — |
-| `app-clips` | `ASC-AppClips` | App Clips | 42 | — |
-| `background-assets` | `ASC-BackgroundAssets` | Downloadable content | 16 | — |
-| `distribution` | `ASC-Distribution` | Releases | 97 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, routing-coverage, version |
-| `game-center` | `ASC-GameCenter` | Game Center | 176 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
+| `app-clips` | `ASC-AppClips` | App Clips | 34 | — |
+| `background-assets` | `ASC-BackgroundAssets` | Downloadable content | 13 | — |
+| `distribution` | `ASC-Distribution` | Releases | 80 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
+| `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | App details | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Store page and reviews | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Prices and subscriptions | 170 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Prices and subscriptions | 152 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Certificates and devices | 41 | bundle, certificates, devices, profiles, wallet |
 | `testflight` | `ASC-TestFlight` | Beta testing | 81 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Notifications to your server | 9 | — |
@@ -27,11 +27,11 @@ Next to whatever you pick, setup registers **ASC-Core**: finding your apps, sear
 
 Setup and `register` add ASC-Core on their own whenever they add a profile, and remove it when no profile is left. You never pick it.
 
-- **It follows your strictest setting.** If any Heimdall server in an app runs `--read-only`, ASC-Core is registered read-only too.
-- **It is left out when the account is unclear.** If the servers in an app use different App Store Connect accounts, carry credentials of their own, or the app's config could not be read in full, setup does not add ASC-Core there and says why.
-- **An app that runs only one server** can fold it in with `--with-core`. The Xcode plug-ins do this.
+- **It follows your strictest setting.** If any Heimdall server in an AI app runs `--read-only`, ASC-Core is registered read-only too.
+- **It is left out when the account is unclear.** Setup does not add ASC-Core to an AI app, and says why, when the servers there use different App Store Connect accounts, when one carries credentials of its own in its `env`, or when the settings, or one entry, cannot be read in full (an entry that loads an `envFile` counts).
+- **An AI app that runs only one server** can fold it in with `--with-core`. The Xcode plug-ins do this.
 
-Its screenshot and video tools (`media__*`) work through the app's image and video library: you upload a file to the library and place it on the version page, a custom product page, a product page test or an in-app event.
+Its media tools (`media__*`) handle every screenshot, video, image and file. Store page media goes through your app's image and video library: you upload a file to the library and place it on the version page, a custom product page, a product page test or an in-app event. Other images and files go straight to their owner: App Clip, Game Center, in-app purchase and subscription images, review screenshots and attachments, encryption documents, routing coverage, background asset and build upload files. Every target is in [Media targets](MEDIA_TARGETS_en.md).
 
 ### `core` · 16 tools
 
@@ -58,7 +58,7 @@ Its screenshot and video tools (`media__*`) work through the app's image and vid
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: ticking monetization opens its sub-profiles, each with its tool count and token estimate" width="720">
 
 Tick a profile in the [setup](SETUP_en.md) picker. When you move the cursor onto it, its sub-profiles open, all ticked; untick the ones you don't want.
-For example, `monetization` has 170 tools, but if you only work on subscriptions and their offers, the 73 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
+For example, `monetization` has 152 tools, but if you only work on subscriptions and their offers, the 64 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
 
 The tool counts on this page are what the server lists: its own tools plus `asc__status`. A server started with only some of its sub-profiles also gets `asc__call` and `asc__describe`, which reach the reads of the parts you left out.
 
@@ -71,11 +71,11 @@ A quick answer to "Which profiles should I install?" The counts include ASC-Core
 
 | Role | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `general` | 162 |
+| Release manager | `distribution` + `general` | 145 |
 | ASO / marketing | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 97 |
-| Monetization | `monetization` | 186 |
-| Game developer | `game-center` + `distribution:version,publish` | 227 |
+| Monetization | `monetization` | 168 |
+| Game developer | `game-center` + `distribution:version,publish` | 200 |
 | Customer support | `marketing:customer-reviews` + `monetization:transactions` | 42 |
 | Build and signing | `provisioning` + `xcode-cloud` | 101 |
 | Team admin | `access` | 33 |
@@ -160,7 +160,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `sales_reports__list` — Fetches the sales and subscription report
 - `analytics__get_report` — Downloads the app's analytics report in one step and returns it row by row; does not start a new report request
 
-### `app-clips` · 42 tools
+### `app-clips` · 34 tools
 
 **Server:** `ASC-AppClips` · **Key role:** App Manager
 
@@ -168,16 +168,12 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 **When you need it:** The instant, lightweight version of your app.
 
-- `app_clip_advanced_experience_images__create` — Opens an upload record for an advanced App Clip experience's image
-- `app_clip_advanced_experience_images__get` — Fetches the details of an advanced App Clip experience's image
-- `app_clip_advanced_experience_images__update` — Marks an uploaded advanced experience image as complete
 - `app_clip_advanced_experiences__create` — Creates an advanced App Clip experience triggered by a location or a code
 - `app_clip_advanced_experiences__get` — Fetches the details of an advanced App Clip experience
 - `app_clip_advanced_experiences__update` — Updates the settings of an advanced App Clip experience
 - `app_clip_app_store_review_details__create` — Saves the links App Review will open the App Clip with
 - `app_clip_app_store_review_details__get` — Fetches the links App Review will open the App Clip with
 - `app_clip_app_store_review_details__update` — Updates the links App Review will open the App Clip with
-- `app_clip_default_experience_localizations__app_clip_heade_1vi3gd` — Fetches the header image of the default App Clip experience in one language
 - `app_clip_default_experience_localizations__create` — Adds text in a new language to the default App Clip experience
 - `app_clip_default_experience_localizations__delete` — Deletes the default App Clip experience's text in one language
 - `app_clip_default_experience_localizations__get` — Fetches the default App Clip experience's text in one language
@@ -190,10 +186,6 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `app_clip_default_experiences__release_with_app_store_vers_0zdb21` — Fetches the store version the default App Clip experience is tied to
 - `app_clip_default_experiences__release_with_app_store_vers_0zdbim` — Ties the default App Clip experience to a store version
 - `app_clip_default_experiences__update` — Updates the default App Clip experience's action button or settings
-- `app_clip_header_images__create` — Opens an upload record for an App Clip header image
-- `app_clip_header_images__delete` — Deletes an App Clip header image
-- `app_clip_header_images__get` — Fetches the details of an App Clip header image
-- `app_clip_header_images__update` — Marks an uploaded App Clip header image as complete
 - `app_clips__app_clip_advanced_experiences__list` — Lists every advanced experience of an App Clip
 - `app_clips__app_clip_default_experiences__list` — Lists every default experience of an App Clip
 - `app_clips__get` — Fetches an App Clip's basic details
@@ -210,7 +202,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `build_bundles__app_clip_domain_debug_status__get` — Fetches the build bundle's App Clip domain configuration errors
 - `build_bundles__beta_app_clip_invocations__list` — Lists the beta App Clip invocation links set on a build bundle
 
-### `background-assets` · 16 tools
+### `background-assets` · 13 tools
 
 **Server:** `ASC-BackgroundAssets` · **Key role:** Developer
 
@@ -219,22 +211,19 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 **When you need it:** Content packs your app downloads after it is installed.
 
 - `apps__background_assets__list` — Lists the app's background asset packs
-- `background_asset_upload_files__create` — Opens an upload record for a background asset file; the file itself is sent separately
-- `background_asset_upload_files__get` — Fetches the status of an uploaded background asset file
 - `background_asset_upload_files__update` — Marks a sent background asset file as uploaded
 - `background_asset_version_app_store_releases__get` — Fetches the App Store release status of a background asset version
 - `background_asset_version_external_beta_releases__get` — Fetches the external beta release status of a background asset version
 - `background_asset_version_internal_beta_releases__get` — Fetches the internal beta release status of a background asset version
-- `background_asset_versions__background_asset_upload_files__list` — Lists the files uploaded to a background asset version
 - `background_asset_versions__create` — Creates a new version record for background assets
 - `background_asset_versions__get` — Fetches the details and status of a background asset version
 - `background_assets__create` — Creates a new background asset pack for the app
 - `background_assets__get` — Fetches the details of a background asset pack
 - `background_assets__update` — Archives a background asset pack or takes it out of the archive
 - `background_assets__versions__list` — Lists every version of a background asset
-- `release__submit_items` — Sends an in-app item's version to review
+- `release__submit_items` — Sends a background asset version to review
 
-### `distribution` · 97 tools
+### `distribution` · 80 tools
 
 **Server:** `ASC-Distribution` · **Key role:** App Manager
 
@@ -242,16 +231,13 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 **When you need it:** New versions, builds, sending to review and phased release.
 
-#### `distribution:app-encryption` · 13 tools
+#### `distribution:app-encryption` · 10 tools
 
 **What is inside:** Export compliance: encryption declarations, their documents, and attaching one to a build.
 
 **When you need it:** Answer the export compliance questions for a build. · **Key role:** App Manager
 
-- `app_encryption_declaration_documents__create` — Opens a record for uploading a document to an encryption declaration
-- `app_encryption_declaration_documents__get` — Fetches the details of a document attached to an encryption declaration
 - `app_encryption_declaration_documents__update` — Saves the checksum details of an uploaded encryption document
-- `app_encryption_declarations__app_encryption_declaration_d_0az88b` — Fetches the document tied to an encryption declaration
 - `app_encryption_declarations__create` — Creates an encryption declaration for the app
 - `app_encryption_declarations__get` — Fetches an encryption declaration's details
 - `app_encryption_declarations__list` — Lists encryption declarations
@@ -259,23 +245,19 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `builds__app_encryption_declaration__get` — Fetches the encryption declaration tied to a build
 - `builds__app_encryption_declaration__set` — Ties an encryption declaration to a build
 
-#### `distribution:app-review-information` · 12 tools
+#### `distribution:app-review-information` · 8 tools
 
 **What is inside:** What App Review sees: contact info, demo account, review notes and attachments.
 
 **When you need it:** The contact, demo account and notes App Review reads. · **Key role:** App Manager
 
-- `app_store_review_attachments__create` — Opens a record for uploading a file as a review attachment
-- `app_store_review_attachments__delete` — Deletes a file attached for review
-- `app_store_review_attachments__get` — Fetches the details of a file attached for review
 - `app_store_review_attachments__update` — Saves the checksum details of an uploaded review attachment
-- `app_store_review_details__app_store_review_attachments__list` — Lists the files attached to the review details
 - `app_store_review_details__create` — Creates the review contact and access details for a version
 - `app_store_review_details__get` — Fetches the review contact and access details
 - `app_store_review_details__update` — Updates the review contact and access details
 - `app_store_versions__app_store_review_detail__get` — Fetches a version's review contact and access details
 
-#### `distribution:builds` · 18 tools
+#### `distribution:builds` · 13 tools
 
 **What is inside:** Uploaded builds: upload sessions, bundles, file sizes, build details.
 
@@ -283,12 +265,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 - `apps__build_uploads__list` — Lists the app's build upload records
 - `build_bundles__build_bundle_file_sizes__list` — Lists a build bundle's download and install sizes by device and OS version
-- `build_upload_files__create` — Opens a file record for a build upload
-- `build_upload_files__get` — Fetches a build upload file's details
 - `build_upload_files__update` — Saves the checksum details of an uploaded build file
-- `build_uploads__build_upload_files__list` — Lists the files in a build upload
-- `build_uploads__create` — Opens a new build upload record
-- `build_uploads__delete` — Deletes a build upload record
 - `build_uploads__get` — Fetches a build upload record
 - `builds__app__get` — Fetches the app a build belongs to
 - `builds__app_store_version__get` — Fetches the App Store version a build is selected for
@@ -356,18 +333,6 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `review_submissions__update` — Sends a review submission or withdraws it
 - `release__submit` — Checks the version and sends it to App Review
 
-#### `distribution:routing-coverage` · 8 tools
-
-**What is inside:** Routing app coverage files for apps that offer directions.
-
-**When you need it:** The regions a navigation app gives directions in. · **Key role:** App Manager
-
-- `app_store_versions__routing_app_coverage__get` — Fetches a version's routing coverage file
-- `routing_app_coverages__create` — Opens a file record for routing coverage regions
-- `routing_app_coverages__delete` — Deletes a routing coverage file
-- `routing_app_coverages__get` — Fetches a routing coverage file's details
-- `routing_app_coverages__update` — Saves the checksum details of an uploaded coverage file
-
 #### `distribution:version` · 24 tools
 
 **What is inside:** App Store versions and their localizations: what is new, keywords, the version preflight and the translation tools. Screenshots and previews go through ASC-Core's media tools.
@@ -396,7 +361,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `metadata_ai__draft_translation` — Helps draft store text for the languages asked for
 - `preflight__check_version` — Checks whether a version is ready to send to review
 
-### `game-center` · 176 tools
+### `game-center` · 149 tools
 
 **Server:** `ASC-GameCenter` · **Key role:** App Manager
 
@@ -404,21 +369,16 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 **When you need it:** Achievements, leaderboards and challenges.
 
-#### `game-center:achievements` · 25 tools
+#### `game-center:achievements` · 20 tools
 
 **What is inside:** Achievements: versions, localizations, images, player submissions.
 
 **When you need it:** Create achievements, their text and images. · **Key role:** App Manager
 
 - `apps__game_center_detail__get` — Shows the app's Game Center record
-- `game_center_achievement_images_v2__create` — Opens an upload record for an achievement image
-- `game_center_achievement_images_v2__delete` — Deletes an achievement image
-- `game_center_achievement_images_v2__get` — Shows the details of an achievement image
-- `game_center_achievement_images_v2__update` — Marks an uploaded achievement image as complete
 - `game_center_achievement_localizations_v2__create` — Adds an achievement version's name and before/after descriptions in one language
 - `game_center_achievement_localizations_v2__delete` — Deletes an achievement's text in one language
 - `game_center_achievement_localizations_v2__get` — Shows an achievement's text in one language
-- `game_center_achievement_localizations_v2__image__get` — Shows an achievement's image in one language
 - `game_center_achievement_localizations_v2__update` — Changes an achievement's text in one language
 - `game_center_achievement_versions_v2__create` — Starts a new version of an achievement
 - `game_center_achievement_versions_v2__get` — Shows the details of an achievement version
@@ -433,7 +393,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `game_center_player_achievement_submissions__create` — Sends achievement progress on behalf of a player
 - `release__submit_items` — Sends an achievement version to review
 
-#### `game-center:activities` · 31 tools
+#### `game-center:activities` · 25 tools
 
 **What is inside:** Activities: versions, localizations, images, and the achievements and leaderboards they link.
 
@@ -449,17 +409,11 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `game_center_activities__leaderboards_v2__remove` — Unlinks leaderboards from a game activity
 - `game_center_activities__update` — Changes a game activity's settings
 - `game_center_activities__versions__list` — Lists every version of a game activity
-- `game_center_activity_images__create` — Opens an upload record for an activity image
-- `game_center_activity_images__delete` — Deletes an activity image
-- `game_center_activity_images__get` — Shows the details of an activity image
-- `game_center_activity_images__update` — Marks an uploaded activity image as complete
 - `game_center_activity_localizations__create` — Adds an activity's text in one language
 - `game_center_activity_localizations__delete` — Deletes an activity's text in one language
 - `game_center_activity_localizations__get` — Shows an activity's text in one language
-- `game_center_activity_localizations__image__get` — Shows an activity's image in one language
 - `game_center_activity_localizations__update` — Changes an activity's text in one language
 - `game_center_activity_versions__create` — Starts a new version of an activity
-- `game_center_activity_versions__default_image__get` — Shows an activity version's default image
 - `game_center_activity_versions__get` — Shows the details of an activity version
 - `game_center_activity_versions__localizations__list` — Lists the text in every language of an activity version
 - `game_center_activity_versions__update` — Changes an activity version's fallback URL
@@ -468,24 +422,18 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `game_center_details__game_center_leaderboards_v2__list` — Lists every leaderboard of the app
 - `release__submit_items` — Sends a Game Center activity version to review
 
-#### `game-center:challenges` · 27 tools
+#### `game-center:challenges` · 21 tools
 
 **What is inside:** Challenges: versions, localizations, images, and the leaderboard each uses.
 
 **When you need it:** Challenges players send each other. · **Key role:** App Manager
 
 - `apps__game_center_detail__get` — Shows the app's Game Center record
-- `game_center_challenge_images__create` — Opens an upload record for a challenge image
-- `game_center_challenge_images__delete` — Deletes a challenge image
-- `game_center_challenge_images__get` — Shows the details of a challenge image
-- `game_center_challenge_images__update` — Marks an uploaded challenge image as complete
 - `game_center_challenge_localizations__create` — Adds a challenge's text in one language
 - `game_center_challenge_localizations__delete` — Deletes a challenge's text in one language
 - `game_center_challenge_localizations__get` — Shows a challenge's text in one language
-- `game_center_challenge_localizations__image__get` — Shows a challenge's image in one language
 - `game_center_challenge_localizations__update` — Changes a challenge's text in one language
 - `game_center_challenge_versions__create` — Starts a new version of a challenge
-- `game_center_challenge_versions__default_image__get` — Shows a challenge version's default image
 - `game_center_challenge_versions__get` — Shows the details of a challenge version
 - `game_center_challenge_versions__localizations__list` — Lists the text in every language of a challenge version
 - `game_center_challenges__create` — Adds a new challenge to the game
@@ -521,7 +469,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `game_center_groups__list` — Lists every game group on the account
 - `game_center_groups__update` — Changes a game group's name
 
-#### `game-center:leaderboards` · 54 tools
+#### `game-center:leaderboards` · 44 tools
 
 **What is inside:** Leaderboards and leaderboard sets: versions, localizations, images, score submissions and moderation.
 
@@ -533,23 +481,13 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `game_center_details__game_center_leaderboards_v2__list` — Lists every leaderboard of the app
 - `game_center_details__game_center_leaderboards_v2__replace` — Sets the app's leaderboards and their order from scratch
 - `game_center_leaderboard_entry_submissions__create` — Sends a score to a leaderboard on behalf of a player
-- `game_center_leaderboard_images_v2__create` — Opens an upload record for a leaderboard image
-- `game_center_leaderboard_images_v2__delete` — Deletes a leaderboard image
-- `game_center_leaderboard_images_v2__get` — Shows the details of a leaderboard image
-- `game_center_leaderboard_images_v2__update` — Marks an uploaded leaderboard image as complete
 - `game_center_leaderboard_localizations_v2__create` — Adds a leaderboard's text in one language
 - `game_center_leaderboard_localizations_v2__delete` — Deletes a leaderboard's text in one language
 - `game_center_leaderboard_localizations_v2__get` — Shows a leaderboard's text in one language
-- `game_center_leaderboard_localizations_v2__image__get` — Shows a leaderboard's image in one language
 - `game_center_leaderboard_localizations_v2__update` — Changes a leaderboard's text in one language
-- `game_center_leaderboard_set_images_v2__create` — Opens an upload record for a leaderboard set image
-- `game_center_leaderboard_set_images_v2__delete` — Deletes a leaderboard set image
-- `game_center_leaderboard_set_images_v2__get` — Shows the details of a leaderboard set image
-- `game_center_leaderboard_set_images_v2__update` — Marks an uploaded leaderboard set image as complete
 - `game_center_leaderboard_set_localizations_v2__create` — Adds a leaderboard set's name in one language
 - `game_center_leaderboard_set_localizations_v2__delete` — Deletes a leaderboard set's name in one language
 - `game_center_leaderboard_set_localizations_v2__get` — Shows a leaderboard set's name in one language
-- `game_center_leaderboard_set_localizations_v2__image__get` — Shows a leaderboard set's image in one language
 - `game_center_leaderboard_set_localizations_v2__update` — Changes a leaderboard set's name in one language
 - `game_center_leaderboard_set_member_localizations__create` — Adds the set-specific name of a leaderboard inside a set
 - `game_center_leaderboard_set_member_localizations__delete` — Deletes the set-specific name of a leaderboard inside a set
@@ -851,7 +789,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `apps__app_store_version_experiments_v2__list` — Lists the app's product page tests
 - `release__submit_items` — Sends a product page test to review
 
-### `monetization` · 170 tools
+### `monetization` · 152 tools
 
 **Server:** `ASC-Monetization` · **Key role:** App Manager
 
@@ -899,23 +837,16 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `in_app_purchases_v2__offer_codes__list` — Lists a product's code-redeemed offers
 - `in_app_purchases_v2__price_points__list` — Lists the prices a product can be set to
 
-#### `monetization:in-app-purchases` · 43 tools
+#### `monetization:in-app-purchases` · 34 tools
 
 **What is inside:** In-app purchases: localizations, images, versions, availability, prices, submissions, and the price macros.
 
 **When you need it:** In-app purchases, their text, images, prices and review. · **Key role:** App Manager
 
-- `in_app_purchase_app_store_review_screenshots__create` — Opens an upload record for the product screenshot App Review sees
-- `in_app_purchase_app_store_review_screenshots__delete` — Deletes a product's review screenshot
-- `in_app_purchase_app_store_review_screenshots__get` — Shows a product's review screenshot
 - `in_app_purchase_app_store_review_screenshots__update` — Marks an uploaded review screenshot as complete
 - `in_app_purchase_availabilities__available_territories__list` — Lists the countries a product is on sale in
 - `in_app_purchase_availabilities__create` — Sets the countries a product goes on sale in
 - `in_app_purchase_availabilities__get` — Shows a product's sale availability settings
-- `in_app_purchase_images_v2__create` — Opens an upload record for a product image
-- `in_app_purchase_images_v2__delete` — Deletes a product image
-- `in_app_purchase_images_v2__get` — Shows the details of a product image
-- `in_app_purchase_images_v2__update` — Marks an uploaded product image as complete
 - `in_app_purchase_localizations_v2__create` — Adds a name and description in the chosen language to a product version
 - `in_app_purchase_localizations_v2__delete` — Deletes a product version's text in the chosen language
 - `in_app_purchase_localizations_v2__get` — Shows a product version's text in the chosen language
@@ -929,9 +860,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `in_app_purchase_versions__create` — Creates a new version of an in-app product
 - `in_app_purchase_versions__get` — Shows a product version's number and review status
 - `in_app_purchase_versions__image__get` — Shows a product version's image
-- `in_app_purchase_versions__images__list` — Lists a product version's images
 - `in_app_purchase_versions__localizations__list` — Lists a product version's text in every language
-- `in_app_purchases_v2__app_store_review_screenshot__get` — Shows a product's review screenshot
 - `in_app_purchases_v2__content__get` — Shows the details and link of a product's downloadable file
 - `in_app_purchases_v2__create` — Creates a product to sell inside the app
 - `in_app_purchases_v2__delete` — Deletes an in-app product
@@ -962,16 +891,13 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscription_groups__subscriptions__list` — Lists the subscriptions in a group
 - `subscriptions__promoted_purchase__get` — Shows a subscription's promotion settings on the App Store
 
-#### `monetization:subscription` · 61 tools
+#### `monetization:subscription` · 52 tools
 
 **What is inside:** Subscriptions and their groups: localizations, images, versions, prices, availability, grace period, submissions, and the price and preflight macros.
 
 **When you need it:** Subscriptions and their groups, text, prices and review. · **Key role:** App Manager
 
 - `apps__subscription_grace_period__get` — Shows the app's settings for keeping a subscription going when payment fails
-- `subscription_app_store_review_screenshots__create` — Opens an upload record for the subscription screenshot App Review sees
-- `subscription_app_store_review_screenshots__delete` — Deletes a subscription's review screenshot
-- `subscription_app_store_review_screenshots__get` — Shows a subscription's review screenshot
 - `subscription_app_store_review_screenshots__update` — Marks an uploaded subscription review screenshot as complete
 - `subscription_grace_periods__get` — Shows how long a subscription is kept going when payment fails
 - `subscription_grace_periods__update` — Sets whether, and for how long, a subscription is kept going when payment fails
@@ -988,10 +914,6 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscription_groups__subscriptions__list` — Lists the subscriptions in a group
 - `subscription_groups__update` — Changes the name a subscription group is managed under
 - `subscription_groups__versions__list` — Lists a subscription group's versions
-- `subscription_images_v2__create` — Opens an upload record for a subscription image
-- `subscription_images_v2__delete` — Deletes a subscription image
-- `subscription_images_v2__get` — Shows the details of a subscription image
-- `subscription_images_v2__update` — Marks an uploaded subscription image as complete
 - `subscription_localizations_v2__create` — Adds a name and description in the chosen language to a subscription version
 - `subscription_localizations_v2__delete` — Deletes a subscription version's text in the chosen language
 - `subscription_localizations_v2__get` — Shows a subscription version's text in the chosen language
@@ -1009,9 +931,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscription_versions__create` — Creates a new version of a subscription
 - `subscription_versions__get` — Shows a subscription version's number and review status
 - `subscription_versions__image__get` — Shows a subscription version's image
-- `subscription_versions__images__list` — Lists a subscription version's images
 - `subscription_versions__localizations__list` — Lists a subscription version's text in every language
-- `subscriptions__app_store_review_screenshot__get` — Shows a subscription's review screenshot
 - `subscriptions__create` — Creates a new subscription in a group
 - `subscriptions__delete` — Deletes a subscription
 - `subscriptions__get` — Shows a subscription's details

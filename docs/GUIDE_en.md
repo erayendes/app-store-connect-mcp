@@ -32,7 +32,8 @@ The workflows below turn chains like that into a single step. You don't have to 
 | version + build + review details + localizations + screenshots, to answer "can I submit?" | `preflight__check_version` | `distribution:version` |
 | subscription + group localizations + prices + availability + review screenshot | `preflight__check_subscription` — what's missing before review | `monetization:subscription` |
 | comparing two versions language by language | `listing__diff_metadata` — only the fields that differ, plus languages added or dropped | `distribution:version` |
-| page → localizations → library placements → images and videos | `media__list` — the version page, a custom product page, a product page test, an in-app event or the library itself, with Apple's count and size limits | ASC-Core, so every profile |
+| page → localizations → library placements → images and videos | `media__list` — the version page, a custom product page, a product page test, an in-app event or the library itself, with Apple's count and size limits | ASC-Core |
+| an App Clip, Game Center item, in-app purchase or subscription → its image → reserve, upload, commit | `media__list` / `media__upload` / `media__delete` with a file `target` — also review screenshots and attachments, encryption documents, routing coverage, background asset and build upload files; one check of the file and its owner before anything is sent. Every target and its rules: [Media targets](MEDIA_TARGETS_en.md) | ASC-Core |
 | reserving a library image or video, uploading the bytes, then placing it on a page | `media__upload` — into the library, and onto a page if you name one | ASC-Core |
 | placing, reordering, removing from a page, setting a video's poster frame, archiving or renaming | `media__arrange` | ASC-Core |
 | deleting several library files, or taking them off a page, under one confirmation | `media__delete` — checks every file belongs to that app and page before it deletes any | ASC-Core |
@@ -41,6 +42,8 @@ The workflows below turn chains like that into a single step. You don't have to 
 | app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` — finds the most recent failure among the last 40 runs and lists its issues and failed tests | `xcode-cloud:workflows` |
 | pulling reviews and sorting them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-reviews` |
 | listing your apps, checking each one's version, then making sense of their App Store status | `asc__account_status` — which app is live, which is on its way, and whether the next move is yours or Apple's | ASC-Core |
+
+"ASC-Core" means the tool is on ASC-Core, the server setup registers next to your profiles. A profile server does not carry it; an app that runs only one server gets it with `--with-core`.
 
 `pricing__equalize_price` changes prices in about 175 countries at once, so it goes straight to your revenue. That's why it always asks for your approval before it runs.
 

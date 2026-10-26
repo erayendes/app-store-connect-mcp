@@ -10,9 +10,9 @@ Bu doküman App Store Connect rollerinin yetkilerini ve risklerini belirtmek iç
 | **App Manager** | Uygulamayı uçtan uca yönetir: uygulama bilgileri (`general`), sürümler ve yayın (`distribution`), abonelikler, IAP ve fiyatlar (`monetization`), Game Center (`game-center`), App Clip'ler (`app-clips`) ve sandbox hesapları (`access:sandbox`). | **Yüksek.** Canlı bir sürümü gönderebilir/geri çekebilir, bir uygulama içi satın alma veya abonelik grubunu silebilir. Canlı listenizi ve gelirinizi doğrudan etkiler. |
 | **Developer** | Yalnızca build ve test: yüklenen build'ler (`distribution:builds`), TestFlight (`testflight`), Xcode Cloud (`xcode-cloud`), Background Assets (`background-assets`) — yükleme, gönderim değil. | **Orta.** Testçileri, build'leri, beta gruplarını silebilir; ama fiyatlandırmaya, canlı metadata'ya dokunamaz, incelemeye gönderemez. |
 | **Marketing** | Mağaza görünürlüğünü yönetir: özel ürün sayfaları, ürün sayfası denemeleri, uygulama içi etkinlikler, öne çıkarılma başvuruları ve yorumlar (`marketing`). | **Orta.** Zaten müşteriye görünen özel ürün sayfalarını, önizlemeleri, uygulama içi etkinlikleri kaldırabilir. |
-| **Sales** | Satış ve trend raporlarını okur (`analytics`). | **Düşük.** Neredeyse tamamen salt okunur — rapor istekleri, listenizi değiştiren bir şey yok. |
+| **Sales** | Satış ve trend raporlarını okur (`analytics`). | **Düşük.** Neredeyse yalnızca okuma yapar; rapor istemek mağaza sayfanızda hiçbir şeyi değiştirmez. |
 | **Finance** | Finans ve ödeme raporlarını okur (`analytics`; ayrıca setup'ta Vendor number girilmiş olmalı). | **Düşük.** Sales ile aynı, ağırlıklı okuma yapan `analytics` alanı. |
-| **Customer Support** | Müşteri yorumlarını okur ve yanıtlar (`marketing:customer-reviews`, `reviews_ai__*` dahil). | **Düşük-orta.** Bir işlem kamuya açık yanıt gönderir — geri alınabilir, ama bir hatayı fark etmeden önce müşterilere görünür. |
+| **Customer Support** | Müşteri yorumlarını okur ve yanıtlar (`marketing:customer-reviews`, `reviews_ai__*` dahil). | **Düşük-orta.** Gönderilen yanıt herkese açıktır. Geri alınabilir, ama siz hatayı fark etmeden müşteriler görmüş olabilir. |
 
 > [!NOTE]
 > Günlük release işlerinin çoğu yalnızca **App Manager** rolü ister.
@@ -40,7 +40,6 @@ Setup aynı tabloyla çalışır: seçtiklerinize bakıp hepsini karşılayan en
 | `distribution:dma-distribution` | Admin |
 | `distribution:phased-releases` | App Manager, Admin |
 | `distribution:publish` | App Manager, Admin |
-| `distribution:routing-coverage` | App Manager, Admin |
 | `distribution:version` | App Manager, Admin |
 | `game-center` | App Manager, Admin |
 | `game-center:achievements` | App Manager, Admin |

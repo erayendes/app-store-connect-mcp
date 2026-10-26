@@ -5,7 +5,7 @@
   "display_name": "Heimdall — App Store Connect",
   "version": "2.2.0",
   "description": "Every App Store Connect and StoreKit 2 endpoint, narrowed to the profile you pick.",
-  "long_description": "Heimdall serves the App Store Connect API and the App Store Server API (StoreKit 2), with every tool generated from Apple's own OpenAPI specification. Pick one profile at install time — distribution, monetization, marketing, testflight and nine more — and only that area's tools are served, together with app lookup, tool search and the screenshot tools every area needs.\n\nThe key never leaves this machine: Heimdall reads it, signs a short-lived token, and talks to Apple directly. Nothing sits in between.\n\nIf you have already run `npx -y @erayendes/asc-mcp setup`, leave the credential fields below empty — the shared config it wrote is used instead, with the key still in the Keychain.",
+  "long_description": "Heimdall serves the App Store Connect API and the App Store Server API (StoreKit 2), with every tool generated from Apple's own OpenAPI specification. Pick one profile at install time — distribution, monetization, marketing, testflight and nine more — and only that area's tools are served, together with app lookup, tool search and the media tools every area needs.\n\nThe key never leaves this machine: Heimdall reads it, signs a short-lived token, and talks to Apple directly. Nothing sits in between.\n\nIf you have already run `npx -y @erayendes/asc-mcp setup`, leave the credential fields below empty — the shared config it wrote is used instead, with the key still in the Keychain.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"

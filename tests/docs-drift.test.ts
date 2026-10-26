@@ -10,7 +10,7 @@
  * checked — only the parts of it that are claims about the code.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import {
   CORE_PROFILE,
   PROFILES,
@@ -19,8 +19,9 @@ import {
 } from '../src/profiles.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toolNameFor } from '../src/core/registry.js';
-import { serverName } from '../src/clients.js';
+import { PACKAGE, serverName } from '../src/clients.js';
 import { NARROW_FIRST, ROLES } from '../src/setup.js';
+import { FILE_TARGETS } from '../src/tools/media-catalog.js';
 
 const read = (path: string): string => readFileSync(path, 'utf8');
 
@@ -36,9 +37,13 @@ const manual = new Set(PROFILES.flatMap((p) => p.subProfiles.flatMap((s) => s.ma
 
 const COUNTS = {
   profiles: PROFILES.length,
+  // What setup offers to pick: every profile but core, which comes with them.
+  pickable: PROFILES.filter((p) => p.name !== CORE_PROFILE).length,
   subProfiles: PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length,
   operations: OPERATIONS.length,
   deprecated: OPERATIONS.filter((op) => op.deprecated).length,
+  // What asc__search_tools searches without --include-deprecated.
+  searchable: OPERATIONS.filter((op) => !op.deprecated).length,
   placed: placedOps.size,
   handWritten: manual.size + PROXY_PAIR.length,
   // The headline, as server.json and the release pre-flight count it.
@@ -64,11 +69,18 @@ describe('advertised counts', () => {
     ['docs/README_tr.md', /Kalanlardan (\d+)'.{0,40}elle yazılmış (\d+) araç ekleniyor: toplam (\d+) araç/, [COUNTS.placed, COUNTS.handWritten, COUNTS.tools]],
     ['AGENTS.md', /serves (\d+) tools across (\d+) profiles: (\d+) generated from Apple's (\d+) operations \(the (\d+) that/, [COUNTS.tools, COUNTS.profiles, COUNTS.placed, COUNTS.operations, COUNTS.deprecated]],
     ['AGENTS.md', /and (\d+) hand-written\./, [COUNTS.handWritten]],
-    ['AGENTS.md', /searches all (\d+) operations/, [COUNTS.operations]],
+    ['AGENTS.md', /Search covers the (\d+) operations Apple has not deprecated/, [COUNTS.searchable]],
     ['skills/heimdall/SKILL.md', /Apple's API is (\d+) operations/, [COUNTS.operations]],
     ['skills/heimdall/SKILL.md', /serves (\d+) distinct tools across (\d+) profiles: (\d+) reachable Apple operations plus (\d+) hand-written/, [COUNTS.tools, COUNTS.profiles, COUNTS.placed, COUNTS.handWritten]],
-    ['skills/heimdall/SKILL.md', /searches all (\d+) operations/, [COUNTS.operations]],
+    ['skills/heimdall/SKILL.md', /covers the (\d+) operations Apple has not\s+deprecated/, [COUNTS.searchable]],
     ['CITATION.cff', /with (\d+) tools .*?, (\d+) curated profiles/, [COUNTS.tools, COUNTS.profiles]],
+    ['.github/SECURITY.md', /The (\d+) hand-written ones/, [COUNTS.handWritten]],
+    ['.github/SECURITY.md', /Elle yazılan (\d+) araç/, [COUNTS.handWritten]],
+    // The newest changelog entry speaks for the code as it is now; older ones are history.
+    ['docs/CHANGELOG.md', /There are (\d+) to pick from, and (\d+) sub-profiles/, [COUNTS.pickable, COUNTS.subProfiles]],
+    ['docs/CHANGELOG.md', /Seçebileceğiniz (\d+) profil ve (\d+) alt profil/, [COUNTS.pickable, COUNTS.subProfiles]],
+    ['docs/CHANGELOG.md', /Heimdall now has (\d+) tools\./, [COUNTS.tools]],
+    ['docs/CHANGELOG.md', /Heimdall artık (\d+) araç içeriyor\./, [COUNTS.tools]],
   ];
 
   it.each(claims)('%s says %s', (file, re, expected) => {
@@ -82,14 +94,37 @@ describe('advertised counts', () => {
     expect(numbers(pkg.description, /(\d+) tools across (\d+) profiles/, 'package.json')).toEqual([COUNTS.tools, COUNTS.profiles]);
   });
 
-  it.each(['AGENTS.md', 'skills/heimdall/SKILL.md'])('%s keeps its sub-profile example true', (file) => {
-    // \s+: the skill wraps its prose, so the sentence may break anywhere.
-    const examples = [...read(file).matchAll(/`([a-z-]+(?::[a-z,-]+)?)` is (\d+) tools\s+where\s+`([a-z-]+)` is (\d+)/g)];
+  it('server.json derives its profile list and its "narrow to" from the profiles', () => {
+    const server = JSON.parse(read('server.json'));
+    const arg = server.packages[0].packageArguments.find((a: { valueHint?: string }) => a.valueHint === 'profile');
+    const [narrow, wide] = numbers(arg.description, /monetization:[a-z-]+ is (\d+) tools instead of (\d+)/, 'server.json');
+    const sub = /monetization:([a-z-]+) is/.exec(arg.description)![1];
+    expect(narrow).toBe(toolCountFor(resolveSelection(`monetization:${sub}`)));
+    expect(wide).toBe(toolCountFor(resolveSelection('monetization')));
+    expect(numbers(server.description, /narrow to (\d+)\./, 'server.json')).toEqual([narrow]);
+  });
+
+  /** `narrow` is N tools where `wide` is M, in either language, wrapped anywhere. */
+  const EXAMPLE = [
+    /`([a-z-]+(?::[a-z,-]+)?)` is (\d+) tools\s+where\s+`([a-z-]+)` is (\d+)/g,
+    /`([a-z-]+(?::[a-z,-]+)?)` is (\d+)\s+tools where `([a-z-]+)` is (\d+)/g,
+    /`([a-z-]+(?::[a-z,-]+)?)` (\d+) araç,\s+`([a-z-]+)` (\d+)/g,
+  ];
+  it.each(['AGENTS.md', 'skills/heimdall/SKILL.md', 'examples/README.md'])('%s keeps its sub-profile examples true', (file) => {
+    const doc = read(file);
+    const examples = EXAMPLE.flatMap((re) => [...doc.matchAll(re)]);
     expect(examples.length, `${file} has no sub-profile example`).toBeGreaterThan(0);
     for (const [, narrow, n, wide, w] of examples) {
       expect(toolCountFor(resolveSelection(narrow)), narrow).toBe(Number(n));
       expect(toolCountFor(resolveSelection(wide)), wide).toBe(Number(w));
     }
+  });
+});
+
+describe.each(['docs/MEDIA_TARGETS_en.md', 'docs/MEDIA_TARGETS_tr.md'])('%s', (file) => {
+  it('lists every file target the media tools accept', () => {
+    const rows = [...read(file).matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]);
+    expect(rows.sort()).toEqual(Object.keys(FILE_TARGETS).sort());
   });
 });
 
@@ -170,30 +205,41 @@ describe.each(['docs/ROLES_en.md', 'docs/ROLES_tr.md'])('%s', (file) => {
 });
 
 /**
- * Names in backticks are the part of prose an agent copies into a call. The
- * 2.x names are kept only where a doc explains what an old config looks like.
+ * Names in backticks are the part of prose an agent copies into a call. A
+ * retired 2.x name is allowed only on a line that says it is one — a migration
+ * note — never as if it were current. The changelog is history and is not read.
  */
 describe('names the docs use exist', () => {
   const DOCS = [
-    'README.md', 'AGENTS.md', 'skills/heimdall/SKILL.md',
-    ...['README_tr', 'GUIDE_en', 'GUIDE_tr', 'CONFIGURATION_en', 'CONFIGURATION_tr', 'SETUP_en', 'SETUP_tr', 'ROLES_en', 'ROLES_tr']
+    'README.md', 'AGENTS.md', 'skills/heimdall/SKILL.md', 'examples/README.md', '.github/SECURITY.md',
+    ...['README_tr', 'GUIDE_en', 'GUIDE_tr', 'CONFIGURATION_en', 'CONFIGURATION_tr', 'SETUP_en', 'SETUP_tr',
+      'ROLES_en', 'ROLES_tr', 'PROFILES_en', 'PROFILES_tr', 'MEDIA_TARGETS_en', 'MEDIA_TARGETS_tr']
       .map((d) => `docs/${d}.md`),
   ];
-  const LEGACY = new Set(['monetization:subscription-pricing']);
-  const tools = new Set([
-    ...OPERATIONS.filter((op) => !op.deprecated).map((op) => toolNameFor(op)),
-    ...manual,
-    ...PROXY_PAIR,
-  ]);
+  /** A line that is about an old name: 2.x, a removed profile, a rename. */
+  const MIGRATION = /2\.x|before 2\.5|no longer exist|artık olmayan|now `general`|artık `general`|earlier version|önceki bir sürüm|old name|eski ad|old profile|eski bir profil|was removed|kaldırılan/;
+  // Only what actually loads: placed operations and the hand-written tools.
+  // MACRO_COVERED, TWIN_OF and PROFILELESS operations are in no server.
+  const tools = new Set([...[...placedOps].map((op) => toolNameFor({ name: op })), ...manual, ...PROXY_PAIR]);
+  const servers = new Set(PROFILES.map((p) => serverName(p.name)));
+  const RETIRED_PROFILES = ['app-info'];
 
   it.each(DOCS)('%s', (file) => {
-    const doc = read(file);
-    for (const [, spec] of doc.matchAll(/`([a-z-]+:[a-z-]+(?:,[a-z-]+)*)`/g)) {
-      if (LEGACY.has(spec)) continue;
-      expect(() => resolveSelection(spec), `${file}: ${spec}`).not.toThrow();
-    }
-    for (const [, tool] of doc.matchAll(/`([a-z0-9_]+__[a-z0-9_]+)`/g)) {
-      expect(tools.has(tool), `${file}: ${tool}`).toBe(true);
+    // A paragraph, list item or table row: prose wraps, so a note and the name
+    // it is about can sit on different lines.
+    for (const line of read(file).split(/\n(?=\s*\n|\s*[-|#>] |\s*\d+\. )/)) {
+      const historical = MIGRATION.test(line);
+      const check = (ok: boolean, what: string) => {
+        if (!historical) expect(ok, `${file}: ${what} is not a current name — "${line.trim().slice(0, 120)}"`).toBe(true);
+      };
+      for (const [, spec] of line.matchAll(/`([a-z-]+:[a-z-]+(?:,[a-z-]+)*)`/g)) {
+        let ok = true;
+        try { resolveSelection(spec); } catch { ok = false; }
+        check(ok, spec);
+      }
+      for (const [, tool] of line.matchAll(/`([a-z0-9_]+__[a-z0-9_]+)`/g)) check(tools.has(tool), tool);
+      for (const [, server] of line.matchAll(/`(ASC-[A-Za-z]+)`/g)) check(servers.has(server), server);
+      for (const name of RETIRED_PROFILES) check(!line.includes(`\`${name}\``), name);
     }
   });
 });
@@ -216,8 +262,36 @@ describe('version surfaces', () => {
       '.claude-plugin/plugin.json': JSON.parse(read('.claude-plugin/plugin.json')).version,
       'CITATION.cff': /^version:\s*"?([^"\s]+)"?/m.exec(read('CITATION.cff'))?.[1],
     };
+    const marketplace = JSON.parse(read('.claude-plugin/marketplace.json'));
+    seen['.claude-plugin/marketplace.json metadata'] = marketplace.metadata.version;
+    for (const p of marketplace.plugins) seen[`.claude-plugin/marketplace.json ${p.name}`] = p.version;
+    for (const dir of readdirSync('plugins')) {
+      seen[`plugins/${dir}/.claude-plugin/plugin.json`] = JSON.parse(read(`plugins/${dir}/.claude-plugin/plugin.json`)).version;
+    }
     for (const [where, v] of Object.entries(seen)) expect(v, where).toBe(version);
   });
+
+  it('runs every plug-in on this release channel', () => {
+    for (const dir of readdirSync('plugins')) {
+      const servers = Object.values(JSON.parse(read(`plugins/${dir}/.mcp.json`)).mcpServers) as { args: string[] }[];
+      for (const s of servers) expect(s.args, dir).toContain(PACKAGE);
+    }
+  });
+
+  /**
+   * A copy-paste command that installs the other channel sets the user up
+   * with a version these docs do not describe: on a beta, the bare package is
+   * still the previous major.
+   */
+  it.each(['AGENTS.md', 'skills/heimdall/SKILL.md', 'docs/SETUP_en.md', 'docs/SETUP_tr.md', 'server.json', 'examples/README.md', 'examples/ci/release-notes.yml'])(
+    '%s gives commands for this channel',
+    (file) => {
+      const commands = [...read(file).matchAll(/npx -y (@erayendes\/asc-mcp(?:@[\w.-]+)?)/g)].map((m) => m[1]);
+      expect(commands.length, file).toBeGreaterThan(0);
+      // A pinned older version (`@2.8.0`) is a way back, not an install.
+      for (const pkg of commands.filter((c) => !/@\d/.test(c.slice(1)))) expect(pkg, file).toBe(PACKAGE);
+    }
+  );
 
   it('open both changelog sections with this version', () => {
     const changelog = read('docs/CHANGELOG.md');

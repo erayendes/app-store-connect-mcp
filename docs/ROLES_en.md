@@ -40,7 +40,6 @@ Setup works from the same table: from what you pick, it suggests the narrowest r
 | `distribution:dma-distribution` | Admin |
 | `distribution:phased-releases` | App Manager, Admin |
 | `distribution:publish` | App Manager, Admin |
-| `distribution:routing-coverage` | App Manager, Admin |
 | `distribution:version` | App Manager, Admin |
 | `game-center` | App Manager, Admin |
 | `game-center:achievements` | App Manager, Admin |

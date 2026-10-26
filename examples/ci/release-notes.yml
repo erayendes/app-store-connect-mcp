@@ -61,7 +61,8 @@ jobs:
         # cannot reach the pricing tools cannot touch a price by accident.
         # `register` adds ASC-Core beside it on its own: finding the app by name
         # (apps__list) lives there, and nowhere else since 3.0.
-        run: npx -y @erayendes/asc-mcp register distribution --clients=claude
+        # `@beta` while 3.0 is in beta: the stable 2.x has no ASC-Core.
+        run: npx -y @erayendes/asc-mcp@beta register distribution --clients=claude
 
       - name: Write the release notes
         env:
@@ -71,10 +72,13 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
-          # No user is here to answer an elicitation prompt. Left at the default
-          # `strong`, the write would be refused and reported as a refusal —
-          # which reads, in a log, exactly like a bug. Saying so explicitly is
-          # the honest form.
+          # No user is here to answer a confirmation prompt. The default mode
+          # asks before revenue, deletion, infrastructure and access writes and
+          # a list of release steps; unanswered, those are refused, which reads
+          # in a log exactly like a bug. Saying so explicitly is the honest form.
+          # (Writing whatsNew is a public-level write the default does not ask
+          # about; release__submit and release__submit_items ask even with this
+          # set, so submitting stays out of an unattended job.)
           ASC_CONFIRM_WRITES: '0'
           ASC_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

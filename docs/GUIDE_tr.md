@@ -24,15 +24,16 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Siz b
 | IAP → fiyat noktaları → elle kurulan yepyeni bir fiyat takvimi | `pricing__set_iap_price` — tek ülkenin fiyatı; diğer elle girilmiş ve planlanmış fiyatlar aynen korunur | `monetization:in-app-purchases` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:app-price`, `in-app-purchases` ya da `subscription` |
 | win-back, promosyon ya da tanıtım teklifini ülke ülke fiyatlamak | `pricing__make_offer` — tek çapa fiyat (ya da ücretsiz deneme), teklif aboneliğin satıldığı her ülkede kurulur; tanıtım teklifi ülke ülke yazılır ve kaldığı yerden devam eder | `monetization:subscription-offers` ya da `subscription-win-back` |
-| submission aç, sürümü ekle, teslim et — bu sırayla üç çağrı | `release__submit` | `distribution:publish` |
+| submission açmak, sürümü eklemek, teslim etmek — bu sırayla üç çağrı | `release__submit` | `distribution:publish` |
 | aynısını bir IAP, abonelik, uygulama içi etkinlik, özel ürün sayfası, ürün sayfası denemesi, Game Center öğesi ya da background asset için yapmak | `release__submit_items` — birden çok öğe tek başvuruda; başvuruda zaten ne olduğunu okur, onaydan önce hepsini listeler, öğenin sürümle gitmesi gerekiyorsa uygulamanın sürümünü de ekleyebilir | öğenin kendi alt profili, örneğin `monetization:in-app-purchases` |
-| build'i bul, beta gruplarını çözümle, eksik bağlantıları ekle | `testflight__assign_build_to_groups` | `testflight:groups` |
+| build'i bulmak, beta gruplarını çözümlemek, eksik bağlantıları eklemek | `testflight__assign_build_to_groups` | `testflight:groups` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
 | abonelik + grup yerelleştirmeleri + fiyatlar + kullanılabilirlik + inceleme ekran görüntüsü | `preflight__check_subscription` — inceleme öncesi katalog eksikleri | `monetization:subscription` |
 | iki sürümü, her dil için elle karşılaştırmak | `listing__diff_metadata` — yalnızca farklı alanlar, artı eklenen ve düşen diller | `distribution:version` |
-| sayfa → yerelleştirmeler → kütüphane yerleşimleri → görseller ve videolar | `media__list` — sürüm sayfası, özel ürün sayfası, ürün sayfası denemesi, uygulama içi etkinlik ya da kütüphanenin kendisi; Apple'ın adet ve boyut sınırlarıyla | ASC-Core, yani her profilde |
+| sayfa → yerelleştirmeler → kütüphane yerleşimleri → görseller ve videolar | `media__list` — sürüm sayfası, özel ürün sayfası, ürün sayfası denemesi, uygulama içi etkinlik ya da kütüphanenin kendisi; Apple'ın adet ve boyut sınırlarıyla | ASC-Core |
+| bir App Clip, Game Center öğesi, IAP ya da abonelik → görseli → yer ayırmak, yüklemek, tamamlamak | dosya `target`'ıyla `media__list` / `media__upload` / `media__delete` — inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, yol tarifi kapsamı, background asset ve build yükleme dosyaları da; hiçbir şey gönderilmeden önce dosya ve sahibi bir kez kontrol edilir. Bütün hedefler ve kuralları: [Medya hedefleri](MEDIA_TARGETS_tr.md) | ASC-Core |
 | kütüphanede görsel ya da video için yer ayırmak, baytları yüklemek, sonra bir sayfaya yerleştirmek | `media__upload` — kütüphaneye, sayfa verirseniz o sayfaya da | ASC-Core |
 | sayfaya yerleştirmek, sıralamak, sayfadan kaldırmak, videonun kapak karesini seçmek, arşivlemek ya da yeniden adlandırmak | `media__arrange` | ASC-Core |
 | kütüphaneden birden çok dosyayı silmek ya da bir sayfadan kaldırmak, tek onayla | `media__delete` — silmeden önce her dosyanın o uygulamaya ve sayfaya ait olduğunu kontrol eder | ASC-Core |
@@ -41,6 +42,8 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Siz b
 | uygulama → Xcode Cloud ürünü → koşu → adımlar → sorunlar ve testler | `ci__diagnose_run` — en yeni 40 koşu içinde en son patlayanı bulur, sorunları ve başarısız testleri listeler | `xcode-cloud:workflows` |
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-reviews` |
 | uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | ASC-Core |
+
+Son sütundaki "ASC-Core", aracın setup'ın profillerinizin yanına kaydettiği ASC-Core sunucusunda olduğunu söyler. Profil sunucuları bu araçları taşımaz; tek sunucu çalıştırabilen bir uygulama onları `--with-core` ile alır.
 
 `pricing__equalize_price` yaklaşık 175 ülkede fiyatı birden değiştirir, yani doğrudan gelirinize dokunur. Bu yüzden çalışmadan önce mutlaka onayınızı ister.
 

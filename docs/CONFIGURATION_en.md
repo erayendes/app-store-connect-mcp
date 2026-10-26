@@ -23,16 +23,21 @@ Restart your app after changing either.
 | `--read-only` | Removes every tool that can change something. The AI can't see them, so it can't call them. |
 | `--dry-run` | Nothing reaches Apple. Each change returns what *would* have been sent, with its risk level. Reads work as usual. |
 | `--confirm` | Asks before **every** change, not just the risky ones. |
-| `--no-confirm` | Never asks. Your app's own tool approval is the only check left. |
-| `--with-core` | Serves ASC-Core's tools (finding apps, tool search, screenshots and videos) from this server too, for an app that can run only one server. Setup doesn't need it: it registers ASC-Core next to your profiles. |
+| `--no-confirm` | Stops asking, with one exception: `release__submit` and `release__submit_items` always ask. Otherwise your AI app's own tool approval is the only check left. |
+| `--with-core` | Serves ASC-Core's tools (finding apps, tool search, the media tools) from this server too, for an AI app that can run only one server. Setup doesn't need it: it registers ASC-Core next to your profiles. |
 | `--include-deprecated` | Also loads the operations Apple has deprecated or replaced, in the areas the profile covers: 185 in all, 102 of them Game Center. This includes the v1 subscription and in-app purchase tools. |
 | `--domains=<list>` | Only without a profile: loads these areas, comma-separated, or `all`. |
 
 **ASC-Core follows your strictest setting.** When setup or `register` adds ASC-Core to an app, it is read-only if any Heimdall server in that app is, by flag or by `ASC_READ_ONLY`. Making one profile read-only by hand later doesn't change ASC-Core; run setup again, or add `--read-only` to ASC-Core's entry too.
 
-By default Heimdall asks before revenue, deletion, infrastructure and access changes, and before the release steps that reach users: sending a version to review, releasing it, changing a phased rollout, and opening a build to external testers. Releasing asks you to type CONFIRM. Preparation steps, such as creating a version or picking its build, and everything else are left to your app's approval.
+By default Heimdall asks in two ways:
 
-Some apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press Allow (or Return). Don't Allow or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+- **Type CONFIRM** for any change at the revenue, deletion (`destructive`), infrastructure or access level — prices and offers, deletes, certificates and workflows, users and sandbox accounts — and for three steps that cannot be walked back: releasing a version, ending a pre-order, and expiring a build (`builds__update` with `expired: true`, which counts as a deletion). The pricing macros and `testflight__assign_build_to_groups` ask this way too.
+- **Yes or no** for the steps that reach customers, players or testers: sending something to review (`release__submit`, `release__submit_items`, a review submission), creating a new subscription, subscription group or in-app purchase version, changing a phased rollout, sending a build to external beta review, selling in a country or changing availability, starting or changing a product page test, and sending a score or achievement for a player.
+
+Everything else — store text, a draft version, picking its build, TestFlight and webhook settings — is left to your AI app's approval. A media tool asks at the level its plan has: placing an image on a page is public and does not ask, removing or replacing one is a deletion and asks for CONFIRM.
+
+Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press Allow (or Return). Don't Allow or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 
@@ -55,7 +60,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 |:--|:--|
 | `ASC_READ_ONLY` | `true`, `1` or `yes` (any case) = `--read-only`. Anything else, including `false`, `0` and empty, leaves writes on. |
 | `ASC_DRY_RUN` | `1` or `true` = `--dry-run` |
-| `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` |
+| `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (the release tools still ask) |
 | `ASC_NATIVE_CONFIRM` | `0` = no Mac dialog when the app can't ask; those changes are refused instead |
 | `ASC_INCLUDE_DEPRECATED` | `true` = `--include-deprecated` |
 | `ASC_DOMAINS` | Same as `--domains` |

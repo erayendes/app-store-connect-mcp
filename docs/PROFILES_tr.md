@@ -2,21 +2,21 @@
 
 🇬🇧 [English](PROFILES_en.md) · 🇹🇷 Türkçe
 
-Heimdall, App Store Connect'i yaptığınız işe göre böler. 13 profil arasından seçersiniz ve her biri kendi başına küçük bir MCP sunucusudur: profil adını verirsiniz, yalnızca o işin araçları yüklenir. Büyük profiller ayrıca alt profillere ayrılır; toplam 51 alt profil var.
+Heimdall, App Store Connect'i yaptığınız işe göre böler. 13 profil arasından seçersiniz ve her biri kendi başına küçük bir MCP sunucusudur: profil adını verirsiniz, yalnızca o işin araçları yüklenir. Büyük profiller ayrıca alt profillere ayrılır; toplam 50 alt profil var.
 
-Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı bulma, bütün araçlarda arama, ekran görüntüsü ve video araçları. Bunlar her profilde aynı olduğu için her sunucunun içinde ayrı ayrı değil, bir kez çalışır.
+Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı bulma, bütün araçlarda arama ve medya araçları. Bunlar her profilde aynı olduğu için her sunucunun içinde ayrı ayrı değil, bir kez çalışır.
 
 | Profil | Sunucu | Ne için | Araç | Alt profiller |
 |:--|:--|:--|--:|:--|
 | `access` | `ASC-Access` | Ekibiniz | 17 | sandbox, user-invitations, user-management |
 | `analytics` | `ASC-Analytics` | Satış ve raporlar | 19 | — |
-| `app-clips` | `ASC-AppClips` | App Clip'ler | 42 | — |
-| `background-assets` | `ASC-BackgroundAssets` | İndirilebilir içerik | 16 | — |
-| `distribution` | `ASC-Distribution` | Sürümler ve yayın | 97 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, routing-coverage, version |
-| `game-center` | `ASC-GameCenter` | Game Center | 176 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
+| `app-clips` | `ASC-AppClips` | App Clip'ler | 34 | — |
+| `background-assets` | `ASC-BackgroundAssets` | İndirilebilir içerik | 13 | — |
+| `distribution` | `ASC-Distribution` | Sürümler ve yayın | 80 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
+| `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | Uygulama bilgileri | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Mağaza sayfası ve yorumlar | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 170 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 152 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Sertifikalar ve cihazlar | 41 | bundle, certificates, devices, profiles, wallet |
 | `testflight` | `ASC-TestFlight` | Beta testi | 81 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Sunucunuza bildirimler | 9 | — |
@@ -27,11 +27,11 @@ Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı 
 
 Setup ve `register` bir profil eklediklerinde ASC-Core'u kendiliğinden ekler, hiç profil kalmayınca kaldırır. Siz seçmezsiniz.
 
-- **En sıkı ayarınıza uyar.** Bir uygulamadaki Heimdall sunucularından biri `--read-only` çalışıyorsa ASC-Core da salt okunur kaydedilir.
-- **Hesap belirsizse eklenmez.** Bir uygulamadaki sunucular farklı App Store Connect hesapları kullanıyorsa, kendi kimlik bilgilerini taşıyorsa ya da uygulamanın ayar dosyası tam okunamadıysa setup ASC-Core'u oraya eklemez ve nedenini söyler.
-- **Tek sunucu çalıştırabilen bir uygulama** onu `--with-core` ile profilin içine alabilir. Xcode eklentileri bunu yapar.
+- **En sıkı ayarınıza uyar.** Bir yapay zekâ uygulamasındaki Heimdall sunucularından biri `--read-only` çalışıyorsa ASC-Core da salt okunur kaydedilir.
+- **Hesap belirsizse eklenmez.** Oradaki sunucular farklı App Store Connect hesapları kullanıyorsa, biri `env` içinde kendi kimlik bilgilerini taşıyorsa ya da ayarlar veya bir kayıt tam okunamıyorsa (`envFile` yükleyen bir kayıt da buna girer) setup ASC-Core'u o yapay zekâ uygulamasına eklemez ve nedenini söyler.
+- **Tek sunucu çalıştırabilen bir yapay zekâ uygulaması** onu `--with-core` ile profilin içine alabilir. Xcode eklentileri bunu yapar.
 
-Ekran görüntüsü ve video araçları (`media__*`) uygulamanın görsel ve video kütüphanesi üzerinden çalışır: dosyayı kütüphaneye yüklersiniz, sonra sürüm sayfasına, özel ürün sayfasına, ürün sayfası denemesine ya da uygulama içi etkinliğe yerleştirirsiniz.
+Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve dosyayı yönetir. Mağaza sayfası medyası uygulamanızın görsel ve video kütüphanesi üzerinden gider: dosyayı kütüphaneye yüklersiniz, sonra sürüm sayfasına, özel ürün sayfasına, ürün sayfası denemesine ya da uygulama içi etkinliğe yerleştirirsiniz. Diğer görseller ve dosyalar doğrudan sahiplerine gider: App Clip, Game Center, uygulama içi satın alma ve abonelik görselleri, inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, yol tarifi kapsamı, background asset ve build yükleme dosyaları. Bütün hedefler [Medya hedefleri](MEDIA_TARGETS_tr.md) sayfasında.
 
 ### `core` · 16 araç
 
@@ -58,7 +58,7 @@ Ekran görüntüsü ve video araçları (`media__*`) uygulamanın görsel ve vid
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri, araç sayısı ve token tahminiyle açılıyor" width="720">
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
-Örneğin `monetization` 170 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 73 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
+Örneğin `monetization` 152 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 64 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
 
 Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçları ve `asc__status`. Alt profillerinin yalnızca bir kısmıyla başlatılan bir sunucuya ayrıca `asc__call` ve `asc__describe` gelir; bunlar dışarıda bıraktığınız kısımlardaki okumalara ulaşır.
 
@@ -71,11 +71,11 @@ Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçl
 
 | Rol | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `general` | 162 |
+| Yayın yöneticisi | `distribution` + `general` | 145 |
 | ASO / pazarlama | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 97 |
-| Monetizasyon | `monetization` | 186 |
-| Oyun geliştirici | `game-center` + `distribution:version,publish` | 227 |
+| Monetizasyon | `monetization` | 168 |
+| Oyun geliştirici | `game-center` + `distribution:version,publish` | 200 |
 | Müşteri desteği | `marketing:customer-reviews` + `monetization:transactions` | 42 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 101 |
 | Ekip yöneticisi | `access` | 33 |
@@ -160,7 +160,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `sales_reports__list` — Satış ve abonelik raporunu getirir
 - `analytics__get_report` — Uygulamanın analiz raporunu tek adımda indirip satır satır getirir; yeni rapor isteği başlatmaz
 
-### `app-clips` · 42 araç
+### `app-clips` · 34 araç
 
 **Sunucu:** `ASC-AppClips` · **Anahtar rolü:** App Manager
 
@@ -168,16 +168,12 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **Ne zaman gerekir:** Uygulamanızın anında açılan hafif sürümü için.
 
-- `app_clip_advanced_experience_images__create` — Gelişmiş App Clip deneyiminin görseli için yükleme kaydı açar
-- `app_clip_advanced_experience_images__get` — Gelişmiş App Clip deneyiminin görselinin bilgilerini getirir
-- `app_clip_advanced_experience_images__update` — Yüklenen gelişmiş deneyim görselini tamamlandı olarak işaretler
 - `app_clip_advanced_experiences__create` — Konum veya kodla tetiklenen gelişmiş bir App Clip deneyimi oluşturur
 - `app_clip_advanced_experiences__get` — Gelişmiş bir App Clip deneyiminin ayrıntılarını getirir
 - `app_clip_advanced_experiences__update` — Gelişmiş bir App Clip deneyiminin ayarlarını günceller
 - `app_clip_app_store_review_details__create` — İnceleme ekibinin App Clip'i açacağı bağlantıları kaydeder
 - `app_clip_app_store_review_details__get` — İnceleme ekibinin App Clip'i açacağı bağlantıları getirir
 - `app_clip_app_store_review_details__update` — İnceleme ekibinin App Clip'i açacağı bağlantıları günceller
-- `app_clip_default_experience_localizations__app_clip_heade_1vi3gd` — Varsayılan App Clip deneyiminin bir dildeki başlık görselini getirir
 - `app_clip_default_experience_localizations__create` — Varsayılan App Clip deneyimi için yeni bir dil metni ekler
 - `app_clip_default_experience_localizations__delete` — Varsayılan App Clip deneyiminin bir dildeki metnini siler
 - `app_clip_default_experience_localizations__get` — Varsayılan App Clip deneyiminin bir dildeki metnini getirir
@@ -190,10 +186,6 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `app_clip_default_experiences__release_with_app_store_vers_0zdb21` — Varsayılan App Clip deneyiminin bağlı olduğu mağaza sürümünü getirir
 - `app_clip_default_experiences__release_with_app_store_vers_0zdbim` — Varsayılan App Clip deneyimini belirli bir mağaza sürümüne bağlar
 - `app_clip_default_experiences__update` — Varsayılan App Clip deneyiminin eylem butonunu veya ayarlarını günceller
-- `app_clip_header_images__create` — App Clip başlık görseli için yükleme kaydı açar
-- `app_clip_header_images__delete` — App Clip başlık görselini siler
-- `app_clip_header_images__get` — App Clip başlık görselinin bilgilerini getirir
-- `app_clip_header_images__update` — Yüklenen App Clip başlık görselini tamamlandı olarak işaretler
 - `app_clips__app_clip_advanced_experiences__list` — Bir App Clip'e ait tüm gelişmiş deneyimleri listeler
 - `app_clips__app_clip_default_experiences__list` — Bir App Clip'e ait tüm varsayılan deneyimleri listeler
 - `app_clips__get` — Bir App Clip'in temel bilgilerini getirir
@@ -210,7 +202,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `build_bundles__app_clip_domain_debug_status__get` — Build paketinin App Clip alan adı yapılandırma hatalarını getirir
 - `build_bundles__beta_app_clip_invocations__list` — Derleme paketine tanımlanmış beta App Clip başlatma bağlantılarını listeler
 
-### `background-assets` · 16 araç
+### `background-assets` · 13 araç
 
 **Sunucu:** `ASC-BackgroundAssets` · **Anahtar rolü:** Developer
 
@@ -219,22 +211,19 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 **Ne zaman gerekir:** Uygulamanızın kurulduktan sonra indirdiği içerik paketleri için.
 
 - `apps__background_assets__list` — Uygulamanın arka plan varlık paketlerini listeler
-- `background_asset_upload_files__create` — Arka plan varlık dosyası için yükleme kaydı açar; dosyanın kendisi ayrıca gönderilir
-- `background_asset_upload_files__get` — Yüklenen arka plan varlık dosyasının durumunu getirir
 - `background_asset_upload_files__update` — Gönderilen arka plan varlık dosyasını yüklendi olarak işaretler
 - `background_asset_version_app_store_releases__get` — Arka plan varlık sürümünün mağaza yayınlanma durumunu getirir
 - `background_asset_version_external_beta_releases__get` — Arka plan varlık sürümünün dış beta yayınlanma durumunu getirir
 - `background_asset_version_internal_beta_releases__get` — Arka plan varlık sürümünün iç beta yayınlanma durumunu getirir
-- `background_asset_versions__background_asset_upload_files__list` — Bir arka plan varlık sürümüne ait yüklenmiş dosyaları listeler
 - `background_asset_versions__create` — Arka plan varlıkları için yeni bir sürüm kaydı oluşturur
 - `background_asset_versions__get` — Bir arka plan varlık sürümünün ayrıntılarını ve durumunu getirir
 - `background_assets__create` — Uygulama için yeni bir arka plan varlık paketi oluşturur
 - `background_assets__get` — Bir arka plan varlık paketinin ayrıntılarını getirir
 - `background_assets__update` — Arka plan varlık paketini arşivler ya da arşivden çıkarır
 - `background_assets__versions__list` — Bir arka plan varlığına ait tüm sürümleri listeler
-- `release__submit_items` — Uygulama içi ürün sürümünü incelemeye gönderir
+- `release__submit_items` — Background asset sürümünü incelemeye gönderir
 
-### `distribution` · 97 araç
+### `distribution` · 80 araç
 
 **Sunucu:** `ASC-Distribution` · **Anahtar rolü:** App Manager
 
@@ -242,16 +231,13 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **Ne zaman gerekir:** Yeni sürüm, build, incelemeye gönderme ve kademeli yayın için.
 
-#### `distribution:app-encryption` · 13 araç
+#### `distribution:app-encryption` · 10 araç
 
 **İçinde ne var:** İhracat uyumluluğu: şifreleme beyanları, belgeleri ve bir beyanı build'e bağlama.
 
 **Ne zaman gerekir:** Bir build'in ihracat uyumluluğu sorularını cevaplamak için. · **Anahtar rolü:** App Manager
 
-- `app_encryption_declaration_documents__create` — Şifreleme beyanına belge yüklemek için kayıt açar
-- `app_encryption_declaration_documents__get` — Şifreleme beyanına eklenen belgenin bilgilerini getirir
 - `app_encryption_declaration_documents__update` — Yüklenen şifreleme belgesinin doğrulama bilgilerini kaydeder
-- `app_encryption_declarations__app_encryption_declaration_d_0az88b` — Şifreleme beyanına bağlı belgeyi getirir
 - `app_encryption_declarations__create` — Uygulama için şifreleme beyanı oluşturur
 - `app_encryption_declarations__get` — Şifreleme beyanının bilgilerini getirir
 - `app_encryption_declarations__list` — Şifreleme beyanlarını listeler
@@ -259,23 +245,19 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `builds__app_encryption_declaration__get` — Build'e bağlı şifreleme beyanını getirir
 - `builds__app_encryption_declaration__set` — Build'e şifreleme beyanı bağlar
 
-#### `distribution:app-review-information` · 12 araç
+#### `distribution:app-review-information` · 8 araç
 
 **İçinde ne var:** App Review'un gördükleri: iletişim bilgisi, demo hesap, inceleme notları ve ekler.
 
 **Ne zaman gerekir:** App Review'un okuduğu iletişim bilgisi, demo hesap ve notlar için. · **Anahtar rolü:** App Manager
 
-- `app_store_review_attachments__create` — İnceleme ekine dosya yüklemek için kayıt açar
-- `app_store_review_attachments__delete` — İncelemeye eklenmiş dosyayı siler
-- `app_store_review_attachments__get` — İncelemeye eklenmiş dosyanın bilgilerini getirir
 - `app_store_review_attachments__update` — Yüklenen inceleme ekinin doğrulama bilgilerini kaydeder
-- `app_store_review_details__app_store_review_attachments__list` — İnceleme bilgilerine bağlı dosyaları listeler
 - `app_store_review_details__create` — Sürüm için inceleme iletişim ve erişim bilgileri oluşturur
 - `app_store_review_details__get` — İnceleme iletişim ve erişim bilgilerini getirir
 - `app_store_review_details__update` — İnceleme iletişim ve erişim bilgilerini günceller
 - `app_store_versions__app_store_review_detail__get` — Sürümün inceleme iletişim ve erişim bilgilerini getirir
 
-#### `distribution:builds` · 18 araç
+#### `distribution:builds` · 13 araç
 
 **İçinde ne var:** Yüklenen build'ler: yükleme kayıtları, paketler, dosya boyutları, build ayrıntıları.
 
@@ -283,12 +265,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 - `apps__build_uploads__list` — Uygulamanın build yükleme kayıtlarını listeler
 - `build_bundles__build_bundle_file_sizes__list` — Build paketinin cihaz ve işletim sistemi sürümüne göre indirme ve kurulum boyutlarını listeler
-- `build_upload_files__create` — Build yüklemesi için dosya kaydı açar
-- `build_upload_files__get` — Build yükleme dosyasının bilgilerini getirir
 - `build_upload_files__update` — Yüklenen build dosyasının doğrulama bilgilerini kaydeder
-- `build_uploads__build_upload_files__list` — Bir build yüklemesindeki dosyaları listeler
-- `build_uploads__create` — Yeni bir build yükleme kaydı açar
-- `build_uploads__delete` — Build yükleme kaydını siler
 - `build_uploads__get` — Build yükleme kaydını getirir
 - `builds__app__get` — Build'in ait olduğu uygulamayı getirir
 - `builds__app_store_version__get` — Build'in seçildiği App Store sürümünü getirir
@@ -334,7 +311,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 - `app_store_version_phased_releases__create` — Sürüm için 7 günlük kademeli yayını açar; sürüm yayımlanınca başlar
 - `app_store_version_phased_releases__delete` — Sürümün kademeli yayın kaydını siler
-- `app_store_version_phased_releases__update` — Kademeli yayını duraklatır sürdürür veya tamamlar
+- `app_store_version_phased_releases__update` — Kademeli yayını duraklatır, sürdürür veya tamamlar
 - `app_store_version_release_requests__create` — Onaylanmış sürümü hemen yayımlar; geri alınamaz
 - `app_store_versions__app_store_version_phased_release__get` — Sürümün kademeli yayın durumunu getirir
 
@@ -355,18 +332,6 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `review_submissions__list` — İnceleme başvurularını listeler
 - `review_submissions__update` — İnceleme başvurusunu gönderir veya geri çeker
 - `release__submit` — Sürümü kontrol eder ve Apple incelemesine gönderir
-
-#### `distribution:routing-coverage` · 8 araç
-
-**İçinde ne var:** Yol tarifi veren uygulamalar için hizmet bölgesi dosyaları.
-
-**Ne zaman gerekir:** Bir navigasyon uygulamasının yol tarifi verdiği bölgeler için. · **Anahtar rolü:** App Manager
-
-- `app_store_versions__routing_app_coverage__get` — Sürümün yol tarifi hizmet bölgesi dosyasını getirir
-- `routing_app_coverages__create` — Yol tarifi hizmet bölgeleri için dosya kaydı açar
-- `routing_app_coverages__delete` — Yol tarifi hizmet bölgesi dosyasını siler
-- `routing_app_coverages__get` — Yol tarifi hizmet bölgesi dosyasının bilgilerini getirir
-- `routing_app_coverages__update` — Yüklenen hizmet bölgesi dosyasının doğrulama bilgilerini kaydeder
 
 #### `distribution:version` · 24 araç
 
@@ -396,7 +361,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `metadata_ai__draft_translation` — İstenen diller için mağaza metni taslağı hazırlanmasına yardımcı olur
 - `preflight__check_version` — Sürümün incelemeye gönderilmeye hazır olup olmadığını denetler
 
-### `game-center` · 176 araç
+### `game-center` · 149 araç
 
 **Sunucu:** `ASC-GameCenter` · **Anahtar rolü:** App Manager
 
@@ -404,21 +369,16 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **Ne zaman gerekir:** Başarımlar, sıralama tabloları ve meydan okumalar için.
 
-#### `game-center:achievements` · 25 araç
+#### `game-center:achievements` · 20 araç
 
 **İçinde ne var:** Başarımlar: sürümler, diller, görseller, oyuncu adına gönderimler.
 
 **Ne zaman gerekir:** Başarım oluşturmak, metinlerini ve görsellerini hazırlamak için. · **Anahtar rolü:** App Manager
 
 - `apps__game_center_detail__get` — Uygulamanın Game Center kaydını gösterir
-- `game_center_achievement_images_v2__create` — Başarım görseli için yükleme kaydı açar
-- `game_center_achievement_images_v2__delete` — Başarım görselini siler
-- `game_center_achievement_images_v2__get` — Başarım görselinin bilgilerini gösterir
-- `game_center_achievement_images_v2__update` — Yüklenen başarım görselini tamamlandı olarak işaretler
 - `game_center_achievement_localizations_v2__create` — Başarımın bir sürümüne bir dilde ad ve kazanma öncesi/sonrası açıklamalarını ekler
 - `game_center_achievement_localizations_v2__delete` — Bir başarımın bir dildeki metnini siler
 - `game_center_achievement_localizations_v2__get` — Bir başarımın bir dildeki metnini gösterir
-- `game_center_achievement_localizations_v2__image__get` — Başarımın bir dildeki görselini gösterir
 - `game_center_achievement_localizations_v2__update` — Bir başarımın bir dildeki metnini değiştirir
 - `game_center_achievement_versions_v2__create` — Bir başarımın yeni bir sürümünü başlatır
 - `game_center_achievement_versions_v2__get` — Bir başarım sürümünün ayrıntılarını gösterir
@@ -433,7 +393,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `game_center_player_achievement_submissions__create` — Bir oyuncu adına başarım ilerlemesi gönderir
 - `release__submit_items` — Başarım sürümünü incelemeye gönderir
 
-#### `game-center:activities` · 31 araç
+#### `game-center:activities` · 25 araç
 
 **İçinde ne var:** Etkinlikler: sürümler, diller, görseller ve bağlı başarımlar ile sıralama tabloları.
 
@@ -449,17 +409,11 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `game_center_activities__leaderboards_v2__remove` — Bir oyun etkinliğinden sıralama tablolarını ayırır
 - `game_center_activities__update` — Bir oyun etkinliğinin ayarlarını değiştirir
 - `game_center_activities__versions__list` — Bir oyun etkinliğinin tüm sürümlerini listeler
-- `game_center_activity_images__create` — Etkinlik görseli için yükleme kaydı açar
-- `game_center_activity_images__delete` — Etkinlik görselini siler
-- `game_center_activity_images__get` — Etkinlik görselinin bilgilerini gösterir
-- `game_center_activity_images__update` — Yüklenen etkinlik görselini tamamlandı olarak işaretler
 - `game_center_activity_localizations__create` — Bir etkinliğin bir dildeki metnini ekler
 - `game_center_activity_localizations__delete` — Bir etkinliğin bir dildeki metnini siler
 - `game_center_activity_localizations__get` — Bir etkinliğin bir dildeki metnini gösterir
-- `game_center_activity_localizations__image__get` — Etkinliğin bir dildeki görselini gösterir
 - `game_center_activity_localizations__update` — Bir etkinliğin bir dildeki metnini değiştirir
 - `game_center_activity_versions__create` — Bir etkinliğin yeni bir sürümünü başlatır
-- `game_center_activity_versions__default_image__get` — Etkinlik sürümünün varsayılan görselini gösterir
 - `game_center_activity_versions__get` — Bir etkinlik sürümünün ayrıntılarını gösterir
 - `game_center_activity_versions__localizations__list` — Bir etkinlik sürümünün tüm dil metinlerini listeler
 - `game_center_activity_versions__update` — Etkinlik sürümünün yedek bağlantısını (fallback URL) değiştirir
@@ -468,24 +422,18 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `game_center_details__game_center_leaderboards_v2__list` — Uygulamanın tüm sıralama tablolarını listeler
 - `release__submit_items` — Game Center etkinlik sürümünü incelemeye gönderir
 
-#### `game-center:challenges` · 27 araç
+#### `game-center:challenges` · 21 araç
 
 **İçinde ne var:** Meydan okumalar: sürümler, diller, görseller ve kullandıkları sıralama tablosu.
 
 **Ne zaman gerekir:** Oyuncuların birbirine gönderdiği meydan okumalar için. · **Anahtar rolü:** App Manager
 
 - `apps__game_center_detail__get` — Uygulamanın Game Center kaydını gösterir
-- `game_center_challenge_images__create` — Meydan okuma görseli için yükleme kaydı açar
-- `game_center_challenge_images__delete` — Meydan okuma görselini siler
-- `game_center_challenge_images__get` — Meydan okuma görselinin bilgilerini gösterir
-- `game_center_challenge_images__update` — Yüklenen meydan okuma görselini tamamlandı olarak işaretler
 - `game_center_challenge_localizations__create` — Bir meydan okumanın bir dildeki metnini ekler
 - `game_center_challenge_localizations__delete` — Bir meydan okumanın bir dildeki metnini siler
 - `game_center_challenge_localizations__get` — Bir meydan okumanın bir dildeki metnini gösterir
-- `game_center_challenge_localizations__image__get` — Meydan okumanın bir dildeki görselini gösterir
 - `game_center_challenge_localizations__update` — Bir meydan okumanın bir dildeki metnini değiştirir
 - `game_center_challenge_versions__create` — Bir meydan okumanın yeni bir sürümünü başlatır
-- `game_center_challenge_versions__default_image__get` — Meydan okuma sürümünün varsayılan görselini gösterir
 - `game_center_challenge_versions__get` — Bir meydan okuma sürümünün ayrıntılarını gösterir
 - `game_center_challenge_versions__localizations__list` — Bir meydan okuma sürümünün tüm dil metinlerini listeler
 - `game_center_challenges__create` — Oyuna yeni bir meydan okuma ekler
@@ -521,7 +469,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `game_center_groups__list` — Hesaptaki tüm oyun gruplarını listeler
 - `game_center_groups__update` — Bir oyun grubunun adını değiştirir
 
-#### `game-center:leaderboards` · 54 araç
+#### `game-center:leaderboards` · 44 araç
 
 **İçinde ne var:** Sıralama tabloları ve setleri: sürümler, diller, görseller, skor gönderimi ve denetimi.
 
@@ -533,23 +481,13 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `game_center_details__game_center_leaderboards_v2__list` — Uygulamanın tüm sıralama tablolarını listeler
 - `game_center_details__game_center_leaderboards_v2__replace` — Uygulamadaki sıralama tablolarının sırasını ve listesini baştan belirler
 - `game_center_leaderboard_entry_submissions__create` — Bir oyuncu adına sıralama tablosuna skor gönderir
-- `game_center_leaderboard_images_v2__create` — Sıralama tablosu görseli için yükleme kaydı açar
-- `game_center_leaderboard_images_v2__delete` — Sıralama tablosu görselini siler
-- `game_center_leaderboard_images_v2__get` — Sıralama tablosu görselinin bilgilerini gösterir
-- `game_center_leaderboard_images_v2__update` — Yüklenen sıralama tablosu görselini tamamlandı olarak işaretler
 - `game_center_leaderboard_localizations_v2__create` — Bir sıralama tablosunun bir dildeki metnini ekler
 - `game_center_leaderboard_localizations_v2__delete` — Bir sıralama tablosunun bir dildeki metnini siler
 - `game_center_leaderboard_localizations_v2__get` — Bir sıralama tablosunun bir dildeki metnini gösterir
-- `game_center_leaderboard_localizations_v2__image__get` — Sıralama tablosunun bir dildeki görselini gösterir
 - `game_center_leaderboard_localizations_v2__update` — Bir sıralama tablosunun bir dildeki metnini değiştirir
-- `game_center_leaderboard_set_images_v2__create` — Tablo seti görseli için yükleme kaydı açar
-- `game_center_leaderboard_set_images_v2__delete` — Tablo seti görselini siler
-- `game_center_leaderboard_set_images_v2__get` — Tablo seti görselinin bilgilerini gösterir
-- `game_center_leaderboard_set_images_v2__update` — Yüklenen tablo seti görselini tamamlandı olarak işaretler
 - `game_center_leaderboard_set_localizations_v2__create` — Bir tablo setinin bir dildeki adını ekler
 - `game_center_leaderboard_set_localizations_v2__delete` — Bir tablo setinin bir dildeki adını siler
 - `game_center_leaderboard_set_localizations_v2__get` — Bir tablo setinin bir dildeki adını gösterir
-- `game_center_leaderboard_set_localizations_v2__image__get` — Tablo setinin bir dildeki görselini gösterir
 - `game_center_leaderboard_set_localizations_v2__update` — Bir tablo setinin bir dildeki adını değiştirir
 - `game_center_leaderboard_set_member_localizations__create` — Set içindeki bir tablonun o sete özel adını ekler
 - `game_center_leaderboard_set_member_localizations__delete` — Set içindeki bir tablonun sete özel adını siler
@@ -851,7 +789,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `apps__app_store_version_experiments_v2__list` — Uygulamanın mağaza sayfası denemelerini listeler
 - `release__submit_items` — Ürün sayfası denemesini incelemeye gönderir
 
-### `monetization` · 170 araç
+### `monetization` · 152 araç
 
 **Sunucu:** `ASC-Monetization` · **Anahtar rolü:** App Manager
 
@@ -899,23 +837,16 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `in_app_purchases_v2__offer_codes__list` — Ürünün kodla kullanılabilen tekliflerini listeler
 - `in_app_purchases_v2__price_points__list` — Ürün için seçilebilecek fiyatları listeler
 
-#### `monetization:in-app-purchases` · 43 araç
+#### `monetization:in-app-purchases` · 34 araç
 
 **İçinde ne var:** Uygulama içi satın almalar: diller, görseller, sürümler, satış ülkeleri, fiyatlar, gönderim ve fiyat makroları.
 
 **Ne zaman gerekir:** Uygulama içi satın almalar, metinleri, görselleri, fiyatları ve incelemesi için. · **Anahtar rolü:** App Manager
 
-- `in_app_purchase_app_store_review_screenshots__create` — İnceleme ekibinin göreceği ürün ekran görüntüsü için yükleme kaydı açar
-- `in_app_purchase_app_store_review_screenshots__delete` — Ürünün inceleme ekran görüntüsünü siler
-- `in_app_purchase_app_store_review_screenshots__get` — Ürünün inceleme ekran görüntüsünü gösterir
 - `in_app_purchase_app_store_review_screenshots__update` — Yüklenen inceleme ekran görüntüsünü tamamlandı olarak işaretler
 - `in_app_purchase_availabilities__available_territories__list` — Ürünün satışa açık olduğu ülkeleri listeler
 - `in_app_purchase_availabilities__create` — Ürünün satışa açılacağı ülkeleri belirler
 - `in_app_purchase_availabilities__get` — Ürünün satışa açıklık ayarlarını gösterir
-- `in_app_purchase_images_v2__create` — Ürün görseli için yükleme kaydı açar
-- `in_app_purchase_images_v2__delete` — Ürün görselini siler
-- `in_app_purchase_images_v2__get` — Ürün görselinin bilgilerini gösterir
-- `in_app_purchase_images_v2__update` — Yüklenen ürün görselini tamamlandı olarak işaretler
 - `in_app_purchase_localizations_v2__create` — Ürün sürümüne seçilen dilde ad ve açıklama ekler
 - `in_app_purchase_localizations_v2__delete` — Ürün sürümünün seçilen dildeki metinlerini siler
 - `in_app_purchase_localizations_v2__get` — Ürün sürümünün seçilen dildeki metinlerini gösterir
@@ -929,9 +860,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `in_app_purchase_versions__create` — Uygulama içi ürün için yeni sürüm oluşturur
 - `in_app_purchase_versions__get` — Ürün sürümünün numarasını ve inceleme durumunu gösterir
 - `in_app_purchase_versions__image__get` — Ürün sürümünün görselini gösterir
-- `in_app_purchase_versions__images__list` — Ürün sürümünün görsellerini listeler
 - `in_app_purchase_versions__localizations__list` — Ürün sürümünün farklı dillerdeki metinlerini listeler
-- `in_app_purchases_v2__app_store_review_screenshot__get` — Ürünün inceleme ekran görüntüsünü gösterir
 - `in_app_purchases_v2__content__get` — Ürüne ait indirilebilir dosyanın bilgilerini ve bağlantısını gösterir
 - `in_app_purchases_v2__create` — Uygulama içinde satılacak ürün oluşturur
 - `in_app_purchases_v2__delete` — Uygulama içi ürünü siler
@@ -962,16 +891,13 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscription_groups__subscriptions__list` — Bir gruptaki abonelikleri listeler
 - `subscriptions__promoted_purchase__get` — Aboneliğin App Store'daki tanıtım ayarlarını gösterir
 
-#### `monetization:subscription` · 61 araç
+#### `monetization:subscription` · 52 araç
 
 **İçinde ne var:** Abonelikler ve grupları: diller, görseller, sürümler, fiyatlar, satış ülkeleri, ödeme aksadığında süre tanıma, gönderim, fiyat ve ön kontrol makroları.
 
 **Ne zaman gerekir:** Abonelikler ve grupları, metinleri, fiyatları ve incelemesi için. · **Anahtar rolü:** App Manager
 
 - `apps__subscription_grace_period__get` — Uygulamanın ödeme aksadığında aboneliği sürdürme ayarlarını gösterir
-- `subscription_app_store_review_screenshots__create` — İnceleme ekibinin göreceği abonelik ekran görüntüsü için yükleme kaydı açar
-- `subscription_app_store_review_screenshots__delete` — Aboneliğin inceleme ekran görüntüsünü siler
-- `subscription_app_store_review_screenshots__get` — Aboneliğin inceleme ekran görüntüsünü gösterir
 - `subscription_app_store_review_screenshots__update` — Yüklenen abonelik inceleme ekran görüntüsünü tamamlandı olarak işaretler
 - `subscription_grace_periods__get` — Ödeme aksadığında aboneliğin ne kadar sürdürüleceğini gösterir
 - `subscription_grace_periods__update` — Ödeme aksadığında aboneliğin sürdürülmesini ve süresini ayarlar
@@ -988,10 +914,6 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscription_groups__subscriptions__list` — Bir gruptaki abonelikleri listeler
 - `subscription_groups__update` — Abonelik grubunun yönetimde kullanılan adını değiştirir
 - `subscription_groups__versions__list` — Abonelik grubunun sürümlerini listeler
-- `subscription_images_v2__create` — Abonelik görseli için yükleme kaydı açar
-- `subscription_images_v2__delete` — Abonelik görselini siler
-- `subscription_images_v2__get` — Abonelik görselinin bilgilerini gösterir
-- `subscription_images_v2__update` — Yüklenen abonelik görselini tamamlandı olarak işaretler
 - `subscription_localizations_v2__create` — Abonelik sürümüne seçilen dilde ad ve açıklama ekler
 - `subscription_localizations_v2__delete` — Abonelik sürümünün seçilen dildeki metinlerini siler
 - `subscription_localizations_v2__get` — Abonelik sürümünün seçilen dildeki metinlerini gösterir
@@ -1009,9 +931,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscription_versions__create` — Abonelik için yeni sürüm oluşturur
 - `subscription_versions__get` — Abonelik sürümünün numarasını ve inceleme durumunu gösterir
 - `subscription_versions__image__get` — Abonelik sürümünün görselini gösterir
-- `subscription_versions__images__list` — Abonelik sürümünün görsellerini listeler
 - `subscription_versions__localizations__list` — Abonelik sürümünün farklı dillerdeki metinlerini listeler
-- `subscriptions__app_store_review_screenshot__get` — Aboneliğin inceleme ekran görüntüsünü gösterir
 - `subscriptions__create` — Bir grupta yeni abonelik oluşturur
 - `subscriptions__delete` — Aboneliği siler
 - `subscriptions__get` — Aboneliğin bilgilerini gösterir

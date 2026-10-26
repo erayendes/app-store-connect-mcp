@@ -29,7 +29,7 @@
       "environmentVariables": [
         {
           "name": "ASC_KEY_ID",
-          "description": "App Store Connect API Key ID. Normally written for you by `npx -y @erayendes/asc-mcp setup`.",
+          "description": "App Store Connect API Key ID. Normally written for you by `npx -y @erayendes/asc-mcp@beta setup` (the 3.0 beta; drop `@beta` once 3.0.0 is out).",
           "isRequired": false
         },
         {
