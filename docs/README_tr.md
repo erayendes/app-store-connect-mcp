@@ -1,12 +1,9 @@
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<a href="#kurulum"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-tr.png" alt="Heimdall 3.0 betası. Hemen deneyin: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
-
 # Heimdall — App Store Connect MCP
 
 **App Store Connect hesabınızın tamamı, tek bir araçta.**
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
+<a href="#kurulum"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-tr.png" alt="Heimdall 3.0 betası. Hemen deneyin: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
