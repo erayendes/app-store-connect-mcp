@@ -112,7 +112,7 @@ flowchart TD
 
 **Yapay zekâ uygulamanız soruyu gösteremiyorsa** (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresiyle sorar. Düğmesi ne yapacağını söyler: Remove, Upload, Delete. Yapay zekâ bu pencereyi ne görebilir ne de basabilir; siz cevap verene kadar bekler.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Düğmeler: Cancel ve Remove." width="394">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 

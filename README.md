@@ -111,7 +111,7 @@ flowchart TD
 
 **If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Buttons: Cancel and Remove." width="394">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 More in [Security](.github/SECURITY.md).
 

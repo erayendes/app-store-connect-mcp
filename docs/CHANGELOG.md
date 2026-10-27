@@ -16,7 +16,9 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 **New one-call workflows.** `pricing__setup_subscription` builds a whole subscription under one confirmation: group, subscription, languages, countries and price. `testflight__wait_for_build` waits until an uploaded build is processed. `testflight__feedback_digest` can attach the newest tester screenshots as images. `preflight__check_version` lists the steps only App Store Connect can do (App Privacy, EU trader status, agreements), and a `getting-started` prompt walks a new user through the first steps.
 
-**Clearer confirmations.** A confirmation now asks about the thing by name, says values in words (countries, periods, roles) instead of codes and IDs, and ends with what the change really does. Prices, StoreKit, submissions and TestFlight have dialogs written for them.
+**Clearer confirmations.** A confirmation now asks about the thing by name, says values in words (countries, periods, roles) instead of codes and IDs, and ends with what the change really does. Prices, StoreKit, submissions and TestFlight have dialogs written for them. On a Mac the confirmation is now a panel of its own instead of the narrow system alert: the question in bold, the facts lined up, and what the change does set apart above the buttons.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 **Smaller things.** Sales and finance reports for finished periods are cached on your machine, kept apart per key. An analytics report with no rows says that is not a confirmed zero. The in-app event state filter says that an ended event is PAST, not ARCHIVED.
 
@@ -345,7 +347,9 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 **Tek çağrılık yeni iş akışları.** `pricing__setup_subscription` bir aboneliği tek onayla baştan kurar: grup, abonelik, diller, ülkeler ve fiyat. `testflight__wait_for_build` yüklenen build işlenene kadar bekler. `testflight__feedback_digest` testçilerin en yeni ekran görüntülerini görsel olarak ekleyebilir. `preflight__check_version` yalnızca App Store Connect'te yapılabilen adımları (App Privacy, AB tüccar durumu, sözleşmeler) listeler; `getting-started` prompt'u yeni bir kullanıcıya ilk adımlarda yol gösterir.
 
-**Daha anlaşılır onaylar.** Onay artık değişen şeyi adıyla soruyor, değerleri kod ve kimlik yerine sözle yazıyor (ülkeler, dönemler, roller) ve değişikliğin gerçekte ne yapacağıyla bitiyor. Fiyat, StoreKit, inceleme gönderimi ve TestFlight onaylarının kendilerine özel metinleri var.
+**Daha anlaşılır onaylar.** Onay artık değişen şeyi adıyla soruyor, değerleri kod ve kimlik yerine sözle yazıyor (ülkeler, dönemler, roller) ve değişikliğin gerçekte ne yapacağıyla bitiyor. Fiyat, StoreKit, inceleme gönderimi ve TestFlight onaylarının kendilerine özel metinleri var. Mac'te onay artık dar sistem uyarısı yerine kendi penceresinde: soru kalın, bilgiler hizalı, değişikliğin ne yapacağı düğmelerin üstünde ayrı duruyor.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
 **Küçük işler.** Bitmiş dönemlerin satış ve finans raporları bilgisayarınızda, her anahtar için ayrı önbelleğe alınır. Satırı olmayan bir analitik rapor bunun doğrulanmış bir sıfır olmadığını söyler. In-app event durum filtresi, bitmiş bir etkinliğin ARCHIVED değil PAST olduğunu söyler.
 
