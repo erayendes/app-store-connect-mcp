@@ -6,6 +6,7 @@
  * The JSON tests run against real temp files rather than a mock, because the
  * failure that matters is what ends up on disk.
  */
+import { execFileSync } from 'node:child_process';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   chmodSync,
@@ -728,10 +729,13 @@ describe('reporting a change of release channel', () => {
 /** Claude Desktop is found by its main process, not a helper or Claude Code's namesake. */
 describe('a config held by an open app', () => {
   it('counts every change as not done when the app holding its config is open', () => {
-    // The test runner is itself a process named node, so this app is open.
+    // This test's own process is an open app: its name as ps reports it
+    // (vitest retitles workers, so not always "node").
+    const self = process.platform === 'win32' ? 'node'
+      : execFileSync('ps', ['-o', 'comm=', '-p', String(process.pid)], { encoding: 'utf8' }).trim().split('/').pop()!;
     const path = join(dir, 'held.json');
     writeFileSync(path, JSON.stringify({ mcpServers: {} }));
-    const held: McpClient = { id: 'held', label: 'Held', targets: [{ kind: 'json', path, where: 'held.json', key: 'mcpServers', heldBy: 'node' }] };
+    const held: McpClient = { id: 'held', label: 'Held', targets: [{ kind: 'json', path, where: 'held.json', key: 'mcpServers', heldBy: self }] };
     const { results, needsManual } = applyToClient(held, ['analytics'], []);
     expect(results.find((r) => r.message.startsWith('added ASC-Analytics'))?.ok).toBe(false);
     expect(needsManual).toBe(true);
