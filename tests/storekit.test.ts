@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import { StoreKitService } from '../src/storekit/index.js';
 import type { ServerConfig } from '../src/core/config.js';
-import type { StatusResponse } from '@apple/app-store-server-library';
+import { APIException, type StatusResponse } from '@apple/app-store-server-library';
 
 const config = {
   credentials: {
@@ -255,5 +255,25 @@ describe('which app a StoreKit call goes to', () => {
     const { http, calls } = apps([]);
     expect((await target(new StoreKitService(config, http))).bundleId).toBe('com.example.app');
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('what a StoreKit failure says', () => {
+  const fail = (err: unknown) => {
+    const svc = new StoreKitService(config, { get: async () => ({ data: [{ id: '9', attributes: { name: 'Example', bundleId: 'com.example.app' } }] }) } as never);
+    Object.assign(svc, { run: async () => { throw err; }, clientFor: () => ({}) });
+    return svc;
+  };
+
+  it('points a Production 401 at a missing App Store release, not only at the key', async () => {
+    await expect(fail(new APIException(401)).execute('storekit__get_notification_history', { environment: 'Production' }))
+      .rejects.toThrow(/returned 401\. App: com\.example\.app\. Apple answers 401 in Production for an app with no App Store release/);
+    await expect(fail(new APIException(401)).execute('storekit__get_notification_history', { environment: 'Sandbox' }))
+      .rejects.toThrow(/App: com\.example\.app\.$/);
+  });
+
+  it('says a retention messaging 404 may mean the feature is not enabled', async () => {
+    await expect(fail(new APIException(404)).execute('storekit__get_retention_messaging', { environment: 'Sandbox' }))
+      .rejects.toThrow(/Retention messaging may not be enabled for this account/);
   });
 });

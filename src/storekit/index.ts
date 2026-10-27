@@ -306,6 +306,8 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         notification_type: { type: 'string', description: 'Filter by notification type.' },
         only_failures: { type: 'boolean', description: 'Return only failed deliveries.' },
       },
+      // Apple refuses the request without them (error 4000015).
+      required: ['start_date', 'end_date'],
     },
     annotations: { readOnlyHint: true },
   },
@@ -803,7 +805,14 @@ export class StoreKitService {
           `App Store Server API returned ${err.httpStatusCode}` +
             (err.apiError != null ? ` (error ${err.apiError})` : '') +
             (err.errorMessage ? `: ${err.errorMessage}` : '.') +
-            ` App: ${app.bundleId}.`,
+            ` App: ${app.bundleId}.` +
+            // Both seen live: the key was fine, the app or the account was not there yet.
+            (err.httpStatusCode === 401 && this.envFor(args.environment) === 'Production'
+              ? ' Apple answers 401 in Production for an app with no App Store release yet; Sandbox works before release.'
+              : '') +
+            (err.httpStatusCode === 404 && name.includes('retention_messaging')
+              ? ' Retention messaging may not be enabled for this account; Apple grants access on request.'
+              : ''),
           err.httpStatusCode
         );
       }

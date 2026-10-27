@@ -221,6 +221,11 @@ describe(NAME, () => {
     expect(http.get.mock.calls).toHaveLength(3);
   });
 
+  it('asking for images in an empty window explains it without marking the digest truncated', async () => {
+    const res = await run(fakeHttp(), { app: 'Example', images: 3 });
+    expect(res).toMatchObject({ truncated: false, notes: ['No screenshot feedback in this window carries an image.'] });
+  });
+
   it('does not invent email or build metadata when Apple omits them', async () => {
     const res = await run(fakeHttp({ [SHOTS]: page([submission('s1')], undefined, []) }));
     expect(res.builds[0].version).toBe('unknown (b-1)');
