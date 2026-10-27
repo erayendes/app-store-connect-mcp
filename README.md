@@ -13,6 +13,20 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](docs/README_tr.md)
 
+> **Heimdall 3.0 beta is here! 🎉**
+>
+> I released Heimdall three months ago. Since then it has been **downloaded more than 6,800 times** from npm, about 1,700 installs a month. It has passed **50 stars** on GitHub, with **37 releases** in 3 months. Thank you all; 3.0 is built on exactly the feedback you sent.
+>
+> 3.0 is the biggest update Heimdall has had:
+> - **Profiles are cut by the work you do:** 13 profiles, 50 sub-profiles.
+> - **Images and files now take just four tools:** we removed 73 separate ones. `media__list`, `media__upload`, `media__arrange` and `media__delete` handle everything from screenshots to build files.
+> - **Everything you send to review goes in one call.**
+> - **The confirmation dialog** is clear and plain.
+>
+> Everything that changed is in the [changelog](docs/CHANGELOG.md).
+>
+> If you see anything odd during the beta, I'd love to [hear about it](https://github.com/erayendes/app-store-connect-mcp/issues). To stay on the stable release, just leave `@beta` off.
+
 **Ask, and it answers. Tell it, and it's done.**
 
 > - *"Summarize this week's 1-star reviews and draft replies."*
