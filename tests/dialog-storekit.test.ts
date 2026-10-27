@@ -36,7 +36,7 @@ describe('storekitDialog: renewal extensions', () => {
     });
     expect(text).toEqual({
       title: 'Extend every heimdall.test.monthly subscription by 1 day?',
-      body: "Milowda Test App · Sandbox\nOnly in Türkiye\nReason: other\n\nEach subscriber's next charge moves 1 day later.",
+      body: "Milowda Test App · Sandbox\nCountries: Türkiye\nReason: other\n\nEach subscriber's next charge moves 1 day later.",
       action: 'Extend',
     });
   });
@@ -48,7 +48,7 @@ describe('storekitDialog: renewal extensions', () => {
     expect(text.title).toBe('Extend every heimdall.test.monthly subscription by 7 days?');
     expect(text.body.split('\n')).toEqual([
       'Production — real customers',
-      'In every country',
+      'Countries: all',
       'Reason: service issue or outage',
       '',
       "Each subscriber's next charge moves 7 days later.",
@@ -59,14 +59,14 @@ describe('storekitDialog: renewal extensions', () => {
     const text = dialog('storekit__mass_extend_renewal_date', {
       product_id: 'p', extend_by_days: 3, request_identifier: UUID, storefront_country_codes: ['USA', 'DEU', 'TUR'],
     });
-    expect(text.body).toContain('Only in United States, Germany and Türkiye');
+    expect(text.body).toContain('Countries: United States, Germany and Türkiye');
   });
 
   it('names lowercase codes as the uppercase ones the run sends', () => {
     const text = dialog('storekit__mass_extend_renewal_date', {
       product_id: 'p', extend_by_days: 3, request_identifier: UUID, storefront_country_codes: ['tur', ' usa '],
     });
-    expect(text.body).toContain('Only in Türkiye and United States');
+    expect(text.body).toContain('Countries: Türkiye and United States');
   });
 
   it('one subscriber, environment argument over the default', () => {

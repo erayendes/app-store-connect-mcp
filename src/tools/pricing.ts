@@ -927,15 +927,19 @@ export function pricingDialog(name: string, args: Record<string, unknown>): Dial
     // The text customers will read, cut so many languages still fit the 1500-character alert.
     const shown = locs.slice(0, 4);
     const more = locs.length > shown.length ? ` and ${locs.length - shown.length} more` : '';
+    // "Label: value" rows; the alert lines them up as a table.
     return dialog(`Create the subscription "${String(args.name ?? args.product_id ?? '?')}"?`, [
       `${app} · group "${String(args.group ?? '?')}" (created if missing)`,
-      ...(args.group_display_name ? [`If the group is new, customers see it as "${cut(args.group_display_name, 60)}".`] : []),
-      `${price} ${every(args.period)} in ${country}; Apple derives every other country.`,
-      territories.length ? `On sale in ${listText(territories)}` : 'On sale everywhere, new countries included',
-      `Names: ${shown.map((l) => `${cut(l.name, 60)} (${language(String(l.locale))})`).join(', ')}${more}`,
-      ...shown.map((l) => `${language(String(l.locale))} description: ${cut(l.description, 100)}`),
-      ...(args.family_sharable === true ? ['Family Sharing on'] : []),
-      `Product ID ${String(args.product_id ?? '?')} can’t be changed later.`,
+      `Price: ${price} ${every(args.period)} in ${country}; Apple sets the other countries`,
+      `On sale: ${territories.length ? listText(territories) : 'everywhere, new countries included'}`,
+      ...(args.group_display_name ? [`Group name: ${cut(args.group_display_name, 60)} (if the group is new)`] : []),
+      ...shown.flatMap((l) => [
+        `Name (${language(String(l.locale))}): ${cut(l.name, 60)}`,
+        `Description (${language(String(l.locale))}): ${cut(l.description, 100)}`,
+      ]),
+      ...(more ? [`Other languages: ${more.replace(/^ and /, '')}`] : []),
+      ...(args.family_sharable === true ? ['Family Sharing: on'] : []),
+      `Product ID: ${String(args.product_id ?? '?')} (can’t be changed later)`,
     ], 'Nothing is sold until App Review approves it.', 'Create');
   }
 

@@ -13,10 +13,10 @@ describe('pricingDialog', () => {
     expect(d.title).toBe('Create the subscription "Heimdall Test Monthly"?');
     expect(d.action).toBe('Create');
     expect(lines(d.body)[0]).toBe('Heimdall Test · group "Heimdall Test" (created if missing)');
-    expect(d.body).toContain('99.99 every month in Türkiye; Apple derives every other country.');
+    expect(d.body).toContain('Price: 99.99 every month in Türkiye; Apple sets the other countries');
     // No territories means everywhere.
-    expect(d.body).toContain('On sale everywhere, new countries included');
-    expect(d.body).toContain('Product ID heimdall.test.monthly can’t be changed later.');
+    expect(d.body).toContain('On sale: everywhere, new countries included');
+    expect(d.body).toContain('Product ID: heimdall.test.monthly (can’t be changed later)');
     expect(d.body.endsWith('\n\nNothing is sold until App Review approves it.')).toBe(true);
     expect(d.body).not.toMatch(/ONE_MONTH|TUR\b/);
   });
@@ -27,8 +27,8 @@ describe('pricingDialog', () => {
       territory: 'TUR', price: '9.99', territories: ['TUR', 'USA', 'DEU', 'FRA', 'GBR'], family_sharable: true,
     })!;
     expect(d.body).toContain('9.99 every year in Türkiye');
-    expect(d.body).toContain('On sale in Türkiye, United States and 3 more');
-    expect(d.body).toContain('Family Sharing on');
+    expect(d.body).toContain('On sale: Türkiye, United States and 3 more');
+    expect(d.body).toContain('Family Sharing: on');
   });
 
   it('shows the names, descriptions and group name customers will read', () => {
@@ -40,11 +40,12 @@ describe('pricingDialog', () => {
         { locale: 'en-US', name: 'Monthly Test', description: 'x'.repeat(300) },
       ],
     })!;
-    expect(d.body).toContain('Names: Aylık Deneme (Turkish), Monthly Test (American English)');
-    expect(d.body).toContain('Turkish description: Tüm özellikler');
-    expect(d.body).toContain(`American English description: ${'x'.repeat(99)}…`);
+    expect(d.body).toContain('Name (Turkish): Aylık Deneme');
+    expect(d.body).toContain('Name (American English): Monthly Test');
+    expect(d.body).toContain('Description (Turkish): Tüm özellikler');
+    expect(d.body).toContain(`Description (American English): ${'x'.repeat(99)}…`);
     expect(d.body).not.toContain('x'.repeat(100));
-    expect(d.body).toContain('If the group is new, customers see it as "Heimdall Pro".');
+    expect(d.body).toContain('Group name: Heimdall Pro (if the group is new)');
   });
 
   it('caps the languages so a long list still fits the 1500-character alert', () => {
@@ -53,7 +54,7 @@ describe('pricingDialog', () => {
       group_display_name: 'g'.repeat(500),
       localizations: ['tr', 'en-US', 'de-DE', 'fr-FR', 'ja', 'ko', 'es-ES', 'it'].map((locale) => ({ locale, name: 'n'.repeat(200), description: 'd'.repeat(4000) })),
     })!;
-    expect(d.body).toMatch(/\(French \(France\)\) and 4 more$/m);
+    expect(d.body).toContain('Other languages: 4 more');
     expect(d.body).not.toContain('Japanese');
     expect(d.body.length).toBeLessThan(1500);
   });

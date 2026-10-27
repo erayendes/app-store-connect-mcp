@@ -696,7 +696,7 @@ export function storekitDialog(
     case 'storekit__mass_extend_renewal_date': {
       const codes = storefrontCodes(args.storefront_country_codes);
       return dialog(`Extend every ${args.product_id} subscription by ${dayCount(args.extend_by_days)}?`, 'Extend', [
-        codes.length ? `Only in ${andList(codes.map((c) => TERRITORY_NAMES[c] ?? clip(c, 12)))}` : 'In every country',
+        `Countries: ${codes.length ? andList(codes.map((c) => TERRITORY_NAMES[c] ?? clip(c, 12))) : 'all'}`,
         `Reason: ${reasonText(args.reason, ExtendReasonCode.SERVICE_ISSUE_OR_OUTAGE)}`,
       ], `Each subscriber's next charge moves ${dayCount(args.extend_by_days)} later.`);
     }

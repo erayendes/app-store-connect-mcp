@@ -16,7 +16,6 @@
  * missing), the answer is `unavailable` and the caller keeps failing closed.
  */
 import { execFile } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { TERRITORY_NAMES } from './territory-names.js';
 
 export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
@@ -34,39 +33,132 @@ export const DIALOG_FIRST_CLIENTS: ReadonlySet<string> = new Set(['claude-code']
 const MAX_BODY = 1500;
 export const nativeConfirmFits = (text: DialogText): boolean => text.body.length <= MAX_BODY;
 
-// The same path from src/core (tsx) and dist/core (published), shipped via
-// package.json "files". If it is missing the alert shows its default icon.
-const ICON = fileURLToPath(new URL('../../assets/brand/heimdall-icon-rounded-256.png', import.meta.url));
-
-// NSAlert through JXA rather than AppleScript's display dialog: it takes a
-// custom icon and a bold question, and looks like every other macOS alert.
-// Return allows, Escape refuses. No time limit: it stays until answered, or
-// until the tool call is cancelled (below). The text arrives as arguments,
-// never spliced into the script, so a quote in an app name stays text.
-const SCRIPT = `ObjC.import('AppKit');
+// A panel of its own through JXA, not NSAlert: an alert is a fixed narrow
+// column with one bold line and one block of plain text, and a write with
+// six fields read as a wall. Here the question is bold, the app and context
+// sit under it, each "Label: value" line lines up as a table, a line that is
+// not a fact is a dimmer note, and what the change really does stands apart
+// above the buttons. Return approves, Escape refuses. No time limit: it stays
+// until answered, or until the tool call is cancelled (below). The text
+// arrives as arguments, never spliced into the script, so a quote in an app
+// name stays text. A fifth argument renders it to a PNG instead of showing it.
+const SCRIPT = String.raw`ObjC.import('AppKit');
+// argv: title, body, approve label, refuse label[, render path]
 function run(argv) {
+  const [title, body, approve, refuse, renderTo] = argv;
   const app = $.NSApplication.sharedApplication;
   app.setActivationPolicy($.NSApplicationActivationPolicyAccessory);
-  const alert = $.NSAlert.alloc.init;
-  alert.messageText = argv[0];
-  alert.informativeText = argv[1];
-  alert.addButtonWithTitle(argv[3]);
-  alert.addButtonWithTitle(argv[4]).keyEquivalent = '\\u001b';
-  const icon = $.NSImage.alloc.initWithContentsOfFile(argv[2]);
-  if (!icon.isNil()) alert.icon = icon;
-  alert.layout;
-  // Opaque, so the text does not compete with whatever is behind it.
-  const win = alert.window;
-  win.opaque = true;
-  win.backgroundColor = $.NSColor.windowBackgroundColor;
-  const settle = (v) => {
-    if (v.isKindOfClass($.NSVisualEffectView)) { v.material = $.NSVisualEffectMaterialWindowBackground; v.state = $.NSVisualEffectStateActive; }
-    const subs = v.subviews;
-    for (let i = 0; i < subs.count; i++) settle(subs.objectAtIndex(i));
+
+  const W = 440, P = 24, INNER = W - 2 * P;
+  const font = (size, weight) => $.NSFont.systemFontOfSizeWeight(size, weight);
+  const text = (s, f, color, width) => {
+    const t = $.NSTextField.wrappingLabelWithString(s);
+    t.font = f;
+    t.textColor = color;
+    t.preferredMaxLayoutWidth = width;
+    t.selectable = false;
+    // Measured against the width it gets, so a long line wraps instead of being cut.
+    const h = Math.ceil(t.cell.cellSizeForBounds($.NSMakeRect(0, 0, width, 10000)).height);
+    t.frame = $.NSMakeRect(0, 0, width, h);
+    return t;
   };
-  settle(win.contentView.superview);
+
+  // The body: detail lines, a blank line, then what the change really does.
+  // The last paragraph is the outcome; a body with no details starts with the blank line.
+  const parts = body.startsWith('\n') ? ['', body] : body.split('\n\n');
+  const outcome = parts.length > 1 ? parts.pop().trim() : '';
+  const lines = parts.join('\n').split('\n').filter(Boolean);
+  const context = lines.length && lines[0].includes(' · ') ? lines.shift() : '';
+  const rows = lines.map((l) => {
+    const m = /^([A-Z][^:·]{0,30}): (.+)$/.exec(l);
+    return m ? { label: m[1], value: m[2] } : { value: l };
+  });
+
+  const blocks = []; // [view, x, gapBefore]
+  const add = (view, x, gap) => blocks.push([view, x, gap]);
+
+  add(text('Heimdall', font(11, $.NSFontWeightSemibold), $.NSColor.secondaryLabelColor, INNER), P, 0);
+  add(text(title, font(15, $.NSFontWeightBold), $.NSColor.labelColor, INNER), P, 6);
+  if (context) add(text(context, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, INNER), P, 4);
+
+  if (rows.length) {
+    const sep = $.NSBox.alloc.initWithFrame($.NSMakeRect(0, 0, INNER, 1));
+    sep.boxType = $.NSBoxSeparator;
+    add(sep, P, 14);
+    const labelW = Math.min(130, Math.max(0, ...rows.filter((r) => r.label).map((r) => text(r.label, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, 400).fittingSize.width)));
+    rows.forEach((r, i) => {
+      const gap = i === 0 ? 12 : 6;
+      if (r.label) {
+        const l = text(r.label, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, labelW);
+        const v = text(r.value, font(13, $.NSFontWeightRegular), $.NSColor.labelColor, INNER - labelW - 12);
+        const h = Math.max(l.frame.size.height, v.frame.size.height);
+        const row = $.NSView.alloc.initWithFrame($.NSMakeRect(0, 0, INNER, h));
+        l.frame = $.NSMakeRect(0, h - l.frame.size.height, labelW, l.frame.size.height);
+        v.frame = $.NSMakeRect(labelW + 12, h - v.frame.size.height, INNER - labelW - 12, v.frame.size.height);
+        row.addSubview(l);
+        row.addSubview(v);
+        add(row, P, gap);
+      } else {
+        // A line that is not a fact ("Groups that already have it stay as they are") reads as a note.
+        add(text(r.value, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, INNER), P, gap);
+      }
+    });
+  }
+
+  if (outcome) {
+    const sep = $.NSBox.alloc.initWithFrame($.NSMakeRect(0, 0, INNER, 1));
+    sep.boxType = $.NSBoxSeparator;
+    add(sep, P, 14);
+    add(text(outcome, font(12, $.NSFontWeightMedium), $.NSColor.labelColor, INNER), P, 12);
+  }
+
+  // Buttons, right-aligned: refuse then approve, approve is the default (Return).
+  const BH = 32, BW = 110;
+  const ok = $.NSButton.buttonWithTitleTargetAction(approve, $(), $());
+  const no = $.NSButton.buttonWithTitleTargetAction(refuse, $(), $());
+  for (const b of [ok, no]) { b.bezelStyle = $.NSBezelStyleRounded; b.controlSize = $.NSControlSizeLarge; }
+  ok.keyEquivalent = '\r';
+  no.keyEquivalent = '\u001b';
+  const bw = Math.max(BW, ok.fittingSize.width + 24, no.fittingSize.width + 24);
+
+  const H = 22 + blocks.reduce((s, [v, , g]) => s + g + v.frame.size.height, 0) + 22 + BH + 20;
+  const panel = $.NSPanel.alloc.initWithContentRectStyleMaskBackingDefer($.NSMakeRect(0, 0, W, H), $.NSWindowStyleMaskTitled | $.NSWindowStyleMaskFullSizeContentView, $.NSBackingStoreBuffered, false);
+  panel.title = 'Heimdall';
+  panel.titleVisibility = $.NSWindowTitleHidden;
+  panel.titlebarAppearsTransparent = true;
+  const content = panel.contentView;
+  let y = H - 22;
+  for (const [v, x, g] of blocks) {
+    y -= g + v.frame.size.height;
+    v.setFrameOrigin($.NSMakePoint(x, y));
+    content.addSubview(v);
+  }
+  ok.frame = $.NSMakeRect(W - P - bw, 20, bw, BH);
+  no.frame = $.NSMakeRect(W - P - 2 * bw - 12, 20, bw, BH);
+  content.addSubview(ok);
+  content.addSubview(no);
+
+  if (renderTo) {
+    const frame = content.superview;
+    frame.layoutSubtreeIfNeeded;
+    const rep = frame.bitmapImageRepForCachingDisplayInRect(frame.bounds);
+    frame.cacheDisplayInRectToBitmapImageRep(frame.bounds, rep);
+    rep.representationUsingTypeProperties($.NSBitmapImageFileTypePNG, $()).writeToFileAtomically(renderTo, true);
+    return 'rendered';
+  }
+
+  ObjC.registerSubclass({ name: 'HeimdallAnswer', methods: {
+    'approve:': { types: ['void', ['id']], implementation: () => app.stopModalWithCode(1) },
+    'refuse:': { types: ['void', ['id']], implementation: () => app.stopModalWithCode(0) },
+  } });
+  const target = $.HeimdallAnswer.alloc.init;
+  ok.target = target; ok.action = 'approve:';
+  no.target = target; no.action = 'refuse:';
+  panel.level = $.NSFloatingWindowLevel;
+  panel.center;
   app.activateIgnoringOtherApps(true);
-  return alert.runModal === $.NSAlertFirstButtonReturn ? 'approved' : 'cancelled';
+  // JXA hands the modal response back as a string ("1"), not a number.
+  return Number(app.runModalForWindow(panel)) === 1 ? 'approved' : 'cancelled';
 }`;
 
 export interface DialogText {
@@ -188,7 +280,7 @@ function titleFrom(what: string, name?: string): string {
  * `what` is the tool's own one-line summary, or a question already worded for
  * this write (it ends in "?").
  */
-export function dialogText(what: string | undefined, preview: string): DialogText {
+export function dialogText(what: string | undefined, preview: string, covered: string[] = []): DialogText {
   const details: string[] = [];
   const warnings: string[] = [];
   const lists = new Map<string, string[]>();
@@ -207,6 +299,8 @@ export function dialogText(what: string | undefined, preview: string): DialogTex
     }
     // The count only repeats a list the body already shows.
     if (t.startsWith('Territories in request:')) continue;
+    // A field the question already says ("Pause the phased release?") would only repeat it.
+    if (covered.some((key) => new RegExp(`(^|\\.)${key} =`).test(t))) continue;
     const said = changeLine(t.replace(/^(App|Product|Price):\s+/, '$1: '));
     if (!said) continue;
     if (said.startsWith('\u0000')) {
@@ -243,7 +337,7 @@ export function nativeConfirm(text: DialogText, signal?: AbortSignal): Promise<N
     // A cancelled tool call takes its alert with it, so a late click cannot
     // run a write the agent was already told failed.
     const buttons = text.action ? [text.action, 'Cancel'] : ['Allow', 'Don’t Allow'];
-    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ICON, ...buttons], { signal }, (error, stdout) => {
+    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ...buttons], { signal }, (error, stdout) => {
       if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'cancelled');
       resolve(signal?.aborted ? 'cancelled' : 'unavailable');
     });

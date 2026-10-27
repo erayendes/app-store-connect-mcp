@@ -747,7 +747,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message);
+          const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message, 'covered' in preview ? preview.covered : undefined);
           if (!nativeConfirmFits(dialog)) {
             // Not to a dialog-first client's form: it would be declined unseen.
             if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);

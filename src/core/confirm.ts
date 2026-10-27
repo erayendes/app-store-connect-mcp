@@ -59,6 +59,8 @@ export interface WritePreview {
   dialog?: DialogText;
   /** The dialog's question, when the body decides what the write does (pause or resume, submit or withdraw). */
   title?: string;
+  /** Body fields that question already says, left out of the dialog's lines. */
+  covered?: string[];
 }
 
 /**
@@ -70,7 +72,7 @@ function questionFor(
   toolName: string,
   data: any,
   labelOf: (type: string, id: string) => string | undefined
-): { title?: string; consequence?: string } {
+): { title?: string; consequence?: string; covered?: string[] } {
   const a = data?.attributes ?? {};
   const rel = (name: string): string | undefined => {
     const r = data?.relationships?.[name]?.data;
@@ -88,35 +90,35 @@ function questionFor(
     case 'profiles__create':
       return { title: 'Create the provisioning profile?' };
     case 'review_submissions__update':
-      if (yes(a.canceled)) return { title: 'Withdraw this submission from App Review?', consequence: 'You can submit it again later.' };
-      return yes(a.submitted) ? { title: 'Submit this submission to App Review?' } : {};
+      if (yes(a.canceled)) return { title: 'Withdraw this submission from App Review?', consequence: 'You can submit it again later.', covered: ['canceled'] };
+      return yes(a.submitted) ? { title: 'Submit this submission to App Review?', covered: ['submitted'] } : {};
     case 'app_store_version_release_requests__create': {
       const version = rel('appStoreVersion');
       return { title: version ? `Release version ${version} on the App Store now?` : 'Release this version on the App Store now?' };
     }
     case 'app_store_version_phased_releases__update':
-      if (a.phasedReleaseState === 'PAUSED') return { title: 'Pause the phased release?', consequence: 'Automatic updates stop; people can still download it.' };
-      if (a.phasedReleaseState === 'ACTIVE') return { title: 'Resume the phased release?', consequence: 'Automatic updates continue where they stopped.' };
-      if (a.phasedReleaseState === 'COMPLETE') return { title: 'Release the update to all users now?', consequence: 'The rollout can’t be restarted.' };
+      if (a.phasedReleaseState === 'PAUSED') return { title: 'Pause the phased release?', consequence: 'Automatic updates stop; people can still download it.', covered: ['phasedReleaseState'] };
+      if (a.phasedReleaseState === 'ACTIVE') return { title: 'Resume the phased release?', consequence: 'Automatic updates continue where they stopped.', covered: ['phasedReleaseState'] };
+      if (a.phasedReleaseState === 'COMPLETE') return { title: 'Release the update to all users now?', consequence: 'The rollout can’t be restarted.', covered: ['phasedReleaseState'] };
       return { title: 'Change the phased release?' };
     case 'beta_app_review_submissions__create': {
       const build = rel('build');
       return { title: build ? `Send build ${build} to TestFlight review?` : 'Send this build to TestFlight review?' };
     }
     case 'territory_availabilities__update':
-      if (a.available === false) return { title: 'Stop selling the app in this country?', consequence: 'New customers there can no longer download it.' };
-      if (yes(a.preOrderEnabled)) return { title: 'Open pre-orders for the app in this country?' };
-      return a.available === true ? { title: 'Start selling the app in this country?' } : {};
+      if (a.available === false) return { title: 'Stop selling the app in this country?', consequence: 'New customers there can no longer download it.', covered: ['available'] };
+      if (yes(a.preOrderEnabled)) return { title: 'Open pre-orders for the app in this country?', covered: ['available', 'preOrderEnabled'] };
+      return a.available === true ? { title: 'Start selling the app in this country?', covered: ['available'] } : {};
     case 'end_app_availability_pre_orders__create':
       return { title: 'End the pre-order and release the app now?' };
     case 'app_store_version_experiments_v2__update':
-      return yes(a.started) ? { title: 'Start the product page test?' } : {};
+      return yes(a.started) ? { title: 'Start the product page test?', covered: ['started'] } : {};
     case 'game_center_leaderboard_entry_submissions__create':
-      return { title: a.score !== undefined ? `Post a score of ${a.score} for a player?` : 'Post a score for a player?' };
+      return { title: a.score !== undefined ? `Post a score of ${a.score} for a player?` : 'Post a score for a player?', covered: ['score'] };
     case 'game_center_player_achievement_submissions__create':
-      return { title: a.percentageAchieved !== undefined ? `Post ${a.percentageAchieved}% achievement progress for a player?` : 'Post achievement progress for a player?' };
+      return { title: a.percentageAchieved !== undefined ? `Post ${a.percentageAchieved}% achievement progress for a player?` : 'Post achievement progress for a player?', covered: ['percentageAchieved'] };
     case 'builds__update':
-      return yes(a.expired) ? { title: 'Expire this build?' } : {};
+      return yes(a.expired) ? { title: 'Expire this build?', covered: ['expired'] } : {};
     case 'subscription_versions__create':
     case 'subscription_group_versions__create':
     case 'in_app_purchase_versions__create': {
@@ -643,7 +645,7 @@ export async function buildWritePreview(
   lines.push(`Risk:       ${risk} — ${question.consequence ?? consequenceFor(toolName, risk, op.method)}`);
   if (strong) lines.push('', 'Type CONFIRM in the field below to proceed.');
 
-  return { message: lines.join('\n'), strong, ...(question.title ? { title: question.title } : {}) };
+  return { message: lines.join('\n'), strong, ...(question.title ? { title: question.title, covered: question.covered } : {}) };
 }
 
 /** What the signed `requestState` carries from the prompt to the retry. */
