@@ -712,7 +712,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const dialog = dialogText(what, preview.message);
+          const dialog = preview.dialog ?? dialogText(what, preview.message);
           if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
             // Not to a dialog-first client's form: it would be declined unseen.
             if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);

@@ -35,7 +35,7 @@ By default Heimdall asks in two ways:
 
 `testflight__assign_build_to_groups`, which resolves a build and adds it to beta groups in one call, asks for CONFIRM. Everything else — store text, a draft version, picking its build, other TestFlight settings and webhook settings — is left to your AI app's approval. A media tool asks at the level its plan has: placing an image on a page is public and does not ask, removing one, or uploading with `replace: true`, which deletes the existing file first, is a deletion and asks for CONFIRM.
 
-Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press Allow (or Return). Don't Allow or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press its button, named for the change (Remove, Delete, Upload; Allow when no verb fits), or Return. Cancel or Escape stops it. The AI can't see or click that dialog. It stays open until you answer. On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 

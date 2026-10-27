@@ -8,6 +8,7 @@ import type { AscHttpClient, Query } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 import { REVERSIBILITY, STRONG_CONFIRM_LEVELS, type RiskLevel } from '../core/risk.js';
+import { actionFor, type DialogText } from '../core/native-confirm.js';
 import { pickVersion, readAppStoreVersions, PLATFORMS, EDITABLE_STATES } from './preflight.js';
 import {
   MEDIA_NAMES, MEDIA_OPS, MEDIA_ASSETS, MEDIA_TARGETS, PAGE_TARGETS, FILE_TARGETS, MEDIA_CATEGORIES, MEDIA_PLACEMENT_TYPES,
@@ -875,13 +876,95 @@ async function planWrite(name: string, args: Args, http: AscHttpClient, intent: 
   return { target, action: intent.action, files, writes, risk, fingerprint, upload };
 }
 
+// The macOS dialog's own text (core/native-confirm.ts): what happens, to which
+// files, on which page, in words. The form keeps the full plan with ids.
+const PLATFORM_NAMES: Record<string, string> = { IOS: 'iOS', MAC_OS: 'macOS', TV_OS: 'tvOS', VISION_OS: 'visionOS' };
+const PAGE_NAMES: Record<PageTarget, string> = { version: 'App Store page', cpp: 'custom product page', ppo: 'product page test', event: 'in-app event' };
+const language = (locale: string): string => {
+  try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) ?? locale; } catch { return locale; }
+};
+function pageWhere(app: string, page?: Page): string {
+  if (!page) return `${app} · media library`;
+  const label = (page.locale ? page.label.replace(new RegExp(`, ${page.locale}$`), '') : page.label)
+    .replace(/^(\w+) version /, (_, p: string) => `${PLATFORM_NAMES[p] ?? p} `)
+    .replace(/^(CPP|PPO|event) /, '');
+  return [app, label, page.locale && language(page.locale)].filter(Boolean).join(' · ');
+}
+function mediaNoun(kinds: MediaKind[], page?: Page): string {
+  const screens = page && page.target !== 'event';
+  const one = (k: MediaKind) => (k === 'video' ? (screens ? 'app preview' : 'video') : screens ? 'screenshot' : 'image');
+  const words = [...new Set(kinds.map(one))];
+  const word = words.length === 1 ? words[0] : 'file';
+  return kinds.length === 1 ? `${/^[aeiou]/.test(word) ? 'an' : 'a'} ${word}` : `${kinds.length} ${word}s`;
+}
+const sizeText = (bytes: number): string => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`);
+// Every file is named: a dialog too long to show them all is refused (server.ts), not cut.
+const listNames = (names: string[]): string => names.join(', ');
+
+function pageDialog(plan: Plan): DialogText {
+  const deletes = plan.writes.filter((w) => w.operation.endsWith('images.delete') || w.operation.endsWith('videos.delete'));
+  // These change the library file itself, wherever it is placed.
+  const page = deletes.length || ['archive', 'rename', 'poster'].includes(plan.action) ? undefined : plan.target.pages[0];
+  const where = page ? `the ${PAGE_NAMES[page.target]}` : 'the media library';
+  const noun = mediaNoun(plan.files.map((f) => f.kind), page);
+  const names = listNames(plan.files.map((f) => f.name));
+  const lines = [pageWhere(plan.target.app.name, page), ''];
+  let title: string;
+  let note = REVERSIBILITY[plan.risk];
+  if (plan.upload) {
+    title = `Upload ${plan.upload.fileName}?`;
+    lines.push(`${plan.upload.fileName} (${sizeText(plan.upload.size)}) goes into the media library${page ? ` and onto ${where}` : ''}.`);
+  } else if (deletes.length) {
+    title = `Delete ${mediaNoun(plan.files.map((f) => f.kind))} from the media library?`;
+    const pages = new Set(plan.files.flatMap((f) => f.placements.map((p) => relId(p, placementPage(p)?.[1].relationship ?? ''))));
+    lines.push(names, ...(pages.size ? [`Also taken off the ${pages.size === 1 ? 'page that uses' : `${pages.size} pages that use`} ${plan.files.length === 1 ? 'it' : 'them'}.`] : []));
+    note = 'Deleted files can’t be recovered.';
+  } else if (plan.writes.some((w) => w.operation === MEDIA_OPS.placementDelete)) {
+    title = `Remove ${noun} from ${where}?`;
+    lines.push(`${names} will be taken off this page.`);
+    note = `The ${plan.files.length === 1 ? 'file stays' : 'files stay'} in the media library, so ${plan.files.length === 1 ? 'it' : 'they'} can be placed again.`;
+  } else if (plan.action === 'reorder') {
+    title = `Reorder ${noun} on ${where}?`;
+    lines.push(`New order: ${plan.files.map((f) => f.name).join(', ')}`);
+  } else if (plan.action === 'place') {
+    title = `Place ${noun} on ${where}?`;
+    lines.push(names);
+  } else if (plan.action === 'poster') {
+    title = `Set the poster frame of ${noun}?`;
+    lines.push(names, `Frame: ${(plan.writes[0]?.body as any)?.data?.attributes?.previewFrameTimeCode}`);
+  } else if (plan.action === 'rename') {
+    title = `Rename ${plan.files[0].name}?`;
+    lines.push(`New name: ${(plan.writes[0]?.body as any)?.data?.attributes?.referenceName}`);
+  } else {
+    const archived = (plan.writes[0]?.body as any)?.data?.attributes?.archived !== false;
+    title = `${archived ? 'Archive' : 'Unarchive'} ${noun}?`;
+    lines.push(names);
+    if (archived) note = 'Archived files can be unarchived later.';
+  }
+  return { title, body: [...lines, '', note].join('\n'), action: actionFor(title) };
+}
+
+function fileDialog(plan: FilePlan): DialogText {
+  const noun = plan.target.replace(/_/g, ' ').replace(/^in app/, 'in-app').replace(/\bios\b/i, 'iOS');
+  const current = plan.files.map((row) => String(row.attributes?.fileName ?? row.id));
+  const replaced = plan.upload && plan.writes.some((write) => write.operation.endsWith('.delete'));
+  const title = replaced ? `Replace the ${noun}?` : plan.upload ? `Upload ${plan.upload.fileName}?` : `Delete ${current.length === 1 ? `the ${noun}` : `${current.length} files`}?`;
+  const lines = [`${plan.app.name} · ${plan.parentLabel}`, ''];
+  if (plan.upload) lines.push(`New file: ${plan.upload.fileName} (${sizeText(plan.upload.size)})`);
+  if (current.length) lines.push(`${replaced ? 'Replaced' : plan.upload ? 'Current' : 'Deleted'}: ${listNames(current)}`);
+  if (plan.standalone) lines.push('Not attached yet: the new image is used when the advanced experience is created.');
+  if (plan.upload && plan.adapter.attach && plan.files.length) lines.push('The current header image is detached, not deleted.');
+  const note = replaced ? 'The current file is deleted first and can’t be recovered.' : plan.upload ? REVERSIBILITY[plan.risk] : 'Deleted files can’t be recovered.';
+  return { title, body: [...lines, '', note].join('\n'), action: actionFor(title) };
+}
+
 export async function buildMediaPreview(name: string, args: Args, http: AscHttpClient) {
   if (Object.hasOwn(FILE_TARGETS, str(args, 'target', true)!)) {
     const plan = await prepareFileWrite(name, args, http);
     await closeUpload(plan.upload);
     const affected = plan.files.map((row) => `- ${row.attributes?.fileName ?? row.id} [${row.id}]`);
     const replaced = plan.upload && plan.writes.some((write) => write.operation.endsWith('.delete'));
-    return { planFingerprint: plan.fingerprint, strong: STRONG_CONFIRM_LEVELS.has(plan.risk), message: [
+    return { planFingerprint: plan.fingerprint, strong: STRONG_CONFIRM_LEVELS.has(plan.risk), dialog: fileDialog(plan), message: [
       `Heimdall is about to ${replaced ? 'replace' : plan.upload ? 'upload' : 'delete'} ${plan.target} — a ${plan.risk.toUpperCase()}-level write.`, '',
       `App:        ${plan.app.name}`, `Target:     ${plan.target}, ${plan.parentLabel} [${plan.parentId}]`,
       `Existing files (${affected.length}):`, ...affected,
@@ -913,7 +996,7 @@ export async function buildMediaPreview(name: string, args: Args, http: AscHttpC
     const ordered = (write.body as any)?.data?.relationships?.orderedPlacements?.data;
     return `- ${write.operation}${write.id ? ` [${write.id}]` : ''}${attributes ? ` ${JSON.stringify(attributes)}` : ''}${ordered ? ` order=${ordered.map((item: Row) => item.id).join(',')}` : ''}`;
   });
-  return { planFingerprint: plan.fingerprint, strong, message: [
+  return { planFingerprint: plan.fingerprint, strong, dialog: pageDialog(plan), message: [
     `Heimdall is about to ${name === MEDIA_NAMES.delete ? 'delete media' : plan.action === 'upload' ? 'upload media' : plan.action} — a ${plan.risk.toUpperCase()}-level write.`, '',
     `App:        ${plan.target.app.name}`,
     `Target:     ${plan.target.target === 'library' ? `asset library (${plan.target.libraryId})` : `${plan.target.pages[0].label} (${plan.target.pages[0].id})`}`,

@@ -36,6 +36,7 @@ import {
 import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, TYPED_BY_NAME, type RiskLevel } from './risk.js';
 import { OPERATIONS } from '../generated/operations.js';
 import { REVIEW_RESOURCE_TYPES } from '../tools/release.js';
+import type { DialogText } from './native-confirm.js';
 
 export interface ConfirmDecision {
   allowed: boolean;
@@ -52,6 +53,8 @@ export interface WritePreview {
   message: string;
   /** True for high-stakes levels: the user must type CONFIRM, not tick a box. */
   strong: boolean;
+  /** The macOS dialog's own text, when the tool can say it better than the form preview. */
+  dialog?: DialogText;
 }
 
 /** The slice of an Operation the preview needs (StoreKit tools fake one). */
