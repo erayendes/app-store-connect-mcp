@@ -66,6 +66,18 @@ Eğer **hangi profile ihtiyacınız olduğundan emin değilseniz** [başlangıç
 MCP rehberleri genelde uzak HTTP sunucularını önerir.
 **Heimdall yerelde çalışır**. App Store Connect için gerekli olan anahtarları Keychain'den okur. Kısa ömürlü bir token imzalar ve doğrudan Apple ile konuşur. Arada hiçbir şey olmaz, anahtarınız sadece sizde kalır.
 
+```mermaid
+flowchart LR
+  ai["Yapay zekâ uygulamanız"] -->|"stdio, ağ yok"| h
+  subgraph mac["Bilgisayarınız"]
+    h["Heimdall<br/>salt okunur modda yazma araçları görünmez"] --> gate["Riskli işlemlerde önce sorar"]
+    gate --> rl["İstekleri Apple'ın<br/>hız sınırının altında tutar"]
+    rl --> sign["20 dakikalık token imzalar"]
+    kc[("Keychain")] -.->|"anahtar, gerektiğinde okunur"| sign
+  end
+  sign -->|HTTPS| apple["App Store Connect API"]
+```
+
 > [!NOTE]
 > Anahtara en az yetkiyi vermeye çalışın. App Store Connect [rol yetkileri](ROLES_tr.md)ni incelediğinizden emin olun.
 
@@ -77,6 +89,26 @@ Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğ
 - **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan diğer adımlarda: bir şeyi incelemeye göndermek, yeni bir abonelik ya da uygulama içi satın alma sürümü başlatmak, kademeli yayını değiştirmek, bir build'i dış incelemeye göndermek, bir ülkede satışa açmak, ürün sayfası testini değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
 
 Geri kalan her şeyde kullandığınız yapay zekâ uygulamasının kendi onay sistemi devrededir.
+
+```mermaid
+flowchart TD
+  call["Bir yazma işlemi çağrılır"] --> dry{"Dry-run mı?"}
+  dry -- evet --> preview["Ne göndereceğini gösterir.<br/>Apple'a hiçbir şey gitmez."]
+  dry -- hayır --> level{"Neyi değiştiriyor?"}
+  level -- "gelir, silme,<br/>kod imzalama, erişim" --> strong["CONFIRM yazılır"]
+  level -- "müşteriye, oyuncuya<br/>ya da testçiye ulaşır" --> yesno["Evet ya da hayır"]
+  level -- "diğer her şey" --> client["Yapay zekâ uygulamanızın kendi onayı"]
+  strong --> where{"Yapay zekâ uygulamanız<br/>soruyu gösterebiliyor mu?"}
+  yesno --> where
+  where -- evet --> form["Yapay zekâ uygulamanızda sorulur"]
+  where -- "hayır, Mac'te" --> dialog["Heimdall'ın kendi penceresinde sorulur"]
+  where -- "sorulacak yer yok" --> blocked["Engellenir. Hiçbir şey değişmez."]
+  form --> answer{"Cevabınız"}
+  dialog --> answer
+  answer -- onay --> run["Çalışır"]
+  answer -- "diğer her cevap" --> stop["Hiçbir şey değişmez"]
+  client --> run
+```
 
 **Yapay zekâ uygulamanız soruyu gösteremiyorsa** (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresiyle sorar. Düğmesi ne yapacağını söyler: Remove, Upload, Delete. Yapay zekâ bu pencereyi ne görebilir ne de basabilir; siz cevap verene kadar bekler.
 

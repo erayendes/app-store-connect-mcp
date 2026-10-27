@@ -65,6 +65,18 @@ Most App Store Connect MCP servers give you a hand-picked slice of the API. That
 Most MCP guides recommend remote HTTP servers.
 **Heimdall runs locally instead.** It reads your App Store Connect key from the Keychain, signs a short-lived token and talks to Apple directly. Nothing sits in between, so your key stays with you.
 
+```mermaid
+flowchart LR
+  ai["Your AI app"] -->|"stdio, no network"| h
+  subgraph mac["Your machine"]
+    h["Heimdall<br/>read-only mode hides every write"] --> gate["Asks before risky changes"]
+    gate --> rl["Paces requests under<br/>Apple's rate limit"]
+    rl --> sign["Signs a 20-minute token"]
+    kc[("Keychain")] -.->|"key, read when needed"| sign
+  end
+  sign -->|HTTPS| apple["App Store Connect API"]
+```
+
 > [!NOTE]
 > Give your key the narrowest role that does the job. [Roles](docs/ROLES_en.md) explains what each App Store Connect role can do.
 
@@ -76,6 +88,26 @@ Before changing a price, giving someone Admin access or deleting something, Heim
 - **You answer yes or no** for the other steps that reach customers, players or testers: sending something to review, starting a new subscription or in-app purchase version, changing a phased rollout, sending a build to external review, selling in a country, changing a product page test, sending a score or achievement for a player.
 
 Everything else goes through your AI app's own approval.
+
+```mermaid
+flowchart TD
+  call["A write is called"] --> dry{"Dry-run?"}
+  dry -- yes --> preview["Shows what it would send.<br/>Nothing reaches Apple."]
+  dry -- no --> level{"What does it change?"}
+  level -- "revenue, deletion,<br/>code signing, access" --> strong["Type CONFIRM"]
+  level -- "reaches customers,<br/>players or testers" --> yesno["Yes or no"]
+  level -- "anything else" --> client["Your AI app's own approval"]
+  strong --> where{"Can your AI app<br/>show the question?"}
+  yesno --> where
+  where -- yes --> form["Asked in your AI app"]
+  where -- "no, on a Mac" --> dialog["Asked in Heimdall's own window"]
+  where -- "no way to ask" --> blocked["Blocked. Nothing changed."]
+  form --> answer{"Your answer"}
+  dialog --> answer
+  answer -- approved --> run["Runs"]
+  answer -- "anything else" --> stop["Nothing changed"]
+  client --> run
+```
 
 **If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
 

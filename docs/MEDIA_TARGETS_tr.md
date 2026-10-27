@@ -115,6 +115,34 @@ build yüklemesi (`page_id` olmadan) riski `release` olan `build_uploads.create`
 gönderir. Mevcut bir build yüklemesine dosya tamamlamak da build işlemeyi
 başlatır ve `release` seviyesindedir.
 
+## Bir yükleme nasıl çalışır
+
+Tek bir `media__upload` çağrısı, Apple'ın ayır, yükle ve onayla adımlarının
+tamamıdır. Ham araçlar yalnızca yer ayırır, hiç bayt göndermez.
+
+```mermaid
+sequenceDiagram
+  participant AI as Yapay zekâ uygulamanız
+  participant H as Heimdall
+  actor Siz
+  participant ASC as App Store Connect API
+  participant UP as Apple'ın yükleme sunucusu
+  AI->>H: media__upload(dosya, hedef)
+  H->>H: Dosyayı kontrol eder: tür, boyut, SHA-256 ve MD5
+  H->>Siz: Onay ister (müşterinin gördüğü görseller PUBLIC seviyesinde)
+  Siz-->>H: Onaylar
+  H->>ASC: Dosya için yer ayırır
+  ASC-->>H: Bayt aralıkları ve nereye gönderileceği
+  loop her aralık
+    H->>UP: Aralığı gönderir, kontrol edilen dosyadan yeniden okuyarak
+  end
+  H->>H: Gönderilen, kontrol edilenle aynı mı?
+  H->>ASC: Onaylar (uploaded, MD5)
+  ASC-->>H: Teslim durumu
+  H-->>AI: Dosya kimliği ve durumu
+  Note over H,ASC: Sayfa hedefinde dosya aynı çağrıda sayfaya yerleştirilir.<br/>Yer ayrıldıktan sonra bir adım başarısız olursa yanıt,<br/>incelenebilmesi için ayrılan dosyayı adıyla verir.
+```
+
 ## Katkıda bulunanlar için
 
 ### Dosya kontrolleri ve bellek

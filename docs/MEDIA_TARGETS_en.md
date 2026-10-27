@@ -107,6 +107,34 @@ thousands of uploads are not paged through. A new build upload (no `page_id`)
 sends `build_uploads.create`, whose risk is `release`. Committing a file to an
 existing build upload also starts build processing and is `release` level.
 
+## How an upload runs
+
+One `media__upload` call is Apple's whole reserve, upload and commit sequence.
+The raw tools only reserve a slot and move no bytes.
+
+```mermaid
+sequenceDiagram
+  participant AI as Your AI app
+  participant H as Heimdall
+  actor You
+  participant ASC as App Store Connect API
+  participant UP as Apple's upload host
+  AI->>H: media__upload(file, target)
+  H->>H: Checks the file: type, size, SHA-256 and MD5
+  H->>You: Asks to confirm (customer-facing images are PUBLIC-level)
+  You-->>H: Approves
+  H->>ASC: Reserve the file
+  ASC-->>H: Byte ranges and where to send them
+  loop each range
+    H->>UP: Sends the range, read again from the checked file
+  end
+  H->>H: Is what was sent what was checked?
+  H->>ASC: Commit (uploaded, MD5)
+  ASC-->>H: Delivery state
+  H-->>AI: File ID and state
+  Note over H,ASC: For a page, the file is then placed in the same call.<br/>If a step after the reservation fails, the reply names<br/>the reserved file so it can be inspected.
+```
+
 ## For contributors
 
 ### File checks and memory
