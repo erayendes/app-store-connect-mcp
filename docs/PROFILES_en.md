@@ -55,9 +55,7 @@ Its media tools (`media__*`) handle every screenshot, video, image and file. Sto
 ## Sub-profiles
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: ticking monetization opens its sub-profiles, each with its tool count and token estimate" width="720">
-
-<sub>Recorded with 2.x, whose profiles had other names (`app-info` is now `general`).</sub>
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="The browser setup, step 1: each profile with its tool count and token cost; Monetization is open, with two of its sub-profiles ticked" width="560">
 
 Tick a profile in the [setup](SETUP_en.md) picker. When you move the cursor onto it, its sub-profiles open, all ticked; untick the ones you don't want.
 For example, `monetization` has 152 tools, but if you only work on subscriptions and their offers, the 64 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.

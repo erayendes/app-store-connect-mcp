@@ -81,9 +81,9 @@ npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
 
-<sub>Recorded with 2.x. In 3.0, setup first asks whether to continue in the browser or the terminal, then for your profiles, then for the key.</sub>
+<sub>Setup in the browser: pick what you need and see what it costs the AI as you go. All four steps are in [Setup](docs/SETUP_en.md#save-your-credentials-once--the-setup-wizard).</sub>
 
 This is the 3.0 beta; `@beta` picks it until 3.0.0 is out. For 2.8, leave `@beta` off.
 

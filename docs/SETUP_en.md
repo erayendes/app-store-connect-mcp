@@ -24,19 +24,31 @@ npx -y @erayendes/asc-mcp@beta setup
 > [!NOTE]
 > This page describes the 3.0 beta, so every command here uses `@erayendes/asc-mcp@beta`. The bare `@erayendes/asc-mcp` is still 2.x until 3.0.0 is released.
 
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
-
-<sub>Recorded with 2.x. In 3.0, setup first asks whether to continue in the browser or the terminal, then for your profiles, then for the key.</sub>
+**Do it in your browser.** Setup first asks whether to continue in the browser or the terminal; pick the browser. A page opens on your own computer and walks you through the four steps below.
 
 ### Save your credentials once — the setup wizard
 
 The wizard asks in the order you'd think it through, in the browser and the terminal alike:
 
 1. **What you need.** Each row in the [profile](PROFILES_en.md) picker shows how many tools it has and roughly how many tokens it costs; `[Admin key]` and `[vendor no.]` mark the rows that need one. The total is shown as you go.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="The browser setup, step 1: each profile with its tool count and token cost; Monetization is open, with two of its sub-profiles ticked" width="560">
+
 2. **Your key.** From what you picked, it tells you the narrowest key [role](ROLES_en.md) that covers it. A saved key is offered first, with whether it is an Admin key. For a new one it checks the `Key ID` and `Issuer ID` as you type, takes the `.p8` path (drag and drop works) and checks everything with Apple; if Apple rejects it, you enter it again. The `Vendor number` is asked only if you picked sales and finance reports.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step2.png" alt="Step 2: the page says which key role to create for what you picked, how to create it, and takes the .p8 file by drag and drop" width="560">
+
 3. **Your AI apps.** It finds the ones installed on your machine. Settings files it edits directly are backed up first. Claude Desktop writes its own settings back while it is open, so setup asks you to quit it first. If setup itself runs inside Claude Desktop, quit Desktop and run setup from Terminal to include it.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step3.png" alt="Step 3: the AI apps found on this computer, each ticked" width="560">
+
 4. **The plan.** What will change in each app, confirmed once.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step4.png" alt="Step 4: what will be added to each app, with Apply and Cancel" width="560">
 
 Setup checks your credentials with Apple before saving them. A key Apple rejects is not saved; if Apple cannot be reached, setup says so and saves it anyway. Before the profiles are written to your apps, the wizard shows the plan and asks you to confirm once.
 

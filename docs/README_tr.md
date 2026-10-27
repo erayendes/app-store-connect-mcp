@@ -82,9 +82,9 @@ npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, Issuer ID, Apple doğrulaması, profil ve alt profil seçimi, anahtarın Keychain'e kaydı" width="720">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle" width="560">
 
-<sub>2.x ile kaydedildi. 3.0'da setup önce tarayıcıda mı terminalde mi devam edeceğinizi, sonra profillerinizi, en son anahtarı sorar.</sub>
+<sub>Tarayıcıda kurulum: neye ihtiyacınız olduğunu seçin, yapay zekâya maliyetini seçtikçe görün. Dört adımın hepsi [Kurulum](SETUP_tr.md#kimlik-bilgisini-bir-kez-kaydedin--setup-sihirbazı) sayfasında.</sub>
 
 Bu 3.0 betası; 3.0.0 çıkana kadar `@beta` onu seçer. 2.8 için `@beta`'yı yazmayın.
 
