@@ -212,6 +212,16 @@ describe('AscHttpClient retry policy (a resent write can duplicate a resource)',
     await expect(settle(client.post('/v1/apps', {}))).rejects.toThrow(pattern as RegExp);
   });
 
+  it('tells an invalid value apart from a locked state on 409', async () => {
+    const body = { errors: [{ status: '409', code: 'ENTITY_ERROR.ATTRIBUTE.INVALID', title: 'The provided entity includes an attribute with an invalid value' }] };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status: 409, headers: { 'content-type': 'application/json' } })));
+    const client = new AscHttpClient(new TokenProvider(creds), { maxRetries: 0 });
+
+    const error: any = await settle(client.post('/v1/apps', {})).catch((e) => e);
+    expect(error.message).toMatch(/refused a value/);
+    expect(error.message).not.toMatch(/locked/);
+  });
+
   it('understands both Retry-After forms: delay-seconds and HTTP-date', () => {
     expect(backoffMs(0, '7')).toBe(7000);
     const inTenSeconds = new Date(Date.now() + 10_000).toUTCString();

@@ -25,7 +25,8 @@ const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
   // Spec 4.5 (+5 tools, Apple's own summaries) raised four ceilings by 2–4.
   // PR-V2 hides 28 unflagged v1 operations; PR-D1 hides six legacy media families.
-  boilerplate: 632,
+  // The live beta run curated the app → encryption declarations path Apple 404s.
+  boilerplate: 631,
   /**
    * AXIS2 — silent empty results: id-valued filters with no format hint.
    *

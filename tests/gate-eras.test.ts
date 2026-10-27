@@ -74,6 +74,7 @@ async function connect(
     nativeConfirm?: boolean;
     readOnly?: boolean;
     profile?: string;
+    clientName?: string;
   } = {}
 ) {
   const [ct, st] = InMemoryTransport.createLinkedPair();
@@ -88,7 +89,7 @@ async function connect(
     await build().connect(st);
   }
   const client = new Client(
-    { name: 'gate-eras', version: '0' },
+    { name: options.clientName ?? 'gate-eras', version: '0' },
     {
       capabilities: options.noElicitation ? {} : { elicitation: { form: {} } },
       ...(era === 'modern' ? { versionNegotiation: { mode: { pin: '2026-07-28' } } } : {}),
@@ -181,6 +182,44 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
     const res: any = await client.callTool(CALL);
 
     expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    expect(res.isError ?? false).toBe(false);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
+  });
+
+  it('asks a Claude Code client in the macOS dialog even though it declares forms', async () => {
+    const apple = stubApple();
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('approved');
+    const { client, prompts } = await connect(era, CONFIRM, { nativeConfirm: true, clientName: 'claude-code' });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(prompts).toEqual([]);
+    expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    expect(res.isError ?? false).toBe(false);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
+  });
+
+  it('falls back to the form for a Claude Code client when the dialog cannot open', async () => {
+    const apple = stubApple();
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('unavailable');
+    const { client, prompts } = await connect(era, CONFIRM, { nativeConfirm: true, clientName: 'claude-code' });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    expect(prompts).toHaveLength(1);
+    expect(res.isError ?? false).toBe(false);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
+  });
+
+  it('keeps the form for a Claude Code client when the dialog is turned off', async () => {
+    const apple = stubApple();
+    const { client, prompts } = await connect(era, CONFIRM, { nativeConfirm: false, clientName: 'claude-code' });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(prompts).toHaveLength(1);
+    expect(vi.mocked(nativeConfirm)).not.toHaveBeenCalled();
     expect(res.isError ?? false).toBe(false);
     expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
   });

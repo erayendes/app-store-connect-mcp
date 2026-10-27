@@ -37,7 +37,7 @@ and whether a build is attached.
 
 Most image and file owners hold exactly one file: Apple models them as a to-one
 relationship (`app_clip_header_image`, the five Game Center localization images,
-both version default images, both review screenshots, `encryption_document`,
+both version default images, the in-app purchase and subscription images (one per version, although Apple lists them), both review screenshots, `encryption_document`,
 `routing_coverage` and the advanced experience header). An empty to-one answers
 404 or `data: null`; both read as "no file yet", so the first upload works.
 Other read failures (403, 5xx) stay errors.
@@ -148,8 +148,9 @@ owners, existing file IDs and sizes, proposed requests and the upload's digest;
 processing state changes do not invalidate approval. A replace rechecks the
 local file's stamp and SHA-256 immediately before deleting the old file.
 Advanced App Clip uploads with `page_id` attach the new header only after commit. Commits
-include MD5 `sourceFileChecksum` where that is the schema's field, or SHA-256
-`sourceFileChecksums.file` for background and build files. The seven image
+include MD5 `sourceFileChecksum` where that is the schema's field, or MD5
+`sourceFileChecksums.file` for background and build files (the spec also offers
+SHA-256, which Apple refused on a real build commit). The seven image
 families whose update accepts only `uploaded` need no checksum field.
 
 PR-D2 removes 73 raw profile operations and records them in `MACRO_COVERED`:

@@ -53,6 +53,8 @@ export type FileAdapter = {
   chain: readonly ChainStep[]; appList?: string; appListFilter?: readonly string[]; parentInclude?: string;
   /** Apple's create takes no owner: the file exists before what will use it. */
   standalone?: boolean;
+  /** One file per owner although the owner's relationship is a list. */
+  single?: boolean;
   /** The same family under a second owner type, tried when page_id is not the first. */
   versionParent?: FileAdapter;
   format: 'image' | 'document' | 'attachment' | 'geojson' | 'asset' | 'build';
@@ -97,13 +99,15 @@ export const FILE_TARGETS = {
     versionParent: fileTarget('game_center_challenge_images', 'game_center_challenge_versions.get', 'defaultImage', [
       { get: 'game_center_challenges.get', via: 'challenge' }, ...gameCenterOwner,
     ], 'image', 'public', { createParent: 'version', read: 'game_center_challenge_versions.default_image.get' }) }),
+  // One image per version: Apple answers a second create with 409 although
+  // the version also exposes an `images` list.
   in_app_purchase_image: fileTarget('in_app_purchase_images_v2', 'in_app_purchase_versions.get', 'images', [
     { get: 'in_app_purchases_v2.get', via: 'inAppPurchase' },
-  ], 'image', 'public', { createParent: 'version', appList: 'apps.in_app_purchases_v2.list', appListFilter: ['productId'], read: 'in_app_purchase_versions.images.list' }),
+  ], 'image', 'public', { createParent: 'version', appList: 'apps.in_app_purchases_v2.list', appListFilter: ['productId'], read: 'in_app_purchase_versions.images.list', single: true }),
   in_app_purchase_review_screenshot: fileTarget('in_app_purchase_app_store_review_screenshots', 'in_app_purchases_v2.get', 'appStoreReviewScreenshot', [], 'image', 'low', { createParent: 'inAppPurchaseV2', appList: 'apps.in_app_purchases_v2.list', appListFilter: ['productId'], read: 'in_app_purchases_v2.app_store_review_screenshot.get' }),
   subscription_image: fileTarget('subscription_images_v2', 'subscription_versions.get', 'images', [
     { get: 'subscriptions.get', via: 'subscription' }, { get: 'subscription_groups.get', via: 'group' },
-  ], 'image', 'public', { createParent: 'version', appList: 'apps.subscription_groups.list', read: 'subscription_versions.images.list' }),
+  ], 'image', 'public', { createParent: 'version', appList: 'apps.subscription_groups.list', read: 'subscription_versions.images.list', single: true }),
   subscription_review_screenshot: fileTarget('subscription_app_store_review_screenshots', 'subscriptions.get', 'appStoreReviewScreenshot', [
     { get: 'subscription_groups.get', via: 'group' },
   ], 'image', 'low', { createParent: 'subscription', appList: 'apps.subscription_groups.list', read: 'subscriptions.app_store_review_screenshot.get' }),

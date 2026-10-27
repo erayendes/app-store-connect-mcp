@@ -7473,7 +7473,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}/appEncryptionDeclarations",
-    "description": "List the app encryption declarations belonging to an app.",
+    "description": "List the app encryption declarations belonging to an app. Apple answers this path with 404; list the encryption declarations filtered by app instead.",
     "readOnly": true,
     "deprecated": false,
     "pathParams": [

@@ -20,6 +20,15 @@ import { fileURLToPath } from 'node:url';
 
 export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
 
+/**
+ * Clients that declare elicitation forms but cannot be trusted to show them.
+ * Claude Code (2.1.310) declares `elicitation.form`, and its desktop Code tab
+ * declined every form unseen in the 3.0 beta acceptance run (2026-10-27): each
+ * risky write came back refused with no prompt on screen. On macOS these
+ * clients get the dialog; elsewhere they keep the form.
+ */
+export const DIALOG_FIRST_CLIENTS: ReadonlySet<string> = new Set(['claude-code']);
+
 /** An alert grows with its text; past this the buttons leave the screen. */
 const MAX_BODY = 1500;
 export const nativeConfirmFits = (text: DialogText): boolean => text.body.length <= MAX_BODY;

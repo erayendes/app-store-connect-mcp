@@ -39,7 +39,7 @@ olmadığını gösterir.
 
 Görsel ve dosya sahiplerinin çoğu tam olarak tek dosya tutar: Apple bunları
 tekil (to-one) ilişki olarak modeller (`app_clip_header_image`, beş Game Center
-yerelleştirme görseli, iki sürüm varsayılan görseli, iki inceleme ekran
+yerelleştirme görseli, iki sürüm varsayılan görseli, IAP ve abonelik görselleri (Apple liste olarak verse de sürüm başına bir tane), iki inceleme ekran
 görüntüsü, `encryption_document`, `routing_coverage` ve gelişmiş deneyim
 başlığı). Boş bir tekil ilişki 404 ya da `data: null` döndürür; ikisi de
 "henüz dosya yok" diye okunur, böylece ilk yükleme çalışır. Diğer okuma
@@ -161,7 +161,8 @@ kılmaz. Bir değiştirme, eski dosyayı silmeden hemen önce yerel dosyanın
 damgasını ve SHA-256 değerini yeniden kontrol eder. `page_id` verilmiş gelişmiş
 App Clip yüklemeleri yeni başlığı ancak tamamlamadan sonra bağlar. Tamamlama
 istekleri, şemanın alanı buysa MD5 `sourceFileChecksum`, background ve build
-dosyaları içinse SHA-256 `sourceFileChecksums.file` içerir. Güncellemesi yalnızca
+dosyaları içinse MD5 `sourceFileChecksums.file` içerir (spec SHA-256'ya da izin
+veriyor, ama Apple gerçek bir build tamamlamasında bunu reddetti). Güncellemesi yalnızca
 `uploaded` kabul eden yedi görsel ailesi için checksum alanı gerekmez.
 
 PR-D2, 73 ham profil işlemini kaldırıp `MACRO_COVERED`'a kaydediyor: 17

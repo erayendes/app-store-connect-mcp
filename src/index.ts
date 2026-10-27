@@ -33,8 +33,8 @@ Usage:
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "ASC-<Profile>"). Add one entry per profile to
 your client config and pick per project. Register "core" next to them: app
-lookup, tool search and the screenshot and asset-library tools live there and
-nowhere else. No profile = the classic combined server.
+lookup, tool search and the media tools for every screenshot, video, image and
+file live there and nowhere else. No profile = the classic combined server.
 
 A profile can be narrowed to some of its sub-profiles with a colon:
   asc-mcp core                            app lookup, search, media (ASC-Core)
