@@ -23,7 +23,7 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -95,11 +95,17 @@ describe('write-gate annotations (offline)', () => {
     ]);
     expect([...shouldWrite].sort()).toEqual([
       'storekit__extend_renewal_date',
+      'storekit__finish_transaction',
+      'storekit__manage_retention_messaging',
+      'storekit__mass_extend_renewal_date',
       'storekit__request_test_notification',
+      'storekit__send_consumption_info',
+      'storekit__set_app_account_token',
       'pricing__set_subscription_price',
       'pricing__equalize_price',
       'pricing__set_iap_price',
       'pricing__make_offer',
+      'pricing__setup_subscription',
       'media__upload',
       'media__arrange',
       'media__delete',
@@ -154,6 +160,7 @@ describe('write-gate annotations (offline)', () => {
       ...OPERATIONS.map((op) => op.name.replace(/\./g, '__')),
       ...RELEASE_TOOLS.map((t) => t.name),
       ...TESTFLIGHT_TOOLS.map((t) => t.name),
+      ...STOREKIT_TOOLS.map((t) => t.name),
     ]);
     expect([...ASK_BY_DEFAULT].filter((n) => !real.has(n))).toEqual([]);
     expect([...TYPED_BY_NAME].filter((n) => !ASK_BY_DEFAULT.has(n))).toEqual([]);
@@ -298,6 +305,10 @@ describe.skipIf(!live)('write gate, end to end (live)', () => {
     expect(schema.includes('CONFIRM'), `${sample.tool} (${sample.risk}) prompt strength`).toBe(wantsTyped);
 
     expect(text, `${sample.tool} did not report the cancellation`).toMatch(/Nothing was changed|cancelled/i);
+
+    // And the refusal is on the record, not only in the reply.
+    const audit = readFileSync(join(process.env.ASC_STATE_DIR!, 'audit.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    expect(audit.some((e) => e.tool === sample.tool && e.outcome === 'not run' && e.confirmation === 'declined')).toBe(true);
   }, 60_000);
 });
 

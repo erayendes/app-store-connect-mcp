@@ -31,13 +31,13 @@
 Heimdall varsayılan olarak iki şekilde sorar:
 
 - **CONFIRM yazmanızı ister:** gelir, silme (`destructive`), altyapı ya da erişim seviyesindeki her değişiklikte — fiyatlar ve teklifler, silmeler, sertifikalar ve iş akışları, kullanıcılar ve sandbox hesapları — ve geri alınamayan üç adımda: bir sürümü yayınlamak, ön siparişi bitirmek ve bir build'in süresini bitirmek (`expired: true` ile `builds__update`; silme sayılır). Fiyat makroları ve `testflight__assign_build_to_groups` da böyle sorar.
-- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan adımlarda: bir şeyi incelemeye göndermek (`release__submit`, `release__submit_items`, bir inceleme başvurusu), yeni bir abonelik, abonelik grubu ya da uygulama içi satın alma sürümü oluşturmak, kademeli yayını değiştirmek, bir build'i dış beta incelemesine göndermek, bir ülkede satışa açmak ya da satış durumunu değiştirmek, ürün sayfası testini başlatmak ya da değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
+- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan adımlarda: bir şeyi incelemeye göndermek (`release__submit`, `release__submit_items`, bir inceleme başvurusu), yeni bir abonelik, abonelik grubu ya da uygulama içi satın alma sürümü oluşturmak, kademeli yayını değiştirmek, bir build'i dış beta incelemesine göndermek, bir ülkede satışa açmak ya da satış durumunu değiştirmek, ürün sayfası testini başlatmak ya da değiştirmek, bir oyuncu adına skor ya da başarım göndermek ve aboneliğini iptal eden müşteriye gösterilen retention mesajını değiştirmek (`storekit__manage_retention_messaging`) ve bir müşteri yorumuna yanıt vermek.
 
 Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_build_to_groups` CONFIRM ister. Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, diğer TestFlight ayarları ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek `public` seviyesindedir (müşterinin göreceği bir değişiklik), bu yüzden Heimdall sormaz ve onay yapay zekâ uygulamanıza kalır; birini kaldırmak ya da önce mevcut dosyayı silen `replace: true` ile yüklemek silme sayılır ve CONFIRM ister.
 
 Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak penceredeki düğmeye (ya da Enter'a) basarsanız yapılır. Düğme değişikliğin adını taşır: Remove, Delete, Upload; uygun bir fiil yoksa Allow. Cancel (Allow'un yanında Don't Allow) ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır; yapay zekâ uygulaması çağrıyı iptal ederse pencere de kapanır.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Düğmeler: Cancel ve Remove." width="394"> Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552"> Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
 
 ## Ortam değişkenleri
 
@@ -70,7 +70,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | `ASC_BUNDLE_ID` | İstek uygulama belirtmediğinde StoreKit araçlarının kullanacağı uygulama. İsteğe bağlı: araçlar uygulamayı adından bulur. |
 | `ASC_APP_APPLE_ID` | Bu varsayılan uygulamanın sayısal Apple ID'si |
 | `ASC_ENVIRONMENT` | `Production` (varsayılan) ya da `Sandbox` |
-| `ASC_APPLE_ROOT_CERTS` | Apple'ın kök sertifikalarının yolları (ya da tek bir klasör). Girilirse StoreKit cevapları doğrulanmış ve çözülmüş gelir; girilmezse Apple'ın imzalı içeriğini alırsınız. |
+| `ASC_APPLE_ROOT_CERTS` | Ek Apple kök sertifikaları (yollar ya da tek bir klasör). StoreKit cevapları zaten Heimdall'ın içinde gelen Apple Root CA - G3 ile doğrulanır; bunu yalnızca Apple yeni bir kök eklerse girin. |
 
 **Cevaplar.**
 
@@ -100,6 +100,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | Değişken | Ne için |
 |:--|:--|
 | `ASC_CONFIG_DIR` | Setup'ın kayıtlı ayarlarının yeri (varsayılan `~/.config/asc-mcp`) |
+| `ASC_STATE_DIR` | Heimdall'ın yerelde tuttuğu kayıtların klasörü (varsayılan: `ASC_CONFIG_DIR` ile aynı klasör): `audit.jsonl`, yaptığı ya da sizin reddettiğiniz her yazma için bir satır (dry-run çağrıları kaydedilmez) — ne zaman, hangi araç, nasıl onayladığınız, Apple'ın cevabı; `failures.jsonl`, Apple'ın reddettiği her çağrı ve `x-request-id`'si; `report-cache/`, bitmiş dönemlerin satış ve finans raporları. Hiçbiri bilgisayarınızdan çıkmaz. |
 | `ASC_BASE_URL` | İstekleri yerel bir test sunucusu gibi başka bir adrese gönderir. Apple için boş bırakın. |
 
 ## Anahtarı vermenin üç yolu

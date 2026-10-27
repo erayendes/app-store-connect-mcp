@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
+import { APPLE_ROOT_CA_G3 } from '../src/storekit/apple-root-ca.js';
 import { StoreKitService } from '../src/storekit/index.js';
 import type { ServerConfig } from '../src/core/config.js';
 
@@ -22,10 +24,24 @@ const base: ServerConfig = {
  * error rather than fields with a caveat attached.
  */
 describe('StoreKit payload verification', () => {
-  it('hands back the envelope when no roots are configured', async () => {
+  it('verifies by default against the Apple root it ships', async () => {
     const service = new StoreKitService(base);
-    const decoded = await (service as any).decode(['a.b.c'], 'Sandbox', false);
-    expect(decoded).toEqual(['a.b.c']);
+    // A payload that is not Apple-signed fails, rather than coming back as fields.
+    await expect((service as any).decode(['a.b.c'], 'Sandbox', false)).rejects.toThrow(/failed signature verification/);
+  });
+
+  it('verifies the transactions an order lookup returns, instead of handing back envelopes', async () => {
+    const service = new StoreKitService(base);
+    const client = { lookUpOrderId: async () => ({ status: 0, signedTransactions: ['a.b.c'] }) };
+    await expect((service as any).run('storekit__lookup_order', { order_id: 'MX1', environment: 'Sandbox' }, client))
+      .rejects.toThrow(/failed signature verification/);
+  });
+
+  it('ships Apple Root CA - G3, byte for byte', () => {
+    // Apple's published SHA-256 fingerprint of AppleRootCA-G3.cer.
+    expect(createHash('sha256').update(APPLE_ROOT_CA_G3).digest('hex')).toBe(
+      '63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179'
+    );
   });
 
   it('hands back the envelope when the caller asks for raw, even with roots', async () => {
@@ -37,14 +53,14 @@ describe('StoreKit payload verification', () => {
     expect(decoded).toEqual(['a.b.c']);
   });
 
-  // A path that does not exist reads as "no roots" rather than crashing the
-  // server: 24 other tools do not need them.
-  it('treats an unreadable certificate path as no roots at all', () => {
+  // A path that does not exist adds nothing rather than crashing the server,
+  // and the shipped root still verifies.
+  it('keeps the shipped root when a configured path is unreadable', () => {
     const service = new StoreKitService({
       ...base,
       storekit: { ...base.storekit!, appleRootCerts: ['/nope/missing.cer'] },
     });
-    expect((service as any).canVerify).toBe(false);
+    expect((service as any).rootCertificates).toEqual([APPLE_ROOT_CA_G3]);
   });
 
   // A misconfigured root used to surface as a raw OpenSSL string — "PEM

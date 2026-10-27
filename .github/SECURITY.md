@@ -13,7 +13,7 @@ The best habit, with this project or any other, is to check a tool before you tr
 > [!TIP]
 > **Ask your own AI to review it.** Point it at this repository or the npm package and ask: *"Does this send my key or my data anywhere other than Apple? Any telemetry, any calls to other servers?"* The code is small: every App Store Connect request goes through a single file (`src/core/http.ts`), and customer-transaction (StoreKit) calls use Apple's official library.
 
-- **Almost every tool is generated, not hand-written.** They come from Apple's own OpenAPI specification (`spec/openapi.json`) via `scripts/generate.ts`, so what you review is what runs. The 41 hand-written ones (pricing, screenshots and videos, release checks, TestFlight, reviews, StoreKit…) are in the same open code, under `src/tools/` and `src/storekit/`.
+- **Almost every tool is generated, not hand-written.** They come from Apple's own OpenAPI specification (`spec/openapi.json`) via `scripts/generate.ts`, so what you review is what runs. The 52 hand-written ones (pricing, screenshots and videos, release checks, TestFlight, reviews, StoreKit…) are in the same open code, under `src/tools/` and `src/storekit/`.
 
 ### How the package reaches you
 
@@ -88,7 +88,7 @@ En iyi alışkanlık, bu projede ya da başka herhangi birinde, bir araca güven
 > [!TIP]
 > **Kullandığınız yapay zekâya incelettirin.** Ona bu depoyu ya da npm paketini gösterin ve sorun: *"Bu, anahtarımı ya da verimi Apple dışında bir yere gönderiyor mu? Telemetri ya da başka sunuculara istek var mı?"* Kod küçük: App Store Connect'e giden her istek tek bir dosyadan geçiyor (`src/core/http.ts`), müşteri işlemleri (StoreKit) ise Apple'ın resmî kütüphanesini kullanıyor.
 
-- **Araçların neredeyse tamamı elle yazılmıyor, üretiliyor.** Apple'ın kendi OpenAPI spesifikasyonundan (`spec/openapi.json`) `scripts/generate.ts` ile üretiliyorlar; yani incelediğiniz şey, çalışan şeydir. Elle yazılan 41 araç (fiyat, ekran görüntüsü ve video, sürüm kontrolleri, TestFlight, yorumlar, StoreKit…) da aynı açık kodun içinde: `src/tools/` ve `src/storekit/`.
+- **Araçların neredeyse tamamı elle yazılmıyor, üretiliyor.** Apple'ın kendi OpenAPI spesifikasyonundan (`spec/openapi.json`) `scripts/generate.ts` ile üretiliyorlar; yani incelediğiniz şey, çalışan şeydir. Elle yazılan 52 araç (fiyat, ekran görüntüsü ve video, sürüm kontrolleri, TestFlight, yorumlar, StoreKit…) da aynı açık kodun içinde: `src/tools/` ve `src/storekit/`.
 
 ### Paket size nasıl ulaşıyor
 

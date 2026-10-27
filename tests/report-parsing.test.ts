@@ -9,7 +9,10 @@
  *
  * No network, no Apple: every fixture is a TSV built and gzipped in-test.
  */
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { ToolRegistry, toMcpTool, toolNameFor } from '../src/core/registry.js';
@@ -169,6 +172,9 @@ describe('report-parsing module (isolation, no HTTP/registry)', () => {
 });
 
 describe('report-table tools wired into ToolRegistry', () => {
+  // A finished period is cached; each test answers with its own body, so each gets its own cache.
+  beforeEach(() => { process.env.ASC_STATE_DIR = mkdtempSync(join(tmpdir(), 'report-')); });
+
   const REQUIRED_ARGS: Record<string, Record<string, string>> = {
     'sales_reports.list': {
       filter_vendorNumber: '123456',

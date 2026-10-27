@@ -5880,7 +5880,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[eventState]",
         "type": "array",
-        "description": "filter by attribute 'eventState'",
+        "description": "filter by attribute 'eventState' An event that has ended is PAST, set by Apple on its own. ARCHIVED is only an event someone archived by hand. Filter on both to see every finished event.",
         "enum": [
           "DRAFT",
           "READY_FOR_REVIEW",

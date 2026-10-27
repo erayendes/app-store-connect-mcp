@@ -130,6 +130,9 @@ describe('testflight__assign_build_to_groups', () => {
     const result = await run(http);
     expect(result.groups.map((g: any) => g.status)).toEqual(['assigned', 'failed']);
     expect(result.groups[1].error).toMatch(/Conflict: Build not eligible/);
+    // The audit log records the call as an error from this flag.
+    expect(result.ok).toBe(false);
+    expect((await run(fakeHttp().http)).ok).toBeUndefined();
   });
 
   it('refuses an incomplete assignment check before any POST', async () => {

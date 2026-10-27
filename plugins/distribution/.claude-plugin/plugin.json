@@ -1,6 +1,6 @@
 {
   "name": "asc-distribution",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.2",
   "description": "Shipping a version: App Store versions and localizations, builds, review details, submission and release, export compliance, EU alternative distribution.",
   "author": {
     "name": "Eray Endes",

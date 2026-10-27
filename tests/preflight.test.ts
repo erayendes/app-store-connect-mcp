@@ -9,6 +9,8 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { executePreflightTool, PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
+import { RELEASE_TOOLS } from '../src/tools/release.js';
+import { METADATA_I18N_TOOLS } from '../src/tools/metadata-i18n.js';
 import { AscApiError } from '../src/core/errors.js';
 import { readFileSync } from 'node:fs';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -105,6 +107,8 @@ describe('preflight__check_version', () => {
     const res = await run();
     expect(res.ready).toBe(true);
     expect(res.blocking).toEqual([]);
+    // Ready never covers what the API cannot see; those are named every time.
+    expect(res.manualChecks.map((c: any) => c.check)).toEqual(['App Privacy', 'EU trader status', 'Agreements, tax and banking']);
     expect(res.checked).toContain('export compliance answered');
     expect(res.version).toBe('3.2.0');
   });
@@ -175,6 +179,8 @@ describe('preflight__check_version', () => {
     expect(res.blocking).toEqual([]);
     expect(res.checked).toEqual([]);
     expect(res.warnings[0]).toContain('IN_REVIEW');
+    // Required by the output schema, so a strict client accepts this answer too.
+    expect(res.manualChecks.map((c: any) => c.check)).toContain('App Privacy');
   });
 });
 
@@ -535,5 +541,19 @@ describe('shared version lookup in preflight', () => {
     http.get.mockImplementation(async (path: string) => path.endsWith('/appStoreVersions')
       ? { ...versionPage, meta: { paging: { total: 2 } } } as any : original(path));
     await expect(executePreflightTool('preflight__check_version', { app: 'Ask Quran' }, { http })).rejects.toThrow(/truncated/);
+  });
+});
+
+describe('distribution:version write and check descriptions', () => {
+  it('says ready: true leaves App Privacy, EU trader status and agreements to manualChecks', () => {
+    const d = PREFLIGHT_TOOLS.find((t) => t.name === 'preflight__check_version')!.description;
+    expect(d).toMatch(/ready: true does not cover App Privacy, EU trader status or agreements/);
+    expect(d).toMatch(/manualChecks/);
+  });
+
+  it('flags submitting and writing store text as destructive writes', () => {
+    const writes = [...RELEASE_TOOLS, ...METADATA_I18N_TOOLS.filter((t) => t.name === 'metadata_ai__apply_localizations')];
+    expect(writes.map((t) => t.name)).toEqual(['release__submit', 'release__submit_items', 'metadata_ai__apply_localizations']);
+    for (const t of writes) expect(t.annotations, t.name).toEqual({ readOnlyHint: false, destructiveHint: true, idempotentHint: false });
   });
 });

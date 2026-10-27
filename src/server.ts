@@ -16,8 +16,8 @@ import {
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from './core/confirm.js';
-import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits } from './core/native-confirm.js';
+import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName, type WritePreview } from './core/confirm.js';
+import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits, type DialogText } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { MACRO_TOOLS } from './tools/catalog.js';
@@ -27,25 +27,27 @@ import {
   METADATA_I18N_WRITE_TOOLS,
   executeMetadataI18nTool,
 } from './tools/metadata-i18n.js';
-import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
+import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService, storekitDialog, storekitRisk } from './storekit/index.js';
 import {
   PRICING_TOOL_NAMES,
   executePricingTool,
   buildPricingPreview,
+  pricingDialog,
 } from './tools/pricing.js';
 import { buildMediaPreview, executeMediaTool, MEDIA_TOOL_NAMES, mediaRisk } from './tools/screenshots.js';
 import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
 import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
-import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
+import { RELEASE_TOOL_NAMES, executeReleaseTool, releaseDialog, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
+import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview, testflightDialog, testflightPreviewArgs, IMAGE_CONTENT, type ImageContent } from './tools/testflight.js';
 import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } from './core/risk.js';
+import { logFailure, logWrite, type Confirmation } from './core/audit-log.js';
 import {
   CORE_PROFILE,
   manualToolsFor,
@@ -69,6 +71,27 @@ import {
   truncateText,
   DEFAULT_MAX_RESPONSE_CHARS,
 } from './core/shape.js';
+
+/** Progress notifications for a long tool call, when the client asked for them with a progressToken. */
+function progressSender(req: { _meta?: { progressToken?: string | number }; notify: (n: { method: 'notifications/progress'; params: Record<string, unknown> }) => Promise<void> }) {
+  const progressToken = req._meta?.progressToken;
+  if (progressToken === undefined) return undefined;
+  // A lost progress note must not fail the call it reports on.
+  return (progress: number, total: number, message: string) =>
+    void req.notify({ method: 'notifications/progress', params: { progressToken, progress, total, message } }).catch(() => {});
+}
+
+/**
+ * A tool's own dialog text, shown at the top of the form too: the generic
+ * preview lists only scalar arguments and would leave out a message body or a
+ * country list. The generic lines stay below it, with the full ids the
+ * dialog shortens.
+ */
+function withDialog(preview: WritePreview, dialog: DialogText | undefined): WritePreview {
+  if (!dialog) return preview;
+  const [head, ...rest] = preview.message.split('\n');
+  return { ...preview, dialog, message: [head, '', dialog.title, dialog.body, ...rest].join('\n') };
+}
 
 /** Configurable response ceiling (chars of pretty-printed JSON). */
 function maxResponseChars(): number {
@@ -509,6 +532,9 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
   server.setRequestHandler('tools/call', async (request, ctx) => {
     let name = request.params.name;
     let args = (request.params.arguments ?? {}) as Record<string, unknown>;
+    let audited = false;
+    let auditRisk: RiskLevel | 'unrated' = 'unrated';
+    let confirmation: Confirmation = 'not asked';
 
     try {
       // Refused by name, not left to fall through: the generic "unknown tool"
@@ -588,7 +614,14 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
       }
 
       let approvedPlanFingerprint: string | undefined;
-      if ((config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) && !config.dryRun && isWriteTool(name)) {
+      // What the audit log records about this call: a write that runs for real.
+      audited = !config.dryRun && isWriteTool(name);
+      const refuse = <T,>(how: Confirmation, response: T): T => {
+        logWrite({ tool: name, risk: auditRisk, confirmation: how, outcome: 'not run', args });
+        return response;
+      };
+      // The risk is worked out for every real write, so the audit log rates it even with confirmation off.
+      if (audited) {
         const op = registry.get(name);
         // Decided from the risk level alone, before the preview is built:
         // buildWritePreview resolves reference ids over the network, and a
@@ -611,17 +644,17 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
               // at once is not forty times as reversible.
               'public'
             : ((op?.risk ??
-                (name.includes('extend_renewal_date')
-                  ? 'revenue'
+                (STOREKIT_TOOL_NAMES.has(name)
+                  ? storekitRisk(name, args)
                   : // A write macro with no spec operation behind it (the
                     // screenshot upload) changes what customers see.
                     macroOffered(name)
                     ? 'public'
                     : 'low')) as RiskLevel);
+        auditRisk = risk;
         if (
-          config.confirmWrites === 'all' ||
-          STRONG_CONFIRM_LEVELS.has(risk) ||
-          ASK_BY_DEFAULT.has(name)
+          (config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) &&
+          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name))
         ) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.
@@ -662,7 +695,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             ],
             isError: true,
           };
-          if (!canElicit && !canDialog) return blocked;
+          if (!canElicit && !canDialog) return refuse('blocked', blocked);
           // What the prompt shows; the fingerprint stays on the arguments as sent.
           const mediaPreview = MEDIA_TOOL_NAMES.has(name) ? await buildMediaPreview(name, args, http) : undefined;
           const shownWithPlan = mediaPreview
@@ -676,10 +709,10 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           const { planFingerprint: _internalPlanFingerprint, ...shown } = shownWithPlan;
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
-              { message: buildPricingPreview(shown, name), strong: true }
+              { message: buildPricingPreview(shown, name), strong: true, dialog: pricingDialog(name, shown) }
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
-              { message: buildTestflightPreview(shown), strong: true }
+              { message: buildTestflightPreview(shown), strong: true, dialog: testflightDialog(await testflightPreviewArgs(shown, http)) }
             : mediaPreview
             ? mediaPreview
             : op
@@ -687,23 +720,25 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             : macroOffered(name)
             ? // Macros carry readable arguments; review item references still
               // use the same bounded name resolvers as raw writes.
-              await buildWritePreview(
-                name,
-                { method: 'POST', path: `${name} (macro)`, risk },
-                shown,
-                config.credentials.keyId,
-                http
-              )
-            : await buildWritePreview(
-                name,
-                // StoreKit tools live outside the spec; renewal-date extension is
-                // the one that moves money.
-                {
-                  method: 'POST',
-                  path: 'App Store Server API',
-                  risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
-                },
-                shown
+              {
+                // The form keeps its item list; the dialog says it in words.
+                ...(await buildWritePreview(
+                  name,
+                  { method: 'POST', path: `${name} (macro)`, risk },
+                  shown,
+                  config.credentials.keyId,
+                  http
+                )),
+                dialog: releaseDialog(name, shown),
+              }
+            : withDialog(
+                await buildWritePreview(
+                  name,
+                  // StoreKit tools live outside the spec and carry their own risk.
+                  { method: 'POST', path: 'App Store Server API', risk },
+                  shown
+                ),
+                storekitDialog(name, shown, { environment: config.storekit?.environment === 'Sandbox' ? 'Sandbox' : 'Production' })
               );
           if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
@@ -712,18 +747,18 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const dialog = preview.dialog ?? dialogText(what, preview.message);
-          if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
+          const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message, 'covered' in preview ? preview.covered : undefined);
+          if (!nativeConfirmFits(dialog)) {
             // Not to a dialog-first client's form: it would be declined unseen.
             if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
-            return { content: [{ type: 'text' as const, text: `"${name}" was blocked: the full media preview exceeds the native macOS dialog limit. Use a client that can show the full elicitation prompt, or send fewer items. Nothing was changed.` }], isError: true };
+            return refuse('blocked', { content: [{ type: 'text' as const, text: `"${name}" was blocked: its confirmation is too long for the native macOS dialog. Use a client that can show the full elicitation prompt, or send fewer items or shorter text. Nothing was changed.` }], isError: true });
           }
           const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);
           // No GUI session (SSH, a headless Mac): the form it declared is the next best.
           if (answer === 'unavailable' && elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
-          if (answer === 'unavailable') return blocked;
+          if (answer === 'unavailable') return refuse('blocked', blocked);
           if (answer !== 'approved') {
-            return {
+            return refuse('declined', {
               content: [
                 {
                   type: 'text' as const,
@@ -733,8 +768,9 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                 },
               ],
               isError: true,
-            };
+            });
           }
+          confirmation = 'macOS dialog';
           approvedPlanFingerprint = planFingerprint;
           // Approved in the dialog: fall through and run the write.
         }
@@ -749,12 +785,15 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
               (RELEASE_TOOL_NAMES.has(name)
                 ? `Use a client that can display Heimdall's confirmation form, or a macOS client with native confirmation enabled, then retry and approve the displayed item list. Release tools always require this confirmation. You can also submit in App Store Connect.`
                 : `In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and let the client's own tool approval be the gate.`);
-          return {
+          return refuse(decision.stale ? 'blocked' : 'declined', {
             content: [{ type: 'text' as const, text }],
             isError: true,
-          };
+          });
         }
-        if (decision?.allowed) approvedPlanFingerprint = decision.planFingerprint;
+        if (decision?.allowed) {
+          approvedPlanFingerprint = decision.planFingerprint;
+          confirmation = decision.strong ? 'typed CONFIRM' : 'checkbox';
+        }
         }
       }
 
@@ -841,7 +880,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint,
               requireApprovedPlan: !config.dryRun })
           : TESTFLIGHT_TOOL_NAMES.has(name)
-          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
+          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun, signal: ctx.mcpReq.signal, progress: progressSender(ctx.mcpReq) })
           : await executeMediaTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
@@ -892,6 +931,16 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         result = capResponseSize(result, maxResponseChars());
       }
 
+      // A macro that stops part-way reports ok: false instead of throwing.
+      if (audited) logWrite({ tool: name, risk: auditRisk, confirmation, outcome: (result as any)?.ok === false ? 'error' : 'ok', args });
+      // Images a macro attached go out as image content, never as base64 in the text.
+      const images = ((result as any)?.[IMAGE_CONTENT] ?? []) as ImageContent[];
+      // The SDK validates structuredContent and refuses a symbol key.
+      if (images.length) {
+        const { [IMAGE_CONTENT]: _images, ...plain } = result as Record<string | symbol, unknown>;
+        result = plain;
+      }
+
       const text = truncateText(
         JSON.stringify(result ?? { ok: true }, null, 2),
         maxResponseChars()
@@ -924,6 +973,10 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                 },
               ]
             : []),
+          ...images.flatMap((image) => [
+            { type: 'text' as const, text: image.caption },
+            { type: 'image' as const, data: image.data, mimeType: image.mimeType },
+          ]),
         ],
         // The text block stays either way: a client that ignores structured
         // output must still see the whole answer.
@@ -932,6 +985,16 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           : {}),
       };
     } catch (err) {
+      const message = err instanceof AscApiError ? err.summary : (err as Error).message;
+      if (err instanceof AscApiError && err.status) {
+        logFailure({ tool: name, status: err.status, appleRequestId: err.requestId, error: message });
+      }
+      if (audited) {
+        logWrite({
+          tool: name, risk: auditRisk, confirmation, outcome: 'error', args, error: message,
+          appleRequestId: err instanceof AscApiError ? err.requestId : undefined,
+        });
+      }
       return {
         content: [{ type: 'text' as const, text: formatError(err, name) }],
         isError: true,

@@ -71,6 +71,10 @@ export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
   // A score or achievement lands on a real player's record.
   'game_center_leaderboard_entry_submissions__create',
   'game_center_player_achievement_submissions__create',
+  // The message a customer sees while cancelling a subscription.
+  'storekit__manage_retention_messaging',
+  // A reply appears under the customer's review, for everyone to read.
+  'customer_review_responses__create',
 ]);
 
 /** Of those, the ones that cannot be walked back ask for a typed CONFIRM, like the strong levels. */
@@ -106,6 +110,47 @@ export const REVERSIBILITY: Record<RiskLevel, string> = {
   infrastructure: 'Revoked certificates/profiles can break signing and CI builds.',
   access: 'Changes who can access this account or its apps.',
 };
+
+/**
+ * What a write really does, for the prompt's last line. REVERSIBILITY is per
+ * level and reads wrong at the edges: a deleted subscription said "price
+ * history is kept", a new certificate warned about revoking one. Named tools
+ * first, then the method, then the level.
+ */
+const CONSEQUENCES: Record<string, string> = {
+  review_submission_items__delete: 'It can be added back before you submit.',
+  certificates__delete: 'Profiles that use it stop working; apps already on the App Store are not affected.',
+  devices__create: 'It counts toward this year’s device limit, even if you disable it later.',
+  ci_build_runs__create: 'It uses Xcode Cloud compute hours.',
+  subscriptions__create: 'Nothing is sold until App Review approves it.',
+  in_app_purchases_v2__create: 'Nothing is sold until App Review approves it.',
+  subscription_groups__create: 'Nothing is sold until App Review approves it.',
+  subscription_versions__create: 'Apple keeps this draft; it can’t be deleted.',
+  subscription_group_versions__create: 'Apple keeps this draft; it can’t be deleted.',
+  in_app_purchase_versions__create: 'Apple keeps this draft; it can’t be deleted.',
+  review_submissions__update: 'You can withdraw it until App Review starts.',
+  app_store_version_release_requests__create: 'It goes live for everyone; this can’t be undone.',
+  beta_app_review_submissions__create: 'External testers get it once Apple approves it.',
+  end_app_availability_pre_orders__create: 'An ended pre-order can’t be reopened.',
+  app_store_version_experiments_v2__update: 'Real visitors see the test while it runs.',
+  game_center_leaderboard_entry_submissions__create: 'It lands on a real player’s record.',
+  game_center_player_achievement_submissions__create: 'It lands on a real player’s record.',
+  customer_review_responses__create: 'It appears under the review on the App Store; it can be edited or deleted later.',
+  sandbox_testers_v2__update: 'It affects sandbox testing only.',
+  sandbox_testers_clear_purchase_history_request_v2__create: 'Their sandbox purchases are gone for good.',
+};
+
+export function consequenceFor(toolName: string, risk: RiskLevel, method: string): string {
+  if (toolName === 'builds__update' && risk === 'destructive') return 'Testers can no longer install it. This can’t be undone.';
+  if (CONSEQUENCES[toolName]) return CONSEQUENCES[toolName];
+  if (/__remove$/.test(toolName)) return 'They can be added back later.';
+  if (/__replace$/.test(toolName)) return 'Anything not in this list is detached.';
+  if (method === 'DELETE') return 'This can’t be undone.';
+  if (/^bundle_id_capabilities__/.test(toolName)) return 'Provisioning profiles for this bundle ID need to be regenerated.';
+  if (risk === 'infrastructure') return 'It changes code signing or Xcode Cloud for this team.';
+  if (risk === 'revenue') return 'It affects what customers can buy or what they pay.';
+  return REVERSIBILITY[risk];
+}
 
 interface RiskRule {
   /** Regex over the dotted operation name (e.g. `subscription_prices.create`). */

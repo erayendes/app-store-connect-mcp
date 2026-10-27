@@ -31,13 +31,13 @@ Restart your app after changing either.
 By default Heimdall asks in two ways:
 
 - **Type CONFIRM** for any change at the revenue, deletion (`destructive`), infrastructure or access level — prices and offers, deletes, certificates and workflows, users and sandbox accounts — and for three steps that cannot be walked back: releasing a version, ending a pre-order, and expiring a build (`builds__update` with `expired: true`, which counts as a deletion). The pricing macros and `testflight__assign_build_to_groups` ask this way too.
-- **Yes or no** for the steps that reach customers, players or testers: sending something to review (`release__submit`, `release__submit_items`, a review submission), creating a new subscription, subscription group or in-app purchase version, changing a phased rollout, sending a build to external beta review, selling in a country or changing availability, starting or changing a product page test, and sending a score or achievement for a player.
+- **Yes or no** for the steps that reach customers, players or testers: sending something to review (`release__submit`, `release__submit_items`, a review submission), creating a new subscription, subscription group or in-app purchase version, changing a phased rollout, sending a build to external beta review, selling in a country or changing availability, starting or changing a product page test, sending a score or achievement for a player, and changing retention messaging, the message customers see while cancelling a subscription (`storekit__manage_retention_messaging`), and replying to a customer review.
 
 `testflight__assign_build_to_groups`, which resolves a build and adds it to beta groups in one call, asks for CONFIRM. Everything else — store text, a draft version, picking its build, other TestFlight settings and webhook settings — is left to your AI app's approval. A media tool asks at the level its plan has: placing an image on a page is at the `public` level (a change customers will see), so Heimdall does not ask and your AI app's approval decides; removing one, or uploading with `replace: true`, which deletes the existing file first, is a deletion and asks for CONFIRM.
 
 Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press its button, named for the change (Remove, Delete, Upload; Allow when no verb fits), or Return. Cancel (Don't Allow next to Allow) or Escape stops it. The AI can't see or click that dialog. It stays open until you answer; if the AI app cancels the call, the dialog closes with it.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Buttons: Cancel and Remove." width="394"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 
@@ -70,7 +70,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | `ASC_BUNDLE_ID` | The app StoreKit tools use when a request names none. Optional: they look the app up by name. |
 | `ASC_APP_APPLE_ID` | The numeric Apple ID of that default app |
 | `ASC_ENVIRONMENT` | `Production` (default) or `Sandbox` |
-| `ASC_APPLE_ROOT_CERTS` | Paths to Apple's root certificates (or one folder). Set it and StoreKit answers come back verified and decoded; without it you get Apple's signed payloads. |
+| `ASC_APPLE_ROOT_CERTS` | Extra Apple root certificates (paths or one folder). StoreKit answers are already verified against Apple Root CA - G3, which Heimdall ships; set this only if Apple adds another root. |
 
 **Responses.**
 
@@ -100,6 +100,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | Variable | What it's for |
 |:--|:--|
 | `ASC_CONFIG_DIR` | Where setup's saved settings live (default `~/.config/asc-mcp`) |
+| `ASC_STATE_DIR` | Where Heimdall keeps what it records locally (default: the same folder as `ASC_CONFIG_DIR`): `audit.jsonl`, one line per write it carried out or you turned down (dry-run calls are not recorded) — when, which tool, how you confirmed it, what Apple answered; `failures.jsonl`, every call Apple refused, with its `x-request-id`; and `report-cache/`, sales and finance reports for finished periods. Nothing leaves your machine. |
 | `ASC_BASE_URL` | Send requests to another address, such as a local test server. Leave unset for Apple. |
 
 ## Three ways to give the key

@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import { StoreKitService } from '../src/storekit/index.js';
 import type { ServerConfig } from '../src/core/config.js';
-import type { StatusResponse } from '@apple/app-store-server-library';
+import { APIException, type StatusResponse } from '@apple/app-store-server-library';
 
 const config = {
   credentials: {
@@ -60,14 +60,30 @@ const twoProducts: StatusResponse = {
   ],
 };
 
-const entitlement = (response: StatusResponse, args: Record<string, unknown>) =>
-  (new StoreKitService(config) as never as {
-    checkEntitlement(client: never, args: Record<string, unknown>): Promise<{
-      entitled: boolean;
-      activeCount: number;
-      subscriptions: { subscriptionGroupIdentifier?: string }[];
-      undecodableTransactions?: number;
-    }>;
+/**
+ * The service with signature verification stood in for: these payloads are not
+ * Apple-signed, so `decode` reads them as if they had passed. What verification
+ * refuses is pinned below, against the real check.
+ */
+function trustingService(): StoreKitService {
+  const svc = new StoreKitService(config);
+  Object.assign(svc, {
+    decode: async (signed: string[]) =>
+      signed.map((jws) => JSON.parse(Buffer.from(jws.split('.')[1], 'base64url').toString('utf8'))),
+  });
+  return svc;
+}
+
+type Entitlement = {
+  entitled: boolean;
+  activeCount: number;
+  subscriptions: { subscriptionGroupIdentifier?: string; lastTransactions: any[] }[];
+  verified: boolean;
+  undecodableTransactions?: number;
+};
+const entitlement = (response: StatusResponse, args: Record<string, unknown>, svc = trustingService()) =>
+  (svc as never as {
+    checkEntitlement(client: never, args: Record<string, unknown>): Promise<Entitlement>;
   }).checkEntitlement(stubClient(response), args);
 
 describe('check_entitlement', () => {
@@ -82,6 +98,32 @@ describe('check_entitlement', () => {
     expect(res.subscriptions).toHaveLength(1);
     // The one that survived must be the pro group, not merely "one of them".
     expect(res.subscriptions[0].subscriptionGroupIdentifier).toBe('group-pro');
+  });
+
+  it('hands back decoded fields, not the signed payloads', async () => {
+    const res = await entitlement(twoProducts, { transaction_id: '1000000000000001', product_id: 'com.example.pro.monthly' });
+
+    expect(res.verified).toBe(true);
+    expect(res.subscriptions[0].lastTransactions[0]).toEqual({
+      status: 1,
+      originalTransactionId: '1000000000000001',
+      transaction: { productId: 'com.example.pro.monthly' },
+      renewalInfo: null,
+    });
+    expect(JSON.stringify(res)).not.toContain('signedTransactionInfo');
+  });
+
+  it('narrows the raw envelopes too, and says they are unverified', async () => {
+    const res = await entitlement(twoProducts, { transaction_id: '1', product_id: 'com.example.pro.monthly', raw: true });
+
+    expect(res.verified).toBe(false);
+    expect(res.activeCount).toBe(1);
+    expect(res.subscriptions[0].lastTransactions[0].signedTransactionInfo).toBe(signedTransaction('com.example.pro.monthly'));
+  });
+
+  it('refuses a payload that fails Apple\'s signature check instead of granting on it', async () => {
+    await expect(entitlement(twoProducts, { transaction_id: '1' }, new StoreKitService(config)))
+      .rejects.toThrow(/transaction payload failed signature verification/);
   });
 
   it('is not entitled to a product the customer does not hold', async () => {
@@ -139,11 +181,22 @@ describe('check_entitlement', () => {
     const res = await entitlement(response, {
       transaction_id: '1',
       product_id: 'com.example.pro.monthly',
+      raw: true,
     });
 
     expect(res.entitled).toBe(false);
     // ...but says so, so the caller can tell this apart from a real "no".
     expect(res.undecodableTransactions).toBe(2);
+  });
+
+  it('counts a transaction with no payload as unknown when decoding too', async () => {
+    const response: StatusResponse = {
+      data: [{ subscriptionGroupIdentifier: 'group-pro', lastTransactions: [{ status: 1 }] }],
+    };
+    const res = await entitlement(response, { transaction_id: '1', product_id: 'com.example.pro.monthly' });
+
+    expect(res.entitled).toBe(false);
+    expect(res.undecodableTransactions).toBe(1);
   });
 
   it('omits the undecodable count when every payload was readable', async () => {
@@ -163,6 +216,38 @@ describe('check_entitlement', () => {
   });
 });
 
+describe('get_subscription_statuses', () => {
+  const statuses = (svc: StoreKitService, args: Record<string, unknown>) =>
+    (svc as any).run('storekit__get_subscription_statuses', { transaction_id: '1', ...args }, stubClient({ environment: 'Sandbox', ...twoProducts }));
+
+  it('decodes each transaction and renewal info in place of the JWS', async () => {
+    const res = await statuses(trustingService(), {});
+
+    expect(res.verified).toBe(true);
+    expect(res.environment).toBe('Sandbox');
+    expect(res.data[1].lastTransactions[0].transaction).toEqual({ productId: 'com.example.extra.storage' });
+    expect(JSON.stringify(res)).not.toContain('signedTransactionInfo');
+  });
+
+  it('hands back the signed payloads with raw', async () => {
+    const res = await statuses(new StoreKitService(config), { raw: true });
+
+    expect(res.verified).toBe(false);
+    expect(res.data[0].lastTransactions[0].signedTransactionInfo).toBe(signedTransaction('com.example.pro.monthly'));
+  });
+
+  it('fails rather than decoding a payload Apple did not sign', async () => {
+    await expect(statuses(new StoreKitService(config), {})).rejects.toThrow(/failed signature verification/);
+  });
+
+  it('verifies the renewal info as well as the transaction', async () => {
+    const svc = new StoreKitService(config);
+    const client = stubClient({ data: [{ lastTransactions: [{ status: 1, signedRenewalInfo: 'a.b.c' }] }] });
+    await expect((svc as any).run('storekit__get_subscription_statuses', { transaction_id: '1' }, client))
+      .rejects.toThrow(/A renewal payload failed signature verification/);
+  });
+});
+
 /**
  * A page cap that keeps quiet is the dangerous one: "no refunds" and "no
  * refunds in the first N pages" are the same response, and the second is what
@@ -174,7 +259,7 @@ describe('transaction history paging', () => {
     const client = { getTransactionHistory: async () => pages[Math.min(call++, pages.length - 1)] };
     return (new StoreKitService(config) as never as {
       transactionHistory(client: never, args: Record<string, unknown>): Promise<any>;
-    }).transactionHistory(client as never, { transaction_id: '1', max_pages: 2 });
+    }).transactionHistory(client as never, { transaction_id: '1', max_pages: 2, raw: true });
   };
 
   it('says it stopped short and hands back the cursor to resume from', async () => {
@@ -245,9 +330,45 @@ describe('which app a StoreKit call goes to', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('keeps ASC_BUNDLE_ID as the default without a lookup', async () => {
+  it('looks up the Apple ID behind ASC_BUNDLE_ID in Production, which verification needs', async () => {
+    const { http } = apps([{ id: '9', name: 'Example', bundleId: 'com.example.app' }]);
+    const production = { ...config, storekit: { bundleId: 'com.example.app', environment: 'Production' } } as ServerConfig;
+    expect(await target(new StoreKitService(production, http))).toEqual({ bundleId: 'com.example.app', appAppleId: 9 });
+  });
+
+  it('keeps ASC_BUNDLE_ID as the default without a lookup in Sandbox', async () => {
     const { http, calls } = apps([]);
     expect((await target(new StoreKitService(config, http))).bundleId).toBe('com.example.app');
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('what a StoreKit failure says', () => {
+  const fail = (err: unknown) => {
+    const svc = new StoreKitService(config, { get: async () => ({ data: [{ id: '9', attributes: { name: 'Example', bundleId: 'com.example.app' } }] }) } as never);
+    Object.assign(svc, { run: async () => { throw err; }, clientFor: () => ({}) });
+    return svc;
+  };
+
+  it('points a Production 401 at a missing App Store release, not only at the key', async () => {
+    await expect(fail(new APIException(401)).execute('storekit__get_notification_history', { environment: 'Production' }))
+      .rejects.toThrow(/returned 401\. App: com\.example\.app\. Apple answers 401 in Production for an app with no App Store release/);
+    await expect(fail(new APIException(401)).execute('storekit__get_notification_history', { environment: 'Sandbox' }))
+      .rejects.toThrow(/App: com\.example\.app\.$/);
+  });
+
+  it('refuses half of the default-message pair instead of skipping it', async () => {
+    const svc = new StoreKitService(config, { get: async () => ({ data: [] }) } as never);
+    await expect((svc as any).retentionMessaging({}, { product_id: 'pro.monthly' })).rejects.toThrow(/needs both product_id and locale/);
+  });
+
+  it('ends Apple\'s message with one full stop before naming the app', async () => {
+    await expect(fail(new APIException(400, 4000006, 'Invalid request')).execute('storekit__get_notification_history', { environment: 'Sandbox' }))
+      .rejects.toThrow(/returned 400 \(error 4000006\): Invalid request\. App: com\.example\.app\.$/);
+  });
+
+  it('says a retention messaging 404 may mean the feature is not enabled', async () => {
+    await expect(fail(new APIException(404)).execute('storekit__get_retention_messaging', { environment: 'Sandbox' }))
+      .rejects.toThrow(/Retention messaging may not be enabled for this account/);
   });
 });

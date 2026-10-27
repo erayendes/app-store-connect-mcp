@@ -12,13 +12,13 @@ Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı 
 | `analytics` | `ASC-Analytics` | Satış ve raporlar | 19 | — |
 | `app-clips` | `ASC-AppClips` | App Clip'ler | 34 | — |
 | `background-assets` | `ASC-BackgroundAssets` | İndirilebilir içerik | 13 | — |
-| `distribution` | `ASC-Distribution` | Sürümler ve yayın | 80 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
+| `distribution` | `ASC-Distribution` | Sürümler ve yayın | 81 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | Uygulama bilgileri | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Mağaza sayfası ve yorumlar | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 152 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 162 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Sertifikalar ve cihazlar | 41 | bundle, certificates, devices, profiles, wallet |
-| `testflight` | `ASC-TestFlight` | Beta testi | 81 | external-testing, feedbacks, groups, test-builds, testers |
+| `testflight` | `ASC-TestFlight` | Beta testi | 82 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Sunucunuza bildirimler | 9 | — |
 | `xcode-cloud` | `ASC-XcodeCloud` | Bulutta build | 44 | repositories, workflows |
 | `core` | `ASC-Core` | Her profille gelir: uygulama bulma ve ekran görüntüleri | 16 | — |
@@ -58,7 +58,7 @@ Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve d
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
-Örneğin `monetization` 152 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 64 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
+Örneğin `monetization` 162 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 65 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
 
 Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçları ve `asc__status`. Alt profillerinin yalnızca bir kısmıyla başlatılan bir sunucuya ayrıca `asc__call` ve `asc__describe` gelir; bunlar dışarıda bıraktığınız kısımlardaki okumalara ulaşır.
 
@@ -71,12 +71,12 @@ Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçl
 
 | Rol | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `general` | 145 |
+| Yayın yöneticisi | `distribution` + `general` | 146 |
 | ASO / pazarlama | `marketing` + `analytics` | 96 |
-| QA / TestFlight | `testflight` | 97 |
-| Monetizasyon | `monetization` | 168 |
+| QA / TestFlight | `testflight` | 98 |
+| Monetizasyon | `monetization` | 178 |
 | Oyun geliştirici | `game-center` + `distribution:version,publish` | 200 |
-| Müşteri desteği | `marketing:customer-reviews` + `monetization:transactions` | 42 |
+| Müşteri desteği | `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 101 |
 | Ekip yöneticisi | `access` | 33 |
 
@@ -223,7 +223,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `background_assets__versions__list` — Bir arka plan varlığına ait tüm sürümleri listeler
 - `release__submit_items` — Background asset sürümünü incelemeye gönderir
 
-### `distribution` · 80 araç
+### `distribution` · 81 araç
 
 **Sunucu:** `ASC-Distribution` · **Anahtar rolü:** App Manager
 
@@ -257,7 +257,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `app_store_review_details__update` — İnceleme iletişim ve erişim bilgilerini günceller
 - `app_store_versions__app_store_review_detail__get` — Sürümün inceleme iletişim ve erişim bilgilerini getirir
 
-#### `distribution:builds` · 13 araç
+#### `distribution:builds` · 14 araç
 
 **İçinde ne var:** Yüklenen build'ler: yükleme kayıtları, paketler, dosya boyutları, build ayrıntıları.
 
@@ -273,6 +273,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `builds__icons__list` — Build'in simgelerini listeler
 - `builds__list` — Yüklenmiş build'leri listeler
 - `builds__update` — Build'in süresini bitirir veya şifreleme cevabını kaydeder
+- `testflight__wait_for_build` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
 
 #### `distribution:dma-distribution` · 25 araç
 
@@ -789,7 +790,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `apps__app_store_version_experiments_v2__list` — Uygulamanın ürün sayfası testlerini listeler
 - `release__submit_items` — Ürün sayfası testini incelemeye gönderir
 
-### `monetization` · 152 araç
+### `monetization` · 162 araç
 
 **Sunucu:** `ASC-Monetization` · **Anahtar rolü:** App Manager
 
@@ -891,13 +892,19 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscription_groups__subscriptions__list` — Bir gruptaki abonelikleri listeler
 - `subscriptions__promoted_purchase__get` — Aboneliğin App Store'daki tanıtım ayarlarını gösterir
 
-#### `monetization:subscription` · 52 araç
+#### `monetization:subscription` · 53 araç
 
 **İçinde ne var:** Abonelikler ve grupları: diller, görseller, sürümler, fiyatlar, satış ülkeleri, ödeme aksadığında süre tanıma, gönderim, fiyat ve ön kontrol makroları. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Abonelikler ve grupları, metinleri, fiyatları ve incelemesi için. · **Anahtar rolü:** App Manager
 
 - `apps__subscription_grace_period__get` — Uygulamanın ödeme aksadığında aboneliği sürdürme ayarlarını gösterir
+- `preflight__check_subscription` — Abonelik veya grubundaki inceleme öncesi eksikleri kontrol eder
+- `pricing__setup_subscription` — Aboneliği grubu, dilleri, ülkeleri ve fiyatıyla tek adımda oluşturur
+- `pricing__equalize_price` — Bir ülkenin fiyatını temel alıp uygulama, ürün ya da aboneliğin diğer ülke fiyatlarını Apple'a hesaplatır
+- `pricing__get_subscription_price` — Bir aboneliğin ülkelere göre güncel fiyatlarını ve planlanmış değişikliklerini gösterir
+- `pricing__set_subscription_price` — Aboneliğin seçilen ülkedeki fiyatını belirler veya değiştirir
+- `release__submit_items` — Abonelik veya abonelik grubu sürümünü incelemeye gönderir
 - `subscription_app_store_review_screenshots__update` — Yüklenen abonelik inceleme ekran görüntüsünü tamamlandı olarak işaretler
 - `subscription_grace_periods__get` — Ödeme aksadığında aboneliğin ne kadar sürdürüleceğini gösterir
 - `subscription_grace_periods__update` — Ödeme aksadığında aboneliğin sürdürülmesini ve süresini ayarlar
@@ -941,11 +948,6 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscriptions__prices__remove` — Aboneliğin seçilen planlanmış fiyat değişikliklerini kaldırır
 - `subscriptions__update` — Aboneliğin bilgilerini, fiyatlarını ve tekliflerini değiştirir
 - `subscriptions__versions__list` — Aboneliğin sürümlerini listeler
-- `preflight__check_subscription` — Abonelik veya grubundaki inceleme öncesi eksikleri kontrol eder
-- `pricing__equalize_price` — Bir ülkenin fiyatını temel alıp uygulama, ürün ya da aboneliğin diğer ülke fiyatlarını Apple'a hesaplatır
-- `pricing__get_subscription_price` — Bir aboneliğin ülkelere göre güncel fiyatlarını ve planlanmış değişikliklerini gösterir
-- `pricing__set_subscription_price` — Aboneliğin seçilen ülkedeki fiyatını belirler veya değiştirir
-- `release__submit_items` — Abonelik veya abonelik grubu sürümünü incelemeye gönderir
 
 #### `monetization:subscription-codes` · 19 araç
 
@@ -1007,21 +1009,30 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `win_back_offers__update` — Geri kazanma teklifinin koşullarını, tarihlerini ve tanıtım ayarlarını değiştirir
 - `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon veya geri kazanma teklifi oluşturur
 
-#### `monetization:transactions` · 12 araç
+#### `monetization:transactions` · 21 araç
 
-**İçinde ne var:** App Store Server API: müşteri işlemleri, iadeler, abonelik durumu, yenileme tarihleri.
+**İçinde ne var:** App Store Server API: müşteri işlemleri, iadeler ve tüketim yanıtları, abonelik durumu, tek bir abonenin ya da tümünün yenileme tarihleri, retention mesajları.
 
-**Ne zaman gerekir:** Bir müşterinin satın almalarına, iadelerine ve abonelik durumuna bakmak için. · **Anahtar rolü:** App Manager
+**Ne zaman gerekir:** Bir müşterinin satın almalarına, iadelerine ve abonelik durumuna bakmak ve bunlar üzerinde işlem yapmak için: bir kesintiden sonra yenilemeleri ertelemek, bir iade talebini yanıtlamak, iptal eden müşteriye gösterilen mesajı ayarlamak. · **Anahtar rolü:** App Manager
 
 - `storekit__check_entitlement` — Müşterinin abonelikten doğan kullanım hakkının sürüp sürmediğini kontrol eder
 - `storekit__extend_renewal_date` — Müşterinin abonelik yenileme tarihini ileri alır
+- `storekit__finish_transaction` — Sunucunuzun bir satın alma işlemini tamamladığını App Store'a bildirir
+- `storekit__get_app_transaction` — Müşterinin uygulamayı ilk ne zaman ve hangi sürümle edindiğini gösterir
+- `storekit__get_mass_extension_status` — Tüm abonelere uygulanan yenileme tarihi uzatmasının ilerlemesini gösterir
 - `storekit__get_notification_history` — Satın alma bildirimlerinin gönderim geçmişini ve başarısız teslimleri gösterir
 - `storekit__get_refund_history` — Müşterinin ücret iadesi yapılan satın almalarını listeler
+- `storekit__get_retention_messaging` — İptal etmek üzere olan müşterilere gösterilen mesajları, görselleri ve ayarları gösterir
 - `storekit__get_subscription_statuses` — Müşterinin aboneliklerinin durumunu gösterir
+- `storekit__get_test_notification_status` — Deneme bildiriminin bildirim bağlantısına ulaşıp ulaşmadığını gösterir
 - `storekit__get_transaction_history` — Müşterinin satın alma geçmişini getirir
 - `storekit__get_transaction_info` — Bir satın alma işleminin ayrıntılarını gösterir
 - `storekit__lookup_order` — Sipariş numarasına bağlı satın alma işlemlerini bulur
+- `storekit__manage_retention_messaging` — Elde tutma mesajlarını ve görsellerini yükler ya da siler, varsayılan mesajı ve realtime URL'yi ayarlar
+- `storekit__mass_extend_renewal_date` — Bir aboneliğin tüm aktif abonelerinin yenileme tarihini ileri alır
 - `storekit__request_test_notification` — Apple'dan bildirim bağlantısını sınamak için deneme bildirimi göndermesini ister
+- `storekit__send_consumption_info` — İade talebi için Apple'a teslim ve kullanım bilgisini gönderir
+- `storekit__set_app_account_token` — Bir satın almayı kendi sisteminizdeki bir hesaba bağlar
 
 ### `provisioning` · 41 araç
 
@@ -1109,7 +1120,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `pass_type_ids__list` — Hesaptaki tüm Apple Cüzdan kartı tanıtıcılarını listeler
 - `pass_type_ids__update` — Bir Apple Cüzdan kartı tanıtıcısının adını günceller
 
-### `testflight` · 81 araç
+### `testflight` · 82 araç
 
 **Sunucu:** `ASC-TestFlight` · **Anahtar rolü:** Developer
 
@@ -1185,7 +1196,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `beta_groups__update` — Grubun adını, açık davet bağlantısını, katılım sınırını ve test seçeneklerini günceller
 - `testflight__assign_build_to_groups` — İşlenmiş bir build'i seçilen gruplara verir
 
-#### `testflight:test-builds` · 27 araç
+#### `testflight:test-builds` · 28 araç
 
 **İçinde ne var:** Testteki build'ler: “What to Test” notları, beta ayrıntıları, testçi bildirimleri, pre-release sürümler.
 
@@ -1215,6 +1226,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `pre_release_versions__get` — Pre-release sürümü getirir
 - `pre_release_versions__list` — Pre-release sürümleri listeler
 - `testflight__assign_build_to_groups` — İşlenmiş bir build'i seçilen gruplara verir
+- `testflight__wait_for_build` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
 
 #### `testflight:testers` · 18 araç
 

@@ -55,7 +55,9 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
       'build is attached and finished processing, the export compliance answer is ' +
       'given, the review contact and demo account are filled in, every locale has a ' +
       'description and keywords, and screenshots exist. Each gap names the tool that ' +
-      'fixes it. Read-only — it changes nothing and does not submit.',
+      'fixes it. ready: true does not cover App Privacy, EU trader status or agreements, which ' +
+      'the API cannot read; they come back in manualChecks for the user to confirm. ' +
+      'Read-only — it changes nothing and does not submit.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -104,8 +106,17 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
           items: { type: 'string' },
         },
         checked: { type: 'array', items: { type: 'string' } },
+        manualChecks: {
+          type: 'array',
+          description: 'Required before review, but the API can neither read nor set them: confirm each in App Store Connect.',
+          items: {
+            type: 'object',
+            properties: { check: { type: 'string' }, why: { type: 'string' }, where: { type: 'string' } },
+            required: ['check', 'why', 'where'],
+          },
+        },
       },
-      required: ['app', 'ready', 'blocking', 'warnings', 'checked'],
+      required: ['app', 'ready', 'blocking', 'warnings', 'checked', 'manualChecks'],
     },
     annotations: { readOnlyHint: true },
   },
@@ -327,6 +338,7 @@ export async function executePreflightTool(
         `Version ${version.attributes?.versionString} is ${state}, which is past the point of preparing a submission. Nothing here is editable, so no checks were run.`,
       ],
       checked: [],
+      manualChecks: manualChecks(app.id),
     };
   }
 
@@ -527,7 +539,33 @@ export async function executePreflightTool(
     blocking,
     warnings,
     checked,
+    manualChecks: manualChecks(app.id),
   };
+}
+
+/**
+ * What blocks a submission that no App Store Connect API endpoint can read or
+ * write, so `ready: true` is never taken to cover it. Listed every time rather
+ * than guessed at: there is no way to tell from here whether each one is done.
+ */
+export function manualChecks(appId: string) {
+  return [
+    {
+      check: 'App Privacy',
+      why: 'Every app needs its data-collection answers published before review; the API has no endpoint for them.',
+      where: `https://appstoreconnect.apple.com/apps/${encodeURIComponent(appId)}/distribution/privacy`,
+    },
+    {
+      check: 'EU trader status',
+      why: 'Required to be sold in the European Union under the Digital Services Act; set once per account by the Account Holder or Admin.',
+      where: 'https://appstoreconnect.apple.com/business',
+    },
+    {
+      check: 'Agreements, tax and banking',
+      why: 'A paid app or in-app purchases need the Paid Apps Agreement active; Apple removed the endpoint that reported agreement state.',
+      where: 'https://appstoreconnect.apple.com/business',
+    },
+  ];
 }
 
 interface SubscriptionFinding extends Gap {

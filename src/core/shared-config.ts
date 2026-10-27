@@ -27,6 +27,11 @@ export function sharedConfigDir(env: NodeJS.ProcessEnv = process.env): string {
   return env.ASC_CONFIG_DIR ?? join(homedir(), '.config', 'asc-mcp');
 }
 
+/** Where the audit log, failure log and report cache live. ASC_STATE_DIR moves them; tests do. */
+export function stateDir(env: NodeJS.ProcessEnv = process.env): string {
+  return env.ASC_STATE_DIR || sharedConfigDir(env);
+}
+
 export function sharedConfigPath(env: NodeJS.ProcessEnv = process.env): string {
   return join(sharedConfigDir(env), 'config.json');
 }

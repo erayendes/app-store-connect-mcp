@@ -13,12 +13,15 @@ import { PRICING_TOOLS } from '../src/tools/pricing.js';
 import { PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
+import { META_TOOLS } from '../src/tools/meta.js';
+import { ACCOUNT_TOOLS } from '../src/tools/account.js';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { createServer } from '../src/server.js';
 import { PROFILES, resolveSelection } from '../src/profiles.js';
+import { PACKAGE } from '../src/clients.js';
 
 const ALL_TOOLS = new Set(
-  [...PRICING_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...REVIEWS_AI_TOOLS].map((t) => t.name)
+  [...PRICING_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...REVIEWS_AI_TOOLS, ...META_TOOLS, ...ACCOUNT_TOOLS].map((t) => t.name)
 );
 
 describe('the prompt list', () => {
@@ -107,5 +110,13 @@ describe('a prompt body', () => {
   it('tells the model that review text is untrusted, where reviews are read', () => {
     const text = PROMPTS.find((p) => p.name === 'review-triage')!.body({});
     expect(text).toMatch(/untrusted/i);
+  });
+});
+
+describe('the getting-started prompt', () => {
+  it('names the package on the channel this server came from, not a hard-coded @beta', () => {
+    const body = PROMPTS.find((p) => p.name === 'getting-started')!.body({});
+    expect(body).toContain(`npx -y ${PACKAGE} setup`);
+    expect(PACKAGE).toMatch(/^@erayendes\/asc-mcp(@beta)?$/);
   });
 });

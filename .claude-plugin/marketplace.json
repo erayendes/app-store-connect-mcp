@@ -6,92 +6,92 @@
   },
   "metadata": {
     "description": "App Store Connect through Heimdall: one plug-in per area, plus the skill.",
-    "version": "3.0.0-beta.1"
+    "version": "3.0.0-beta.2"
   },
   "plugins": [
     {
       "name": "Heimdall | ASC Skill",
       "source": "./",
       "description": "The Heimdall skill: what the servers below can do, which one owns what, and how to stay inside the credential boundary. Install it with whichever areas you pick.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Access",
       "source": "./plugins/access",
       "description": "Your App Store Connect team: members and roles, invitations, sandbox test accounts.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Analytics",
       "source": "./plugins/analytics",
       "description": "Sales and finance reports, analytics report requests, performance and diagnostic data — for questions about downloads, revenue and crashes.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC App Clips",
       "source": "./plugins/app-clips",
       "description": "App Clips: default and advanced experiences, header images, review details, beta invocations.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Background Assets",
       "source": "./plugins/background-assets",
       "description": "Background Assets (iOS 26): asset packs downloaded outside the app binary, and their releases.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Distribution",
       "source": "./plugins/distribution",
       "description": "Shipping a version: App Store versions and localizations, builds, review details, submission and release, export compliance, EU alternative distribution.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Game Center",
       "source": "./plugins/game-center",
       "description": "Game Center: achievements, leaderboards, activities, challenges, groups, matchmaking.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC General",
       "source": "./plugins/general",
       "description": "The app's identity and store facts: names and subtitles, categories, availability by country, age rating, EULA, accessibility labels, tags.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Marketing",
       "source": "./plugins/marketing",
       "description": "Store presence beyond the version page: custom product pages, product page optimization, in-app events, customer reviews, nominations.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Monetization",
       "source": "./plugins/monetization",
       "description": "Money: subscriptions, in-app purchases, offers and codes, app pricing, StoreKit 2 transactions.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Provisioning",
       "source": "./plugins/provisioning",
       "description": "Code signing: bundle IDs and capabilities, certificates, devices, provisioning profiles, merchant and pass type IDs.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC TestFlight",
       "source": "./plugins/testflight",
       "description": "TestFlight: builds for testing, beta groups and testers, external review, crash and screenshot feedback.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Webhooks",
       "source": "./plugins/webhooks",
       "description": "Webhooks pushing App Store Connect events to your endpoint, their deliveries and pings.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     },
     {
       "name": "Heimdall | ASC Xcode Cloud",
       "source": "./plugins/xcode-cloud",
       "description": "Apple's CI/CD: workflows, build runs, artifacts, test results, source control.",
-      "version": "3.0.0-beta.1"
+      "version": "3.0.0-beta.2"
     }
   ]
 }

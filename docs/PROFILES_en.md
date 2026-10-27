@@ -12,13 +12,13 @@ Next to whatever you pick, setup registers **ASC-Core**: finding your apps, sear
 | `analytics` | `ASC-Analytics` | Sales and reports | 19 | — |
 | `app-clips` | `ASC-AppClips` | App Clips | 34 | — |
 | `background-assets` | `ASC-BackgroundAssets` | Downloadable content | 13 | — |
-| `distribution` | `ASC-Distribution` | Releases | 80 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
+| `distribution` | `ASC-Distribution` | Releases | 81 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | App details | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Store page and reviews | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Prices and subscriptions | 152 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Prices and subscriptions | 162 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Certificates and devices | 41 | bundle, certificates, devices, profiles, wallet |
-| `testflight` | `ASC-TestFlight` | Beta testing | 81 | external-testing, feedbacks, groups, test-builds, testers |
+| `testflight` | `ASC-TestFlight` | Beta testing | 82 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Notifications to your server | 9 | — |
 | `xcode-cloud` | `ASC-XcodeCloud` | Builds in the cloud | 44 | repositories, workflows |
 | `core` | `ASC-Core` | Added with every profile: app lookup and screenshots | 16 | — |
@@ -58,7 +58,7 @@ Its media tools (`media__*`) handle every screenshot, video, image and file. Sto
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="The browser setup, step 1: each profile with its tool count and token cost; Monetization is open, with two of its sub-profiles ticked" width="560">
 
 Tick a profile in the [setup](SETUP_en.md) picker. When you move the cursor onto it, its sub-profiles open, all ticked; untick the ones you don't want.
-For example, `monetization` has 152 tools, but if you only work on subscriptions and their offers, the 64 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
+For example, `monetization` has 162 tools, but if you only work on subscriptions and their offers, the 65 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
 
 The tool counts on this page are what the server lists: its own tools plus `asc__status`. A server started with only some of its sub-profiles also gets `asc__call` and `asc__describe`, which reach the reads of the parts you left out.
 
@@ -71,12 +71,12 @@ A quick answer to "Which profiles should I install?" The counts include ASC-Core
 
 | Role | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `general` | 145 |
+| Release manager | `distribution` + `general` | 146 |
 | ASO / marketing | `marketing` + `analytics` | 96 |
-| QA / TestFlight | `testflight` | 97 |
-| Monetization | `monetization` | 168 |
+| QA / TestFlight | `testflight` | 98 |
+| Monetization | `monetization` | 178 |
 | Game developer | `game-center` + `distribution:version,publish` | 200 |
-| Customer support | `marketing:customer-reviews` + `monetization:transactions` | 42 |
+| Customer support | `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build and signing | `provisioning` + `xcode-cloud` | 101 |
 | Team admin | `access` | 33 |
 
@@ -223,7 +223,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `background_assets__versions__list` — Lists every version of a background asset
 - `release__submit_items` — Sends a background asset version to review
 
-### `distribution` · 80 tools
+### `distribution` · 81 tools
 
 **Server:** `ASC-Distribution` · **Key role:** App Manager
 
@@ -257,7 +257,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `app_store_review_details__update` — Updates the review contact and access details
 - `app_store_versions__app_store_review_detail__get` — Fetches a version's review contact and access details
 
-#### `distribution:builds` · 13 tools
+#### `distribution:builds` · 14 tools
 
 **What is inside:** Uploaded builds: upload sessions, bundles, file sizes, build details.
 
@@ -273,6 +273,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `builds__icons__list` — Lists a build's icons
 - `builds__list` — Lists uploaded builds
 - `builds__update` — Expires a build or records its encryption answer
+- `testflight__wait_for_build` — Waits for an uploaded build to finish processing and says whether it is valid
 
 #### `distribution:dma-distribution` · 25 tools
 
@@ -789,7 +790,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `apps__app_store_version_experiments_v2__list` — Lists the app's product page tests
 - `release__submit_items` — Sends a product page test to review
 
-### `monetization` · 152 tools
+### `monetization` · 162 tools
 
 **Server:** `ASC-Monetization` · **Key role:** App Manager
 
@@ -891,13 +892,19 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscription_groups__subscriptions__list` — Lists the subscriptions in a group
 - `subscriptions__promoted_purchase__get` — Shows a subscription's promotion settings on the App Store
 
-#### `monetization:subscription` · 52 tools
+#### `monetization:subscription` · 53 tools
 
 **What is inside:** Subscriptions and their groups: localizations, images, versions, prices, availability, grace period, submissions, and the price and preflight macros. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** Subscriptions and their groups, text, prices and review. · **Key role:** App Manager
 
 - `apps__subscription_grace_period__get` — Shows the app's settings for keeping a subscription going when payment fails
+- `preflight__check_subscription` — Checks what a subscription, or the subscriptions in its group, is missing before review
+- `pricing__setup_subscription` — Creates a subscription with its group, languages, countries and price in one step
+- `pricing__equalize_price` — Takes one country's price as the base and has Apple work out the app's, product's or subscription's prices in every other country
+- `pricing__get_subscription_price` — Shows a subscription's current prices by country and its scheduled changes
+- `pricing__set_subscription_price` — Sets or changes a subscription's price in the chosen country
+- `release__submit_items` — Sends a subscription or subscription group version to review
 - `subscription_app_store_review_screenshots__update` — Marks an uploaded subscription review screenshot as complete
 - `subscription_grace_periods__get` — Shows how long a subscription is kept going when payment fails
 - `subscription_grace_periods__update` — Sets whether, and for how long, a subscription is kept going when payment fails
@@ -941,11 +948,6 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscriptions__prices__remove` — Removes the chosen scheduled price changes of a subscription
 - `subscriptions__update` — Changes a subscription's details, prices and offers
 - `subscriptions__versions__list` — Lists a subscription's versions
-- `preflight__check_subscription` — Checks what a subscription, or the subscriptions in its group, is missing before review
-- `pricing__equalize_price` — Takes one country's price as the base and has Apple work out the app's, product's or subscription's prices in every other country
-- `pricing__get_subscription_price` — Shows a subscription's current prices by country and its scheduled changes
-- `pricing__set_subscription_price` — Sets or changes a subscription's price in the chosen country
-- `release__submit_items` — Sends a subscription or subscription group version to review
 
 #### `monetization:subscription-codes` · 19 tools
 
@@ -1007,21 +1009,30 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `win_back_offers__update` — Changes a win-back offer's terms, dates and promotion settings
 - `pricing__make_offer` — Creates an introductory, promotional or win-back offer for a subscription, priced in every country
 
-#### `monetization:transactions` · 12 tools
+#### `monetization:transactions` · 21 tools
 
-**What is inside:** App Store Server API: customer transactions, refunds, subscription status, renewal dates.
+**What is inside:** App Store Server API: customer transactions, refunds and their consumption answers, subscription status, renewal dates for one subscriber or all, retention messaging.
 
-**When you need it:** Look up a customer’s purchases, refunds and subscription status. · **Key role:** App Manager
+**When you need it:** Look up a customer’s purchases, refunds and subscription status, and act on them: extend renewals after an outage, answer a refund request, set the message customers see when they cancel. · **Key role:** App Manager
 
 - `storekit__check_entitlement` — Checks whether a customer's entitlement from a subscription is still active
 - `storekit__extend_renewal_date` — Moves a customer's subscription renewal date later
+- `storekit__finish_transaction` — Tells the App Store your server has finished processing a transaction
+- `storekit__get_app_transaction` — Shows when a customer first got the app and on which version
+- `storekit__get_mass_extension_status` — Shows the progress of a renewal-date extension for all subscribers
 - `storekit__get_notification_history` — Shows the delivery history of purchase notifications and the failed deliveries
 - `storekit__get_refund_history` — Lists a customer's refunded purchases
+- `storekit__get_retention_messaging` — Shows the retention messages, images and settings for customers about to cancel
 - `storekit__get_subscription_statuses` — Shows the status of a customer's subscriptions
+- `storekit__get_test_notification_status` — Shows whether the test notification reached the notification endpoint
 - `storekit__get_transaction_history` — Fetches a customer's purchase history
 - `storekit__get_transaction_info` — Shows the details of one purchase transaction
 - `storekit__lookup_order` — Finds the purchases tied to an order number
+- `storekit__manage_retention_messaging` — Uploads or deletes retention messages and images and sets the default message and realtime URL
+- `storekit__mass_extend_renewal_date` — Moves the renewal date later for every active subscriber of a subscription
 - `storekit__request_test_notification` — Asks Apple to send a test notification to check the notification endpoint
+- `storekit__send_consumption_info` — Sends Apple delivery and usage details for a refund request
+- `storekit__set_app_account_token` — Links a purchase to an account in your own system
 
 ### `provisioning` · 41 tools
 
@@ -1109,7 +1120,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `pass_type_ids__list` — Lists every Apple Wallet pass type ID on the account
 - `pass_type_ids__update` — Updates an Apple Wallet pass type ID's name
 
-### `testflight` · 81 tools
+### `testflight` · 82 tools
 
 **Server:** `ASC-TestFlight` · **Key role:** Developer
 
@@ -1185,7 +1196,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `beta_groups__update` — Updates a group's name, public invite link, tester limit and test options
 - `testflight__assign_build_to_groups` — Gives a processed build to the chosen groups
 
-#### `testflight:test-builds` · 27 tools
+#### `testflight:test-builds` · 28 tools
 
 **What is inside:** Builds under test: what to test notes, beta details, tester notifications, pre-release versions.
 
@@ -1215,6 +1226,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `pre_release_versions__get` — Fetches a pre-release version
 - `pre_release_versions__list` — Lists pre-release versions
 - `testflight__assign_build_to_groups` — Gives a processed build to the chosen groups
+- `testflight__wait_for_build` — Waits for an uploaded build to finish processing and says whether it is valid
 
 #### `testflight:testers` · 18 tools
 

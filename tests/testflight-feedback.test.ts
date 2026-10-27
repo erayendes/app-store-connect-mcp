@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
-import { executeTestflightTool, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
+import { executeTestflightTool, IMAGE_CONTENT, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 import { AscHttpClient } from '../src/core/http.js';
 import { AscApiError } from '../src/core/errors.js';
 import { createServer } from '../src/server.js';
@@ -65,6 +65,26 @@ describe(NAME, () => {
     expect(result.builds.map((b: any) => [b.buildId, b.version, b.counts.crashes]).sort()).toEqual([
       ['b-ios', '42', 1], ['b-tv', '42', 1],
     ]);
+  });
+
+  it('attaches the newest screenshots as images only when asked, and never their URLs', async () => {
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from('pixels')]);
+    const shot = (id: string, url: string) => submission(id, 'b-1', { screenshots: [{ url, width: 10, height: 20 }] });
+    const http: any = fakeHttp({ [SHOTS]: page([shot('s-1', 'https://feedback.apple.com/1.png'), shot('s-2', 'https://feedback.apple.com/2.txt')]) });
+    http.downloadAsset = vi.fn(async (url: string) => (url.endsWith('.png') ? png : Buffer.from('not an image')));
+
+    const plain = await run(http);
+    expect(plain[IMAGE_CONTENT]).toBeUndefined();
+    expect(http.downloadAsset).not.toHaveBeenCalled();
+
+    const res = await run(http, { app: 'Example', images: 2 });
+    expect(res[IMAGE_CONTENT]).toEqual([{ data: png.toString('base64'), mimeType: 'image/png', caption: expect.stringContaining('s-1') }]);
+    expect(res.notes.join(' ')).toMatch(/s-2: not a PNG or JPEG/);
+    expect(JSON.stringify(res)).not.toContain('feedback.apple.com');
+  });
+
+  it('refuses more images than it will attach', async () => {
+    await expect(run(fakeHttp(), { app: 'Example', images: 4 })).rejects.toThrow(/"images" must be an integer from 0 to 3/);
   });
 
   it('puts the trust warning first, so cutting the response to size cannot drop it', async () => {
@@ -201,6 +221,11 @@ describe(NAME, () => {
     expect(http.get.mock.calls).toHaveLength(3);
   });
 
+  it('asking for images in an empty window explains it without marking the digest truncated', async () => {
+    const res = await run(fakeHttp(), { app: 'Example', images: 3 });
+    expect(res).toMatchObject({ truncated: false, notes: ['No screenshot feedback in this window carries an image.'] });
+  });
+
   it('does not invent email or build metadata when Apple omits them', async () => {
     const res = await run(fakeHttp({ [SHOTS]: page([submission('s1')], undefined, []) }));
     expect(res.builds[0].version).toBe('unknown (b-1)');
@@ -285,6 +310,29 @@ describe('MCP integration', () => {
       expect(res.isError).not.toBe(true);
       expect(res.structuredContent).toMatchObject({ totals: { crashes: 0, screenshotFeedback: 1 } });
       expect(http.delete).not.toHaveBeenCalled();
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
+
+  it('sends attached screenshots through the server as image content, with valid structured output', async () => {
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from('pixels')]);
+    const http = fakeHttp({ [SHOTS]: page([submission('s-1', 'b-1', { screenshots: [{ url: 'https://feedback.apple.com/1.png', width: 10, height: 20 }] })]) });
+    vi.spyOn(AscHttpClient.prototype, 'get').mockImplementation(http.get);
+    vi.spyOn(AscHttpClient.prototype, 'downloadAsset').mockResolvedValue(png);
+    const server = createServer({
+      credentials: { keyId: 'TEST', issuerId: 'issuer', privateKey: 'unused' },
+      readOnly: true, confirmWrites: 'all', dryRun: false,
+    }, resolveSelection('testflight'));
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: 'test', version: '0' });
+    try {
+      await Promise.all([server.connect(st), client.connect(ct)]);
+      const res: any = await client.callTool({ name: NAME, arguments: { app: 'Example', images: 1 } });
+      expect(res.isError).not.toBe(true);
+      expect(res.content.filter((c: any) => c.type === 'image')).toEqual([{ type: 'image', data: png.toString('base64'), mimeType: 'image/png' }]);
+      expect(res.structuredContent).toMatchObject({ totals: { screenshotFeedback: 1 } });
     } finally {
       await client.close();
       await server.close();

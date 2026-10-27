@@ -1,6 +1,6 @@
 {
   "name": "asc-testflight",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.2",
   "description": "TestFlight: builds for testing, beta groups and testers, external review, crash and screenshot feedback.",
   "author": {
     "name": "Eray Endes",

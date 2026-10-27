@@ -197,6 +197,13 @@ const PARAM_NOTES: Array<[RegExp, string]> = [
     'The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches ' +
       'nothing and comes back as 200 with an empty list.',
   ],
+  // An agent filtered on ARCHIVED, found nothing recent and reported "no event
+  // in 268 days" when the last one had ended twelve days earlier.
+  [
+    /^filter\[eventState\]$/,
+    'An event that has ended is PAST, set by Apple on its own. ARCHIVED is only an event ' +
+      'someone archived by hand. Filter on both to see every finished event.',
+  ],
 ];
 
 /**

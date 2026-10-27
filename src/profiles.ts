@@ -132,7 +132,8 @@ const DESCRIPTIONS: Record<string, string> = {
     'Introductory and promotional offers on a subscription, and the one-call offer macro.',
   'monetization/subscription-win-back': 'Win-back offers for lapsed subscribers.',
   'monetization/transactions':
-    'App Store Server API: customer transactions, refunds, subscription status, renewal dates.',
+    'App Store Server API: customer transactions, refunds and their consumption answers, ' +
+    'subscription status, renewal dates for one subscriber or all, retention messaging.',
 
   provisioning:
     'Code signing: bundle IDs and capabilities, certificates, devices, provisioning profiles, ' +

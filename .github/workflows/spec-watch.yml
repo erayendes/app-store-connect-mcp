@@ -128,3 +128,38 @@ jobs:
             echo
             echo "Nothing is published by this workflow. Tagging and release stay where they were."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # The StoreKit tools are hand-written over Apple's App Store Server Library,
+  # so the specification above never sees them. This tries the newest library
+  # against tests/storekit-coverage.test.ts, which fails when Apple added a
+  # method no tool calls. A failure here is the finding: a run in red on the
+  # Actions page, and the summary names what to wrap.
+  storekit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Try the newest App Store Server Library
+        run: npm install --no-save @apple/app-store-server-library@latest
+      - name: Check every library method has a tool
+        run: |
+          set -o pipefail
+          VERSION="$(node -p "require('@apple/app-store-server-library/package.json').version")"
+          if npx vitest run --dir tests storekit-coverage 2>&1 | tee coverage.log; then
+            echo "App Store Server Library $VERSION: every method has a StoreKit tool." >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## App Store Server Library $VERSION has methods no StoreKit tool calls"
+              echo
+              echo "Wrap them in \`src/storekit/index.ts\`, or decline them with a reason in \`tests/storekit-coverage.test.ts\`."
+              echo
+              echo '```'
+              grep -A12 'no StoreKit tool calls' coverage.log || tail -40 coverage.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
