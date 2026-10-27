@@ -71,6 +71,8 @@ export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
   // A score or achievement lands on a real player's record.
   'game_center_leaderboard_entry_submissions__create',
   'game_center_player_achievement_submissions__create',
+  // The message a customer sees while cancelling a subscription.
+  'storekit__manage_retention_messaging',
 ]);
 
 /** Of those, the ones that cannot be walked back ask for a typed CONFIRM, like the strong levels. */

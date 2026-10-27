@@ -160,6 +160,7 @@ describe('write-gate annotations (offline)', () => {
       ...OPERATIONS.map((op) => op.name.replace(/\./g, '__')),
       ...RELEASE_TOOLS.map((t) => t.name),
       ...TESTFLIGHT_TOOLS.map((t) => t.name),
+      ...STOREKIT_TOOLS.map((t) => t.name),
     ]);
     expect([...ASK_BY_DEFAULT].filter((n) => !real.has(n))).toEqual([]);
     expect([...TYPED_BY_NAME].filter((n) => !ASK_BY_DEFAULT.has(n))).toEqual([]);

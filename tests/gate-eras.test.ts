@@ -379,6 +379,20 @@ describe.each(['legacy', 'modern'] as const)('release steps in the default mode,
     expect(sent.filter((r) => r.startsWith('POST'))).toEqual([]);
   });
 
+  it('asks with a checkbox before changing the message customers see while cancelling', async () => {
+    stubOk();
+    const { client, prompts } = await connect(era, { action: 'cancel' }, { profile: 'monetization:transactions' });
+
+    await client.callTool({
+      name: 'storekit__manage_retention_messaging',
+      arguments: { app: 'com.example.app', environment: 'Sandbox', action: 'upload_message', message_id: '7f0a3c2e-0000-4000-8000-000000000001', header: 'Stay', body: 'A month free' },
+    });
+
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).not.toMatch(/Type CONFIRM/);
+    expect(sent).toEqual([]);
+  });
+
   it('does not ask before editing a draft version', async () => {
     stubOk();
     const { client, prompts } = await connect(era, CONFIRM, { profile: 'distribution' });
