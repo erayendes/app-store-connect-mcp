@@ -168,8 +168,10 @@ describe('what a failure tells the caller', () => {
     expect(parsed.retryable).toBe(false);
     expect(parsed.appleRequestId).toBe('REQ-123');
     expect(parsed.issues[0].source.pointer).toBe('/data/attributes/versionString');
-    // The status hint used to be glued onto the end of the message.
-    expect(parsed.suggestedAction).toMatch(/in review or already released/);
+    // An invalid value is not a locked version (live run, 2026-10-27).
+    expect(parsed.suggestedAction).toMatch(/refused a value/);
+    const locked = new AscApiError('App Store Connect API returned 409', 409, [{ code: 'STATE_ERROR', title: 'Invalid state' }]);
+    expect(JSON.parse(formatError(locked, 'build_uploads__delete')).error.suggestedAction).toMatch(/in review or already released/);
   });
 
   it('marks a rate limit as worth retrying and a bad request as not', () => {
