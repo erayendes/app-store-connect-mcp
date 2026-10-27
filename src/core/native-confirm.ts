@@ -49,8 +49,8 @@ function run(argv) {
   const alert = $.NSAlert.alloc.init;
   alert.messageText = argv[0];
   alert.informativeText = argv[1];
-  alert.addButtonWithTitle('Allow');
-  alert.addButtonWithTitle('Don’t Allow').keyEquivalent = '\\u001b';
+  alert.addButtonWithTitle(argv[3]);
+  alert.addButtonWithTitle(argv[4]).keyEquivalent = '\\u001b';
   const icon = $.NSImage.alloc.initWithContentsOfFile(argv[2]);
   if (!icon.isNil()) alert.icon = icon;
   alert.layout;
@@ -72,33 +72,68 @@ export interface DialogText {
   /** The bold line: the question itself. */
   title: string;
   body: string;
+  /** The approving button, named for what it does ("Remove"); Allow when no verb fits. */
+  action?: string;
 }
+
+// A button named Cancel next to a Cancel button would say nothing, so that verb stays Allow.
+const BUTTON_VERBS = /^(Add|Apply|Archive|Assign|Create|Delete|Extend|Invite|Place|Release|Remove|Rename|Reorder|Replace|Request|Revoke|Send|Set|Submit|Update|Upload)\b/;
+export const actionFor = (title: string): string | undefined => BUTTON_VERBS.exec(title)?.[1];
+
+/** `whatsNew` → "What’s new", `start_date` → "Start date". */
+const humanize = (key: string): string => {
+  const words = key === 'whatsNew' ? 'what’s new' : key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+const showValue = (raw: string): string => (raw === 'true' ? 'Yes' : raw === 'false' ? 'No' : /^".*"$/.test(raw) ? JSON.parse(raw) : raw);
+// Base64 price points and other opaque ids tell a person nothing.
+const opaque = (id: string): boolean => id.length > 40;
+
+/** One "Changes" line from the form preview, said in words, or nothing when it is plumbing. */
+function changeLine(line: string): string | undefined {
+  const m = /^([\w.]+) (=|→) (.*)$/.exec(line);
+  if (!m) return line;
+  const segments = m[1].split('.').filter((s) => !['data', 'attributes', 'relationships'].includes(s));
+  const key = segments.at(-1);
+  if (!key || key === 'type' || key === 'id') return undefined;
+  // A JSON string may hold " — " itself; the note comes after it.
+  const [, value, note] = /^("(?:[^"\\]|\\.)*"|\[.*?\] \(\d+\)|\S+)(?: — (.*))?$/.exec(m[3]) ?? [, m[3]];
+  if (m[2] === '=') return `${humanize(key)}: ${showValue(value)}${note ? ` — ${note}` : ''}`;
+  const count = /^\[.*\] \((\d+)\)$/.exec(value)?.[1];
+  if (count) return `${humanize(key)}: ${count} ${count === '1' ? 'item' : 'items'}`;
+  const label = note && /^".*"$/.test(note) ? JSON.parse(note) : undefined;
+  const id = value.split('/').at(-1) ?? value;
+  return label ? `${humanize(key)}: ${label}` : opaque(id) ? undefined : `${humanize(key)}: ${id}`;
+}
+
+/** `id = 123 (Gold Pack)` → "Gold Pack"; an id with no name stays, or the target would be blank. */
+const targetLine = (value: string): string =>
+  value.split(/, (?=\w+ = )/).map((part) => /^\w+ = (\S+)(?: \((.*)\))?$/.exec(part)?.slice(1).reverse().find(Boolean) ?? part).join(', ');
 
 /**
  * The alert's text, from the elicitation preview.
  *
  * That preview is written for a form inside the client: it opens with the
- * tool name, lists the HTTP operation and the key id, and ends by asking for
- * CONFIRM. In an alert of its own the person needs what will happen, to what,
- * and what cannot be undone. `what` is the tool's own one-line summary.
+ * tool name, lists the HTTP operation, the key id and the request body field
+ * by field, and ends by asking for CONFIRM. In an alert of its own the person
+ * needs what will happen, to what, and what cannot be undone, in words.
+ * `what` is the tool's own one-line summary.
  */
 export function dialogText(what: string | undefined, preview: string): DialogText {
   const details: string[] = [];
-  let warning = '';
+  const warnings: string[] = [];
   for (const line of preview.split('\n').slice(1)) {
     const t = line.trim();
-    if (!t || t === 'Changes:' || /^(Operation|Account):/.test(t) || /Type CONFIRM/.test(t)) continue;
-    if (t.startsWith('Risk:')) warning = t.split(' — ').slice(1).join(' — ');
-    else details.push(t.replace(/^(\w)(\w*):\s+/, (_, c: string, rest: string) => `${c.toUpperCase()}${rest}: `));
+    if (!t || t === 'Changes:' || /^(Operation|Account):/.test(t) || /Type CONFIRM|^Confirm to proceed/.test(t)) continue;
+    if (t.startsWith('Risk:')) warnings.push(t.split(' — ').slice(1).join(' — '));
+    else if (t.startsWith('Target:')) details.push(`Target: ${targetLine(t.replace(/^Target:\s+/, ''))}`);
+    else {
+      const said = changeLine(t);
+      if (said) details.push(said.replace(/^(\w[\w ]*):\s+/, (_, key: string) => `${humanize(key)}: `));
+    }
   }
-  return {
-    title: what ? `${what.replace(/\.$/, '')}?` : 'Allow this change in App Store Connect?',
-    body: [
-      'Your AI assistant asked Heimdall to make this change in App Store Connect.',
-      ...(details.length ? ['', ...details] : []),
-      ...(warning ? ['', warning] : []),
-    ].join('\n'),
-  };
+  const title = what ? `${what.split(/: /)[0].replace(/\.$/, '')}?` : 'Allow this change in App Store Connect?';
+  return { title, body: [...details, ...(warnings.length ? ['', ...warnings] : [])].join('\n'), action: actionFor(title) };
 }
 
 /** Whether an alert can be tried at all; checked before the preview's lookups are spent. */
@@ -111,7 +146,8 @@ export function nativeConfirm(text: DialogText, signal?: AbortSignal): Promise<N
   return new Promise((resolve) => {
     // A cancelled tool call takes its alert with it, so a late click cannot
     // run a write the agent was already told failed.
-    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ICON], { signal }, (error, stdout) => {
+    const buttons = text.action ? [text.action, 'Cancel'] : ['Allow', 'Don’t Allow'];
+    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ICON, ...buttons], { signal }, (error, stdout) => {
       if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'cancelled');
       resolve(signal?.aborted ? 'cancelled' : 'unavailable');
     });

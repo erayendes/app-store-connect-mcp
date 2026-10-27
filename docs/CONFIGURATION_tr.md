@@ -37,7 +37,7 @@ Heimdall varsayılan olarak iki şekilde sorar:
 
 Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_build_to_groups` CONFIRM ister. Geri kalan her şey — mağaza metinleri, taslak bir sürüm, ona build seçmek, diğer TestFlight ayarları ve webhook ayarları — yapay zekâ uygulamanızın onayına bırakılır. Medya araçları, planlarının seviyesine göre sorar: bir görseli sayfaya yerleştirmek herkese açık seviyededir ve sormaz; birini kaldırmak ya da önce mevcut dosyayı silen `replace: true` ile yüklemek silme sayılır ve CONFIRM ister.
 
-Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak Allow'a (ya da Enter'a) basarsanız yapılır. Don't Allow ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
+Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak penceredeki düğmeye (ya da Enter'a) basarsanız yapılır. Düğme değişikliğin adını taşır: Remove, Delete, Upload; uygun bir fiil yoksa Allow. Cancel ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır. Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
 
 ## Ortam değişkenleri
 
