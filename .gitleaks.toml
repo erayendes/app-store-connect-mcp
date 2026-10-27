@@ -23,6 +23,11 @@ regexes = [
 ]
 
 [[allowlists]]
+description = "A made-up appAccountToken UUID in tests/dialog-storekit.test.ts; the dialog must never show it in full."
+regexTarget = "secret"
+regexes = ['''^7e3f1a2b-9c8d-4e5f-a6b7-c8d9e0f1a2b3$''']
+
+[[allowlists]]
 description = """
 Two commits that carried a self-generated EC key used to boot the server for Glama/registry introspection and for the demo recording. Verified: key id AAAAAAAAAA, issuer 00000000-…, never registered with Apple, authorises nothing. Both files moved to a generated key file afterwards, so the leak is historical and there is nothing to rotate. Listed by commit rather than by path so the same shape reappearing in a new commit still fails.
 """
