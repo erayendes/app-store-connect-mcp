@@ -7,7 +7,7 @@ import {
   type ClientCapabilities,
 } from '@modelcontextprotocol/server';
 import { TokenProvider } from './core/jwt.js';
-import { AscHttpClient, STATUS_HINTS } from './core/http.js';
+import { AscHttpClient, hintFor } from './core/http.js';
 import {
   ToolRegistry,
   DEFAULT_DOMAINS,
@@ -1046,7 +1046,7 @@ export function formatError(err: unknown, toolName: string): string {
         status: err.status || undefined,
         retryable: err.retryable,
         appleRequestId: err.requestId,
-        suggestedAction: STATUS_HINTS[err.status],
+        suggestedAction: hintFor(err.status, err.errors),
         issues: err.errors.length ? err.errors : undefined,
       },
     },

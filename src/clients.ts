@@ -866,6 +866,10 @@ export function applyToClient(
     const removing = [...profileRemoves, ...(core.kind === 'remove' ? [CORE_SERVER] : [])];
     if (t.kind === 'cli') {
       const failedMigrations = new Set<string>();
+      // A dead entry whose name the new profile reuses (`ASC-Access` from
+      // `access:users` to `access`) was just overwritten by the add; removing
+      // it by name afterwards deleted the new server (live run, 2026-10-27).
+      const overwritten = new Set<string>();
       const addEntry = (name: string, spec: string, entry: Record<string, unknown>): void => {
         const fallback = t.add(name, spec);
         const marker = fallback.indexOf(SERVER_COMMAND);
@@ -904,12 +908,17 @@ export function applyToClient(
             }
           }
           record(addKey(spec), label(spec), true);
+          overwritten.add(name);
         } catch (err) {
           if (old && old.name !== name) failedMigrations.add(old.name);
           record(addKey(spec), label(spec), false, cliError(err));
         }
       }
       for (const name of removing) {
+        if (overwritten.has(name)) {
+          record(`rm:${name}`, removeLabel(name), true);
+          continue;
+        }
         if (!block.canRemove(name) || failedMigrations.has(name)) {
           record(`rm:${name}`, removeLabel(name), false,
             failedMigrations.has(name) ? 'new entry failed; old entry left unchanged' : 'user-managed entry left unchanged');
@@ -939,6 +948,9 @@ export function applyToClient(
       // this file in memory and writes it back while it runs. Leave it and say
       // so; setup asks for the app to be closed before it gets here.
       record(`held:${t.where}`, `${t.heldBy} Desktop is open, so it was not changed. Quit it, then run setup again`, false);
+      // Every change counts as done only where every target took it; this one took none.
+      for (const spec of adding) record(addKey(spec), label(spec), false, `${t.where} not changed`);
+      for (const name of removing) record(`rm:${name}`, removeLabel(name), false, `${t.where} not changed`);
       continue;
     }
     if (!failure) {

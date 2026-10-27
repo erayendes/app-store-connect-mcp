@@ -6,6 +6,7 @@
  * The JSON tests run against real temp files rather than a mock, because the
  * failure that matters is what ends up on disk.
  */
+import { execFileSync } from 'node:child_process';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   chmodSync,
@@ -502,6 +503,14 @@ fs.writeFileSync(path, JSON.stringify(data));
     expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'add']);
   });
 
+  it('keeps the new server when a dead entry of the same name is removed', () => {
+    state({ 'ASC-Access': { command: 'npx', args: ['-y', PACKAGE, 'access:users'] } });
+    const { results } = applyToClient(client(), ['access'], ['ASC-Access'], new Map(), { dead: new Map([['ASC-Access', 'ASC-Access (access:users)']]) });
+    expect(results.every((r) => r.ok)).toBe(true);
+    expect(result().servers['ASC-Access'].args).toEqual(['-y', PACKAGE, 'access']);
+    expect(result().calls.map((a: string[]) => a[1])).not.toContain('remove');
+  });
+
   it('restores the complete old entry when the second add fails', () => {
     const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] };
     state({ 'ASC-AppInfo': old }, 2);
@@ -718,6 +727,22 @@ describe('reporting a change of release channel', () => {
 });
 
 /** Claude Desktop is found by its main process, not a helper or Claude Code's namesake. */
+describe('a config held by an open app', () => {
+  it('counts every change as not done when the app holding its config is open', () => {
+    // This test's own process is an open app: its name as ps reports it
+    // (vitest retitles workers, so not always "node").
+    const self = process.platform === 'win32' ? 'node'
+      : execFileSync('ps', ['-o', 'comm=', '-p', String(process.pid)], { encoding: 'utf8' }).trim().split('/').pop()!;
+    const path = join(dir, 'held.json');
+    writeFileSync(path, JSON.stringify({ mcpServers: {} }));
+    const held: McpClient = { id: 'held', label: 'Held', targets: [{ kind: 'json', path, where: 'held.json', key: 'mcpServers', heldBy: self }] };
+    const { results, needsManual } = applyToClient(held, ['analytics'], []);
+    expect(results.find((r) => r.message.startsWith('added ASC-Analytics'))?.ok).toBe(false);
+    expect(needsManual).toBe(true);
+    expect(JSON.parse(readFileSync(path, 'utf8')).mcpServers).toEqual({});
+  });
+});
+
 describe('telling whether an app is open', () => {
   it('finds the app by its main process, not by a helper or a namesake', () => {
     const ps = [
