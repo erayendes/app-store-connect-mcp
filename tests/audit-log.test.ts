@@ -51,6 +51,13 @@ describe('maskArgs', () => {
     });
   });
 
+  it('masks secrets inside a body sent as JSON text, and drops JSON text it cannot read', () => {
+    expect(maskArgs({ body: '{"data":{"attributes":{"secret":"abc","url":"https://x.test/h?token=t"}}}', bad: '{"secret": ' })).toEqual({
+      body: '{"data":{"attributes":{"secret":"[masked]","url":"https://x.test/h?token=[masked]"}}}',
+      bad: '[unparsed JSON text not recorded]',
+    });
+  });
+
   it('masks credentials named any way inside a URL, and webhook URLs whose path is the secret', () => {
     expect(maskArgs({
       a: 'https://x.test/h?api_key=abc&page=2',

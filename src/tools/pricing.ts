@@ -1522,6 +1522,7 @@ async function equalizePrice(
         failedAt: row.territory,
         remaining: plan.length - written.length,
         error: (err as Error).message,
+        ...(err instanceof AscApiError ? { status: err.status, requestId: err.requestId } : {}),
         note:
           `Stopped at ${row.territory}. The ${written.length} listed above are set; the ` +
           `remaining ${plan.length - written.length} are unchanged. Fix the cause and run ` +
@@ -2366,7 +2367,7 @@ async function createSubscription(args: Record<string, unknown>, ctx: PricingCon
       throw new AscApiError(
         `${out.error ?? 'pricing stopped'} at ${out.failedAt}; priced so far: ${out.written?.length ? out.written.join(', ') : 'none'}. ` +
           'Finish with pricing__equalize_price and the same anchor price; a price already set is harmless to write again',
-        0
+        out.status ?? 0, [], out.requestId
       );
     }
     return out;

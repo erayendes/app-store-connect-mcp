@@ -75,6 +75,15 @@ describe('testflight__wait_for_build', () => {
     }
   });
 
+  it('stops when the call is cancelled while Apple is answering', async () => {
+    const controller = new AbortController();
+    const http = fakeHttp(['VALID']);
+    const read = http.collect.getMockImplementation();
+    http.collect.mockImplementation(async () => { controller.abort(); return read(); });
+    await expect(executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal }))
+      .rejects.toThrow(/cancelled/);
+  });
+
   it('refuses a wait longer than fifteen minutes', async () => {
     await expect(run(fakeHttp(['VALID']), { max_minutes: 30 })).rejects.toThrow(/from 1 to 15/);
   });

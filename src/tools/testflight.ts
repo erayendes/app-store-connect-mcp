@@ -427,6 +427,8 @@ async function waitForBuild(
       'filter[app]': app.id, [byId ? 'filter[id]' : 'filter[version]']: byId ? args.build.toLowerCase() : args.build,
       'fields[builds]': 'version,processingState', limit: 200,
     }, 2);
+    // shortcut: the read itself is not cancelled or bounded by the deadline (AscHttpClient takes no signal); thread one through if reads stall.
+    if (ctx.signal?.aborted) throw new AscApiError('Stopped waiting: the call was cancelled.', 0);
     const matches = builds.items.filter((b) => (byId ? b.id.toLowerCase() === String(args.build).toLowerCase() : b.attributes?.version === args.build));
     if (matches.length > 1) {
       throw new AscApiError(`Build "${args.build}" matches ${matches.length} builds; pass one of these build IDs: ${matches.map((b) => b.id).join(', ')}.`, 0);
@@ -533,5 +535,7 @@ async function assignBuildToGroups(
       result.error = error instanceof AscApiError ? error.summary : String(error);
     }
   }
-  return { app: `${app.name} (${app.id})`, build: build.id, groups: results };
+  // ok: false is the macro contract for a partial failure; the audit log reads it.
+  const failed = results.some((r) => r.status === 'failed');
+  return { ...(failed ? { ok: false } : {}), app: `${app.name} (${app.id})`, build: build.id, groups: results };
 }

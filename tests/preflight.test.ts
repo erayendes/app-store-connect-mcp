@@ -177,6 +177,8 @@ describe('preflight__check_version', () => {
     expect(res.blocking).toEqual([]);
     expect(res.checked).toEqual([]);
     expect(res.warnings[0]).toContain('IN_REVIEW');
+    // Required by the output schema, so a strict client accepts this answer too.
+    expect(res.manualChecks.map((c: any) => c.check)).toContain('App Privacy');
   });
 });
 

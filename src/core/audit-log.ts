@@ -49,12 +49,22 @@ const SECRET_PATH = /(hooks\.slack\.com\/services\/|discord(?:app)?\.com\/api\/w
 const maskUrls = (s: string) =>
   s.replace(SECRET_USERINFO, '$1[masked]@').replace(SECRET_PARAM, '$1[masked]').replace(SECRET_PATH, '$1[masked]');
 
+function maskValue(k: string, v: unknown): unknown {
+  if (k && SECRET_KEY.test(k) && v !== null) return '[masked]';
+  if (typeof v !== 'string') return v;
+  // A body sent as JSON text carries its secrets inside the string.
+  if (/^\s*[[{]/.test(v)) {
+    try {
+      return JSON.stringify(JSON.parse(v), maskValue);
+    } catch {
+      return '[unparsed JSON text not recorded]';
+    }
+  }
+  return maskUrls(v);
+}
+
 export function maskArgs(args: Record<string, unknown>): Record<string, unknown> {
-  const masked = JSON.parse(
-    JSON.stringify(args, (k, v) =>
-      k && SECRET_KEY.test(k) && v !== null ? '[masked]' : typeof v === 'string' ? maskUrls(v) : v
-    ) ?? '{}'
-  );
+  const masked = JSON.parse(JSON.stringify(args, maskValue) ?? '{}');
   const text = JSON.stringify(masked);
   return text.length > MAX_ARGS_CHARS ? { truncated: text.slice(0, MAX_ARGS_CHARS) } : masked;
 }

@@ -336,6 +336,7 @@ export async function executePreflightTool(
         `Version ${version.attributes?.versionString} is ${state}, which is past the point of preparing a submission. Nothing here is editable, so no checks were run.`,
       ],
       checked: [],
+      manualChecks: manualChecks(app.id),
     };
   }
 
