@@ -127,6 +127,7 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       const request = { ...args, ...(target === 'library' ? { asset_ids: ['img', 'vid'] } : { placement_ids: ['pi', 'pv'] }) };
       const preview = await buildMediaPreview('media__delete', request, http as any);
       expect(preview.strong).toBe(true); expect(preview.message).toContain('Hero image'); expect(preview.message).toContain('Preview video');
+      if (target === 'library') expect(preview.dialog).toEqual({ title: 'Delete 2 files from the media library?', body: 'Example · media library\n\nHero image, Preview video\nAlso taken off the page that uses them.\n\nDeleted files can’t be recovered.', action: 'Delete' });
       expect(preview.message).toContain(target === 'library' ? 'asset library' : pages[target]);
       if (target === 'library') expect(preview.message).toMatch(/Hero image \[img\]: IOS version 3.0[\s\S]*Preview video \[vid\]: IOS version 3.0/);
       const result: any = await executeMediaTool('media__delete', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
@@ -172,6 +173,9 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       expect(preview.strong).toBe(true);
       expect(preview.message).toContain('Hero image');
       expect(preview.message).toContain(pages[target]);
+      expect(preview.dialog).toMatchObject({ title: `Remove ${target === 'event' ? 'an image' : 'a screenshot'} from the ${{ version: 'App Store page', cpp: 'custom product page', ppo: 'product page test', event: 'in-app event' }[target]}?`, action: 'Remove' });
+      expect(preview.dialog!.body).toMatch(/^Example · .+\n\nHero image will be taken off this page\.\n\nThe file stays in the media library, so it can be placed again\.$/);
+      expect(preview.dialog!.body).not.toMatch(/\[|appAsset|placements/);
       await executeMediaTool('media__arrange', request, context(http, { approvedPlanFingerprint: preview.planFingerprint }));
       expect(http.delete).toHaveBeenCalledWith('/v1/appAssetLibraryPlacements/pi');
     });

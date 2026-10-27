@@ -625,6 +625,9 @@ describe('single-file owners: first upload, empty to-one and replace', () => {
       expect(preview.strong).toBe(true);
       expect(preview.message).toContain('replace');
       expect(preview.message).toContain(`${adapter.delete} [file1]`);
+      expect(preview.dialog).toMatchObject({ title: expect.stringMatching(/^Replace the .+\?$/), action: 'Replace' });
+      expect(preview.dialog!.body).toMatch(/^Example · .+\n\nNew file: .+\nReplaced: .+[\s\S]*can’t be recovered\.$/);
+      expect(preview.dialog!.title + preview.dialog!.body).not.toMatch(/\[file1\]|_|\.delete/);
       const result: any = await executeMediaTool('media__upload', { ...args, replace: true }, { http: http as any, approvedPlanFingerprint: preview.planFingerprint });
       expect(result).toMatchObject({ ok: true, deleted: ['file1'], fileId: 'new' });
       expect(http.delete.mock.calls.map(([p]) => p)).toEqual([pathFor(adapter.delete!, 'file1')]);

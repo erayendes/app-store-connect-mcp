@@ -26,7 +26,7 @@ The same tools now also take the other images and files App Store Connect holds:
 
 **`asc__load` is gone.** A server started with some of its sub-profiles still reads the rest through `asc__call`. For the tools themselves, the AI runs the `register` command the server names, with your yes.
 
-**Confirmations reach you in Claude Code.** Claude Code says it can show Heimdall's confirmation form, but its desktop Code tab turned every one down without showing it, so risky changes failed without a word. On a Mac, Heimdall now asks Claude Code in its own dialog, which the AI can neither see nor answer.
+**Confirmations reach you in Claude Code.** Claude Code says it can show Heimdall's confirmation form, but its desktop Code tab turned every one down without showing it, so risky changes failed without a word. On a Mac, Heimdall now asks Claude Code in its own dialog, which the AI can neither see nor answer. The dialog says the change in words ("Remove a screenshot from the App Store page?"), names the app, page and files without IDs, and its button says what it does: Remove, Delete, Upload.
 
 **Try it.** Run `npx -y @erayendes/asc-mcp@beta setup` and pick your profiles again; old names are not carried over (`app-info` is now `general`). Setup removes the entries whose profile no longer exists when they are Heimdall's own and carry no credentials or `envFile` of their own; others it lists and leaves alone. It moves the entries you keep to the beta and adds ASC-Core. Until then, a server whose settings still name an old profile shows one tool telling the AI to run setup.
 
@@ -308,7 +308,7 @@ Aynı araçlar artık App Store Connect'teki diğer görselleri ve dosyaları da
 
 **`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
 
-**Onaylar Claude Code'da size ulaşıyor.** Claude Code, Heimdall'ın onay formunu gösterebildiğini söylüyor; ama masaüstündeki Code sekmesi formu göstermeden reddediyordu ve riskli değişiklikler sessizce başarısız oluyordu. Heimdall artık Mac'te Claude Code'a kendi penceresiyle soruyor; yapay zekâ bu pencereyi ne görebiliyor ne de cevaplayabiliyor.
+**Onaylar Claude Code'da size ulaşıyor.** Claude Code, Heimdall'ın onay formunu gösterebildiğini söylüyor; ama masaüstündeki Code sekmesi formu göstermeden reddediyordu ve riskli değişiklikler sessizce başarısız oluyordu. Heimdall artık Mac'te Claude Code'a kendi penceresiyle soruyor; yapay zekâ bu pencereyi ne görebiliyor ne de cevaplayabiliyor. Pencere değişikliği açık bir cümleyle söylüyor ("Remove a screenshot from the App Store page?"), uygulamayı, sayfayı ve dosyaları ID'siz gösteriyor; düğmesi de ne yapacağını söylüyor: Remove, Delete, Upload.
 
 **Denemek için** `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırıp profillerinizi yeniden seçin; eski adlar taşınmıyor (`app-info` artık `general`). Setup, profili artık olmayan kayıtları Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siliyor; diğerlerini listeleyip olduğu gibi bırakıyor. Tuttuğunuz kayıtları betaya geçiriyor ve ASC-Core'u ekliyor. O zamana kadar ayarlarında eski bir profil adı geçen bir sunucu, yapay zekâya setup'ı çalıştırmasını söyleyen tek bir araç gösteriyor.
 

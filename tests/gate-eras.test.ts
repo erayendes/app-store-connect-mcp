@@ -555,6 +555,45 @@ describe('the macOS dialog text', () => {
   });
 });
 
+describe('the macOS dialog text for a raw write', () => {
+  // The form lists the request body field by field; a person at an alert
+  // needs it in words, with the button named for what it does.
+  it('says the change in words, names the target, and drops ids and plumbing', () => {
+    const preview = [
+      'Heimdall is about to run "app_store_version_localizations__update" — a PUBLIC-level write.',
+      '',
+      'Operation:  PATCH /v1/appStoreVersionLocalizations/{id}',
+      'Target:     id = loc-1 (Example 1.2, tr)',
+      'Account:    TESTKEY123',
+      'Changes:',
+      '  type = "appStoreVersionLocalizations"',
+      '  id = "loc-1"',
+      '  attributes.whatsNew = "Hata düzeltmeleri"',
+      '  attributes.preserveCurrentPrice = false — ⚠ Existing subscribers WILL be moved to the new price.',
+      '  relationships.subscriptionPricePoint.data → subscriptionPricePoints/eyJzIjoiNjcwMDAwMDAwMCIsInQiOiJUVVIiLCJwIjoiMTAwNzcifQ',
+      '  relationships.subscription.data → subscriptions/6700000000 — "Pro Monthly"',
+      'Risk:       public — Visible to customers once live; reversible by editing again.',
+    ].join('\n');
+
+    expect(dialogText('Update the store listing text for one language of a version: description, keywords', preview)).toEqual({
+      title: 'Update the store listing text for one language of a version?',
+      body: [
+        'Target: Example 1.2, tr',
+        'What’s new: Hata düzeltmeleri',
+        'Preserve current price: No — ⚠ Existing subscribers WILL be moved to the new price.',
+        'Subscription: Pro Monthly',
+        '',
+        'Visible to customers once live; reversible by editing again.',
+      ].join('\n'),
+      action: 'Update',
+    });
+  });
+
+  it('keeps Allow when the verb would collide with Cancel', () => {
+    expect(dialogText('Cancel a review submission', 'x').action).toBeUndefined();
+  });
+});
+
 describe.each(['legacy', 'modern'] as const)('deleting library files on a %s connection', (era) => {
   // Three "Delete an image from the asset library?" dialogs in a row, each
   // showing only "01.png (15)": the macro asks once and names them all.
@@ -594,10 +633,11 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
     });
 
     expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
-    const { title, body } = vi.mocked(nativeConfirm).mock.calls[0][0];
-    expect(title).toBe('Delete images or videos from an app’s asset library, or remove placements from a named page?');
-    expect(body).toMatch(/App:\s+Test App/);
-    expect(body).toMatch(/Files \(2\):[\s\S]*01.png \(15\)[\s\S]*02.png \(15\)/);
+    expect(vi.mocked(nativeConfirm).mock.calls[0][0]).toEqual({
+      title: 'Delete 2 images from the media library?',
+      body: 'Test App · media library\n\n01.png (15), 02.png (15)\n\nDeleted files can’t be recovered.',
+      action: 'Delete',
+    });
     expect(res.isError ?? false).toBe(false);
     expect(sent.filter((s) => s.startsWith('DELETE'))).toEqual([
       'DELETE /v1/appAssetLibraryImages/img-1',
