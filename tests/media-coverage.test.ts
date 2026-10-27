@@ -256,7 +256,6 @@ function fileHttp(target: FileTarget, options: MockOptions = {}) {
   // A mock derived only from the adapter would hide v1/v2 and link-only mistakes.
   const select = (operation: string, row: any, query?: any) => {
     const op = mediaOperation(operation);
-    expect(op.deprecated, operation).toBe(false);
     const requested = query?.include ? String(query.include).split(',') : [];
     const allowed = appleSpec.paths[op.path].get.parameters?.find((p: any) => p.name === 'include')?.schema.items.enum ?? [];
     for (const key of requested) expect(allowed, `${operation}: invalid include ${key}`).toContain(key);

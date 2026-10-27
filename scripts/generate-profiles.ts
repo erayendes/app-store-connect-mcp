@@ -14,54 +14,17 @@
  *
  * Run with `npm run generate`.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OPERATIONS } from '../src/generated/operations.js';
+import { MANUAL_MARKER, PROFILELESS_MARKER, TWIN_OF, readRows, type Row } from './profile-sheet.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-/** Rows whose tool is written by hand rather than generated from Apple's spec. */
-const MANUAL_MARKER = '(elle yazılmış)';
 
-/**
- * The profile column for an operation that belongs to no profile. These are
- * reverse reads (`beta_groups.app.get`: which app owns this group) that no
- * workflow needs, because every profile reaches the same resource from the app
- * side. They stay loadable with `--domains` and count as placed for the orphan
- * test; nothing in profile mode serves them.
- */
-const PROFILELESS_MARKER = '(profilsiz)';
 
-/**
- * Apple exposes most to-many relationships from both ends:
- * `/v1/betaGroups/{id}/relationships/betaTesters` and
- * `/v1/betaTesters/{id}/relationships/betaGroups` make the same link. Loading
- * both is two tools a model has to tell apart for one action, so the sheet
- * keeps one direction and drops the other. This is the record of which one was
- * dropped and what it was dropped in favour of — operation -> its twin.
- *
- * Validated below: both ends exist in the spec, and the twin is in a profile,
- * so dropping one side can never drop the action.
- */
-const TWIN_OF: Record<string, string> = {
-  'beta_groups.beta_testers.add': 'beta_testers.beta_groups.add',
-  'beta_groups.beta_testers.remove': 'beta_testers.beta_groups.remove',
-  'builds.beta_groups.add': 'beta_groups.builds.add',
-  'builds.beta_groups.remove': 'beta_groups.builds.remove',
-  'beta_testers.builds.add': 'builds.individual_testers.add',
-  'beta_testers.builds.remove': 'builds.individual_testers.remove',
-  'beta_testers.apps.remove': 'apps.beta_testers.remove',
-  'app_store_versions.app_clip_default_experience.set':
-    'app_clip_default_experiences.release_with_app_store_version.set',
-  'game_center_leaderboards_v2.challenge.set': 'game_center_challenges.leaderboard_v2.set',
-  'game_center_achievements_v2.activity.set': 'game_center_activities.achievements_v2.add',
-  'game_center_leaderboards_v2.activity.set': 'game_center_activities.leaderboards_v2.add',
-  // Not a relationship pair but the same read twice: the content by its own
-  // id, and the content through the in-app purchase that owns it.
-  'in_app_purchase_contents.get': 'in_app_purchases_v2.content.get',
-};
 
 /**
  * Operations a hand-written macro replaces outright — operation -> macro name.
@@ -172,60 +135,8 @@ const MACRO_COVERED: Record<string, string> = {
 /** Hand-written tools live in these families; anything else is a typo. */
 const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'media__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__'];
 
-interface Row {
-  profile: string;
-  subProfile: string;
-  tool: string;
-  operation: string;
-  rootResource: string;
-  line: number;
-}
 
-/**
- * Minimal RFC 4180 reader — enough for a spreadsheet export (quoted fields,
- * doubled quotes, newlines inside quotes). Not worth a dependency.
- */
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = '';
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else quoted = false;
-      } else field += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (c !== '\r') field += c;
-  }
-  if (field || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
 
-function readRows(): Row[] {
-  const table = parseCsv(readFileSync(resolve(ROOT, 'spec/profiles.csv'), 'utf8'));
-  const head = table[0];
-  const col = (name: string): number => {
-    const i = head.indexOf(name);
-    if (i < 0) throw new Error(`spec/profiles.csv is missing the "${name}" column.`);
-    return i;
-  };
-  const [p, s, t, op, root] = ['profile', 'sub-profile', 'tools', 'operasyon', 'kaynak_kok'].map(col);
-  return table
-    .slice(1)
-    .map((r, i) => ({
-      profile: r[p]?.trim() ?? '',
-      subProfile: r[s]?.trim() ?? '',
-      tool: r[t]?.trim() ?? '',
-      operation: r[op]?.trim() ?? '',
-      rootResource: r[root]?.trim() ?? '',
-      line: i + 2, // 1-based, past the header — matches what an editor shows
-    }))
-    .filter((r) => r.profile && r.tool);
-}
 
 /**
  * Every rule below fails the build rather than dropping a row. A silently
@@ -247,13 +158,9 @@ function validate(rows: Row[]): void {
             `(${MANUAL_PREFIXES.join(', ')}).`
         );
       }
-    } else {
-      const op = byName.get(row.operation);
-      if (!op) {
-        problems.push(`${where}: operation "${row.operation}" is not in the spec.`);
-      } else if (op.deprecated) {
-        problems.push(`${where}: operation "${row.operation}" is deprecated by Apple and never loads.`);
-      }
+    } else if (row.profile !== PROFILELESS_MARKER && !byName.has(row.operation)) {
+      // Deprecated operations are left out of the build too (scripts/generate.ts).
+      problems.push(`${where}: operation "${row.operation}" is not in the build: not in the spec, or deprecated.`);
     }
 
     // The same tool in two profiles is deliberate (M:N). The same tool twice in
@@ -267,7 +174,6 @@ function validate(rows: Row[]): void {
     rows.filter((r) => r.profile !== PROFILELESS_MARKER && r.operation !== MANUAL_MARKER).map((r) => r.operation)
   );
   for (const [dropped, twin] of Object.entries(TWIN_OF)) {
-    if (!byName.has(dropped)) problems.push(`TWIN_OF: "${dropped}" is not in the spec.`);
     if (!byName.has(twin)) problems.push(`TWIN_OF: twin "${twin}" of "${dropped}" is not in the spec.`);
     else if (!placed.has(twin)) {
       problems.push(`TWIN_OF: "${dropped}" was dropped for "${twin}", which is in no profile.`);
@@ -308,15 +214,11 @@ interface ProfileData {
   subProfiles: SubProfileData[];
 }
 
-function build(rows: Row[]): { profiles: ProfileData[]; profileless: string[] } {
+function build(rows: Row[]): ProfileData[] {
   const profiles = new Map<string, Map<string, SubProfileData>>();
-  const profileless = new Set<string>();
 
   for (const row of rows) {
-    if (row.profile === PROFILELESS_MARKER) {
-      profileless.add(row.operation);
-      continue;
-    }
+    if (row.profile === PROFILELESS_MARKER) continue;
     if (!profiles.has(row.profile)) profiles.set(row.profile, new Map());
     const subs = profiles.get(row.profile)!;
     if (!subs.has(row.subProfile)) {
@@ -344,9 +246,7 @@ function build(rows: Row[]): { profiles: ProfileData[]; profileless: string[] } 
     }
   }
 
-  return {
-    profileless: [...profileless].sort(),
-    profiles: [...profiles.entries()]
+  return [...profiles.entries()]
       .map(([name, subs]) => ({
         name,
         // Alphabetical, not sheet order: the CSV's row order is an artifact of
@@ -354,11 +254,10 @@ function build(rows: Row[]): { profiles: ProfileData[]; profileless: string[] } 
         // also keeps families together — every iap-* next to the others.
         subProfiles: [...subs.values()].sort((a, b) => a.name.localeCompare(b.name)),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  };
+      .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function emit(profiles: ProfileData[], profileless: string[]): string {
+function emit(profiles: ProfileData[]): string {
   const sub = (s: SubProfileData): string =>
     `    {\n` +
     `      name: ${JSON.stringify(s.name)},\n` +
@@ -396,10 +295,6 @@ function emit(profiles: ProfileData[], profileless: string[]): string {
         p.subProfiles.map(sub).join('\n') + `\n    ],\n  },`)
       .join('\n') +
     `\n];\n\n` +
-    `/** In no profile on purpose (reverse reads); reachable only with --domains. */\n` +
-    `export const PROFILELESS: string[] = ${JSON.stringify(profileless)};\n\n` +
-    `/** One direction of a relationship pair, dropped for its twin (operation -> twin). */\n` +
-    `export const TWIN_OF: Record<string, string> = ${record(TWIN_OF)};\n\n` +
     `/** Operations a hand-written macro replaces outright (operation -> macro). */\n` +
     `export const MACRO_COVERED: Record<string, string> = ${record(MACRO_COVERED)};\n`
   );
@@ -408,17 +303,18 @@ function emit(profiles: ProfileData[], profileless: string[]): string {
 function main(): void {
   const rows = readRows();
   validate(rows);
-  const { profiles, profileless } = build(rows);
+  const profiles = build(rows);
+  const profileless = rows.filter((r) => r.profile === PROFILELESS_MARKER);
 
-  writeFileSync(resolve(ROOT, 'src/generated/profiles-data.ts'), emit(profiles, profileless));
+  writeFileSync(resolve(ROOT, 'src/generated/profiles-data.ts'), emit(profiles));
 
   const named = profiles.reduce((n, p) => n + p.subProfiles.filter((s) => s.name).length, 0);
   const report = [
     `Profiles:       ${profiles.length}`,
     `Sub-profiles:   ${named} named, ` +
       `${profiles.filter((p) => p.subProfiles.length === 1 && !p.subProfiles[0].name).length} profiles without`,
-    `Rows:           ${rows.length} (${profileless.length} profile-less; ` +
-      `${Object.keys(TWIN_OF).length} operations dropped for a twin, ` +
+    `Rows:           ${rows.length} (${profileless.length} profile-less and ` +
+      `${Object.keys(TWIN_OF).length} twins left out of the build, ` +
       `${Object.keys(MACRO_COVERED).length} covered by a macro)`,
     '',
     ...profiles.map((p) => {

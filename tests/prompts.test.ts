@@ -52,7 +52,7 @@ describe('the prompt list', () => {
         const server = createServer(
           {
             credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'not-used-here' },
-            readOnly: false, confirmWrites: 'off', includeDeprecated: false, dryRun: true,
+            readOnly: false, confirmWrites: 'off', dryRun: true,
           },
           resolveSelection(spec)
         );

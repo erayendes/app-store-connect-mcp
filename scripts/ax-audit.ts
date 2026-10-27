@@ -124,16 +124,9 @@ function referencedTypes(op: Operation, schema: unknown): Set<string> {
   return types;
 }
 
-/**
- * Deprecated operations are excluded by default because the registry never
- * loads them (`includeDeprecated` defaults to false), so no agent can reach
- * them and their debt is unpayable and unfelt. Counting them inflated every
- * axis — 59 of the boilerplate findings were on tools nobody can call — and an
- * inflated denominator makes the ratchet ceilings meaningless.
- */
-const LOADABLE = OPERATIONS.filter((op) => !op.deprecated);
-
-export function auditAx(operations: readonly Operation[] = LOADABLE): AxDebt {
+// Deprecated operations are not built (scripts/generate.ts), so every
+// operation here is one an agent can reach.
+export function auditAx(operations: readonly Operation[] = OPERATIONS): AxDebt {
   const writes = operations.filter(isWrite);
   const lists = operations.filter((op) => op.readOnly && op.name.endsWith('.list'));
 

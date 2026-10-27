@@ -25,8 +25,6 @@ Restart your app after changing either.
 | `--confirm` | Asks before **every** change, not just the risky ones. |
 | `--no-confirm` | Stops asking, with one exception: `release__submit` and `release__submit_items` always ask. Otherwise your AI app's own tool approval is the only check left. |
 | `--with-core` | Serves ASC-Core's tools (finding apps, tool search, the media tools) from this server too, for an AI app that can run only one server. Setup doesn't need it: it registers ASC-Core next to your profiles. |
-| `--include-deprecated` | Also loads the operations Apple has deprecated or replaced, in the areas the profile covers: 185 in all, 102 of them Game Center. This includes the v1 subscription and in-app purchase tools. |
-| `--domains=<list>` | Only without a profile: loads these areas, comma-separated, or `all`. |
 
 **ASC-Core follows your strictest setting.** When setup or `register` adds ASC-Core to an app, it is read-only if any Heimdall server in that app is, by flag or by `ASC_READ_ONLY`. Making one profile read-only by hand later doesn't change ASC-Core; run setup again, or add `--read-only` to ASC-Core's entry too.
 
@@ -62,8 +60,6 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | `ASC_DRY_RUN` | `1` or `true` = `--dry-run` |
 | `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (the release tools still ask) |
 | `ASC_NATIVE_CONFIRM` | `0` = no Mac dialog when the app can't ask; those changes are refused instead |
-| `ASC_INCLUDE_DEPRECATED` | `true` = `--include-deprecated` |
-| `ASC_DOMAINS` | Same as `--domains` |
 
 **StoreKit 2 (customer transactions).**
 

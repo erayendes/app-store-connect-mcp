@@ -15,17 +15,11 @@
  * once per registered profile; now it is its own server (`ASC-Core`),
  * registered next to the rest, or folded into one server with `--with-core`.
  */
-import {
-  MACRO_COVERED,
-  PROFILELESS,
-  PROFILE_DATA,
-  TWIN_OF,
-  type GeneratedSubProfile,
-} from './generated/profiles-data.js';
+import { MACRO_COVERED, PROFILE_DATA, type GeneratedSubProfile } from './generated/profiles-data.js';
 import { OPERATIONS } from './generated/operations.js';
 import { PACKAGE, serverName } from './clients.js';
 
-export { MACRO_COVERED, PROFILELESS, TWIN_OF };
+export { MACRO_COVERED };
 
 /** The profile that carries app lookup, tool search and the media macros. */
 export const CORE_PROFILE = 'core';
@@ -212,8 +206,7 @@ export function resolveSelection(spec: string): ProfileSelection {
   if (!profile) {
     throw new Error(
       `Unknown profile "${profileName}".\n` +
-        `Available: ${PROFILES.map((p) => p.name).join(', ')}\n` +
-        `Or run with no profile for the combined server.`
+        `Available: ${PROFILES.map((p) => p.name).join(', ')}`
     );
   }
 
@@ -244,29 +237,6 @@ export function resolveSelection(spec: string): ProfileSelection {
 /** Every spec operation a selection serves. */
 export function operationsFor(selection: ProfileSelection): string[] {
   return [...new Set(selection.subProfiles.flatMap((s) => s.operations))];
-}
-
-/**
- * The deprecated operations `--include-deprecated` should add to a selection.
- *
- * They are in no profile: membership is hand-curated in spec/profiles.csv and
- * nobody curates an endpoint Apple has retired, so 0 of 123 were reachable in
- * profile mode and the flag silently did nothing there — it only ever worked on
- * the no-profile server with `--domains`.
- *
- * Membership by DOMAIN rather than by curation, and that is the honest
- * definition rather than a shortcut: "everything retired in the areas this
- * profile covers" is what someone passing this flag is asking for, and there is
- * no curated answer to inherit. Most of it is Game Center — 102 of the 123 —
- * so `game-center --include-deprecated` is the case this visibly changes.
- */
-export function deprecatedOperationsFor(selection: ProfileSelection): string[] {
-  const domains = new Set(
-    operationsFor(selection)
-      .map((name) => OPERATIONS.find((op) => op.name === name)?.domain)
-      .filter(Boolean) as string[]
-  );
-  return OPERATIONS.filter((op) => op.deprecated && domains.has(op.domain)).map((op) => op.name);
 }
 
 /** Hand-written tools a selection serves (StoreKit, reviews-AI, pricing macros, core's meta tools). */
@@ -340,13 +310,21 @@ export function registerCommand(spec: string): string {
  */
 export function unknownProfileMessage(spec: string, reason?: string): string {
   return (
-    `This MCP server was started with the App Store Connect profile "${spec}", which does ` +
-    `not exist in Heimdall — it was renamed or removed, or it is a typo.` +
-    (reason ? `\n${reason.split('\n')[0]}` : '') +
+    (spec
+      ? `This MCP server was started with the App Store Connect profile "${spec}", which does ` +
+        `not exist in Heimdall — it was renamed or removed, or it is a typo.`
+      : // The combined server of 2.x, started with no profile (and maybe --domains).
+        `This MCP server was started without an App Store Connect profile. Heimdall serves ` +
+        `App Store Connect only through profiles since 3.0.`) +
+    (spec && reason ? `\n${reason.split('\n')[0]}` : '') +
     `\n\nThis server carries no App Store Connect tools. Tell the user to run ` +
-    `\`npx -y ${PACKAGE} setup\` in a terminal: it removes entries whose profile no ` +
-    `longer exists and lets them pick from the current profiles below. Then restart ` +
-    `the client.\n\nCurrent profiles:\n` +
+    `\`npx -y ${PACKAGE} setup\` in a terminal: it ` +
+    (spec
+      ? `removes entries whose profile no longer exists and lets them pick`
+      : // setup counts an entry without a profile as the user's own and leaves it.
+        `lets them pick profiles, but leaves this entry alone, so they also delete it from ` +
+        `their MCP client's settings. They pick`) +
+    ` from the current profiles below. Then restart the client.\n\nCurrent profiles:\n` +
     PROFILES.map((p) => `  ${p.name.padEnd(18)} ${p.description}`).join('\n')
   );
 }

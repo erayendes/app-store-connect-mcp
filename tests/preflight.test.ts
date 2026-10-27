@@ -279,7 +279,6 @@ describe(subscriptionTool, () => {
       }
       const op = OPERATIONS.find((o) => o.name.replaceAll('.', '__') === fix);
       expect(op, fix).toBeTruthy();
-      expect(op!.deprecated, fix).toBe(false);
       expect(op!.readOnly, fix).toBe(false);
       expect(csv).toMatch(new RegExp(`monetization,subscription,${fix},`));
     }

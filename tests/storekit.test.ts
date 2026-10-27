@@ -21,7 +21,6 @@ const config = {
   storekit: { bundleId: 'com.example.app', environment: 'Sandbox' },
   readOnly: false,
   confirmWrites: 'off',
-  includeDeprecated: false,
 } as ServerConfig;
 
 /** A JWS whose payload carries one product ID. Signature is never checked. */

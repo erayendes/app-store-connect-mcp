@@ -25,8 +25,6 @@
 | `--confirm` | Sadece riskli olanlardan değil, **her** değişiklikten önce sorar. |
 | `--no-confirm` | Sormayı bırakır, tek istisnayla: `release__submit` ve `release__submit_items` her zaman sorar. Bunun dışında geriye yalnızca yapay zekâ uygulamanızın kendi araç onayı kalır. |
 | `--with-core` | ASC-Core araçlarını (uygulama bulma, araç arama, medya araçları) bu sunucudan da sunar; yalnızca tek sunucu çalıştırabilen yapay zekâ uygulamaları için. Setup'ın buna ihtiyacı yoktur: ASC-Core'u profillerinizin yanına kendisi kaydeder. |
-| `--include-deprecated` | Apple'ın kullanımdan kaldırdığı ya da yenisiyle değiştirdiği işlemleri de, profilin kapsadığı alanlarda yükler: toplam 185, 102'si Game Center. Eski (v1) abonelik ve uygulama içi satın alma araçları da bunlara dahildir. |
-| `--domains=<liste>` | Yalnızca profilsiz kullanımda: virgülle ayrılmış alanları ya da `all` ile hepsini yükler. |
 
 **ASC-Core en sıkı ayarınıza uyar.** Setup ya da `register` bir uygulamaya ASC-Core eklerken, o uygulamadaki Heimdall sunucularından biri bayrakla ya da `ASC_READ_ONLY` ile salt okunursa ASC-Core'u da salt okunur ekler. Sonradan bir profili elle salt okunur yapmak ASC-Core'u değiştirmez; setup'ı yeniden çalıştırın ya da `--read-only`'yi ASC-Core'un kaydına da ekleyin.
 
@@ -62,8 +60,6 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | `ASC_DRY_RUN` | `1` ya da `true` = `--dry-run` |
 | `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (yayın araçları yine sorar) |
 | `ASC_NATIVE_CONFIRM` | `0` = uygulama soramıyorsa Mac penceresi açılmaz; bu değişiklikler reddedilir |
-| `ASC_INCLUDE_DEPRECATED` | `true` = `--include-deprecated` |
-| `ASC_DOMAINS` | `--domains` ile aynı |
 
 **StoreKit 2 (müşteri işlemleri).**
 

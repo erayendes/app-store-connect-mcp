@@ -112,42 +112,6 @@ type RefResolver = (
   progress?: (label: string) => void
 ) => Promise<string | undefined>;
 
-/** Screenshots and previews: the asset, its set, and the set's device attribute. */
-const LISTING_ASSETS = {
-  appScreenshots: { setRel: 'appScreenshotSet', setType: 'appScreenshotSets', size: 'screenshotDisplayType' },
-  appPreviews: { setRel: 'appPreviewSet', setType: 'appPreviewSets', size: 'previewType' },
-} as const;
-const LISTING_SET_SIZE: Record<string, string> = { appScreenshotSets: 'screenshotDisplayType', appPreviewSets: 'previewType' };
-
-/**
- * Where a screenshot or preview set sits: which app, version, language and
- * device, or which custom product page or product page test. A delete prompt
- * that said only "02.png" could not tell one app's screenshot from another's.
- * Up to three reads, one step up each; `say` is called after every step.
- */
-async function listingSetContext(
-  http: RefReader,
-  setType: string,
-  setId: string,
-  say: (where: string[]) => void,
-  device?: string
-): Promise<string[]> {
-  const where: string[] = device ? [device] : [];
-  const set: any = await http.get(`/v1/${setType}/${encodeURIComponent(setId)}`, {
-    include: 'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization',
-  });
-  const size = set?.data?.attributes?.[LISTING_SET_SIZE[setType]];
-  if (!device && size) where.push(size);
-  const loc = (set?.included ?? [])[0];
-  const locale = loc?.attributes?.locale;
-  if (locale) where.unshift(locale);
-  if (loc?.type === 'appCustomProductPageLocalizations') where.unshift('custom product page');
-  if (loc?.type === 'appStoreVersionExperimentTreatmentLocalizations') where.unshift('product page test');
-  say(where);
-  if (loc?.type === 'appStoreVersionLocalizations') await versionPageContext(http, loc.id, where, say);
-  return where;
-}
-
 /** From a version page's locale up to its version and app: two reads, prepended to `where`. */
 async function versionPageContext(
   http: RefReader,
@@ -214,38 +178,6 @@ const libraryAsset =
     return current;
   };
 
-const listingAsset =
-  (type: keyof typeof LISTING_ASSETS): RefResolver =>
-  async (http, id, progress) => {
-    const { setRel, setType, size } = LISTING_ASSETS[type];
-    const res: any = await http.get(`/v1/${type}/${encodeURIComponent(id)}`, { include: setRel });
-    const fileName: string | undefined = res?.data?.attributes?.fileName;
-    const set = (res?.included ?? []).find((i: any) => i?.type === setType);
-    const setId: string | undefined = set?.id ?? res?.data?.relationships?.[setRel]?.data?.id;
-    const device: string | undefined = set?.attributes?.[size];
-    const label = (where: string[]) =>
-      [fileName, where.join(', ')].filter(Boolean).join(' — ') || undefined;
-    let current = label(device ? [device] : []);
-    if (current) progress?.(current);
-    if (!setId) return current;
-    await listingSetContext(http, setType, setId, (where) => {
-      current = label(where);
-      if (current) progress?.(current);
-    }, device);
-    return current;
-  };
-
-const listingSet =
-  (type: string): RefResolver =>
-  async (http, id, progress) => {
-    let current: string | undefined;
-    await listingSetContext(http, type, id, (where) => {
-      current = where.join(', ') || undefined;
-      if (current) progress?.(current);
-    });
-    return current;
-  };
-
 /**
  * Human labels for the reference types that matter most in previews.
  *
@@ -297,10 +229,6 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
     const res: any = await http.get(`/v1/betaGroups/${encodeURIComponent(id)}`);
     return res?.data?.attributes?.name ?? undefined;
   },
-  appScreenshots: listingAsset('appScreenshots'),
-  appPreviews: listingAsset('appPreviews'),
-  appScreenshotSets: listingSet('appScreenshotSets'),
-  appPreviewSets: listingSet('appPreviewSets'),
   appAssetLibraryImages: libraryAsset('appAssetLibraryImages'),
   appAssetLibraryVideos: libraryAsset('appAssetLibraryVideos'),
 };

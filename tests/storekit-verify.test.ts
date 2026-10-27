@@ -12,7 +12,6 @@ const base: ServerConfig = {
   storekit: { bundleId: 'com.example.app', environment: 'Sandbox' },
   readOnly: false,
   confirmWrites: 'off',
-  includeDeprecated: false,
   dryRun: false,
 };
 

@@ -10,7 +10,6 @@ import { TokenProvider } from './core/jwt.js';
 import { AscHttpClient, hintFor } from './core/http.js';
 import {
   ToolRegistry,
-  DEFAULT_DOMAINS,
   toMcpTool,
   toolNameFor,
   type McpToolDefinition,
@@ -50,7 +49,6 @@ import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } fro
 import {
   CORE_PROFILE,
   manualToolsFor,
-  deprecatedOperationsFor,
   operationsFor,
   profilesForOperation,
   registerCommand,
@@ -140,24 +138,22 @@ export function servedToolCount(server: Server): number | undefined {
   return toolCounts.get(server)?.();
 }
 
-export function createServer(config: ServerConfig, selection?: ProfileSelection): Server {
+export function createServer(config: ServerConfig, selection: ProfileSelection): Server {
   const tokens = new TokenProvider(config.credentials);
   // ASC_BASE_URL redirects everything to a local fixture server for testing;
   // host-pinning then pins to that origin instead of Apple's.
   const http = new AscHttpClient(tokens, { baseUrl: config.baseUrl, rateLimit: config.rateLimit });
 
-  const isCore = selection?.profile.name === CORE_PROFILE;
+  const isCore = selection.profile.name === CORE_PROFILE;
   /**
    * The core profile's tools — app lookup, the meta tools, the media macros.
    * Served by ASC-Core itself, and folded into a profile server started with
    * `--with-core`, for a channel that can run only one process.
    */
-  const core = selection && (isCore || config.withCore) ? resolveSelection(CORE_PROFILE) : undefined;
+  const core = isCore || config.withCore ? resolveSelection(CORE_PROFILE) : undefined;
 
-  // In profile mode, "how do I reach that tool" answers name the sibling MCP
-  // server; the --domains flag only makes sense on the monolithic server.
-  const missingToolHint = selection
-    ? (op: Operation): string => {
+  // "How do I reach that tool" answers name the sibling MCP server.
+  const missingToolHint = (op: Operation): string | undefined => {
         const ownSub = subProfileOwning(selection.profile, op.name);
         if (ownSub) {
           // Same server, unselected sub-profile: the remedy is a startup
@@ -173,25 +169,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? `It is served by the "${serverName(homes[0])}" MCP server. Register it with:\n` +
             `  ${registerCommand(homes[0])}\n` +
             `(or add the same entry to your MCP client config), then restart your client.`
-          : `Run the server without a profile and with --domains=${op.domain} to reach it.`;
-      }
-    : undefined;
+          : undefined;
+      };
 
   const registry = new ToolRegistry({
     // A profile carries an explicit, hand-curated list, plus core's when it
     // rides along.
-    operations: selection
-      ? [
-          ...operationsFor(selection),
-          ...(core && !isCore ? operationsFor(core) : []),
-          // Deprecated operations are in no profile, so without this the flag
-          // was a no-op in profile mode — see deprecatedOperationsFor.
-          ...(config.includeDeprecated ? deprecatedOperationsFor(selection) : []),
-        ]
-      : undefined,
-    domains: selection ? undefined : config.domains,
+    operations: [...operationsFor(selection), ...(core && !isCore ? operationsFor(core) : [])],
     readOnly: config.readOnly,
-    includeDeprecated: config.includeDeprecated,
     paramDefaults: config.vendorNumber
       ? { 'filter[vendorNumber]': config.vendorNumber }
       : undefined,
@@ -199,15 +184,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     dryRun: config.dryRun,
   });
 
-  const loadedDomains = selection
-    ? registry.loadedDomains()
-    : config.domains?.length
-      ? config.domains
-      : [...DEFAULT_DOMAINS];
+  const loadedDomains = registry.loadedDomains();
 
-  const loadedSubs = new Set(selection?.subProfiles ?? []);
-  const unloadedSubs = (): SubProfile[] =>
-    selection ? selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s)) : [];
+  const loadedSubs = new Set(selection.subProfiles);
+  const unloadedSubs = (): SubProfile[] => selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s));
   /**
    * The command that makes `sub` part of this server. There is no way to add
    * it mid-session that works everywhere: a server may revise its tool list,
@@ -215,15 +195,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * app's Code tab among them). Rewriting the config and restarting does.
    */
   const registerWith = (sub: SubProfile): string =>
-    selection
-      ? `npx -y ${PACKAGE} register ${selection.profile.name}:` +
-        // What the user registered first, in their order, then what was added.
-        [...new Set([...loadedSubs, sub])].map((s) => s.name).join(',')
-      : '';
+    `npx -y ${PACKAGE} register ${selection.profile.name}:` +
+    // What the user registered first, in their order, then what was added.
+    [...new Set([...loadedSubs, sub])].map((s) => s.name).join(',');
 
   /** What this server is, in the unit a user configures: profiles. */
-  const profileReport = selection
-    ? (): Record<string, unknown> => ({
+  const profileReport = (): Record<string, unknown> => ({
         profile: selection.profile.name,
         subProfiles: selection.profile.subProfiles
           .filter((s) => s.name)
@@ -244,17 +221,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 `and restart the client.`,
             }
           : {}),
-      })
-    : undefined;
+      });
 
   // Which hand-written tool families this selection carries. The curation
   // sheet decides — a sub-profile listing `storekit__*` is what turns them on,
   // so unchecking that sub-profile turns them off with no second switch. Core's
   // rows count when core rides along; leaving them out here is how a core
   // macro ships unreachable while the sheet says otherwise.
-  const manualTools = selection
-    ? new Set([...manualToolsFor(selection), ...(core ? manualToolsFor(core) : [])])
-    : undefined;
+  const manualTools = new Set([...manualToolsFor(selection), ...(core ? manualToolsFor(core) : [])]);
 
   /**
    * The meta tools. Search and discovery answer for the whole catalogue, so
@@ -263,7 +237,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * from one list, so core cannot register `asc__status` twice.
    */
   const metaTools = META_TOOLS.filter(
-    (t) => !manualTools || manualTools.has(t.name) || t.name === 'asc__status'
+    (t) => manualTools.has(t.name) || t.name === 'asc__status'
   );
   const metaOffered = (name: string): boolean => metaTools.some((t) => t.name === name);
 
@@ -272,9 +246,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * out, so they exist only where something was left out. On a full profile
    * every tool they could reach is already in the list.
    */
-  const proxyOffered = Boolean(selection?.partial);
+  const proxyOffered = Boolean(selection.partial);
   const wantsFamily = (prefix: string): boolean =>
-    manualTools ? [...manualTools].some((t) => t.startsWith(prefix)) : true;
+    [...manualTools].some((t) => t.startsWith(prefix));
 
   // StoreKit tools come with the profile that opts in (monetization's storekit
   // sub-profile). Apple scopes each call to one app, which the service looks
@@ -301,7 +275,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    */
   const macroTools = MACRO_TOOLS.filter(
     (t) =>
-      (!manualTools || manualTools.has(t.name)) &&
+      manualTools.has(t.name) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
   );
   const macroOffered = (name: string): boolean => macroTools.some((t) => t.name === name);
@@ -314,7 +288,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const gate = createWriteGate();
 
   const server = new Server(
-    { name: selection ? serverName(selection.profile.name) : 'app-store-connect-mcp', version: VERSION },
+    { name: serverName(selection.profile.name), version: VERSION },
     {
       // listChanged: the tool list can grow mid-session when asc__call loads
       // the operation it proxied, and a resource appears whenever a response
@@ -324,7 +298,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         resources: { listChanged: true },
         prompts: {},
       },
-      instructions: selection && !core ? `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}` : SERVER_INSTRUCTIONS,
+      instructions: !core ? `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}` : SERVER_INSTRUCTIONS,
       // A confirmation's state comes back through the client: forged, expired
       // or tampered state is refused before the handler ever sees it.
       requestState: { verify: gate.verify },
@@ -377,8 +351,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * not — the reachable set for the proxy below. Its own profile only: core's
    * tools and a sibling profile's are another server's to serve.
    */
-  const profileOperations = (): string[] =>
-    selection ? [...new Set(selection.profile.subProfiles.flatMap((s) => s.operations))] : [];
+  const profileOperations = (): string[] => [...new Set(selection.profile.subProfiles.flatMap((s) => s.operations))];
 
   /** Accepts either the dotted operation name or the public `a__b` tool name. */
   const resolveProfileOperation = (raw: string): Operation | undefined => {
@@ -405,7 +378,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * validation, dry-run, risk level, typed confirmation — and loads the
    * operation on the way, so it also becomes a native tool for whoever refreshes.
    */
-  const PROXY_TOOLS: McpToolDefinition[] = proxyOffered && selection
+  const PROXY_TOOLS: McpToolDefinition[] = proxyOffered
     ? [
         {
           name: 'asc__describe',
@@ -456,12 +429,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     if (!known) {
       return `Unknown tool "${raw}". Use asc__search_tools (on ASC-Core) to find the right name.`;
     }
-    const homes = profilesForOperation(known.name).filter((n) => n !== selection?.profile.name);
+    const homes = profilesForOperation(known.name).filter((n) => n !== selection.profile.name);
     return (
-      `"${raw}" is not part of this profile. ` +
-      (homes.length
-        ? `It is served by the "${serverName(homes[0])}" MCP server:\n  ${registerCommand(homes[0])}`
-        : `Run the server without a profile and with --domains=${known.domain} to reach it.`)
+      `"${raw}" is not part of this profile.` +
+      (homes.length ? ` It is served by the "${serverName(homes[0])}" MCP server:\n  ${registerCommand(homes[0])}` : '')
     );
   };
 
@@ -472,8 +443,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * client receives. It used to quote `toolCountFor`, which counts the
    * operations the profile MAPS — a number that is stable, easy to put in a
    * changelog, and wrong in every client: `asc__call` and `asc__describe` are
-   * served and mapped nowhere, StoreKit only loads with a bundle id, and
-   * since #66 `--include-deprecated` adds tools too. Someone reading "24" and
+   * served and mapped nowhere, and StoreKit only loads with a bundle id. Someone reading "24" and
    * seeing 29 has no way to tell whether they misconfigured something.
    */
   const servedTools = (): McpToolDefinition[] => {
@@ -545,11 +515,9 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       // would send the model looking for a spelling mistake.
       if ((name === 'asc__describe' || name === 'asc__call') && !proxyOffered) {
         throw new Error(
-          selection
-            ? `${name} is not offered here: this server loads every sub-profile of ` +
-                `"${selection.profile.name}", so call the tool itself. Tools of other profiles ` +
-                `are served by their own ASC server.`
-            : `${name} exists only on a profile server started with some of its sub-profiles.`
+          `${name} is not offered here: this server loads every sub-profile of ` +
+            `"${selection.profile.name}", so call the tool itself. Tools of other profiles ` +
+            `are served by their own ASC server.`
         );
       }
       if (META_TOOL_NAMES.has(name) && !metaOffered(name)) {
@@ -563,7 +531,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         throw new Error(`Unknown tool "${name}": this server does not offer it. Nothing was changed.`);
       }
 
-      if (name === 'asc__describe' && selection) {
+      if (name === 'asc__describe') {
         const op = resolveProfileOperation(String(args.tool ?? ''));
         if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
         const tool = toMcpTool(op, config.vendorNumber ? { 'filter[vendorNumber]': config.vendorNumber } : undefined);
@@ -580,7 +548,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         });
       }
 
-      if (name === 'asc__call' && selection) {
+      if (name === 'asc__call') {
         const op = resolveProfileOperation(String(args.tool ?? ''));
         if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
         if (!op.readOnly) {
@@ -804,14 +772,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           loadedDomains,
           storekitEnabled: Boolean(storekit),
           macroOffered,
-          includeDeprecated: config.includeDeprecated,
           profileReport,
-          ownProfile: selection?.profile.name,
+          ownProfile: selection.profile.name,
           // Core answers for the whole catalogue: it is the one server every
           // setup registers, so "what else is there" is its question to answer.
           catalogue: Boolean(core),
-          missingToolsHint: selection
-            ? (ops) => {
+          missingToolsHint: (ops) => {
                 const own = ops
                   .map((op) => subProfileOwning(selection.profile, op.name))
                   .filter((s): s is SubProfile => Boolean(s) && !loadedSubs.has(s!));
@@ -847,9 +813,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                       `their MCP client.`
                   );
                 }
-                return lines.join('\n') || `Run the server without a profile to combine domains freely.`;
-              }
-            : undefined,
+                return lines.join('\n');
+              },
         });
       } else if (macroOffered(name) && METADATA_I18N_TOOL_NAMES.has(name) && !METADATA_I18N_WRITE_TOOLS.has(name)) {
         // The audit and the draft answer with data plus an instruction for the
@@ -993,16 +958,18 @@ export function createUnknownProfileServer(spec: string, reason?: string): Serve
   const message = unknownProfileMessage(spec, reason);
 
   const server = new Server(
-    { name: serverName(spec), version: VERSION },
+    { name: spec ? serverName(spec) : 'app-store-connect-mcp', version: VERSION },
     { capabilities: { tools: {} } }
   );
 
   const tool = {
     name: 'asc__profile_unknown',
     description:
-      `This MCP server is configured for the App Store Connect profile "${spec}", which does ` +
-      `not exist — renamed, removed or mistyped. It carries no other tools. Call this for the ` +
-      `current profiles and the fix to tell the user about.`,
+      (spec
+        ? `This MCP server is configured for the App Store Connect profile "${spec}", which does ` +
+          `not exist — renamed, removed or mistyped.`
+        : `This MCP server is configured with no App Store Connect profile, which Heimdall no longer serves.`) +
+      ` It carries no other tools. Call this for the current profiles and the fix to tell the user about.`,
     inputSchema: { type: 'object' as const, properties: {} },
     annotations: { readOnlyHint: true },
   };

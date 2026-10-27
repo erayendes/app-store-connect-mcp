@@ -308,39 +308,20 @@ describe('generated operations', () => {
 });
 
 describe('ToolRegistry', () => {
-  it('loads a default working set rather than all 1,263 operations', () => {
-    const registry = new ToolRegistry({ readOnly: false, includeDeprecated: false });
-    expect(registry.size).toBeGreaterThan(100);
-    expect(registry.size).toBeLessThan(OPERATIONS.length);
-  });
-
   it('loads everything when asked for "all"', () => {
     const registry = new ToolRegistry({
-      domains: ['all'],
+      operations: OPERATIONS.map((o) => o.name),
       readOnly: false,
-      includeDeprecated: true,
     });
-    // Profile-less "all" still hides operations replaced by media macros.
+    // Every operation still hides the ones replaced by media macros.
     expect(registry.size).toBe(OPERATIONS.length - Object.keys(MACRO_COVERED).length);
   });
 
-  it('excludes deprecated operations by default', () => {
-    const without = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
-    const with_ = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: true });
-    expect(with_.size).toBeGreaterThan(without.size);
-  });
-
   it('exposes only GET operations in read-only mode', () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     for (const tool of registry.listTools()) {
       expect(tool.annotations?.readOnlyHint).toBe(true);
     }
-  });
-
-  it('reports which domains are not loaded', () => {
-    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
-    expect(registry.unloadedDomains()).toContain('game_center');
-    expect(registry.unloadedDomains()).not.toContain('apps');
   });
 
   // The macros have always taken an app the way a person says one; the
@@ -365,7 +346,7 @@ describe('ToolRegistry', () => {
     };
 
     it('resolves a bundle ID on an app-rooted path', async () => {
-      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: false });
       const { paths, http } = spy({ data: [{ id: '6636549188', attributes: { name: 'Ask Quran' } }] });
       await registry.execute('apps__get', { id: 'com.milowda.askquranai' }, http);
       expect(paths[0]).toBe('/v1/apps');
@@ -373,7 +354,7 @@ describe('ToolRegistry', () => {
     });
 
     it('spends no lookup on a value Apple would have accepted', async () => {
-      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: false });
       const { paths, http } = spy({ data: { id: '6636549188' } });
       await registry.execute('apps__get', { id: '6636549188' }, http);
       expect(paths).toEqual(['/v1/apps/6636549188']);
@@ -382,14 +363,14 @@ describe('ToolRegistry', () => {
     it('leaves a non-app id alone, however unlike a number it looks', async () => {
       // Most Apple ids are UUIDs. Resolving those as app names would turn a
       // working call into a search that finds nothing.
-      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: false });
       const { paths, http } = spy({ data: { id: 'x' } });
       await registry.execute('builds__get', { id: '8f0c-not-a-number' }, http);
       expect(paths).toEqual(['/v1/builds/8f0c-not-a-number']);
     });
 
     it('says so in the schema, since a tool nobody knows takes a name gets none', () => {
-      const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
+      const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: false });
       const appsGet = registry.listTools().find((t) => t.name === 'apps__get')!;
       const buildsGet = registry.listTools().find((t) => t.name === 'builds__get')!;
       expect((appsGet.inputSchema.properties as any).id.description).toContain('bundle ID');
@@ -398,8 +379,8 @@ describe('ToolRegistry', () => {
   });
 
   it('refuses to execute a mutating tool in read-only mode', async () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
-    const readOnly = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: false });
+    const readOnly = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const mutating = registry.listTools().find((t) => t.annotations?.readOnlyHint === false)!;
     await expect(
       readOnly.execute(mutating.name, {}, {} as never)
@@ -407,7 +388,7 @@ describe('ToolRegistry', () => {
   });
 
   it('forwards the non-JSON Accept header reports require', async () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const calls: Array<Record<string, unknown>> = [];
     const http = { request: (_m: string, _p: string, opts: Record<string, unknown>) => {
       calls.push(opts);
@@ -438,14 +419,14 @@ describe('ToolRegistry', () => {
     const op = OPERATIONS.find((o) => o.name === 'sales_reports.list')!;
     expect(toMcpTool(op).inputSchema.required).toContain('filter_vendorNumber');
 
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     await expect(
       registry.execute(toolNameFor(op), {}, {} as never)
     ).rejects.toThrow(/Missing required parameter "filter_vendorNumber"/);
   });
 
   it('rejects a call that omits a required path parameter', async () => {
-    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'apps').map((o) => o.name), readOnly: false });
     await expect(registry.execute('apps__get', {}, {} as never)).rejects.toThrow(
       /Missing required parameter "id"/
     );
@@ -453,7 +434,7 @@ describe('ToolRegistry', () => {
 
   it('refuses a dot segment as a path parameter', async () => {
     // URL resolution turns /v1/apps/.. into /v1/ — a different operation.
-    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'apps').map((o) => o.name), readOnly: false });
     for (const id of ['.', '..']) {
       await expect(registry.execute('apps__get', { id }, {} as never)).rejects.toThrow(
         /must be a resource ID/
@@ -488,9 +469,8 @@ describe('configured parameter defaults', () => {
     expect(toMcpTool(op, defaults).inputSchema.required).not.toContain('filter_vendorNumber');
 
     const registry = new ToolRegistry({
-      domains: ['all'],
+      operations: OPERATIONS.map((o) => o.name),
       readOnly: true,
-      includeDeprecated: false,
       paramDefaults: defaults,
     });
     let sent: Record<string, unknown> | undefined;
@@ -506,9 +486,8 @@ describe('configured parameter defaults', () => {
 
   it('lets an explicit argument beat the configured default', async () => {
     const registry = new ToolRegistry({
-      domains: ['all'],
+      operations: OPERATIONS.map((o) => o.name),
       readOnly: true,
-      includeDeprecated: false,
       paramDefaults: { 'filter[vendorNumber]': '99999999' },
     });
     let sent: Record<string, unknown> | undefined;
@@ -524,16 +503,16 @@ describe('configured parameter defaults', () => {
 });
 
 describe('unloaded-domain guidance', () => {
-  it('names the domain and flag when a real tool is not loaded', async () => {
-    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+  it('says a real tool is not loaded, without a flag that no longer exists', async () => {
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'apps').map((o) => o.name), readOnly: false });
     const live = OPERATIONS.find((o) => o.name === 'game_center_achievements_v2.update')!;
     await expect(
       registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
-    ).rejects.toThrow(/is not loaded on this server.*--domains=game_center/s);
+    ).rejects.toThrow(/^Tool "game_center_achievements_v2__update" is not loaded on this server\.$/);
   });
 
   it('still reports a genuinely unknown tool as unknown', async () => {
-    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'apps').map((o) => o.name), readOnly: false });
     await expect(
       registry.execute('not_a_real_tool__ever', {}, {} as never)
     ).rejects.toThrow(/Unknown tool/);
@@ -541,49 +520,25 @@ describe('unloaded-domain guidance', () => {
 });
 
 describe('missing-tool diagnosis', () => {
-  const mk = (o: any) => new ToolRegistry({ includeDeprecated: false, readOnly: false, ...o });
+  const mk = (o: any) => new ToolRegistry({ readOnly: false, ...o });
 
   it('blames read-only mode, not the domain, when the tool is hidden by --read-only', async () => {
-    const mutating = OPERATIONS.find((o) => !o.readOnly && !o.deprecated && o.domain === 'apps')!;
+    const mutating = OPERATIONS.find((o) => !o.readOnly && o.domain === 'apps')!;
     await expect(
-      mk({ domains: ['all'], readOnly: true }).execute(toolNameFor(mutating), {}, {} as never)
+      mk({ operations: OPERATIONS.map((o) => o.name), readOnly: true }).execute(toolNameFor(mutating), {}, {} as never)
     ).rejects.toThrow(/read-only mode/);
   });
 
   it('says the tool is not loaded here, and how to reach it', async () => {
     const live = OPERATIONS.find((o) => o.name === 'game_center_achievements_v2.update')!;
     await expect(
-      mk({ domains: ['apps'] }).execute(toolNameFor(live), { id: 'x' }, {} as never)
-    ).rejects.toThrow(/is not loaded on this server.*--domains=game_center/s);
-  });
-
-  it('flags a deprecated tool as deprecated', async () => {
-    const dep = OPERATIONS.find((o) => o.deprecated)!;
-    await expect(
-      mk({ domains: ['all'] }).execute(toolNameFor(dep), {}, {} as never)
-    ).rejects.toThrow(/deprecated/);
-  });
-
-  // A profile carries a curated slice of several domains, so "the domain is
-  // loaded" says nothing about one tool. Checking the domain first made every
-  // missing tool in a partly-loaded domain read as deprecated.
-  it('does not call a live tool deprecated just because its domain is partly loaded', async () => {
-    const live = OPERATIONS.find((o) => o.name === 'game_center_achievements_v2.update')!;
-    const sibling = OPERATIONS.find(
-      (o) => o.domain === 'game_center' && !o.deprecated && o.name !== live.name
-    )!;
-    const registry = mk({ operations: [sibling.name] });
-    await expect(
-      registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
-    ).rejects.toThrow(/is not loaded on this server/);
-    await expect(
-      registry.execute(toolNameFor(live), { id: 'x' }, {} as never)
-    ).rejects.not.toThrow(/deprecated/);
+      mk({ operations: ['apps.list'], missingToolHint: () => 'Register ASC-GameCenter.' }).execute(toolNameFor(live), { id: 'x' }, {} as never)
+    ).rejects.toThrow(/is not loaded on this server\. Register ASC-GameCenter\./);
   });
 
   it('loads exactly the listed operations when `operations` is given', () => {
     const empty = mk({ operations: [] });
-    expect(empty.size).toBe(0); // an empty list means none — not the seven defaults
+    expect(empty.size).toBe(0);
     const one = mk({ operations: ['apps.list'] });
     expect(one.size).toBe(1);
     expect(one.get('apps__list')).toBeTruthy();
@@ -625,14 +580,14 @@ describe('id-only twin elimination', () => {
     const writes = OPERATIONS.filter(
       (o) => o.path.includes('/relationships/') && o.method !== 'GET'
     );
-    expect(writes.length).toBeGreaterThan(50);
+    expect(writes.length).toBeGreaterThan(30);
   });
 });
 
 describe('AI-136: StoreKit discoverability in search', () => {
   it('surfaces StoreKit tools in asc__search_tools with an enable hint', async () => {
     const { executeMetaTool } = await import('../src/tools/meta.js');
-    const registry = new ToolRegistry({ domains: ['analytics'], readOnly: false, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'analytics').map((o) => o.name), readOnly: false });
     const res: any = await executeMetaTool(
       'asc__search_tools',
       { query: 'refund' },
@@ -647,7 +602,7 @@ describe('AI-136: StoreKit discoverability in search', () => {
 
   it('marks StoreKit as loaded when the server has it enabled', async () => {
     const { executeMetaTool } = await import('../src/tools/meta.js');
-    const registry = new ToolRegistry({ domains: ['analytics'], readOnly: false, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'analytics').map((o) => o.name), readOnly: false });
     const res: any = await executeMetaTool(
       'asc__search_tools',
       { query: 'transaction' },
@@ -660,7 +615,7 @@ describe('AI-136: StoreKit discoverability in search', () => {
 });
 
 describe('unknown parameters are refused, not dropped', () => {
-  const registry = new ToolRegistry({ domains: ['apps'] });
+  const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'apps').map((o) => o.name) });
 
   // The failure this prevents: apps.list ignored a misspelled bundle-id filter,
   // returned the account's first app with isError false, and every write that

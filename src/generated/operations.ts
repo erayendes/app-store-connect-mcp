@@ -14,7 +14,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/accessibilityDeclarations",
     "description": "Create an accessibility declaration.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -28,7 +27,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/accessibilityDeclarations/{id}",
     "description": "Delete an accessibility declaration.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -43,7 +41,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/accessibilityDeclarations/{id}",
     "description": "Read one accessibility declaration by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -76,7 +73,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/accessibilityDeclarations/{id}",
     "description": "Update an accessibility declaration.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -92,7 +88,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/actors/{id}",
     "description": "Read one actor by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -119,7 +114,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/actors",
     "description": "List actors.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -155,7 +149,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ageRatingDeclarations/{id}",
     "description": "Answer Apple’s content questions to set the app’s age rating — violence, gambling, mature themes, unrestricted web access. The rating is derived from the answers rather than chosen.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -171,7 +164,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionDomains",
     "description": "Create an alternative distribution domain.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -185,7 +177,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionDomains/{id}",
     "description": "Delete an alternative distribution domain.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -200,7 +191,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionDomains/{id}",
     "description": "Read one alternative distribution domain by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -225,7 +215,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionDomains",
     "description": "List the domains verified for EU alternative distribution, where an app reaches users through a marketplace rather than the App Store.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -253,7 +242,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionKeys",
     "description": "Create an alternative distribution key.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -267,7 +255,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionKeys/{id}",
     "description": "Delete an alternative distribution key.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -282,7 +269,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionKeys/{id}",
     "description": "Read one alternative distribution key by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -305,7 +291,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionKeys",
     "description": "List the public keys registered for EU alternative distribution, used to sign apps delivered outside the App Store. Use exists[app] to check whether an app has one at all.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -336,7 +321,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackageDeltas/{id}",
     "description": "Read one alternative distribution package delta by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -362,7 +346,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackageVariants/{id}",
     "description": "Read one alternative distribution package variant by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -388,7 +371,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackageVersions/{id}/deltas",
     "description": "List the deltas belonging to an alternative distribution package version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -408,7 +390,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackageVersions/{id}",
     "description": "Read one alternative distribution package version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -448,7 +429,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackageVersions/{id}/variants",
     "description": "List the variants belonging to an alternative distribution package version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -468,7 +448,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackages",
     "description": "Create an alternative distribution package.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -482,7 +461,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackages/{id}",
     "description": "Read one alternative distribution package by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -514,7 +492,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/alternativeDistributionPackages/{id}/versions",
     "description": "List the versions belonging to an alternative distribution package.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -553,7 +530,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportInstances/{id}",
     "description": "Read one analytics report instance by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -578,7 +554,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportInstances/{id}/segments",
     "description": "List the segments belonging to an analytics report instance.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -598,7 +573,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportRequests",
     "description": "Ask Apple to start producing analytics for an app — the product usage numbers behind downloads, sessions, retention and crashes. ONE_TIME_SNAPSHOT covers the past 365 days; ONGOING keeps going as new data arrives. Nothing is downloadable straight away: a fresh request has no instances for a day or more.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -612,7 +586,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportRequests/{id}",
     "description": "Delete an analytics report request.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -627,7 +600,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportRequests/{id}",
     "description": "Read one analytics report request by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -660,7 +632,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportRequests/{id}/reports",
     "description": "List the reports belonging to an analytics report request.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -697,7 +668,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReportSegments/{id}",
     "description": "Read one segment: a short-lived signed URL plus its checksum and byte size. The rows are gzipped TSV at that URL — this response carries the link, not the data.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -722,7 +692,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReports/{id}",
     "description": "Read one analytics report by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -747,7 +716,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/analyticsReports/{id}/instances",
     "description": "List the instances belonging to an analytics report.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -782,7 +750,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/androidToIosAppMappingDetails",
     "description": "Create an android to iOS app mapping detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -796,7 +763,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/androidToIosAppMappingDetails/{id}",
     "description": "Delete an android to iOS app mapping detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -811,7 +777,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/androidToIosAppMappingDetails/{id}",
     "description": "Read one android to iOS app mapping detail by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -835,7 +800,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/androidToIosAppMappingDetails/{id}",
     "description": "Update an android to iOS app mapping detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -851,7 +815,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraries/{id}",
     "description": "Read an asset library by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -875,7 +838,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraries/{id}/images",
     "description": "List the images in an app's asset library, with their review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -959,7 +921,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraries/{id}/videos",
     "description": "List the videos in an app's asset library, with their review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1043,7 +1004,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryImages",
     "description": "Reserve an image in the asset library: returns upload operations, moves no bytes. Commit by setting uploaded.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1057,7 +1017,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryImages/{id}",
     "description": "Delete an image from the asset library.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1072,7 +1031,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryImages/{id}",
     "description": "Read one asset library image: file, size and review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1114,7 +1072,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryImages/{id}/placements",
     "description": "List the placements of an asset library image: which localizations it is on.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1226,7 +1183,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryImages/{id}",
     "description": "Rename an asset library image, archive it, or mark its upload complete.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1242,7 +1198,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryPlacementOrderingRequests",
     "description": "Reorder the asset library placements of one group within a localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -1273,7 +1228,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryPlacements",
     "description": "Put an asset library image or video into one localization: version, custom product variant, treatment or event.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1287,7 +1241,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryPlacements/{id}",
     "description": "Remove one asset library placement; the file stays in the library.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1302,7 +1255,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryPlacements/{id}",
     "description": "Read one asset library placement and its state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1350,7 +1302,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryRefData/{id}",
     "description": "Read one asset library reference entry by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1378,7 +1329,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryRefData",
     "description": "List which placement types, groups and limits the asset library allows.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -1424,7 +1374,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryVideos",
     "description": "Reserve one video in the asset library: returns upload operations, moves no bytes. Commit by setting uploaded.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1438,7 +1387,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryVideos/{id}",
     "description": "Delete a video from the asset library.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1453,7 +1401,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryVideos/{id}",
     "description": "Read one asset library video: file, size, preview frame and review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1497,7 +1444,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryVideos/{id}/placements",
     "description": "List the placements of an asset library video: which localizations it is on.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1609,7 +1555,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appAssetLibraryVideos/{id}",
     "description": "Rename an asset library video, archive it, set its preview frame, or mark its upload complete.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1625,7 +1570,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appAvailabilities",
     "description": "Set an app’s availability — the countries it is sold in. Submitting an empty list removes the app from all territories; submitting some limits it to those.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1639,7 +1583,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appAvailabilities/{id}",
     "description": "Read one app availabilities (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1671,7 +1614,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appAvailabilities/{id}/territoryAvailabilities",
     "description": "List the territory availabilities belonging to an app availabilities (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1712,7 +1654,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCategories/{id}",
     "description": "Read one app category by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1746,7 +1687,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCategories",
     "description": "List app categories.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -1799,7 +1739,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCategories/{id}/parent",
     "description": "Read the parent for an app category.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1813,7 +1752,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCategories/{id}/subcategories",
     "description": "List the subcategories belonging to an app category.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1833,7 +1771,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAdvancedExperienceImages",
     "description": "Create an App Clip advanced experience image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1847,7 +1784,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAdvancedExperienceImages/{id}",
     "description": "Read one App Clip advanced experience image by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1875,7 +1811,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAdvancedExperienceImages/{id}",
     "description": "Update an App Clip advanced experience image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1891,7 +1826,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAdvancedExperiences",
     "description": "Create an App Clip advanced experience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1905,7 +1839,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAdvancedExperiences/{id}",
     "description": "Read one App Clip advanced experience by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1949,7 +1882,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAdvancedExperiences/{id}",
     "description": "Update an App Clip advanced experience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -1965,7 +1897,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAppStoreReviewDetails",
     "description": "Create an App Clip App Store review detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -1979,7 +1910,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAppStoreReviewDetails/{id}",
     "description": "Read one App Clip App Store review detail by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2011,7 +1941,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipAppStoreReviewDetails/{id}",
     "description": "Update an App Clip App Store review detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2027,7 +1956,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperienceLocalizations/{id}/appClipHeaderImage",
     "description": "Read the App Clip header image for an App Clip default experience localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2050,7 +1978,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperienceLocalizations",
     "description": "Create an App Clip default experience localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -2064,7 +1991,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperienceLocalizations/{id}",
     "description": "Delete an App Clip default experience localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2079,7 +2005,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperienceLocalizations/{id}",
     "description": "Read one App Clip default experience localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2114,7 +2039,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperienceLocalizations/{id}",
     "description": "Update an App Clip default experience localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2130,7 +2054,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}/appClipAppStoreReviewDetail",
     "description": "Read the App Clip App Store review detail for an App Clip default experience.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2153,7 +2076,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}/appClipDefaultExperienceLocalizations",
     "description": "List the App Clip default experience localizations belonging to an App Clip default experience.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2198,7 +2120,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences",
     "description": "Create an App Clip default experience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -2212,7 +2133,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}",
     "description": "Delete an App Clip default experience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2227,7 +2147,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}",
     "description": "Read one App Clip default experience by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2265,7 +2184,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}/releaseWithAppStoreVersion",
     "description": "Read the release with App Store version for an App Clip default experience.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2299,7 +2217,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}/relationships/releaseWithAppStoreVersion",
     "description": "Set the release with App Store version linked to an App Clip default experience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2315,7 +2232,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipDefaultExperiences/{id}",
     "description": "Update an App Clip default experience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2331,7 +2247,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipHeaderImages",
     "description": "Create an App Clip header image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -2345,7 +2260,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipHeaderImages/{id}",
     "description": "Delete an App Clip header image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2360,7 +2274,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipHeaderImages/{id}",
     "description": "Read one App Clip header image by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2397,7 +2310,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClipHeaderImages/{id}",
     "description": "Update an App Clip header image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2413,7 +2325,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClips/{id}/appClipAdvancedExperiences",
     "description": "List the App Clip advanced experiences belonging to an App Clip.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2492,7 +2403,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClips/{id}/appClipDefaultExperiences",
     "description": "List the App Clip default experiences belonging to an App Clip.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2540,7 +2450,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appClips/{id}",
     "description": "Read one App Clip by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2569,182 +2478,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_custom_product_page_localizations.app_preview_sets.list",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPageLocalizations/{id}/appPreviewSets",
-    "description": "List the app preview sets belonging to an app custom product page localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[previewType]",
-        "type": "array",
-        "description": "filter by attribute 'previewType'",
-        "enum": [
-          "IPHONE_67",
-          "IPHONE_61",
-          "IPHONE_65",
-          "IPHONE_58",
-          "IPHONE_55",
-          "IPHONE_47",
-          "IPHONE_40",
-          "IPHONE_35",
-          "IPAD_PRO_3GEN_129",
-          "IPAD_PRO_3GEN_11",
-          "IPAD_PRO_129",
-          "IPAD_105",
-          "IPAD_97",
-          "DESKTOP",
-          "APPLE_TV",
-          "APPLE_VISION_PRO"
-        ]
-      },
-      {
-        "name": "filter[appStoreVersionLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "fields[appPreviewSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "previewType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_custom_product_page_localizations.app_screenshot_sets.list",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appCustomProductPageLocalizations/{id}/appScreenshotSets",
-    "description": "List the app screenshot sets belonging to an app custom product page localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[screenshotDisplayType]",
-        "type": "array",
-        "description": "filter by attribute 'screenshotDisplayType'",
-        "enum": [
-          "APP_IPHONE_67",
-          "APP_IPHONE_61",
-          "APP_IPHONE_65",
-          "APP_IPHONE_58",
-          "APP_IPHONE_55",
-          "APP_IPHONE_47",
-          "APP_IPHONE_40",
-          "APP_IPHONE_35",
-          "APP_IPAD_PRO_3GEN_129",
-          "APP_IPAD_PRO_3GEN_11",
-          "APP_IPAD_PRO_129",
-          "APP_IPAD_105",
-          "APP_IPAD_97",
-          "APP_DESKTOP",
-          "APP_WATCH_ULTRA",
-          "APP_WATCH_SERIES_10",
-          "APP_WATCH_SERIES_7",
-          "APP_WATCH_SERIES_4",
-          "APP_WATCH_SERIES_3",
-          "APP_APPLE_TV",
-          "APP_APPLE_VISION_PRO",
-          "IMESSAGE_APP_IPHONE_67",
-          "IMESSAGE_APP_IPHONE_61",
-          "IMESSAGE_APP_IPHONE_65",
-          "IMESSAGE_APP_IPHONE_58",
-          "IMESSAGE_APP_IPHONE_55",
-          "IMESSAGE_APP_IPHONE_47",
-          "IMESSAGE_APP_IPHONE_40",
-          "IMESSAGE_APP_IPAD_PRO_3GEN_129",
-          "IMESSAGE_APP_IPAD_PRO_3GEN_11",
-          "IMESSAGE_APP_IPAD_PRO_129",
-          "IMESSAGE_APP_IPAD_105",
-          "IMESSAGE_APP_IPAD_97"
-        ]
-      },
-      {
-        "name": "filter[appStoreVersionLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "fields[appScreenshotSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "screenshotDisplayType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_custom_product_page_localizations.create",
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appCustomProductPageLocalizations",
     "description": "Create an app custom product page localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -2758,7 +2497,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}",
     "description": "Delete an app custom product page localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2773,7 +2511,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}",
     "description": "Read one app custom product page localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2814,7 +2551,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}/placements",
     "description": "List the placements belonging to an app custom product page localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2926,7 +2662,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}/relationships/searchKeywords",
     "description": "Link search keywords to an app custom product page localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2942,7 +2677,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}/searchKeywords",
     "description": "List the search keywords belonging to an app custom product page localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2972,7 +2706,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}/relationships/searchKeywords",
     "description": "Unlink search keywords from an app custom product page localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -2988,7 +2721,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageLocalizations/{id}",
     "description": "Update an app custom product page localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3004,7 +2736,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageVersions/{id}/appCustomProductPageLocalizations",
     "description": "List the app custom product page localizations belonging to an app custom product page version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3055,7 +2786,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageVersions",
     "description": "Create an app custom product page version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3069,7 +2799,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageVersions/{id}",
     "description": "Read one app custom product page version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3105,7 +2834,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPageVersions/{id}",
     "description": "Update an app custom product page version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3121,7 +2849,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPages/{id}/appCustomProductPageVersions",
     "description": "List the app custom product page versions belonging to an app custom product page.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3177,7 +2904,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPages",
     "description": "Create a custom product page — an alternative store page with its own screenshots and text, reached by a campaign link, for testing a message with one audience.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3191,7 +2917,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPages/{id}",
     "description": "Delete an app custom product page.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3206,7 +2931,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPages/{id}",
     "description": "Read one app custom product page by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3242,7 +2966,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appCustomProductPages/{id}",
     "description": "Update an app custom product page.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3258,7 +2981,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarationDocuments",
     "description": "Create an app encryption declaration document.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3272,7 +2994,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarationDocuments/{id}",
     "description": "Read one app encryption declaration document by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3301,7 +3022,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarationDocuments/{id}",
     "description": "Update an app encryption declaration document.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3317,42 +3037,11 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarations/{id}/appEncryptionDeclarationDocument",
     "description": "Read the app encryption declaration document for an app encryption declaration.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
     "queryParams": [],
     "hasBody": false
-  },
-  {
-    "name": "app_encryption_declarations.app.get",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/appEncryptionDeclarations/{id}/app",
-    "description": "Read the app for an app encryption declaration. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "app_encryption_declarations.builds.add",
-    "domain": "apps",
-    "method": "POST",
-    "path": "/v1/appEncryptionDeclarations/{id}/relationships/builds",
-    "description": "Link builds to an app encryption declaration. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppEncryptionDeclarationBuildsLinkagesRequest",
-    "risk": "low"
   },
   {
     "name": "app_encryption_declarations.create",
@@ -3361,7 +3050,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarations",
     "description": "Create an app encryption declaration.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3375,7 +3063,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarations/{id}",
     "description": "Read one app encryption declaration by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3424,7 +3111,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEncryptionDeclarations",
     "description": "List export-compliance declarations, which a build needs before it can ship in most territories. Filter by app or build to find whether one already covers the build you are releasing.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -3491,102 +3177,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_event_localizations.app_event_screenshots.list",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEventLocalizations/{id}/appEventScreenshots",
-    "description": "List the app event screenshots belonging to an app event localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appEventScreenshots]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appEventScreenshots Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "imageAsset",
-          "assetToken",
-          "uploadOperations",
-          "assetDeliveryState",
-          "appEventAssetType",
-          "appEventLocalization"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appEventLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_event_localizations.app_event_video_clips.list",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEventLocalizations/{id}/appEventVideoClips",
-    "description": "List the app event video clips belonging to an app event localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appEventVideoClips]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appEventVideoClips Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "previewFrameTimeCode",
-          "videoUrl",
-          "previewFrameImage",
-          "previewImage",
-          "uploadOperations",
-          "assetDeliveryState",
-          "videoDeliveryState",
-          "appEventAssetType",
-          "appEventLocalization"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appEventLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_event_localizations.create",
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appEventLocalizations",
     "description": "Create an app event localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3600,7 +3196,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEventLocalizations/{id}",
     "description": "Delete an app event localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3615,7 +3210,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEventLocalizations/{id}",
     "description": "Read one app event localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3656,7 +3250,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEventLocalizations/{id}/placements",
     "description": "List the asset library images and videos placed on an in-app event localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3768,7 +3361,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEventLocalizations/{id}",
     "description": "Update an app event localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3778,182 +3370,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "app_event_screenshots.create",
-    "domain": "marketing",
-    "method": "POST",
-    "path": "/v1/appEventScreenshots",
-    "description": "Create an app event screenshot. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppEventScreenshotCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_event_screenshots.delete",
-    "domain": "marketing",
-    "method": "DELETE",
-    "path": "/v1/appEventScreenshots/{id}",
-    "description": "Delete an app event screenshot. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_event_screenshots.get",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEventScreenshots/{id}",
-    "description": "Read one app event screenshot by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appEventScreenshots]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appEventScreenshots Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "imageAsset",
-          "assetToken",
-          "uploadOperations",
-          "assetDeliveryState",
-          "appEventAssetType",
-          "appEventLocalization"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appEventLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_event_screenshots.update",
-    "domain": "marketing",
-    "method": "PATCH",
-    "path": "/v1/appEventScreenshots/{id}",
-    "description": "Update an app event screenshot. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppEventScreenshotUpdateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_event_video_clips.create",
-    "domain": "marketing",
-    "method": "POST",
-    "path": "/v1/appEventVideoClips",
-    "description": "Create an app event video clip. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppEventVideoClipCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_event_video_clips.delete",
-    "domain": "marketing",
-    "method": "DELETE",
-    "path": "/v1/appEventVideoClips/{id}",
-    "description": "Delete an app event video clip. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_event_video_clips.get",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appEventVideoClips/{id}",
-    "description": "Read one app event video clip by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appEventVideoClips]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appEventVideoClips Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "previewFrameTimeCode",
-          "videoUrl",
-          "previewFrameImage",
-          "previewImage",
-          "uploadOperations",
-          "assetDeliveryState",
-          "videoDeliveryState",
-          "appEventAssetType",
-          "appEventLocalization"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appEventLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_event_video_clips.update",
-    "domain": "marketing",
-    "method": "PATCH",
-    "path": "/v1/appEventVideoClips/{id}",
-    "description": "Update an app event video clip. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppEventVideoClipUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "app_events.create",
     "domain": "marketing",
     "method": "POST",
     "path": "/v1/appEvents",
     "description": "Create an in-app event — a limited-time activity Apple features on your store page, such as a tournament, a live stream, a challenge or a premiere. Localize it and add artwork before submitting it for review.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -3967,7 +3389,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEvents/{id}",
     "description": "Delete an app event.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -3982,7 +3403,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEvents/{id}",
     "description": "Read one app event by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4023,7 +3443,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEvents/{id}/localizations",
     "description": "List the localizations belonging to an app event.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4054,7 +3473,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appEvents/{id}",
     "description": "Update an app event.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4070,7 +3488,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfoLocalizations",
     "description": "Add a new language for the app-level listing fields: name, subtitle, privacy policy.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -4084,7 +3501,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfoLocalizations/{id}",
     "description": "Delete an app info localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4099,7 +3515,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfoLocalizations/{id}",
     "description": "Read one app info localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4136,7 +3551,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfoLocalizations/{id}",
     "description": "Update the listing title (Apple's field is called the name), subtitle or privacy policy text for one language. Name and subtitle are capped at 30 characters.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4152,7 +3566,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/ageRatingDeclaration",
     "description": "Read the age rating declaration for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4166,7 +3579,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/appInfoLocalizations",
     "description": "List the app info localizations belonging to an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4213,7 +3625,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}",
     "description": "Read one app info by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4269,7 +3680,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/primaryCategory",
     "description": "Read the primary category for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4293,7 +3703,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/primarySubcategoryOne",
     "description": "Read the primary subcategory one for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4317,7 +3726,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/primarySubcategoryTwo",
     "description": "Read the primary subcategory two for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4341,7 +3749,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/secondaryCategory",
     "description": "Read the secondary category for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4365,7 +3772,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/secondarySubcategoryOne",
     "description": "Read the secondary subcategory one for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4389,7 +3795,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/secondarySubcategoryTwo",
     "description": "Read the secondary subcategory two for an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4413,7 +3818,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}/territoryAgeRatings",
     "description": "List the territory age ratings belonging to an app info.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4450,7 +3854,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appInfos/{id}",
     "description": "Change an app’s primary and secondary App Store category and its subcategories. These belong to the app rather than to a version, so changing them here changes them for every version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4460,230 +3863,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "app_preview_sets.app_previews.list",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appPreviewSets/{id}/appPreviews",
-    "description": "List the app previews belonging to an app preview set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appPreviews]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appPreviews Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "sourceFileChecksum",
-          "previewFrameTimeCode",
-          "mimeType",
-          "videoUrl",
-          "previewFrameImage",
-          "previewImage",
-          "uploadOperations",
-          "assetDeliveryState",
-          "videoDeliveryState",
-          "appPreviewSet"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appPreviewSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_preview_sets.app_previews.replace",
-    "domain": "marketing",
-    "method": "PATCH",
-    "path": "/v1/appPreviewSets/{id}/relationships/appPreviews",
-    "description": "Replace the full set of app previews linked to an app preview set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppPreviewSetAppPreviewsLinkagesRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_preview_sets.create",
-    "domain": "marketing",
-    "method": "POST",
-    "path": "/v1/appPreviewSets",
-    "description": "Create an app preview set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppPreviewSetCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_preview_sets.delete",
-    "domain": "marketing",
-    "method": "DELETE",
-    "path": "/v1/appPreviewSets/{id}",
-    "description": "Delete an app preview set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_preview_sets.get",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appPreviewSets/{id}",
-    "description": "Read one app preview set by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appPreviewSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "previewType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_previews.create",
-    "domain": "marketing",
-    "method": "POST",
-    "path": "/v1/appPreviews",
-    "description": "Create an app preview. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppPreviewCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_previews.delete",
-    "domain": "marketing",
-    "method": "DELETE",
-    "path": "/v1/appPreviews/{id}",
-    "description": "Delete an app preview. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_previews.get",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appPreviews/{id}",
-    "description": "Read one app preview by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appPreviews]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appPreviews Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "sourceFileChecksum",
-          "previewFrameTimeCode",
-          "mimeType",
-          "videoUrl",
-          "previewFrameImage",
-          "previewImage",
-          "uploadOperations",
-          "assetDeliveryState",
-          "videoDeliveryState",
-          "appPreviewSet"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appPreviewSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_previews.update",
-    "domain": "marketing",
-    "method": "PATCH",
-    "path": "/v1/appPreviews/{id}",
-    "description": "Update an app preview. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppPreviewUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "app_price_points_v3.equalizations.list",
     "domain": "pricing",
     "method": "GET",
     "path": "/v3/appPricePoints/{id}/equalizations",
     "description": "List the equalizations belonging to an app price points v3.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4717,7 +3902,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v3/appPricePoints/{id}",
     "description": "Read one app price points v3 by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4753,7 +3937,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appPriceSchedules/{id}/automaticPrices",
     "description": "List the automatic prices belonging to an app price schedule.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4797,7 +3980,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appPriceSchedules/{id}/baseTerritory",
     "description": "Read the base territory for an app price schedule.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4811,7 +3993,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appPriceSchedules",
     "description": "Change or set an app's price: create a price schedule with base territory and manual prices. Find price point IDs with apps__app_price_points__list first.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -4825,7 +4006,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appPriceSchedules/{id}",
     "description": "Read one app price schedule by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4862,7 +4042,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appPriceSchedules/{id}/manualPrices",
     "description": "List the manual prices belonging to an app price schedule.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -4900,224 +4079,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_screenshot_sets.app_screenshots.list",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appScreenshotSets/{id}/appScreenshots",
-    "description": "List the app screenshots belonging to an app screenshot set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appScreenshots]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appScreenshots Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "sourceFileChecksum",
-          "imageAsset",
-          "assetToken",
-          "assetType",
-          "uploadOperations",
-          "assetDeliveryState",
-          "appScreenshotSet"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appScreenshotSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_screenshot_sets.app_screenshots.replace",
-    "domain": "marketing",
-    "method": "PATCH",
-    "path": "/v1/appScreenshotSets/{id}/relationships/appScreenshots",
-    "description": "Replace the full set of app screenshots linked to an app screenshot set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppScreenshotSetAppScreenshotsLinkagesRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_screenshot_sets.create",
-    "domain": "marketing",
-    "method": "POST",
-    "path": "/v1/appScreenshotSets",
-    "description": "Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version localization, then upload screenshots into it. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppScreenshotSetCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_screenshot_sets.delete",
-    "domain": "marketing",
-    "method": "DELETE",
-    "path": "/v1/appScreenshotSets/{id}",
-    "description": "Delete an app screenshot set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_screenshot_sets.get",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appScreenshotSets/{id}",
-    "description": "Read one app screenshot set by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appScreenshotSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "screenshotDisplayType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_screenshots.create",
-    "domain": "marketing",
-    "method": "POST",
-    "path": "/v1/appScreenshots",
-    "description": "Upload a store listing screenshot: reserve the upload for a screenshot set, then transfer the image data. These are the screenshots customers see on the App Store page. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppScreenshotCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_screenshots.delete",
-    "domain": "marketing",
-    "method": "DELETE",
-    "path": "/v1/appScreenshots/{id}",
-    "description": "Delete an app screenshot. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_screenshots.get",
-    "domain": "marketing",
-    "method": "GET",
-    "path": "/v1/appScreenshots/{id}",
-    "description": "Read one app screenshot by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appScreenshots]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appScreenshots Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "sourceFileChecksum",
-          "imageAsset",
-          "assetToken",
-          "assetType",
-          "uploadOperations",
-          "assetDeliveryState",
-          "appScreenshotSet"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appScreenshotSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_screenshots.update",
-    "domain": "marketing",
-    "method": "PATCH",
-    "path": "/v1/appScreenshots/{id}",
-    "description": "Update an app screenshot. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppScreenshotUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "app_store_review_attachments.create",
     "domain": "versions",
     "method": "POST",
     "path": "/v1/appStoreReviewAttachments",
     "description": "Create an App Store review attachment.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -5131,7 +4098,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewAttachments/{id}",
     "description": "Delete an App Store review attachment.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5146,7 +4112,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewAttachments/{id}",
     "description": "Read one App Store review attachment by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5182,7 +4147,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewAttachments/{id}",
     "description": "Update an App Store review attachment.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5198,7 +4162,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewDetails/{id}/appStoreReviewAttachments",
     "description": "List the App Store review attachments belonging to an App Store review detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5239,7 +4202,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewDetails",
     "description": "Create an App Store review detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -5253,7 +4215,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewDetails/{id}",
     "description": "Read one App Store review detail by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5294,7 +4255,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreReviewDetails/{id}",
     "description": "Update an App Store review detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5304,182 +4264,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "app_store_version_experiment_treatment_localizations.app_preview_sets.list",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/appPreviewSets",
-    "description": "List the app preview sets belonging to an App Store version experiment treatment localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[previewType]",
-        "type": "array",
-        "description": "filter by attribute 'previewType'",
-        "enum": [
-          "IPHONE_67",
-          "IPHONE_61",
-          "IPHONE_65",
-          "IPHONE_58",
-          "IPHONE_55",
-          "IPHONE_47",
-          "IPHONE_40",
-          "IPHONE_35",
-          "IPAD_PRO_3GEN_129",
-          "IPAD_PRO_3GEN_11",
-          "IPAD_PRO_129",
-          "IPAD_105",
-          "IPAD_97",
-          "DESKTOP",
-          "APPLE_TV",
-          "APPLE_VISION_PRO"
-        ]
-      },
-      {
-        "name": "filter[appStoreVersionLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "filter[appCustomProductPageLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "fields[appPreviewSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "previewType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_experiment_treatment_localizations.app_screenshot_sets.list",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/appScreenshotSets",
-    "description": "List the app screenshot sets belonging to an App Store version experiment treatment localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[screenshotDisplayType]",
-        "type": "array",
-        "description": "filter by attribute 'screenshotDisplayType'",
-        "enum": [
-          "APP_IPHONE_67",
-          "APP_IPHONE_61",
-          "APP_IPHONE_65",
-          "APP_IPHONE_58",
-          "APP_IPHONE_55",
-          "APP_IPHONE_47",
-          "APP_IPHONE_40",
-          "APP_IPHONE_35",
-          "APP_IPAD_PRO_3GEN_129",
-          "APP_IPAD_PRO_3GEN_11",
-          "APP_IPAD_PRO_129",
-          "APP_IPAD_105",
-          "APP_IPAD_97",
-          "APP_DESKTOP",
-          "APP_WATCH_ULTRA",
-          "APP_WATCH_SERIES_10",
-          "APP_WATCH_SERIES_7",
-          "APP_WATCH_SERIES_4",
-          "APP_WATCH_SERIES_3",
-          "APP_APPLE_TV",
-          "APP_APPLE_VISION_PRO",
-          "IMESSAGE_APP_IPHONE_67",
-          "IMESSAGE_APP_IPHONE_61",
-          "IMESSAGE_APP_IPHONE_65",
-          "IMESSAGE_APP_IPHONE_58",
-          "IMESSAGE_APP_IPHONE_55",
-          "IMESSAGE_APP_IPHONE_47",
-          "IMESSAGE_APP_IPHONE_40",
-          "IMESSAGE_APP_IPAD_PRO_3GEN_129",
-          "IMESSAGE_APP_IPAD_PRO_3GEN_11",
-          "IMESSAGE_APP_IPAD_PRO_129",
-          "IMESSAGE_APP_IPAD_105",
-          "IMESSAGE_APP_IPAD_97"
-        ]
-      },
-      {
-        "name": "filter[appStoreVersionLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionLocalization' Takes a 'appStoreVersionLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "filter[appCustomProductPageLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "fields[appScreenshotSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "screenshotDisplayType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_version_experiment_treatment_localizations.create",
     "domain": "versions",
     "method": "POST",
     "path": "/v1/appStoreVersionExperimentTreatmentLocalizations",
     "description": "Create an App Store version experiment treatment localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -5493,7 +4283,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}",
     "description": "Delete an App Store version experiment treatment localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5508,7 +4297,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}",
     "description": "Read one App Store version experiment treatment localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5546,7 +4334,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatmentLocalizations/{id}/placements",
     "description": "List the placements belonging to an App Store version experiment treatment localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5658,7 +4445,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatments/{id}/appStoreVersionExperimentTreatmentLocalizations",
     "description": "List the App Store version experiment treatment localizations belonging to an App Store version experiment treatment.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5706,7 +4492,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatments",
     "description": "Create an App Store version experiment treatment.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -5720,7 +4505,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatments/{id}",
     "description": "Delete an App Store version experiment treatment.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5735,7 +4519,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatments/{id}",
     "description": "Read one App Store version experiment treatment by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5774,7 +4557,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionExperimentTreatments/{id}",
     "description": "Update an App Store version experiment treatment.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5790,7 +4572,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments",
     "description": "List the App Store version experiment treatments belonging to an App Store version experiments (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5834,7 +4615,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appStoreVersionExperiments",
     "description": "Start an A/B test on a version’s product page: up to three treatments against the live one, split by traffic share. Treatments and their assets are attached separately.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -5848,7 +4628,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appStoreVersionExperiments/{id}",
     "description": "Delete a product page experiment and its results. Halt it with an update instead if you still want the numbers.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5863,7 +4642,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appStoreVersionExperiments/{id}",
     "description": "Read one App Store version experiments (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5907,7 +4685,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/appStoreVersionExperiments/{id}",
     "description": "Change a product page experiment — begin or halt it, or adjust its traffic split. Halting it keeps the results readable; deleting does not.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -5917,310 +4694,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "app_store_version_experiments.app_store_version_experiment_treatments.list",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperiments/{id}/appStoreVersionExperimentTreatments",
-    "description": "List the App Store version experiment treatments belonging to an App Store version experiment. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appStoreVersionExperimentTreatments]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appStoreVersionExperimentTreatments Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "appIcon",
-          "appIconName",
-          "promotedDate",
-          "appStoreVersionExperiment",
-          "appStoreVersionExperimentV2",
-          "appStoreVersionExperimentTreatmentLocalizations"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionExperiment",
-          "appStoreVersionExperimentV2",
-          "appStoreVersionExperimentTreatmentLocalizations"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_experiments.create",
-    "domain": "versions",
-    "method": "POST",
-    "path": "/v1/appStoreVersionExperiments",
-    "description": "Create an App Store version experiment. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "app_store_version_experiments.delete",
-    "domain": "versions",
-    "method": "DELETE",
-    "path": "/v1/appStoreVersionExperiments/{id}",
-    "description": "Delete an App Store version experiment. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "app_store_version_experiments.get",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionExperiments/{id}",
-    "description": "Read one App Store version experiment by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[appStoreVersionExperiments]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appStoreVersionExperiments Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "trafficProportion",
-          "state",
-          "reviewRequired",
-          "startDate",
-          "endDate",
-          "appStoreVersion",
-          "appStoreVersionExperimentTreatments"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersion",
-          "appStoreVersionExperimentTreatments"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_experiments.update",
-    "domain": "versions",
-    "method": "PATCH",
-    "path": "/v1/appStoreVersionExperiments/{id}",
-    "description": "Update an App Store version experiment. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppStoreVersionExperimentUpdateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "app_store_version_localizations.app_preview_sets.list",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionLocalizations/{id}/appPreviewSets",
-    "description": "List the app preview sets belonging to an App Store version localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[previewType]",
-        "type": "array",
-        "description": "filter by attribute 'previewType'",
-        "enum": [
-          "IPHONE_67",
-          "IPHONE_61",
-          "IPHONE_65",
-          "IPHONE_58",
-          "IPHONE_55",
-          "IPHONE_47",
-          "IPHONE_40",
-          "IPHONE_35",
-          "IPAD_PRO_3GEN_129",
-          "IPAD_PRO_3GEN_11",
-          "IPAD_PRO_129",
-          "IPAD_105",
-          "IPAD_97",
-          "DESKTOP",
-          "APPLE_TV",
-          "APPLE_VISION_PRO"
-        ]
-      },
-      {
-        "name": "filter[appCustomProductPageLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "fields[appPreviewSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appPreviewSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "previewType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appPreviews"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_version_localizations.app_screenshot_sets.list",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersionLocalizations/{id}/appScreenshotSets",
-    "description": "List the app screenshot sets belonging to an App Store version localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[screenshotDisplayType]",
-        "type": "array",
-        "description": "filter by attribute 'screenshotDisplayType'",
-        "enum": [
-          "APP_IPHONE_67",
-          "APP_IPHONE_61",
-          "APP_IPHONE_65",
-          "APP_IPHONE_58",
-          "APP_IPHONE_55",
-          "APP_IPHONE_47",
-          "APP_IPHONE_40",
-          "APP_IPHONE_35",
-          "APP_IPAD_PRO_3GEN_129",
-          "APP_IPAD_PRO_3GEN_11",
-          "APP_IPAD_PRO_129",
-          "APP_IPAD_105",
-          "APP_IPAD_97",
-          "APP_DESKTOP",
-          "APP_WATCH_ULTRA",
-          "APP_WATCH_SERIES_10",
-          "APP_WATCH_SERIES_7",
-          "APP_WATCH_SERIES_4",
-          "APP_WATCH_SERIES_3",
-          "APP_APPLE_TV",
-          "APP_APPLE_VISION_PRO",
-          "IMESSAGE_APP_IPHONE_67",
-          "IMESSAGE_APP_IPHONE_61",
-          "IMESSAGE_APP_IPHONE_65",
-          "IMESSAGE_APP_IPHONE_58",
-          "IMESSAGE_APP_IPHONE_55",
-          "IMESSAGE_APP_IPHONE_47",
-          "IMESSAGE_APP_IPHONE_40",
-          "IMESSAGE_APP_IPAD_PRO_3GEN_129",
-          "IMESSAGE_APP_IPAD_PRO_3GEN_11",
-          "IMESSAGE_APP_IPAD_PRO_129",
-          "IMESSAGE_APP_IPAD_105",
-          "IMESSAGE_APP_IPAD_97"
-        ]
-      },
-      {
-        "name": "filter[appCustomProductPageLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appCustomProductPageLocalization' Takes a 'appCustomProductPageLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "filter[appStoreVersionExperimentTreatmentLocalization]",
-        "type": "array",
-        "description": "filter by id(s) of related 'appStoreVersionExperimentTreatmentLocalization' Takes a 'appStoreVersionExperimentTreatmentLocalization' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "fields[appScreenshotSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appScreenshotSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "screenshotDisplayType",
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersionLocalization",
-          "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization",
-          "appScreenshots"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_version_localizations.create",
     "domain": "versions",
     "method": "POST",
     "path": "/v1/appStoreVersionLocalizations",
     "description": "Add a new language (locale) to an App Store version — description, keywords, what's new, promotional text for that language.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -6234,7 +4713,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}",
     "description": "Delete an App Store version localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6249,7 +4727,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}",
     "description": "Read one App Store version localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6295,7 +4772,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}/placements",
     "description": "List the asset library images and videos placed on a version localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6407,7 +4883,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}/relationships/searchKeywords",
     "description": "Add App Store search keywords to a version localization (ASO keyword optimization).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6423,7 +4898,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}/searchKeywords",
     "description": "List the search keywords belonging to an App Store version localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6453,7 +4927,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}/relationships/searchKeywords",
     "description": "Unlink search keywords from an App Store version localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6469,7 +4942,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionLocalizations/{id}",
     "description": "Update the store listing text for one language of a version: description, keywords, what's new (release notes), promotional text, support and marketing URLs.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6485,7 +4957,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionPhasedReleases",
     "description": "Start a phased (gradual) rollout for an approved version, releasing to a growing percentage of users over 7 days.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -6499,7 +4970,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionPhasedReleases/{id}",
     "description": "Delete an App Store version phased release.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6514,7 +4984,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionPhasedReleases/{id}",
     "description": "Pause, resume or complete a phased release. Set phasedReleaseState to PAUSE, ACTIVE or COMPLETE.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6530,7 +4999,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionPromotions",
     "description": "Create an App Store version promotion.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -6544,27 +5012,11 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersionReleaseRequests",
     "description": "Release the version immediately: publish an approved App Store version right now. Only for one Apple has already approved and that is waiting on you — the manual release button, not the submission.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "AppStoreVersionReleaseRequestCreateRequest",
     "risk": "release"
-  },
-  {
-    "name": "app_store_version_submissions.delete",
-    "domain": "versions",
-    "method": "DELETE",
-    "path": "/v1/appStoreVersionSubmissions/{id}",
-    "description": "Cancel a pending App Store review submission. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
   },
   {
     "name": "app_store_versions.alternative_distribution_package.get",
@@ -6573,7 +5025,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/alternativeDistributionPackage",
     "description": "Read the alternative distribution package for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6596,7 +5047,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/appClipDefaultExperience",
     "description": "Read the App Clip default experience for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6616,29 +5066,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.app_clip_default_experience.set",
-    "domain": "versions",
-    "method": "PATCH",
-    "path": "/v1/appStoreVersions/{id}/relationships/appClipDefaultExperience",
-    "description": "Set the App Clip default experience linked to an App Store version.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "AppStoreVersionAppClipDefaultExperienceLinkageRequest",
-    "risk": "low"
-  },
-  {
     "name": "app_store_versions.app_store_review_detail.get",
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersions/{id}/appStoreReviewDetail",
     "description": "Read the App Store review detail for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6662,7 +5095,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/appStoreVersionExperimentsV2",
     "description": "List the App Store version experiments (v2) belonging to an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6703,73 +5135,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "app_store_versions.app_store_version_experiments.list",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/appStoreVersionExperiments",
-    "description": "List the App Store version experiments belonging to an App Store version. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[state]",
-        "type": "array",
-        "description": "filter by attribute 'state'",
-        "enum": [
-          "PREPARE_FOR_SUBMISSION",
-          "READY_FOR_REVIEW",
-          "WAITING_FOR_REVIEW",
-          "IN_REVIEW",
-          "ACCEPTED",
-          "APPROVED",
-          "REJECTED",
-          "COMPLETED",
-          "STOPPED"
-        ]
-      },
-      {
-        "name": "fields[appStoreVersionExperiments]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type appStoreVersionExperiments Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "trafficProportion",
-          "state",
-          "reviewRequired",
-          "startDate",
-          "endDate",
-          "appStoreVersion",
-          "appStoreVersionExperimentTreatments"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersion",
-          "appStoreVersionExperimentTreatments"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "app_store_versions.app_store_version_localizations.list",
     "domain": "versions",
     "method": "GET",
     "path": "/v1/appStoreVersions/{id}/appStoreVersionLocalizations",
     "description": "List the App Store version localizations belonging to an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6825,34 +5196,10 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/appStoreVersionPhasedRelease",
     "description": "Read the App Store version phased release for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
     "queryParams": [],
-    "hasBody": false
-  },
-  {
-    "name": "app_store_versions.app_store_version_submission.get",
-    "domain": "versions",
-    "method": "GET",
-    "path": "/v1/appStoreVersions/{id}/appStoreVersionSubmission",
-    "description": "Read the App Store version submission for an App Store version. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "appStoreVersion"
-        ]
-      }
-    ],
     "hasBody": false
   },
   {
@@ -6862,7 +5209,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/build",
     "description": "Read the build for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6876,7 +5222,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/relationships/build",
     "description": "Set the build linked to an App Store version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -6892,7 +5237,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions",
     "description": "Start the next release: create a new App Store version to prepare. Do this before attaching a build and submitting for review.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -6906,7 +5250,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/customerReviews",
     "description": "List the customer reviews belonging to an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7023,7 +5366,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}",
     "description": "Delete an App Store version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7038,7 +5380,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/gameCenterAppVersion",
     "description": "Read the Game Center app version for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7062,7 +5403,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}",
     "description": "Read one App Store version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7127,7 +5467,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}/routingAppCoverage",
     "description": "Read the routing app coverage for an App Store version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7150,7 +5489,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appStoreVersions/{id}",
     "description": "Update an App Store version, including its release type and earliest release date.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7166,7 +5504,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appTags/{id}/territories",
     "description": "List the territories belonging to an app tag.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7194,7 +5531,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/appTags/{id}",
     "description": "Update an app tag.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7210,7 +5546,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/accessibilityDeclarations",
     "description": "List the accessibility declarations belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7271,7 +5606,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/alternativeDistributionKey",
     "description": "Read the alternative distribution key for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7285,7 +5619,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/analyticsReportRequests",
     "description": "List the analytics report requests belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7332,7 +5665,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/androidToIosAppMappingDetails",
     "description": "List the android to iOS app mapping details belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7361,7 +5693,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appAvailabilityV2",
     "description": "Read the app availability (v2) for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7384,7 +5715,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appClips",
     "description": "List the App Clips belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7429,7 +5759,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appCustomProductPages",
     "description": "List the app custom product pages belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7475,7 +5804,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appEncryptionDeclarations",
     "description": "List the app encryption declarations belonging to an app. Apple answers this path with 404; list the encryption declarations filtered by app instead.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7545,7 +5873,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appEvents",
     "description": "List the app events belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7613,7 +5940,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appInfos",
     "description": "List the app infos belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7674,7 +6000,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appPricePoints",
     "description": "List the allowed price points for an app's purchase price. Filter by territory (country) to find the price point ID matching the price you want to set.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7720,7 +6045,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appPriceSchedule",
     "description": "Read the app price schedule for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7746,7 +6070,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appStoreVersionExperimentsV2",
     "description": "List the App Store version experiments (v2) belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7793,7 +6116,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appStoreVersions",
     "description": "List App Store versions for an app, with their review state (e.g. PREPARE_FOR_SUBMISSION, WAITING_FOR_REVIEW, READY_FOR_SALE).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7933,7 +6255,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/appTags",
     "description": "List the app tags belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7985,7 +6306,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/assetLibrary",
     "description": "Get an app's asset library, the media library its images and videos live in. Start here for its ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -7999,7 +6319,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/backgroundAssets",
     "description": "List the background assets belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8083,7 +6402,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/betaAppLocalizations",
     "description": "List the beta app localizations belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8117,7 +6435,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/betaAppReviewDetail",
     "description": "Read the beta app review detail for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8131,7 +6448,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/betaFeedbackCrashSubmissions",
     "description": "List the beta feedback crash submissions belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8246,7 +6562,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/betaFeedbackScreenshotSubmissions",
     "description": "List the beta feedback screenshot submissions belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8361,7 +6676,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/betaGroups",
     "description": "List the beta groups belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8405,7 +6719,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/betaLicenseAgreement",
     "description": "Read the beta license agreement for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8419,7 +6732,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/metrics/betaTesterUsages",
     "description": "Read beta tester usages metrics for an app. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8463,7 +6775,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/relationships/betaTesters",
     "description": "Unlink beta testers from an app.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8479,7 +6790,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/buildUploads",
     "description": "List the build uploads belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8565,7 +6875,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/builds",
     "description": "List builds uploaded for an app, newest first when sorted by -uploadedDate.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8618,7 +6927,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/ciProduct",
     "description": "Read the Xcode Cloud product for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8643,7 +6951,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/customerReviewSummarizations",
     "description": "List the customer review summarizations belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8700,7 +7007,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/customerReviews",
     "description": "List customer reviews for an app. Filter by rating or territory; sort by -createdDate for the newest.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8817,7 +7123,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/endUserLicenseAgreement",
     "description": "Read the end user license agreement for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8831,7 +7136,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/gameCenterDetail",
     "description": "Read the Game Center detail for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -8868,84 +7172,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.game_center_enabled_versions.list",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/gameCenterEnabledVersions",
-    "description": "List the Game Center enabled versions belonging to an app. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[platform]",
-        "type": "array",
-        "description": "filter by attribute 'platform'",
-        "enum": [
-          "IOS",
-          "MAC_OS",
-          "TV_OS",
-          "VISION_OS"
-        ]
-      },
-      {
-        "name": "filter[versionString]",
-        "type": "array",
-        "description": "filter by attribute 'versionString'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "sort",
-        "type": "array",
-        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
-        "enum": [
-          "versionString",
-          "-versionString"
-        ]
-      },
-      {
-        "name": "fields[gameCenterEnabledVersions]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterEnabledVersions Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "platform",
-          "versionString",
-          "iconAsset",
-          "compatibleVersions",
-          "app"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "compatibleVersions",
-          "app"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.get",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps/{id}",
     "description": "Read one app by ID, including bundle ID, SKU and primary locale.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9039,7 +7271,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/inAppPurchasesV2",
     "description": "List the in-app purchases (v2) belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9119,83 +7350,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "apps.in_app_purchases.list",
-    "domain": "apps",
-    "method": "GET",
-    "path": "/v1/apps/{id}/inAppPurchases",
-    "description": "List the in-app purchases belonging to an app. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[inAppPurchaseType]",
-        "type": "array",
-        "description": "filter by attribute 'inAppPurchaseType'",
-        "enum": [
-          "AUTOMATICALLY_RENEWABLE_SUBSCRIPTION",
-          "NON_CONSUMABLE",
-          "CONSUMABLE",
-          "NON_RENEWING_SUBSCRIPTION",
-          "FREE_SUBSCRIPTION"
-        ]
-      },
-      {
-        "name": "filter[canBeSubmitted]",
-        "type": "array",
-        "description": "filter by canBeSubmitted"
-      },
-      {
-        "name": "sort",
-        "type": "array",
-        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
-        "enum": [
-          "referenceName",
-          "-referenceName",
-          "productId",
-          "-productId",
-          "inAppPurchaseType",
-          "-inAppPurchaseType"
-        ]
-      },
-      {
-        "name": "fields[inAppPurchases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type inAppPurchases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "productId",
-          "inAppPurchaseType",
-          "state",
-          "apps"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "apps"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "apps.list",
     "domain": "apps",
     "method": "GET",
     "path": "/v1/apps",
     "description": "List all apps in your App Store Connect account. Start here when you need an app ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -9420,7 +7580,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/marketplaceSearchDetail",
     "description": "Read the marketplace search detail for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9434,7 +7593,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/perfPowerMetrics",
     "description": "List the perf power metrics belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9478,7 +7636,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/performanceOverviews",
     "description": "List the performance overviews belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9499,7 +7656,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/preReleaseVersions",
     "description": "List the pre release versions belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9530,7 +7686,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/promotedPurchases",
     "description": "List the promoted purchases belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9571,7 +7726,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/relationships/promotedPurchases",
     "description": "Replace the full set of promoted purchases linked to an app.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9587,7 +7741,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/reviewSubmissions",
     "description": "List the review submissions belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9659,7 +7812,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/searchKeywords",
     "description": "List the search keywords belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9689,7 +7841,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/subscriptionGracePeriod",
     "description": "Read the subscription grace period for an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9703,7 +7854,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/subscriptionGroups",
     "description": "List the subscription groups belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9775,7 +7925,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}",
     "description": "Update an app.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9791,7 +7940,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/apps/{id}/webhooks",
     "description": "List the webhooks belonging to an app.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9832,7 +7980,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetUploadFiles",
     "description": "Create a background asset upload file.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -9846,7 +7993,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetUploadFiles/{id}",
     "description": "Read one background asset upload file by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9876,7 +8022,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetUploadFiles/{id}",
     "description": "Update a background asset upload file.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9892,7 +8037,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetVersionAppStoreReleases/{id}",
     "description": "Read one background asset version App Store release by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9924,7 +8068,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetVersionExternalBetaReleases/{id}",
     "description": "Read one background asset version external beta release by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9956,7 +8099,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetVersionInternalBetaReleases/{id}",
     "description": "Read one background asset version internal beta release by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -9988,7 +8130,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetVersions/{id}/backgroundAssetUploadFiles",
     "description": "List the background asset upload files belonging to a background asset version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10023,7 +8164,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetVersions",
     "description": "Create a background asset version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10037,7 +8177,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssetVersions/{id}",
     "description": "Read one background asset version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10085,7 +8224,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssets",
     "description": "Add a downloadable resource pack — a Background Assets package holding large game or app content that iOS fetches separately, after install and outside the app bundle.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10099,7 +8237,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssets/{id}",
     "description": "Read one background asset by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10141,7 +8278,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssets/{id}",
     "description": "Update a background asset.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10157,7 +8293,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/backgroundAssets/{id}/versions",
     "description": "List the versions belonging to a background asset.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10270,7 +8405,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocationLocalizations",
     "description": "Create a beta App Clip invocation localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10284,7 +8418,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocationLocalizations/{id}",
     "description": "Delete a beta App Clip invocation localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10299,7 +8432,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocationLocalizations/{id}",
     "description": "Update a beta App Clip invocation localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10315,7 +8447,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocations",
     "description": "Create a beta App Clip invocation.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10329,7 +8460,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocations/{id}",
     "description": "Delete a beta App Clip invocation.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10344,7 +8474,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocations/{id}",
     "description": "Read one beta App Clip invocation by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10376,7 +8505,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppClipInvocations/{id}",
     "description": "Update a beta App Clip invocation.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10386,27 +8514,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "beta_app_localizations.app.get",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaAppLocalizations/{id}/app",
-    "description": "Read the app for a beta app localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_app_localizations.create",
     "domain": "testflight",
     "method": "POST",
     "path": "/v1/betaAppLocalizations",
     "description": "Create a beta app localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10420,7 +8533,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppLocalizations/{id}",
     "description": "Delete a beta app localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10435,7 +8547,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppLocalizations/{id}",
     "description": "Read one beta app localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10472,7 +8583,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppLocalizations",
     "description": "List beta app localizations.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -10522,7 +8632,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppLocalizations/{id}",
     "description": "Update a beta app localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10532,27 +8641,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "beta_app_review_details.app.get",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaAppReviewDetails/{id}/app",
-    "description": "Read the app for a beta app review detail.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_app_review_details.get",
     "domain": "testflight",
     "method": "GET",
     "path": "/v1/betaAppReviewDetails/{id}",
     "description": "Read one beta app review detail by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10591,7 +8685,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppReviewDetails",
     "description": "List beta app review details.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -10639,7 +8732,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppReviewDetails/{id}",
     "description": "Update a beta app review detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10655,7 +8747,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppReviewSubmissions/{id}/build",
     "description": "Read the build for a beta app review submission.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10669,7 +8760,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppReviewSubmissions",
     "description": "Create a beta app review submission.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10683,7 +8773,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppReviewSubmissions/{id}",
     "description": "Read one beta app review submission by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10716,7 +8805,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaAppReviewSubmissions",
     "description": "List beta app review submissions.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -10763,27 +8851,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_build_localizations.build.get",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaBuildLocalizations/{id}/build",
-    "description": "Read the build for a beta build localization.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_build_localizations.create",
     "domain": "testflight",
     "method": "POST",
     "path": "/v1/betaBuildLocalizations",
     "description": "Create a beta build localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -10797,7 +8870,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaBuildLocalizations/{id}",
     "description": "Delete a beta build localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10812,7 +8884,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaBuildLocalizations/{id}",
     "description": "Read one beta build localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10845,7 +8916,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaBuildLocalizations",
     "description": "List beta build localizations.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -10891,7 +8961,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaBuildLocalizations/{id}",
     "description": "Set the tester-facing \"what to test\" notes for a TestFlight build in one language.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10907,7 +8976,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaCrashLogs/{id}",
     "description": "Read one beta crash log by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10930,7 +8998,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaFeedbackCrashSubmissions/{id}/crashLog",
     "description": "Read the crash log for a beta feedback crash submission.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10944,7 +9011,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaFeedbackCrashSubmissions/{id}",
     "description": "Delete a beta feedback crash submission.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -10959,7 +9025,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaFeedbackCrashSubmissions/{id}",
     "description": "Read one beta feedback crash submission by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11013,7 +9078,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaFeedbackScreenshotSubmissions/{id}",
     "description": "Delete a beta feedback screenshot submission.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11028,7 +9092,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaFeedbackScreenshotSubmissions/{id}",
     "description": "Read one beta feedback screenshot submission by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11076,27 +9139,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_groups.app.get",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaGroups/{id}/app",
-    "description": "Read the app for a beta group.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_groups.beta_recruitment_criteria.get",
     "domain": "testflight",
     "method": "GET",
     "path": "/v1/betaGroups/{id}/betaRecruitmentCriteria",
     "description": "Read the beta recruitment criteria for a beta group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11120,7 +9168,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}/betaRecruitmentCriterionCompatibleBuildCheck",
     "description": "Read the beta recruitment criterion compatible build check for a beta group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11134,7 +9181,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}/metrics/betaTesterUsages",
     "description": "Read beta tester usages metrics for a beta group. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11172,29 +9218,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_groups.beta_testers.add",
-    "domain": "testflight",
-    "method": "POST",
-    "path": "/v1/betaGroups/{id}/relationships/betaTesters",
-    "description": "Add existing beta testers to a TestFlight group.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BetaGroupBetaTestersLinkagesRequest",
-    "risk": "low"
-  },
-  {
     "name": "beta_groups.beta_testers.list",
     "domain": "testflight",
     "method": "GET",
     "path": "/v1/betaGroups/{id}/betaTesters",
     "description": "List the beta testers belonging to a beta group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11224,29 +9253,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_groups.beta_testers.remove",
-    "domain": "testflight",
-    "method": "DELETE",
-    "path": "/v1/betaGroups/{id}/relationships/betaTesters",
-    "description": "Unlink beta testers from a beta group.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BetaGroupBetaTestersLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "beta_groups.builds.add",
     "domain": "testflight",
     "method": "POST",
     "path": "/v1/betaGroups/{id}/relationships/builds",
     "description": "Distribute a build to a TestFlight beta group so its testers can install it.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11262,7 +9274,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}/builds",
     "description": "List the builds belonging to a beta group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11315,7 +9326,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}/relationships/builds",
     "description": "Unlink builds from a beta group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11331,7 +9341,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups",
     "description": "Make a TestFlight group to organise testers — an internal one for the team, or an external one Apple reviews before it can receive builds.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -11345,7 +9354,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}",
     "description": "Delete a beta group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11360,7 +9368,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}",
     "description": "Read one beta group by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11410,7 +9417,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups",
     "description": "List beta groups.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -11518,7 +9524,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}/metrics/publicLinkUsages",
     "description": "Read public link usages metrics for a beta group. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11538,7 +9543,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaGroups/{id}",
     "description": "Update a beta group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11548,27 +9552,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "beta_license_agreements.app.get",
-    "domain": "testflight",
-    "method": "GET",
-    "path": "/v1/betaLicenseAgreements/{id}/app",
-    "description": "Read the app for a beta license agreement.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "beta_license_agreements.get",
     "domain": "testflight",
     "method": "GET",
     "path": "/v1/betaLicenseAgreements/{id}",
     "description": "Read one beta license agreement by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11600,7 +9589,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaLicenseAgreements",
     "description": "List beta license agreements.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -11640,7 +9628,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaLicenseAgreements/{id}",
     "description": "Update a beta license agreement.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11656,7 +9643,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaRecruitmentCriteria",
     "description": "Create a beta recruitment criteria.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -11670,7 +9656,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaRecruitmentCriteria/{id}",
     "description": "Delete a beta recruitment criteria.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11685,7 +9670,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaRecruitmentCriteria/{id}",
     "description": "Update a beta recruitment criteria.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11701,7 +9685,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaRecruitmentCriterionOptions",
     "description": "List beta recruitment criterion options.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -11727,7 +9710,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesterInvitations",
     "description": "Re-send a TestFlight invitation email to a tester who has not accepted yet.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -11741,7 +9723,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters/{id}/apps",
     "description": "List the apps belonging to a beta tester.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11802,29 +9783,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_testers.apps.remove",
-    "domain": "testflight",
-    "method": "DELETE",
-    "path": "/v1/betaTesters/{id}/relationships/apps",
-    "description": "Unlink apps from a beta tester.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BetaTesterAppsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "beta_testers.beta_groups.add",
     "domain": "testflight",
     "method": "POST",
     "path": "/v1/betaTesters/{id}/relationships/betaGroups",
     "description": "Link beta groups to a beta tester.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11840,7 +9804,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters/{id}/betaGroups",
     "description": "List the beta groups belonging to a beta tester.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11884,7 +9847,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters/{id}/relationships/betaGroups",
     "description": "Unlink beta groups from a beta tester.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11900,7 +9862,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters/{id}/metrics/betaTesterUsages",
     "description": "Read beta tester usages metrics for a beta tester. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -11931,29 +9892,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_testers.builds.add",
-    "domain": "testflight",
-    "method": "POST",
-    "path": "/v1/betaTesters/{id}/relationships/builds",
-    "description": "Link builds to a beta tester.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BetaTesterBuildsLinkagesRequest",
-    "risk": "low"
-  },
-  {
     "name": "beta_testers.builds.list",
     "domain": "testflight",
     "method": "GET",
     "path": "/v1/betaTesters/{id}/builds",
     "description": "List the builds belonging to a beta tester.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12000,29 +9944,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "beta_testers.builds.remove",
-    "domain": "testflight",
-    "method": "DELETE",
-    "path": "/v1/betaTesters/{id}/relationships/builds",
-    "description": "Unlink builds from a beta tester.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BetaTesterBuildsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "beta_testers.create",
     "domain": "testflight",
     "method": "POST",
     "path": "/v1/betaTesters",
     "description": "Invite a new TestFlight tester by email and add them to one or more beta groups.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -12036,7 +9963,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters/{id}",
     "description": "Remove a TestFlight tester from your account entirely, so they lose access to every build and group. Removing them from one group is a different call.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12051,7 +9977,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters/{id}",
     "description": "Read one beta tester by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12092,7 +10017,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/betaTesters",
     "description": "List beta testers.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -12191,47 +10115,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "build_beta_details.build.get",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/buildBetaDetails/{id}/build",
-    "description": "Read the build for a build beta detail.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "preReleaseVersion",
-          "individualTesters",
-          "betaGroups",
-          "betaBuildLocalizations",
-          "appEncryptionDeclaration",
-          "betaAppReviewSubmission",
-          "app",
-          "buildBetaDetail",
-          "appStoreVersion",
-          "icons",
-          "buildBundles",
-          "buildUpload"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "build_beta_details.get",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/buildBetaDetails/{id}",
     "description": "Read one build beta detail by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12265,7 +10154,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBetaDetails",
     "description": "List the TestFlight state of builds: whether external testing is available and how the build was distributed. This is the beta side of a build — build attributes themselves come from builds__list.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -12312,7 +10200,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBetaDetails/{id}",
     "description": "Update a build beta detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12328,7 +10215,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBetaNotifications",
     "description": "Create a build beta notification.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -12342,7 +10228,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBundles/{id}/appClipDomainCacheStatus",
     "description": "Read the App Clip domain cache statu for a build bundle.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12356,7 +10241,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBundles/{id}/appClipDomainDebugStatus",
     "description": "Read the App Clip domain debug statu for a build bundle.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12370,7 +10254,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBundles/{id}/betaAppClipInvocations",
     "description": "List the beta App Clip invocations belonging to a build bundle.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12407,7 +10290,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildBundles/{id}/buildBundleFileSizes",
     "description": "List the build bundle file sizes belonging to a build bundle.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12438,7 +10320,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploadFiles",
     "description": "Create a build upload file.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -12452,7 +10333,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploadFiles/{id}",
     "description": "Read one build upload file by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12482,7 +10362,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploadFiles/{id}",
     "description": "Update a build upload file.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12498,7 +10377,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploads/{id}/buildUploadFiles",
     "description": "List the build upload files belonging to a build upload.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12533,7 +10411,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploads",
     "description": "Create a build upload.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -12547,7 +10424,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploads/{id}",
     "description": "Delete a build upload.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12562,7 +10438,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/buildUploads/{id}",
     "description": "Read one build upload by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12606,7 +10481,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/appEncryptionDeclaration",
     "description": "Read the app encryption declaration for a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12620,7 +10494,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/relationships/appEncryptionDeclaration",
     "description": "Set the app encryption declaration linked to a build.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12636,7 +10509,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/appStoreVersion",
     "description": "Read the App Store version for a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12670,7 +10542,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/app",
     "description": "Read the app for a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12684,7 +10555,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/betaAppReviewSubmission",
     "description": "Read the beta app review submission for a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12698,7 +10568,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/betaBuildLocalizations",
     "description": "List the beta build localizations belonging to a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12728,7 +10597,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/metrics/betaBuildUsages",
     "description": "Read beta build usages metrics for a build. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12742,45 +10610,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "builds.beta_groups.add",
-    "domain": "builds",
-    "method": "POST",
-    "path": "/v1/builds/{id}/relationships/betaGroups",
-    "description": "Link beta groups to a build.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BuildBetaGroupsLinkagesRequest",
-    "risk": "low"
-  },
-  {
-    "name": "builds.beta_groups.remove",
-    "domain": "builds",
-    "method": "DELETE",
-    "path": "/v1/builds/{id}/relationships/betaGroups",
-    "description": "Unlink beta groups from a build.",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "BuildBetaGroupsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "builds.build_beta_detail.get",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/builds/{id}/buildBetaDetail",
     "description": "Read the build beta detail for a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12803,7 +10638,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/diagnosticSignatures",
     "description": "List the diagnostic signatures belonging to a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12845,7 +10679,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}",
     "description": "Read one build by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12912,7 +10745,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/icons",
     "description": "List the icons belonging to a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12932,7 +10764,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/relationships/individualTesters",
     "description": "Link individual testers to a build.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12948,7 +10779,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/individualTesters",
     "description": "List the individual testers belonging to a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12968,7 +10798,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/relationships/individualTesters",
     "description": "Unlink individual testers from a build.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -12984,7 +10813,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds",
     "description": "List uploaded builds across all apps, newest first with sort=-uploadedDate. Filter by app, version or processing state. For one app's builds use apps__builds__list instead.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -13159,7 +10987,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/perfPowerMetrics",
     "description": "List the perf power metrics belonging to a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13203,7 +11030,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}/preReleaseVersion",
     "description": "Read the pre release version for a build.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13217,7 +11043,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/builds/{id}",
     "description": "Update a build — most commonly to set usesNonExemptEncryption compliance so it can be distributed.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13233,7 +11058,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIdCapabilities",
     "description": "Create a bundle ID capability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -13247,7 +11071,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIdCapabilities/{id}",
     "description": "Delete a bundle ID capability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13262,7 +11085,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIdCapabilities/{id}",
     "description": "Update a bundle ID capability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13278,7 +11100,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds/{id}/app",
     "description": "Read the app for a bundle ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13292,7 +11113,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds/{id}/bundleIdCapabilities",
     "description": "List the bundle ID capabilities belonging to a bundle ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13321,7 +11141,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds",
     "description": "Register a new bundle identifier before creating provisioning profiles for it.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -13335,7 +11154,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds/{id}",
     "description": "Delete a bundle ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13350,7 +11168,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds/{id}",
     "description": "Read one bundle ID by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13389,7 +11206,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds",
     "description": "List bundle IDs.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -13478,7 +11294,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds/{id}/profiles",
     "description": "List the profiles belonging to a bundle ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13516,7 +11331,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/bundleIds/{id}",
     "description": "Update a bundle ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13532,7 +11346,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/certificates",
     "description": "Create a certificate.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -13546,7 +11359,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/certificates/{id}",
     "description": "Revoke a signing certificate. Any provisioning profile built on it stops working, so replace the profile before removing the certificate a build depends on.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13561,7 +11373,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/certificates/{id}",
     "description": "Read one certificate by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13600,7 +11411,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/certificates",
     "description": "List certificates.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -13697,7 +11507,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/certificates/{id}/passTypeId",
     "description": "Read the pass type ID for a certificate.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13720,7 +11529,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/certificates/{id}",
     "description": "Update a certificate.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13736,7 +11544,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciArtifacts/{id}",
     "description": "Read one Xcode Cloud artifact by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13762,7 +11569,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildActions/{id}/artifacts",
     "description": "List the artifacts belonging to an Xcode Cloud build action.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13782,7 +11588,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildActions/{id}/buildRun",
     "description": "Read the build run for an Xcode Cloud build action.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13810,7 +11615,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildActions/{id}",
     "description": "Read one Xcode Cloud build action by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13852,7 +11656,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildActions/{id}/issues",
     "description": "List the issues belonging to an Xcode Cloud build action.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13872,7 +11675,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildActions/{id}/testResults",
     "description": "List the test results belonging to an Xcode Cloud build action.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13892,7 +11694,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildRuns/{id}/actions",
     "description": "List the actions belonging to an Xcode Cloud build run.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -13920,7 +11721,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildRuns/{id}/builds",
     "description": "List the builds belonging to an Xcode Cloud build run.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14097,7 +11897,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildRuns",
     "description": "Start an Xcode Cloud build for a workflow, optionally targeting a specific branch, tag or pull request.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -14111,7 +11910,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciBuildRuns/{id}",
     "description": "Read one Xcode Cloud build run by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14165,7 +11963,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciIssues/{id}",
     "description": "Read one Xcode Cloud issue by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14191,7 +11988,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciMacOsVersions/{id}",
     "description": "Read one Xcode Cloud mac os version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14224,7 +12020,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciMacOsVersions",
     "description": "List Xcode Cloud mac os versions.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -14260,7 +12055,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciMacOsVersions/{id}/xcodeVersions",
     "description": "List the Xcode versions belonging to an Xcode Cloud mac os version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14288,7 +12082,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}/additionalRepositories",
     "description": "List the additional repositories belonging to an Xcode Cloud product.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14322,7 +12115,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}/app",
     "description": "Read the app for an Xcode Cloud product.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14369,7 +12161,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}/buildRuns",
     "description": "List the build runs belonging to an Xcode Cloud product.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14416,7 +12207,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}",
     "description": "Delete an Xcode Cloud product.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14431,7 +12221,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}",
     "description": "Read one Xcode Cloud product by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14472,7 +12261,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts",
     "description": "List Xcode Cloud products.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -14530,7 +12318,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}/primaryRepositories",
     "description": "List the primary repositories belonging to an Xcode Cloud product.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14564,7 +12351,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciProducts/{id}/workflows",
     "description": "List the workflows belonging to an Xcode Cloud product.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14595,7 +12381,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciTestResults/{id}",
     "description": "Read one Xcode Cloud test result by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14623,7 +12408,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciWorkflows/{id}/buildRuns",
     "description": "List the Xcode Cloud builds a workflow has run, newest first, with how each one ended.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14670,7 +12454,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciWorkflows",
     "description": "Set up an Xcode Cloud workflow — what starts a build, which actions it runs (build, test, archive) and where it goes afterwards.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -14684,7 +12467,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciWorkflows/{id}",
     "description": "Delete an Xcode Cloud workflow.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14699,7 +12481,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciWorkflows/{id}",
     "description": "Read one Xcode Cloud workflow by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14752,7 +12533,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciWorkflows/{id}/repository",
     "description": "Read the repository for an Xcode Cloud workflow.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14776,7 +12556,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciWorkflows/{id}",
     "description": "Update an Xcode Cloud workflow.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14792,7 +12571,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciXcodeVersions/{id}",
     "description": "Read one Xcode Cloud Xcode version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14826,7 +12604,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciXcodeVersions",
     "description": "List Xcode Cloud Xcode versions.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -14863,7 +12640,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/ciXcodeVersions/{id}/macOsVersions",
     "description": "List the mac os versions belonging to an Xcode Cloud Xcode version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14891,7 +12667,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/customerReviewResponses",
     "description": "Publish a developer response to a customer review. One response per review; use update to change it.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -14905,7 +12680,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/customerReviewResponses/{id}",
     "description": "Delete your response to a customer review.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14920,7 +12694,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/customerReviewResponses/{id}",
     "description": "Read one customer review response by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14954,7 +12727,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/customerReviews/{id}",
     "description": "Read one customer review by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -14993,7 +12765,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/customerReviews/{id}/response",
     "description": "Read the response for a customer review.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15016,7 +12787,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/devices",
     "description": "Register a device for development and ad-hoc provisioning by its UDID, so builds signed for it will install.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15030,7 +12800,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/devices/{id}",
     "description": "Read one device by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15059,7 +12828,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/devices",
     "description": "List devices.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -15142,7 +12910,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/devices/{id}",
     "description": "Update a device.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15158,7 +12925,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/diagnosticSignatures/{id}/logs",
     "description": "List the logs belonging to a diagnostic signature.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15179,7 +12945,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/endAppAvailabilityPreOrders",
     "description": "Create an end app availability pre order.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15193,7 +12958,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/endUserLicenseAgreements",
     "description": "Create an end user license agreement.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15207,7 +12971,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/endUserLicenseAgreements/{id}",
     "description": "Delete an end user license agreement.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15222,7 +12985,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/endUserLicenseAgreements/{id}",
     "description": "Read one end user license agreement by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15256,7 +13018,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/endUserLicenseAgreements/{id}/territories",
     "description": "List the territories belonging to an end user license agreement.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15284,7 +13045,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/endUserLicenseAgreements/{id}",
     "description": "Update an end user license agreement.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15300,7 +13060,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/financeReports",
     "description": "Download the monthly financial report — what Apple actually paid, by region and currency, for a fiscal period. This is the money report, as opposed to units sold. Needs ASC_VENDOR_NUMBER and a Finance role on the API key.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -15342,7 +13101,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementImages",
     "description": "Create a Game Center achievement images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15356,7 +13114,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementImages/{id}",
     "description": "Delete a Game Center achievement images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15371,7 +13128,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementImages/{id}",
     "description": "Read one Game Center achievement images (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15407,7 +13163,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementImages/{id}",
     "description": "Update a Game Center achievement images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15417,94 +13172,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "game_center_achievement_images.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterAchievementImages",
-    "description": "Create a Game Center achievement image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementImageCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_achievement_images.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterAchievementImages/{id}",
-    "description": "Delete a Game Center achievement image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_achievement_images.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementImages/{id}",
-    "description": "Read one Game Center achievement image by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterAchievementImages]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterAchievementImages Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "imageAsset",
-          "uploadOperations",
-          "assetDeliveryState",
-          "gameCenterAchievementLocalization"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterAchievementLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievement_images.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterAchievementImages/{id}",
-    "description": "Update a Game Center achievement image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementImageUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_achievement_localizations_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterAchievementLocalizations",
     "description": "Create a Game Center achievement localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15518,7 +13191,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementLocalizations/{id}",
     "description": "Delete a Game Center achievement localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15533,7 +13205,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementLocalizations/{id}",
     "description": "Read one Game Center achievement localizations (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15570,7 +13241,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementLocalizations/{id}/image",
     "description": "Read the image for a Game Center achievement localizations (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15593,7 +13263,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementLocalizations/{id}",
     "description": "Update a Game Center achievement localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15603,209 +13272,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_achievement_localizations.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterAchievementLocalizations",
-    "description": "Create a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementLocalizationCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "game_center_achievement_localizations.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}",
-    "description": "Delete a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_achievement_localizations.game_center_achievement_image.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}/gameCenterAchievementImage",
-    "description": "Read the Game Center achievement image for a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterAchievementLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievement_localizations.game_center_achievement.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}/gameCenterAchievement",
-    "description": "Read the Game Center achievement for a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievement_localizations.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}",
-    "description": "Read one Game Center achievement localization by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterAchievementLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterAchievementLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "locale",
-          "name",
-          "beforeEarnedDescription",
-          "afterEarnedDescription",
-          "gameCenterAchievement",
-          "gameCenterAchievementImage"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterAchievement",
-          "gameCenterAchievementImage"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievement_localizations.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterAchievementLocalizations/{id}",
-    "description": "Update a Game Center achievement localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementLocalizationUpdateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "game_center_achievement_releases.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterAchievementReleases",
-    "description": "Create a Game Center achievement release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementReleaseCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_achievement_releases.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterAchievementReleases/{id}",
-    "description": "Delete a Game Center achievement release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_achievement_releases.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievementReleases/{id}",
-    "description": "Read one Game Center achievement release by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterAchievementReleases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterAchievementReleases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "live",
-          "gameCenterDetail",
-          "gameCenterAchievement"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterAchievement"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_achievement_versions_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterAchievementVersions",
     "description": "Create a Game Center achievement versions (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15819,7 +13291,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementVersions/{id}",
     "description": "Read one Game Center achievement versions (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15854,7 +13325,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievementVersions/{id}/localizations",
     "description": "List the localizations belonging to a Game Center achievement versions (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15877,29 +13347,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievements_v2.activity.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v2/gameCenterAchievements/{id}/relationships/activity",
-    "description": "Set the activity linked to a Game Center achievements (v2).",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementV2ActivityLinkageRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_achievements_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterAchievements",
     "description": "Create a Game Center achievement — a milestone a player unlocks once, worth a share of the 1000 achievement points a game has to spend.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -15913,7 +13366,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievements/{id}",
     "description": "Delete a Game Center achievements (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15928,7 +13380,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievements/{id}",
     "description": "Read one Game Center achievements (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15972,7 +13423,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievements/{id}",
     "description": "Update a Game Center achievements (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -15988,7 +13438,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterAchievements/{id}/versions",
     "description": "List the versions belonging to a Game Center achievements (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16011,234 +13460,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_achievements.activity.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterAchievements/{id}/relationships/activity",
-    "description": "Set the activity linked to a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementActivityLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_achievements.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterAchievements",
-    "description": "Create a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_achievements.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterAchievements/{id}",
-    "description": "Delete a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_achievements.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}",
-    "description": "Read one Game Center achievement by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterAchievements]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "vendorIdentifier",
-          "points",
-          "showBeforeEarned",
-          "repeatable",
-          "archived",
-          "activityProperties",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievements.group_achievement.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}/groupAchievement",
-    "description": "Read the group achievement for a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievements.group_achievement.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterAchievements/{id}/relationships/groupAchievement",
-    "description": "Set the group achievement linked to a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementGroupAchievementLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_achievements.localizations.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}/localizations",
-    "description": "List the localizations belonging to a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterAchievement",
-          "gameCenterAchievementImage"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievements.releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterAchievements/{id}/releases",
-    "description": "List the releases belonging to a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[live]",
-        "type": "array",
-        "description": "filter by attribute 'live'"
-      },
-      {
-        "name": "filter[gameCenterDetail]",
-        "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetail' Takes a 'gameCenterDetail' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterAchievement"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_achievements.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterAchievements/{id}",
-    "description": "Update a Game Center achievement. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterAchievementUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_activities.achievements_v2.add",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterActivities/{id}/relationships/achievementsV2",
     "description": "Link achievements (v2) to a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16254,7 +13481,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivities/{id}/relationships/achievementsV2",
     "description": "Unlink achievements (v2) from a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16264,45 +13490,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_activities.achievements.add",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterActivities/{id}/relationships/achievements",
-    "description": "Link achievements to a Game Center activity. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterActivityAchievementsLinkagesRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_activities.achievements.remove",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterActivities/{id}/relationships/achievements",
-    "description": "Unlink achievements from a Game Center activity. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterActivityAchievementsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_activities.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterActivities",
     "description": "Create a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -16316,7 +13509,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivities/{id}",
     "description": "Delete a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16331,7 +13523,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivities/{id}",
     "description": "Read one Game Center activity by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16382,7 +13573,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivities/{id}/relationships/leaderboardsV2",
     "description": "Link leaderboards (v2) to a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16398,7 +13588,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivities/{id}/relationships/leaderboardsV2",
     "description": "Unlink leaderboards (v2) from a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16408,45 +13597,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_activities.leaderboards.add",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterActivities/{id}/relationships/leaderboards",
-    "description": "Link leaderboards to a Game Center activity. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterActivityLeaderboardsLinkagesRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_activities.leaderboards.remove",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterActivities/{id}/relationships/leaderboards",
-    "description": "Unlink leaderboards from a Game Center activity. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterActivityLeaderboardsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_activities.update",
     "domain": "game_center",
     "method": "PATCH",
     "path": "/v1/gameCenterActivities/{id}",
     "description": "Update a Game Center activity.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16462,7 +13618,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivities/{id}/versions",
     "description": "List the versions belonging to a Game Center activity.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16493,7 +13648,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityImages",
     "description": "Create a Game Center activity image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -16507,7 +13661,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityImages/{id}",
     "description": "Delete a Game Center activity image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16522,7 +13675,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityImages/{id}",
     "description": "Read one Game Center activity image by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16549,7 +13701,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityImages/{id}",
     "description": "Update a Game Center activity image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16565,7 +13716,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityLocalizations",
     "description": "Create a Game Center activity localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -16579,7 +13729,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityLocalizations/{id}",
     "description": "Delete a Game Center activity localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16594,7 +13743,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityLocalizations/{id}",
     "description": "Read one Game Center activity localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16630,7 +13778,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityLocalizations/{id}/image",
     "description": "Read the image for a Game Center activity localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16644,7 +13791,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityLocalizations/{id}",
     "description": "Update a Game Center activity localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16654,73 +13800,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_activity_version_releases.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterActivityVersionReleases",
-    "description": "Create a Game Center activity version release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterActivityVersionReleaseCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_activity_version_releases.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterActivityVersionReleases/{id}",
-    "description": "Delete a Game Center activity version release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_activity_version_releases.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterActivityVersionReleases/{id}",
-    "description": "Read one Game Center activity version release by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterActivityVersionReleases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterActivityVersionReleases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "version"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "version"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_activity_versions.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterActivityVersions",
     "description": "Create a Game Center activity version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -16734,7 +13819,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityVersions/{id}/defaultImage",
     "description": "Read the default image for a Game Center activity version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16748,7 +13832,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityVersions/{id}",
     "description": "Read one Game Center activity version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16788,7 +13871,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityVersions/{id}/localizations",
     "description": "List the localizations belonging to a Game Center activity version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16817,7 +13899,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterActivityVersions/{id}",
     "description": "Update a Game Center activity version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16833,7 +13914,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions/{id}/appStoreVersion",
     "description": "Read the App Store version for a Game Center app version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16867,7 +13947,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions/{id}/relationships/compatibilityVersions",
     "description": "Link compatibility versions to a Game Center app version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16883,7 +13962,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions/{id}/compatibilityVersions",
     "description": "List the compatibility versions belonging to a Game Center app version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16917,7 +13995,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions/{id}/relationships/compatibilityVersions",
     "description": "Unlink compatibility versions from a Game Center app version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16933,7 +14010,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions",
     "description": "Create a Game Center app version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -16947,7 +14023,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions/{id}",
     "description": "Read one Game Center app version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16981,7 +14056,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterAppVersions/{id}",
     "description": "Update a Game Center app version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -16997,7 +14071,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeImages",
     "description": "Create a Game Center challenge image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -17011,7 +14084,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeImages/{id}",
     "description": "Delete a Game Center challenge image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17026,7 +14098,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeImages/{id}",
     "description": "Read one Game Center challenge image by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17053,7 +14124,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeImages/{id}",
     "description": "Update a Game Center challenge image.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17069,7 +14139,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeLocalizations",
     "description": "Create a Game Center challenge localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -17083,7 +14152,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeLocalizations/{id}",
     "description": "Delete a Game Center challenge localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17098,7 +14166,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeLocalizations/{id}",
     "description": "Read one Game Center challenge localization by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17134,7 +14201,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeLocalizations/{id}/image",
     "description": "Read the image for a Game Center challenge localization.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17148,7 +14214,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeLocalizations/{id}",
     "description": "Update a Game Center challenge localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17158,73 +14223,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_challenge_version_releases.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterChallengeVersionReleases",
-    "description": "Create a Game Center challenge version release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterChallengeVersionReleaseCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_challenge_version_releases.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterChallengeVersionReleases/{id}",
-    "description": "Delete a Game Center challenge version release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_challenge_version_releases.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterChallengeVersionReleases/{id}",
-    "description": "Read one Game Center challenge version release by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterChallengeVersionReleases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterChallengeVersionReleases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "version"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "version"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_challenge_versions.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterChallengeVersions",
     "description": "Create a Game Center challenge version.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -17238,7 +14242,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeVersions/{id}/defaultImage",
     "description": "Read the default image for a Game Center challenge version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17252,7 +14255,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeVersions/{id}",
     "description": "Read one Game Center challenge version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17291,7 +14293,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallengeVersions/{id}/localizations",
     "description": "List the localizations belonging to a Game Center challenge version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17320,7 +14321,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallenges",
     "description": "Create a Game Center challenge.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -17334,7 +14334,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallenges/{id}",
     "description": "Delete a Game Center challenge.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17349,7 +14348,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallenges/{id}",
     "description": "Read one Game Center challenge by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17393,7 +14391,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallenges/{id}/relationships/leaderboardV2",
     "description": "Set the leaderboard (v2) linked to a Game Center challenge.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17403,29 +14400,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "game_center_challenges.leaderboard.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterChallenges/{id}/relationships/leaderboard",
-    "description": "Set the leaderboard linked to a Game Center challenge. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterChallengeLeaderboardLinkageRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_challenges.update",
     "domain": "game_center",
     "method": "PATCH",
     "path": "/v1/gameCenterChallenges/{id}",
     "description": "Update a Game Center challenge.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17441,7 +14421,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterChallenges/{id}/versions",
     "description": "List the versions belonging to a Game Center challenge.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17472,7 +14451,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetailPlayers/{id}",
     "description": "Update a Game Center detail player.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17482,80 +14460,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_details.achievement_releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/achievementReleases",
-    "description": "List the achievement releases belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[live]",
-        "type": "array",
-        "description": "filter by attribute 'live'"
-      },
-      {
-        "name": "filter[gameCenterAchievement]",
-        "type": "array",
-        "description": "filter by id(s) of related 'gameCenterAchievement' Takes a 'gameCenterAchievement' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterAchievement"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.activity_releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/activityReleases",
-    "description": "List the activity releases belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "version"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.blocked_players.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterDetails/{id}/blockedPlayers",
     "description": "List the blocked players belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17564,34 +14474,6 @@ export const OPERATIONS: Operation[] = [
         "name": "limit",
         "type": "number",
         "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.challenge_releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/challengeReleases",
-    "description": "List the challenge releases belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "version"
-        ]
       }
     ],
     "hasBody": false
@@ -17603,7 +14485,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/relationships/challengesMinimumPlatformVersions",
     "description": "Replace the full set of challenges minimum platform versions linked to a Game Center detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17619,7 +14500,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/metrics/classicMatchmakingRequests",
     "description": "Read classic matchmaking requests metrics for a Game Center detail. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17683,7 +14563,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails",
     "description": "Create a Game Center detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -17697,7 +14576,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/gameCenterAchievementsV2",
     "description": "List the Game Center achievements (v2) belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17743,7 +14621,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterAchievementsV2",
     "description": "Replace the full set of Game Center achievements (v2) linked to a Game Center detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17753,97 +14630,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_details.game_center_achievements.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/gameCenterAchievements",
-    "description": "List the Game Center achievements belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[archived]",
-        "type": "array",
-        "description": "filter by attribute 'archived'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterAchievements]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "vendorIdentifier",
-          "points",
-          "showBeforeEarned",
-          "repeatable",
-          "archived",
-          "activityProperties",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_achievements.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterAchievements",
-    "description": "Replace the full set of Game Center achievements linked to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterAchievementsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_details.game_center_activities.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterDetails/{id}/gameCenterActivities",
     "description": "List the Game Center activities belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17899,7 +14691,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/gameCenterAppVersions",
     "description": "List the Game Center app versions belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -17943,7 +14734,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/gameCenterChallenges",
     "description": "List the Game Center challenges belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18007,7 +14797,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/gameCenterGroup",
     "description": "Read the Game Center group for a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18038,7 +14827,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/gameCenterLeaderboardSetsV2",
     "description": "List the Game Center leaderboard sets (v2) belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18079,7 +14867,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSetsV2",
     "description": "Replace the full set of Game Center leaderboard sets (v2) linked to a Game Center detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18089,87 +14876,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_details.game_center_leaderboard_sets.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/gameCenterLeaderboardSets",
-    "description": "List the Game Center leaderboard sets belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterLeaderboardSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "vendorIdentifier",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_leaderboard_sets.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardSets",
-    "description": "Replace the full set of Game Center leaderboard sets linked to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterLeaderboardSetsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_details.game_center_leaderboards_v2.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterDetails/{id}/gameCenterLeaderboardsV2",
     "description": "List the Game Center leaderboards (v2) belonging to a Game Center detail.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18217,7 +14929,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboardsV2",
     "description": "Replace the full set of Game Center leaderboards (v2) linked to a Game Center detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18227,107 +14938,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_details.game_center_leaderboards.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/gameCenterLeaderboards",
-    "description": "List the Game Center leaderboards belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[archived]",
-        "type": "array",
-        "description": "filter by attribute 'archived'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterLeaderboards]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "defaultFormatter",
-          "referenceName",
-          "vendorIdentifier",
-          "submissionType",
-          "scoreSortType",
-          "scoreRangeStart",
-          "scoreRangeEnd",
-          "recurrenceStartDate",
-          "recurrenceDuration",
-          "recurrenceRule",
-          "archived",
-          "activityProperties",
-          "visibility",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.game_center_leaderboards.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterDetails/{id}/relationships/gameCenterLeaderboards",
-    "description": "Replace the full set of Game Center leaderboards linked to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterDetailGameCenterLeaderboardsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_details.get",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterDetails/{id}",
     "description": "Read one Game Center detail by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18395,91 +15011,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_details.leaderboard_releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/leaderboardReleases",
-    "description": "List the leaderboard releases belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[live]",
-        "type": "array",
-        "description": "filter by attribute 'live'"
-      },
-      {
-        "name": "filter[gameCenterLeaderboard]",
-        "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboard' Takes a 'gameCenterLeaderboard' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterLeaderboard"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_details.leaderboard_set_releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterDetails/{id}/leaderboardSetReleases",
-    "description": "List the leaderboard set releases belonging to a Game Center detail. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[live]",
-        "type": "array",
-        "description": "filter by attribute 'live'"
-      },
-      {
-        "name": "filter[gameCenterLeaderboardSet]",
-        "type": "array",
-        "description": "filter by id(s) of related 'gameCenterLeaderboardSet' Takes a 'gameCenterLeaderboardSet' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterLeaderboardSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_details.rule_based_matchmaking_requests.metrics",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterDetails/{id}/metrics/ruleBasedMatchmakingRequests",
     "description": "Read rule based matchmaking requests metrics for a Game Center detail. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18543,7 +15080,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterDetails/{id}",
     "description": "Update a Game Center detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18553,125 +15089,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "game_center_enabled_versions.compatible_versions.add",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterEnabledVersions/{id}/relationships/compatibleVersions",
-    "description": "Link compatible versions to a Game Center enabled version. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_enabled_versions.compatible_versions.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterEnabledVersions/{id}/compatibleVersions",
-    "description": "List the compatible versions belonging to a Game Center enabled version. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[platform]",
-        "type": "array",
-        "description": "filter by attribute 'platform'",
-        "enum": [
-          "IOS",
-          "MAC_OS",
-          "TV_OS",
-          "VISION_OS"
-        ]
-      },
-      {
-        "name": "filter[versionString]",
-        "type": "array",
-        "description": "filter by attribute 'versionString'"
-      },
-      {
-        "name": "filter[app]",
-        "type": "array",
-        "description": "filter by id(s) of related 'app' The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches nothing and comes back as 200 with an empty list."
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "sort",
-        "type": "array",
-        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
-        "enum": [
-          "versionString",
-          "-versionString"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "compatibleVersions",
-          "app"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_enabled_versions.compatible_versions.remove",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterEnabledVersions/{id}/relationships/compatibleVersions",
-    "description": "Unlink compatible versions from a Game Center enabled version. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_enabled_versions.compatible_versions.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterEnabledVersions/{id}/relationships/compatibleVersions",
-    "description": "Replace the full set of compatible versions linked to a Game Center enabled version. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterEnabledVersionCompatibleVersionsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_groups.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterGroups",
     "description": "Create a Game Center group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -18685,7 +15108,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}",
     "description": "Delete a Game Center group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18700,7 +15122,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/gameCenterAchievementsV2",
     "description": "List the Game Center achievements (v2) belonging to a Game Center group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18746,7 +15167,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterAchievementsV2",
     "description": "Replace the full set of Game Center achievements (v2) linked to a Game Center group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18756,97 +15176,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_groups.game_center_achievements.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/gameCenterAchievements",
-    "description": "List the Game Center achievements belonging to a Game Center group. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[archived]",
-        "type": "array",
-        "description": "filter by attribute 'archived'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterAchievements]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterAchievements Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "vendorIdentifier",
-          "points",
-          "showBeforeEarned",
-          "repeatable",
-          "archived",
-          "activityProperties",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupAchievement",
-          "localizations",
-          "releases",
-          "activity"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_achievements.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterAchievements",
-    "description": "Replace the full set of Game Center achievements linked to a Game Center group. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterAchievementsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_groups.game_center_activities.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterGroups/{id}/gameCenterActivities",
     "description": "List the Game Center activities belonging to a Game Center group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18902,7 +15237,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/gameCenterChallenges",
     "description": "List the Game Center challenges belonging to a Game Center group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -18966,7 +15300,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/gameCenterDetails",
     "description": "List the Game Center details belonging to a Game Center group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19050,7 +15383,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/gameCenterLeaderboardSetsV2",
     "description": "List the Game Center leaderboard sets (v2) belonging to a Game Center group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19091,7 +15423,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardSetsV2",
     "description": "Replace the full set of Game Center leaderboard sets (v2) linked to a Game Center group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19101,87 +15432,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_groups.game_center_leaderboard_sets.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/gameCenterLeaderboardSets",
-    "description": "List the Game Center leaderboard sets belonging to a Game Center group. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterLeaderboardSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "vendorIdentifier",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_leaderboard_sets.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardSets",
-    "description": "Replace the full set of Game Center leaderboard sets linked to a Game Center group. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterLeaderboardSetsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_groups.game_center_leaderboards_v2.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterGroups/{id}/gameCenterLeaderboardsV2",
     "description": "List the Game Center leaderboards (v2) belonging to a Game Center group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19229,7 +15485,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboardsV2",
     "description": "Replace the full set of Game Center leaderboards (v2) linked to a Game Center group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19239,107 +15494,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_groups.game_center_leaderboards.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterGroups/{id}/gameCenterLeaderboards",
-    "description": "List the Game Center leaderboards belonging to a Game Center group. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[archived]",
-        "type": "array",
-        "description": "filter by attribute 'archived'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterLeaderboards]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "defaultFormatter",
-          "referenceName",
-          "vendorIdentifier",
-          "submissionType",
-          "scoreSortType",
-          "scoreRangeStart",
-          "scoreRangeEnd",
-          "recurrenceStartDate",
-          "recurrenceDuration",
-          "recurrenceRule",
-          "archived",
-          "activityProperties",
-          "visibility",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_groups.game_center_leaderboards.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterGroups/{id}/relationships/gameCenterLeaderboards",
-    "description": "Replace the full set of Game Center leaderboards linked to a Game Center group. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterGroupGameCenterLeaderboardsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
     "name": "game_center_groups.get",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterGroups/{id}",
     "description": "Read one Game Center group by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19387,7 +15547,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups",
     "description": "List Game Center groups.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -19443,7 +15602,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterGroups/{id}",
     "description": "Update a Game Center group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19459,7 +15617,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterLeaderboardEntrySubmissions",
     "description": "Post a player’s score to a Game Center leaderboard. This is the write that submits a result; the leaderboard itself is created separately.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -19473,7 +15630,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardImages",
     "description": "Create a Game Center leaderboard images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -19487,7 +15643,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardImages/{id}",
     "description": "Delete a Game Center leaderboard images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19502,7 +15657,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardImages/{id}",
     "description": "Read one Game Center leaderboard images (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19538,7 +15692,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardImages/{id}",
     "description": "Update a Game Center leaderboard images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19548,94 +15701,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "game_center_leaderboard_images.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardImages",
-    "description": "Create a Game Center leaderboard image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardImageCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_images.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardImages/{id}",
-    "description": "Delete a Game Center leaderboard image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_images.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardImages/{id}",
-    "description": "Read one Game Center leaderboard image by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardImages]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardImages Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "imageAsset",
-          "uploadOperations",
-          "assetDeliveryState",
-          "gameCenterLeaderboardLocalization"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboardLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_images.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardImages/{id}",
-    "description": "Update a Game Center leaderboard image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardImageUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_leaderboard_localizations_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterLeaderboardLocalizations",
     "description": "Create a Game Center leaderboard localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -19649,7 +15720,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardLocalizations/{id}",
     "description": "Delete a Game Center leaderboard localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19664,7 +15734,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardLocalizations/{id}",
     "description": "Read one Game Center leaderboard localizations (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19703,7 +15772,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardLocalizations/{id}/image",
     "description": "Read the image for a Game Center leaderboard localizations (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19726,7 +15794,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardLocalizations/{id}",
     "description": "Update a Game Center leaderboard localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19736,183 +15803,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_leaderboard_localizations.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardLocalizations",
-    "description": "Create a Game Center leaderboard localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardLocalizationCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "game_center_leaderboard_localizations.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardLocalizations/{id}",
-    "description": "Delete a Game Center leaderboard localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_localizations.game_center_leaderboard_image.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardLocalizations/{id}/gameCenterLeaderboardImage",
-    "description": "Read the Game Center leaderboard image for a Game Center leaderboard localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboardLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_localizations.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardLocalizations/{id}",
-    "description": "Read one Game Center leaderboard localization by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "locale",
-          "name",
-          "formatterOverride",
-          "formatterSuffix",
-          "formatterSuffixSingular",
-          "description",
-          "gameCenterLeaderboard",
-          "gameCenterLeaderboardImage"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboard",
-          "gameCenterLeaderboardImage"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_localizations.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardLocalizations/{id}",
-    "description": "Update a Game Center leaderboard localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardLocalizationUpdateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "game_center_leaderboard_releases.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardReleases",
-    "description": "Create a Game Center leaderboard release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardReleaseCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_releases.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardReleases/{id}",
-    "description": "Delete a Game Center leaderboard release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_releases.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardReleases/{id}",
-    "description": "Read one Game Center leaderboard release by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardReleases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardReleases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "live",
-          "gameCenterDetail",
-          "gameCenterLeaderboard"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterLeaderboard"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_set_images_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterLeaderboardSetImages",
     "description": "Create a Game Center leaderboard set images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -19926,7 +15822,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetImages/{id}",
     "description": "Delete a Game Center leaderboard set images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19941,7 +15836,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetImages/{id}",
     "description": "Read one Game Center leaderboard set images (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19977,7 +15871,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetImages/{id}",
     "description": "Update a Game Center leaderboard set images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -19987,94 +15880,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "game_center_leaderboard_set_images.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardSetImages",
-    "description": "Create a Game Center leaderboard set image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetImageCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_set_images.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardSetImages/{id}",
-    "description": "Delete a Game Center leaderboard set image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_set_images.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetImages/{id}",
-    "description": "Read one Game Center leaderboard set image by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardSetImages]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetImages Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "imageAsset",
-          "uploadOperations",
-          "assetDeliveryState",
-          "gameCenterLeaderboardSetLocalization"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboardSetLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_set_images.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardSetImages/{id}",
-    "description": "Update a Game Center leaderboard set image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetImageUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_leaderboard_set_localizations_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterLeaderboardSetLocalizations",
     "description": "Create a Game Center leaderboard set localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -20088,7 +15899,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetLocalizations/{id}",
     "description": "Delete a Game Center leaderboard set localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20103,7 +15913,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetLocalizations/{id}",
     "description": "Read one Game Center leaderboard set localizations (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20138,7 +15947,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetLocalizations/{id}/image",
     "description": "Read the image for a Game Center leaderboard set localizations (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20161,7 +15969,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetLocalizations/{id}",
     "description": "Update a Game Center leaderboard set localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20171,116 +15978,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_leaderboard_set_localizations.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardSetLocalizations",
-    "description": "Create a Game Center leaderboard set localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetLocalizationCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "game_center_leaderboard_set_localizations.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardSetLocalizations/{id}",
-    "description": "Delete a Game Center leaderboard set localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_set_localizations.game_center_leaderboard_set_image.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetLocalizations/{id}/gameCenterLeaderboardSetImage",
-    "description": "Read the Game Center leaderboard set image for a Game Center leaderboard set localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboardSetLocalization"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_set_localizations.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetLocalizations/{id}",
-    "description": "Read one Game Center leaderboard set localization by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardSetLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "locale",
-          "name",
-          "gameCenterLeaderboardSet",
-          "gameCenterLeaderboardSetImage"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboardSet",
-          "gameCenterLeaderboardSetImage"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_set_localizations.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardSetLocalizations/{id}",
-    "description": "Update a Game Center leaderboard set localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetLocalizationUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "game_center_leaderboard_set_member_localizations.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterLeaderboardSetMemberLocalizations",
     "description": "Create a Game Center leaderboard set member localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -20294,7 +15997,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterLeaderboardSetMemberLocalizations/{id}",
     "description": "Delete a Game Center leaderboard set member localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20303,71 +16005,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "destructive"
   },
   {
-    "name": "game_center_leaderboard_set_member_localizations.game_center_leaderboard_set.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetMemberLocalizations/{id}/gameCenterLeaderboardSet",
-    "description": "Read the Game Center leaderboard set for a Game Center leaderboard set member localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_set_member_localizations.game_center_leaderboard.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetMemberLocalizations/{id}/gameCenterLeaderboard",
-    "description": "Read the Game Center leaderboard for a Game Center leaderboard set member localization. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_set_member_localizations.list",
     "domain": "game_center",
     "method": "GET",
     "path": "/v1/gameCenterLeaderboardSetMemberLocalizations",
     "description": "List Game Center leaderboard set member localizations.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -20417,7 +16060,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterLeaderboardSetMemberLocalizations/{id}",
     "description": "Update a Game Center leaderboard set member localization.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20427,76 +16069,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "game_center_leaderboard_set_releases.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardSetReleases",
-    "description": "Create a Game Center leaderboard set release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetReleaseCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_set_releases.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardSetReleases/{id}",
-    "description": "Delete a Game Center leaderboard set release. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_set_releases.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSetReleases/{id}",
-    "description": "Read one Game Center leaderboard set release by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardSetReleases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardSetReleases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "live",
-          "gameCenterDetail",
-          "gameCenterLeaderboardSet"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterLeaderboardSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "game_center_leaderboard_set_versions_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterLeaderboardSetVersions",
     "description": "Create a Game Center leaderboard set versions (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -20510,7 +16088,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetVersions/{id}",
     "description": "Read one Game Center leaderboard set versions (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20545,7 +16122,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSetVersions/{id}/localizations",
     "description": "List the localizations belonging to a Game Center leaderboard set versions (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20574,7 +16150,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets",
     "description": "Create a Game Center leaderboard sets (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -20588,7 +16163,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}",
     "description": "Delete a Game Center leaderboard sets (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20603,7 +16177,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
     "description": "Link Game Center leaderboards to a Game Center leaderboard sets (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20619,7 +16192,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}/gameCenterLeaderboards",
     "description": "List the Game Center leaderboards belonging to a Game Center leaderboard sets (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20694,7 +16266,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
     "description": "Unlink Game Center leaderboards from a Game Center leaderboard sets (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20710,7 +16281,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
     "description": "Replace the full set of Game Center leaderboards linked to a Game Center leaderboard sets (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20726,7 +16296,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}",
     "description": "Read one Game Center leaderboard sets (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20765,7 +16334,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}",
     "description": "Update a Game Center leaderboard sets (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20781,7 +16349,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardSets/{id}/versions",
     "description": "List the versions belonging to a Game Center leaderboard sets (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -20804,339 +16371,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboard_sets.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardSets",
-    "description": "Create a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_sets.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardSets/{id}",
-    "description": "Delete a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_sets.game_center_leaderboards.add",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
-    "description": "Link Game Center leaderboards to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_sets.game_center_leaderboards.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/gameCenterLeaderboards",
-    "description": "List the Game Center leaderboards belonging to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[referenceName]",
-        "type": "array",
-        "description": "filter by attribute 'referenceName'"
-      },
-      {
-        "name": "filter[archived]",
-        "type": "array",
-        "description": "filter by attribute 'archived'"
-      },
-      {
-        "name": "filter[id]",
-        "type": "array",
-        "description": "filter by id(s)"
-      },
-      {
-        "name": "fields[gameCenterLeaderboards]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "defaultFormatter",
-          "referenceName",
-          "vendorIdentifier",
-          "submissionType",
-          "scoreSortType",
-          "scoreRangeStart",
-          "scoreRangeEnd",
-          "recurrenceStartDate",
-          "recurrenceDuration",
-          "recurrenceRule",
-          "archived",
-          "activityProperties",
-          "visibility",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets.game_center_leaderboards.remove",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
-    "description": "Unlink Game Center leaderboards from a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_sets.game_center_leaderboards.replace",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/gameCenterLeaderboards",
-    "description": "Replace the full set of Game Center leaderboards linked to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGameCenterLeaderboardsLinkagesRequest",
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboard_sets.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}",
-    "description": "Read one Game Center leaderboard set by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboardSets]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboardSets Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "vendorIdentifier",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets.group_leaderboard_set.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/groupLeaderboardSet",
-    "description": "Read the group leaderboard set for a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboardSet",
-          "localizations",
-          "gameCenterLeaderboards",
-          "releases"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets.group_leaderboard_set.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/relationships/groupLeaderboardSet",
-    "description": "Set the group leaderboard set linked to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetGroupLeaderboardSetLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboard_sets.localizations.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/localizations",
-    "description": "List the localizations belonging to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboardSet",
-          "gameCenterLeaderboardSetImage"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets.releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboardSets/{id}/releases",
-    "description": "List the releases belonging to a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[live]",
-        "type": "array",
-        "description": "filter by attribute 'live'"
-      },
-      {
-        "name": "filter[gameCenterDetail]",
-        "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetail' Takes a 'gameCenterDetail' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterLeaderboardSet"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboard_sets.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboardSets/{id}",
-    "description": "Update a Game Center leaderboard set. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardSetUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_leaderboard_versions_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterLeaderboardVersions",
     "description": "Create a Game Center leaderboard versions (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -21150,7 +16390,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardVersions/{id}",
     "description": "Read one Game Center leaderboard versions (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21185,7 +16424,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboardVersions/{id}/localizations",
     "description": "List the localizations belonging to a Game Center leaderboard versions (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21208,45 +16446,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboards_v2.activity.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v2/gameCenterLeaderboards/{id}/relationships/activity",
-    "description": "Set the activity linked to a Game Center leaderboards (v2).",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardV2ActivityLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboards_v2.challenge.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v2/gameCenterLeaderboards/{id}/relationships/challenge",
-    "description": "Set the challenge linked to a Game Center leaderboards (v2).",
-    "readOnly": false,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardV2ChallengeLinkageRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_leaderboards_v2.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v2/gameCenterLeaderboards",
     "description": "Create a Game Center leaderboard — a ranked score board players compete on, either classic (all-time) or recurring.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -21260,7 +16465,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboards/{id}",
     "description": "Delete a Game Center leaderboards (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21275,7 +16479,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboards/{id}/gameCenterScoreModerations",
     "description": "List the Game Center score moderations belonging to a Game Center leaderboards (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21323,7 +16526,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboards/{id}",
     "description": "Read one Game Center leaderboards (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21378,7 +16580,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboards/{id}",
     "description": "Update a Game Center leaderboards (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21394,7 +16595,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/gameCenterLeaderboards/{id}/versions",
     "description": "List the versions belonging to a Game Center leaderboards (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21417,262 +16617,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "game_center_leaderboards.activity.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboards/{id}/relationships/activity",
-    "description": "Set the activity linked to a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardActivityLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboards.challenge.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboards/{id}/relationships/challenge",
-    "description": "Set the challenge linked to a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardChallengeLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboards.create",
-    "domain": "game_center",
-    "method": "POST",
-    "path": "/v1/gameCenterLeaderboards",
-    "description": "Create a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboards.delete",
-    "domain": "game_center",
-    "method": "DELETE",
-    "path": "/v1/gameCenterLeaderboards/{id}",
-    "description": "Delete a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "game_center_leaderboards.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}",
-    "description": "Read one Game Center leaderboard by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[gameCenterLeaderboards]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type gameCenterLeaderboards Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "defaultFormatter",
-          "referenceName",
-          "vendorIdentifier",
-          "submissionType",
-          "scoreSortType",
-          "scoreRangeStart",
-          "scoreRangeEnd",
-          "recurrenceStartDate",
-          "recurrenceDuration",
-          "recurrenceRule",
-          "archived",
-          "activityProperties",
-          "visibility",
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboards.group_leaderboard.get",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}/groupLeaderboard",
-    "description": "Read the group leaderboard for a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterGroup",
-          "groupLeaderboard",
-          "gameCenterLeaderboardSets",
-          "localizations",
-          "releases",
-          "activity",
-          "challenge"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboards.group_leaderboard.set",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboards/{id}/relationships/groupLeaderboard",
-    "description": "Set the group leaderboard linked to a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardGroupLeaderboardLinkageRequest",
-    "risk": "low"
-  },
-  {
-    "name": "game_center_leaderboards.localizations.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}/localizations",
-    "description": "List the localizations belonging to a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterLeaderboard",
-          "gameCenterLeaderboardImage"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboards.releases.list",
-    "domain": "game_center",
-    "method": "GET",
-    "path": "/v1/gameCenterLeaderboards/{id}/releases",
-    "description": "List the releases belonging to a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "filter[live]",
-        "type": "array",
-        "description": "filter by attribute 'live'"
-      },
-      {
-        "name": "filter[gameCenterDetail]",
-        "type": "array",
-        "description": "filter by id(s) of related 'gameCenterDetail' Takes a 'gameCenterDetail' resource id, read from the call that lists them — not a name. A value that matches nothing returns 200 with an empty list rather than an error."
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "gameCenterDetail",
-          "gameCenterLeaderboard"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "game_center_leaderboards.update",
-    "domain": "game_center",
-    "method": "PATCH",
-    "path": "/v1/gameCenterLeaderboards/{id}",
-    "description": "Update a Game Center leaderboard. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "GameCenterLeaderboardUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "game_center_matchmaking_queues.create",
     "domain": "game_center",
     "method": "POST",
     "path": "/v1/gameCenterMatchmakingQueues",
     "description": "Create a Game Center matchmaking queue.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -21686,7 +16636,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}",
     "description": "Delete a Game Center matchmaking queue.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21701,7 +16650,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}/metrics/experimentMatchmakingQueueSizes",
     "description": "Read experiment matchmaking queue sizes metrics for a Game Center matchmaking queue. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21747,7 +16695,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}/metrics/experimentMatchmakingRequests",
     "description": "Read experiment matchmaking requests metrics for a Game Center matchmaking queue. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21817,7 +16764,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}",
     "description": "Read one Game Center matchmaking queue by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21852,7 +16798,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues",
     "description": "List Game Center matchmaking queues.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -21890,7 +16835,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}/metrics/matchmakingQueueSizes",
     "description": "Read matchmaking queue sizes metrics for a Game Center matchmaking queue. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -21936,7 +16880,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}/metrics/matchmakingRequests",
     "description": "Read matchmaking requests metrics for a Game Center matchmaking queue. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22006,7 +16949,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}/metrics/matchmakingSessions",
     "description": "Read matchmaking sessions metrics for a Game Center matchmaking queue. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22052,7 +16994,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingQueues/{id}",
     "description": "Update a Game Center matchmaking queue.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22068,7 +17009,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSetTests",
     "description": "Create a Game Center matchmaking rule set test.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22082,7 +17022,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets",
     "description": "Create a Game Center matchmaking rule set.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22096,7 +17035,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}",
     "description": "Delete a Game Center matchmaking rule set.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22111,7 +17049,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}",
     "description": "Read one Game Center matchmaking rule set by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22150,7 +17087,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets",
     "description": "List Game Center matchmaking rule sets.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -22192,7 +17128,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}/matchmakingQueues",
     "description": "List the matchmaking queues belonging to a Game Center matchmaking rule set.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22221,7 +17156,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}/rules",
     "description": "List the rules belonging to a Game Center matchmaking rule set.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22241,7 +17175,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}/teams",
     "description": "List the teams belonging to a Game Center matchmaking rule set.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22261,7 +17194,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRuleSets/{id}",
     "description": "Update a Game Center matchmaking rule set.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22277,7 +17209,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRules",
     "description": "Create a Game Center matchmaking rule.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22291,7 +17222,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRules/{id}",
     "description": "Delete a Game Center matchmaking rule.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22306,7 +17236,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRules/{id}/metrics/matchmakingBooleanRuleResults",
     "description": "Read matchmaking boolean rule results metrics for a Game Center matchmaking rule. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22365,7 +17294,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRules/{id}/metrics/matchmakingNumberRuleResults",
     "description": "Read matchmaking number rule results metrics for a Game Center matchmaking rule. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22424,7 +17352,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRules/{id}/metrics/matchmakingRuleErrors",
     "description": "Read matchmaking rule errors metrics for a Game Center matchmaking rule. Returns aggregated time-series data, not individual records.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22477,7 +17404,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingRules/{id}",
     "description": "Update a Game Center matchmaking rule.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22493,7 +17419,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingTeams",
     "description": "Create a Game Center matchmaking team.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22507,7 +17432,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingTeams/{id}",
     "description": "Delete a Game Center matchmaking team.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22522,7 +17446,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterMatchmakingTeams/{id}",
     "description": "Update a Game Center matchmaking team.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22538,7 +17461,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterPlayerAchievementSubmissions",
     "description": "Create a Game Center player achievement submission.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22552,7 +17474,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/gameCenterScoreModerations/{id}",
     "description": "Update a Game Center score moderation.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22568,7 +17489,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAppStoreReviewScreenshots",
     "description": "Upload the reviewer screenshot for an in-app purchase — the image App Review checks. Not related to store listing screenshots or pricing.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22582,7 +17502,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAppStoreReviewScreenshots/{id}",
     "description": "Delete the reviewer screenshot attached to an in-app purchase.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22597,7 +17516,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAppStoreReviewScreenshots/{id}",
     "description": "Read the reviewer screenshot attached to an in-app purchase.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22636,7 +17554,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAppStoreReviewScreenshots/{id}",
     "description": "Commit the uploaded reviewer screenshot for an in-app purchase after the file transfer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22652,7 +17569,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAvailabilities/{id}/availableTerritories",
     "description": "List the available territories belonging to an in-app purchase availability.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22672,7 +17588,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAvailabilities",
     "description": "Create an in-app purchase availability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22686,7 +17601,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseAvailabilities/{id}",
     "description": "Read one in-app purchase availability by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22712,48 +17626,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_contents.get",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseContents/{id}",
-    "description": "Read one in-app purchase content by ID.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[inAppPurchaseContents]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type inAppPurchaseContents Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileName",
-          "fileSize",
-          "url",
-          "lastModifiedDate",
-          "inAppPurchaseV2"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "inAppPurchaseV2"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchase_images_v2.create",
     "domain": "iap",
     "method": "POST",
     "path": "/v2/inAppPurchaseImages",
     "description": "Create an in-app purchase images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22767,7 +17645,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchaseImages/{id}",
     "description": "Delete an in-app purchase images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22782,7 +17659,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchaseImages/{id}",
     "description": "Read one in-app purchase images (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22810,7 +17686,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchaseImages/{id}",
     "description": "Update an in-app purchase images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22820,96 +17695,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "in_app_purchase_images.create",
-    "domain": "iap",
-    "method": "POST",
-    "path": "/v1/inAppPurchaseImages",
-    "description": "Create an in-app purchase image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "InAppPurchaseImageCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "in_app_purchase_images.delete",
-    "domain": "iap",
-    "method": "DELETE",
-    "path": "/v1/inAppPurchaseImages/{id}",
-    "description": "Delete an in-app purchase image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "in_app_purchase_images.get",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseImages/{id}",
-    "description": "Read one in-app purchase image by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[inAppPurchaseImages]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type inAppPurchaseImages Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "sourceFileChecksum",
-          "assetToken",
-          "imageAsset",
-          "uploadOperations",
-          "state",
-          "inAppPurchase"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "inAppPurchase"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchase_images.update",
-    "domain": "iap",
-    "method": "PATCH",
-    "path": "/v1/inAppPurchaseImages/{id}",
-    "description": "Update an in-app purchase image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "InAppPurchaseImageUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "in_app_purchase_localizations_v2.create",
     "domain": "iap",
     "method": "POST",
     "path": "/v2/inAppPurchaseLocalizations",
     "description": "Create a in-app purchase localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -22923,7 +17714,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchaseLocalizations/{id}",
     "description": "Delete an in-app purchase localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22938,7 +17728,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchaseLocalizations/{id}",
     "description": "Read a in-app purchase localization by ID and see its version relationship.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22972,7 +17761,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchaseLocalizations/{id}",
     "description": "Update a in-app purchase localization by ID on its editable version draft.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -22982,93 +17770,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "in_app_purchase_localizations.create",
-    "domain": "iap",
-    "method": "POST",
-    "path": "/v1/inAppPurchaseLocalizations",
-    "description": "Create an in-app purchase localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "InAppPurchaseLocalizationCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "in_app_purchase_localizations.delete",
-    "domain": "iap",
-    "method": "DELETE",
-    "path": "/v1/inAppPurchaseLocalizations/{id}",
-    "description": "Delete an in-app purchase localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "in_app_purchase_localizations.get",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchaseLocalizations/{id}",
-    "description": "Read one in-app purchase localization by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[inAppPurchaseLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type inAppPurchaseLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "locale",
-          "description",
-          "state",
-          "inAppPurchaseV2"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "inAppPurchaseV2"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "in_app_purchase_localizations.update",
-    "domain": "iap",
-    "method": "PATCH",
-    "path": "/v1/inAppPurchaseLocalizations/{id}",
-    "description": "Update an in-app purchase localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "InAppPurchaseLocalizationUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "in_app_purchase_offer_code_custom_codes.create",
     "domain": "iap",
     "method": "POST",
     "path": "/v1/inAppPurchaseOfferCodeCustomCodes",
     "description": "Create an in-app purchase offer code custom code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23082,7 +17789,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodeCustomCodes/{id}",
     "description": "Read one in-app purchase offer code custom code by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23120,7 +17826,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodeCustomCodes/{id}",
     "description": "Update an in-app purchase offer code custom code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23136,7 +17841,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodeOneTimeUseCodes",
     "description": "Create an in-app purchase offer code one time use code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23150,7 +17854,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodeOneTimeUseCodes/{id}",
     "description": "Read one in-app purchase offer code one time use code by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23189,7 +17892,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodeOneTimeUseCodes/{id}",
     "description": "Update an in-app purchase offer code one time use code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23205,7 +17907,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodeOneTimeUseCodes/{id}/values",
     "description": "Read the value for an in-app purchase offer code one time use code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23220,7 +17921,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodes",
     "description": "Create an in-app purchase offer code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23234,7 +17934,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodes/{id}/customCodes",
     "description": "List the custom codes belonging to an in-app purchase offer code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23263,7 +17962,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodes/{id}",
     "description": "Read one in-app purchase offer code by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23303,7 +18001,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodes/{id}/oneTimeUseCodes",
     "description": "List the one time use codes belonging to an in-app purchase offer code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23332,7 +18029,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodes/{id}/prices",
     "description": "List the prices belonging to an in-app purchase offer code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23366,7 +18062,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseOfferCodes/{id}",
     "description": "Update an in-app purchase offer code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23382,7 +18077,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchasePricePoints/{id}/equalizations",
     "description": "List the equalizations belonging to an in-app purchase price point.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23420,7 +18114,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchasePriceSchedules/{id}/automaticPrices",
     "description": "List the automatic prices belonging to an in-app purchase price schedule.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23454,7 +18147,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchasePriceSchedules/{id}/baseTerritory",
     "description": "Read the base territory for an in-app purchase price schedule.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23468,7 +18160,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchasePriceSchedules",
     "description": "Change or set an in-app purchase (IAP) price: create a price schedule from price point IDs. Find them with in_app_purchases_v2__price_points__list, filtered by territory.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23482,7 +18173,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchasePriceSchedules/{id}",
     "description": "Read one in-app purchase price schedule by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23517,7 +18207,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchasePriceSchedules/{id}/manualPrices",
     "description": "List the manual prices belonging to an in-app purchase price schedule.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23545,27 +18234,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchase_submissions.create",
-    "domain": "iap",
-    "method": "POST",
-    "path": "/v1/inAppPurchaseSubmissions",
-    "description": "Create an in-app purchase submission. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "InAppPurchaseSubmissionCreateRequest",
-    "risk": "revenue"
-  },
-  {
     "name": "in_app_purchase_versions.create",
     "domain": "iap",
     "method": "POST",
     "path": "/v1/inAppPurchaseVersions",
     "description": "Create one editable in-app purchase review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23579,7 +18253,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseVersions/{id}",
     "description": "Read a in-app purchase review version by ID, including its version number and review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23618,7 +18291,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseVersions/{id}/image",
     "description": "Read the image for an in-app purchase version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23632,7 +18304,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseVersions/{id}/images",
     "description": "List the images belonging to an in-app purchase version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23652,7 +18323,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/inAppPurchaseVersions/{id}/localizations",
     "description": "List the localizations belonging to an in-app purchase version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23680,7 +18350,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}/appStoreReviewScreenshot",
     "description": "Read the reviewer screenshot attached to an in-app purchase.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23703,7 +18372,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}/content",
     "description": "Read the content for an in-app purchases (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23726,7 +18394,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases",
     "description": "Create an in-app purchase. Set the product ID, type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION) and reference name.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -23740,7 +18407,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}",
     "description": "Delete an in-app purchases (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23755,7 +18421,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}",
     "description": "Read one in-app purchases (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23811,7 +18476,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}/iapPriceSchedule",
     "description": "Read the IAP price schedule for an in-app purchases (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23830,41 +18494,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.images.list",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/images",
-    "description": "List the images belonging to an in-app purchases (v2). DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "inAppPurchase"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.in_app_purchase_availability.get",
     "domain": "iap",
     "method": "GET",
     "path": "/v2/inAppPurchases/{id}/inAppPurchaseAvailability",
     "description": "Read the in-app purchase availability for an in-app purchases (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23881,53 +18516,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases_v2.in_app_purchase_localizations.list",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v2/inAppPurchases/{id}/inAppPurchaseLocalizations",
-    "description": "List the in-app purchase localizations belonging to an in-app purchases (v2). DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[inAppPurchaseLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type inAppPurchaseLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "locale",
-          "description",
-          "state",
-          "inAppPurchaseV2"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "inAppPurchaseV2"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "in_app_purchases_v2.offer_codes.list",
     "domain": "iap",
     "method": "GET",
     "path": "/v2/inAppPurchases/{id}/offerCodes",
     "description": "List the offer codes belonging to an in-app purchases (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23962,7 +18556,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}/pricePoints",
     "description": "List the allowed price points for an in-app purchase. Filter by territory (country) to find the price point ID for a specific price before scheduling a price change.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -23995,7 +18588,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}/promotedPurchase",
     "description": "Read the promoted purchase for an in-app purchases (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24019,7 +18611,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}",
     "description": "Update an in-app purchases (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24035,7 +18626,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/inAppPurchases/{id}/versions",
     "description": "List the versions belonging to an in-app purchases (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24076,48 +18666,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "in_app_purchases.get",
-    "domain": "iap",
-    "method": "GET",
-    "path": "/v1/inAppPurchases/{id}",
-    "description": "Read one in-app purchase by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[inAppPurchases]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type inAppPurchases Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "referenceName",
-          "productId",
-          "inAppPurchaseType",
-          "state",
-          "apps"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "apps"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "marketplace_search_details.create",
     "domain": "apps",
     "method": "POST",
     "path": "/v1/marketplaceSearchDetails",
     "description": "Create a marketplace search detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -24131,7 +18685,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/marketplaceSearchDetails/{id}",
     "description": "Delete a marketplace search detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24146,7 +18699,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/marketplaceSearchDetails/{id}",
     "description": "Update a marketplace search detail.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24156,84 +18708,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "marketplace_webhooks.create",
-    "domain": "webhooks",
-    "method": "POST",
-    "path": "/v1/marketplaceWebhooks",
-    "description": "Create a marketplace webhook. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "MarketplaceWebhookCreateRequest",
-    "risk": "low"
-  },
-  {
-    "name": "marketplace_webhooks.delete",
-    "domain": "webhooks",
-    "method": "DELETE",
-    "path": "/v1/marketplaceWebhooks/{id}",
-    "description": "Delete a marketplace webhook. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "marketplace_webhooks.list",
-    "domain": "webhooks",
-    "method": "GET",
-    "path": "/v1/marketplaceWebhooks",
-    "description": "List marketplace webhooks. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [
-      {
-        "name": "fields[marketplaceWebhooks]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type marketplaceWebhooks Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "endpointUrl"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "marketplace_webhooks.update",
-    "domain": "webhooks",
-    "method": "PATCH",
-    "path": "/v1/marketplaceWebhooks/{id}",
-    "description": "Update a marketplace webhook. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "MarketplaceWebhookUpdateRequest",
-    "risk": "low"
-  },
-  {
     "name": "merchant_ids.certificates.list",
     "domain": "provisioning",
     "method": "GET",
     "path": "/v1/merchantIds/{id}/certificates",
     "description": "List the certificates belonging to a merchant ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24332,7 +18812,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/merchantIds",
     "description": "Create a merchant ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -24346,7 +18825,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/merchantIds/{id}",
     "description": "Delete a merchant ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24361,7 +18839,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/merchantIds/{id}",
     "description": "Read one merchant ID by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24394,7 +18871,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/merchantIds",
     "description": "List merchant IDs.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -24451,7 +18927,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/merchantIds/{id}",
     "description": "Update a merchant ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24467,7 +18942,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/nominations",
     "description": "Create a nomination.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -24481,7 +18955,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/nominations/{id}",
     "description": "Delete a nomination.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24496,7 +18969,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/nominations/{id}",
     "description": "Read one nomination by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24553,7 +19025,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/nominations",
     "description": "List nominations.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -24661,7 +19132,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/nominations/{id}",
     "description": "Update a nomination.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24677,7 +19147,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/passTypeIds/{id}/certificates",
     "description": "List the certificates belonging to a pass type ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24776,7 +19245,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/passTypeIds",
     "description": "Create a pass type ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -24790,7 +19258,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/passTypeIds/{id}",
     "description": "Delete a pass type ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24805,7 +19272,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/passTypeIds/{id}",
     "description": "Read one pass type ID by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24838,7 +19304,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/passTypeIds",
     "description": "List pass type IDs.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -24902,7 +19367,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/passTypeIds/{id}",
     "description": "Update a pass type ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24912,27 +19376,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "infrastructure"
   },
   {
-    "name": "pre_release_versions.app.get",
-    "domain": "builds",
-    "method": "GET",
-    "path": "/v1/preReleaseVersions/{id}/app",
-    "description": "Read the app for a pre release version.",
-    "readOnly": true,
-    "deprecated": false,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false
-  },
-  {
     "name": "pre_release_versions.builds.list",
     "domain": "builds",
     "method": "GET",
     "path": "/v1/preReleaseVersions/{id}/builds",
     "description": "List the builds belonging to a pre release version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -24985,7 +19434,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/preReleaseVersions/{id}",
     "description": "Read one pre release version by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25020,7 +19468,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/preReleaseVersions",
     "description": "List the version numbers builds were uploaded under (e.g. 2.4), across all apps. These are TestFlight train numbers, not App Store versions — for what customers see, use app_store_versions.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -25123,7 +19570,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles/{id}/bundleId",
     "description": "Read the bundle ID for a profile.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25137,7 +19583,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles/{id}/certificates",
     "description": "List the certificates belonging to a profile.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25173,7 +19618,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles",
     "description": "Prepare an app’s signing configuration: make a provisioning profile from a bundle ID, a certificate and (for development) a device list. This is the file Xcode signs a build with.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -25187,7 +19631,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles/{id}",
     "description": "Delete a profile.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25202,7 +19645,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles/{id}/devices",
     "description": "List the devices belonging to a profile.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25236,7 +19678,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles/{id}",
     "description": "Read one profile by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25279,7 +19720,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/profiles",
     "description": "List profiles.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -25380,7 +19820,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/promotedPurchases",
     "description": "Create a promoted purchase.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -25394,7 +19833,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/promotedPurchases/{id}",
     "description": "Delete a promoted purchase.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25409,7 +19847,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/promotedPurchases/{id}",
     "description": "Read one promoted purchase by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25445,7 +19882,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/promotedPurchases/{id}",
     "description": "Update a promoted purchase.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25461,7 +19897,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissionItems",
     "description": "Put one thing into an open review submission — a version, an event, or another releasable item. One per call, so repeat it for each thing Apple should look at.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -25475,7 +19910,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissionItems/{id}",
     "description": "Take one item back out of a submission that has not been handed to Apple yet.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25490,7 +19924,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissionItems/{id}",
     "description": "Update a review submission item.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25506,7 +19939,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissions",
     "description": "Submit an App Store version for Apple review — step 1 of 3, and this call alone does not send anything. It opens an empty submission for an app; put the version in it with review_submission_items__create, then set submitted on it.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -25520,7 +19952,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissions/{id}",
     "description": "Read one review submission by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25562,7 +19993,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissions/{id}/items",
     "description": "List what is inside a review submission and the state of each item, so you can check what Apple will actually look at before handing it over.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25605,7 +20035,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissions",
     "description": "List App Store review submissions and their state, so you can tell whether something is waiting on Apple or on you. Filter by app or state; the items inside a submission come from review_submissions__items__list.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -25681,7 +20110,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/reviewSubmissions/{id}",
     "description": "Hand an open submission to Apple by setting submitted to true, or take it back with canceled. This is the step that starts the queue; opening the submission and filling it does not.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25697,7 +20125,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/routingAppCoverages",
     "description": "Create a routing app coverage.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -25711,7 +20138,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/routingAppCoverages/{id}",
     "description": "Delete a routing app coverage.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25726,7 +20152,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/routingAppCoverages/{id}",
     "description": "Read one routing app coverage by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25762,7 +20187,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/routingAppCoverages/{id}",
     "description": "Update a routing app coverage.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25778,7 +20202,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/salesReports",
     "description": "Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -25851,7 +20274,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/sandboxTestersClearPurchaseHistoryRequest",
     "description": "Create a sandbox testers clear purchase history request (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -25865,7 +20287,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/sandboxTesters",
     "description": "List sandbox testers (v2).",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -25897,7 +20318,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/sandboxTesters/{id}",
     "description": "Update a sandbox testers (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25913,7 +20333,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmGitReferences/{id}",
     "description": "Read one SCM git reference by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25948,7 +20367,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmProviders/{id}",
     "description": "Read one SCM provider by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -25973,7 +20391,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmProviders",
     "description": "List SCM providers.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -26001,7 +20418,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmProviders/{id}/repositories",
     "description": "List the repositories belonging to an SCM provider.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26035,7 +20451,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmPullRequests/{id}",
     "description": "Read one SCM pull request by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26077,7 +20492,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmRepositories/{id}",
     "description": "Read one SCM repository by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26117,7 +20531,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmRepositories/{id}/gitReferences",
     "description": "List the git references belonging to an SCM repository.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26145,7 +20558,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmRepositories",
     "description": "List SCM repositories.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -26193,7 +20605,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/scmRepositories/{id}/pullRequests",
     "description": "List the pull requests belonging to an SCM repository.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26221,7 +20632,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionAppStoreReviewScreenshots",
     "description": "Upload the reviewer screenshot for a subscription — the image App Review checks. Not related to store listing screenshots or pricing.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26235,7 +20645,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionAppStoreReviewScreenshots/{id}",
     "description": "Delete the reviewer screenshot attached to a subscription.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26250,7 +20659,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionAppStoreReviewScreenshots/{id}",
     "description": "Read the reviewer screenshot attached to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26289,7 +20697,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionAppStoreReviewScreenshots/{id}",
     "description": "Commit the uploaded reviewer screenshot for a subscription after the file transfer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26299,79 +20706,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "low"
   },
   {
-    "name": "subscription_availabilities.available_territories.list",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionAvailabilities/{id}/availableTerritories",
-    "description": "List the available territories belonging to a subscription availability. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_availabilities.create",
-    "domain": "subscriptions",
-    "method": "POST",
-    "path": "/v1/subscriptionAvailabilities",
-    "description": "Create a subscription availability. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionAvailabilityCreateRequest",
-    "risk": "revenue"
-  },
-  {
-    "name": "subscription_availabilities.get",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionAvailabilities/{id}",
-    "description": "Read one subscription availability by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[subscriptionAvailabilities]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type subscriptionAvailabilities Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "availableInNewTerritories",
-          "availableTerritories"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "availableTerritories"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_grace_periods.get",
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionGracePeriods/{id}",
     "description": "Read one subscription grace period by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26397,7 +20737,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGracePeriods/{id}",
     "description": "Update a subscription grace period.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26413,7 +20752,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionGroupLocalizations",
     "description": "Create a subscription group localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26427,7 +20765,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionGroupLocalizations/{id}",
     "description": "Delete a subscription group localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26442,7 +20779,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionGroupLocalizations/{id}",
     "description": "Read a subscription group localization by ID and see its version relationship.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26476,7 +20812,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionGroupLocalizations/{id}",
     "description": "Update a subscription group localization by ID on its editable version draft.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26486,107 +20821,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "subscription_group_localizations.create",
-    "domain": "subscriptions",
-    "method": "POST",
-    "path": "/v1/subscriptionGroupLocalizations",
-    "description": "Create a subscription group localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionGroupLocalizationCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "subscription_group_localizations.delete",
-    "domain": "subscriptions",
-    "method": "DELETE",
-    "path": "/v1/subscriptionGroupLocalizations/{id}",
-    "description": "Delete a subscription group localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "subscription_group_localizations.get",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionGroupLocalizations/{id}",
-    "description": "Read one subscription group localization by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[subscriptionGroupLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type subscriptionGroupLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "customAppName",
-          "locale",
-          "state",
-          "subscriptionGroup"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "subscriptionGroup"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_group_localizations.update",
-    "domain": "subscriptions",
-    "method": "PATCH",
-    "path": "/v1/subscriptionGroupLocalizations/{id}",
-    "description": "Update a subscription group localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionGroupLocalizationUpdateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "subscription_group_submissions.create",
-    "domain": "subscriptions",
-    "method": "POST",
-    "path": "/v1/subscriptionGroupSubmissions",
-    "description": "Create a subscription group submission. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionGroupSubmissionCreateRequest",
-    "risk": "revenue"
-  },
-  {
     "name": "subscription_group_versions.create",
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionGroupVersions",
     "description": "Create one editable subscription group review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26600,7 +20840,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroupVersions/{id}",
     "description": "Read a subscription group review version by ID, including its version number and review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26635,7 +20874,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroupVersions/{id}/localizations",
     "description": "List the localizations belonging to a subscription group version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26663,7 +20901,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroups",
     "description": "Create a subscription group. Subscriptions in the same group are mutually exclusive upgrade/downgrade options.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26677,7 +20914,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroups/{id}",
     "description": "Delete a subscription group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26692,7 +20928,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroups/{id}",
     "description": "Read one subscription group by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26722,53 +20957,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscription_groups.subscription_group_localizations.list",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionGroups/{id}/subscriptionGroupLocalizations",
-    "description": "List the subscription group localizations belonging to a subscription group. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[subscriptionGroupLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type subscriptionGroupLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "customAppName",
-          "locale",
-          "state",
-          "subscriptionGroup"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "subscriptionGroup"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscription_groups.subscriptions.list",
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionGroups/{id}/subscriptions",
     "description": "List the subscriptions belonging to a subscription group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26874,7 +21068,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroups/{id}",
     "description": "Update a subscription group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26890,7 +21083,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionGroups/{id}/versions",
     "description": "List the versions belonging to a subscription group.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26935,7 +21127,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionImages",
     "description": "Create a subscription images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -26949,7 +21140,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionImages/{id}",
     "description": "Delete a subscription images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26964,7 +21154,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionImages/{id}",
     "description": "Read one subscription images (v2) by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -26992,7 +21181,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionImages/{id}",
     "description": "Update a subscription images (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27002,96 +21190,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "subscription_images.create",
-    "domain": "subscriptions",
-    "method": "POST",
-    "path": "/v1/subscriptionImages",
-    "description": "Create a subscription image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionImageCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "subscription_images.delete",
-    "domain": "subscriptions",
-    "method": "DELETE",
-    "path": "/v1/subscriptionImages/{id}",
-    "description": "Delete a subscription image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "subscription_images.get",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionImages/{id}",
-    "description": "Read one subscription image by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[subscriptionImages]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type subscriptionImages Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "fileSize",
-          "fileName",
-          "sourceFileChecksum",
-          "assetToken",
-          "imageAsset",
-          "uploadOperations",
-          "state",
-          "subscription"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "subscription"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_images.update",
-    "domain": "subscriptions",
-    "method": "PATCH",
-    "path": "/v1/subscriptionImages/{id}",
-    "description": "Update a subscription image. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionImageUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "subscription_introductory_offers.create",
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionIntroductoryOffers",
     "description": "Create a subscription introductory offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27105,7 +21209,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionIntroductoryOffers/{id}",
     "description": "Delete a subscription introductory offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27120,7 +21223,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionIntroductoryOffers/{id}",
     "description": "Update a subscription introductory offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27136,7 +21238,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionLocalizations",
     "description": "Create a subscription localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27150,7 +21251,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionLocalizations/{id}",
     "description": "Delete a subscription localizations (v2).",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27165,7 +21265,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionLocalizations/{id}",
     "description": "Read a subscription localization by ID and see its version relationship.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27199,7 +21298,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v2/subscriptionLocalizations/{id}",
     "description": "Update a subscription localization by ID on its editable version draft.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27209,93 +21307,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "public"
   },
   {
-    "name": "subscription_localizations.create",
-    "domain": "subscriptions",
-    "method": "POST",
-    "path": "/v1/subscriptionLocalizations",
-    "description": "Create a subscription localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionLocalizationCreateRequest",
-    "risk": "public"
-  },
-  {
-    "name": "subscription_localizations.delete",
-    "domain": "subscriptions",
-    "method": "DELETE",
-    "path": "/v1/subscriptionLocalizations/{id}",
-    "description": "Delete a subscription localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": false,
-    "risk": "destructive"
-  },
-  {
-    "name": "subscription_localizations.get",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptionLocalizations/{id}",
-    "description": "Read one subscription localization by ID. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[subscriptionLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type subscriptionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "locale",
-          "description",
-          "state",
-          "subscription"
-        ]
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "subscription"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscription_localizations.update",
-    "domain": "subscriptions",
-    "method": "PATCH",
-    "path": "/v1/subscriptionLocalizations/{id}",
-    "description": "Update a subscription localization. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionLocalizationUpdateRequest",
-    "risk": "public"
-  },
-  {
     "name": "subscription_offer_code_custom_codes.create",
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionOfferCodeCustomCodes",
     "description": "Create a subscription offer code custom code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27309,7 +21326,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodeCustomCodes/{id}",
     "description": "Read one subscription offer code custom code by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27345,7 +21361,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodeCustomCodes/{id}",
     "description": "Update a subscription offer code custom code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27361,7 +21376,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodeOneTimeUseCodes",
     "description": "Create a subscription offer code one time use code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27375,7 +21389,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodeOneTimeUseCodes/{id}",
     "description": "Read one subscription offer code one time use code by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27412,7 +21425,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodeOneTimeUseCodes/{id}",
     "description": "Update a subscription offer code one time use code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27428,7 +21440,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodeOneTimeUseCodes/{id}/values",
     "description": "Read the value for a subscription offer code one time use code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27443,7 +21454,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodes",
     "description": "Create a redeemable offer code for a subscription — a code a customer types in to claim a free or discounted period, for a campaign or a support gesture.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27457,7 +21467,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodes/{id}/customCodes",
     "description": "List the custom codes belonging to a subscription offer code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27485,7 +21494,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodes/{id}",
     "description": "Read one subscription offer code by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27534,7 +21542,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodes/{id}/oneTimeUseCodes",
     "description": "List the one time use codes belonging to a subscription offer code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27562,7 +21569,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodes/{id}/prices",
     "description": "List the prices belonging to a subscription offer code.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27596,7 +21602,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionOfferCodes/{id}",
     "description": "Update a subscription offer code.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27612,7 +21617,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPlanAvailabilities/{id}/availableTerritories",
     "description": "List the available territories belonging to a subscription plan availability.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27632,7 +21636,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPlanAvailabilities/{id}/relationships/availableTerritories",
     "description": "Replace the full set of available territories linked to a subscription plan availability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27648,7 +21651,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPlanAvailabilities",
     "description": "Make a subscription available in a country, and set its territory availability overall — the list of countries it is sold in. Putting a country here is what puts the subscription on sale there; a price alone does not.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27662,7 +21664,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPlanAvailabilities/{id}",
     "description": "Read one subscription plan availability by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27695,7 +21696,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPlanAvailabilities/{id}",
     "description": "Update a subscription plan availability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27711,7 +21711,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPricePoints/{id}/adjustedEqualizations",
     "description": "List the adjusted equalizations belonging to a subscription price point.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27760,7 +21759,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPricePoints/{id}/equalizations",
     "description": "Given one price point in a base country, list the equivalent (equalized) price points in every other territory — for per-country pricing aligned to one anchor price.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27808,7 +21806,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPricePoints/{id}",
     "description": "Read one subscription price point by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27844,7 +21841,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPrices",
     "description": "Change or set a subscription price in a specific territory (country). This is the write step for raising or lowering a subscription price: first find the price point ID with subscriptions__price_points__list (filtered by territory), then create the price with it. preserveCurrentPrice decides whether existing subscribers keep their old price or move to the new one.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27858,7 +21854,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPrices/{id}",
     "description": "Cancel a scheduled subscription price change before it takes effect.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27873,7 +21868,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPromotionalOffers",
     "description": "Create a subscription promotional offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -27887,7 +21881,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPromotionalOffers/{id}",
     "description": "Delete a subscription promotional offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27902,7 +21895,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPromotionalOffers/{id}",
     "description": "Read one subscription promotional offer by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27941,7 +21933,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPromotionalOffers/{id}/prices",
     "description": "List the prices belonging to a subscription promotional offer.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27975,7 +21966,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionPromotionalOffers/{id}",
     "description": "Update a subscription promotional offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -27985,27 +21975,12 @@ export const OPERATIONS: Operation[] = [
     "risk": "revenue"
   },
   {
-    "name": "subscription_submissions.create",
-    "domain": "subscriptions",
-    "method": "POST",
-    "path": "/v1/subscriptionSubmissions",
-    "description": "Create a subscription submission. DEPRECATED by Apple.",
-    "readOnly": false,
-    "deprecated": true,
-    "pathParams": [],
-    "queryParams": [],
-    "hasBody": true,
-    "bodyRef": "SubscriptionSubmissionCreateRequest",
-    "risk": "revenue"
-  },
-  {
     "name": "subscription_versions.create",
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionVersions",
     "description": "Create one editable subscription review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -28019,7 +21994,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionVersions/{id}",
     "description": "Read a subscription review version by ID, including its version number and review state.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28058,7 +22032,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionVersions/{id}/image",
     "description": "Read the image for a subscription version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28072,7 +22045,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionVersions/{id}/images",
     "description": "List the images belonging to a subscription version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28092,7 +22064,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptionVersions/{id}/localizations",
     "description": "List the localizations belonging to a subscription version.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28120,7 +22091,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/appStoreReviewScreenshot",
     "description": "Read the reviewer screenshot attached to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28143,7 +22113,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions",
     "description": "Create an auto-renewable subscription inside a subscription group.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -28157,7 +22126,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}",
     "description": "Remove a recurring product entirely: delete a subscription from the catalogue. Possible only before Apple has ever approved it; anything that has been on sale is withdrawn by emptying the countries it sells in.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28172,7 +22140,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}",
     "description": "Read one subscription by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28231,41 +22198,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.images.list",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/images",
-    "description": "List the images belonging to a subscription. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "subscription"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.introductory_offers.list",
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptions/{id}/introductoryOffers",
     "description": "List the introductory offers belonging to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28300,7 +22238,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/relationships/introductoryOffers",
     "description": "Unlink introductory offers from a subscription.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28316,7 +22253,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/offerCodes",
     "description": "List the offer codes belonging to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28352,7 +22288,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/planAvailabilities",
     "description": "List the plan availabilities belonging to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28380,7 +22315,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/pricePoints",
     "description": "List the allowed price points for a subscription — the first step when you want to change, set, raise or lower a subscription price. ALWAYS filter by territory (filter_territory, e.g. TUR, USA) — unfiltered, this returns thousands of rows. Find the price point whose customerPrice matches the price you want, then pass its ID to subscription_prices__create.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28423,7 +22357,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/prices",
     "description": "List the current and scheduled prices of a subscription per territory (country) — what a subscription costs today in each storefront. Each row is a start date and a reference: the amount and the currency live in the price point, so a row read without include=subscriptionPricePoint,territory carries no price at all. pricing__get_subscription_price resolves that in one call, for one country or for every one.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28471,7 +22404,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/relationships/prices",
     "description": "Unlink prices from a subscription.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28487,7 +22419,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/promotedPurchase",
     "description": "Read the promoted purchase for a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28511,7 +22442,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/promotionalOffers",
     "description": "List the promotional offers belonging to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28539,76 +22469,12 @@ export const OPERATIONS: Operation[] = [
     "hasBody": false
   },
   {
-    "name": "subscriptions.subscription_availability.get",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/subscriptionAvailability",
-    "description": "Read the subscription availability for a subscription. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "availableTerritories"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
-    "name": "subscriptions.subscription_localizations.list",
-    "domain": "subscriptions",
-    "method": "GET",
-    "path": "/v1/subscriptions/{id}/subscriptionLocalizations",
-    "description": "List the subscription localizations belonging to a subscription. DEPRECATED by Apple.",
-    "readOnly": true,
-    "deprecated": true,
-    "pathParams": [
-      "id"
-    ],
-    "queryParams": [
-      {
-        "name": "fields[subscriptionLocalizations]",
-        "type": "array",
-        "description": "the fields to include for returned resources of type subscriptionLocalizations Return only these attributes. A full row set can exceed 200 KB.",
-        "enum": [
-          "name",
-          "locale",
-          "description",
-          "state",
-          "subscription"
-        ]
-      },
-      {
-        "name": "limit",
-        "type": "number",
-        "description": "maximum resources per page"
-      },
-      {
-        "name": "include",
-        "type": "array",
-        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
-        "enum": [
-          "subscription"
-        ]
-      }
-    ],
-    "hasBody": false
-  },
-  {
     "name": "subscriptions.update",
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v1/subscriptions/{id}",
     "description": "Update a subscription.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28624,7 +22490,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/versions",
     "description": "List the versions belonging to a subscription.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28671,7 +22536,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/subscriptions/{id}/winBackOffers",
     "description": "List the win-back offers on a subscription — the discounts shown to lapsed subscribers who cancelled, to bring them back.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28720,7 +22584,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/territories",
     "description": "List territories.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -28746,7 +22609,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/territoryAvailabilities/{id}",
     "description": "Update a territory availability.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28762,7 +22624,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/userInvitations",
     "description": "Invite someone to your App Store Connect team by email, with the role they get on arrival. They are not a member until they accept.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -28776,7 +22637,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/userInvitations/{id}",
     "description": "Delete a user invitation.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28791,7 +22651,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/userInvitations/{id}",
     "description": "Read one user invitation by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28829,7 +22688,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/userInvitations",
     "description": "List user invitations.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -28911,7 +22769,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/userInvitations/{id}/visibleApps",
     "description": "List the visible apps belonging to a user invitation.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28931,7 +22788,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}",
     "description": "Delete a user.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28946,7 +22802,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}",
     "description": "Read one user by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -28983,7 +22838,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users",
     "description": "List team members with access to your App Store Connect account.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [
       {
@@ -29064,7 +22918,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}",
     "description": "Change a team member’s role and which apps they can reach — Admin, App Manager, Developer, Marketing or Finance permissions. Edits an existing member; it does not invite anyone.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29080,7 +22933,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}/relationships/visibleApps",
     "description": "Link visible apps to a user.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29096,7 +22948,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}/visibleApps",
     "description": "List the visible apps belonging to a user.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29116,7 +22967,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}/relationships/visibleApps",
     "description": "Unlink visible apps from a user.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29132,7 +22982,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/users/{id}/relationships/visibleApps",
     "description": "Replace the full set of visible apps linked to a user.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29148,7 +22997,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhookDeliveries",
     "description": "Create a webhook delivery.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -29162,7 +23010,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhookPings",
     "description": "Ping a webhook to check your endpoint answers — Apple sends a test delivery to it and records the result. Nothing about the app changes.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -29176,7 +23023,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhooks",
     "description": "Create a webhook so Apple pushes App Store Connect events to your endpoint.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -29190,7 +23036,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhooks/{id}",
     "description": "Delete a webhook.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29205,7 +23050,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhooks/{id}/deliveries",
     "description": "List the deliveries belonging to a webhook.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29253,7 +23097,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhooks/{id}",
     "description": "Read one webhook by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29289,7 +23132,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/webhooks/{id}",
     "description": "Update a webhook.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29305,7 +23147,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/winBackOffers",
     "description": "Create a win back offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
@@ -29319,7 +23160,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/winBackOffers/{id}",
     "description": "Delete a win back offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29334,7 +23174,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/winBackOffers/{id}",
     "description": "Read one win back offer by ID.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29378,7 +23217,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/winBackOffers/{id}/prices",
     "description": "List the prices belonging to a win back offer.",
     "readOnly": true,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],
@@ -29412,7 +23250,6 @@ export const OPERATIONS: Operation[] = [
     "path": "/v1/winBackOffers/{id}",
     "description": "Update a win back offer.",
     "readOnly": false,
-    "deprecated": false,
     "pathParams": [
       "id"
     ],

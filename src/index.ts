@@ -10,8 +10,7 @@ import {
   servedToolCount,
   VERSION,
 } from './server.js';
-import { ALL_DOMAINS, DEFAULT_DOMAINS } from './core/registry.js';
-import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
+import { SPEC_VERSION } from './generated/operations.js';
 import {
   PROFILES,
   resolveSelection,
@@ -27,14 +26,14 @@ export function helpText(): string {
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
-  npx -y ${PACKAGE} [profile] [options]
+  npx -y ${PACKAGE} <profile> [options]
   npx -y ${PACKAGE} setup
 
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "ASC-<Profile>"). Add one entry per profile to
 your client config and pick per project. Register "core" next to them: app
 lookup, tool search and the media tools for every screenshot, video, image and
-file live there and nowhere else. No profile = the classic combined server.
+file live there and nowhere else. A profile is required.
 
 A profile can be narrowed to some of its sub-profiles with a colon:
   asc-mcp core                            app lookup, search, media (ASC-Core)
@@ -66,8 +65,6 @@ Commands:
                          every one found on this machine.
 
 Options:
-  --domains=<list>       (no-profile mode) Comma-separated domains, or "all".
-                         Default: ${DEFAULT_DOMAINS.join(',')}
   --read-only            Expose only tools that cannot modify anything.
   --confirm              Ask before EVERY mutating tool, not just the risky
                          ones. ASC_CONFIRM_WRITES=1 does the same.
@@ -76,18 +73,14 @@ Options:
                          By default Heimdall asks (via MCP elicitation) before
                          a revenue, destructive, infrastructure or access level
                          write and stays quiet on the rest.
-  --with-core            (profile mode) Also serve the core profile's tools from
+  --with-core            Also serve the core profile's tools from
                          this server, for a client that runs only one process.
-  --include-deprecated   Also load operations Apple has marked deprecated.
   --dry-run              Writes never reach Apple: each mutating call returns
                          what WOULD have been sent (method, path, body, risk)
                          after validation. Reads run normally. ASC_DRY_RUN=1
                          does the same.
   --version              Print version and exit.
   --help                 Print this message.
-
-Available domains (${OPERATIONS.length} operations total):
-${ALL_DOMAINS.map((d) => `  ${d}`).join('\n')}
 
 Credentials (in resolution order):
   1. Environment: ASC_KEY_ID, ASC_ISSUER_ID, and one of ASC_PRIVATE_KEY /
@@ -112,6 +105,10 @@ async function main(): Promise<void> {
   }
 
   const positional = argv.filter((a) => !a.startsWith('-'));
+  // A 2.x config may still pass these; say so rather than start without them.
+  for (const flag of ['--domains', '--include-deprecated']) {
+    if (argv.some((a) => a === flag || a.startsWith(`${flag}=`))) console.error(`${flag} was removed in 3.0 and is ignored.`);
+  }
 
   if (positional[0] === 'register') {
     const { runRegister } = await import('./setup.js');
@@ -148,19 +145,18 @@ async function main(): Promise<void> {
     return;
   }
 
-  let selection: ProfileSelection | undefined;
-  if (positional.length) {
-    try {
-      selection = resolveSelection(positional[0]);
-    } catch (err) {
-      // Someone at a terminal reads the error and fixes the argument.
-      if (process.stdin.isTTY) {
-        console.error((err as Error).message);
-        process.exit(1);
-      }
-      serveUnknownProfile(positional[0], (err as Error).message);
-      return;
+  let selection: ProfileSelection;
+  try {
+    if (!positional.length) throw new Error('No profile given. Run with --help for the list.');
+    selection = resolveSelection(positional[0]);
+  } catch (err) {
+    // Someone at a terminal reads the error and fixes the argument.
+    if (process.stdin.isTTY) {
+      console.error((err as Error).message);
+      process.exit(1);
     }
+    serveUnknownProfile(positional[0] ?? '', (err as Error).message);
+    return;
   }
 
   let config;
@@ -188,14 +184,13 @@ async function main(): Promise<void> {
   // stderr is safe: stdout carries the MCP protocol itself.
   //
   // The count is what tools/list will actually answer, not what the profile
-  // maps. Those differ by configuration — the profile's sub-profiles,
-  // --read-only removes writes, --include-deprecated adds tools — and quoting
-  // the mapped number meant every client showed something else.
-  const scope = selection
-    ? serverName(selection.profile.name) +
-      (selection.partial ? `:${selection.subProfiles.map((s) => s.name).join(',')}` : '') +
-      ` (${served ?? toolCountFor(selection)} tools)`
-    : 'asc-mcp';
+  // maps. Those differ by configuration — the profile's sub-profiles, and
+  // --read-only removes writes — and quoting the mapped number meant every
+  // client showed something else.
+  const scope =
+    serverName(selection.profile.name) +
+    (selection.partial ? `:${selection.subProfiles.map((s) => s.name).join(',')}` : '') +
+    ` (${served ?? toolCountFor(selection)} tools)`;
   console.error(
     `${scope} v${VERSION} ready (spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
   );
@@ -233,7 +228,7 @@ function serveUnknownProfile(spec: string, reason: string): void {
     clearTimeout(timer);
     return createUnknownProfileServer(spec, reason);
   });
-  console.error(`${serverName(spec)} v${VERSION}: unknown profile "${spec}". ${reason.split('\n')[0]}`);
+  console.error(`${spec ? serverName(spec) : 'asc-mcp'} v${VERSION}: ${spec ? `unknown profile "${spec}". ` : ''}${reason.split('\n')[0]}`);
 }
 
 /**

@@ -185,7 +185,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   };
 
   it.each(REPORT_OPS)('exposes parse/max_rows in the listed tool schema for %s', (opName) => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const tool = registry.listTools().find((t) => t.name === toolNameFor({ name: opName }))!;
     expect(tool).toBeDefined();
     expect(tool.inputSchema.properties).toHaveProperty('parse');
@@ -193,7 +193,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   });
 
   it.each(REPORT_OPS)('default (parse omitted) returns the blob unchanged for %s', async (opName) => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const http = { request: () => Promise.resolve({ ...BLOB }) };
 
     const result = await registry.execute(toolNameFor({ name: opName }), REQUIRED_ARGS[opName], http as never);
@@ -201,7 +201,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   });
 
   it.each(REPORT_OPS)('parse: true returns structured rows for %s', async (opName) => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const http = { request: () => Promise.resolve({ ...BLOB }) };
 
     const result = (await registry.execute(
@@ -217,7 +217,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   });
 
   it('does not reject parse/max_rows as unknown parameters', async () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const http = { request: () => Promise.resolve({ ...BLOB }) };
 
     await expect(
@@ -230,7 +230,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   });
 
   it('still rejects a genuinely unknown parameter on a report tool', async () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const http = { request: () => Promise.resolve({ ...BLOB }) };
 
     await expect(
@@ -243,7 +243,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   });
 
   it('surfaces a corrupt gzip as blob + parseError through the registry too', async () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: true, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.map((o) => o.name), readOnly: true });
     const corrupt = { contentType: 'application/a-gzip', base64: Buffer.from('nope').toString('base64') };
     const http = { request: () => Promise.resolve(corrupt) };
 
@@ -258,7 +258,7 @@ describe('report-table tools wired into ToolRegistry', () => {
   });
 
   it('an unrelated tool never gains parse/max_rows in its schema', () => {
-    const registry = new ToolRegistry({ domains: ['apps'], readOnly: false, includeDeprecated: false });
+    const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'apps').map((o) => o.name), readOnly: false });
     const tool = registry.listTools().find((t) => t.name === 'apps__list')!;
     expect(tool.inputSchema.properties).not.toHaveProperty('parse');
     expect(tool.inputSchema.properties).not.toHaveProperty('max_rows');

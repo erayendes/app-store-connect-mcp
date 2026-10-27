@@ -79,14 +79,14 @@ How the structure works since 3.0:
   cannot be shown to match), and `--with-core` folds it into one process for
   clients that run a single server — the Xcode plug-ins do. A tool every
   profile needs goes in `core`, once.
-- **Every operation is accounted for, and not every one is placed.**
-  `scripts/generate-profiles.ts` emits three lists beside the profiles:
-  `PROFILELESS` (CSV rows marked `(profilsiz)`: reverse reads no workflow
-  needs, reachable only with `--domains`), `TWIN_OF` (one side of a
-  relationship Apple exposes from both ends, dropped for its twin, which must
-  be placed) and `MACRO_COVERED` (operations a hand-written macro replaces
-  outright, such as the asset library under `media__*`). An operation in none
-  of these and in no profile fails the orphan test.
+- **Every built operation is accounted for.** `scripts/generate.ts` does not
+  build deprecated operations, CSV rows marked `(profilsiz)` (reverse reads no
+  workflow needs) or `TWIN_OF` keys (one side of a relationship Apple exposes
+  from both ends, dropped for its twin, which must be placed); both lists live
+  in `scripts/profile-sheet.ts`. `MACRO_COVERED` (operations a hand-written
+  macro replaces outright, such as the asset library under `media__*`) is built
+  but served nowhere. A built operation in no profile and not macro-covered
+  fails the orphan test.
 - **The tool counts are pinned** in the `counts` block of
   `tests/profile-invariants.test.ts`; a membership change moves them on purpose.
 

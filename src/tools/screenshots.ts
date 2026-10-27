@@ -187,10 +187,11 @@ async function resolvePage(http: AscHttpClient, app: Target['app'], target: Page
     label = `CPP ${parent.attributes?.name ?? parent.id}, version ${version.attributes?.version ?? version.id}`;
     parent = version;
   } else if (target === 'ppo') {
-    const treatment = await getRow(http, 'app_store_version_experiment_treatments.get', relId(loc, 'appStoreVersionExperimentTreatment'), { include: 'appStoreVersionExperiment,appStoreVersionExperimentV2' });
-    const v2 = treatment.relationships?.appStoreVersionExperimentV2?.data?.id;
-    parent = await getRow(http, v2 ? 'app_store_version_experiments_v2.get' : 'app_store_version_experiments.get', v2 ?? relId(treatment, 'appStoreVersionExperiment'), { include: v2 ? 'app' : 'appStoreVersion' });
-    owner = v2 ? relId(parent, 'app') : relId(await getRow(http, 'app_store_versions.get', relId(parent, 'appStoreVersion'), { include: 'app' }), 'app');
+    const treatment = await getRow(http, 'app_store_version_experiment_treatments.get', relId(loc, 'appStoreVersionExperimentTreatment'), { include: 'appStoreVersionExperimentV2' });
+    // Apple retired the v1 experiment API; Heimdall builds only v2.
+    const v2 = treatment.relationships?.appStoreVersionExperimentV2?.data?.id ?? fail('This product page test was made with Apple’s retired v1 API; Heimdall reaches v2 tests only. Nothing was changed.');
+    parent = await getRow(http, 'app_store_version_experiments_v2.get', v2, { include: 'app' });
+    owner = relId(parent, 'app');
     label = `PPO ${parent.attributes?.name ?? parent.id}, treatment ${treatment.attributes?.name ?? treatment.id}`;
   } else if (target === 'event') {
     const eventId = relId(loc, 'appEvent');

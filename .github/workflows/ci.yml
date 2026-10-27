@@ -70,7 +70,7 @@ jobs:
           ASC_PRIVATE_KEY_PATH=/tmp/ci.p8 \
           node -e "
           const { spawn } = require('child_process');
-          const p = spawn('node', ['dist/index.js'], { env: process.env });
+          const p = spawn('node', ['dist/index.js', 'monetization'], { env: process.env });
           let out = '';
           p.stdout.on('data', d => out += d);
           p.stdin.write(JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'ci',version:'1'}}}) + '\n');
@@ -126,9 +126,10 @@ jobs:
       # generated output, while starting a profile loads the catalogue, the
       # profile data and the macros. `general` is 49 tools in 3.0, so > 40
       # still means "the profile loaded", and core folded in with --with-core
-      # must add app lookup. A 2.x name (`app-info`) must not fail: it opens
-      # the one-tool tombstone that tells the agent to run setup.
-      - name: The installed server starts, serves a profile, and tombstones a 2.x name
+      # must add app lookup. A 2.x name (`app-info`) and the 2.x combined server
+      # (no profile) must not fail: each opens the one-tool tombstone that tells
+      # the agent to run setup.
+      - name: The installed server starts, serves a profile, and tombstones a 2.x entry
         run: |
           set -euo pipefail
           cd /tmp/packtest
@@ -168,8 +169,10 @@ jobs:
             console.log('general --with-core serves apps__list:', withCore.includes('apps__list'));
             const tombstone = await list(['app-info']);
             console.log('app-info serves:', tombstone.join(', '));
+            const unprofiled = await list([]);
+            console.log('no profile serves:', unprofiled.join(', '));
             const ok = general.length > 40 && withCore.includes('apps__list') &&
-              tombstone.length === 1 && tombstone[0] === 'asc__profile_unknown';
+              [tombstone, unprofiled].every((t) => t.length === 1 && t[0] === 'asc__profile_unknown');
             process.exit(ok ? 0 : 1);
           })();
           "
