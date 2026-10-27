@@ -8,6 +8,18 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [3.0.0-beta.2] — 2026-10-27
+
+**StoreKit catches up with Apple.** Nine new App Store Server API tools: extend renewal dates for every subscriber of a product at once, answer a refund's consumption request, link a purchase to your own account ID, finish a transaction, read the app transaction and a test notification's delivery, and set up retention messaging. Each one that touches a purchase or billing asks you to type CONFIRM. Transactions now arrive verified against Apple's own root, shipped with Heimdall, with nothing to configure. A weekly check fails as soon as Apple's library gains a method no tool wraps.
+
+**A record of what changed.** Every write Heimdall is asked to make goes into `audit.jsonl` on your machine: when, which tool, its risk level, how you confirmed it or why it did not run, and Apple's answer. Calls Apple refuses go into `failures.jsonl` with the request ID Apple support asks for. Keys, tokens and credentials inside URLs are masked. `ASC_STATE_DIR` moves both files.
+
+**New one-call workflows.** `pricing__setup_subscription` builds a whole subscription under one confirmation: group, subscription, languages, countries and price. `testflight__wait_for_build` waits until an uploaded build is processed. `testflight__feedback_digest` can attach the newest tester screenshots as images. `preflight__check_version` lists the steps only App Store Connect can do (App Privacy, EU trader status, agreements), and a `getting-started` prompt walks a new user through the first steps.
+
+**Smaller things.** Sales and finance reports for finished periods are cached on your machine, kept apart per key. An analytics report with no rows says that is not a confirmed zero. The in-app event state filter says that an ended event is PAST, not ARCHIVED.
+
+Heimdall now has 762 tools.
+
 ### [3.0.0-beta.1] — 2026-10-27
 
 Hi,
@@ -19,7 +31,7 @@ There are now 13 profiles and 50 sub-profiles: `general`, `distribution`, `marke
 
 `general` replaces `app-info`, as in App Store Connect.
 
-Big profiles have more sub-profiles, so you can pick fewer tools. For example, `monetization:subscription` and `monetization:subscription-offers` are 65 tools, where all of `monetization` is 162.
+Big profiles have more sub-profiles, so you can pick fewer tools. For example, `monetization:subscription` and `monetization:subscription-offers` are 64 tools, where all of `monetization` is 152.
 
 Every profile and sub-profile, with every tool in it, is on the [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) page.
 
@@ -67,7 +79,7 @@ If your AI app has rules that allow Heimdall tools by server name (such as `mcp_
 
 To go back to 2.x, `npx -y @erayendes/asc-mcp@2.8.0 setup` is all it takes.
 
-Heimdall now has 762 tools. If you see anything odd during the beta, I'd love to hear about it.
+Heimdall now has 751 tools. If you see anything odd during the beta, I'd love to hear about it.
 
 ### [2.8.0] — 2026-10-26
 
@@ -323,6 +335,18 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
+### [3.0.0-beta.2] — 2026-10-27
+
+**StoreKit Apple'a yetişti.** Dokuz yeni App Store Server API aracı: bir ürünün tüm abonelerinin yenileme tarihini tek seferde ileri almak, bir iadenin tüketim talebini yanıtlamak, bir satın almayı kendi hesap kimliğinize bağlamak, bir işlemi tamamlamak, uygulama işlemini ve deneme bildiriminin teslimini okumak, elde tutma mesajlarını kurmak. Satın almaya ya da faturalandırmaya dokunan her biri CONFIRM yazmanızı ister. İşlemler artık hiçbir ayar gerekmeden, Heimdall'ın içinde gelen Apple kök sertifikasıyla doğrulanmış olarak gelir. Apple'ın kütüphanesine hiçbir aracın karşılamadığı bir metot eklendiğinde haftalık bir kontrol hemen uyarır.
+
+**Neyin değiştiğinin kaydı.** Heimdall'dan istenen her yazma bilgisayarınızdaki `audit.jsonl` dosyasına girer: ne zaman, hangi araç, risk seviyesi, nasıl onayladığınız ya da neden çalışmadığı, Apple'ın cevabı. Apple'ın reddettiği çağrılar, Apple desteğinin ilk istediği request ID ile `failures.jsonl` dosyasına girer. Anahtarlar, token'lar ve URL içindeki kimlik bilgileri maskelenir. `ASC_STATE_DIR` iki dosyanın yerini değiştirir.
+
+**Tek çağrılık yeni iş akışları.** `pricing__setup_subscription` bir aboneliği tek onayla baştan kurar: grup, abonelik, diller, ülkeler ve fiyat. `testflight__wait_for_build` yüklenen build işlenene kadar bekler. `testflight__feedback_digest` testçilerin en yeni ekran görüntülerini görsel olarak ekleyebilir. `preflight__check_version` yalnızca App Store Connect'te yapılabilen adımları (App Privacy, AB tüccar durumu, sözleşmeler) listeler; `getting-started` prompt'u yeni bir kullanıcıya ilk adımlarda yol gösterir.
+
+**Küçük işler.** Bitmiş dönemlerin satış ve finans raporları bilgisayarınızda, her anahtar için ayrı önbelleğe alınır. Satırı olmayan bir analitik rapor bunun doğrulanmış bir sıfır olmadığını söyler. In-app event durum filtresi, bitmiş bir etkinliğin ARCHIVED değil PAST olduğunu söyler.
+
+Heimdall artık 762 araç içeriyor.
+
 ### [3.0.0-beta.1] — 2026-10-27
 
 Selam,
@@ -334,7 +358,7 @@ Artık 13 profil ve 50 alt profil var: `general`, `distribution`, `marketing`, `
 
 `app-info`'nun yerini App Store Connect'teki gibi `general` aldı.
 
-Büyük profillerin alt profil sayısı arttı. Böylece daha az araç seçebilirsiniz. Örneğin `monetization:subscription` ve `monetization:subscription-offers` 65 araç, `monetization`'ın tamamı ise 162.
+Büyük profillerin alt profil sayısı arttı. Böylece daha az araç seçebilirsiniz. Örneğin `monetization:subscription` ve `monetization:subscription-offers` 64 araç, `monetization`'ın tamamı ise 152.
 
 Her profil ve alt profil, içindeki bütün araçlarla [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfasında.
 
@@ -382,7 +406,7 @@ Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren kural
 
 2.x'e dönmek isterseniz `npx -y @erayendes/asc-mcp@2.8.0 setup` yeterli.
 
-Heimdall artık 762 araç içeriyor. Beta sürecinde gördüğünüz her tuhaflığı yazarsanız çok sevinirim.
+Heimdall artık 751 araç içeriyor. Beta sürecinde gördüğünüz her tuhaflığı yazarsanız çok sevinirim.
 
 ### [2.8.0] — 2026-10-26
 
