@@ -24,6 +24,8 @@ import { resolveApp } from '../core/resolve-app.js';
 import { createHash } from 'node:crypto';
 import { PLATFORMS, PLATFORM_NAMES, EDITABLE_STATES, executePreflightTool, pickVersion, readAppStoreVersions } from './preflight.js';
 import { APPROVED_STATES, PRODUCT_APPROVED_STATES } from '../core/review-states.js';
+import type { DialogText } from '../core/native-confirm.js';
+import { appLabel, listText } from './pricing.js';
 
 /** Relationship names accepted by Apple's ReviewSubmissionItemCreateRequest. */
 export const REVIEW_ITEM_TYPES = [
@@ -546,4 +548,56 @@ export async function releaseItemsPreviewArgs(args: Record<string, unknown>, htt
     existingItems: plan.existing,
     ...(target.appVersion ? { version: target.version, itemNames: { [itemKey(target.appVersion)]: `Version ${target.version}` } } : {}),
     planFingerprint: planFingerprint(app.id, target.platform, plan.submission?.id, plan.items) };
+}
+
+const ITEM_NOUNS: Record<string, string> = {
+  appStoreVersion: 'app version', appCustomProductPageVersion: 'custom product page',
+  appStoreVersionExperiment: 'product page test', appStoreVersionExperimentV2: 'product page test',
+  appEvent: 'in-app event', appAssetLibraryImage: 'library image', appAssetLibraryVideo: 'library video',
+  backgroundAssetVersion: 'background asset', gameCenterAchievementVersion: 'Game Center achievement',
+  gameCenterActivityVersion: 'Game Center activity', gameCenterChallengeVersion: 'Game Center challenge',
+  gameCenterLeaderboardVersion: 'Game Center leaderboard', gameCenterLeaderboardSetVersion: 'Game Center leaderboard set',
+  inAppPurchaseVersion: 'in-app purchase', subscriptionVersion: 'subscription', subscriptionGroupVersion: 'subscription group',
+};
+/** Items by name where the preview carries one, else counted by kind ("2 in-app purchases"); never by id. */
+function itemPhrases(items: ReviewItem[], shown: Record<string, unknown>): string[] {
+  const names = (shown.itemNames ?? {}) as Record<string, string>;
+  const named: string[] = [];
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    if (item.type === 'appStoreVersion' && shown.version) named.push(`version ${String(shown.version)}`);
+    else if (names[itemKey(item)]) named.push(names[itemKey(item)]);
+    else counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
+  }
+  return [...named, ...[...counts].map(([type, n]) => {
+    const noun = ITEM_NOUNS[type] ?? 'item';
+    return n === 1 ? `${/^[aeiou]/i.test(noun) ? 'an' : 'a'} ${noun}` : `${n} ${noun}s`;
+  })];
+}
+
+/**
+ * The macOS dialog for a submission, from what releasePreviewArgs or
+ * releaseItemsPreviewArgs resolved: items by name or kind, items already in the
+ * open submission said apart, no ids or states.
+ */
+export function releaseDialog(name: string, shown: Record<string, unknown>): DialogText | undefined {
+  if (name !== 'release__submit' && name !== 'release__submit_items') return undefined;
+  const app = appLabel(shown.app);
+  const items = (Array.isArray(shown.items) ? shown.items : []) as ReviewItem[];
+  const existing = new Set((Array.isArray(shown.existingItems) ? shown.existingItems as ReviewItem[] : []).map(itemKey));
+  const added = items.filter((i) => !existing.has(itemKey(i)));
+  // The version is in the title of release__submit; it is not news when it was already there.
+  const along = items.filter((i) => existing.has(itemKey(i)) && !(name === 'release__submit' && i.type === 'appStoreVersion'));
+  const title = name === 'release__submit'
+    ? `Submit ${[app, shown.version].filter(Boolean).join(' ')} for App Review?`
+    : `Submit ${listText(itemPhrases(added.length ? added : items, shown))} for App Review?`;
+  const lines = [
+    [app, shown.platform].filter(Boolean).join(' · '),
+    ...(along.length && (name === 'release__submit' || added.length) ? [`Already in the open submission and going too: ${listText(itemPhrases(along, shown))}`] : []),
+    ...(shown.skip_preflight === true ? ['Submitted even if the pre-flight finds blocking gaps.'] : []),
+  ];
+  const last = items.length > 1
+    ? 'Apple starts reviewing the submission; you can withdraw it until review begins.'
+    : 'Apple starts reviewing it; you can withdraw it until review begins.';
+  return { title, body: [...lines, '', last].join('\n'), action: 'Submit' };
 }

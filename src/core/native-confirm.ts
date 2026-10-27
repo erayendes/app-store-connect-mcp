@@ -17,6 +17,7 @@
  */
 import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { TERRITORY_NAMES } from './territory-names.js';
 
 export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
 
@@ -77,38 +78,103 @@ export interface DialogText {
 }
 
 // A button named Cancel next to a Cancel button would say nothing, so that verb stays Allow.
-const BUTTON_VERBS = /^(Add|Apply|Archive|Assign|Create|Delete|Extend|Invite|Place|Release|Remove|Rename|Reorder|Replace|Request|Revoke|Send|Set|Submit|Update|Upload)\b/;
-export const actionFor = (title: string): string | undefined => BUTTON_VERBS.exec(title)?.[1];
+const BUTTON_VERBS = /^(Activate|Add|Answer|Apply|Archive|Assign|Change|Create|Deactivate|Delete|End|Expire|Extend|Finish|Give|Invite|Link|Mark|Pause|Place|Post|Register|Release|Remove|Rename|Reorder|Replace|Request|Resume|Revoke|Send|Set|Start|Stop|Submit|Turn|Unlink|Update|Upload|Withdraw)\b/;
+export const actionFor = (title: string): string | undefined =>
+  /^Set up\b/.test(title) ? 'Create' : BUTTON_VERBS.exec(title)?.[1];
 
 /** `whatsNew` → "What’s new", `start_date` → "Start date". */
 const humanize = (key: string): string => {
-  const words = key === 'whatsNew' ? 'what’s new' : key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+  const words = key === 'whatsNew' ? 'what’s new' : key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().replace(/\b(id|url)\b/g, (w) => w.toUpperCase());
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
-const showValue = (raw: string): string => (raw === 'true' ? 'Yes' : raw === 'false' ? 'No' : /^".*"$/.test(raw) ? JSON.parse(raw) : raw);
-// Base64 price points and other opaque ids tell a person nothing.
-const opaque = (id: string): boolean => id.length > 40;
+
+const COUNT: Record<string, number> = { ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5, SIX: 6, SEVEN: 7, EIGHT: 8, NINE: 9, TEN: 10, ELEVEN: 11, TWELVE: 12, FOURTEEN: 14 };
+const TOKEN: Record<string, string> = { ICLOUD: 'iCloud', IOS: 'iOS', MAC: 'Mac', MAC_OS: 'macOS', TV_OS: 'tvOS', VISION_OS: 'visionOS', WATCH_OS: 'watchOS', APP: 'app', ID: 'ID', IAP: 'IAP', URL: 'URL' };
+
+/** `ONE_MONTH` → "1 month", `MAC_OS` → "macOS", `PAY_AS_YOU_GO` → "Pay as you go", `TUR` → "Türkiye". */
+export function plainEnum(raw: string): string {
+  if (TERRITORY_NAMES[raw]) return TERRITORY_NAMES[raw];
+  const span = /^([A-Z]+)_(DAY|WEEK|MONTH|YEAR|HOUR)S?$/.exec(raw);
+  if (span && COUNT[span[1]]) return `${COUNT[span[1]]} ${span[2].toLowerCase()}${COUNT[span[1]] > 1 ? 's' : ''}`;
+  if (TOKEN[raw]) return TOKEN[raw];
+  const words = raw.replace(/(MAC|TV|VISION|WATCH)_OS/g, (m) => TOKEN[m]).split('_').map((w) => TOKEN[w] ?? (/[a-z]/.test(w) ? w : w.toLowerCase()));
+  // "iOS" and "macOS" keep their own capitals at the start.
+  if (!/[A-Z]/.test(words[0])) words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+  return words.join(' ');
+}
+
+/** "A", "A and B", "A, B and 3 more". */
+export const listWords = (items: string[], max = 4): string =>
+  items.length <= 1 ? items.join('') : items.length <= max
+    ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
+    : `${items.slice(0, max - 1).join(', ')} and ${items.length - max + 1} more`;
+
+const ENUM = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
+/** A value from the form preview, as a person would say it. */
+function showValue(raw: string): string {
+  if (raw === 'true') return 'Yes';
+  if (raw === 'false') return 'No';
+  let value: unknown = raw;
+  // A list of objects arrives cut to a hundred characters; half a JSON object says nothing.
+  if (raw.startsWith('[{')) return 'see the full request';
+  if (/^["[]/.test(raw)) {
+    try { value = JSON.parse(raw); } catch { return raw; }
+  }
+  if (Array.isArray(value) && value.every((v) => typeof v === 'string')) return listWords(value.map((v) => (ENUM.test(v) ? plainEnum(v) : v)));
+  if (typeof value !== 'string') return raw;
+  return ENUM.test(value) ? plainEnum(value) : value;
+}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Base64 price points, UUIDs and other opaque ids tell a person nothing.
+const opaque = (id: string): boolean => id.length > 40 || UUID.test(id);
 
 /** One "Changes" line from the form preview, said in words, or nothing when it is plumbing. */
 function changeLine(line: string): string | undefined {
   const m = /^([\w.]+) (=|→) (.*)$/.exec(line);
-  if (!m) return line;
+  if (!m) {
+    // A macro's flat argument: `key: value`.
+    const flat = /^(\w+): (.*)$/.exec(line);
+    return flat ? `${humanize(flat[1])}: ${showValue(flat[2])}` : line;
+  }
   const segments = m[1].split('.').filter((s) => !['data', 'attributes', 'relationships'].includes(s));
   const key = segments.at(-1);
-  if (!key || key === 'type' || key === 'id') return undefined;
+  // Ids and per-player plumbing Apple needs and a person cannot check.
+  if (!key || ['type', 'id', 'scopedPlayerId', 'vendorIdentifier', 'challengeIds'].includes(key)) return undefined;
   // A JSON string may hold " — " itself; the note comes after it.
-  const [, value, note] = /^("(?:[^"\\]|\\.)*"|\[.*?\] \(\d+\)|\S+)(?: — (.*))?$/.exec(m[3]) ?? [, m[3]];
+  const [, value, note] = /^("(?:[^"\\]|\\.)*"|\[.*?\] \(\d+\)|\[.*\]|\S+)(?: — (.*))?$/.exec(m[3]) ?? [, m[3]];
   if (m[2] === '=') return `${humanize(key)}: ${showValue(value)}${note ? ` — ${note}` : ''}`;
   const count = /^\[.*\] \((\d+)\)$/.exec(value)?.[1];
   if (count) return `${humanize(key)}: ${count} ${count === '1' ? 'item' : 'items'}`;
   const label = note && /^".*"$/.test(note) ? JSON.parse(note) : undefined;
-  const id = value.split('/').at(-1) ?? value;
-  return label ? `${humanize(key)}: ${label}` : opaque(id) ? undefined : `${humanize(key)}: ${id}`;
+  const [type, id = value] = value.split('/');
+  // A relationship list arrives one entry per line, keyed 0, 1, 2…; dialogText joins them.
+  if (/^\d+$/.test(key)) return label || !opaque(id) ? `\u0000${humanize(type)}\u0000${label ?? id}` : undefined;
+  return label ? `${humanize(key)}: ${label}` : opaque(id) ? undefined : `${humanize(key)}: ${TERRITORY_NAMES[id] ?? id}`;
 }
 
-/** `id = 123 (Gold Pack)` → "Gold Pack"; an id with no name stays, or the target would be blank. */
-const targetLine = (value: string): string =>
-  value.split(/, (?=\w+ = )/).map((part) => /^\w+ = (\S+)(?: \((.*)\))?$/.exec(part)?.slice(1).reverse().find(Boolean) ?? part).join(', ');
+/** `id = 123 (Gold Pack)` → "Gold Pack"; an opaque id with no name says nothing and is left out. */
+const targetNames = (value: string): string[] =>
+  value.split(/, (?=\w+ = )/).flatMap((part) => {
+    const m = /^\w+ = (\S+)(?: \((.*)\))?$/.exec(part);
+    if (!m) return [part];
+    return m[2] ? [m[2]] : opaque(m[1]) ? [] : [m[1]];
+  });
+
+/** The tool's summary as a question, about the named thing when there is one. */
+function titleFrom(what: string, name?: string): string {
+  let title = what.split(/: /)[0].replace(/\s*\(v\d+\)/g, '');
+  // A long summary reads as a manual; its first clause is the question.
+  if (title.length > 70) title = title.split(/, | so | by /)[0];
+  title = title.replace(/[\s.,;:?]+$/, '');
+  // Generated summaries say "a sandbox testers" for the resource's plural name.
+  title = title.replace(/^(\w+) (an?) (.+)$/, (_, verb: string, article: string, noun: string) => {
+    const one = noun.replace(/(\w*[^s])s$/, '$1');
+    // A plain noun takes the name; "a tester from your account entirely" would bury it.
+    const plain = one.split(' ').length <= 4 && !/\b(from|to|of|in|for|with|on|by|before|after|entirely)\b/.test(one);
+    return name && plain ? `${verb} the ${one} "${name}"` : `${verb} ${article} ${one}`;
+  });
+  return `${title}?`;
+}
 
 /**
  * The alert's text, from the elicitation preview.
@@ -117,22 +183,46 @@ const targetLine = (value: string): string =>
  * tool name, lists the HTTP operation, the key id and the request body field
  * by field, and ends by asking for CONFIRM. In an alert of its own the person
  * needs what will happen, to what, and what cannot be undone, in words.
- * `what` is the tool's own one-line summary.
+ * `what` is the tool's own one-line summary, or a question already worded for
+ * this write (it ends in "?").
  */
 export function dialogText(what: string | undefined, preview: string): DialogText {
   const details: string[] = [];
   const warnings: string[] = [];
+  const lists = new Map<string, string[]>();
+  const seen = new Set<string>();
+  let target: string[] = [];
   for (const line of preview.split('\n').slice(1)) {
     const t = line.trim();
     if (!t || t === 'Changes:' || /^(Operation|Account):/.test(t) || /Type CONFIRM|^Confirm to proceed/.test(t)) continue;
-    if (t.startsWith('Risk:')) warnings.push(t.split(' — ').slice(1).join(' — '));
-    else if (t.startsWith('Target:')) details.push(`Target: ${targetLine(t.replace(/^Target:\s+/, ''))}`);
-    else {
-      const said = changeLine(t);
-      if (said) details.push(said.replace(/^(\w[\w ]*):\s+/, (_, key: string) => `${humanize(key)}: `));
+    if (t.startsWith('Risk:')) {
+      warnings.push(t.split(' — ').slice(1).join(' — '));
+      continue;
     }
+    if (t.startsWith('Target:')) {
+      target = targetNames(t.replace(/^Target:\s+/, ''));
+      continue;
+    }
+    // The count only repeats a list the body already shows.
+    if (t.startsWith('Territories in request:')) continue;
+    const said = changeLine(t.replace(/^(App|Product|Price):\s+/, '$1: '));
+    if (!said) continue;
+    if (said.startsWith('\u0000')) {
+      const [, type, item] = said.split('\u0000');
+      lists.set(type, [...(lists.get(type) ?? []), item]);
+      continue;
+    }
+    // The same name under two keys ("Product", "Subscription") is one fact.
+    const value = said.replace(/^[^:]+:\s+/, '');
+    if (seen.has(value)) continue;
+    seen.add(value);
+    details.push(said);
   }
-  const title = what ? `${what.split(/: /)[0].replace(/\.$/, '')}?` : 'Allow this change in App Store Connect?';
+  for (const [type, items] of lists) details.push(`${type}: ${listWords(items, 6)}`);
+  const named = what && !what.endsWith('?') && target.length === 1 ? target[0] : undefined;
+  const title = what?.endsWith('?') ? what : what ? titleFrom(what, named) : 'Allow this change in App Store Connect?';
+  // Named in the question itself, the target needs no line of its own.
+  if (target.length && !(named && title.includes(`"${named}"`))) details.unshift(`Target: ${target.join(', ')}`);
   return { title, body: [...details, ...(warnings.length ? ['', ...warnings] : [])].join('\n'), action: actionFor(title) };
 }
 

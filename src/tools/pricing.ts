@@ -17,6 +17,7 @@ import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 import { TERRITORY_NAMES } from '../core/territory-names.js';
+import type { DialogText } from '../core/native-confirm.js';
 
 const scheduleOutputSchema: NonNullable<McpToolDefinition['outputSchema']> = {
   type: 'object',
@@ -837,6 +838,138 @@ export function buildPricingPreview(args: Record<string, unknown>, toolName?: st
     '',
     'Type CONFIRM in the field below to proceed.',
   ].join('\n');
+}
+
+/** "A", "A and B", "A, B and C"; past three, "A, B and 5 more". */
+export function listText(items: string[]): string {
+  const shown = items.length > 3 ? [...items.slice(0, 2), `${items.length - 2} more`] : items;
+  return shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}` : (shown[0] ?? '');
+}
+
+/** The app as a person names it: the server's "Name (com.example.app)" or "Name (123)" loses the id. */
+export const appLabel = (app: unknown): string =>
+  String(app ?? '?').trim().replace(/ \((?:\d+|[\w-]+(?:\.[\w-]+)+)\)$/, '');
+
+const countryName = (code: unknown): string => {
+  const c = String(code ?? '?').trim().toUpperCase();
+  return TERRITORY_NAMES[c] ?? c;
+};
+const language = (locale: string): string => {
+  try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) ?? locale; } catch { return locale; }
+};
+
+// Apple's period and offer-duration names as a count and a unit.
+const SPANS: Record<string, [number, string]> = {
+  THREE_DAYS: [3, 'day'], ONE_WEEK: [1, 'week'], TWO_WEEKS: [2, 'week'], ONE_MONTH: [1, 'month'],
+  TWO_MONTHS: [2, 'month'], THREE_MONTHS: [3, 'month'], SIX_MONTHS: [6, 'month'], ONE_YEAR: [1, 'year'],
+};
+/** `ONE_MONTH` → "1 month"; `times` multiplies it, for the whole length of a pay-as-you-go offer. */
+function span(key: unknown, times = 1): string {
+  const found = SPANS[String(key)];
+  if (!found) return String(key ?? '?');
+  const n = found[0] * times;
+  return `${n} ${found[1]}${n === 1 ? '' : 's'}`;
+}
+/** `ONE_MONTH` → "every month", `THREE_MONTHS` → "every 3 months". */
+const every = (key: unknown): string => `every ${span(key).replace(/^1 /, '')}`;
+const months = (n: unknown): string => `${String(n)} month${n === 1 ? '' : 's'}`;
+const starts = (args: Record<string, unknown>): string =>
+  args.start_date ? `Starts ${String(args.start_date)}` : 'Starts as soon as possible';
+
+function offerTerms(args: Record<string, unknown>): string {
+  const length = span(args.duration, Number(args.periods) || 1);
+  const amount = normalizePrice(String(args.price ?? '?'));
+  const anchor = ` in ${countryName(args.territory)}`;
+  if (args.offer_mode === 'FREE_TRIAL') return `Free trial for ${length}`;
+  if (args.offer_mode === 'PAY_UP_FRONT') return `Pay ${amount} up front for ${length}${anchor}`;
+  return `Pay as you go: ${amount} ${every(args.duration)} for ${length}${anchor}`;
+}
+
+/**
+ * The macOS dialog for a pricing write: the same facts as the form preview,
+ * said in words — country names, "every month", no enum strings — with the
+ * consequence for customers on the last line.
+ */
+export function pricingDialog(name: string, args: Record<string, unknown>): DialogText | undefined {
+  const app = appLabel(args.app);
+  const price = normalizePrice(String(args.price ?? '?'));
+  const country = countryName(args.territory);
+  const derived = 'Every other country gets Apple’s equivalent price in its own currency, not the same number.';
+  const subscribers = args.preserve_current_price === true
+    ? 'Current subscribers keep their price.'
+    : 'Current subscribers move to the new price.';
+  const dialog = (title: string, lines: string[], last: string, action: string): DialogText =>
+    ({ title, body: [...lines, '', last].join('\n'), action });
+
+  if (name === 'pricing__set_subscription_price') {
+    return dialog(`Change the price of ${String(args.subscription ?? '?')} in ${country} to ${price}?`,
+      [`${app} · subscription`, starts(args)], subscribers, 'Change');
+  }
+
+  if (name === 'pricing__set_iap_price') {
+    return dialog(`Change the price of ${String(args.iap ?? '?')} in ${country} to ${price}?`,
+      [args.app ? `${app} · in-app purchase` : 'In-app purchase', starts(args), 'Every other price and scheduled change is kept.'],
+      `If ${country} is its base country, Apple also moves the automatic prices everywhere else.`, 'Change');
+  }
+
+  if (name === 'pricing__setup_subscription') {
+    const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
+    const territories = Array.isArray(args.territories) ? (args.territories as unknown[]).map(countryName) : [];
+    return dialog(`Create the subscription "${String(args.name ?? args.product_id ?? '?')}"?`, [
+      `${app} · group "${String(args.group ?? '?')}" (created if missing)`,
+      `${price} ${every(args.period)} in ${country}; Apple derives every other country.`,
+      territories.length ? `On sale in ${listText(territories)}` : 'On sale everywhere, new countries included',
+      `Languages: ${listText(locs.map((l) => language(String(l.locale))))}`,
+      ...(args.family_sharable === true ? ['Family Sharing on'] : []),
+      `Product ID ${String(args.product_id ?? '?')} can’t be changed later.`,
+    ], 'Nothing is sold until App Review approves it.', 'Create');
+  }
+
+  if (name === 'pricing__equalize_price') {
+    const kind = String(args.product_type ?? '');
+    const what = kind === 'app' ? app : String(args.product ?? '?');
+    const lines = [`${app} · ${kind === 'app' ? 'app price' : kind === 'subscription' ? 'subscription' : 'in-app purchase'}`, starts(args), derived];
+    const title = `Set the price of ${what} in every country from ${price} in ${country}?`;
+    // Subscriptions have no base country: one write per country, stopping at the first failure.
+    if (kind === 'subscription') {
+      return dialog(title, [...lines, 'About 175 countries, one at a time; if one fails, it stops there.'],
+        args.preserve_current_price === true ? subscribers : 'Current subscribers move to the new price in every country.', 'Set');
+    }
+    return dialog(title, lines, 'Its other manual prices and scheduled changes are replaced by this one.', 'Set');
+  }
+
+  if (name === 'pricing__make_offer') {
+    const sub = String(args.subscription ?? '?');
+    const paid = args.offer_mode !== 'FREE_TRIAL';
+    const runs = `${args.start_date ? `from ${String(args.start_date)}` : 'from now'}, ${args.end_date ? `until ${String(args.end_date)}` : 'open-ended'}`;
+    if (args.offer_type === 'introductory') {
+      if (args.undo === true) {
+        return dialog(`Remove the introductory offer from ${sub}?`, [
+          `${app} · subscription`, `${offerTerms(args)}, ${runs}`,
+          'Only the offer with exactly these terms goes, country by country; other offers stay.',
+        ], 'New subscribers no longer get it.', 'Remove');
+      }
+      return dialog(`Add an introductory offer to ${sub}?`, [
+        `${app} · subscription`, offerTerms(args), ...(paid ? [derived] : []),
+        `For customers new to the subscription group, ${runs}`,
+        'Written country by country; if one fails, it stops there and the same call carries on.',
+      ], 'Afterwards Apple lets only its end date change.', 'Add');
+    }
+    const winBack = args.offer_type === 'win_back';
+    return dialog(`Create the ${winBack ? 'win-back' : 'promotional'} offer "${String(args.name ?? '?')}"?`, [
+      `${app} · subscription ${sub}`, `Offer ID ${String(args.offer_id ?? '?')}`,
+      offerTerms(args), ...(paid ? [derived] : []),
+      ...(winBack
+        ? [
+            `For customers who paid for ${months(args.eligibility_paid_months)} and lapsed ${String(args.eligibility_last_subscribed_min_months)} to ${months(args.eligibility_last_subscribed_max_months)} ago`,
+            ...(args.eligibility_wait_months !== undefined ? [`Each customer can redeem it again after ${months(args.eligibility_wait_months)}.`] : []),
+            `Runs ${runs}`,
+            ...(args.priority === 'HIGH' ? ['High priority against other offers'] : []),
+          ]
+        : ['For current or lapsed subscribers, through a signed offer in the app']),
+    ], 'Its countries and prices can’t be changed later.', 'Create');
+  }
+  return undefined;
 }
 
 /**

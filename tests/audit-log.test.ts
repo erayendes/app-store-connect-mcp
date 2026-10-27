@@ -7,7 +7,7 @@ import { mkdtempSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { logFailure, logWrite, maskArgs } from '../src/core/audit-log.js';
+import { auditArgs, logFailure, logWrite } from '../src/core/audit-log.js';
 
 const lines = (path: string) => readFileSync(path, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
 
@@ -44,42 +44,28 @@ describe('audit log', () => {
   });
 });
 
-describe('maskArgs', () => {
-  it('masks tokens and keys, keeps everything else', () => {
-    expect(maskArgs({ app_account_token: 'u-1', privateKey: 'p', keywords: 'notes,todo', app: 'Notes' })).toEqual({
-      app_account_token: '[masked]', privateKey: '[masked]', keywords: 'notes,todo', app: 'Notes',
+describe('auditArgs', () => {
+  it('keeps names, ids, codes, numbers and flags, and masks credentials by name', () => {
+    expect(auditArgs({ app: 'Notes', product_id: 'com.x.pro', territory: 'TUR', days: 7, dry: false, app_account_token: 'u-1', privateKey: 'p' })).toEqual({
+      app: 'Notes', product_id: 'com.x.pro', territory: 'TUR', days: 7, dry: false, app_account_token: '[masked]', privateKey: '[masked]',
     });
   });
 
-  it('masks secrets inside a body sent as JSON text, and drops JSON text it cannot read', () => {
-    expect(maskArgs({ body: '{"data":{"attributes":{"secret":"abc","url":"https://x.test/h?token=t"}}}', bad: '{"secret": ' })).toEqual({
-      body: '{"data":{"attributes":{"secret":"[masked]","url":"https://x.test/h?token=[masked]"}}}',
-      bad: '[unparsed JSON text not recorded]',
-    });
+  it('leaves out free text, URLs and JSON sent as text, whatever secret they might carry', () => {
+    expect(auditArgs({
+      header: 'Before you go',
+      url: 'https://bot:s3cret@hooks.example.com/r?api_key=abc',
+      raw: '{"data":{"attributes":{"secret":"abc"}}}',
+    })).toEqual({ header: '[not recorded]', url: '[not recorded]', raw: '[not recorded]' });
   });
 
-  it('masks credentials named any way inside a URL, and webhook URLs whose path is the secret', () => {
-    expect(maskArgs({
-      a: 'https://x.test/h?api_key=abc&page=2',
-      b: 'https://s3.test/f?X-Amz-Signature=abc&X-Amz-Security-Token=def',
-      c: 'https://hooks.slack.com/services/T0/B0/xyz',
-      d: 'https://bot:s3cret@hooks.example.com/retention',
-    })).toEqual({
-      a: 'https://x.test/h?api_key=[masked]&page=2',
-      b: 'https://s3.test/f?X-Amz-Signature=[masked]&X-Amz-Security-Token=[masked]',
-      c: 'https://hooks.slack.com/services/[masked]',
-      d: 'https://bot:[masked]@hooks.example.com/retention',
-    });
+  it('records a body as the resource and the fields it sets, never their values', () => {
+    expect(auditArgs({ body: { data: { type: 'webhooks', id: 'w-1', attributes: { url: 'https://x.test', secret: 's' }, relationships: { app: {} } } } }))
+      .toEqual({ body: { type: 'webhooks', id: 'w-1', fields: ['url', 'secret', 'app'] } });
   });
 
-  it('masks a secret list and a credential inside a URL', () => {
-    expect(maskArgs({ secrets: ['a', 'b'], url: 'https://example.com/hook?token=abc&x=1' })).toEqual({
-      secrets: '[masked]', url: 'https://example.com/hook?token=[masked]&x=1',
-    });
-  });
-
-  it('cuts a huge body down rather than logging all of it', () => {
-    const masked = maskArgs({ body: 'x'.repeat(5000) });
-    expect(JSON.stringify(masked).length).toBeLessThan(2100);
+  it('keeps a short list of codes and counts anything else', () => {
+    expect(auditArgs({ territories: ['TUR', 'USA'], notes: ['a b', 'c'] })).toEqual({ territories: ['TUR', 'USA'], notes: '[2 items not recorded]' });
   });
 });
+

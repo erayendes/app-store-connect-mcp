@@ -4,6 +4,8 @@ import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 import { redactPii } from '../core/shape.js';
+import type { DialogText } from '../core/native-confirm.js';
+import { appLabel, listText } from './pricing.js';
 
 const PAGE_SIZE = 50;
 const MAX_PAGES = 5;
@@ -394,6 +396,26 @@ export function buildTestflightPreview(args: Record<string, unknown>): string {
       'may also need beta app review; this does not submit one. Groups that already have the ' +
       'build are left as they are.',
   ].join('\n');
+}
+
+/** The macOS dialog for an assignment, from the arguments alone, like the preview above. */
+export function testflightDialog(args: Record<string, unknown>): DialogText {
+  const groups = Array.isArray(args.groups) ? args.groups.map(String) : [];
+  const build = String(args.build ?? '').trim();
+  // A build ID is a UUID that tells a person nothing; a build number is what they know it by.
+  const title = `Assign ${/^[\d.]+$/.test(build) ? `build ${build}` : 'the build'} to ${listText(groups) || '?'}?`;
+  return {
+    title,
+    body: [
+      `${appLabel(args.app)} · TestFlight`,
+      ...(groups.length > 3 ? [`Groups: ${groups.join(', ')}`] : []),
+      'Groups that already have it stay as they are.',
+      'External groups may also need beta app review; this does not submit one.',
+      '',
+      'Every tester in these groups can install it.',
+    ].join('\n'),
+    action: 'Assign',
+  };
 }
 
 /** Reports how long a wait has run, so a client that times out silent calls keeps this one open. */

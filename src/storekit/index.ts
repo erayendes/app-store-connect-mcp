@@ -32,7 +32,9 @@ import {
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { AscApiError } from '../core/errors.js';
+import { listWords, type DialogText } from '../core/native-confirm.js';
 import type { RiskLevel } from '../core/risk.js';
+import { TERRITORY_NAMES } from '../core/territory-names.js';
 import { APPLE_ROOT_CA_G3 } from './apple-root-ca.js';
 import type { McpToolDefinition } from '../core/registry.js';
 import type { ServerConfig } from '../core/config.js';
@@ -575,6 +577,141 @@ export function storekitRisk(name: string, args: Record<string, unknown>): RiskL
   if (action.startsWith('delete_')) return 'destructive';
   if (action === 'set_realtime_url') return 'infrastructure';
   return 'public';
+}
+
+// The macOS dialog for each StoreKit write, in words: ids are cut to a tail or a
+// prefix, codes become what they mean. The approval form keeps the raw values.
+const EXTEND_REASONS = ['not given', 'customer satisfaction', 'other', 'service issue or outage'];
+const DELIVERY: Record<string, string> = {
+  DELIVERED: 'delivered and working',
+  UNDELIVERED_QUALITY_ISSUE: 'not delivered: quality issue',
+  UNDELIVERED_WRONG_ITEM: 'not delivered: wrong item',
+  UNDELIVERED_SERVER_OUTAGE: 'not delivered: server outage',
+  UNDELIVERED_OTHER: 'not delivered: other reason',
+};
+const REFUND_PREFERENCE: Record<string, string> = {
+  DECLINE: 'decline the refund',
+  GRANT_FULL: 'full refund',
+  GRANT_PRORATED: 'prorated refund',
+};
+const ending = (id: unknown) => `ending ${String(id ?? '').slice(-4)}`;
+const prefix = (id: unknown) => `${String(id ?? '').slice(0, 8)}…`;
+const dayCount = (n: unknown) => `${n} ${Number(n) === 1 ? 'day' : 'days'}`;
+// Capped, so 175 countries still fit in the alert.
+const andList = (names: string[]) => listWords(names, 8);
+// Unset, the run sends a default reason (below), so the dialog names that one.
+const reasonText = (reason: unknown, sent: ExtendReasonCode) => EXTEND_REASONS[Number(reason ?? sent)] ?? String(reason);
+
+/** The dialog text for a StoreKit write; undefined for reads and unknown actions. */
+export function storekitDialog(
+  name: string,
+  args: Record<string, unknown>,
+  defaults: { environment: 'Production' | 'Sandbox' }
+): DialogText | undefined {
+  const env = args.environment === 'Production' || args.environment === 'Sandbox' ? args.environment : defaults.environment;
+  const app = typeof args.app === 'string' ? args.app.trim() : '';
+  const where = [
+    app && (/^\d+$/.test(app) ? `Apple ID ${app}` : app),
+    env === 'Production' ? 'Production — real customers' : 'Sandbox',
+  ].filter(Boolean).join(' · ');
+  const dialog = (title: string, action: string, lines: string[], note: string): DialogText =>
+    ({ title, body: [where, ...lines, '', note].join('\n'), action });
+
+  switch (name) {
+    case 'storekit__extend_renewal_date':
+      return dialog(`Extend one subscription by ${dayCount(args.extend_by_days)}?`, 'Extend', [
+        `Transaction ${ending(args.original_transaction_id)}`,
+        `Reason: ${reasonText(args.reason, ExtendReasonCode.CUSTOMER_SATISFACTION)}`,
+      ], `This subscriber's next charge moves ${dayCount(args.extend_by_days)} later.`);
+
+    case 'storekit__mass_extend_renewal_date': {
+      const codes = Array.isArray(args.storefront_country_codes) ? args.storefront_country_codes.map(String) : [];
+      return dialog(`Extend every ${args.product_id} subscription by ${dayCount(args.extend_by_days)}?`, 'Extend', [
+        codes.length ? `Only in ${andList(codes.map((c) => TERRITORY_NAMES[c.toUpperCase()] ?? c))}` : 'In every country',
+        `Reason: ${reasonText(args.reason, ExtendReasonCode.SERVICE_ISSUE_OR_OUTAGE)}`,
+      ], `Each subscriber's next charge moves ${dayCount(args.extend_by_days)} later.`);
+    }
+
+    case 'storekit__send_consumption_info': {
+      const pct = args.consumption_percentage;
+      const outcome = args.refund_preference;
+      return dialog(`Send refund details for transaction ${ending(args.transaction_id)}?`, 'Send', [
+        `Customer consented: ${args.customer_consented === true ? 'yes' : 'no'}`,
+        `Delivery: ${DELIVERY[String(args.delivery_status)] ?? String(args.delivery_status)}`,
+        // Apple's unit is milliunits of a percent: 25000 is 25%.
+        ...(pct !== undefined ? [`Used: ${Number(pct) / 1000}%`] : []),
+        `Free sample or trial before purchase: ${args.sample_content_provided ? 'yes' : 'no'}`,
+        ...(outcome !== undefined ? [`Preferred outcome: ${REFUND_PREFERENCE[String(outcome)] ?? String(outcome)}`] : []),
+      ], 'Apple weighs this when deciding the refund.');
+    }
+
+    case 'storekit__set_app_account_token':
+      return dialog(`Link transaction ${ending(args.original_transaction_id)} to an account?`, 'Link', [
+        `Account token: ${prefix(args.app_account_token)}`,
+      ], 'Apple sets this token on the purchase, replacing any it had.');
+
+    case 'storekit__finish_transaction':
+      return dialog(`Finish transaction ${ending(args.transaction_id)}?`, 'Finish', [],
+        'The App Store records that your server has finished processing it.');
+
+    case 'storekit__request_test_notification':
+      return dialog('Request a test notification?', 'Request', [],
+        "Apple sends a test notification to your server; customers aren't affected.");
+
+    case 'storekit__manage_retention_messaging':
+      return retentionDialog(args, dialog);
+
+    default:
+      return undefined;
+  }
+}
+
+function retentionDialog(
+  args: Record<string, unknown>,
+  dialog: (title: string, action: string, lines: string[], note: string) => DialogText
+): DialogText | undefined {
+  switch (args.action) {
+    case 'upload_message': {
+      const bullets = Array.isArray(args.bullet_points) ? args.bullet_points : [];
+      return dialog('Upload a retention message?', 'Upload', [
+        `Header: ${args.header}`,
+        `Body: ${args.body}`,
+        ...bullets.map((b: any) => `• ${b?.text}`),
+        ...(args.image_id ? [`Image: ${args.image_alt_text || 'no alt text'}`] : []),
+      ], 'Customers about to cancel see it once it is set as a default or picked by your realtime URL.');
+    }
+    case 'delete_message':
+      return dialog('Delete a retention message?', 'Delete', [`Message ${prefix(args.message_id)}`],
+        "A deleted message can't be restored; it would have to be uploaded again.");
+    case 'upload_image':
+      return dialog('Upload a retention image?', 'Upload', [
+        `File: ${String(args.file_path ?? '').split('/').pop()}`,
+        `Size: ${args.image_size === 'BULLET_POINT' ? 'bullet point' : 'full size'}`,
+      ], 'Customers see it only in a message that uses it.');
+    case 'delete_image':
+      return dialog('Delete a retention image?', 'Delete', [`Image ${prefix(args.image_id)}`],
+        "A deleted image can't be restored; it would have to be uploaded again.");
+    case 'set_default_message':
+      return dialog(`Set the default retention message for ${args.product_id}?`, 'Set', [
+        `Locale: ${args.locale}`,
+        `Message ${prefix(args.message_id)}`,
+      ], 'Customers about to cancel see this message by default.');
+    case 'delete_default_message':
+      return dialog(`Delete the default retention message for ${args.product_id}?`, 'Delete', [`Locale: ${args.locale}`],
+        'The message itself stays uploaded; only the default is removed.');
+    case 'set_realtime_url':
+      return dialog('Set the retention realtime URL?', 'Set', [`URL: ${args.url}`],
+        'Apple calls this URL, in Sandbox and Production, to pick a message for each customer about to cancel.');
+    case 'delete_realtime_url':
+      return dialog('Delete the retention realtime URL?', 'Delete', [],
+        'Apple stops calling your endpoint to pick a message.');
+    case 'start_performance_test':
+      return dialog('Start a performance test of the realtime URL?', 'Start', [
+        `Transaction ${ending(args.original_transaction_id)}`,
+      ], "Apple sends test requests to your realtime URL in Sandbox; customers aren't affected.");
+    default:
+      return undefined;
+  }
 }
 
 const MAX_RETENTION_IMAGE_BYTES = 10 * 1024 * 1024;

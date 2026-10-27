@@ -35,7 +35,6 @@ export interface FailureEntry {
   error: string;
 }
 
-const MAX_ARGS_CHARS = 2000;
 /** Keys whose values are credentials or link a purchase to a person: never written. */
 const SECRET_KEY = /(key|token|secret|password|credential)s?$/i;
 
@@ -49,24 +48,39 @@ const SECRET_PATH = /(hooks\.slack\.com\/services\/|discord(?:app)?\.com\/api\/w
 const maskUrls = (s: string) =>
   s.replace(SECRET_USERINFO, '$1[masked]@').replace(SECRET_PARAM, '$1[masked]').replace(SECRET_PATH, '$1[masked]');
 
-function maskValue(k: string, v: unknown): unknown {
-  if (k && SECRET_KEY.test(k) && v !== null) return '[masked]';
-  if (typeof v !== 'string') return v;
-  // A body sent as JSON text carries its secrets inside the string.
-  if (/^\s*[[{]/.test(v)) {
-    try {
-      return JSON.stringify(JSON.parse(v), maskValue);
-    } catch {
-      return '[unparsed JSON text not recorded]';
-    }
-  }
-  return maskUrls(v);
+/**
+ * Names, ids, codes, numbers and flags: what says which thing a write touched.
+ * Free text, URLs and request bodies are left out rather than masked — three
+ * review rounds each found a new way a secret hid in one (a query parameter,
+ * a URL's user info, JSON sent as text).
+ */
+const PLAIN = /^[\w.@:+-]{1,100}$/;
+const plain = (v: unknown): boolean => typeof v === 'number' || typeof v === 'boolean' || (typeof v === 'string' && PLAIN.test(v));
+
+/** A JSON:API body as what it touches: the resource type, its id and the fields it sets. */
+function bodyShape(body: unknown): unknown {
+  const data = (body as { data?: unknown })?.data;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return '[body not recorded]';
+  const d = data as { type?: unknown; id?: unknown; attributes?: object; relationships?: object };
+  return {
+    ...(plain(d.type) ? { type: d.type } : {}),
+    ...(plain(d.id) ? { id: d.id } : {}),
+    fields: [...Object.keys(d.attributes ?? {}), ...Object.keys(d.relationships ?? {})],
+  };
 }
 
-export function maskArgs(args: Record<string, unknown>): Record<string, unknown> {
-  const masked = JSON.parse(JSON.stringify(args, maskValue) ?? '{}');
-  const text = JSON.stringify(masked);
-  return text.length > MAX_ARGS_CHARS ? { truncated: text.slice(0, MAX_ARGS_CHARS) } : masked;
+export function auditArgs(args: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(args).map(([k, v]) => [
+      k,
+      SECRET_KEY.test(k) && v !== null ? '[masked]'
+        : plain(v) || v === null ? v
+        : k === 'body' && typeof v === 'object' ? bodyShape(v)
+        : Array.isArray(v) && v.length <= 50 && v.every(plain) ? v
+        : Array.isArray(v) ? `[${v.length} items not recorded]`
+        : '[not recorded]',
+    ])
+  );
 }
 
 function append(file: string, entry: object, env: NodeJS.ProcessEnv): void {
@@ -84,7 +98,7 @@ function append(file: string, entry: object, env: NodeJS.ProcessEnv): void {
 const maskText = (text?: string) => (text === undefined ? text : maskUrls(text));
 
 export function logWrite(entry: AuditEntry, env: NodeJS.ProcessEnv = process.env): void {
-  append('audit.jsonl', { ...entry, args: maskArgs(entry.args), error: maskText(entry.error) }, env);
+  append('audit.jsonl', { ...entry, args: auditArgs(entry.args), error: maskText(entry.error) }, env);
 }
 
 export function logFailure(entry: FailureEntry, env: NodeJS.ProcessEnv = process.env): void {

@@ -26,7 +26,7 @@ describe('risk manifest', () => {
       const op = OPERATIONS.find((o) => o.name === `${name}.create`)!;
       expect(op.risk).toBe('release');
       const preview = await buildWritePreview(`${name}__create`, op, { body: { data: { type: 'x' } } });
-      expect(preview.message).toContain('A draft version cannot be deleted.');
+      expect(preview.message).toContain('Apple keeps this draft; it can’t be deleted.');
     }
     expect(ASK_BY_DEFAULT.has('release__submit_items')).toBe(true);
   });

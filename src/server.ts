@@ -16,8 +16,8 @@ import {
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from './core/confirm.js';
-import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits } from './core/native-confirm.js';
+import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName, type WritePreview } from './core/confirm.js';
+import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits, type DialogText } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { MACRO_TOOLS } from './tools/catalog.js';
@@ -27,19 +27,20 @@ import {
   METADATA_I18N_WRITE_TOOLS,
   executeMetadataI18nTool,
 } from './tools/metadata-i18n.js';
-import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService, storekitRisk } from './storekit/index.js';
+import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService, storekitDialog, storekitRisk } from './storekit/index.js';
 import {
   PRICING_TOOL_NAMES,
   executePricingTool,
   buildPricingPreview,
+  pricingDialog,
 } from './tools/pricing.js';
 import { buildMediaPreview, executeMediaTool, MEDIA_TOOL_NAMES, mediaRisk } from './tools/screenshots.js';
 import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
 import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
-import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview, IMAGE_CONTENT, type ImageContent } from './tools/testflight.js';
+import { RELEASE_TOOL_NAMES, executeReleaseTool, releaseDialog, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
+import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview, testflightDialog, IMAGE_CONTENT, type ImageContent } from './tools/testflight.js';
 import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
@@ -78,6 +79,17 @@ function progressSender(req: { _meta?: { progressToken?: string | number }; noti
   // A lost progress note must not fail the call it reports on.
   return (progress: number, total: number, message: string) =>
     void req.notify({ method: 'notifications/progress', params: { progressToken, progress, total, message } }).catch(() => {});
+}
+
+/**
+ * A tool's own dialog text, shown in the form too: the generic preview lists
+ * only scalar arguments and would leave out a message body or a country list.
+ */
+function withDialog(preview: WritePreview, dialog: DialogText | undefined): WritePreview {
+  if (!dialog) return preview;
+  const head = preview.message.split('\n')[0];
+  const confirm = preview.strong ? ['', 'Type CONFIRM in the field below to proceed.'] : [];
+  return { ...preview, dialog, message: [head, '', dialog.title, dialog.body, ...confirm].join('\n') };
 }
 
 /** Configurable response ceiling (chars of pretty-printed JSON). */
@@ -696,10 +708,10 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           const { planFingerprint: _internalPlanFingerprint, ...shown } = shownWithPlan;
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
-              { message: buildPricingPreview(shown, name), strong: true }
+              { message: buildPricingPreview(shown, name), strong: true, dialog: pricingDialog(name, shown) }
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
-              { message: buildTestflightPreview(shown), strong: true }
+              { message: buildTestflightPreview(shown), strong: true, dialog: testflightDialog(shown) }
             : mediaPreview
             ? mediaPreview
             : op
@@ -707,18 +719,25 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             : macroOffered(name)
             ? // Macros carry readable arguments; review item references still
               // use the same bounded name resolvers as raw writes.
-              await buildWritePreview(
-                name,
-                { method: 'POST', path: `${name} (macro)`, risk },
-                shown,
-                config.credentials.keyId,
-                http
-              )
-            : await buildWritePreview(
-                name,
-                // StoreKit tools live outside the spec and carry their own risk.
-                { method: 'POST', path: 'App Store Server API', risk },
-                shown
+              {
+                // The form keeps its item list; the dialog says it in words.
+                ...(await buildWritePreview(
+                  name,
+                  { method: 'POST', path: `${name} (macro)`, risk },
+                  shown,
+                  config.credentials.keyId,
+                  http
+                )),
+                dialog: releaseDialog(name, shown),
+              }
+            : withDialog(
+                await buildWritePreview(
+                  name,
+                  // StoreKit tools live outside the spec and carry their own risk.
+                  { method: 'POST', path: 'App Store Server API', risk },
+                  shown
+                ),
+                storekitDialog(name, shown, { environment: config.storekit?.environment === 'Sandbox' ? 'Sandbox' : 'Production' })
               );
           if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
@@ -727,7 +746,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const dialog = preview.dialog ?? dialogText(what, preview.message);
+          const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message);
           if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
             // Not to a dialog-first client's form: it would be declined unseen.
             if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
