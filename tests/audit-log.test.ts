@@ -56,10 +56,12 @@ describe('maskArgs', () => {
       a: 'https://x.test/h?api_key=abc&page=2',
       b: 'https://s3.test/f?X-Amz-Signature=abc&X-Amz-Security-Token=def',
       c: 'https://hooks.slack.com/services/T0/B0/xyz',
+      d: 'https://bot:s3cret@hooks.example.com/retention',
     })).toEqual({
       a: 'https://x.test/h?api_key=[masked]&page=2',
       b: 'https://s3.test/f?X-Amz-Signature=[masked]&X-Amz-Security-Token=[masked]',
       c: 'https://hooks.slack.com/services/[masked]',
+      d: 'https://bot:[masked]@hooks.example.com/retention',
     });
   });
 

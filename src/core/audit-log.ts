@@ -41,10 +41,13 @@ const SECRET_KEY = /(key|token|secret|password|credential)s?$/i;
 
 /** A credential carried inside a URL: `?token=…`, `&api_key=…`, `&X-Amz-Signature=…`. */
 const SECRET_PARAM = /([?&][\w-]*(?:token|key|secret|sig|signature|password|credential|auth)[\w-]*=)[^&#\s]+/gi;
+/** A password in a URL's user info: `https://bot:secret@host/…`. */
+const SECRET_USERINFO = /(\b[a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:)[^/\s@]+@/gi;
 /** Webhook URLs whose path is the secret (Slack, Discord). */
 const SECRET_PATH = /(hooks\.slack\.com\/services\/|discord(?:app)?\.com\/api\/webhooks\/)[^\s"?#]+/gi;
 
-const maskUrls = (s: string) => s.replace(SECRET_PARAM, '$1[masked]').replace(SECRET_PATH, '$1[masked]');
+const maskUrls = (s: string) =>
+  s.replace(SECRET_USERINFO, '$1[masked]@').replace(SECRET_PARAM, '$1[masked]').replace(SECRET_PATH, '$1[masked]');
 
 export function maskArgs(args: Record<string, unknown>): Record<string, unknown> {
   const masked = JSON.parse(

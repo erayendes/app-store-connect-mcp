@@ -804,7 +804,7 @@ export class StoreKitService {
         throw new AscApiError(
           `App Store Server API returned ${err.httpStatusCode}` +
             (err.apiError != null ? ` (error ${err.apiError})` : '') +
-            (err.errorMessage ? `: ${err.errorMessage}` : '.') +
+            (err.errorMessage ? `: ${err.errorMessage.replace(/[.!?]?$/, '.')}` : '.') +
             ` App: ${app.bundleId}.` +
             // Both seen live: the key was fine, the app or the account was not there yet.
             (err.httpStatusCode === 401 && this.envFor(args.environment) === 'Production'
@@ -1033,6 +1033,10 @@ export class StoreKitService {
   }
 
   private async retentionMessaging(client: AppStoreServerAPIClient, args: Record<string, any>): Promise<unknown> {
+    // One without the other would skip the default message without a word.
+    if (Boolean(args.product_id) !== Boolean(args.locale)) {
+      throw new AscApiError('The default message needs both product_id and locale.', 0);
+    }
     // Apple answers 404 for a realtime URL or default message never set; that is "none", not a failure.
     const orNull = <T>(p: Promise<T>) =>
       p.catch((err) => {

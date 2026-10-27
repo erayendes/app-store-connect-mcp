@@ -114,7 +114,7 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
           },
         },
       },
-      required: ['app', 'ready', 'blocking', 'warnings', 'checked'],
+      required: ['app', 'ready', 'blocking', 'warnings', 'checked', 'manualChecks'],
     },
     annotations: { readOnlyHint: true },
   },

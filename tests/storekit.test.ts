@@ -272,6 +272,16 @@ describe('what a StoreKit failure says', () => {
       .rejects.toThrow(/App: com\.example\.app\.$/);
   });
 
+  it('refuses half of the default-message pair instead of skipping it', async () => {
+    const svc = new StoreKitService(config, { get: async () => ({ data: [] }) } as never);
+    await expect((svc as any).retentionMessaging({}, { product_id: 'pro.monthly' })).rejects.toThrow(/needs both product_id and locale/);
+  });
+
+  it('ends Apple\'s message with one full stop before naming the app', async () => {
+    await expect(fail(new APIException(400, 4000006, 'Invalid request')).execute('storekit__get_notification_history', { environment: 'Sandbox' }))
+      .rejects.toThrow(/returned 400 \(error 4000006\): Invalid request\. App: com\.example\.app\.$/);
+  });
+
   it('says a retention messaging 404 may mean the feature is not enabled', async () => {
     await expect(fail(new APIException(404)).execute('storekit__get_retention_messaging', { environment: 'Sandbox' }))
       .rejects.toThrow(/Retention messaging may not be enabled for this account/);
