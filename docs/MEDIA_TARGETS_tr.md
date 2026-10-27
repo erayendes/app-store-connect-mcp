@@ -129,8 +129,10 @@ sequenceDiagram
   participant UP as Apple'ın yükleme sunucusu
   AI->>H: media__upload(dosya, hedef)
   H->>H: Dosyayı kontrol eder: tür, boyut, SHA-256 ve MD5
-  H->>Siz: Onay ister (müşterinin gördüğü görseller PUBLIC seviyesinde)
-  Siz-->>H: Onaylar
+  opt Bir dosyanın yerine yükleme (DESTRUCTIVE seviyesinde)
+    H->>Siz: CONFIRM yazmanızı ister
+    Siz-->>H: CONFIRM yazar
+  end
   H->>ASC: Dosya için yer ayırır
   ASC-->>H: Bayt aralıkları ve nereye gönderileceği
   loop her aralık

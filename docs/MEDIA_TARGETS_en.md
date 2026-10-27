@@ -121,8 +121,10 @@ sequenceDiagram
   participant UP as Apple's upload host
   AI->>H: media__upload(file, target)
   H->>H: Checks the file: type, size, SHA-256 and MD5
-  H->>You: Asks to confirm (customer-facing images are PUBLIC-level)
-  You-->>H: Approves
+  opt Replacing a file (DESTRUCTIVE-level)
+    H->>You: Asks you to type CONFIRM
+    You-->>H: Types CONFIRM
+  end
   H->>ASC: Reserve the file
   ASC-->>H: Byte ranges and where to send them
   loop each range
