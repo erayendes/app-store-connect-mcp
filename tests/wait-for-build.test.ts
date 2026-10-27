@@ -50,6 +50,31 @@ describe('testflight__wait_for_build', () => {
     expect(http.collect).toHaveBeenCalledTimes(1);
   });
 
+  it('reports progress on every poll it waits through', async () => {
+    let now = Date.parse('2026-10-27T12:00:00Z');
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const progress = vi.fn();
+    await executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' },
+      { http: fakeHttp([undefined, 'PROCESSING', 'VALID']), sleep: async (ms) => { now += ms; }, progress });
+    expect(progress.mock.calls).toEqual([[0, 300, 'Build 42 is not listed yet.'], [20, 300, 'Build 42 is PROCESSING.']]);
+  });
+
+  it('leaves no abort listener behind on its real timer, and does not sleep on an aborted signal', async () => {
+    vi.useFakeTimers();
+    try {
+      const controller = new AbortController();
+      const add = vi.spyOn(controller.signal, 'addEventListener');
+      const remove = vi.spyOn(controller.signal, 'removeEventListener');
+      const http = fakeHttp(['PROCESSING', 'VALID']);
+      const done = executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal });
+      await vi.advanceTimersByTimeAsync(20_000);
+      await expect(done).resolves.toMatchObject({ state: 'VALID' });
+      expect(remove).toHaveBeenCalledTimes(add.mock.calls.length);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('refuses a wait longer than fifteen minutes', async () => {
     await expect(run(fakeHttp(['VALID']), { max_minutes: 30 })).rejects.toThrow(/from 1 to 15/);
   });

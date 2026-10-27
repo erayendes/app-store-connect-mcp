@@ -109,6 +109,15 @@ describe('pricing__setup_subscription', () => {
     expect(err.status).toBe(409);
   });
 
+  it('refuses a three-letter code Apple does not sell in, under dry-run too, before writing anything', async () => {
+    for (const dryRun of [false, true]) {
+      const { http, posts } = fakeHttp();
+      await expect(executePricingTool('pricing__setup_subscription', { ...args, territories: ['TUR', 'EUR'] }, { http, dryRun }))
+        .rejects.toThrow(/no territory called EUR\. Nothing was created/);
+      expect(posts).toEqual([]);
+    }
+  });
+
   it('refuses two-letter countries before writing anything', async () => {
     const { http, posts } = fakeHttp();
     await expect(executePricingTool('pricing__setup_subscription', { ...args, territory: 'TR' }, { http, dryRun: false })).rejects.toThrow(/three letters/);

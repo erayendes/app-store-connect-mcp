@@ -100,7 +100,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | Değişken | Ne için |
 |:--|:--|
 | `ASC_CONFIG_DIR` | Setup'ın kayıtlı ayarlarının yeri (varsayılan `~/.config/asc-mcp`) |
-| `ASC_STATE_DIR` | Heimdall'ın yerelde tuttuğu kayıtların klasörü (varsayılan: `ASC_CONFIG_DIR` ile aynı klasör): `audit.jsonl`, istenen her yazma için bir satır — ne zaman, hangi araç, nasıl onayladığınız, Apple'ın cevabı; `failures.jsonl`, Apple'ın reddettiği her çağrı ve `x-request-id`'si; `report-cache/`, bitmiş dönemlerin satış ve finans raporları. Hiçbiri bilgisayarınızdan çıkmaz. |
+| `ASC_STATE_DIR` | Heimdall'ın yerelde tuttuğu kayıtların klasörü (varsayılan: `ASC_CONFIG_DIR` ile aynı klasör): `audit.jsonl`, yaptığı ya da sizin reddettiğiniz her yazma için bir satır (dry-run çağrıları kaydedilmez) — ne zaman, hangi araç, nasıl onayladığınız, Apple'ın cevabı; `failures.jsonl`, Apple'ın reddettiği her çağrı ve `x-request-id`'si; `report-cache/`, bitmiş dönemlerin satış ve finans raporları. Hiçbiri bilgisayarınızdan çıkmaz. |
 | `ASC_BASE_URL` | İstekleri yerel bir test sunucusu gibi başka bir adrese gönderir. Apple için boş bırakın. |
 
 ## Anahtarı vermenin üç yolu

@@ -30,6 +30,13 @@ describe('StoreKit payload verification', () => {
     await expect((service as any).decode(['a.b.c'], 'Sandbox', false)).rejects.toThrow(/failed signature verification/);
   });
 
+  it('verifies the transactions an order lookup returns, instead of handing back envelopes', async () => {
+    const service = new StoreKitService(base);
+    const client = { lookUpOrderId: async () => ({ status: 0, signedTransactions: ['a.b.c'] }) };
+    await expect((service as any).run('storekit__lookup_order', { order_id: 'MX1', environment: 'Sandbox' }, client))
+      .rejects.toThrow(/failed signature verification/);
+  });
+
   it('ships Apple Root CA - G3, byte for byte', () => {
     // Apple's published SHA-256 fingerprint of AppleRootCA-G3.cer.
     expect(createHash('sha256').update(APPLE_ROOT_CA_G3).digest('hex')).toBe(

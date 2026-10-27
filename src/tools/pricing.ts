@@ -2272,6 +2272,12 @@ async function createSubscription(args: Record<string, unknown>, ctx: PricingCon
     territories ? `sell in ${territories.length} countries` : 'sell in every country, new ones included',
     `price ${normalizePrice(String(args.price))} in ${String(args.territory).toUpperCase()}, derived by Apple elsewhere`,
   ];
+  // Checked before the first write: a group, a product ID and a draft version cannot be taken back.
+  const known: string[] = ((await ctx.http.get('/v1/territories', { limit: 200 })) as any).data.map((t: any) => String(t.id));
+  const unknown = [String(args.territory).trim().toUpperCase(), ...(territories ?? [])].filter((t) => !known.includes(t));
+  if (unknown.length) {
+    throw new AscApiError(`Apple sells in no territory called ${[...new Set(unknown)].join(', ')}. Nothing was created.`, 0);
+  }
   if (ctx.dryRun) return { dryRun: true, app: `${app.name} (${app.id})`, plan };
 
   const done: string[] = [];
@@ -2337,7 +2343,7 @@ async function createSubscription(args: Record<string, unknown>, ctx: PricingCon
     }));
   }
 
-  const sellIn = territories ?? ((await ctx.http.get('/v1/territories', { limit: 200 })) as any).data.map((t: any) => String(t.id));
+  const sellIn = territories ?? known;
   await step(`on sale in ${sellIn.length} countries`, () => ctx.http.post('/v1/subscriptionPlanAvailabilities', {
     data: {
       type: 'subscriptionPlanAvailabilities',
@@ -2356,7 +2362,13 @@ async function createSubscription(args: Record<string, unknown>, ctx: PricingCon
       ...(territories ? { only_territories: territories } : {}),
     }, ctx);
     // equalizePrice reports a stop part-way as ok: false rather than throwing.
-    if (out?.ok === false) throw new AscApiError(`${out.note ?? out.error ?? 'pricing stopped part-way'}`, 0);
+    if (out?.ok === false) {
+      throw new AscApiError(
+        `${out.error ?? 'pricing stopped'} at ${out.failedAt}; priced so far: ${out.written?.length ? out.written.join(', ') : 'none'}. ` +
+          'Finish with pricing__equalize_price and the same anchor price; a price already set is harmless to write again',
+        0
+      );
+    }
     return out;
   });
 

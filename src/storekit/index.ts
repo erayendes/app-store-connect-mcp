@@ -872,7 +872,8 @@ export class StoreKitService {
 
       case 'storekit__lookup_order': {
         const res = await client.lookUpOrderId(args.order_id);
-        return res;
+        // Verified like every other transaction read: the decoded list is what can be taken as fact.
+        return { status: res.status, transactions: await this.decode(res.signedTransactions ?? [], this.envFor(args.environment), false, args._app), verified: true };
       }
 
       case 'storekit__get_notification_history': {

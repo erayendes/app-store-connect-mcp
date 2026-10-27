@@ -207,7 +207,7 @@ interface Feedback {
 export async function executeTestflightTool(
   name: string,
   args: Record<string, unknown>,
-  ctx: { http: AscHttpClient; dryRun?: boolean; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal }
+  ctx: { http: AscHttpClient; dryRun?: boolean; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal; progress?: Progress }
 ): Promise<unknown> {
   if (name === 'testflight__assign_build_to_groups') return assignBuildToGroups(args, ctx);
   if (name === 'testflight__wait_for_build') return waitForBuild(args, ctx);
@@ -396,9 +396,12 @@ export function buildTestflightPreview(args: Record<string, unknown>): string {
   ].join('\n');
 }
 
+/** Reports how long a wait has run, so a client that times out silent calls keeps this one open. */
+export type Progress = (seconds: number, totalSeconds: number, message: string) => void;
+
 async function waitForBuild(
   args: Record<string, unknown>,
-  ctx: { http: AscHttpClient; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal }
+  ctx: { http: AscHttpClient; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal; progress?: Progress }
 ): Promise<unknown> {
   if (typeof args.app !== 'string' || !args.app.trim()) throw new AscApiError('"app" is required.', 0);
   if (typeof args.build !== 'string' || !args.build.trim()) throw new AscApiError('"build" is required.', 0);
@@ -408,8 +411,11 @@ async function waitForBuild(
   }
   // A cancelled call stops polling instead of running on for up to fifteen minutes.
   const sleep = ctx.sleep ?? ((ms: number) => new Promise<void>((done) => {
-    const timer = setTimeout(done, ms);
-    ctx.signal?.addEventListener('abort', () => { clearTimeout(timer); done(); }, { once: true });
+    if (ctx.signal?.aborted) return done();
+    const stop = () => { clearTimeout(timer); done(); };
+    // Removed when the timer fires: fifteen minutes of polls would otherwise pile listeners on one signal.
+    const timer = setTimeout(() => { ctx.signal?.removeEventListener('abort', stop); done(); }, ms);
+    ctx.signal?.addEventListener('abort', stop, { once: true });
   }));
   const app = await resolveApp(ctx.http, args.app);
   const byId = /[a-z-]/i.test(args.build);
@@ -437,6 +443,7 @@ async function waitForBuild(
       return { ...identity, state: state ?? 'NOT_LISTED_YET', ready: false, waitedSeconds, timedOut: true,
         note: state ? 'Still processing. Call again to keep waiting.' : 'Apple has not listed this build yet; that can take several minutes after an upload. Call again.' };
     }
+    ctx.progress?.(waitedSeconds, minutes * 60, state ? `Build ${args.build} is ${state}.` : `Build ${args.build} is not listed yet.`);
     await sleep(POLL_MS);
   }
 }

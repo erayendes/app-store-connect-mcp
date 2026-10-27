@@ -39,13 +39,17 @@ const MAX_ARGS_CHARS = 2000;
 /** Keys whose values are credentials or link a purchase to a person: never written. */
 const SECRET_KEY = /(key|token|secret|password|credential)s?$/i;
 
-/** A credential carried inside a URL: `?token=…`, `&sig=…`. */
-const SECRET_PARAM = /([?&](?:[a-z_]*token|key|secret|sig|signature|password)=)[^&#\s]+/gi;
+/** A credential carried inside a URL: `?token=…`, `&api_key=…`, `&X-Amz-Signature=…`. */
+const SECRET_PARAM = /([?&][\w-]*(?:token|key|secret|sig|signature|password|credential|auth)[\w-]*=)[^&#\s]+/gi;
+/** Webhook URLs whose path is the secret (Slack, Discord). */
+const SECRET_PATH = /(hooks\.slack\.com\/services\/|discord(?:app)?\.com\/api\/webhooks\/)[^\s"?#]+/gi;
+
+const maskUrls = (s: string) => s.replace(SECRET_PARAM, '$1[masked]').replace(SECRET_PATH, '$1[masked]');
 
 export function maskArgs(args: Record<string, unknown>): Record<string, unknown> {
   const masked = JSON.parse(
     JSON.stringify(args, (k, v) =>
-      k && SECRET_KEY.test(k) && v !== null ? '[masked]' : typeof v === 'string' ? v.replace(SECRET_PARAM, '$1[masked]') : v
+      k && SECRET_KEY.test(k) && v !== null ? '[masked]' : typeof v === 'string' ? maskUrls(v) : v
     ) ?? '{}'
   );
   const text = JSON.stringify(masked);
@@ -64,7 +68,7 @@ function append(file: string, entry: object, env: NodeJS.ProcessEnv): void {
 }
 
 /** An error message can quote the URL it failed on. */
-const maskText = (text?: string) => text?.replace(SECRET_PARAM, '$1[masked]');
+const maskText = (text?: string) => (text === undefined ? text : maskUrls(text));
 
 export function logWrite(entry: AuditEntry, env: NodeJS.ProcessEnv = process.env): void {
   append('audit.jsonl', { ...entry, args: maskArgs(entry.args), error: maskText(entry.error) }, env);

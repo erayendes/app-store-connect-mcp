@@ -71,6 +71,15 @@ import {
   DEFAULT_MAX_RESPONSE_CHARS,
 } from './core/shape.js';
 
+/** Progress notifications for a long tool call, when the client asked for them with a progressToken. */
+function progressSender(req: { _meta?: { progressToken?: string | number }; notify: (n: { method: 'notifications/progress'; params: Record<string, unknown> }) => Promise<void> }) {
+  const progressToken = req._meta?.progressToken;
+  if (progressToken === undefined) return undefined;
+  // A lost progress note must not fail the call it reports on.
+  return (progress: number, total: number, message: string) =>
+    void req.notify({ method: 'notifications/progress', params: { progressToken, progress, total, message } }).catch(() => {});
+}
+
 /** Configurable response ceiling (chars of pretty-printed JSON). */
 function maxResponseChars(): number {
   const raw = Number(process.env.ASC_MAX_RESPONSE_CHARS);
@@ -851,7 +860,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint,
               requireApprovedPlan: !config.dryRun })
           : TESTFLIGHT_TOOL_NAMES.has(name)
-          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun, signal: ctx.mcpReq.signal })
+          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun, signal: ctx.mcpReq.signal, progress: progressSender(ctx.mcpReq) })
           : await executeMediaTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple

@@ -100,7 +100,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | Variable | What it's for |
 |:--|:--|
 | `ASC_CONFIG_DIR` | Where setup's saved settings live (default `~/.config/asc-mcp`) |
-| `ASC_STATE_DIR` | Where Heimdall keeps what it records locally (default: the same folder as `ASC_CONFIG_DIR`): `audit.jsonl`, one line per write it was asked to make — when, which tool, how you confirmed it, what Apple answered; `failures.jsonl`, every call Apple refused, with its `x-request-id`; and `report-cache/`, sales and finance reports for finished periods. Nothing leaves your machine. |
+| `ASC_STATE_DIR` | Where Heimdall keeps what it records locally (default: the same folder as `ASC_CONFIG_DIR`): `audit.jsonl`, one line per write it carried out or you turned down (dry-run calls are not recorded) — when, which tool, how you confirmed it, what Apple answered; `failures.jsonl`, every call Apple refused, with its `x-request-id`; and `report-cache/`, sales and finance reports for finished periods. Nothing leaves your machine. |
 | `ASC_BASE_URL` | Send requests to another address, such as a local test server. Leave unset for Apple. |
 
 ## Three ways to give the key

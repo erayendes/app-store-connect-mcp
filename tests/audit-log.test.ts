@@ -51,6 +51,18 @@ describe('maskArgs', () => {
     });
   });
 
+  it('masks credentials named any way inside a URL, and webhook URLs whose path is the secret', () => {
+    expect(maskArgs({
+      a: 'https://x.test/h?api_key=abc&page=2',
+      b: 'https://s3.test/f?X-Amz-Signature=abc&X-Amz-Security-Token=def',
+      c: 'https://hooks.slack.com/services/T0/B0/xyz',
+    })).toEqual({
+      a: 'https://x.test/h?api_key=[masked]&page=2',
+      b: 'https://s3.test/f?X-Amz-Signature=[masked]&X-Amz-Security-Token=[masked]',
+      c: 'https://hooks.slack.com/services/[masked]',
+    });
+  });
+
   it('masks a secret list and a credential inside a URL', () => {
     expect(maskArgs({ secrets: ['a', 'b'], url: 'https://example.com/hook?token=abc&x=1' })).toEqual({
       secrets: '[masked]', url: 'https://example.com/hook?token=[masked]&x=1',
