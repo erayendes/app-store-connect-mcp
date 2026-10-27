@@ -75,7 +75,7 @@ describe('advertised counts', () => {
     ['README.md', /(\d+) become tools, and (\d+) hand-written ones join them: (\d+) tools in all/, [COUNTS.placed, COUNTS.handWritten, COUNTS.tools]],
     ['docs/README_tr.md', /\*\*(\d+) profil altında (\d+) alt profil ve (\d+) araç\*\*/, [COUNTS.profiles, COUNTS.subProfiles, COUNTS.tools]],
     ['docs/README_tr.md', /(\d+) API operasyonu/, [COUNTS.listed]],
-    ['docs/README_tr.md', /değiştirdiği (\d+) tanesini.*?gerekmediği (\d+) tanesini.*?Kalan (\d+) işlemden/, [COUNTS.deprecated, COUNTS.sheetDropped, COUNTS.operations]],
+    ['docs/README_tr.md', /değiştirdiği (\d+) tanesini.*?gerekmeyen (\d+) tanesini.*?Kalan (\d+) işlemden/, [COUNTS.deprecated, COUNTS.sheetDropped, COUNTS.operations]],
     ['docs/README_tr.md', /işlemden (\d+)'.{0,40}elle yazılmış (\d+) araç ekleniyor: toplam (\d+) araç/, [COUNTS.placed, COUNTS.handWritten, COUNTS.tools]],
     ['AGENTS.md', /serves (\d+) tools across (\d+) profiles: (\d+) generated from Apple's (\d+) operations \(the (\d+) that/, [COUNTS.tools, COUNTS.profiles, COUNTS.placed, COUNTS.listed, COUNTS.deprecated]],
     ['AGENTS.md', /and (\d+) hand-written\./, [COUNTS.handWritten]],

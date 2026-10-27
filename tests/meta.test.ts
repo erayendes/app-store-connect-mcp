@@ -69,7 +69,7 @@ describe('asc__search_tools speaks English and says so', () => {
  */
 describe('asc__search_tools finds the macros', () => {
   const ctx = (): any => ({
-    registry: { get: () => undefined, size: 0, unloadedDomains: () => [] },
+    registry: { get: () => undefined, size: 0 },
     http: { limiter: { status: () => ({}) } },
     tokens: { status: () => ({}) },
     readOnly: false,
@@ -80,6 +80,12 @@ describe('asc__search_tools finds the macros', () => {
     ((await executeMetaTool('asc__search_tools', { query, limit }, ctx())) as any).matches.map(
       (m: any) => m.tool
     );
+
+  // Served nowhere, so naming a server for it would be a dead end.
+  it('points a raw operation a macro replaced at that macro', async () => {
+    const res: any = await executeMetaTool('asc__search_tools', { query: 'app_clip_header_images.create', limit: 50 }, ctx());
+    expect(res.matches.find((m: any) => m.tool === 'app_clip_header_images.create')).toMatchObject({ loaded: false, useInstead: 'media__upload' });
+  });
 
   it('ranks the one-call tool above the chain it replaces', async () => {
     expect(await search('change subscription price')).toContain('pricing__set_subscription_price');
@@ -230,7 +236,7 @@ describe('short tokens do not match mid-word', () => {
  */
 describe('asc__status check_capabilities', () => {
   const baseCtx = (http: any): any => ({
-    registry: { get: () => undefined, size: 0, unloadedDomains: () => [] },
+    registry: { get: () => undefined, size: 0 },
     http,
     tokens: { status: () => ({}) },
     readOnly: false,

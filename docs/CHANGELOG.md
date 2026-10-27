@@ -310,7 +310,7 @@ Aynı araçlar artık App Store Connect'teki diğer görselleri ve dosyaları da
 
 **`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
 
-**Pakette yalnızca kullanılabilenler var.** Apple'ın kullanımdan kaldırdığı ya da yenisiyle değiştirdiği 185 işlem artık pakete girmiyor; `--include-deprecated` de kalktı. Başka bir işlemi öbür taraftan tekrarlayan ya da hiçbir işin gerekmediği 19 işlem de çıktı. Heimdall artık her zaman bir profille çalışıyor: `--domains` ve profil verilmeden açılan birleşik sunucu kalktı. Profilsiz başlatılan bir sunucu, yapay zekâya setup'ı çalıştırmasını ve o kaydı silmesini söyleyen tek bir araç gösteriyor.
+**Pakette yalnızca kullanılabilenler var.** Apple'ın kullanımdan kaldırdığı ya da yenisiyle değiştirdiği 185 işlem artık pakete girmiyor; `--include-deprecated` de kalktı. Başka bir işlemi öbür taraftan tekrarlayan ya da hiçbir işte gerekmeyen 19 işlem de çıktı. Heimdall artık her zaman bir profille çalışıyor: `--domains` ve profil verilmeden açılan birleşik sunucu kalktı. Profilsiz başlatılan bir sunucu, yapay zekâya setup'ı çalıştırmasını ve o kaydı silmesini söyleyen tek bir araç gösteriyor.
 
 **Onaylar Claude Code'da size ulaşıyor.** Claude Code, Heimdall'ın onay formunu gösterebildiğini söylüyor; ama masaüstündeki Code sekmesi formu göstermeden reddediyordu ve riskli değişiklikler sessizce başarısız oluyordu. Heimdall artık Mac'te Claude Code'a kendi penceresiyle soruyor; yapay zekâ bu pencereyi ne görebiliyor ne de cevaplayabiliyor.
 

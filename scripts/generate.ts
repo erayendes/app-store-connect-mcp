@@ -521,14 +521,16 @@ function main(): void {
         droppedTwins++;
         continue;
       }
+      // Checked first, so an operation the sheet drops still counts as the
+      // sheet's when Apple later deprecates it.
+      if (sheetDropped.has(toolNameFrom(op.operationId, method))) {
+        droppedBySheet.add(toolNameFrom(op.operationId, method));
+        continue;
+      }
       // Deprecated by Apple, or retired in its release notes before the spec
       // caught up (spec/deprecated-overrides.json): never served, so not built.
       if (op.deprecated || overrideIds.has(op.operationId)) {
         droppedDeprecated++;
-        continue;
-      }
-      if (sheetDropped.has(toolNameFrom(op.operationId, method))) {
-        droppedBySheet.add(toolNameFrom(op.operationId, method));
         continue;
       }
 

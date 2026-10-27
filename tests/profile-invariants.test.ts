@@ -108,7 +108,7 @@ describe('reachability — every sub-profile reaches its own resources from an a
    * id anyone needs to find: the create response is the end of it.
    */
   const collectionOf = (resource: string): string | undefined => {
-    const ops = OPERATIONS.filter((o) => o.name.startsWith(`${resource}.`) && !o.deprecated);
+    const ops = OPERATIONS.filter((o) => o.name.startsWith(`${resource}.`));
     const byId = ops.find((o) => o.path.split('/')[3] === '{id}');
     return byId ? norm(byId.path.split('/')[2]) : undefined;
   };
@@ -174,7 +174,7 @@ describe('reachability — every sub-profile reaches its own resources from an a
 
   it('treats as include-only only what no read returns', () => {
     // A read that returns ids, not one that takes them: `/v1/X/{id}` is neither.
-    const producers = OPERATIONS.filter((o) => !o.deprecated && !o.path.endsWith('{id}')).map((o) => o.name);
+    const producers = OPERATIONS.filter((o) => !o.path.endsWith('{id}')).map((o) => o.name);
     const returned = new Set(readCollections(producers));
     expect(INCLUDE_ONLY.filter((c) => returned.has(c))).toEqual([]);
   });
@@ -490,10 +490,9 @@ describe('server.json stays in step with the profiles', () => {
   );
 
   it('describes the profile argument at all', () => {
-    // Without it an installer runs the server with no profile and serves the
-    // default working set, which is the one thing the product is not about.
+    // Without one the server serves only the setup tombstone, so an installer must ask for it.
     expect(profileArg, 'server.json declares no profile argument').toBeTruthy();
-    expect(profileArg.isRequired).toBe(false);
+    expect(profileArg.isRequired).toBe(true);
   });
 
   it('names every profile, and invents none', () => {

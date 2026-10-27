@@ -22,8 +22,8 @@
         {
           "type": "positional",
           "valueHint": "profile",
-          "description": "Which slice of App Store Connect to serve. One of general, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets — plus core (app lookup, tool search, screenshots), which runs next to them, or add --with-core to fold it into one server. Narrow further with a colon — monetization:subscription-offers is 17 tools instead of 152. Omit it to serve the default working set, which is larger.",
-          "isRequired": false
+          "description": "Which slice of App Store Connect to serve. One of general, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets — plus core (app lookup, tool search, screenshots), which runs next to them, or add --with-core to fold it into one server. Narrow further with a colon — monetization:subscription-offers is 17 tools instead of 152. Required: without one the server only tells the agent to run setup.",
+          "isRequired": true
         }
       ],
       "environmentVariables": [

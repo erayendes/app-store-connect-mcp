@@ -4,11 +4,10 @@
  */
 import type { McpToolDefinition } from '../core/registry.js';
 import { ToolRegistry } from '../core/registry.js';
-import { DOMAIN_DESCRIPTIONS } from '../generated/domain-info.js';
 import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
 import { MACRO_TOOLS } from './catalog.js';
-import { PROFILES, type SubProfile } from '../profiles.js';
+import { MACRO_COVERED, PROFILES, type SubProfile } from '../profiles.js';
 import { PACKAGE, serverName } from '../clients.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
@@ -18,9 +17,9 @@ export const META_TOOLS: McpToolDefinition[] = [
   {
     name: 'asc__discover_domains',
     description:
-      'List what this server can reach and what it cannot: in profile mode every profile ' +
-      'and sub-profile that exists, its server name, and how many tools each holds; ' +
-      'otherwise the tool domains. Use this when a capability you need is not in the tool list.',
+      'List what this server can reach and what it cannot: every profile and sub-profile ' +
+      'that exists, its server name, and how many tools each holds. Use this when a ' +
+      'capability you need is not in the tool list.',
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true },
   },
@@ -490,7 +489,10 @@ export async function executeMetaTool(
         endpoint: `${op.method} ${op.path}`,
         description: op.description,
         loaded: Boolean(ctx.registry.get(op.name)),
-        ...homeOf((s) => s.operations.includes(op.name), ctx.ownProfile),
+        // Served nowhere: the macro that replaced it is what to call.
+        ...(MACRO_COVERED[op.name]
+          ? { useInstead: MACRO_COVERED[op.name] }
+          : homeOf((s) => s.operations.includes(op.name), ctx.ownProfile)),
       }));
 
       // Neither StoreKit nor the macros come from the OpenAPI spec, so both are

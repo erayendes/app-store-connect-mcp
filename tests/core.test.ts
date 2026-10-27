@@ -313,7 +313,7 @@ describe('ToolRegistry', () => {
       operations: OPERATIONS.map((o) => o.name),
       readOnly: false,
     });
-    // Profile-less "all" still hides operations replaced by media macros.
+    // Every operation still hides the ones replaced by media macros.
     expect(registry.size).toBe(OPERATIONS.length - Object.keys(MACRO_COVERED).length);
   });
 

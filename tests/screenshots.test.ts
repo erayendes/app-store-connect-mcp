@@ -352,6 +352,13 @@ describe('media resolution, confirmation and file safety', () => {
     expect(result.risk).toBe('destructive');
     if (action.startsWith('remove')) expect(http.delete).toHaveBeenCalledOnce(); else expect(http.patch).toHaveBeenCalledOnce();
   });
+  it('refuses a product page test made with the retired v1 API, by name', async () => {
+    const http = fakeHttp('ppo'); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path, query) => path === '/v1/appStoreVersionExperimentTreatments/treatment'
+      ? { data: { id: 'treatment', type: 'appStoreVersionExperimentTreatments', attributes: { name: 'Blue' }, relationships: {} } }
+      : original(path, query));
+    await expect(executeMediaTool('media__list', pageArgs('ppo'), context(http))).rejects.toThrow(/retired v1 API/);
+  });
   it('refuses a library-target remove before reading a live placement', async () => {
     const http = fakeHttp();
     const request = { ...pageArgs('library'), action: 'remove', placement_ids: ['pi'] };

@@ -10,7 +10,7 @@ import {
   servedToolCount,
   VERSION,
 } from './server.js';
-import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
+import { SPEC_VERSION } from './generated/operations.js';
 import {
   PROFILES,
   resolveSelection,
@@ -26,7 +26,7 @@ export function helpText(): string {
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
-  npx -y ${PACKAGE} [profile] [options]
+  npx -y ${PACKAGE} <profile> [options]
   npx -y ${PACKAGE} setup
 
 One install backs many small MCP servers: pass a profile name and only that
@@ -105,6 +105,10 @@ async function main(): Promise<void> {
   }
 
   const positional = argv.filter((a) => !a.startsWith('-'));
+  // A 2.x config may still pass these; say so rather than start without them.
+  for (const flag of ['--domains', '--include-deprecated']) {
+    if (argv.some((a) => a === flag || a.startsWith(`${flag}=`))) console.error(`${flag} was removed in 3.0 and is ignored.`);
+  }
 
   if (positional[0] === 'register') {
     const { runRegister } = await import('./setup.js');
