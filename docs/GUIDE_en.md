@@ -26,9 +26,11 @@ The workflows below turn chains like that into a single step. You don't have to 
 | in-app purchase → price points → a new price schedule built by hand | `pricing__set_iap_price` — one country's price; every other manual and scheduled price is kept | `monetization:in-app-purchases` |
 | setting prices country by country | `pricing__equalize_price` — you set one base price and Apple works out every other market; for apps, in-app purchases or subscriptions | `monetization:app-price`, `in-app-purchases` or `subscription` |
 | pricing a win-back, promotional or introductory offer country by country | `pricing__make_offer` — you set one base price (or a free trial) and the offer is made in every country the subscription is sold in; an introductory offer goes country by country and picks up where it stopped | `monetization:subscription-offers` or `subscription-win-back` |
+| group → subscription → version → localizations → availability → price, seven kinds of write | `pricing__setup_subscription` — one confirmation; an existing group is reused, never edited | `monetization:subscription` |
 | create a submission, add the version, submit — three calls in that order | `release__submit` | `distribution:publish` |
 | the same for an in-app purchase, subscription, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — several items in one submission; it reads what is already in it, lists everything before you confirm, and can add the app's version when the item has to go with it | the item's own sub-profile, e.g. `monetization:in-app-purchases` |
 | find the build, look up the beta groups, add the missing links | `testflight__assign_build_to_groups` | `testflight:groups` |
+| checking again and again whether an uploaded build has finished processing | `testflight__wait_for_build` — waits up to 15 minutes and says whether it is VALID | `testflight:test-builds` |
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
 | pasting translations into each language by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review details + localizations + screenshots, to answer "can I submit?" | `preflight__check_version` | `distribution:version` |
@@ -68,6 +70,7 @@ Three workflows are available as MCP prompts. Type `/` in your app (Claude, Curs
 | `release-readiness` | `preflight__check_version`, then `listing__diff_metadata`, ending in GO or NO-GO | `distribution:version` |
 | `review-triage` | briefing → triage → a draft reply per review, none of them sent. Takes the app's numeric Apple ID | `marketing:customer-reviews` |
 | `price-check` | prices worldwide in one call, then the ones that look like mistakes | `monetization:subscription` |
+| `getting-started` | the connection check, the account at a glance, then how to find a tool by asking | ASC-Core |
 
 A prompt only appears when all the tools it uses are installed. Each one stops before changing anything: submitting, replying and changing prices are your call.
 

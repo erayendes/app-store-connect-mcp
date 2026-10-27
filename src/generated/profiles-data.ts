@@ -292,7 +292,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "subscription",
       operations: ["apps.subscription_grace_period.get","subscription_app_store_review_screenshots.update","subscription_grace_periods.get","subscription_grace_periods.update","subscription_group_localizations_v2.create","subscription_group_localizations_v2.delete","subscription_group_localizations_v2.get","subscription_group_localizations_v2.update","subscription_group_versions.create","subscription_group_versions.get","subscription_group_versions.localizations.list","subscription_groups.create","subscription_groups.delete","subscription_groups.get","subscription_groups.subscriptions.list","subscription_groups.update","subscription_groups.versions.list","subscription_localizations_v2.create","subscription_localizations_v2.delete","subscription_localizations_v2.get","subscription_localizations_v2.update","subscription_plan_availabilities.available_territories.list","subscription_plan_availabilities.available_territories.replace","subscription_plan_availabilities.create","subscription_plan_availabilities.get","subscription_plan_availabilities.update","subscription_price_points.adjusted_equalizations.list","subscription_price_points.equalizations.list","subscription_price_points.get","subscription_prices.create","subscription_prices.delete","subscription_versions.create","subscription_versions.get","subscription_versions.image.get","subscription_versions.localizations.list","subscriptions.create","subscriptions.delete","subscriptions.get","subscriptions.plan_availabilities.list","subscriptions.price_points.list","subscriptions.prices.list","subscriptions.prices.remove","subscriptions.update","subscriptions.versions.list"],
-      manualTools: ["preflight__check_subscription","pricing__equalize_price","pricing__get_subscription_price","pricing__set_subscription_price","release__submit_items"],
+      manualTools: ["preflight__check_subscription","pricing__equalize_price","pricing__get_subscription_price","pricing__set_subscription_price","pricing__setup_subscription","release__submit_items"],
       rootResources: ["apps","subscription_app_store_review_screenshots","subscription_grace_periods","subscription_group_localizations_v2","subscription_group_versions","subscription_groups","subscription_localizations_v2","subscription_plan_availabilities","subscription_price_points","subscription_prices","subscription_versions","subscriptions"],
     },
     {
@@ -316,7 +316,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "transactions",
       operations: [],
-      manualTools: ["storekit__check_entitlement","storekit__extend_renewal_date","storekit__get_notification_history","storekit__get_refund_history","storekit__get_subscription_statuses","storekit__get_transaction_history","storekit__get_transaction_info","storekit__lookup_order","storekit__request_test_notification"],
+      manualTools: ["storekit__check_entitlement","storekit__extend_renewal_date","storekit__finish_transaction","storekit__get_app_transaction","storekit__get_mass_extension_status","storekit__get_notification_history","storekit__get_refund_history","storekit__get_retention_messaging","storekit__get_subscription_statuses","storekit__get_test_notification_status","storekit__get_transaction_history","storekit__get_transaction_info","storekit__lookup_order","storekit__manage_retention_messaging","storekit__mass_extend_renewal_date","storekit__request_test_notification","storekit__send_consumption_info","storekit__set_app_account_token"],
       rootResources: [],
     },
     ],
@@ -380,7 +380,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "test-builds",
       operations: ["apps.beta_app_localizations.list","apps.beta_groups.list","apps.pre_release_versions.list","beta_app_localizations.create","beta_app_localizations.delete","beta_app_localizations.get","beta_app_localizations.list","beta_app_localizations.update","beta_build_localizations.create","beta_build_localizations.delete","beta_build_localizations.get","beta_build_localizations.list","beta_build_localizations.update","build_beta_details.get","build_beta_details.list","build_beta_details.update","build_beta_notifications.create","builds.beta_build_localizations.list","builds.build_beta_detail.get","builds.pre_release_version.get","pre_release_versions.builds.list","pre_release_versions.get","pre_release_versions.list"],
-      manualTools: ["testflight__assign_build_to_groups"],
+      manualTools: ["testflight__assign_build_to_groups","testflight__wait_for_build"],
       rootResources: ["apps","beta_app_localizations","beta_build_localizations","build_beta_details","build_beta_notifications","builds","pre_release_versions"],
     },
     {

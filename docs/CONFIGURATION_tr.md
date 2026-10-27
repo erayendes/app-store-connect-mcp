@@ -70,7 +70,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | `ASC_BUNDLE_ID` | İstek uygulama belirtmediğinde StoreKit araçlarının kullanacağı uygulama. İsteğe bağlı: araçlar uygulamayı adından bulur. |
 | `ASC_APP_APPLE_ID` | Bu varsayılan uygulamanın sayısal Apple ID'si |
 | `ASC_ENVIRONMENT` | `Production` (varsayılan) ya da `Sandbox` |
-| `ASC_APPLE_ROOT_CERTS` | Apple'ın kök sertifikalarının yolları (ya da tek bir klasör). Girilirse StoreKit cevapları doğrulanmış ve çözülmüş gelir; girilmezse Apple'ın imzalı içeriğini alırsınız. |
+| `ASC_APPLE_ROOT_CERTS` | Ek Apple kök sertifikaları (yollar ya da tek bir klasör). StoreKit cevapları zaten Heimdall'ın içinde gelen Apple Root CA - G3 ile doğrulanır; bunu yalnızca Apple yeni bir kök eklerse girin. |
 
 **Cevaplar.**
 
@@ -100,6 +100,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | Değişken | Ne için |
 |:--|:--|
 | `ASC_CONFIG_DIR` | Setup'ın kayıtlı ayarlarının yeri (varsayılan `~/.config/asc-mcp`) |
+| `ASC_STATE_DIR` | Heimdall'ın yerelde tuttuğu kayıtların klasörü (varsayılan: `ASC_CONFIG_DIR` ile aynı klasör): `audit.jsonl`, istenen her yazma için bir satır — ne zaman, hangi araç, nasıl onayladığınız, Apple'ın cevabı; `failures.jsonl`, Apple'ın reddettiği her çağrı ve `x-request-id`'si; `report-cache/`, bitmiş dönemlerin satış ve finans raporları. Hiçbiri bilgisayarınızdan çıkmaz. |
 | `ASC_BASE_URL` | İstekleri yerel bir test sunucusu gibi başka bir adrese gönderir. Apple için boş bırakın. |
 
 ## Anahtarı vermenin üç yolu

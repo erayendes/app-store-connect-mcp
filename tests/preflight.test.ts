@@ -105,6 +105,8 @@ describe('preflight__check_version', () => {
     const res = await run();
     expect(res.ready).toBe(true);
     expect(res.blocking).toEqual([]);
+    // Ready never covers what the API cannot see; those are named every time.
+    expect(res.manualChecks.map((c: any) => c.check)).toEqual(['App Privacy', 'EU trader status', 'Agreements, tax and banking']);
     expect(res.checked).toContain('export compliance answered');
     expect(res.version).toBe('3.2.0');
   });

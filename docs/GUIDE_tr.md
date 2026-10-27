@@ -26,9 +26,11 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Sizin
 | IAP → fiyat noktaları → elle kurulan yepyeni bir fiyat takvimi | `pricing__set_iap_price` — tek ülkenin fiyatı; diğer elle girilmiş ve planlanmış fiyatlar aynen korunur | `monetization:in-app-purchases` |
 | ülke ülke fiyat belirlemek | `pricing__equalize_price` — tek çapa fiyat, diğer tüm pazarları Apple türetir; uygulama, IAP veya abonelik için | `monetization:app-price`, `in-app-purchases` ya da `subscription` |
 | win-back, promosyon ya da introductory offer'ı ülke ülke fiyatlamak | `pricing__make_offer` — tek çapa fiyat (ya da ücretsiz deneme), teklif aboneliğin satıldığı her ülkede kurulur; tanıtım teklifi ülke ülke yazılır ve kaldığı yerden devam eder | `monetization:subscription-offers` ya da `subscription-win-back` |
+| grup → abonelik → sürüm → yerelleştirmeler → satış ülkeleri → fiyat, yedi tür yazma | `pricing__setup_subscription` — tek onay; var olan grup yeniden kullanılır, hiç değiştirilmez | `monetization:subscription` |
 | submission açmak, sürümü eklemek, teslim etmek — bu sırayla üç çağrı | `release__submit` | `distribution:publish` |
 | aynısını bir IAP, abonelik, uygulama içi etkinlik, özel ürün sayfası, ürün sayfası testi, Game Center öğesi ya da background asset için yapmak | `release__submit_items` — birden çok öğe tek başvuruda; başvuruda zaten ne olduğunu okur, onaydan önce hepsini listeler, öğenin sürümle gitmesi gerekiyorsa uygulamanın sürümünü de ekleyebilir | öğenin kendi alt profili, örneğin `monetization:in-app-purchases` |
 | build'i bulmak, beta gruplarını çözümlemek, eksik bağlantıları eklemek | `testflight__assign_build_to_groups` | `testflight:groups` |
+| yüklenen build'in işlenip işlenmediğine tekrar tekrar bakmak | `testflight__wait_for_build` — 15 dakikaya kadar bekler ve VALID olup olmadığını söyler | `testflight:test-builds` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |
@@ -68,6 +70,7 @@ App Store Server API mağaza sayfanızla değil, tek tek müşterilerle ilgili s
 | `release-readiness` | `preflight__check_version`, ardından `listing__diff_metadata`, sonuçta GO ya da NO-GO | `distribution:version` |
 | `review-triage` | brifing → triyaj → yorum başına taslak yanıt, hiçbiri gönderilmeden. Uygulamanın sayısal Apple ID'sini ister | `marketing:customer-reviews` |
 | `price-check` | tek çağrıda dünya fiyatları, ardından yanlışlıkla girilmiş gibi görünen fiyatlar | `monetization:subscription` |
+| `getting-started` | bağlantı kontrolü, hesabın özeti, ardından bir aracın sorarak nasıl bulunacağı | ASC-Core |
 
 Bir prompt yalnızca kullandığı araçların hepsi yüklüyse görünür. Her biri yazmadan önce durur: gönderim, yanıt ve fiyat değişikliği sizin kararınızdır.
 

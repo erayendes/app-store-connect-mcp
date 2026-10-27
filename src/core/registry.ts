@@ -17,6 +17,7 @@ import {
   maybeParseReportTable,
   REPORT_TABLE_EXTRA_PARAMS,
 } from './report-parsing.js';
+import { cachedReport, cacheReport } from './report-cache.js';
 
 export interface RegistryOptions {
   /** Load exactly these operations (dotted names), plus `extraOperations`. */
@@ -533,11 +534,17 @@ export class ToolRegistry {
       };
     }
 
-    const result = await http.request(op.method, path, {
-      query: Object.keys(query).length ? query : undefined,
-      body: op.hasBody ? args.body : undefined,
-      accept: op.accept,
-    });
+    const report = isReportTableOperation(op.name);
+    const account = String((http as { account?: string }).account ?? '');
+    let result = report ? cachedReport(account, path, query) : undefined;
+    if (result === undefined) {
+      result = await http.request(op.method, path, {
+        query: Object.keys(query).length ? query : undefined,
+        body: op.hasBody ? args.body : undefined,
+        accept: op.accept,
+      });
+      if (report) cacheReport(account, path, query, result);
+    }
     return maybeParseReportTable(op.name, args, result);
   }
 }

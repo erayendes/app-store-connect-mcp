@@ -46,9 +46,9 @@ Almost anything you'd click through App Store Connect to do, you can now just as
 
 ### Heimdall
 
-One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 50 sub-profiles, 751 tools.** Each profile runs as its own small MCP server.
+One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 50 sub-profiles, 762 tools.** Each profile runs as its own small MCP server.
 
-Apple's specification lists 1011 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 807, 710 become tools, and 41 hand-written ones join them: 751 tools in all. The other 97 are covered by the media tools, which do in one call what took several raw ones.
+Apple's specification lists 1011 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 807, 710 become tools, and 52 hand-written ones join them: 762 tools in all. The other 97 are covered by the media tools, which do in one call what took several raw ones.
 
 Most App Store Connect MCP servers give you a hand-picked slice of the API. That works until you need the one endpoint they left out, and then **you're off hunting for yet another tool.**
 

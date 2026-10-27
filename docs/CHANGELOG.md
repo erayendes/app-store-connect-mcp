@@ -19,7 +19,7 @@ There are now 13 profiles and 50 sub-profiles: `general`, `distribution`, `marke
 
 `general` replaces `app-info`, as in App Store Connect.
 
-Big profiles have more sub-profiles, so you can pick fewer tools. For example, `monetization:subscription` and `monetization:subscription-offers` are 64 tools, where all of `monetization` is 152.
+Big profiles have more sub-profiles, so you can pick fewer tools. For example, `monetization:subscription` and `monetization:subscription-offers` are 65 tools, where all of `monetization` is 162.
 
 Every profile and sub-profile, with every tool in it, is on the [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) page.
 
@@ -67,7 +67,7 @@ If your AI app has rules that allow Heimdall tools by server name (such as `mcp_
 
 To go back to 2.x, `npx -y @erayendes/asc-mcp@2.8.0 setup` is all it takes.
 
-Heimdall now has 751 tools. If you see anything odd during the beta, I'd love to hear about it.
+Heimdall now has 762 tools. If you see anything odd during the beta, I'd love to hear about it.
 
 ### [2.8.0] — 2026-10-26
 
@@ -334,7 +334,7 @@ Artık 13 profil ve 50 alt profil var: `general`, `distribution`, `marketing`, `
 
 `app-info`'nun yerini App Store Connect'teki gibi `general` aldı.
 
-Büyük profillerin alt profil sayısı arttı. Böylece daha az araç seçebilirsiniz. Örneğin `monetization:subscription` ve `monetization:subscription-offers` 64 araç, `monetization`'ın tamamı ise 152.
+Büyük profillerin alt profil sayısı arttı. Böylece daha az araç seçebilirsiniz. Örneğin `monetization:subscription` ve `monetization:subscription-offers` 65 araç, `monetization`'ın tamamı ise 162.
 
 Her profil ve alt profil, içindeki bütün araçlarla [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfasında.
 
@@ -382,7 +382,7 @@ Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren kural
 
 2.x'e dönmek isterseniz `npx -y @erayendes/asc-mcp@2.8.0 setup` yeterli.
 
-Heimdall artık 751 araç içeriyor. Beta sürecinde gördüğünüz her tuhaflığı yazarsanız çok sevinirim.
+Heimdall artık 762 araç içeriyor. Beta sürecinde gördüğünüz her tuhaflığı yazarsanız çok sevinirim.
 
 ### [2.8.0] — 2026-10-26
 

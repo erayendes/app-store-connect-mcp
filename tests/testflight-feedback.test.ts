@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
-import { executeTestflightTool, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
+import { executeTestflightTool, IMAGE_CONTENT, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 import { AscHttpClient } from '../src/core/http.js';
 import { AscApiError } from '../src/core/errors.js';
 import { createServer } from '../src/server.js';
@@ -65,6 +65,26 @@ describe(NAME, () => {
     expect(result.builds.map((b: any) => [b.buildId, b.version, b.counts.crashes]).sort()).toEqual([
       ['b-ios', '42', 1], ['b-tv', '42', 1],
     ]);
+  });
+
+  it('attaches the newest screenshots as images only when asked, and never their URLs', async () => {
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from('pixels')]);
+    const shot = (id: string, url: string) => submission(id, 'b-1', { screenshots: [{ url, width: 10, height: 20 }] });
+    const http: any = fakeHttp({ [SHOTS]: page([shot('s-1', 'https://feedback.apple.com/1.png'), shot('s-2', 'https://feedback.apple.com/2.txt')]) });
+    http.downloadAsset = vi.fn(async (url: string) => (url.endsWith('.png') ? png : Buffer.from('not an image')));
+
+    const plain = await run(http);
+    expect(plain[IMAGE_CONTENT]).toBeUndefined();
+    expect(http.downloadAsset).not.toHaveBeenCalled();
+
+    const res = await run(http, { app: 'Example', images: 2 });
+    expect(res[IMAGE_CONTENT]).toEqual([{ data: png.toString('base64'), mimeType: 'image/png', caption: expect.stringContaining('s-1') }]);
+    expect(res.notes.join(' ')).toMatch(/s-2: not a PNG or JPEG/);
+    expect(JSON.stringify(res)).not.toContain('feedback.apple.com');
+  });
+
+  it('refuses more images than it will attach', async () => {
+    await expect(run(fakeHttp(), { app: 'Example', images: 4 })).rejects.toThrow(/"images" must be an integer from 0 to 3/);
   });
 
   it('puts the trust warning first, so cutting the response to size cannot drop it', async () => {

@@ -13,12 +13,14 @@ import { PRICING_TOOLS } from '../src/tools/pricing.js';
 import { PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
+import { META_TOOLS } from '../src/tools/meta.js';
+import { ACCOUNT_TOOLS } from '../src/tools/account.js';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { createServer } from '../src/server.js';
 import { PROFILES, resolveSelection } from '../src/profiles.js';
 
 const ALL_TOOLS = new Set(
-  [...PRICING_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...REVIEWS_AI_TOOLS].map((t) => t.name)
+  [...PRICING_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...REVIEWS_AI_TOOLS, ...META_TOOLS, ...ACCOUNT_TOOLS].map((t) => t.name)
 );
 
 describe('the prompt list', () => {

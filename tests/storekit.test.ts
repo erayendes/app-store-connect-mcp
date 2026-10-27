@@ -174,7 +174,7 @@ describe('transaction history paging', () => {
     const client = { getTransactionHistory: async () => pages[Math.min(call++, pages.length - 1)] };
     return (new StoreKitService(config) as never as {
       transactionHistory(client: never, args: Record<string, unknown>): Promise<any>;
-    }).transactionHistory(client as never, { transaction_id: '1', max_pages: 2 });
+    }).transactionHistory(client as never, { transaction_id: '1', max_pages: 2, raw: true });
   };
 
   it('says it stopped short and hands back the cursor to resume from', async () => {
@@ -245,7 +245,13 @@ describe('which app a StoreKit call goes to', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('keeps ASC_BUNDLE_ID as the default without a lookup', async () => {
+  it('looks up the Apple ID behind ASC_BUNDLE_ID in Production, which verification needs', async () => {
+    const { http } = apps([{ id: '9', name: 'Example', bundleId: 'com.example.app' }]);
+    const production = { ...config, storekit: { bundleId: 'com.example.app', environment: 'Production' } } as ServerConfig;
+    expect(await target(new StoreKitService(production, http))).toEqual({ bundleId: 'com.example.app', appAppleId: 9 });
+  });
+
+  it('keeps ASC_BUNDLE_ID as the default without a lookup in Sandbox', async () => {
     const { http, calls } = apps([]);
     expect((await target(new StoreKitService(config, http))).bundleId).toBe('com.example.app');
     expect(calls).toHaveLength(0);

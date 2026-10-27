@@ -46,6 +46,8 @@ export interface ConfirmDecision {
   reason?: string;
   /** The answer was for another call, or already spent: ask again rather than blame the user. */
   stale?: true;
+  /** Approved by typing CONFIRM rather than ticking a box. */
+  strong?: boolean;
 }
 
 /** What the user sees before approving a write. */
@@ -704,7 +706,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
       const confirmed = state.strong
         ? typeof content?.confirmation === 'string' && /^confirm$/i.test(content.confirmation.trim())
         : content?.confirm === true;
-      if (confirmed) return { allowed: true, planFingerprint: state.planFingerprint };
+      if (confirmed) return { allowed: true, strong: state.strong, planFingerprint: state.planFingerprint };
       const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
       const unconfirmed = state.strong ? 'the answer was not CONFIRM' : 'the box was left unticked';
       return { allowed: false, reason: content ? unconfirmed : (action ?? 'no answer') };

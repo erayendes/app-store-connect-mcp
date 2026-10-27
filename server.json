@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.erayendes/asc-mcp",
   "title": "Heimdall",
-  "description": "Every App Store Connect + StoreKit 2 endpoint. 751 tools in 14 profiles, narrow to 17.",
+  "description": "Every App Store Connect + StoreKit 2 endpoint. 762 tools in 14 profiles, narrow to 17.",
   "websiteUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE_en.md",
   "repository": {
     "url": "https://github.com/erayendes/app-store-connect-mcp",
@@ -22,7 +22,7 @@
         {
           "type": "positional",
           "valueHint": "profile",
-          "description": "Which slice of App Store Connect to serve. One of general, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets — plus core (app lookup, tool search, screenshots), which runs next to them, or add --with-core to fold it into one server. Narrow further with a colon — monetization:subscription-offers is 17 tools instead of 152. Required: without one the server only tells the agent to run setup.",
+          "description": "Which slice of App Store Connect to serve. One of general, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets — plus core (app lookup, tool search, screenshots), which runs next to them, or add --with-core to fold it into one server. Narrow further with a colon — monetization:subscription-offers is 17 tools instead of 162. Required: without one the server only tells the agent to run setup.",
           "isRequired": true
         }
       ],

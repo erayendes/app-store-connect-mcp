@@ -70,7 +70,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | `ASC_BUNDLE_ID` | The app StoreKit tools use when a request names none. Optional: they look the app up by name. |
 | `ASC_APP_APPLE_ID` | The numeric Apple ID of that default app |
 | `ASC_ENVIRONMENT` | `Production` (default) or `Sandbox` |
-| `ASC_APPLE_ROOT_CERTS` | Paths to Apple's root certificates (or one folder). Set it and StoreKit answers come back verified and decoded; without it you get Apple's signed payloads. |
+| `ASC_APPLE_ROOT_CERTS` | Extra Apple root certificates (paths or one folder). StoreKit answers are already verified against Apple Root CA - G3, which Heimdall ships; set this only if Apple adds another root. |
 
 **Responses.**
 
@@ -100,6 +100,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | Variable | What it's for |
 |:--|:--|
 | `ASC_CONFIG_DIR` | Where setup's saved settings live (default `~/.config/asc-mcp`) |
+| `ASC_STATE_DIR` | Where Heimdall keeps what it records locally (default: the same folder as `ASC_CONFIG_DIR`): `audit.jsonl`, one line per write it was asked to make — when, which tool, how you confirmed it, what Apple answered; `failures.jsonl`, every call Apple refused, with its `x-request-id`; and `report-cache/`, sales and finance reports for finished periods. Nothing leaves your machine. |
 | `ASC_BASE_URL` | Send requests to another address, such as a local test server. Leave unset for Apple. |
 
 ## Three ways to give the key

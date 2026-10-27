@@ -14,8 +14,11 @@ import {
   GetTransactionHistoryVersion,
   SignedDataVerifier,
   Status,
+  type ConsumptionRequest,
   type ExtendRenewalDateRequest,
   type HistoryResponse,
+  type MassExtendRenewalDateRequest,
+  type UploadMessageRequestBody,
   type LastTransactionsItem,
   type NotificationHistoryRequest,
   type NotificationTypeV2,
@@ -29,6 +32,8 @@ import {
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { AscApiError } from '../core/errors.js';
+import type { RiskLevel } from '../core/risk.js';
+import { APPLE_ROOT_CA_G3 } from './apple-root-ca.js';
 import type { McpToolDefinition } from '../core/registry.js';
 import type { ServerConfig } from '../core/config.js';
 import type { AscHttpClient } from '../core/http.js';
@@ -82,13 +87,11 @@ const TRANSACTION_FIELDS = [
 ] as const;
 
 /**
- * Reads Apple's DER roots from paths, or from a directory of them.
- *
- * The library asks the caller for these rather than shipping them, and this
- * repository does not ship them either: a certificate committed here is one
- * more thing to keep current, and getting it wrong turns verification into a
- * silent no. Unset is a supported state — the reads then return the signed
- * envelope, which is what their descriptions already say.
+ * Reads extra DER roots from paths, or from a directory of them, on top of the
+ * Apple Root CA - G3 shipped in apple-root-ca.ts. The library asks the caller
+ * for roots rather than shipping them; shipping the one Apple signs with keeps
+ * verification on without configuration, and ASC_APPLE_ROOT_CERTS stays for
+ * the day Apple adds another.
  */
 function readRootCertificates(paths: string[] | undefined): Buffer[] {
   if (!paths?.length) return [];
@@ -150,8 +153,8 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     description:
       "Get a customer's full purchase history from any one of their transaction IDs. " +
       'Supports filtering by product type, product ID and date range. Returns Apple\'s ' +
-      'SIGNED transactions (JWS strings) unless ASC_APPLE_ROOT_CERTS is set, in which ' +
-      'case they arrive verified and decoded. [App Store Server API]',
+      'transactions checked against Apple\'s signature and decoded; `raw` returns ' +
+      'the signed JWS strings instead. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -163,9 +166,7 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         raw: {
           type: 'boolean',
           description:
-            'Return Apple\'s signed JWS payloads instead of decoded fields, to verify them ' +
-            'yourself. Ignored when ASC_APPLE_ROOT_CERTS is unset — the payloads are all ' +
-            'there is then.',
+            'Return Apple\'s signed JWS payloads instead of the verified, decoded fields.',
         },
         product_type: {
           type: 'string',
@@ -189,9 +190,8 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_transaction_info',
     description:
       'Get a single transaction: product, price, dates, ownership type and revocation ' +
-      'state. Set ASC_APPLE_ROOT_CERTS and the payload arrives verified and decoded; ' +
-      "without it you get Apple's SIGNED payload (a JWS string) to verify yourself with " +
-      "the App Store Server Library. [App Store Server API]",
+      'state, checked against Apple\'s signature and decoded; `raw` returns the ' +
+      'signed JWS string instead. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -199,9 +199,7 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         raw: {
           type: 'boolean',
           description:
-            'Return Apple\'s signed JWS payloads instead of decoded fields, to verify them ' +
-            'yourself. Ignored when ASC_APPLE_ROOT_CERTS is unset — the payloads are all ' +
-            'there is then.',
+            'Return Apple\'s signed JWS payloads instead of the verified, decoded fields.',
         },
       },
       required: ['transaction_id'],
@@ -260,9 +258,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_refund_history',
     description:
       'List every refunded transaction for a customer. Useful for auditing refund ' +
-      'abuse before granting goodwill credit. Returns Apple\'s SIGNED transactions ' +
-      '(JWS strings) unless ASC_APPLE_ROOT_CERTS is set, in which case they arrive ' +
-      'verified and decoded. [App Store Server API]',
+      'abuse before granting goodwill credit. Returns the transactions verified against ' +
+      'Apple\'s signature and decoded; `raw` returns the signed JWS strings ' +
+      'instead. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -273,9 +271,7 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         raw: {
           type: 'boolean',
           description:
-            'Return Apple\'s signed JWS payloads instead of decoded fields, to verify them ' +
-            'yourself. Ignored when ASC_APPLE_ROOT_CERTS is unset — the payloads are all ' +
-            'there is then.',
+            'Return Apple\'s signed JWS payloads instead of the verified, decoded fields.',
         },
       },
       required: ['transaction_id'],
@@ -352,7 +348,240 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     },
     annotations: { readOnlyHint: false, destructiveHint: true },
   },
+  {
+    name: 'storekit__mass_extend_renewal_date',
+    description:
+      'Extend the renewal date of EVERY active subscriber of one subscription product, ' +
+      'optionally only in some countries — the outage gesture for everyone at once. Apple ' +
+      'runs it in the background; read progress with storekit__get_mass_extension_status. ' +
+      '[App Store Server API] REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        product_id: { type: 'string', description: 'The subscription product ID.' },
+        extend_by_days: { type: 'number', description: 'Days to extend, 1-90.' },
+        reason: {
+          type: 'number',
+          description: '0=Undeclared, 1=CustomerSatisfaction, 2=Other, 3=ServiceIssue.',
+        },
+        request_identifier: {
+          type: 'string',
+          description: 'A UUID you choose; the same one reads the status later.',
+        },
+        storefront_country_codes: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Only these storefronts, ISO-3166 alpha-3 (USA, TUR). Omit for all.',
+        },
+      },
+      required: ['product_id', 'extend_by_days', 'request_identifier'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true },
+  },
+  {
+    name: 'storekit__get_mass_extension_status',
+    description:
+      'Progress of a renewal-date extension for all subscribers: whether it completed and ' +
+      'how many subscriptions succeeded or failed. [App Store Server API]',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        request_identifier: { type: 'string', description: 'The UUID the extension was started with.' },
+        product_id: { type: 'string', description: 'The subscription product ID.' },
+      },
+      required: ['request_identifier', 'product_id'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'storekit__send_consumption_info',
+    description:
+      'Answer Apple\'s refund CONSUMPTION_REQUEST for one transaction: whether the purchase ' +
+      'was delivered, how much was used and which outcome you prefer. Apple weighs it when ' +
+      'deciding the refund. Send only with the customer\'s consent. [App Store Server API] ' +
+      'REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        transaction_id: { type: 'string', description: 'The transaction the refund request is for.' },
+        customer_consented: {
+          type: 'boolean',
+          description: 'The customer agreed to share this data. Apple rejects the request without it.',
+        },
+        delivery_status: {
+          type: 'string',
+          enum: ['DELIVERED', 'UNDELIVERED_QUALITY_ISSUE', 'UNDELIVERED_WRONG_ITEM', 'UNDELIVERED_SERVER_OUTAGE', 'UNDELIVERED_OTHER'],
+          description: 'Whether the purchase was delivered and works.',
+        },
+        sample_content_provided: {
+          type: 'boolean',
+          description: 'A free sample or trial was offered before the purchase.',
+        },
+        consumption_percentage: {
+          type: 'number',
+          description: 'How much was consumed, in thousandths of a percent: 0 to 100000.',
+        },
+        refund_preference: {
+          type: 'string',
+          enum: ['DECLINE', 'GRANT_FULL', 'GRANT_PRORATED'],
+          description: 'The outcome you would prefer. Apple decides.',
+        },
+      },
+      required: ['transaction_id', 'customer_consented', 'delivery_status', 'sample_content_provided'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true },
+  },
+  {
+    name: 'storekit__set_app_account_token',
+    description:
+      'Link a purchase to an account in your own system by setting its appAccountToken, ' +
+      'for purchases made without one. [App Store Server API] REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        original_transaction_id: { type: 'string', description: "The purchase's original transaction ID." },
+        app_account_token: { type: 'string', description: 'The UUID your system uses for the account.' },
+      },
+      required: ['original_transaction_id', 'app_account_token'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true },
+  },
+  {
+    name: 'storekit__finish_transaction',
+    description:
+      'Tell the App Store your server has finished processing a transaction. ' +
+      '[App Store Server API] REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        transaction_id: { type: 'string', description: 'The transaction to mark as finished.' },
+      },
+      required: ['transaction_id'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true },
+  },
+  {
+    name: 'storekit__get_app_transaction',
+    description:
+      'Get the app transaction behind a customer: when they first got the app, the version ' +
+      'they started on, and the environment. Takes any of their transaction IDs. ' +
+      '[App Store Server API]',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        transaction_id: { type: 'string', description: 'Any transaction ID belonging to the customer.' },
+        raw: { type: 'boolean', description: 'Return the signed JWS instead of the verified fields.' },
+      },
+      required: ['transaction_id'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'storekit__get_test_notification_status',
+    description:
+      'Whether the test notification from storekit__request_test_notification reached your ' +
+      'webhook, with each send attempt and its result. [App Store Server API]',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        test_notification_token: { type: 'string', description: 'The token the test request returned.' },
+      },
+      required: ['test_notification_token'],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'storekit__get_retention_messaging',
+    description:
+      'Retention messaging setup: the messages and images uploaded for customers about to ' +
+      'cancel, the realtime URL, and with product_id and locale the default message. ' +
+      'With performance_test_id, that test\'s results. [App Store Server API]',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        product_id: { type: 'string', description: 'With locale: also read the default message.' },
+        locale: { type: 'string', description: 'With product_id, e.g. en-US.' },
+        performance_test_id: { type: 'string', description: 'Read this realtime performance test.' },
+      },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: 'storekit__manage_retention_messaging',
+    description:
+      'Change retention messaging: upload or delete a message or an image, set or remove a ' +
+      'product\'s default message, set or remove the realtime URL, or start a performance ' +
+      'test of it. Deletes are DESTRUCTIVE-level; the realtime URL is INFRASTRUCTURE-level. ' +
+      '[App Store Server API]',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: [
+            'upload_message', 'delete_message', 'upload_image', 'delete_image',
+            'set_default_message', 'delete_default_message',
+            'set_realtime_url', 'delete_realtime_url', 'start_performance_test',
+          ],
+        },
+        message_id: { type: 'string', description: 'Lowercase UUID of the message.' },
+        header: { type: 'string', description: 'upload_message: the header.' },
+        body: { type: 'string', description: 'upload_message: the body.' },
+        header_position: { type: 'string', enum: ['ABOVE_BODY', 'ABOVE_IMAGE'] },
+        image_id: { type: 'string', description: 'Lowercase UUID of the image.' },
+        image_alt_text: { type: 'string', description: 'upload_message: alt text for image_id.' },
+        bullet_points: {
+          type: 'array',
+          description: 'upload_message: bullet points, each with an uploaded BULLET_POINT image.',
+          items: {
+            type: 'object',
+            properties: {
+              text: { type: 'string' },
+              image_id: { type: 'string' },
+              alt_text: { type: 'string' },
+            },
+            required: ['text', 'image_id', 'alt_text'],
+          },
+        },
+        file_path: { type: 'string', description: 'upload_image: local PNG file.' },
+        image_size: { type: 'string', enum: ['FULL_SIZE', 'BULLET_POINT'] },
+        product_id: { type: 'string', description: 'set_default_message / delete_default_message.' },
+        locale: { type: 'string', description: 'set_default_message / delete_default_message, e.g. en-US.' },
+        url: { type: 'string', description: 'set_realtime_url: your HTTPS endpoint.' },
+        original_transaction_id: { type: 'string', description: 'start_performance_test.' },
+      },
+      required: ['action'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true },
+  },
 ];
+
+/** Writes that touch a customer's purchase or billing: typed CONFIRM, like a price change. */
+const STOREKIT_REVENUE = new Set([
+  'storekit__extend_renewal_date',
+  'storekit__mass_extend_renewal_date',
+  'storekit__send_consumption_info',
+  'storekit__set_app_account_token',
+  'storekit__finish_transaction',
+]);
+
+/** The risk a StoreKit call carries; these tools live outside the spec's risk stamps. */
+export function storekitRisk(name: string, args: Record<string, unknown>): RiskLevel {
+  if (STOREKIT_REVENUE.has(name)) return 'revenue';
+  if (name !== 'storekit__manage_retention_messaging') return 'low';
+  const action = String(args.action ?? '');
+  if (action.startsWith('delete_')) return 'destructive';
+  if (action === 'set_realtime_url') return 'infrastructure';
+  return 'public';
+}
+
+const MAX_RETENTION_IMAGE_BYTES = 10 * 1024 * 1024;
+
+/** The fields of an app transaction worth showing; device-verification values are not. */
+const APP_TRANSACTION_FIELDS = [
+  'appTransactionId', 'bundleId', 'appAppleId', 'applicationVersion', 'originalApplicationVersion',
+  'originalPurchaseDate', 'preorderDate', 'originalPlatform', 'receiptType', 'receiptCreationDate',
+] as const;
 
 // Every StoreKit tool accepts an optional environment override. A transaction
 // ID exists in exactly one environment, so a caller who has a sandbox ID can
@@ -391,7 +620,7 @@ export class StoreKitService {
   private readonly http?: AscHttpClient;
   /** What each `app` argument resolved to, so a name costs one lookup per session. */
   private readonly targets = new Map<string, Promise<AppTarget>>();
-  /** Apple's DER roots, read once. Empty means verified decoding is off. */
+  /** Apple's DER roots: the shipped G3 plus any configured, read once. */
   private readonly rootCertificates: Buffer[];
   // Apple scopes every App Store Server API token to one app (the `bid`
   // claim) and one environment, so both are built lazily and cached per pair.
@@ -410,7 +639,7 @@ export class StoreKitService {
       ? { bundleId: storekit.bundleId, appAppleId: storekit.appAppleId }
       : undefined;
     this.http = http;
-    this.rootCertificates = readRootCertificates(storekit.appleRootCerts);
+    this.rootCertificates = [APPLE_ROOT_CA_G3, ...readRootCertificates(storekit.appleRootCerts)];
   }
 
   /**
@@ -418,9 +647,13 @@ export class StoreKitService {
    * the bundle ID Apple wants in the token is looked up rather than asked for:
    * named by the caller, else ASC_BUNDLE_ID, else the account's only app.
    */
-  private target(app: unknown): Promise<AppTarget> {
+  private target(app: unknown, env: 'Production' | 'Sandbox' = this.defaultEnvironment): Promise<AppTarget> {
     const wanted = typeof app === 'string' ? app.trim() : '';
-    if (!wanted && this.defaultApp) return Promise.resolve(this.defaultApp);
+    if (!wanted && this.defaultApp) {
+      // Production verification needs the app's Apple ID, which ASC_BUNDLE_ID alone does not carry.
+      if (this.defaultApp.appAppleId !== undefined || env === 'Sandbox' || !this.http) return Promise.resolve(this.defaultApp);
+      return this.target(this.defaultApp.bundleId, env);
+    }
     let hit = this.targets.get(wanted);
     if (!hit) {
       hit = this.lookUp(wanted);
@@ -450,10 +683,6 @@ export class StoreKitService {
     );
   }
 
-  /** True when a caller configured Apple's roots, so payloads can be verified. */
-  private get canVerify(): boolean {
-    return this.rootCertificates.length > 0;
-  }
 
   private verifierFor(env: 'Production' | 'Sandbox', app: AppTarget): SignedDataVerifier {
     const key = `${app.bundleId}|${env}`;
@@ -468,7 +697,7 @@ export class StoreKitService {
         throw new AscApiError(
           `ASC_APPLE_ROOT_CERTS does not parse as Apple's DER root certificates: ` +
             `${(err as Error).message}. Point it at the .cer files Apple publishes, or ` +
-            `unset it to receive the signed payloads instead.`,
+            `unset it to verify against the Apple root Heimdall ships.`,
           0
         );
       }
@@ -504,7 +733,7 @@ export class StoreKitService {
     raw: boolean,
     app: AppTarget = this.defaultApp ?? { bundleId: '' }
   ): Promise<unknown[]> {
-    if (raw || !this.canVerify) return signed;
+    if (raw) return signed;
     const verifier = this.verifierFor(env, app);
     const out: unknown[] = [];
     for (const jws of signed) {
@@ -514,8 +743,7 @@ export class StoreKitService {
       } catch (err) {
         throw new AscApiError(
           `A transaction payload failed signature verification: ${(err as Error).message}. ` +
-            `Nothing was decoded. Check that ASC_APPLE_ROOT_CERTS points at Apple's current ` +
-            `root certificates and that the environment (${env}) matches the transaction.`,
+            `Nothing was decoded. Check that the environment (${env}) matches the transaction.`,
           0
         );
       }
@@ -540,7 +768,7 @@ export class StoreKitService {
     args: Record<string, any>
   ): Promise<Record<string, unknown>> {
     const raw = Boolean(args.raw);
-    if (raw || !this.canVerify) return { signedTransactions: signed, verified: false };
+    if (raw) return { signedTransactions: signed, verified: false };
     return { transactions: await this.decode(signed, this.envFor(args.environment), false, args._app), verified: true };
   }
 
@@ -563,7 +791,7 @@ export class StoreKitService {
   }
 
   async execute(name: string, args: Record<string, any>): Promise<unknown> {
-    const app = await this.target(args.app);
+    const app = await this.target(args.app, this.envFor(args.environment));
     try {
       return await this.run(name, { ...args, _app: app }, this.clientFor(args.environment, app));
     } catch (err) {
@@ -592,7 +820,7 @@ export class StoreKitService {
         const res = await client.getTransactionInfo(args.transaction_id);
         const signed = res.signedTransactionInfo ? [res.signedTransactionInfo] : [];
         const [one] = await this.decode(signed, this.envFor(args.environment), Boolean(args.raw), args._app);
-        return this.canVerify && !args.raw
+        return !args.raw
           ? { transaction: one ?? null, verified: true }
           : { signedTransactionInfo: res.signedTransactionInfo, verified: false };
       }
@@ -671,6 +899,76 @@ export class StoreKitService {
         );
       }
 
+      case 'storekit__mass_extend_renewal_date': {
+        const days = Number(args.extend_by_days);
+        if (!Number.isInteger(days) || days < 1 || days > 90) {
+          throw new Error('extend_by_days must be an integer between 1 and 90.');
+        }
+        const request: MassExtendRenewalDateRequest = {
+          productId: args.product_id,
+          extendByDays: days,
+          extendReasonCode: (args.reason ?? ExtendReasonCode.SERVICE_ISSUE_OR_OUTAGE) as ExtendReasonCode,
+          requestIdentifier: args.request_identifier,
+          storefrontCountryCodes: args.storefront_country_codes,
+        };
+        return client.extendRenewalDateForAllActiveSubscribers(request);
+      }
+
+      case 'storekit__get_mass_extension_status':
+        return client.getStatusOfSubscriptionRenewalDateExtensions(args.request_identifier, args.product_id);
+
+      case 'storekit__send_consumption_info': {
+        // Apple's own rule, checked here so the refusal names the field.
+        if (args.customer_consented !== true) {
+          throw new Error('customer_consented must be true: Apple accepts consumption data only with the customer\'s consent.');
+        }
+        const pct = args.consumption_percentage;
+        if (pct !== undefined && (!Number.isInteger(pct) || pct < 0 || pct > 100000)) {
+          throw new Error('consumption_percentage is in thousandths of a percent: an integer from 0 to 100000.');
+        }
+        const request: ConsumptionRequest = {
+          customerConsented: true,
+          deliveryStatus: args.delivery_status,
+          sampleContentProvided: Boolean(args.sample_content_provided),
+          consumptionPercentage: pct,
+          refundPreference: args.refund_preference,
+        };
+        await client.sendConsumptionInformation(args.transaction_id, request);
+        return { sent: true, transactionId: args.transaction_id };
+      }
+
+      case 'storekit__set_app_account_token':
+        await client.setAppAccountToken(args.original_transaction_id, { appAccountToken: args.app_account_token });
+        return { set: true, originalTransactionId: args.original_transaction_id };
+
+      case 'storekit__finish_transaction':
+        await client.finishTransaction(args.transaction_id);
+        return { finished: true, transactionId: args.transaction_id };
+
+      case 'storekit__get_app_transaction': {
+        const res = await client.getAppTransactionInfo(args.transaction_id);
+        const signed = res.signedAppTransactionInfo;
+        if (args.raw || !signed) return { signedAppTransactionInfo: signed ?? null, verified: false };
+        try {
+          const decoded = await this.verifierFor(this.envFor(args.environment), args._app)
+            .verifyAndDecodeAppTransaction(signed) as unknown as Record<string, unknown>;
+          const appTransaction: Record<string, unknown> = {};
+          for (const key of APP_TRANSACTION_FIELDS) if (decoded[key] !== undefined) appTransaction[key] = decoded[key];
+          return { appTransaction, verified: true };
+        } catch (err) {
+          throw new AscApiError(`The app transaction failed signature verification: ${(err as Error).message}. Nothing was decoded.`, 0);
+        }
+      }
+
+      case 'storekit__get_test_notification_status':
+        return client.getTestNotificationStatus(args.test_notification_token);
+
+      case 'storekit__get_retention_messaging':
+        return this.retentionMessaging(client, args);
+
+      case 'storekit__manage_retention_messaging':
+        return this.manageRetentionMessaging(client, args);
+
       default:
         throw new Error(`Unknown StoreKit tool: ${name}`);
     }
@@ -722,6 +1020,92 @@ export class StoreKitService {
       count: transactions.length,
       ...truncation(hasMore, revision, 'max_pages'),
     };
+  }
+
+  private async retentionMessaging(client: AppStoreServerAPIClient, args: Record<string, any>): Promise<unknown> {
+    // Apple answers 404 for a realtime URL or default message never set; that is "none", not a failure.
+    const orNull = <T>(p: Promise<T>) =>
+      p.catch((err) => {
+        if (err instanceof APIException && err.httpStatusCode === 404) return null;
+        throw err;
+      });
+    const [messages, images, realtimeUrl] = await Promise.all([
+      client.getMessageList(),
+      client.getImageList(),
+      orNull(client.getRealtimeURL()),
+    ]);
+    return {
+      messages: messages.messageIdentifiers ?? [],
+      images: images.imageIdentifiers ?? [],
+      realtimeUrl: realtimeUrl?.realtimeURL ?? null,
+      ...(args.product_id && args.locale
+        ? { defaultMessage: await orNull(client.getDefaultMessage(args.product_id, args.locale)) }
+        : {}),
+      ...(args.performance_test_id
+        ? { performanceTest: await client.getPerformanceTestResults(args.performance_test_id) }
+        : {}),
+    };
+  }
+
+  private async manageRetentionMessaging(client: AppStoreServerAPIClient, args: Record<string, any>): Promise<unknown> {
+    const need = (...keys: string[]) => {
+      const missing = keys.filter((k) => args[k] === undefined || args[k] === '');
+      if (missing.length) throw new Error(`${args.action} needs ${missing.join(', ')}.`);
+    };
+    switch (args.action) {
+      case 'upload_message': {
+        need('message_id', 'header', 'body');
+        const request: UploadMessageRequestBody = {
+          header: args.header,
+          body: args.body,
+          headerPosition: args.header_position,
+          ...(args.image_id ? { image: { imageIdentifier: args.image_id, altText: args.image_alt_text ?? '' } } : {}),
+          ...(args.bullet_points
+            ? { bulletPoints: args.bullet_points.map((b: any) => ({ text: b.text, imageIdentifier: b.image_id, altText: b.alt_text })) }
+            : {}),
+        };
+        await client.uploadMessage(args.message_id, request);
+        return { uploaded: 'message', messageId: args.message_id };
+      }
+      case 'delete_message':
+        need('message_id');
+        await client.deleteMessage(args.message_id);
+        return { deleted: 'message', messageId: args.message_id };
+      case 'upload_image': {
+        need('image_id', 'file_path', 'image_size');
+        const info = statSync(args.file_path);
+        if (!info.isFile() || info.size === 0 || info.size > MAX_RETENTION_IMAGE_BYTES) {
+          throw new Error(`file_path must be a nonempty file of at most ${MAX_RETENTION_IMAGE_BYTES} bytes.`);
+        }
+        await client.uploadImage(args.image_id, readFileSync(args.file_path), args.image_size);
+        return { uploaded: 'image', imageId: args.image_id };
+      }
+      case 'delete_image':
+        need('image_id');
+        await client.deleteImage(args.image_id);
+        return { deleted: 'image', imageId: args.image_id };
+      case 'set_default_message':
+        need('product_id', 'locale', 'message_id');
+        await client.configureDefaultMessage(args.product_id, args.locale, { messageIdentifier: args.message_id });
+        return { defaultMessage: args.message_id, productId: args.product_id, locale: args.locale };
+      case 'delete_default_message':
+        need('product_id', 'locale');
+        await client.deleteDefaultMessage(args.product_id, args.locale);
+        return { deleted: 'default message', productId: args.product_id, locale: args.locale };
+      case 'set_realtime_url':
+        need('url');
+        if (!/^https:\/\//i.test(args.url)) throw new Error('url must be an https:// address.');
+        await client.configureRealtimeURL({ realtimeURL: args.url });
+        return { realtimeUrl: args.url };
+      case 'delete_realtime_url':
+        await client.deleteRealtimeURL();
+        return { deleted: 'realtime URL' };
+      case 'start_performance_test':
+        need('original_transaction_id');
+        return client.initiatePerformanceTest({ originalTransactionId: args.original_transaction_id });
+      default:
+        throw new Error(`Unknown retention messaging action: ${args.action}`);
+    }
   }
 
   private async checkEntitlement(

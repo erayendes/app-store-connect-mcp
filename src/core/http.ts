@@ -53,6 +53,11 @@ export class AscHttpClient {
     this.limiter = new RateLimiter(opts.rateLimit);
   }
 
+  /** The key and host this client signs for. */
+  get account(): string {
+    return `${this.tokens.identity}@${this.allowedHost}`;
+  }
+
   /**
    * Resolves a `links.next` URL returned by Apple.
    * Rejects anything pointing off-host — a redirected pagination cursor must

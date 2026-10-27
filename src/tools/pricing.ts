@@ -93,6 +93,53 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
     annotations: { readOnlyHint: false, idempotentHint: false },
   },
   {
+    name: 'pricing__setup_subscription',
+    description:
+      'Set up a whole auto-renewable subscription under one confirmation: the group (found by ' +
+      'name, or made new with its display name), the subscription, its localizations, sale in ' +
+      'every country (or the ones given) and its price, set in one country and derived by Apple ' +
+      'everywhere else. Reuses an existing group and never edits one. Check the result with ' +
+      'preflight__check_subscription. REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'App name, bundle ID (com.example.app) or numeric Apple ID.' },
+        group: { type: 'string', description: 'Subscription group reference name. Created when the app has none by that name.' },
+        group_display_name: {
+          type: 'string',
+          description: 'New group only: the name customers see, in every locale given. Defaults to the group name.',
+        },
+        product_id: { type: 'string', description: 'New product ID, e.g. com.example.pro.monthly. Cannot be changed later.' },
+        name: { type: 'string', description: 'Reference name, seen only in App Store Connect.' },
+        period: { type: 'string', enum: ['ONE_WEEK', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'] },
+        localizations: {
+          type: 'array',
+          description: 'At least one: the name and description customers see, per locale.',
+          items: {
+            type: 'object',
+            properties: {
+              locale: { type: 'string', description: 'e.g. en-US, tr.' },
+              name: { type: 'string' },
+              description: { type: 'string' },
+            },
+            required: ['locale', 'name', 'description'],
+          },
+        },
+        territory: { type: 'string', description: 'The country whose price you set, ISO-3166 alpha-3: TUR, USA.' },
+        price: { type: 'string', description: 'Customer price there, e.g. "99.99". Apple derives every other country.' },
+        territories: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Sell only in these countries (alpha-3). Omit to sell everywhere, new countries included.',
+        },
+        family_sharable: { type: 'boolean' },
+        review_note: { type: 'string', description: 'Note for App Review.' },
+      },
+      required: ['app', 'group', 'product_id', 'name', 'period', 'localizations', 'territory', 'price'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
+  {
     name: 'pricing__equalize_price',
     description:
       'Set one anchor price and let Apple derive the equivalent price in every other ' +
@@ -650,6 +697,26 @@ async function resolvePricePoint(
 export function buildPricingPreview(args: Record<string, unknown>, toolName?: string): string {
   const preserve = args.preserve_current_price === true;
 
+  if (toolName === 'pricing__setup_subscription') {
+    const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
+    const where = Array.isArray(args.territories) && args.territories.length
+      ? `${args.territories.length} countries: ${(args.territories as unknown[]).join(', ')}`
+      : 'every country, and new ones as Apple adds them';
+    return [
+      `Heimdall is about to CREATE a subscription and price it — a REVENUE-level write.`,
+      '',
+      `App:          ${String(args.app ?? '?')}`,
+      `Group:        ${String(args.group ?? '?')} (created if the app has none by that name)`,
+      `Product ID:   ${String(args.product_id ?? '?')} — permanent once created`,
+      `Period:       ${String(args.period ?? '?')}`,
+      `Languages:    ${locs.map((l) => `${String(l.locale)} "${String(l.name)}"`).join(', ') || '?'}`,
+      `Price:        ${normalizePrice(String(args.price ?? '?'))} in ${String(args.territory ?? '?').toUpperCase()}, derived by Apple elsewhere`,
+      `On sale in:   ${where}`,
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n');
+  }
+
   if (toolName === 'pricing__equalize_price') {
     const kind = String(args.product_type ?? '?');
     const isSub = kind === 'subscription';
@@ -1032,6 +1099,7 @@ export async function executePricingTool(
   }
 
   if (name === 'pricing__equalize_price') return equalizePrice(args, ctx);
+  if (name === 'pricing__setup_subscription') return createSubscription(args, ctx);
   if (name === 'pricing__set_iap_price') return setIapPrice(args, ctx);
   if (name === 'pricing__make_offer') return createOffer(args, ctx);
 
@@ -2144,5 +2212,150 @@ async function setIapPrice(args: Record<string, unknown>, ctx: PricingContext): 
     diff,
     ...(warning ? { warning } : {}),
     note: 'Price schedule replaced. Check pricing__get_iap_price to see current and scheduled prices.',
+  };
+}
+
+const SUBSCRIPTION_PERIODS = ['ONE_WEEK', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'];
+
+/**
+ * Group, subscription, its first version, localizations, availability and price
+ * in one call — the seven-write chain a new subscription takes in the v2 model.
+ *
+ * An existing group is reused and never edited: its versions and localizations
+ * belong to whatever is already live. A new subscription's version is created
+ * only when Apple did not create one, because a draft version cannot be deleted
+ * and a second one blocks the first. Availability uses the UPFRONT plan, the
+ * standard one; the monthly-with-commitment plan depends on it and is left to
+ * subscription_plan_availabilities__create.
+ */
+async function createSubscription(args: Record<string, unknown>, ctx: PricingContext): Promise<unknown> {
+  for (const field of ['app', 'group', 'product_id', 'name', 'period', 'territory', 'price'] as const) {
+    if (typeof args[field] !== 'string' || !String(args[field]).trim()) throw new AscApiError(`"${field}" is required.`, 0);
+  }
+  const period = String(args.period);
+  if (!SUBSCRIPTION_PERIODS.includes(period)) {
+    throw new AscApiError(`"${period}" is not a period. One of: ${SUBSCRIPTION_PERIODS.join(', ')}.`, 0);
+  }
+  const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
+  if (!locs.length || locs.some((l) => ['locale', 'name', 'description'].some((f) => typeof l?.[f] !== 'string' || !String(l[f]).trim()))) {
+    throw new AscApiError('"localizations" needs at least one entry, each with locale, name and description.', 0);
+  }
+  const territories = Array.isArray(args.territories) ? (args.territories as unknown[]).map((t) => String(t).trim().toUpperCase()) : undefined;
+  if (territories && !territories.length) {
+    throw new AscApiError('"territories" is empty. Omit it to sell everywhere, or name the countries.', 0);
+  }
+  for (const t of [String(args.territory).trim().toUpperCase(), ...(territories ?? [])]) {
+    if (!/^[A-Z]{3}$/.test(t)) {
+      throw new AscApiError(`"${t}" is not a territory code. Apple wants three letters (ISO-3166 alpha-3): USA, TUR, DEU — not US, TR, DE.`, 0);
+    }
+  }
+
+  const app = await resolveApp(ctx.http, String(args.app));
+  const wantedGroup = String(args.group).trim();
+  const groups: any = await ctx.http.get(`/v1/apps/${encodeURIComponent(app.id)}/subscriptionGroups`, {
+    'fields[subscriptionGroups]': 'referenceName', limit: 200,
+  });
+  let groupId: string | undefined = (groups?.data ?? [])
+    .find((g: any) => String(g.attributes?.referenceName ?? '').toLowerCase() === wantedGroup.toLowerCase())?.id;
+  if (!groupId && groups?.links?.next) {
+    throw new AscApiError('The app has more than 200 subscription groups; name an existing one exactly or create the group first.', 0);
+  }
+  const plan = [
+    groupId ? `reuse group "${wantedGroup}" (${groupId})` : `create group "${wantedGroup}" with its display name in ${locs.length} language(s)`,
+    `create subscription ${String(args.product_id)} (${period})`,
+    `add ${locs.length} localization(s): ${locs.map((l) => l.locale).join(', ')}`,
+    territories ? `sell in ${territories.length} countries` : 'sell in every country, new ones included',
+    `price ${normalizePrice(String(args.price))} in ${String(args.territory).toUpperCase()}, derived by Apple elsewhere`,
+  ];
+  if (ctx.dryRun) return { dryRun: true, app: `${app.name} (${app.id})`, plan };
+
+  const done: string[] = [];
+  // A failure part-way names what already exists, so nothing is created twice on a retry.
+  const step = async <T>(label: string, run: () => Promise<T>): Promise<T> => {
+    try {
+      const out = await run();
+      done.push(label);
+      return out;
+    } catch (err) {
+      const message = err instanceof AscApiError ? err.summary : (err as Error).message;
+      throw new AscApiError(
+        `Stopped at "${label}": ${message}. Already done: ${done.length ? done.join('; ') : 'nothing'}. ` +
+          'Finish with the single tools rather than calling this again, or the done steps run twice.',
+        // Apple's errors[] stay out: AscApiError.summary prefers them and would hide what is already done.
+        err instanceof AscApiError ? err.status : 0, [], err instanceof AscApiError ? err.requestId : undefined
+      );
+    }
+  };
+  /** The editable version of a group or subscription: Apple's own, else a new one. */
+  const draftVersion = async (list: string, create: string, rel: string, ownerType: string, ownerId: string) => {
+    const existing: any = await ctx.http.get(list, { limit: 1 });
+    if (existing?.data?.[0]?.id) return String(existing.data[0].id);
+    const made: any = await ctx.http.post(create, { data: { type: create.split('/').pop(), relationships: { [rel]: { data: { type: ownerType, id: ownerId } } } } });
+    return String(made.data.id);
+  };
+
+  if (!groupId) {
+    const made: any = await step(`created group "${wantedGroup}"`, () => ctx.http.post('/v1/subscriptionGroups', {
+      data: { type: 'subscriptionGroups', attributes: { referenceName: wantedGroup }, relationships: { app: { data: { type: 'apps', id: app.id } } } },
+    }));
+    groupId = String(made.data.id);
+    const gid = groupId;
+    const groupVersion = await step('group version', () => draftVersion(
+      `/v1/subscriptionGroups/${encodeURIComponent(gid)}/versions`, '/v1/subscriptionGroupVersions', 'subscriptionGroup', 'subscriptionGroups', gid));
+    const display = String(args.group_display_name ?? wantedGroup);
+    for (const l of locs) {
+      await step(`group name in ${String(l.locale)}`, () => ctx.http.post('/v2/subscriptionGroupLocalizations', {
+        data: { type: 'subscriptionGroupLocalizations', attributes: { locale: l.locale, name: display },
+          relationships: { version: { data: { type: 'subscriptionGroupVersions', id: groupVersion } } } },
+      }));
+    }
+  }
+
+  const sub: any = await step(`created subscription ${String(args.product_id)}`, () => ctx.http.post('/v1/subscriptions', {
+    data: {
+      type: 'subscriptions',
+      attributes: {
+        productId: args.product_id, name: args.name, subscriptionPeriod: period,
+        ...(typeof args.family_sharable === 'boolean' ? { familySharable: args.family_sharable } : {}),
+        ...(args.review_note ? { reviewNote: args.review_note } : {}),
+      },
+      relationships: { group: { data: { type: 'subscriptionGroups', id: groupId } } },
+    },
+  }));
+  const subId = String(sub.data.id);
+  const version = await step('subscription version', () => draftVersion(
+    `/v1/subscriptions/${encodeURIComponent(subId)}/versions`, '/v1/subscriptionVersions', 'subscription', 'subscriptions', subId));
+  for (const l of locs) {
+    await step(`localization ${String(l.locale)}`, () => ctx.http.post('/v2/subscriptionLocalizations', {
+      data: { type: 'subscriptionLocalizations', attributes: { locale: l.locale, name: l.name, description: l.description },
+        relationships: { version: { data: { type: 'subscriptionVersions', id: version } } } },
+    }));
+  }
+
+  const sellIn = territories ?? ((await ctx.http.get('/v1/territories', { limit: 200 })) as any).data.map((t: any) => String(t.id));
+  await step(`on sale in ${sellIn.length} countries`, () => ctx.http.post('/v1/subscriptionPlanAvailabilities', {
+    data: {
+      type: 'subscriptionPlanAvailabilities',
+      attributes: { planType: 'UPFRONT', availableInNewTerritories: !territories },
+      relationships: {
+        subscription: { data: { type: 'subscriptions', id: subId } },
+        availableTerritories: { data: sellIn.map((id: string) => ({ type: 'territories', id })) },
+      },
+    },
+  }));
+
+  const priced = await step('price', async () => {
+    const out: any = await equalizePrice({
+      app: app.id, product_type: 'subscription', product: String(args.product_id),
+      territory: args.territory, price: args.price, preserve_current_price: true,
+    }, ctx);
+    // equalizePrice reports a stop part-way as ok: false rather than throwing.
+    if (out?.ok === false) throw new AscApiError(`${out.note ?? out.error ?? 'pricing stopped part-way'}`, 0);
+    return out;
+  });
+
+  return {
+    app: `${app.name} (${app.id})`, groupId, subscriptionId: subId, versionId: version, done, price: priced,
+    next: 'Upload the App Review screenshot (media__upload, target subscription_review_screenshot) and run preflight__check_subscription before submitting.',
   };
 }
