@@ -3,7 +3,7 @@
 **App Store Connect hesabınızın tamamı, tek bir araçta.**
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
+<a href="#kurulum"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-tr.png" alt="Heimdall 3.0 betası. Hemen deneyin: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
@@ -12,6 +12,20 @@
 [![Yerli üretim](https://img.shields.io/badge/YERL%C4%B0%20%C3%9CRET%C4%B0M-red?style=flat&label=%F0%9F%A4%9D&color=red&link=https%3A%2F%2Fmilowda.com)](https://milowda.com)
 
 🇬🇧 [English](../README.md) · 🇹🇷 Türkçe
+
+> **Heimdall 3.0 betası çıktı! 🎉**
+>
+> Heimdall'ı üç ay önce yayınladım. O günden bu yana npm'den **6.800'den fazla indirildi**, her ay ortalama 1.700 kez kuruluyor. GitHub'da **50'yi aşkın yıldız** topladı ve 3 ayda **37 sürüm** çıktı. Bu ilgi için hepinize teşekkür ederim; 3.0'ı da tam olarak sizden gelen geri bildirimlerle kurdum.
+>
+> 3.0, Heimdall'ın şimdiye kadarki en büyük güncellemesi:
+> - **Profiller yaptığınız işe göre yeniden bölündü:** 13 profil, 50 alt profil.
+> - **Görsel ve dosya yönetimi artık yalnızca dört araçla yapılıyor:** 73 ayrı aracı kaldırdık. Ekran görüntüsünden build dosyasına kadar her şeyi `media__list`, `media__upload`, `media__arrange` ve `media__delete` hallediyor.
+> - **İncelemeye gönderdiğiniz her şey tek çağrıyla gidiyor.**
+> - **Onay penceresi artık açık ve anlaşılır.**
+>
+> Ne değiştiğinin hepsi [sürüm notlarında](CHANGELOG.md).
+>
+> Beta sürecinde gördüğünüz her tuhaflığı [yazarsanız](https://github.com/erayendes/app-store-connect-mcp/issues) çok sevinirim. Kararlı sürümü kullanmaya devam etmek isterseniz `@beta`'yı yazmamanız yeterli.
 
 **Sorun yanıtlasın, isteyin yapsın.**
 
@@ -32,15 +46,15 @@ Yani App Store Connect ekranlarında yapabildiğiniz işlerin neredeyse tamamın
 
 ### Heimdall
 
-Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **14 profil altında 50 alt profil ve 751 araç** içeren tek bir MCP sunucusudur.
+Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **14 profil altında 50 alt profil ve 751 araç** içeren tek bir pakettir; her profil kendi küçük MCP sunucusu olarak çalışır.
 
-Apple'ın spesifikasyonunda 1011 API operasyonu var. Heimdall, Apple'ın kullanımdan kaldırdığı ya da yeni sürümüyle değiştirdiği 185 tanesini ve başka bir işlemi öbür taraftan tekrarlayan ya da hiçbir işte gerekmeyen 19 tanesini dışarıda bırakıyor. Kalan 807 işlemden 710'u araca dönüşüyor, üstüne elle yazılmış 41 araç ekleniyor: toplam 751 araç. Geri kalan 97 işlemi, birkaç ham çağrının işini tek çağrıda yapan medya araçları karşılıyor.
+Apple'ın spesifikasyonunda 1011 API operasyonu var. Heimdall, Apple'ın kullanımdan kaldırdığı ya da yeni sürümüyle değiştirdiği 185 tanesini ve aynı ilişkiye öbür uçtan erişen ya da hiçbir işte gerekmeyen 19 tanesini dışarıda bırakıyor. Kalan 807 işlemden 710'u araca dönüşüyor, üstüne elle yazılmış 41 araç ekleniyor: toplam 751 araç. Geri kalan 97 işlemi, birkaç ham çağrının işini tek çağrıda yapan medya araçları karşılıyor.
 
 Çoğu muadili API'nin elle seçilmiş bir araç dilimini sunar. Bu kürasyon ihtiyaç duyacağınız o uç noktaya kadar işe yarar. Ama **o uç nokta geldiğinde çözümü bulmak için alternatifler arasında kaybolur gidersiniz.**
 
 **Heimdall** tam tersini yapar, **API'nin tamamını yaptığınız işe göre bölerek verir.** Sürümler, TestFlight, abonelikler ve uygulama içi satın almalar, mağaza sayfası ve yorumlar, Game Center, Xcode Cloud, provisioning, webhook'lar, satış ve finans raporları: her biri bir profil. Büyük profiller alt profillere ayrılır; örneğin `monetization:subscription` yalnızca abonelikleri yükler, gelirle ilgili öbür araçları getirmez. **İstediklerinizi siz seçersiniz** ve istediğiniz zaman ekleyip çıkarırsınız.
 
-**ASC-Core her profille gelir.** Uygulamalarınızı bulmak, bütün araçlarda aramak ve medya araçları hangi işi yaparsanız yapın aynıdır. Bu yüzden ayrı bir sunucuda bir kez çalışırlar; setup bu sunucuyu seçtiklerinizin yanına kaydeder. Medya araçları App Store Connect'in aldığı her ekran görüntüsünü, videoyu, görseli ve dosyayı yönetir: mağaza sayfası medyası, App Clip ve Game Center görselleri, uygulama içi satın alma ve abonelik görselleri, inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, yol tarifi kapsamı, background asset ve build yükleme dosyaları ([tam liste](MEDIA_TARGETS_tr.md)).
+**ASC-Core her profille gelir.** Uygulamalarınızı bulmak, bütün araçlarda aramak ve medya araçları hangi işi yaparsanız yapın aynıdır. Bu yüzden ayrı bir sunucuda bir kez çalışırlar; setup bu sunucuyu seçtiklerinizin yanına kaydeder. Medya araçları App Store Connect'in aldığı her ekran görüntüsünü, videoyu, görseli ve dosyayı yönetir: mağaza sayfası medyası, App Clip ve Game Center görselleri, uygulama içi satın alma ve abonelik görselleri, inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, routing coverage dosyası, background asset ve build yükleme dosyaları ([tam liste](MEDIA_TARGETS_tr.md)).
 
 Hangi profilin neyi kapsadığını, araç araç görmek için [Profiller](PROFILES_tr.md) dokümanına bakabilirsiniz.
 Ama örneğin *"in-app event için bir araç var mı?"* diye sorarsanız Heimdall o aracın hangi profilde olduğunu zaten söyler.
@@ -52,6 +66,18 @@ Eğer **hangi profile ihtiyacınız olduğundan emin değilseniz** [başlangıç
 MCP rehberleri genelde uzak HTTP sunucularını önerir.
 **Heimdall yerelde çalışır**. App Store Connect için gerekli olan anahtarları Keychain'den okur. Kısa ömürlü bir token imzalar ve doğrudan Apple ile konuşur. Arada hiçbir şey olmaz, anahtarınız sadece sizde kalır.
 
+```mermaid
+flowchart LR
+  ai["Yapay zekâ uygulamanız"] -->|"stdio, ağ yok"| h
+  subgraph mac["Bilgisayarınız"]
+    h["Heimdall<br/>salt okunur modda yazma araçları görünmez"] --> gate["Riskli işlemlerde önce sorar"]
+    gate --> rl["İstekleri Apple'ın<br/>hız sınırının altında tutar"]
+    rl --> sign["20 dakikalık token imzalar"]
+    kc[("Keychain")] -.->|"anahtar, gerektiğinde okunur"| sign
+  end
+  sign -->|HTTPS| apple["App Store Connect API"]
+```
+
 > [!NOTE]
 > Anahtara en az yetkiyi vermeye çalışın. App Store Connect [rol yetkileri](ROLES_tr.md)ni incelediğinizden emin olun.
 
@@ -60,9 +86,33 @@ MCP rehberleri genelde uzak HTTP sunucularını önerir.
 Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğinizde önce onay ister ve neyin değişeceğini gösterir. Varsayılan olarak iki şekilde sorar:
 
 - **CONFIRM yazmanızı ister:** gelir, silme, kod imzalama ve erişim değişikliklerinde ve geri alınamayan birkaç adımda: bir sürümü yayınlamak, ön siparişi bitirmek, bir build'in süresini bitirmek. Bir build'i tek çağrıda beta gruplarına atamak (`testflight__assign_build_to_groups`) da CONFIRM ister.
-- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan diğer adımlarda: bir şeyi incelemeye göndermek, yeni bir abonelik ya da uygulama içi satın alma sürümü başlatmak, kademeli yayını değiştirmek, bir build'i dış incelemeye göndermek, bir ülkede satışa açmak, ürün sayfası denemesini değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
+- **Evet ya da hayır sorar:** müşteriye, oyuncuya ya da testçiye ulaşan diğer adımlarda: bir şeyi incelemeye göndermek, yeni bir abonelik ya da uygulama içi satın alma sürümü başlatmak, kademeli yayını değiştirmek, bir build'i dış incelemeye göndermek, bir ülkede satışa açmak, ürün sayfası testini değiştirmek, bir oyuncu adına skor ya da başarım göndermek.
 
 Geri kalan her şeyde kullandığınız yapay zekâ uygulamasının kendi onay sistemi devrededir.
+
+```mermaid
+flowchart TD
+  call["Bir yazma işlemi çağrılır"] --> dry{"Dry-run mı?"}
+  dry -- evet --> preview["Ne göndereceğini gösterir.<br/>Apple'a hiçbir şey gitmez."]
+  dry -- hayır --> level{"Neyi değiştiriyor?"}
+  level -- "gelir, silme,<br/>kod imzalama, erişim" --> strong["CONFIRM yazılır"]
+  level -- "müşteriye, oyuncuya<br/>ya da testçiye ulaşır" --> yesno["Evet ya da hayır"]
+  level -- "diğer her şey" --> client["Yapay zekâ uygulamanızın kendi onayı"]
+  strong --> where{"Yapay zekâ uygulamanız<br/>soruyu gösterebiliyor mu?"}
+  yesno --> where
+  where -- evet --> form["Yapay zekâ uygulamanızda sorulur"]
+  where -- "hayır, Mac'te" --> dialog["Heimdall'ın kendi penceresinde sorulur"]
+  where -- "sorulacak yer yok" --> blocked["Engellenir. Hiçbir şey değişmez."]
+  form --> answer{"Cevabınız"}
+  dialog --> answer
+  answer -- onay --> run["Çalışır"]
+  answer -- "diğer her cevap" --> stop["Hiçbir şey değişmez"]
+  client --> run
+```
+
+**Yapay zekâ uygulamanız soruyu gösteremiyorsa** (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresiyle sorar. Düğmesi ne yapacağını söyler: Remove, Upload, Delete. Yapay zekâ bu pencereyi ne görebilir ne de basabilir; siz cevap verene kadar bekler.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Düğmeler: Cancel ve Remove." width="394">
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 
@@ -78,11 +128,13 @@ npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, Issuer ID, Apple doğrulaması, profil ve alt profil seçimi, anahtarın Keychain'e kaydı" width="720">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle" width="560">
+
+<sub>Tarayıcıda kurulum: neye ihtiyacınız olduğunu seçin, yapay zekâya maliyetini seçtikçe görün. Dört adımın hepsi [Kurulum](SETUP_tr.md#kimlik-bilgisini-bir-kez-kaydedin--setup-sihirbazı) sayfasında.</sub>
 
 Bu 3.0 betası; 3.0.0 çıkana kadar `@beta` onu seçer. 2.8 için `@beta`'yı yazmayın.
 
-Tarayıcıda (önerilen) ya da terminalde devam etmek isteyip istemediğinizi sorar. Bir [App Store Connect API anahtarı](SETUP_tr.md#api-anahtarı-oluşturun) gerekir; tarayıcı sayfası seçtiklerinize göre anahtara hangi rolü vermeniz gerektiğini söyler, yani anahtarı oluşturmadan da setup'ı başlatabilirsiniz. Node.js 20.19 veya üstü gerekir.
+Tarayıcıda mı (önerilir) terminalde mi devam etmek istediğinizi sorar. Bir [App Store Connect API anahtarı](SETUP_tr.md#api-anahtarı-oluşturun) gerekir; tarayıcı sayfası seçtiklerinize göre anahtara hangi rolü vermeniz gerektiğini söyler, yani anahtarı oluşturmadan da setup'ı başlatabilirsiniz. Node.js 20.19 veya üstü gerekir.
 
 Setup iki iş yapar: anahtarınızı kaydeder ve seçtiğiniz profilleri, yanlarına ASC-Core'u da ekleyerek bulduğu her yapay zekâ uygulamasına kaydeder. İkinci kısmı yapay zekânız `register` ile sizin yerinize yapabilir; anahtarı ise her zaman siz, `setup` ile verirsiniz.
 

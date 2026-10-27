@@ -49,13 +49,13 @@ Its media tools (`media__*`) handle every screenshot, video, image and file. Sto
 - `asc__status` — Checks the connection and the credentials
 - `media__arrange` — Orders images, places them on a page or removes them, sets the poster frame, archives and renames
 - `media__delete` — Deletes the chosen images or videos from their target; checks ownership first and shows them by name
-- `media__list` — Lists the images and videos on the version page, custom product pages, product page tests, in-app events and the library, with their IDs and states
-- `media__upload` — Uploads an image or video to the library and, if asked, places it on a page
+- `media__list` — Lists the images and videos on the version page, custom product pages, product page tests, in-app events and the library, or the files of an image or file target (in-app purchase image, review screenshot, build file…), with their IDs and states
+- `media__upload` — Uploads an image or video to the library and, if asked, places it on a page; or uploads to an image or file target (in-app purchase image, review screenshot, build file…)
 
 ## Sub-profiles
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="The profile picker: ticking monetization opens its sub-profiles, each with its tool count and token estimate" width="720">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="The browser setup, step 1: each profile with its tool count and token cost; Monetization is open, with two of its sub-profiles ticked" width="560">
 
 Tick a profile in the [setup](SETUP_en.md) picker. When you move the cursor onto it, its sub-profiles open, all ticked; untick the ones you don't want.
 For example, `monetization` has 152 tools, but if you only work on subscriptions and their offers, the 64 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
@@ -164,7 +164,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 **Server:** `ASC-AppClips` · **Key role:** App Manager
 
-**What is inside:** App Clips: default and advanced experiences, header images, review details, beta invocations.
+**What is inside:** App Clips: default and advanced experiences, header images, review details, beta invocations. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** The instant, lightweight version of your app.
 
@@ -371,7 +371,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `game-center:achievements` · 20 tools
 
-**What is inside:** Achievements: versions, localizations, images, player submissions.
+**What is inside:** Achievements: versions, localizations, images, player submissions. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** Create achievements, their text and images. · **Key role:** App Manager
 
@@ -395,7 +395,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `game-center:activities` · 25 tools
 
-**What is inside:** Activities: versions, localizations, images, and the achievements and leaderboards they link.
+**What is inside:** Activities: versions, localizations, images, and the achievements and leaderboards they link. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** Activities players can jump into, and what they link to. · **Key role:** App Manager
 
@@ -424,7 +424,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `game-center:challenges` · 21 tools
 
-**What is inside:** Challenges: versions, localizations, images, and the leaderboard each uses.
+**What is inside:** Challenges: versions, localizations, images, and the leaderboard each uses. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** Challenges players send each other. · **Key role:** App Manager
 
@@ -471,7 +471,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `game-center:leaderboards` · 44 tools
 
-**What is inside:** Leaderboards and leaderboard sets: versions, localizations, images, score submissions and moderation.
+**What is inside:** Leaderboards and leaderboard sets: versions, localizations, images, score submissions and moderation. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** Leaderboards and sets of them, and moderating scores. · **Key role:** App Manager
 
@@ -839,7 +839,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `monetization:in-app-purchases` · 34 tools
 
-**What is inside:** In-app purchases: localizations, images, versions, availability, prices, submissions, and the price macros.
+**What is inside:** In-app purchases: localizations, images, versions, availability, prices, submissions, and the price macros. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** In-app purchases, their text, images, prices and review. · **Key role:** App Manager
 
@@ -893,7 +893,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `monetization:subscription` · 52 tools
 
-**What is inside:** Subscriptions and their groups: localizations, images, versions, prices, availability, grace period, submissions, and the price and preflight macros.
+**What is inside:** Subscriptions and their groups: localizations, images, versions, prices, availability, grace period, submissions, and the price and preflight macros. Images are uploaded through ASC-Core's media tools.
 
 **When you need it:** Subscriptions and their groups, text, prices and review. · **Key role:** App Manager
 

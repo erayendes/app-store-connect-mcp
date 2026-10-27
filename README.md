@@ -3,7 +3,7 @@
 **Your whole App Store Connect account, in one tool.**
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
+<a href="#setup"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-en.png" alt="Heimdall 3.0 beta. Try it now: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
@@ -12,6 +12,20 @@
 [![Yerli üretim](https://img.shields.io/badge/YERL%C4%B0%20%C3%9CRET%C4%B0M-red?style=flat&label=%F0%9F%A4%9D&color=red&link=https%3A%2F%2Fmilowda.com)](https://milowda.com)
 
 🇬🇧 English · 🇹🇷 [Türkçe](docs/README_tr.md)
+
+> **Heimdall 3.0 beta is here! 🎉**
+>
+> I released Heimdall three months ago. Since then it has been **downloaded more than 6,800 times** from npm, about 1,700 installs a month. It has passed **50 stars** on GitHub, with **37 releases** in 3 months. Thank you all; 3.0 is built on exactly the feedback you sent.
+>
+> 3.0 is the biggest update Heimdall has had:
+> - **Profiles are cut by the work you do:** 13 profiles, 50 sub-profiles.
+> - **Images and files now take just four tools:** we removed 73 separate ones. `media__list`, `media__upload`, `media__arrange` and `media__delete` handle everything from screenshots to build files.
+> - **Everything you send to review goes in one call.**
+> - **The confirmation dialog** is clear and plain.
+>
+> Everything that changed is in the [changelog](docs/CHANGELOG.md).
+>
+> If you see anything odd during the beta, I'd love to [hear about it](https://github.com/erayendes/app-store-connect-mcp/issues). To stay on the stable release, just leave `@beta` off.
 
 **Ask, and it answers. Tell it, and it's done.**
 
@@ -32,7 +46,7 @@ Almost anything you'd click through App Store Connect to do, you can now just as
 
 ### Heimdall
 
-One MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 50 sub-profiles, 751 tools.**
+One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 50 sub-profiles, 751 tools.** Each profile runs as its own small MCP server.
 
 Apple's specification lists 1011 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 807, 710 become tools, and 41 hand-written ones join them: 751 tools in all. The other 97 are covered by the media tools, which do in one call what took several raw ones.
 
@@ -51,6 +65,18 @@ Most App Store Connect MCP servers give you a hand-picked slice of the API. That
 Most MCP guides recommend remote HTTP servers.
 **Heimdall runs locally instead.** It reads your App Store Connect key from the Keychain, signs a short-lived token and talks to Apple directly. Nothing sits in between, so your key stays with you.
 
+```mermaid
+flowchart LR
+  ai["Your AI app"] -->|"stdio, no network"| h
+  subgraph mac["Your machine"]
+    h["Heimdall<br/>read-only mode hides every write"] --> gate["Asks before risky changes"]
+    gate --> rl["Paces requests under<br/>Apple's rate limit"]
+    rl --> sign["Signs a 20-minute token"]
+    kc[("Keychain")] -.->|"key, read when needed"| sign
+  end
+  sign -->|HTTPS| apple["App Store Connect API"]
+```
+
 > [!NOTE]
 > Give your key the narrowest role that does the job. [Roles](docs/ROLES_en.md) explains what each App Store Connect role can do.
 
@@ -62,6 +88,30 @@ Before changing a price, giving someone Admin access or deleting something, Heim
 - **You answer yes or no** for the other steps that reach customers, players or testers: sending something to review, starting a new subscription or in-app purchase version, changing a phased rollout, sending a build to external review, selling in a country, changing a product page test, sending a score or achievement for a player.
 
 Everything else goes through your AI app's own approval.
+
+```mermaid
+flowchart TD
+  call["A write is called"] --> dry{"Dry-run?"}
+  dry -- yes --> preview["Shows what it would send.<br/>Nothing reaches Apple."]
+  dry -- no --> level{"What does it change?"}
+  level -- "revenue, deletion,<br/>code signing, access" --> strong["Type CONFIRM"]
+  level -- "reaches customers,<br/>players or testers" --> yesno["Yes or no"]
+  level -- "anything else" --> client["Your AI app's own approval"]
+  strong --> where{"Can your AI app<br/>show the question?"}
+  yesno --> where
+  where -- yes --> form["Asked in your AI app"]
+  where -- "no, on a Mac" --> dialog["Asked in Heimdall's own window"]
+  where -- "no way to ask" --> blocked["Blocked. Nothing changed."]
+  form --> answer{"Your answer"}
+  dialog --> answer
+  answer -- approved --> run["Runs"]
+  answer -- "anything else" --> stop["Nothing changed"]
+  client --> run
+```
+
+**If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Buttons: Cancel and Remove." width="394">
 
 More in [Security](.github/SECURITY.md).
 
@@ -77,7 +127,9 @@ npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
+
+<sub>Setup in the browser: pick what you need and see what it costs the AI as you go. All four steps are in [Setup](docs/SETUP_en.md#save-your-credentials-once--the-setup-wizard).</sub>
 
 This is the 3.0 beta; `@beta` picks it until 3.0.0 is out. For 2.8, leave `@beta` off.
 

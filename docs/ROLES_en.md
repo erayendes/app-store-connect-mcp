@@ -21,7 +21,7 @@ This page shows what each App Store Connect role can do and what's at risk if th
 
 ## Which roles each profile works with
 
-Setup works from the same table: from what you pick, it suggests the narrowest role that covers all of it. A key has one role, so a mix that no single narrow role covers lands on Admin. ASC-Core works with any role.
+Setup works from the same table: from what you pick, it suggests the narrowest role that covers all of it. A key has one role, so a mix that no single narrow role covers lands on Admin. ASC-Core's app lookup and tool search work with any role; its media tools need the role that owns what you upload to (Marketing or App Manager for store pages, App Manager for in-app purchase and Game Center images, Developer for build files).
 
 | Profile or sub-profile | Roles that work |
 |:--|:--|

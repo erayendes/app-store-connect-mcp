@@ -24,17 +24,31 @@ npx -y @erayendes/asc-mcp@beta setup
 > [!NOTE]
 > Bu sayfa 3.0 betasını anlatıyor; bu yüzden buradaki her komut `@erayendes/asc-mcp@beta` kullanır. Yalın `@erayendes/asc-mcp`, 3.0.0 yayınlanana kadar hâlâ 2.x'tir.
 
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="Setup sihirbazı: anahtar, Issuer ID, Apple doğrulaması, profil ve alt profil seçimi, anahtarın Keychain'e kaydı" width="720">
+**Tarayıcıda yapın.** Setup önce tarayıcıda mı terminalde mi devam etmek istediğinizi sorar; tarayıcıyı seçin. Kendi bilgisayarınızda bir sayfa açılır ve sizi aşağıdaki dört adımdan geçirir.
 
 ### Kimlik bilgisini bir kez kaydedin — Setup sihirbazı
 
 Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 
 1. **Neye ihtiyacınız var.** [Profil](PROFILES_tr.md) seçicinin her satırı araç sayısını ve kabaca token maliyetini gösterir; `[Admin key]` ve `[vendor no.]` bunlardan birini isteyen satırları işaretler. Toplam, seçtikçe gösterilir.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
+
 2. **Anahtarınız.** Seçtiklerinize göre bunları karşılayan en dar anahtar [rolünü](ROLES_tr.md) söyler. Kayıtlı bir anahtar varsa önce o önerilir, Admin olup olmadığıyla birlikte. Yeni anahtarda `Key ID` ve `Issuer ID` yazarken kontrol edilir, `.p8` yolunu alır (sürükle-bırak da olur) ve hepsini Apple'a doğrulatır; Apple reddederse yeniden girersiniz. `Vendor number` yalnızca satış ve finans raporlarını seçtiyseniz sorulur.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step2.png" alt="2. adım: sayfa, seçtiklerinize göre hangi rolde anahtar oluşturacağınızı ve nasıl oluşturacağınızı söyler; .p8 dosyasını sürükle-bırakla alır" width="560">
+
 3. **Yapay zekâ uygulamalarınız.** Cihazınızda kurulu olanları bulur. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır. Claude Desktop açıkken kendi ayarlarını geri yazdığı için kurulum önce onu kapatmanızı ister. Kurulumu Claude Desktop'ın içinden çalıştırıyorsanız, Desktop'ı da kapsaması için Desktop'ı kapatıp kurulumu Terminal'den çalıştırın.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step3.png" alt="3. adım: bu bilgisayarda bulunan yapay zekâ uygulamaları, her biri işaretli" width="560">
+
 4. **Plan.** Her uygulamada neyin değişeceği gösterilir ve bir kez onay istenir.
+
+   <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step4.png" alt="4. adım: her uygulamaya neyin ekleneceği, Apply ve Cancel düğmeleriyle" width="560">
 
 Setup anahtar bilgilerini kaydetmeden önce Apple'a doğrular. Apple'ın reddettiği anahtar kaydedilmez; Apple'a ulaşılamazsa setup bunu söyler ve bilgileri yine de kaydeder. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
@@ -42,15 +56,15 @@ Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantıs
 
 > - Anahtar **macOS Keychain**'de saklanır. macOS dışında dosya yoluyla referanslanır.
 > - **Gizli olmayan her şey** `~/.config/asc-mcp/config.json`'a yazılır. Her profil bu ortak yapılandırmayı okur.
-> - **`setup`'ı daha önce çalıştırdıysanız**, kayıtlı `Key/Issuer`'ınızı bulur ve bunları yeniden kullanıp yalnızca profilleri yeniden seçmeyi önerir.
+> - **`setup`'ı daha önce çalıştırdıysanız**, kayıtlı Key ID ve Issuer ID'nizi bulur ve bunları yeniden kullanıp yalnızca profilleri yeniden seçmeyi önerir.
 > - **Xcode 27** eklentileri Git URL'sinden kurduğu için bir config dosyası yoktur. Bu yüzden setup sihirbazından kurulamıyor; [kendi bölümü](#xcode-27de-heimdall-kullanmak) var.
-> - **Heimdall'ı yapay zekânıza kurduracaksanız** o yalnızca profilleri `register` ile ekleyebilir. Anahtar için `setup`'ı siz çalıştırırsınız; kurulum sırasında anahtarınız yapay zekâya hiç gösterilmez. Kurallar [AGENTS.md](../AGENTS.md)'de.
+> - **Heimdall'ı yapay zekânıza kurduracaksanız** o, profilleri `register` ile kaydedebilir; kullandığınız bir profili hiç kaldırmaz, ama 2.x'ten kalan kayıtları temizler. Anahtar için `setup`'ı siz çalıştırırsınız; kurulum sırasında anahtarınız yapay zekâya hiç gösterilmez. Kurallar [AGENTS.md](../AGENTS.md)'de.
 
 ### ASC-Core da gelir
 
 Uygulamalarınızı bulmak, bütün araçlarda aramak, ekran görüntüsü ve video araçları her profilin içinde değil, tek bir sunucuda durur: **ASC-Core**. Setup ve `register` onu her uygulamada profillerinizin yanına ekler; siz seçmezsiniz.
 
-- Bir uygulamadaki Heimdall sunucularından biri salt okunursa ASC-Core da salt okunur eklenir.
+- Bir uygulamadaki Heimdall sunucularından biri salt okunur modda çalışıyorsa ASC-Core da salt okunur eklenir.
 - ASC-Core, oradaki sunucularınızla aynı hesabı kullandığı gösterilemeyen bir yapay zekâ uygulamasına eklenmez: sunucular farklı App Store Connect hesapları kullanıyorsa, `env`'lerinde kendi kimlik bilgilerini taşıyorsa ya da ayar dosyası veya kayıtlarından biri tam okunamıyorsa (`envFile` yükleyen bir kayıt da buna girer). Plan bunu nedeniyle birlikte söyler.
 - Bir uygulamadan son profil de çıkınca ASC-Core da çıkar.
 
@@ -85,13 +99,16 @@ Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birka�
 - **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp@beta setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
 - Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
-- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir.
+- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir. Profil vermeden çalışan eski bir 2.x kaydına setup dokunmaz; onu uygulamanızın MCP ayarlarından kendiniz silin.
 
 ## Yüklü olmayan bir araç gerekirse
 
 Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini söyler. Bu yüzden az profille kurmaktan çekinmeyin; eksik olan bir şey size zaten söylenecek.
 
 ## Xcode 27'de Heimdall kullanmak
+
+> [!IMPORTANT]
+> 3.0.0 çıkana kadar Xcode bu adresten 2.8 eklentilerini kurar. 3.0 eklentileri, 3.0 deponun `main` dalına alınınca gelir.
 
 1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir.
 2. Xcode → Settings → Intelligence → Plug-ins → **Add Plug-in…**
@@ -124,9 +141,9 @@ Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect
 | **`401 Unauthorized`** | Key ID, Issuer ID ve `.p8` aynı anahtara ait değil ya da anahtar iptal edilmiş. | `setup`'ı yeniden çalıştırın ve kayıtlı bilgileri yeniden kullanmak isteyip istemediğinizi sorduğunda **n** deyin. Anahtarı yeniden girin; setup kaydetmeden önce Apple'a doğrular. |
 | **`403 Forbidden`** | Anahtarın rolü o işlem için yeterli değil ya da bir App Store Connect sözleşmesi imzalanmamış veya süresi dolmuş. | Yapay zekâya *"Anahtarımın yetkilerini kontrol et"* deyin. Hangi rolün gerektiği [Roller](ROLES_tr.md)'de. Sözleşmeyi yalnızca Account Holder App Store Connect'te kabul edebilir; hiçbir anahtar bunu çözmez. |
 | **Sürüm güncellemesinde `409 Conflict`** | App Store Connect düzenlemelere yalnızca belirli sürüm durumlarında izin verir. | İncelemede olan veya yayınlanmış bir sürüm kilitlidir. |
-| **İhtiyacım olan araç listede yok** | Başka bir profilde. | Yapay zekâya sorun: *"X için bir araç var mı?"* |
+| **İhtiyacım olan araç listede yok** | Başka bir profilde. | Yapay zekâya sorun: *"X için bir araç var mı?"* Hangi profilde olduğunu söyler; onu `setup` ile ekleyin ya da yapay zekânın `register` çalıştırmasına izin verin, sonra uygulamayı yeniden başlatın. |
 | **Bir sunucuda, profilinin olmadığını söyleyen tek bir araç var** | Ayarları, önceki bir sürümden kalma bir profil adı içeriyor; örneğin `app-info`. | `setup`'ı yeniden çalıştırıp profillerinizi seçin; eski kaydı siler (`app-info` artık `general`). |
-| **Uygulama bulma, araç arama ya da ekran görüntüsü araçları yok** | Bu uygulamada ASC-Core kayıtlı değil. Setup, uygulamadaki sunucular farklı hesaplar kullanıyorsa onu eklemez. | `setup`'ı yeniden çalıştırıp plana bakın; ASC-Core'un neden eklenmediğini söyler. |
+| **Uygulama bulma, araç arama ya da ekran görüntüsü araçları yok** | Bu uygulamada ASC-Core kayıtlı değil. Setup, uygulamadaki sunucular farklı hesaplar kullanıyorsa, `env`'lerinde kendi kimlik bilgilerini taşıyorsa ya da ayar dosyası tam okunamıyorsa onu eklemez. | `setup`'ı yeniden çalıştırıp plana bakın; ASC-Core'un neden eklenmediğini söyler. |
 | **`429 Too Many Requests`** | Apple her anahtar için saatlik bir istek sınırı uygular (şu an 3.600); bu sınır dolmuş. | Heimdall kısa bir süre bekleyip kendisi tekrar dener. Sık görüyorsanız aynı anahtarı başka bir araç da kullanıyordur (ör. CI'daki Fastlane); ona ayrı bir anahtar oluşturun. |
 | **Yeni uygulama oluşturulamıyor** | Apple'ın API'si yeni uygulama oluşturmaya izin vermez. | Uygulamayı bir kez App Store Connect web sayfasından oluşturun; sonrasını Heimdall'la yönetebilirsiniz. |
 
