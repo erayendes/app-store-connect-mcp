@@ -161,7 +161,8 @@ kılmaz. Bir değiştirme, eski dosyayı silmeden hemen önce yerel dosyanın
 damgasını ve SHA-256 değerini yeniden kontrol eder. `page_id` verilmiş gelişmiş
 App Clip yüklemeleri yeni başlığı ancak tamamlamadan sonra bağlar. Tamamlama
 istekleri, şemanın alanı buysa MD5 `sourceFileChecksum`, background ve build
-dosyaları içinse SHA-256 `sourceFileChecksums.file` içerir. Güncellemesi yalnızca
+dosyaları içinse MD5 `sourceFileChecksums.file` içerir (spec SHA-256'ya da izin
+veriyor, ama Apple gerçek bir build tamamlamasında bunu reddetti). Güncellemesi yalnızca
 `uploaded` kabul eden yedi görsel ailesi için checksum alanı gerekmez.
 
 PR-D2, 73 ham profil işlemini kaldırıp `MACRO_COVERED`'a kaydediyor: 17

@@ -172,7 +172,7 @@ describe('media target × action coverage', () => {
         const path = join(directory, 'hero.png');
         await writeFile(path, Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,1,2,3,4]));
         Object.assign(args, { file_path: path, category: 'APP_SCREENSHOTS_AND_PREVIEWS', ...(cell.target === 'library' ? {} : { placement_type: 'APP_SCREENSHOT' }) });
-      } else if (cell.action === 'remove' || cell.action === 'reorder' || (cell.action === 'delete' && cell.target !== 'library')) Object.assign(args, { placement_ids: cell.action === 'reorder' ? ['pv', 'pi'] : ['pi'], ...(cell.action === 'reorder' ? { placement_group: 'phone' } : {}), ...(cell.macro === 'media__arrange' ? { action: cell.action } : {}) });
+      } else if (cell.action === 'remove' || cell.action === 'reorder' || (cell.action === 'delete' && cell.target !== 'library')) Object.assign(args, { placement_ids: ['pi'], ...(cell.action === 'reorder' ? { placement_group: 'phone' } : {}), ...(cell.macro === 'media__arrange' ? { action: cell.action } : {}) });
       else if (cell.action === 'delete') Object.assign(args, { asset_ids: ['img', 'vid'] });
       else if (cell.action !== 'list') Object.assign(args, { action: cell.action, asset_ids: cell.action === 'archive' ? ['img', 'vid'] : [cell.action === 'poster' ? 'vid' : 'img'], ...(cell.action === 'place' ? { placement_type: 'APP_SCREENSHOT' } : {}), ...(cell.action === 'poster' ? { preview_frame_time_code: '00:00:05:00' } : {}), ...(cell.action === 'rename' ? { reference_name: 'New hero' } : {}) });
       const result: any = await executeMediaTool(cell.macro, args, { http: http as any });
@@ -204,7 +204,7 @@ describe('media target × action coverage', () => {
 });
 
 type FileCell = Coverage & { variant?: 'version' };
-const singleFile = (adapter: FileAdapter) => Boolean(adapter.attach || (adapter.read && !adapter.read.endsWith('.list')));
+const singleFile = (adapter: FileAdapter) => Boolean(adapter.attach || adapter.single || (adapter.read && !adapter.read.endsWith('.list')));
 const FILE_COVERAGE: FileCell[] = Object.entries(FILE_TARGETS as Record<string, FileAdapter>).flatMap(([target, primary]) =>
   [primary, ...(primary.versionParent ? [primary.versionParent] : [])].flatMap((adapter): FileCell[] => {
     const variant = adapter === primary ? {} : { variant: 'version' as const };
@@ -341,7 +341,7 @@ describe('image and file target × action coverage', () => {
         const bytes = http.uploadAssetPart.mock.calls[0][1];
         const attributes = http.patch.mock.calls[0][1].data.attributes;
         const schema = mediaDataSchema(adapter.update).properties.attributes.properties;
-        if (schema.sourceFileChecksums) expect(attributes.sourceFileChecksums).toEqual({ file: { algorithm: 'SHA_256', hash: createHash('sha256').update(bytes).digest('hex') } });
+        if (schema.sourceFileChecksums) expect(attributes.sourceFileChecksums).toEqual({ file: { algorithm: 'MD5', hash: createHash('md5').update(bytes).digest('hex') } });
         else if (schema.sourceFileChecksum) expect(attributes.sourceFileChecksum).toBe(createHash('md5').update(bytes).digest('hex'));
         expect(attributes.uploaded).toBe(true);
       }
@@ -586,7 +586,7 @@ describe('single-file owners: first upload, empty to-one and replace', () => {
   it('covers every to-one target, including the version default images', () => {
     expect(SINGLE_FILE.sort()).toEqual(['app_clip_advanced_experience_image', 'app_clip_header_image', 'encryption_document', 'game_center_achievement_image',
       'game_center_activity_image', 'game_center_challenge_image', 'game_center_leaderboard_image', 'game_center_leaderboard_set_image',
-      'in_app_purchase_review_screenshot', 'routing_coverage', 'subscription_review_screenshot']);
+      'in_app_purchase_image', 'in_app_purchase_review_screenshot', 'routing_coverage', 'subscription_image', 'subscription_review_screenshot']);
   });
 
   it.each(SINGLE_FILE.flatMap((target) => [[target, false], ...(FILE_TARGETS[target].versionParent ? [[target, true]] : [])] as [FileTarget, boolean][]))('%s (version owner: %s) lists and uploads onto an empty to-one', async (target, version) => {
@@ -847,7 +847,7 @@ describe('bounded reads: hashing and sending from one descriptor', () => {
       expect(result).toMatchObject({ ok: true, parts: 4 });
       const sent = http.uploadAssetPart.mock.calls.map(([op, part]) => { expect(part.length).toBe(op.length); expect(part.length).toBeLessThanOrEqual(1024 * 1024); return part; });
       expect(Buffer.concat(sent).equals(bytes)).toBe(true);
-      expect(http.patch.mock.calls[0][1].data.attributes.sourceFileChecksums.file.hash).toBe(createHash('sha256').update(bytes).digest('hex'));
+      expect(http.patch.mock.calls[0][1].data.attributes.sourceFileChecksums.file.hash).toBe(createHash('md5').update(bytes).digest('hex'));
     });
   });
 

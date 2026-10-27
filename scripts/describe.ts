@@ -101,6 +101,9 @@ export const CURATED: Record<string, string> = {
   'apps.list':
     'List all apps in your App Store Connect account. Start here when you need an app ID.',
   'apps.get': 'Read one app by ID, including bundle ID, SKU and primary locale.',
+  // Live 404 "relationship does not exist" (2026-10-27) while the spec keeps it.
+  'apps.app_encryption_declarations.list':
+    'List the app encryption declarations belonging to an app. Apple answers this path with 404; list the encryption declarations filtered by app instead.',
   'apps.app_store_versions.list':
     'List App Store versions for an app, with their review state (e.g. PREPARE_FOR_SUBMISSION, WAITING_FOR_REVIEW, READY_FOR_SALE).',
   'apps.builds.list':

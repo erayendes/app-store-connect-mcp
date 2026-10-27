@@ -72,12 +72,13 @@ export const MEDIA_TOOLS: McpToolDefinition[] = [
             count: { type: 'integer' }, placements: { type: 'array', items: placementSchema },
           }, required: ['kind', 'placementType', 'placementGroup', 'count', 'placements'] } },
         }, required: ['id', 'target', 'label', 'locale', 'state', 'sets'] } },
-        limits: { type: 'array', description: 'Apple reference entries: placement policies with maxCount, group mappings, image/video specs with dimensions and maxFileSize.', items: { type: 'object', properties: {
-          id: textField, features: { type: 'array', items: { type: 'object' } },
-          placementTypes: { type: 'array', items: { type: 'object' } },
-          placementProfileGroups: { type: 'array', items: { type: 'object' } },
-          imageSpecs: { type: 'array', items: { type: 'object' } }, videoSpecs: { type: 'array', items: { type: 'object' } },
-        }, required: ['id', 'features', 'placementTypes', 'placementProfileGroups', 'imageSpecs', 'videoSpecs'] } },
+        limits: { type: 'array', description: 'Per placement type for this page: max files per group, categories, accepted sizes.', items: { type: 'object', properties: {
+          id: textField, policies: { type: 'array', items: { type: 'object', properties: {
+            feature: textField, placementType: textField, maxCount: { type: ['integer', 'null'] },
+            categories: { type: 'array', items: { type: 'string' } },
+            groups: { type: 'array', items: { type: 'object', properties: { id: textField, sizes: { type: 'array', items: { type: 'string' } } } } },
+          } } },
+        }, required: ['id', 'policies'] } },
       }, required: ['app', 'target', 'libraryId', 'assets', 'pages', 'limits'],
     },
     annotations: { readOnlyHint: true, idempotentHint: true },
@@ -328,7 +329,7 @@ async function listMedia(args: Args, http: AscHttpClient) {
     }
   }
   const refs = refDataId ? { rows: [await getRow(http, MEDIA_OPS.referenceGet, refDataId)] } : await readMediaRows(http, MEDIA_OPS.reference, undefined, { 'fields[appAssetLibraryRefData]': 'features,placementTypes,placementProfileGroups,imageSpecs,videoSpecs' });
-  return { app: `${target.app.name} (${target.app.id})`, target: target.target, libraryId: target.libraryId, assets: files.map(showFile), pages: target.target === 'library' ? target.pages.map((p) => ({ ...p, sets: [] })) : pages, limits: refs.rows.map((r) => ({ id: r.id, ...Object.fromEntries(['features', 'placementTypes', 'placementProfileGroups', 'imageSpecs', 'videoSpecs'].map((k) => [k, r.attributes?.[k] ?? []])) })) };
+  return { app: `${target.app.name} (${target.app.id})`, target: target.target, libraryId: target.libraryId, assets: files.map(showFile), pages: target.target === 'library' ? target.pages.map((p) => ({ ...p, sets: [] })) : pages, limits: refs.rows.map((r) => compactLimits(r, target.target)) };
 }
 
 /** A checked file, still open on the descriptor that was checked. Its bytes
@@ -458,7 +459,7 @@ interface FilePlan {
 }
 const fileAdapter = (target: string): FileAdapter => (FILE_TARGETS as Record<string, FileAdapter>)[target] ?? fail(`Unknown file target: ${target}.`);
 /** One file per owner: Apple models these as a to-one relationship. */
-const singleFile = (adapter: FileAdapter) => Boolean(adapter.attach || (adapter.read && !adapter.read.endsWith('.list')));
+const singleFile = (adapter: FileAdapter) => Boolean(adapter.attach || adapter.single || (adapter.read && !adapter.read.endsWith('.list')));
 const relationshipIds = (row: Row, key: string): string[] => {
   const relationship = row?.relationships?.[key];
   if (!relationship || !Object.hasOwn(relationship, 'data')) fail(`Missing ${key} relationship; cannot verify ownership.`);
@@ -647,8 +648,10 @@ async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): 
         attributes: attrs, ...(resolved.adapter.createParent ? { relationships: { [resolved.adapter.createParent]: mediaRelationship(adapter.create, resolved.adapter.createParent, resolved.parentId) } } : {}),
       }) });
       const commitAttributes = mediaDataSchema(adapter.update).properties.attributes.properties;
+      // The spec offers SHA_256 here, but Apple answered 409 to it on a real
+      // build commit (2026-10-27) and accepted the file's MD5.
       const attributes = { uploaded: true,
-        ...(commitAttributes.sourceFileChecksums ? { sourceFileChecksums: { file: { algorithm: 'SHA_256', hash: upload.sha256 } } }
+        ...(commitAttributes.sourceFileChecksums ? { sourceFileChecksums: { file: { algorithm: 'MD5', hash: upload.md5 } } }
           : commitAttributes.sourceFileChecksum ? { sourceFileChecksum: upload.md5 } : {}),
       };
       writes.push({ operation: adapter.update, id: '(reserved file)', name: upload.fileName,
@@ -727,6 +730,40 @@ function placeBody(args: Args, page: Page, kind: MediaKind, id: string) {
   } });
 }
 
+/** Apple's reference feature behind each page target; the library answers for all of them. */
+const FEATURE_OF: Partial<Record<Target['target'], string>> = { version: 'APP_STORE_VERSIONS', cpp: 'CUSTOM_PRODUCT_PAGES', ppo: 'PRODUCT_PAGE_OPTIMIZATIONS', event: 'IN_APP_EVENTS' };
+const span = (min?: number, max?: number): string => (min === max ? `${min ?? '*'}` : `${min ?? '*'}–${max ?? '*'}`);
+const seconds = (iso?: string): string => iso?.match(/^PT(\d+(?:\.\d+)?)S$/)?.[1] ?? iso ?? '*';
+function specText(spec: any): string {
+  const d = spec?.dimensions ?? {};
+  return [
+    d.minWidth !== undefined || d.maxWidth !== undefined || d.minHeight !== undefined || d.maxHeight !== undefined ? `${span(d.minWidth, d.maxWidth)}x${span(d.minHeight, d.maxHeight)}` : undefined,
+    spec?.duration ? `${seconds(spec.duration.min)}–${seconds(spec.duration.max)}s` : undefined,
+    typeof spec?.maxFileSize === 'number' ? `≤${Math.round(spec.maxFileSize / 1048576)} MB` : undefined,
+  ].filter(Boolean).join(' ');
+}
+/**
+ * The reference data, cut to what a placement needs. Apple's full answer is
+ * ~64 KB on every call (82 image specs, every page type), which pushed a
+ * three-file list past what a client will read (live run, 2026-10-27).
+ */
+function compactLimits(row: Row, target: Target['target']) {
+  const a = row.attributes ?? {};
+  const features: any[] = a.features ?? [];
+  const wanted = FEATURE_OF[target];
+  const kept = wanted && features.some((f) => f.featureId === wanted) ? features.filter((f) => f.featureId === wanted) : features;
+  const specs = new Map<string, string>([...(a.imageSpecs ?? []), ...(a.videoSpecs ?? [])].map((s: any) => [s.specId, specText(s)]));
+  const types = new Map<string, any>((a.placementTypes ?? []).map((t: any) => [t.placementTypeId, t]));
+  return { id: row.id, policies: kept.flatMap((f) => (f.placementPolicies ?? []).flatMap((p: any) => (p.groupLimits ?? []).map((g: any) => {
+    const type = types.get(p.placementType);
+    return {
+      feature: f.featureId, placementType: p.placementType, maxCount: g.maxCount ?? null,
+      categories: type?.acceptsAssetCategories ?? [],
+      groups: (g.groupIds ?? []).map((id: string) => ({ id, sizes: [...new Set<string>((type?.specMappings ?? []).filter((m: any) => m.placementGroupId === id).flatMap((m: any) => m.specs ?? []).map((s: string) => specs.get(s) ?? s))] })),
+    };
+  }))) };
+}
+
 async function checkedPlacements(args: Args, http: AscHttpClient, target: Target): Promise<{ rows: Row[]; files: File[] }> {
   const ids = arrayIds(args, 'placement_ids');
   let rows: Row[];
@@ -758,7 +795,10 @@ async function planWrite(name: string, args: Args, http: AscHttpClient, intent: 
   const writes: Write[] = [];
   let files: File[] = [];
   if (upload) {
-    const category = str(args, 'category', true)!;
+    // Apple's reference data gives each placement type one category: screenshots
+    // and previews theirs, every other page asset CREATIVE_ASSETS.
+    const placing = target.pages.length ? str(args, 'placement_type') : undefined;
+    const category = str(args, 'category') ?? (placing ? (['APP_SCREENSHOT', 'IMESSAGE_APP_SCREENSHOT', 'APP_PREVIEW'].includes(placing) ? 'APP_SCREENSHOTS_AND_PREVIEWS' : 'CREATIVE_ASSETS') : str(args, 'category', true)!);
     if (!MEDIA_CATEGORIES.includes(category)) fail(`Unknown category: ${category}.`);
     if (target.target === 'library' && (args.placement_type !== undefined || args.placement_group !== undefined)) fail('Choose a page target to place the uploaded library file.');
     const poster = str(args, 'preview_frame_time_code');
@@ -785,9 +825,13 @@ async function planWrite(name: string, args: Args, http: AscHttpClient, intent: 
         }
         if (!PAGE_TARGETS[page.target].ordered) fail('Event placements have no order in Apple’s schema.');
         const group = str(args, 'placement_group', true)!;
-        const all = (await pagePlacements(http, page)).rows.filter((p) => p.attributes?.placementGroup === group);
+        // Apple orders each placement type on its own (409 otherwise), so a
+        // group holding screenshots and previews is two lists.
+        const type = str(args, 'placement_type') ?? checked.rows[0]?.attributes?.placementType;
+        if (checked.rows.some((p) => p.attributes?.placementType !== type)) fail('Reorder one placement type at a time: screenshots and previews are ordered separately.');
+        const all = (await pagePlacements(http, page)).rows.filter((p) => p.attributes?.placementGroup === group && p.attributes?.placementType === type);
         const ids = checked.rows.map((p) => p.id);
-        if (all.length !== ids.length || all.some((p) => !ids.includes(p.id))) fail('Reorder requires every placement in exactly one page/group; no omissions or foreign IDs.');
+        if (all.length !== ids.length || all.some((p) => !ids.includes(p.id))) fail(`Reorder requires every ${type} placement in one page/group, and nothing else; ${group} has ${all.length}.`);
         const op = MEDIA_OPS.reorder;
         const itemType = mediaDataSchema(op).properties.relationships.properties.orderedPlacements.properties.data.items.properties.type.enum[0];
         writes.push({ operation: op, name: files.map((f) => f.name).join(', '), body: mediaBody(op, { attributes: { placementGroup: group }, relationships: {

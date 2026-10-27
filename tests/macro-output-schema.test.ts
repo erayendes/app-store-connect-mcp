@@ -222,8 +222,8 @@ describe('the schema matches what the macro actually returns', () => {
       'assets[].placements', 'assets[].placements[].id',
       'assets[].placements[].pageId', 'pages', 'pages[].sets',
       'pages[].sets[].kind', 'pages[].sets[].count',
-      'pages[].sets[].placements', 'limits', 'limits[].features',
-      'limits[].imageSpecs', 'limits[].videoSpecs',
+      'pages[].sets[].placements', 'limits', 'limits[].policies',
+      'limits[].policies[].groups', 'limits[].policies[].groups[].sizes',
     ]) {
       expect(declared.has(path), `outputSchema declares ${path}`).toBe(true);
     }

@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module';
 import {
   CLIENT_CAPABILITIES_META_KEY,
+  CLIENT_INFO_META_KEY,
   Server,
   type CallToolResult,
   type ClientCapabilities,
@@ -17,7 +18,7 @@ import {
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
 import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from './core/confirm.js';
-import { dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits } from './core/native-confirm.js';
+import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { MACRO_TOOLS } from './tools/catalog.js';
@@ -122,8 +123,8 @@ export const SERVER_INSTRUCTIONS = [
  * name into an id, and concludes the server cannot do the task.
  */
 export const CORE_POINTER =
-  'App lookup (apps__list), tool search (asc__search_tools) and the screenshot and ' +
-  'asset-library tools live in the ASC-Core server, not here.';
+  'App lookup (apps__list), tool search (asc__search_tools) and the media tools ' +
+  '(media__*) live in the ASC-Core server, not here.';
 
 /**
  * How many tools each server actually serves, by server.
@@ -662,10 +663,16 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           // 2025 client once at initialize. (The SDK types the envelope as `{}`.)
           const envelope = ctx.mcpReq.envelope as Record<string, ClientCapabilities | undefined> | undefined;
           const caps = envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? server.getClientCapabilities();
-          const canElicit = Boolean(caps?.elicitation?.form);
+          const elicitDeclared = Boolean(caps?.elicitation?.form);
+          const info = (ctx.mcpReq.envelope as Record<string, { name?: string } | undefined> | undefined)?.[CLIENT_INFO_META_KEY] ?? server.getClientVersion();
+          const dialogAvailable = config.nativeConfirm === true && nativeConfirmAvailable();
+          // Some clients declare forms they never show (core/native-confirm.ts);
+          // there the dialog goes first. Self-reported, but it only ever trades
+          // a form for a dialog the agent can answer even less.
+          const canElicit = elicitDeclared && !(dialogAvailable && DIALOG_FIRST_CLIENTS.has(info?.name ?? ''));
           // No prompt from the client: on macOS, ask in a dialog of our own,
           // which the agent can neither see nor answer (core/native-confirm.ts).
-          const canDialog = !canElicit && config.nativeConfirm === true && nativeConfirmAvailable();
+          const canDialog = !canElicit && dialogAvailable;
           // No way to ask at all. The user asked for a guard, so say it can't
           // run here rather than proceed under a guard that stopped guarding.
           // Worded for the agent to relay, not to act on: the last version
@@ -738,6 +745,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             ?.replace(/\.$/, '');
           const dialog = dialogText(what, preview.message);
           if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
+            if (elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
             return { content: [{ type: 'text' as const, text: `"${name}" was blocked: the full media preview exceeds the native macOS dialog limit. Use a client that can show the full elicitation prompt, or send fewer items. Nothing was changed.` }], isError: true };
           }
           const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);

@@ -148,8 +148,9 @@ owners, existing file IDs and sizes, proposed requests and the upload's digest;
 processing state changes do not invalidate approval. A replace rechecks the
 local file's stamp and SHA-256 immediately before deleting the old file.
 Advanced App Clip uploads with `page_id` attach the new header only after commit. Commits
-include MD5 `sourceFileChecksum` where that is the schema's field, or SHA-256
-`sourceFileChecksums.file` for background and build files. The seven image
+include MD5 `sourceFileChecksum` where that is the schema's field, or MD5
+`sourceFileChecksums.file` for background and build files (the spec also offers
+SHA-256, which Apple refused on a real build commit). The seven image
 families whose update accepts only `uploaded` need no checksum field.
 
 PR-D2 removes 73 raw profile operations and records them in `MACRO_COVERED`:
