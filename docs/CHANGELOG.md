@@ -8,7 +8,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [3.0.0-beta.1] — 2026-10-26
+### [3.0.0-beta.1] — 2026-10-27
 
 Hi,
 
@@ -323,7 +323,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [3.0.0-beta.1] — 2026-10-26
+### [3.0.0-beta.1] — 2026-10-27
 
 Selam,
 
