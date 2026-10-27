@@ -51,6 +51,31 @@ describe('dialogText', () => {
     expect(text.body).toBe('Product: Pro Monthly');
   });
 
+  it('keeps two fields that share a value, and a name that holds a quote', () => {
+    const text = dialogText('Update a territory availability', preview(
+      'Changes:',
+      '  data.attributes.available = true',
+      '  data.attributes.preOrderEnabled = true',
+      '  data.attributes.releaseDate = "2026-12-01"',
+      '  data.attributes.preOrderPublishDate = "2026-12-01"',
+      '  data.relationships.subscription.data → subscriptions/67 — "The "Pro" plan"',
+    ));
+    expect(text.body.split('\n')).toEqual([
+      'Available: Yes', 'Pre order enabled: Yes', 'Release date: 2026-12-01', 'Pre order publish date: 2026-12-01', 'Subscription: The "Pro" plan',
+    ]);
+  });
+
+  it('keeps plurals that belong to the summary', () => {
+    expect(dialogText('Make a TestFlight group to organise testers', preview()).title).toBe('Make a TestFlight group to organise testers?');
+    expect(dialogText('Change an app’s primary and secondary App Store category and its subcategories', preview()).title)
+      .toBe('Change an app’s primary and secondary App Store category and its subcategories?');
+  });
+
+  it('cuts a long field so the alert keeps its buttons on screen', () => {
+    const text = dialogText('Update a localization', preview('Changes:', `  data.attributes.description = "${'x'.repeat(4000)}"`));
+    expect(text.body.length).toBeLessThan(300);
+  });
+
   it('keeps a question already worded for this write', () => {
     expect(dialogText('Pause the phased release?', preview('Risk:       release — Automatic updates stop.')).title).toBe('Pause the phased release?');
   });
@@ -82,6 +107,9 @@ describe('what a write really does', () => {
     const pause = await buildWritePreview('app_store_version_phased_releases__update', op, { id: 'p-1', body: { data: { type: 'appStoreVersionPhasedReleases', id: 'p-1', attributes: { phasedReleaseState: 'PAUSED' } } } });
     expect(pause.title).toBe('Pause the phased release?');
     expect(pause.message).toContain('Automatic updates stop; people can still download it.');
+
+    const preOrder = await buildWritePreview('territory_availabilities__update', { ...op, path: '/v1/territoryAvailabilities/{id}' }, { id: 't-1', body: { data: { type: 'territoryAvailabilities', id: 't-1', attributes: { available: true, preOrderEnabled: true } } } });
+    expect(preOrder.title).toBe('Open pre-orders for the app in this country?');
 
     const withdraw = await buildWritePreview('review_submissions__update', { ...op, path: '/v1/reviewSubmissions/{id}' }, { id: 's-1', body: { data: { type: 'reviewSubmissions', id: 's-1', attributes: { canceled: true } } } });
     expect(withdraw.title).toBe('Withdraw this submission from App Review?');

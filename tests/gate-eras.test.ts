@@ -676,7 +676,7 @@ describe.each(['legacy', 'modern'] as const)('deleting library files on a %s con
     const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true, profile: 'core' });
     const result: any = await client.callTool({ name: 'media__delete', arguments: { app: 'Test App', target: 'library', asset_ids: ids } });
     expect(result.isError).toBe(true);
-    expect(textOf(result)).toMatch(/full media preview exceeds.*native macOS dialog limit.*elicitation prompt.*fewer items/);
+    expect(textOf(result)).toMatch(/too long for the native macOS dialog.*elicitation prompt.*fewer items/);
     expect(vi.mocked(nativeConfirm)).not.toHaveBeenCalled();
     expect(sent.some((entry) => entry.startsWith('DELETE'))).toBe(false);
   });

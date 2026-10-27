@@ -1010,9 +1010,9 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 
 #### `monetization:transactions` · 21 tools
 
-**What is inside:** App Store Server API: customer transactions, refunds, subscription status, renewal dates.
+**What is inside:** App Store Server API: customer transactions, refunds and their consumption answers, subscription status, renewal dates for one subscriber or all, retention messaging.
 
-**When you need it:** Look up a customer’s purchases, refunds and subscription status. · **Key role:** App Manager
+**When you need it:** Look up a customer’s purchases, refunds and subscription status, and act on them: extend renewals after an outage, answer a refund request, set the message customers see when they cancel. · **Key role:** App Manager
 
 - `storekit__check_entitlement` — Checks whether a customer's entitlement from a subscription is still active
 - `storekit__extend_renewal_date` — Moves a customer's subscription renewal date later

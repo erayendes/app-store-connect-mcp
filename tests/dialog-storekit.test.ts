@@ -62,6 +62,13 @@ describe('storekitDialog: renewal extensions', () => {
     expect(text.body).toContain('Only in United States, Germany and Türkiye');
   });
 
+  it('names lowercase codes as the uppercase ones the run sends', () => {
+    const text = dialog('storekit__mass_extend_renewal_date', {
+      product_id: 'p', extend_by_days: 3, request_identifier: UUID, storefront_country_codes: ['tur', ' usa '],
+    });
+    expect(text.body).toContain('Only in Türkiye and United States');
+  });
+
   it('one subscriber, environment argument over the default', () => {
     const text = dialog('storekit__extend_renewal_date', {
       original_transaction_id: TX, extend_by_days: 7, reason: 3, request_identifier: UUID,
@@ -149,22 +156,55 @@ describe('storekitDialog: purchases', () => {
 describe('storekitDialog: retention messaging', () => {
   const retention = (args: Record<string, unknown>) => dialog('storekit__manage_retention_messaging', args);
 
-  it('upload_message shows header, body and bullet points', () => {
+  it('upload_message shows every field it sends: header, position, body, image and bullet points', () => {
     const text = retention({
       action: 'upload_message', message_id: MESSAGE, header: 'Before you go', body: 'Stay for 50% off.',
-      bullet_points: [{ text: 'Keep your plans', image_id: IMAGE, alt_text: 'x' }], image_id: IMAGE, image_alt_text: 'A gift',
+      header_position: 'ABOVE_IMAGE',
+      bullet_points: [{ text: 'Keep your plans', image_id: MESSAGE, alt_text: 'Plans' }], image_id: IMAGE, image_alt_text: 'A gift',
     });
     expect(text.title).toBe('Upload a retention message?');
     expect(text.action).toBe('Upload');
     expect(text.body.split('\n')).toEqual([
       'Sandbox',
       'Header: Before you go',
+      'Header position: above the image',
       'Body: Stay for 50% off.',
-      '• Keep your plans',
-      'Image: A gift',
+      'Image: 9a8b7c6d… (alt text "A gift")',
+      '• Keep your plans (image 3c1d2e4f…, alt text "Plans")',
       '',
       'Customers about to cancel see it once it is set as a default or picked by your realtime URL.',
     ]);
+  });
+
+  it('upload_message says when the image has no alt text, and leaves out an unset position', () => {
+    const text = retention({ action: 'upload_message', message_id: MESSAGE, header: 'H', body: 'B', image_id: IMAGE });
+    expect(text.body).toContain('Image: 9a8b7c6d… (no alt text)');
+    expect(text.body).not.toContain('Header position');
+  });
+
+  it('upload_message stays under the alert limit whatever the agent sends', () => {
+    const long = 'x'.repeat(3000);
+    const text = retention({
+      action: 'upload_message', message_id: MESSAGE, header: long, body: long, header_position: 'ABOVE_BODY',
+      image_id: IMAGE, image_alt_text: long, app: long,
+      bullet_points: Array.from({ length: 9 }, () => ({ text: long, image_id: IMAGE, alt_text: long })),
+    });
+    expect(text.body.length).toBeLessThan(1500);
+    expect(text.body).toContain(`Header: ${'x'.repeat(399)}…`);
+    expect(text.body).toContain(`Body: ${'x'.repeat(399)}…`);
+    // Past the per-field caps the lines are cut as a whole; the consequence line never is.
+    expect(text.body.endsWith('…\n\nCustomers about to cancel see it once it is set as a default or picked by your realtime URL.')).toBe(true);
+  });
+
+  it('upload_message lists the first 5 bullet points and counts the rest', () => {
+    const text = retention({
+      action: 'upload_message', message_id: MESSAGE, header: 'H', body: 'B',
+      bullet_points: Array.from({ length: 9 }, (_, i) => ({ text: `Point ${i + 1}`, image_id: IMAGE, alt_text: 'Icon' })),
+    });
+    expect(text.body.match(/^• /gm)).toHaveLength(5);
+    expect(text.body).toContain('• Point 5 (image 9a8b7c6d…, alt text "Icon")');
+    expect(text.body).not.toContain('Point 6');
+    expect(text.body).toContain('and 4 more bullet points');
   });
 
   it('delete_message', () => {
@@ -209,8 +249,15 @@ describe('storekitDialog: retention messaging', () => {
     const text = retention({ action: 'set_realtime_url', url: 'https://example.com/retention' });
     expect(text.title).toBe('Set the retention realtime URL?');
     expect(text.action).toBe('Set');
-    expect(text.body).toContain('URL: https://example.com/retention');
+    expect(text.body).toContain('URL: https://example.com/retention\n');
+    expect(text.body).not.toContain('query hidden');
     expect(text.body).toContain('in Sandbox and Production');
+  });
+
+  it('set_realtime_url keeps a token in the query or a password in the user info off screen', () => {
+    const text = retention({ action: 'set_realtime_url', url: 'https://bob:hunter2@example.com:8443/hook?token=s3cret#frag' });
+    expect(text.body).toContain('URL: https://example.com:8443/hook (query hidden)');
+    expect(text.body).not.toMatch(/hunter2|bob|s3cret|frag/);
   });
 
   it('delete_realtime_url', () => {

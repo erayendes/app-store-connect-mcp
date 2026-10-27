@@ -78,7 +78,7 @@ export interface DialogText {
 }
 
 // A button named Cancel next to a Cancel button would say nothing, so that verb stays Allow.
-const BUTTON_VERBS = /^(Activate|Add|Answer|Apply|Archive|Assign|Change|Create|Deactivate|Delete|End|Expire|Extend|Finish|Give|Invite|Link|Mark|Pause|Place|Post|Register|Release|Remove|Rename|Reorder|Replace|Request|Resume|Revoke|Send|Set|Start|Stop|Submit|Turn|Unlink|Update|Upload|Withdraw)\b/;
+const BUTTON_VERBS = /^(Activate|Add|Answer|Apply|Archive|Assign|Change|Create|Deactivate|Delete|End|Expire|Extend|Finish|Give|Invite|Link|Mark|Pause|Place|Post|Register|Release|Remove|Rename|Reorder|Replace|Request|Resume|Revoke|Send|Set|Start|Stop|Submit|Turn|Unarchive|Unlink|Update|Upload|Withdraw)\b/;
 export const actionFor = (title: string): string | undefined =>
   /^Set up\b/.test(title) ? 'Create' : BUTTON_VERBS.exec(title)?.[1];
 
@@ -116,7 +116,7 @@ function showValue(raw: string): string {
   if (raw === 'false') return 'No';
   let value: unknown = raw;
   // A list of objects arrives cut to a hundred characters; half a JSON object says nothing.
-  if (raw.startsWith('[{')) return 'see the full request';
+  if (raw.startsWith('[{')) return 'a list of settings';
   if (/^["[]/.test(raw)) {
     try { value = JSON.parse(raw); } catch { return raw; }
   }
@@ -145,7 +145,8 @@ function changeLine(line: string): string | undefined {
   if (m[2] === '=') return `${humanize(key)}: ${showValue(value)}${note ? ` — ${note}` : ''}`;
   const count = /^\[.*\] \((\d+)\)$/.exec(value)?.[1];
   if (count) return `${humanize(key)}: ${count} ${count === '1' ? 'item' : 'items'}`;
-  const label = note && /^".*"$/.test(note) ? JSON.parse(note) : undefined;
+  // Quoted as written, not JSON-escaped: a name holding a quote must not throw.
+  const label = note && /^".*"$/.test(note) ? note.slice(1, -1) : undefined;
   const [type, id = value] = value.split('/');
   // A relationship list arrives one entry per line, keyed 0, 1, 2…; dialogText joins them.
   if (/^\d+$/.test(key)) return label || !opaque(id) ? `\u0000${humanize(type)}\u0000${label ?? id}` : undefined;
@@ -167,11 +168,12 @@ function titleFrom(what: string, name?: string): string {
   if (title.length > 70) title = title.split(/, | so | by /)[0];
   title = title.replace(/[\s.,;:?]+$/, '');
   // Generated summaries say "a sandbox testers" for the resource's plural name.
-  title = title.replace(/^(\w+) (an?) (.+)$/, (_, verb: string, article: string, noun: string) => {
+  title = title.replace(/^(\w+) (an?) (.+)$/, (whole, verb: string, article: string, noun: string) => {
+    // Only a plain noun: "a tester from your account entirely" would bury the name,
+    // and "its subcategories" or "to organise testers" are plurals that belong.
+    if (noun.split(' ').length > 4 || /\b(from|to|of|in|for|with|on|by|before|after|and|its|entirely)\b/.test(noun)) return whole;
     const one = noun.replace(/(\w*[^s])s$/, '$1');
-    // A plain noun takes the name; "a tester from your account entirely" would bury it.
-    const plain = one.split(' ').length <= 4 && !/\b(from|to|of|in|for|with|on|by|before|after|entirely)\b/.test(one);
-    return name && plain ? `${verb} the ${one} "${name}"` : `${verb} ${article} ${one}`;
+    return name ? `${verb} the ${one} "${name}"` : `${verb} ${article} ${one}`;
   });
   return `${title}?`;
 }
@@ -212,11 +214,12 @@ export function dialogText(what: string | undefined, preview: string): DialogTex
       lists.set(type, [...(lists.get(type) ?? []), item]);
       continue;
     }
-    // The same name under two keys ("Product", "Subscription") is one fact.
+    // The same name under two keys ("Product" and the subscription it links) is one fact;
+    // two fields that merely share a value ("Yes", a date) are two.
     const value = said.replace(/^[^:]+:\s+/, '');
-    if (seen.has(value)) continue;
-    seen.add(value);
-    details.push(said);
+    if (/^(App|Product|Price):/.test(said)) seen.add(value);
+    else if (t.includes(' → ') && seen.has(value)) continue;
+    details.push(said.length > MAX_LINE ? `${said.slice(0, MAX_LINE - 1)}…` : said);
   }
   for (const [type, items] of lists) details.push(`${type}: ${listWords(items, 6)}`);
   const named = what && !what.endsWith('?') && target.length === 1 ? target[0] : undefined;
@@ -225,6 +228,9 @@ export function dialogText(what: string | undefined, preview: string): DialogTex
   if (target.length && !(named && title.includes(`"${named}"`))) details.unshift(`Target: ${target.join(', ')}`);
   return { title, body: [...details, ...(warnings.length ? ['', ...warnings] : [])].join('\n'), action: actionFor(title) };
 }
+
+/** One field's line; a long description would push the buttons off the screen. */
+const MAX_LINE = 200;
 
 /** Whether an alert can be tried at all; checked before the preview's lookups are spent. */
 export const nativeConfirmAvailable = (): boolean => process.platform === 'darwin';

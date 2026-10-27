@@ -19,7 +19,6 @@ import {
   type HistoryResponse,
   type MassExtendRenewalDateRequest,
   type UploadMessageRequestBody,
-  type LastTransactionsItem,
   type NotificationHistoryRequest,
   type NotificationTypeV2,
   type Order,
@@ -88,6 +87,23 @@ const TRANSACTION_FIELDS = [
   'price',
 ] as const;
 
+/** The renewal info worth showing; like a transaction, it leaves `appAccountToken` out. */
+const RENEWAL_FIELDS = [
+  'originalTransactionId',
+  'productId',
+  'autoRenewProductId',
+  'autoRenewStatus',
+  'expirationIntent',
+  'isInBillingRetryPeriod',
+  'gracePeriodExpiresDate',
+  'priceIncreaseStatus',
+  'renewalDate',
+  'renewalPrice',
+  'currency',
+  'offerType',
+  'recentSubscriptionStartDate',
+] as const;
+
 /**
  * Reads extra DER roots from paths, or from a directory of them, on top of the
  * Apple Root CA - G3 shipped in apple-root-ca.ts. The library asks the caller
@@ -120,9 +136,9 @@ function readRootCertificates(paths: string[] | undefined): Buffer[] {
   });
 }
 
-function pickTransactionFields(decoded: Record<string, unknown>): Record<string, unknown> {
+function pickFields(decoded: Record<string, unknown>, fields: readonly string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const key of TRANSACTION_FIELDS) {
+  for (const key of fields) {
     if (decoded[key] !== undefined) out[key] = decoded[key];
   }
   return out;
@@ -212,9 +228,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_subscription_statuses',
     description:
       "Get the status of every subscription a customer holds, including expiry date, " +
-      'auto-renew state, billing retry and grace period. Apple returns those fields ' +
-      'inside SIGNED payloads (JWS strings) on each item, so verify and decode them ' +
-      'before reading. Use this for entitlement checks. [App Store Server API]',
+      'auto-renew state, billing retry and grace period. Each item\'s transaction and ' +
+      'renewal info come back checked against Apple\'s signature and decoded; `raw` ' +
+      'returns the signed JWS strings instead. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -228,6 +244,11 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
           description:
             'Filter by status: 1=Active, 2=Expired, 3=BillingRetry, 4=GracePeriod, 5=Revoked.',
         },
+        raw: {
+          type: 'boolean',
+          description:
+            'Return Apple\'s signed JWS payloads instead of the verified, decoded fields.',
+        },
       },
       required: ['transaction_id'],
     },
@@ -237,9 +258,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__check_entitlement',
     description:
       'Answer the single question "does this customer currently have access?". ' +
-      'Returns a boolean plus the active subscriptions backing it — those come back as ' +
-      'Apple\'s SIGNED payloads (JWS strings), so verify and decode them before reading ' +
-      'any field. Optionally narrow to one product ID. [App Store Server API]',
+      'Returns a boolean plus the subscriptions backing it, checked against Apple\'s ' +
+      'signature and decoded; `raw` returns the signed JWS strings instead. Optionally ' +
+      'narrow to one product ID. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -250,6 +271,11 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         product_id: {
           type: 'string',
           description: 'Only count this product as granting entitlement.',
+        },
+        raw: {
+          type: 'boolean',
+          description:
+            'Return Apple\'s signed JWS payloads instead of the verified, decoded fields.',
         },
       },
       required: ['transaction_id'],
@@ -284,7 +310,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__lookup_order',
     description:
       'Look up all transactions tied to an order ID from a customer receipt. ' +
-      'Use when a customer sends you the order number from their email. ' +
+      'Use when a customer sends you the order number from their email. The transactions ' +
+      'come back checked against Apple\'s signature and decoded. `status` 1 means Apple ' +
+      'does not know the order ID, so an empty list then is not "no purchases". ' +
       '[App Store Server API]',
     inputSchema: {
       type: 'object',
@@ -299,7 +327,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     name: 'storekit__get_notification_history',
     description:
       'Retrieve App Store Server Notification delivery history, including failures. ' +
-      'Use to debug a webhook endpoint that is missing events. [App Store Server API]',
+      'Use to debug a webhook endpoint that is missing events. Apple answers 20 at a time: ' +
+      'when hasMore is true, pass the paginationToken it returned to read the next page. ' +
+      '[App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -307,6 +337,10 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         end_date: { type: 'number', description: 'End timestamp in milliseconds.' },
         notification_type: { type: 'string', description: 'Filter by notification type.' },
         only_failures: { type: 'boolean', description: 'Return only failed deliveries.' },
+        pagination_token: {
+          type: 'string',
+          description: "From the previous answer's paginationToken when hasMore is true.",
+        },
       },
       // Apple refuses the request without them (error 4000015).
       required: ['start_date', 'end_date'],
@@ -325,9 +359,9 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
   {
     name: 'storekit__extend_renewal_date',
     description:
-      "Extend a subscriber's renewal date — a service gesture for an outage or a " +
-      'support escalation. This changes billing, so confirm with the user before ' +
-      'calling it. [App Store Server API]',
+      "Extend ONE subscriber's renewal date — a service gesture for an outage or a support escalation. " +
+      'For every subscriber of a product at once, use storekit__mass_extend_renewal_date. ' +
+      '[App Store Server API] REVENUE-level write.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -335,13 +369,13 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
           type: 'string',
           description: "The subscription's original transaction ID.",
         },
-        extend_by_days: {
-          type: 'number',
-          description: 'Days to extend, 1-90.',
-        },
+        extend_by_days: { type: 'integer', minimum: 1, maximum: 90, description: 'Days to extend, 1-90.' },
         reason: {
-          type: 'number',
-          description: '0=Undeclared, 1=CustomerSatisfaction, 2=Other, 3=ServiceIssue.',
+          type: 'integer',
+          enum: [0, 1, 2, 3],
+          description:
+            '0 not declared, 1 customer satisfaction, 2 other, 3 service issue or outage. ' +
+            'Omitted, 1 (customer satisfaction) is sent.',
         },
         request_identifier: {
           type: 'string',
@@ -363,10 +397,13 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
       type: 'object',
       properties: {
         product_id: { type: 'string', description: 'The subscription product ID.' },
-        extend_by_days: { type: 'number', description: 'Days to extend, 1-90.' },
+        extend_by_days: { type: 'integer', minimum: 1, maximum: 90, description: 'Days to extend, 1-90.' },
         reason: {
-          type: 'number',
-          description: '0=Undeclared, 1=CustomerSatisfaction, 2=Other, 3=ServiceIssue.',
+          type: 'integer',
+          enum: [0, 1, 2, 3],
+          description:
+            '0 not declared, 1 customer satisfaction, 2 other, 3 service issue or outage. ' +
+            'Omitted, 3 (service issue or outage) is sent.',
         },
         request_identifier: {
           type: 'string',
@@ -375,7 +412,7 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         storefront_country_codes: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Only these storefronts, ISO-3166 alpha-3 (USA, TUR). Omit for all.',
+          description: 'Only these storefronts, ISO-3166 alpha-3 (USA, TUR, DEU — not US, TR, DE). Omit for all.',
         },
       },
       required: ['product_id', 'extend_by_days', 'request_identifier'],
@@ -422,8 +459,10 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
           description: 'A free sample or trial was offered before the purchase.',
         },
         consumption_percentage: {
-          type: 'number',
-          description: 'How much was consumed, in thousandths of a percent: 0 to 100000.',
+          type: 'integer',
+          minimum: 0,
+          maximum: 100000,
+          description: 'How much was consumed, in milliunits of a percent: 25000 = 25%, 100000 = all of it.',
         },
         refund_preference: {
           type: 'string',
@@ -438,8 +477,8 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
   {
     name: 'storekit__set_app_account_token',
     description:
-      'Link a purchase to an account in your own system by setting its appAccountToken, ' +
-      'for purchases made without one. [App Store Server API] REVENUE-level write.',
+      'Link a purchase to an account in your own system: sets its appAccountToken, or ' +
+      'replaces the one it already has. [App Store Server API] REVENUE-level write.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -499,7 +538,8 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
     description:
       'Retention messaging setup: the messages and images uploaded for customers about to ' +
       'cancel, the realtime URL, and with product_id and locale the default message. ' +
-      'With performance_test_id, that test\'s results. [App Store Server API]',
+      'With performance_test_id, that test\'s results. Apple enables retention messaging ' +
+      'per account, on request; until then these calls answer 404. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -513,10 +553,13 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
   {
     name: 'storekit__manage_retention_messaging',
     description:
-      'Change retention messaging: upload or delete a message or an image, set or remove a ' +
-      'product\'s default message, set or remove the realtime URL, or start a performance ' +
-      'test of it. Deletes are DESTRUCTIVE-level; the realtime URL is INFRASTRUCTURE-level. ' +
-      '[App Store Server API]',
+      'Change retention messaging, which Apple enables per account on request. `action`: ' +
+      'upload_message / delete_message (a header, body, image and bullet points), ' +
+      'upload_image / delete_image (a PNG messages refer to), set_default_message / ' +
+      'delete_default_message (what one product shows in one locale), set_realtime_url / ' +
+      'delete_realtime_url (your endpoint that picks a message per customer), ' +
+      'start_performance_test (Apple tests that endpoint in Sandbox). Deletes are ' +
+      'DESTRUCTIVE-level; the realtime URL is INFRASTRUCTURE-level. [App Store Server API]',
     inputSchema: {
       type: 'object',
       properties: {
@@ -601,6 +644,30 @@ const dayCount = (n: unknown) => `${n} ${Number(n) === 1 ? 'day' : 'days'}`;
 const andList = (names: string[]) => listWords(names, 8);
 // Unset, the run sends a default reason (below), so the dialog names that one.
 const reasonText = (reason: unknown, sent: ExtendReasonCode) => EXTEND_REASONS[Number(reason ?? sent)] ?? String(reason);
+// The alert refuses a longer body, and a refused dialog blocks the write.
+const MAX_DIALOG_BODY = 1500;
+const clip = (text: unknown, max: number) => {
+  const s = String(text ?? '');
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+};
+const HEADER_POSITION: Record<string, string> = { ABOVE_BODY: 'above the body', ABOVE_IMAGE: 'above the image' };
+const MAX_BULLETS_SHOWN = 5;
+
+/** Storefront codes as sent: uppercased, a lone string taken as one code. The run refuses any that is not alpha-3. */
+function storefrontCodes(value: unknown): string[] {
+  if (value === undefined || value === null) return [];
+  return (Array.isArray(value) ? value : [value]).map((c) => String(c).trim().toUpperCase());
+}
+
+/** scheme://host/path only: a token in the query or a password in the user info stays off screen. */
+function urlForDialog(raw: unknown): string {
+  try {
+    const u = new URL(String(raw));
+    return `${u.protocol}//${u.host}${u.pathname}${u.search || u.hash ? ' (query hidden)' : ''}`;
+  } catch {
+    return 'not a valid URL';
+  }
+}
 
 /** The dialog text for a StoreKit write; undefined for reads and unknown actions. */
 export function storekitDialog(
@@ -609,13 +676,15 @@ export function storekitDialog(
   defaults: { environment: 'Production' | 'Sandbox' }
 ): DialogText | undefined {
   const env = args.environment === 'Production' || args.environment === 'Sandbox' ? args.environment : defaults.environment;
-  const app = typeof args.app === 'string' ? args.app.trim() : '';
+  const app = typeof args.app === 'string' ? clip(args.app.trim(), 60) : '';
   const where = [
     app && (/^\d+$/.test(app) ? `Apple ID ${app}` : app),
     env === 'Production' ? 'Production — real customers' : 'Sandbox',
   ].filter(Boolean).join(' · ');
-  const dialog = (title: string, action: string, lines: string[], note: string): DialogText =>
-    ({ title, body: [where, ...lines, '', note].join('\n'), action });
+  const dialog = (title: string, action: string, lines: string[], note: string): DialogText => {
+    const tail = `\n\n${note}`;
+    return { title, body: clip([where, ...lines].join('\n'), MAX_DIALOG_BODY - 1 - tail.length) + tail, action };
+  };
 
   switch (name) {
     case 'storekit__extend_renewal_date':
@@ -625,9 +694,9 @@ export function storekitDialog(
       ], `This subscriber's next charge moves ${dayCount(args.extend_by_days)} later.`);
 
     case 'storekit__mass_extend_renewal_date': {
-      const codes = Array.isArray(args.storefront_country_codes) ? args.storefront_country_codes.map(String) : [];
+      const codes = storefrontCodes(args.storefront_country_codes);
       return dialog(`Extend every ${args.product_id} subscription by ${dayCount(args.extend_by_days)}?`, 'Extend', [
-        codes.length ? `Only in ${andList(codes.map((c) => TERRITORY_NAMES[c.toUpperCase()] ?? c))}` : 'In every country',
+        codes.length ? `Only in ${andList(codes.map((c) => TERRITORY_NAMES[c] ?? clip(c, 12)))}` : 'In every country',
         `Reason: ${reasonText(args.reason, ExtendReasonCode.SERVICE_ISSUE_OR_OUTAGE)}`,
       ], `Each subscriber's next charge moves ${dayCount(args.extend_by_days)} later.`);
     }
@@ -672,12 +741,16 @@ function retentionDialog(
 ): DialogText | undefined {
   switch (args.action) {
     case 'upload_message': {
-      const bullets = Array.isArray(args.bullet_points) ? args.bullet_points : [];
+      const bullets: any[] = Array.isArray(args.bullet_points) ? args.bullet_points : [];
+      const altText = (alt: unknown) => (alt ? `alt text "${clip(alt, 40)}"` : 'no alt text');
+      const position = args.header_position;
       return dialog('Upload a retention message?', 'Upload', [
-        `Header: ${args.header}`,
-        `Body: ${args.body}`,
-        ...bullets.map((b: any) => `• ${b?.text}`),
-        ...(args.image_id ? [`Image: ${args.image_alt_text || 'no alt text'}`] : []),
+        `Header: ${clip(args.header, 400)}`,
+        ...(position !== undefined ? [`Header position: ${HEADER_POSITION[String(position)] ?? clip(position, 20)}`] : []),
+        `Body: ${clip(args.body, 400)}`,
+        ...(args.image_id ? [`Image: ${prefix(args.image_id)} (${altText(args.image_alt_text)})`] : []),
+        ...bullets.slice(0, MAX_BULLETS_SHOWN).map((b) => `• ${clip(b?.text, 80)} (image ${prefix(b?.image_id)}, ${altText(b?.alt_text)})`),
+        ...(bullets.length > MAX_BULLETS_SHOWN ? [`and ${bullets.length - MAX_BULLETS_SHOWN} more bullet points`] : []),
       ], 'Customers about to cancel see it once it is set as a default or picked by your realtime URL.');
     }
     case 'delete_message':
@@ -700,7 +773,7 @@ function retentionDialog(
       return dialog(`Delete the default retention message for ${args.product_id}?`, 'Delete', [`Locale: ${args.locale}`],
         'The message itself stays uploaded; only the default is removed.');
     case 'set_realtime_url':
-      return dialog('Set the retention realtime URL?', 'Set', [`URL: ${args.url}`],
+      return dialog('Set the retention realtime URL?', 'Set', [`URL: ${urlForDialog(args.url)}`],
         'Apple calls this URL, in Sandbox and Production, to pick a message for each customer about to cancel.');
     case 'delete_realtime_url':
       return dialog('Delete the retention realtime URL?', 'Delete', [],
@@ -715,6 +788,25 @@ function retentionDialog(
 }
 
 const MAX_RETENTION_IMAGE_BYTES = 10 * 1024 * 1024;
+
+/** The reason code sent: the caller's, else the default; anything but 0-3 is refused before Apple sees it. */
+function extendReason(reason: unknown, sent: ExtendReasonCode): ExtendReasonCode {
+  if (reason === undefined || reason === null) return sent;
+  if (![0, 1, 2, 3].includes(reason as number)) {
+    throw new Error('reason must be 0 (not declared), 1 (customer satisfaction), 2 (other) or 3 (service issue or outage).');
+  }
+  return reason as ExtendReasonCode;
+}
+
+interface DecodedStatusGroup {
+  subscriptionGroupIdentifier?: string;
+  lastTransactions: Array<{
+    status?: number;
+    originalTransactionId?: string;
+    transaction: Record<string, unknown> | null;
+    renewalInfo: Record<string, unknown> | null;
+  }>;
+}
 
 /** The fields of an app transaction worth showing; device-verification values are not. */
 const APP_TRANSACTION_FIELDS = [
@@ -870,24 +962,46 @@ export class StoreKitService {
     signed: string[],
     env: 'Production' | 'Sandbox',
     raw: boolean,
-    app: AppTarget = this.defaultApp ?? { bundleId: '' }
+    app: AppTarget = this.defaultApp ?? { bundleId: '' },
+    kind: 'transaction' | 'renewal' = 'transaction'
   ): Promise<unknown[]> {
     if (raw) return signed;
     const verifier = this.verifierFor(env, app);
     const out: unknown[] = [];
     for (const jws of signed) {
       try {
-        const decoded = await verifier.verifyAndDecodeTransaction(jws);
-        out.push(pickTransactionFields(decoded as unknown as Record<string, unknown>));
+        const decoded = kind === 'renewal'
+          ? await verifier.verifyAndDecodeRenewalInfo(jws)
+          : await verifier.verifyAndDecodeTransaction(jws);
+        out.push(pickFields(decoded as unknown as Record<string, unknown>, kind === 'renewal' ? RENEWAL_FIELDS : TRANSACTION_FIELDS));
       } catch (err) {
         throw new AscApiError(
-          `A transaction payload failed signature verification: ${(err as Error).message}. ` +
+          `A ${kind} payload failed signature verification: ${(err as Error).message}. ` +
             `Nothing was decoded. Check that the environment (${env}) matches the transaction.`,
           0
         );
       }
     }
     return out;
+  }
+
+  /** Status items with their transaction and renewal info verified and decoded in place of the JWS. */
+  private async decodeStatuses(
+    groups: SubscriptionGroupIdentifierItem[],
+    env: 'Production' | 'Sandbox',
+    app: AppTarget | undefined
+  ): Promise<DecodedStatusGroup[]> {
+    const one = async (jws: string | undefined, kind: 'transaction' | 'renewal') =>
+      jws ? ((await this.decode([jws], env, false, app, kind))[0] as Record<string, unknown>) : null;
+    return Promise.all(groups.map(async (g) => ({
+      subscriptionGroupIdentifier: g.subscriptionGroupIdentifier,
+      lastTransactions: await Promise.all((g.lastTransactions ?? []).map(async (t) => ({
+        status: t.status,
+        originalTransactionId: t.originalTransactionId,
+        transaction: await one(t.signedTransactionInfo, 'transaction'),
+        renewalInfo: await one(t.signedRenewalInfo, 'renewal'),
+      }))),
+    })));
   }
 
   /** The environment a call runs against: the argument, else the default. */
@@ -971,11 +1085,14 @@ export class StoreKitService {
           : { signedTransactionInfo: res.signedTransactionInfo, verified: false };
       }
 
-      case 'storekit__get_subscription_statuses':
-        return client.getAllSubscriptionStatuses(
+      case 'storekit__get_subscription_statuses': {
+        const res: StatusResponse = await client.getAllSubscriptionStatuses(
           args.transaction_id,
           args.status as Status[] | undefined
         );
+        if (args.raw) return { ...res, verified: false };
+        return { ...res, data: await this.decodeStatuses(res.data ?? [], this.envFor(args.environment), args._app), verified: true };
+      }
 
       case 'storekit__check_entitlement':
         return this.checkEntitlement(client, args);
@@ -1023,7 +1140,7 @@ export class StoreKitService {
           notificationType: args.notification_type as NotificationTypeV2 | undefined,
           onlyFailures: args.only_failures,
         };
-        return client.getNotificationHistory(null, request);
+        return client.getNotificationHistory(args.pagination_token || null, request);
       }
 
       case 'storekit__request_test_notification':
@@ -1036,8 +1153,7 @@ export class StoreKitService {
         }
         const request: ExtendRenewalDateRequest = {
           extendByDays: days,
-          extendReasonCode: (args.reason ??
-            ExtendReasonCode.CUSTOMER_SATISFACTION) as ExtendReasonCode,
+          extendReasonCode: extendReason(args.reason, ExtendReasonCode.CUSTOMER_SATISFACTION),
           requestIdentifier: args.request_identifier,
         };
         return client.extendSubscriptionRenewalDate(
@@ -1051,12 +1167,18 @@ export class StoreKitService {
         if (!Number.isInteger(days) || days < 1 || days > 90) {
           throw new Error('extend_by_days must be an integer between 1 and 90.');
         }
+        const codes = storefrontCodes(args.storefront_country_codes);
+        const bad = codes.filter((c) => !/^[A-Z]{3}$/.test(c));
+        if (bad.length) {
+          throw new Error(`storefront_country_codes are ISO-3166 alpha-3 (USA, TUR, DEU — not US, TR, DE); got ${bad.join(', ')}.`);
+        }
         const request: MassExtendRenewalDateRequest = {
           productId: args.product_id,
           extendByDays: days,
-          extendReasonCode: (args.reason ?? ExtendReasonCode.SERVICE_ISSUE_OR_OUTAGE) as ExtendReasonCode,
+          extendReasonCode: extendReason(args.reason, ExtendReasonCode.SERVICE_ISSUE_OR_OUTAGE),
           requestIdentifier: args.request_identifier,
-          storefrontCountryCodes: args.storefront_country_codes,
+          // Empty reads as every country, as the dialog says.
+          storefrontCountryCodes: codes.length ? codes : undefined,
         };
         return client.extendRenewalDateForAllActiveSubscribers(request);
       }
@@ -1273,19 +1395,26 @@ export class StoreKitService {
       [Status.ACTIVE, Status.BILLING_GRACE_PERIOD] // Both grant access.
     );
 
-    const groups: SubscriptionGroupIdentifierItem[] = res.data ?? [];
+    const raw = Boolean(args.raw);
+    type Group = { lastTransactions?: Array<{ status?: number }> };
+    const groups: Group[] = raw
+      ? res.data ?? []
+      : await this.decodeStatuses(res.data ?? [], this.envFor(args.environment), args._app);
+    // Decoded, the product ID is a verified field; raw, it is read from the unverified payload.
+    const productOf = (t: any): unknown =>
+      raw ? jwsClaim(t.signedTransactionInfo, 'productId') : t.transaction?.productId;
 
     // A group is named by its subscription group, not by product, and the
     // product ID lives inside each transaction's signed payload — so narrowing
     // to one product means reading that payload, and keeping only the groups
     // that still hold a transaction afterwards.
     let undecodable = 0;
-    const matching: SubscriptionGroupIdentifierItem[] = args.product_id
+    const matching: Group[] = args.product_id
       ? groups
           .map((g) => ({
             ...g,
             lastTransactions: (g.lastTransactions ?? []).filter((t) => {
-              const productId = jwsClaim(t.signedTransactionInfo, 'productId');
+              const productId = productOf(t);
               // An unreadable payload is not a mismatch, it is an unknown. It
               // still drops out — we will not grant on a guess — but saying so
               // keeps "does not hold this product" apart from "could not tell".
@@ -1296,7 +1425,7 @@ export class StoreKitService {
           .filter((g) => g.lastTransactions.length > 0)
       : groups;
 
-    const active: LastTransactionsItem[] = matching.flatMap((g) =>
+    const active = matching.flatMap((g) =>
       (g.lastTransactions ?? []).filter(
         (t) => t.status === Status.ACTIVE || t.status === Status.BILLING_GRACE_PERIOD
       )
@@ -1305,12 +1434,14 @@ export class StoreKitService {
     return {
       entitled: active.length > 0,
       activeCount: active.length,
-      // Statuses are JWS-signed; the caller decodes them if they need detail.
       subscriptions: matching,
+      verified: !raw,
       ...(undecodable > 0 ? { undecodableTransactions: undecodable } : {}),
       note:
         'Status 1 = Active, 4 = Grace period. Both are treated as entitled. ' +
-        'Signed payloads are returned verbatim for you to verify.' +
+        (raw
+          ? 'Signed payloads are returned verbatim, unverified.'
+          : 'Transactions and renewal info are verified against Apple\'s signature and decoded.') +
         (undecodable > 0
           ? ` ${undecodable} transaction(s) had an unreadable payload and were excluded, ` +
             'so a negative result here means "could not confirm", not "does not hold".'

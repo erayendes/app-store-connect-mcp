@@ -40,7 +40,7 @@ import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
 import { RELEASE_TOOL_NAMES, executeReleaseTool, releaseDialog, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
-import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview, testflightDialog, IMAGE_CONTENT, type ImageContent } from './tools/testflight.js';
+import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview, testflightDialog, testflightPreviewArgs, IMAGE_CONTENT, type ImageContent } from './tools/testflight.js';
 import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
@@ -82,14 +82,15 @@ function progressSender(req: { _meta?: { progressToken?: string | number }; noti
 }
 
 /**
- * A tool's own dialog text, shown in the form too: the generic preview lists
- * only scalar arguments and would leave out a message body or a country list.
+ * A tool's own dialog text, shown at the top of the form too: the generic
+ * preview lists only scalar arguments and would leave out a message body or a
+ * country list. The generic lines stay below it, with the full ids the
+ * dialog shortens.
  */
 function withDialog(preview: WritePreview, dialog: DialogText | undefined): WritePreview {
   if (!dialog) return preview;
-  const head = preview.message.split('\n')[0];
-  const confirm = preview.strong ? ['', 'Type CONFIRM in the field below to proceed.'] : [];
-  return { ...preview, dialog, message: [head, '', dialog.title, dialog.body, ...confirm].join('\n') };
+  const [head, ...rest] = preview.message.split('\n');
+  return { ...preview, dialog, message: [head, '', dialog.title, dialog.body, ...rest].join('\n') };
 }
 
 /** Configurable response ceiling (chars of pretty-printed JSON). */
@@ -711,7 +712,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
               { message: buildPricingPreview(shown, name), strong: true, dialog: pricingDialog(name, shown) }
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
-              { message: buildTestflightPreview(shown), strong: true, dialog: testflightDialog(shown) }
+              { message: buildTestflightPreview(shown), strong: true, dialog: testflightDialog(await testflightPreviewArgs(shown, http)) }
             : mediaPreview
             ? mediaPreview
             : op
@@ -747,10 +748,10 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
           const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message);
-          if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
+          if (!nativeConfirmFits(dialog)) {
             // Not to a dialog-first client's form: it would be declined unseen.
             if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
-            return refuse('blocked', { content: [{ type: 'text' as const, text: `"${name}" was blocked: the full media preview exceeds the native macOS dialog limit. Use a client that can show the full elicitation prompt, or send fewer items. Nothing was changed.` }], isError: true });
+            return refuse('blocked', { content: [{ type: 'text' as const, text: `"${name}" was blocked: its confirmation is too long for the native macOS dialog. Use a client that can show the full elicitation prompt, or send fewer items or shorter text. Nothing was changed.` }], isError: true });
           }
           const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);
           // No GUI session (SSH, a headless Mac): the form it declared is the next best.
@@ -934,6 +935,11 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
       if (audited) logWrite({ tool: name, risk: auditRisk, confirmation, outcome: (result as any)?.ok === false ? 'error' : 'ok', args });
       // Images a macro attached go out as image content, never as base64 in the text.
       const images = ((result as any)?.[IMAGE_CONTENT] ?? []) as ImageContent[];
+      // The SDK validates structuredContent and refuses a symbol key.
+      if (images.length) {
+        const { [IMAGE_CONTENT]: _images, ...plain } = result as Record<string | symbol, unknown>;
+        result = plain;
+      }
 
       const text = truncateText(
         JSON.stringify(result ?? { ok: true }, null, 2),

@@ -315,4 +315,27 @@ describe('MCP integration', () => {
       await server.close();
     }
   });
+
+  it('sends attached screenshots through the server as image content, with valid structured output', async () => {
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from('pixels')]);
+    const http = fakeHttp({ [SHOTS]: page([submission('s-1', 'b-1', { screenshots: [{ url: 'https://feedback.apple.com/1.png', width: 10, height: 20 }] })]) });
+    vi.spyOn(AscHttpClient.prototype, 'get').mockImplementation(http.get);
+    vi.spyOn(AscHttpClient.prototype, 'downloadAsset').mockResolvedValue(png);
+    const server = createServer({
+      credentials: { keyId: 'TEST', issuerId: 'issuer', privateKey: 'unused' },
+      readOnly: true, confirmWrites: 'all', dryRun: false,
+    }, resolveSelection('testflight'));
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: 'test', version: '0' });
+    try {
+      await Promise.all([server.connect(st), client.connect(ct)]);
+      const res: any = await client.callTool({ name: NAME, arguments: { app: 'Example', images: 1 } });
+      expect(res.isError).not.toBe(true);
+      expect(res.content.filter((c: any) => c.type === 'image')).toEqual([{ type: 'image', data: png.toString('base64'), mimeType: 'image/png' }]);
+      expect(res.structuredContent).toMatchObject({ totals: { screenshotFeedback: 1 } });
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
 });

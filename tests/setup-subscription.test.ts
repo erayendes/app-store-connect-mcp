@@ -5,7 +5,7 @@
  * stop part-way says what already exists so a retry does not create it twice.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { executePricingTool } from '../src/tools/pricing.js';
+import { executePricingTool, PRICING_TOOLS } from '../src/tools/pricing.js';
 import { validateBody } from '../src/core/validate.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
@@ -122,5 +122,28 @@ describe('pricing__setup_subscription', () => {
     const { http, posts } = fakeHttp();
     await expect(executePricingTool('pricing__setup_subscription', { ...args, territory: 'TR' }, { http, dryRun: false })).rejects.toThrow(/three letters/);
     expect(posts).toEqual([]);
+  });
+});
+
+describe('pricing__setup_subscription schema', () => {
+  const tool = PRICING_TOOLS.find((t) => t.name === 'pricing__setup_subscription')!;
+  const props = (tool.inputSchema as any).properties;
+
+  it('asks for at least one language and one country, the priced one among them', () => {
+    expect(props.localizations.minItems).toBe(1);
+    expect(props.territories.minItems).toBe(1);
+    expect(props.territories.description).toMatch(/must include `territory`/);
+  });
+
+  it('says what it leaves for later: review screenshot, offers, submission', () => {
+    expect(tool.description).toMatch(/no review screenshot and no offers, and submits nothing/);
+    expect(tool.description).toMatch(/media__upload/);
+    expect(tool.description).toMatch(/release__submit_items/);
+  });
+
+  it('flags every pricing write as destructive, set_subscription_price included', () => {
+    const writes = PRICING_TOOLS.filter((t) => t.annotations?.readOnlyHint === false);
+    expect(writes.map((t) => t.name)).toContain('pricing__set_subscription_price');
+    for (const t of writes) expect(t.annotations, t.name).toMatchObject({ destructiveHint: true, idempotentHint: false });
   });
 });

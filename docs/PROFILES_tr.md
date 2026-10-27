@@ -1010,9 +1010,9 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `monetization:transactions` · 21 araç
 
-**İçinde ne var:** App Store Server API: müşteri işlemleri, iadeler, abonelik durumu, yenileme tarihleri.
+**İçinde ne var:** App Store Server API: müşteri işlemleri, iadeler ve tüketim yanıtları, abonelik durumu, tek bir abonenin ya da tümünün yenileme tarihleri, retention mesajları.
 
-**Ne zaman gerekir:** Bir müşterinin satın almalarına, iadelerine ve abonelik durumuna bakmak için. · **Anahtar rolü:** App Manager
+**Ne zaman gerekir:** Bir müşterinin satın almalarına, iadelerine ve abonelik durumuna bakmak ve bunlar üzerinde işlem yapmak için: bir kesintiden sonra yenilemeleri ertelemek, bir iade talebini yanıtlamak, iptal eden müşteriye gösterilen mesajı ayarlamak. · **Anahtar rolü:** App Manager
 
 - `storekit__check_entitlement` — Müşterinin abonelikten doğan kullanım hakkının sürüp sürmediğini kontrol eder
 - `storekit__extend_renewal_date` — Müşterinin abonelik yenileme tarihini ileri alır

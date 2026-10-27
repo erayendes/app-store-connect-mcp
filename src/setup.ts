@@ -288,7 +288,7 @@ export const DOES: Record<string, string> = {
   'monetization:subscription-codes': 'Offer codes for subscriptions.',
   'monetization:subscription-offers': 'Introductory and promotional subscription offers.',
   'monetization:subscription-win-back': 'Offers that bring lapsed subscribers back.',
-  'monetization:transactions': 'Look up a customer’s purchases, refunds and subscription status.',
+  'monetization:transactions': 'Customer purchases, refunds and subscription status; renewal extensions and retention messages.',
   provisioning: 'Signing certificates, provisioning profiles and test devices.',
   'provisioning:bundle': 'Bundle IDs and the capabilities they turn on.',
   'provisioning:certificates': 'Signing certificates: create, list and revoke.',

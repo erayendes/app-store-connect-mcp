@@ -154,14 +154,16 @@ export const TESTFLIGHT_TOOLS: McpToolDefinition[] = [{
   description:
     'Wait until an uploaded build finishes processing, then say whether it is VALID — the step ' +
     'between an upload and assigning testers or submitting. Give the app and the build number ' +
-    'or ID. Checks every 20 seconds for up to max_minutes (default 5, max 15) and, if still ' +
-    'processing, says so to call again. A build Apple has not listed yet counts as processing. Read-only.',
+    'or ID. Checks every 20 seconds for up to max_minutes (default 1, max 15) and, if still ' +
+    'processing, says so: a longer wait is done by calling again, since many clients give up on ' +
+    'a call after 60 seconds. Reports progress while it waits when the client asks for it. A ' +
+    'build Apple has not listed yet counts as processing. Read-only.',
   inputSchema: {
     type: 'object',
     properties: {
       app: { type: 'string', description: 'App name, bundle ID or numeric Apple ID.' },
       build: { type: 'string', description: 'Build number (Apple build version) or build ID.' },
-      max_minutes: { type: 'integer', minimum: 1, maximum: MAX_WAIT_MINUTES, default: 5 },
+      max_minutes: { type: 'integer', minimum: 1, maximum: MAX_WAIT_MINUTES, default: 1 },
     },
     required: ['app', 'build'],
   },
@@ -398,17 +400,54 @@ export function buildTestflightPreview(args: Record<string, unknown>): string {
   ].join('\n');
 }
 
-/** The macOS dialog for an assignment, from the arguments alone, like the preview above. */
-export function testflightDialog(args: Record<string, unknown>): DialogText {
-  const groups = Array.isArray(args.groups) ? args.groups.map(String) : [];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_LOOKUPS = 10;
+const MAX_DIALOG_GROUPS = 15;
+
+/**
+ * The dialog's arguments with a UUID build and UUID groups put in words:
+ * `buildLabel` (the build number) and `groupNames` (id → name). Reads only, at
+ * most ten, each failure left out, so the dialog falls back to counting them.
+ */
+export async function testflightPreviewArgs(
+  args: Record<string, unknown>, http: AscHttpClient
+): Promise<Record<string, unknown>> {
   const build = String(args.build ?? '').trim();
-  // A build ID is a UUID that tells a person nothing; a build number is what they know it by.
+  const ids = [...new Set((Array.isArray(args.groups) ? args.groups : []).map((g) => String(g).trim()).filter((g) => UUID.test(g)))];
+  const read = async (path: string, query: Record<string, string>, field: string): Promise<string | undefined> => {
+    try {
+      const value = (await http.get<{ data?: Resource }>(path, query))?.data?.attributes?.[field];
+      return typeof value === 'string' && value.trim() ? value : undefined;
+    } catch { return undefined; }
+  };
+  const byBuild = UUID.test(build);
+  const [version, ...names] = await Promise.all([
+    byBuild ? read(`/v1/builds/${encodeURIComponent(build)}`, { 'fields[builds]': 'version' }, 'version') : undefined,
+    ...ids.slice(0, MAX_LOOKUPS - (byBuild ? 1 : 0)).map((id) =>
+      read(`/v1/betaGroups/${encodeURIComponent(id)}`, { 'fields[betaGroups]': 'name' }, 'name')),
+  ]);
+  const groupNames = Object.fromEntries(ids.flatMap((id, i) => (names[i] ? [[id, names[i]]] : [])));
+  return { ...args, ...(version ? { buildLabel: version } : {}), ...(Object.keys(groupNames).length ? { groupNames } : {}) };
+}
+
+/** The macOS dialog for an assignment, from the arguments and what testflightPreviewArgs looked up. */
+export function testflightDialog(args: Record<string, unknown>): DialogText {
+  const names = (args.groupNames && typeof args.groupNames === 'object' ? args.groupNames : {}) as Record<string, unknown>;
+  const given = Array.isArray(args.groups) ? args.groups.map((g) => String(g).trim()) : [];
+  // A UUID tells a person nothing: a group shows by its name, or is only counted.
+  const named = given.map((g) => (typeof names[g] === 'string' ? String(names[g]) : g)).filter((g) => !UUID.test(g));
+  const unknown = given.length - named.length;
+  const groups = [...named, ...(unknown ? [`${unknown} ${named.length ? 'other ' : ''}group${unknown === 1 ? '' : 's'}`] : [])];
+  const build = typeof args.buildLabel === 'string' ? args.buildLabel : String(args.build ?? '').trim();
   const title = `Assign ${/^[\d.]+$/.test(build) ? `build ${build}` : 'the build'} to ${listText(groups) || '?'}?`;
+  const listed = named.slice(0, MAX_DIALOG_GROUPS).map((g) => (g.length > 60 ? `${g.slice(0, 59)}…` : g));
+  const more = given.length - listed.length;
   return {
     title,
     body: [
       `${appLabel(args.app)} · TestFlight`,
-      ...(groups.length > 3 ? [`Groups: ${groups.join(', ')}`] : []),
+      // The title shows three; past that the body names them, capped to fit the alert.
+      ...(groups.length > 3 ? [`Groups: ${listed.join(', ')}${more ? ` and ${more} more` : ''}`] : []),
       'Groups that already have it stay as they are.',
       'External groups may also need beta app review; this does not submit one.',
       '',
@@ -427,7 +466,7 @@ async function waitForBuild(
 ): Promise<unknown> {
   if (typeof args.app !== 'string' || !args.app.trim()) throw new AscApiError('"app" is required.', 0);
   if (typeof args.build !== 'string' || !args.build.trim()) throw new AscApiError('"build" is required.', 0);
-  const minutes = args.max_minutes ?? 5;
+  const minutes = args.max_minutes ?? 1;
   if (typeof minutes !== 'number' || !Number.isInteger(minutes) || minutes < 1 || minutes > MAX_WAIT_MINUTES) {
     throw new AscApiError(`"max_minutes" must be an integer from 1 to ${MAX_WAIT_MINUTES}.`, 0);
   }

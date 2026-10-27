@@ -123,6 +123,7 @@ export const METADATA_I18N_TOOLS: McpToolDefinition[] = [
       },
       required: ['app', 'file_path'],
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
 ];
 

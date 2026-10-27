@@ -105,6 +105,7 @@ function questionFor(
     }
     case 'territory_availabilities__update':
       if (a.available === false) return { title: 'Stop selling the app in this country?', consequence: 'New customers there can no longer download it.' };
+      if (yes(a.preOrderEnabled)) return { title: 'Open pre-orders for the app in this country?' };
       return a.available === true ? { title: 'Start selling the app in this country?' } : {};
     case 'end_app_availability_pre_orders__create':
       return { title: 'End the pre-order and release the app now?' };

@@ -31,6 +31,33 @@ describe('pricingDialog', () => {
     expect(d.body).toContain('Family Sharing on');
   });
 
+  it('shows the names, descriptions and group name customers will read', () => {
+    const d = pricingDialog('pricing__setup_subscription', {
+      app, group: 'Pro', group_display_name: 'Heimdall Pro', product_id: 'p', name: 'N', period: 'ONE_MONTH',
+      territory: 'TUR', price: '9.99',
+      localizations: [
+        { locale: 'tr', name: 'Aylık Deneme', description: 'Tüm özellikler' },
+        { locale: 'en-US', name: 'Monthly Test', description: 'x'.repeat(300) },
+      ],
+    })!;
+    expect(d.body).toContain('Names: Aylık Deneme (Turkish), Monthly Test (American English)');
+    expect(d.body).toContain('Turkish description: Tüm özellikler');
+    expect(d.body).toContain(`American English description: ${'x'.repeat(99)}…`);
+    expect(d.body).not.toContain('x'.repeat(100));
+    expect(d.body).toContain('If the group is new, customers see it as "Heimdall Pro".');
+  });
+
+  it('caps the languages so a long list still fits the 1500-character alert', () => {
+    const d = pricingDialog('pricing__setup_subscription', {
+      app, group: 'G', product_id: 'p', name: 'N', period: 'ONE_YEAR', territory: 'TUR', price: '9.99',
+      group_display_name: 'g'.repeat(500),
+      localizations: ['tr', 'en-US', 'de-DE', 'fr-FR', 'ja', 'ko', 'es-ES', 'it'].map((locale) => ({ locale, name: 'n'.repeat(200), description: 'd'.repeat(4000) })),
+    })!;
+    expect(d.body).toMatch(/\(French \(France\)\) and 4 more$/m);
+    expect(d.body).not.toContain('Japanese');
+    expect(d.body.length).toBeLessThan(1500);
+  });
+
   it('says which subscribers keep their price, both ways', () => {
     const args = { app, subscription: 'heimdall.test.monthly', territory: 'TUR', price: '129.99' };
     const keep = pricingDialog('pricing__set_subscription_price', { ...args, preserve_current_price: true })!;

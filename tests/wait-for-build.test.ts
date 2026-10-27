@@ -4,7 +4,7 @@
  * has not listed yet — that is still processing, not missing.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { executeTestflightTool } from '../src/tools/testflight.js';
+import { executeTestflightTool, TESTFLIGHT_TOOLS } from '../src/tools/testflight.js';
 
 function fakeHttp(states: Array<string | undefined>) {
   let call = 0;
@@ -56,7 +56,7 @@ describe('testflight__wait_for_build', () => {
     const progress = vi.fn();
     await executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' },
       { http: fakeHttp([undefined, 'PROCESSING', 'VALID']), sleep: async (ms) => { now += ms; }, progress });
-    expect(progress.mock.calls).toEqual([[0, 300, 'Build 42 is not listed yet.'], [20, 300, 'Build 42 is PROCESSING.']]);
+    expect(progress.mock.calls).toEqual([[0, 60, 'Build 42 is not listed yet.'], [20, 60, 'Build 42 is PROCESSING.']]);
   });
 
   it('leaves no abort listener behind on its real timer, and does not sleep on an aborted signal', async () => {
@@ -82,6 +82,17 @@ describe('testflight__wait_for_build', () => {
     http.collect.mockImplementation(async () => { controller.abort(); return read(); });
     await expect(executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal }))
       .rejects.toThrow(/cancelled/);
+  });
+
+  it('waits one minute by default, inside a client\'s 60-second request timeout, and says to call again', async () => {
+    const res = await run(fakeHttp(['PROCESSING']));
+    expect(res).toMatchObject({ timedOut: true });
+    expect(res.waitedSeconds).toBeLessThanOrEqual(60);
+    const tool = TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__wait_for_build')!;
+    expect((tool.inputSchema as any).properties.max_minutes).toMatchObject({ default: 1, maximum: 15 });
+    expect(tool.description).toMatch(/default 1, max 15/);
+    expect(tool.description).toMatch(/calling again/);
+    expect(tool.description).toMatch(/progress/);
   });
 
   it('refuses a wait longer than fifteen minutes', async () => {

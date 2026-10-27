@@ -91,7 +91,7 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
       },
       required: ['app', 'subscription', 'territory', 'price', 'preserve_current_price'],
     },
-    annotations: { readOnlyHint: false, idempotentHint: false },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   {
     name: 'pricing__setup_subscription',
@@ -99,7 +99,9 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
       'Set up a whole auto-renewable subscription under one confirmation: the group (found by ' +
       'name, or made new with its display name), the subscription, its localizations, sale in ' +
       'every country (or the ones given) and its price, set in one country and derived by Apple ' +
-      'everywhere else. Reuses an existing group and never edits one. Check the result with ' +
+      'everywhere else. Reuses an existing group and never edits one. It adds no review ' +
+      'screenshot and no offers, and submits nothing: next come media__upload for the review ' +
+      'screenshot and release__submit_items. Check the result with ' +
       'preflight__check_subscription. REVENUE-level write.',
     inputSchema: {
       type: 'object',
@@ -115,6 +117,7 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         period: { type: 'string', enum: ['ONE_WEEK', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'] },
         localizations: {
           type: 'array',
+          minItems: 1,
           description: 'At least one: the name and description customers see, per locale.',
           items: {
             type: 'object',
@@ -131,7 +134,8 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         territories: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Sell only in these countries (alpha-3). Omit to sell everywhere, new countries included.',
+          minItems: 1,
+          description: 'Sell only in these countries (alpha-3); must include `territory`, the priced one. Omit to sell everywhere, new countries included.',
         },
         family_sharable: { type: 'boolean' },
         review_note: { type: 'string', description: 'Note for App Review.' },
@@ -854,6 +858,11 @@ const countryName = (code: unknown): string => {
   const c = String(code ?? '?').trim().toUpperCase();
   return TERRITORY_NAMES[c] ?? c;
 };
+/** At most `max` characters, the cut marked with "…". */
+const cut = (text: unknown, max: number): string => {
+  const s = String(text ?? '?').trim().replace(/\s+/g, ' ');
+  return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
+};
 const language = (locale: string): string => {
   try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) ?? locale; } catch { return locale; }
 };
@@ -915,11 +924,16 @@ export function pricingDialog(name: string, args: Record<string, unknown>): Dial
   if (name === 'pricing__setup_subscription') {
     const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
     const territories = Array.isArray(args.territories) ? (args.territories as unknown[]).map(countryName) : [];
+    // The text customers will read, cut so many languages still fit the 1500-character alert.
+    const shown = locs.slice(0, 4);
+    const more = locs.length > shown.length ? ` and ${locs.length - shown.length} more` : '';
     return dialog(`Create the subscription "${String(args.name ?? args.product_id ?? '?')}"?`, [
       `${app} · group "${String(args.group ?? '?')}" (created if missing)`,
+      ...(args.group_display_name ? [`If the group is new, customers see it as "${cut(args.group_display_name, 60)}".`] : []),
       `${price} ${every(args.period)} in ${country}; Apple derives every other country.`,
       territories.length ? `On sale in ${listText(territories)}` : 'On sale everywhere, new countries included',
-      `Languages: ${listText(locs.map((l) => language(String(l.locale))))}`,
+      `Names: ${shown.map((l) => `${cut(l.name, 60)} (${language(String(l.locale))})`).join(', ')}${more}`,
+      ...shown.map((l) => `${language(String(l.locale))} description: ${cut(l.description, 100)}`),
       ...(args.family_sharable === true ? ['Family Sharing on'] : []),
       `Product ID ${String(args.product_id ?? '?')} can’t be changed later.`,
     ], 'Nothing is sold until App Review approves it.', 'Create');

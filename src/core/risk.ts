@@ -73,6 +73,8 @@ export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
   'game_center_player_achievement_submissions__create',
   // The message a customer sees while cancelling a subscription.
   'storekit__manage_retention_messaging',
+  // A reply appears under the customer's review, for everyone to read.
+  'customer_review_responses__create',
 ]);
 
 /** Of those, the ones that cannot be walked back ask for a typed CONFIRM, like the strong levels. */
@@ -133,6 +135,7 @@ const CONSEQUENCES: Record<string, string> = {
   app_store_version_experiments_v2__update: 'Real visitors see the test while it runs.',
   game_center_leaderboard_entry_submissions__create: 'It lands on a real player’s record.',
   game_center_player_achievement_submissions__create: 'It lands on a real player’s record.',
+  customer_review_responses__create: 'It appears under the review on the App Store; it can be edited or deleted later.',
   sandbox_testers_v2__update: 'It affects sandbox testing only.',
   sandbox_testers_clear_purchase_history_request_v2__create: 'Their sandbox purchases are gone for good.',
 };

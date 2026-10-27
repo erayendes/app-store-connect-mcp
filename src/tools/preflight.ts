@@ -55,7 +55,9 @@ export const PREFLIGHT_TOOLS: McpToolDefinition[] = [
       'build is attached and finished processing, the export compliance answer is ' +
       'given, the review contact and demo account are filled in, every locale has a ' +
       'description and keywords, and screenshots exist. Each gap names the tool that ' +
-      'fixes it. Read-only — it changes nothing and does not submit.',
+      'fixes it. ready: true does not cover App Privacy, EU trader status or agreements, which ' +
+      'the API cannot read; they come back in manualChecks for the user to confirm. ' +
+      'Read-only — it changes nothing and does not submit.',
     inputSchema: {
       type: 'object',
       properties: {

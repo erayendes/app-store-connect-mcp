@@ -30,7 +30,7 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Sizin
 | submission açmak, sürümü eklemek, teslim etmek — bu sırayla üç çağrı | `release__submit` | `distribution:publish` |
 | aynısını bir IAP, abonelik, uygulama içi etkinlik, özel ürün sayfası, ürün sayfası testi, Game Center öğesi ya da background asset için yapmak | `release__submit_items` — birden çok öğe tek başvuruda; başvuruda zaten ne olduğunu okur, onaydan önce hepsini listeler, öğenin sürümle gitmesi gerekiyorsa uygulamanın sürümünü de ekleyebilir | öğenin kendi alt profili, örneğin `monetization:in-app-purchases` |
 | build'i bulmak, beta gruplarını çözümlemek, eksik bağlantıları eklemek | `testflight__assign_build_to_groups` | `testflight:groups` |
-| yüklenen build'in işlenip işlenmediğine tekrar tekrar bakmak | `testflight__wait_for_build` — 15 dakikaya kadar bekler ve VALID olup olmadığını söyler | `testflight:test-builds` |
+| yüklenen build'in işlenip işlenmediğine tekrar tekrar bakmak | `testflight__wait_for_build` — varsayılan olarak 1 dakika, istenirse 15 dakikaya kadar bekler ve VALID olup olmadığını söyler; daha uzun bekleme için yeniden çağrılır | `testflight:test-builds` |
 | kırk dilin mağaza metnini gözle karşılaştırmak | `metadata_ai__audit_localizations` | `distribution:version` |
 | her dile çeviriyi elle yapıştırmak | `metadata_ai__apply_localizations` — CSV veya JSON dosyadan | `distribution:version` |
 | sürüm + build + inceleme detayı + yerelleştirmeler + ekran görüntüleri, "gönderilebilir mi" sorusu için | `preflight__check_version` | `distribution:version` |

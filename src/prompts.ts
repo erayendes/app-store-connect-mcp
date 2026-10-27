@@ -18,6 +18,8 @@
  *      it reads as a capability and fails at the first step.
  */
 
+import { PACKAGE } from './clients.js';
+
 export interface PromptArgument {
   name: string;
   description: string;
@@ -124,7 +126,7 @@ export const PROMPTS: PromptDefinition[] = [
       [
         'Help the user take their first steps with App Store Connect through Heimdall.',
         '',
-        '1. Call asc__status. If the connection fails, stop: tell the user to run `npx -y @erayendes/asc-mcp@beta setup` in their own terminal. Never ask for the .p8 key or look for it yourself.',
+        `1. Call asc__status. If the connection fails, stop: tell the user to run \`npx -y ${PACKAGE} setup\` in their own terminal. Never ask for the .p8 key or look for it yourself.`,
         '2. Call asc__account_status and summarize it: the apps, what is live, and anything waiting on the user, such as a version in review or a rejected one.',
         '3. Tell the user they can ask in plain words, and show it once: call asc__search_tools for something they are likely to want next, for example "change a subscription price", and say which profile carries it.',
         '4. Mention that changes to prices, access, deletions and releases ask for their confirmation first, and that nothing here has changed anything yet.',

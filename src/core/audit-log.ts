@@ -94,8 +94,12 @@ function append(file: string, entry: object, env: NodeJS.ProcessEnv): void {
   }
 }
 
-/** An error message can quote the URL it failed on. */
-const maskText = (text?: string) => (text === undefined ? text : maskUrls(text));
+/**
+ * An error message can quote what it was given: a URL, or a value a validator
+ * refused. Quoted values and URLs are dropped, like the arguments are.
+ */
+const maskText = (text?: string) =>
+  text === undefined ? text : maskUrls(text).replace(/"[^"]*"|“[^”]*”/g, '"…"').replace(/\b\w+:\/\/\S+/g, '<url>').slice(0, 500);
 
 export function logWrite(entry: AuditEntry, env: NodeJS.ProcessEnv = process.env): void {
   append('audit.jsonl', { ...entry, args: auditArgs(entry.args), error: maskText(entry.error) }, env);

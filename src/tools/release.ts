@@ -132,6 +132,7 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
       },
       required: ['app', 'version', 'steps'],
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   {
     name: 'release__submit_items',
@@ -157,6 +158,7 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
         items: { type: 'array', items: { type: 'object', properties: { type: { type: 'string' }, id: { type: 'string' } }, required: ['type', 'id'] } },
       }, required: ['app', 'platform', 'steps', 'items'],
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
 ];
 
