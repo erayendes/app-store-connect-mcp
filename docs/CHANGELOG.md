@@ -47,7 +47,7 @@ Don't worry: it lists every item before it sends.
 **Clearer confirmations**
 In apps that can't show the confirmation form (like the Code tab in Claude Desktop), Heimdall opens its own window on a Mac. The AI can neither see that window nor press it.
 
-<!-- SCREENSHOT: the new confirmation dialog -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page and stays in the media library. Buttons: Cancel and Remove." width="394">
 
 The window asks what will happen in one sentence: "Remove a screenshot from the App Store page?" Below it are the app, the page and the files by name, with no IDs. And the button says what it does: Remove, Delete, Upload.
 
@@ -362,7 +362,7 @@ Merak etmeyin, göndermeden önce hepsini tek tek listeliyor.
 **Onaylar daha anlaşılır**
 Onay formu gösteremeyen uygulamalarda (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresini açıyor. Yapay zekâ bu pencereyi ne görebiliyor ne de basabiliyor.
 
-<!-- EKRAN GÖRÜNTÜSÜ: yeni onay penceresi -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak ve medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="394">
 
 Pencere ne olacağını tek cümleyle soruyor: "Remove a screenshot from the App Store page?" Altında uygulama, sayfa ve dosyalar adlarıyla yazıyor; ID yok. Düğme de ne yapacağını söylüyor: Remove, Delete, Upload.
 
