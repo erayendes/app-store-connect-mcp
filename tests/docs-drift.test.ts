@@ -87,8 +87,8 @@ describe('advertised counts', () => {
     ['.github/SECURITY.md', /The (\d+) hand-written ones/, [COUNTS.handWritten]],
     ['.github/SECURITY.md', /Elle yazılan (\d+) araç/, [COUNTS.handWritten]],
     // The newest changelog entry speaks for the code as it is now; older ones are history.
-    ['docs/CHANGELOG.md', /There are (\d+) to pick from, and (\d+) sub-profiles/, [COUNTS.pickable, COUNTS.subProfiles]],
-    ['docs/CHANGELOG.md', /Seçebileceğiniz (\d+) profil ve (\d+) alt profil/, [COUNTS.pickable, COUNTS.subProfiles]],
+    ['docs/CHANGELOG.md', /There are now (\d+) profiles and (\d+) sub-profiles/, [COUNTS.pickable, COUNTS.subProfiles]],
+    ['docs/CHANGELOG.md', /Artık (\d+) profil ve (\d+) alt profil var/, [COUNTS.pickable, COUNTS.subProfiles]],
     ['docs/CHANGELOG.md', /Heimdall now has (\d+) tools\./, [COUNTS.tools]],
     ['docs/CHANGELOG.md', /Heimdall artık (\d+) araç içeriyor\./, [COUNTS.tools]],
   ];
