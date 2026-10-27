@@ -643,6 +643,16 @@ describe('pricing__equalize_price', () => {
     expect(result.written).toBe(3);
   });
 
+  it('prices only the countries a new subscription is sold in', async () => {
+    const { http, posts } = equalizeHttp();
+    await run(
+      { app: 'Ask Quran', product_type: 'subscription', product: 'weekly.1', territory: 'TUR', price: '3.99',
+        preserve_current_price: true, only_territories: ['TUR', 'DEU'] },
+      http
+    );
+    expect(posts.map((p) => p.body.data.relationships.subscriptionPricePoint.data.id)).toEqual(['pp-tur', 'pp-deu']);
+  });
+
   it('reports exactly where it stopped instead of leaving an unknown state', async () => {
     const { http, posts } = equalizeHttp({ failAt: 'pp-deu' });
     const result: any = await run(

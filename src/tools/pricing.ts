@@ -1456,7 +1456,9 @@ async function equalizePrice(
       territory: String(p.relationships?.territory?.data?.id ?? ''),
       customerPrice: String(p.attributes?.customerPrice ?? ''),
     }))
-    .filter((p: { territory: string }) => p.territory && p.territory !== territory);
+    .filter((p: { territory: string }) => p.territory && p.territory !== territory)
+    // setup_subscription sells in named countries only, and a price elsewhere is refused.
+    .filter((p: { territory: string }) => !Array.isArray(args.only_territories) || (args.only_territories as string[]).includes(p.territory));
 
   // The anchor goes first, deliberately. If a later write fails, the country
   // the user actually named is already set rather than left behind.
@@ -2244,6 +2246,9 @@ async function createSubscription(args: Record<string, unknown>, ctx: PricingCon
   if (territories && !territories.length) {
     throw new AscApiError('"territories" is empty. Omit it to sell everywhere, or name the countries.', 0);
   }
+  if (territories && !territories.includes(String(args.territory).trim().toUpperCase())) {
+    throw new AscApiError(`"territories" must include ${String(args.territory).toUpperCase()}, the country whose price you set.`, 0);
+  }
   for (const t of [String(args.territory).trim().toUpperCase(), ...(territories ?? [])]) {
     if (!/^[A-Z]{3}$/.test(t)) {
       throw new AscApiError(`"${t}" is not a territory code. Apple wants three letters (ISO-3166 alpha-3): USA, TUR, DEU — not US, TR, DE.`, 0);
@@ -2348,6 +2353,7 @@ async function createSubscription(args: Record<string, unknown>, ctx: PricingCon
     const out: any = await equalizePrice({
       app: app.id, product_type: 'subscription', product: String(args.product_id),
       territory: args.territory, price: args.price, preserve_current_price: true,
+      ...(territories ? { only_territories: territories } : {}),
     }, ctx);
     // equalizePrice reports a stop part-way as ok: false rather than throwing.
     if (out?.ok === false) throw new AscApiError(`${out.note ?? out.error ?? 'pricing stopped part-way'}`, 0);

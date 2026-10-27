@@ -416,10 +416,10 @@ async function waitForBuild(
   for (;;) {
     if (ctx.signal?.aborted) throw new AscApiError('Stopped waiting: the call was cancelled.', 0);
     const builds = await ctx.http.collect<AssignResource>('/v1/builds', {
-      'filter[app]': app.id, [byId ? 'filter[id]' : 'filter[version]']: args.build,
+      'filter[app]': app.id, [byId ? 'filter[id]' : 'filter[version]']: byId ? args.build.toLowerCase() : args.build,
       'fields[builds]': 'version,processingState', limit: 200,
     }, 2);
-    const matches = builds.items.filter((b) => (byId ? b.id === args.build : b.attributes?.version === args.build));
+    const matches = builds.items.filter((b) => (byId ? b.id.toLowerCase() === String(args.build).toLowerCase() : b.attributes?.version === args.build));
     if (matches.length > 1) {
       throw new AscApiError(`Build "${args.build}" matches ${matches.length} builds; pass one of these build IDs: ${matches.map((b) => b.id).join(', ')}.`, 0);
     }

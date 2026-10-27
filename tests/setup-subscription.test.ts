@@ -85,6 +85,12 @@ describe('pricing__setup_subscription', () => {
     expect(posts[3].body.data.attributes.availableInNewTerritories).toBe(false);
   });
 
+  it('refuses a country list that leaves out the priced country', async () => {
+    const { http, posts } = fakeHttp();
+    await expect(executePricingTool('pricing__setup_subscription', { ...args, territories: ['USA'] }, { http, dryRun: false })).rejects.toThrow(/must include TUR/);
+    expect(posts).toEqual([]);
+  });
+
   it('refuses an empty country list rather than selling nowhere', async () => {
     const { http, posts } = fakeHttp();
     await expect(executePricingTool('pricing__setup_subscription', { ...args, territories: [] }, { http, dryRun: false })).rejects.toThrow(/"territories" is empty/);

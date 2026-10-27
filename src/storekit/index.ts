@@ -1073,11 +1073,16 @@ export class StoreKitService {
         return { deleted: 'message', messageId: args.message_id };
       case 'upload_image': {
         need('image_id', 'file_path', 'image_size');
-        const info = statSync(args.file_path);
+        let info;
+        try { info = statSync(args.file_path); } catch { throw new Error(`No file at ${args.file_path}.`); }
         if (!info.isFile() || info.size === 0 || info.size > MAX_RETENTION_IMAGE_BYTES) {
           throw new Error(`file_path must be a nonempty file of at most ${MAX_RETENTION_IMAGE_BYTES} bytes.`);
         }
-        await client.uploadImage(args.image_id, readFileSync(args.file_path), args.image_size);
+        const image = readFileSync(args.file_path);
+        if (!image.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+          throw new Error('file_path must be a PNG image.');
+        }
+        await client.uploadImage(args.image_id, image, args.image_size);
         return { uploaded: 'image', imageId: args.image_id };
       }
       case 'delete_image':

@@ -598,7 +598,8 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         logWrite({ tool: name, risk: auditRisk, confirmation: how, outcome: 'not run', args });
         return response;
       };
-      if ((config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) && audited) {
+      // The risk is worked out for every real write, so the audit log rates it even with confirmation off.
+      if (audited) {
         const op = registry.get(name);
         // Decided from the risk level alone, before the preview is built:
         // buildWritePreview resolves reference ids over the network, and a
@@ -630,9 +631,8 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                     : 'low')) as RiskLevel);
         auditRisk = risk;
         if (
-          config.confirmWrites === 'all' ||
-          STRONG_CONFIRM_LEVELS.has(risk) ||
-          ASK_BY_DEFAULT.has(name)
+          (config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) &&
+          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name))
         ) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.

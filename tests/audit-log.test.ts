@@ -31,6 +31,12 @@ describe('audit log', () => {
     expect(lines(join(dir, 'failures.jsonl'))[0]).toMatchObject({ status: 404, appleRequestId: 'REQ-1' });
   });
 
+  it('masks a credential quoted in an error message', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'audit-'));
+    logFailure({ tool: 't', status: 400, error: 'bad URL https://x.test/hook?token=abc' }, { ASC_STATE_DIR: dir } as NodeJS.ProcessEnv);
+    expect(lines(join(dir, 'failures.jsonl'))[0].error).toBe('bad URL https://x.test/hook?token=[masked]');
+  });
+
   it('never fails the call when the log cannot be written', () => {
     expect(() =>
       logWrite({ tool: 't', risk: 'low', confirmation: 'not asked', outcome: 'ok', args: {} }, { ASC_STATE_DIR: '/dev/null/nope' } as NodeJS.ProcessEnv)

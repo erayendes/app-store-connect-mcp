@@ -11,7 +11,7 @@
  * Nothing leaves the machine, and nothing here throws: a full disk must not
  * turn a write that already ran into an error.
  */
-import { appendFileSync, chmodSync, existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { stateDir } from './shared-config.js';
 
@@ -56,19 +56,20 @@ function append(file: string, entry: object, env: NodeJS.ProcessEnv): void {
   try {
     const dir = stateDir(env);
     mkdirSync(dir, { recursive: true, mode: 0o700 });
-    const path = join(dir, file);
-    const fresh = !existsSync(path);
-    appendFileSync(path, JSON.stringify({ at: new Date().toISOString(), ...entry }) + '\n');
-    if (fresh) chmodSync(path, 0o600);
+    // The mode applies when the file is created, so it is never readable by others, even briefly.
+    appendFileSync(join(dir, file), JSON.stringify({ at: new Date().toISOString(), ...entry }) + '\n', { mode: 0o600 });
   } catch {
     // A log that cannot be written is not a reason to fail the call.
   }
 }
 
+/** An error message can quote the URL it failed on. */
+const maskText = (text?: string) => text?.replace(SECRET_PARAM, '$1[masked]');
+
 export function logWrite(entry: AuditEntry, env: NodeJS.ProcessEnv = process.env): void {
-  append('audit.jsonl', { ...entry, args: maskArgs(entry.args) }, env);
+  append('audit.jsonl', { ...entry, args: maskArgs(entry.args), error: maskText(entry.error) }, env);
 }
 
 export function logFailure(entry: FailureEntry, env: NodeJS.ProcessEnv = process.env): void {
-  append('failures.jsonl', entry, env);
+  append('failures.jsonl', { ...entry, error: maskText(entry.error) }, env);
 }
