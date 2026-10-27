@@ -60,7 +60,8 @@ Commands:
                          --dry-run  with --web: walk through it, save nothing
   register <profile...>  Register profiles without a terminal — for an AI agent
                          acting on your behalf. Asks for nothing, never touches
-                         credentials, and only adds (setup is what removes).
+                         credentials, and never removes a profile you use;
+                         it does clear entries left over from 2.x.
                          --clients=<ids>  limit to some clients; default is
                          every one found on this machine.
 

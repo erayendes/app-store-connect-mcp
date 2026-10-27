@@ -1,11 +1,30 @@
-# Media file targets (3.0)
+# Media targets
 
 🇬🇧 English · 🇹🇷 [Türkçe](MEDIA_TARGETS_tr.md)
 
-Use the existing `media__list`, `media__upload` and `media__delete` tools with
-these `target` values. `page_id` is the exact owning resource ID in the table;
-it is not the image/file ID. `media__list` returns file IDs, names, processing
-states and errors. Use `file_ids` to filter the list or select files to delete.
+Ask your AI to list, upload, arrange or delete images, videos and files. It
+uses the four media tools on ASC-Core (`media__list`, `media__upload`,
+`media__arrange`, `media__delete`) with one of the `target` values below.
+
+## Store pages and the asset library
+
+| Target | What it is | `page_id` | Arrange |
+|:--|:--|:--|:--|
+| `library` | The app's asset library: every image and video, placed or not | — | rename, archive, set a video's poster |
+| `version` | The App Store version page | — (name the version and `locale`) | place, reorder, remove, poster |
+| `cpp` | A custom product page | Its localization | place, reorder, remove, poster |
+| `ppo` | A product page test treatment | Its localization | place, reorder, remove, poster |
+| `event` | An in-app event's card and details images | Its localization | place, remove |
+
+An upload to a page goes into the library and is placed in one step. Removing
+from a page leaves the file in the library; deleting from the library removes
+it everywhere it is placed.
+
+## Image and file targets
+
+`page_id` is the exact owning resource ID in the table; it is not the
+image/file ID. `media__list` returns file IDs, names, processing states and
+errors. Use `file_ids` to filter the list or select files to delete.
 
 | Target | `page_id` owner | List | Upload | Delete | Upload risk | File check |
 |:--|:--|:--:|:--:|:--:|:--|:--|
@@ -25,6 +44,10 @@ states and errors. Use `file_ids` to filter the list or select files to delete.
 | `routing_coverage` | App Store version | ✓ | ✓ | ✓ | low | Parsed GeoJSON structure, ≤4 MiB |
 | `background_asset_file` | Background asset version | ✓ | ✓ | — | low | Opaque asset/manifest bytes |
 | `build_upload_file` | Build upload, or none | ✓ | ✓ | Whole upload | release | UTI-specific signature |
+
+**What the risk means for you.** `public`, `low` and `release` don't ask:
+your AI app's own approval decides. Every delete, and an upload with
+`replace: true`, is `destructive` and asks you to type CONFIRM.
 
 All deletes are `destructive`. None of these targets supports
 `media__arrange`: Apple has no placement ordering for them. A dash means the
@@ -84,7 +107,9 @@ thousands of uploads are not paged through. A new build upload (no `page_id`)
 sends `build_uploads.create`, whose risk is `release`. Committing a file to an
 existing build upload also starts build processing and is `release` level.
 
-## File checks and memory
+## For contributors
+
+### File checks and memory
 
 Every file must be nonempty and regular: 50 MiB for images, 4 MiB for routing
 coverage GeoJSON, 500 MiB for other files. These are local safety limits, not
@@ -131,7 +156,7 @@ The flow is `POST /v1/buildUploads` when needed, then
 `PATCH /v1/buildUploadFiles/{id}`. No file DELETE exists;
 `DELETE /v1/buildUploads/{id}` deletes the owner instead.
 
-## Ownership, previews and coverage
+### Ownership, previews and coverage
 
 Ownership is checked from the exact parent through requested relationships to
 the named app. IAPs and subscription groups use the app's paginated collection
@@ -153,14 +178,14 @@ include MD5 `sourceFileChecksum` where that is the schema's field, or MD5
 SHA-256, which Apple refused on a real build commit). The seven image
 families whose update accepts only `uploaded` need no checksum field.
 
-PR-D2 removes 73 raw profile operations and records them in `MACRO_COVERED`:
+Of the 97 raw operations the media tools cover (`MACRO_COVERED`), 73 are these
+file targets; the other 24 are store page and library media. The 73 are
 17 creates (16 file families plus build uploads), 13 deletes (12 file families
 plus build uploads), ten updates and 33 reads (16 file getters and 17 owner
 relationship reads, including the two version default images). The updates
 are the seven uploaded-only ones, the two customer-facing App Clip images
 (their update is `uploaded` plus an MD5 checksum, which is exactly the commit
-step) and routing coverage, whose `distribution:routing-coverage` sub-profile
-was removed in favour of the macro. The exact mapping is in
+step) and routing coverage. The exact mapping is in
 [`scripts/generate-profiles.ts`](../scripts/generate-profiles.ts), and each
 covered target/action runs against the include-aware HTTP mock in
 [`tests/media-coverage.test.ts`](../tests/media-coverage.test.ts).

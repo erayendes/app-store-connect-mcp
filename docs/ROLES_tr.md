@@ -9,7 +9,7 @@ Bu doküman App Store Connect rollerinin yetkilerini ve risklerini belirtmek iç
 | **Admin** | Her şey üzerinde tam kontrol; ekip (`access`), kod imzalama (`provisioning`), webhook'lar (`webhooks`) ve AB'de alternatif dağıtım (`distribution:dma-distribution`) dahil. | **En yüksek.** Başka kullanıcıların erişimini iptal edebilir, sertifika/profilleri silebilir — bu tüm ekibin imzalamasını bozar. Etki alanı kendi uygulamanızın dışına taşar. |
 | **App Manager** | Uygulamayı uçtan uca yönetir: uygulama bilgileri (`general`), sürümler ve yayın (`distribution`), abonelikler, IAP ve fiyatlar (`monetization`), Game Center (`game-center`), App Clip'ler (`app-clips`) ve sandbox hesapları (`access:sandbox`). | **Yüksek.** Canlı bir sürümü gönderebilir/geri çekebilir, bir uygulama içi satın alma veya abonelik grubunu silebilir. Canlı listenizi ve gelirinizi doğrudan etkiler. |
 | **Developer** | Yalnızca build ve test: yüklenen build'ler (`distribution:builds`), TestFlight (`testflight`), Xcode Cloud (`xcode-cloud`), Background Assets (`background-assets`) — yükleme, gönderim değil. | **Orta.** Testçileri, build'leri, beta gruplarını silebilir; ama fiyatlandırmaya, canlı metadata'ya dokunamaz, incelemeye gönderemez. |
-| **Marketing** | Mağaza görünürlüğünü yönetir: özel ürün sayfaları, ürün sayfası denemeleri, uygulama içi etkinlikler, öne çıkarılma başvuruları ve yorumlar (`marketing`). | **Orta.** Zaten müşteriye görünen özel ürün sayfalarını, önizlemeleri, uygulama içi etkinlikleri kaldırabilir. |
+| **Marketing** | Mağaza görünürlüğünü yönetir: özel ürün sayfaları, ürün sayfası testleri, uygulama içi etkinlikler, öne çıkarılma başvuruları ve yorumlar (`marketing`). | **Orta.** Zaten müşteriye görünen özel ürün sayfalarını, önizlemeleri, uygulama içi etkinlikleri kaldırabilir. |
 | **Sales** | Satış ve trend raporlarını okur (`analytics`). | **Düşük.** Neredeyse yalnızca okuma yapar; rapor istemek mağaza sayfanızda hiçbir şeyi değiştirmez. |
 | **Finance** | Finans ve ödeme raporlarını okur (`analytics`; ayrıca setup'ta Vendor number girilmiş olmalı). | **Düşük.** Sales ile aynı, ağırlıklı okuma yapan `analytics` alanı. |
 | **Customer Support** | Müşteri yorumlarını okur ve yanıtlar (`marketing:customer-reviews`, `reviews_ai__*` dahil). | **Düşük-orta.** Gönderilen yanıt herkese açıktır. Geri alınabilir, ama siz hatayı fark etmeden müşteriler görmüş olabilir. |
@@ -21,7 +21,7 @@ Bu doküman App Store Connect rollerinin yetkilerini ve risklerini belirtmek iç
 
 ## Hangi profil hangi rollerle çalışır
 
-Setup aynı tabloyla çalışır: seçtiklerinize bakıp hepsini karşılayan en dar rolü önerir. Bir anahtarın tek rolü olduğu için hiçbir dar rolün tek başına karşılamadığı bir karışım Admin'e çıkar. ASC-Core her rolle çalışır.
+Setup aynı tabloyla çalışır: seçtiklerinize bakıp hepsini karşılayan en dar rolü önerir. Bir anahtarın tek rolü olduğu için hiçbir dar rolün tek başına karşılamadığı bir karışım Admin'e çıkar. ASC-Core'un uygulama bulma ve araç arama araçları her rolle çalışır; medya araçları ise yüklediğiniz şeyin sahibi olan rolü ister (mağaza sayfaları için Marketing ya da App Manager, uygulama içi satın alma ve Game Center görselleri için App Manager, build dosyaları için Developer).
 
 | Profil ya da alt profil | Çalışan roller |
 |:--|:--|
@@ -92,7 +92,7 @@ Setup aynı tabloyla çalışır: seçtiklerinize bakıp hepsini karşılayan en
 
 ## Pratikte en az yetki
 
-Yukarıdaki tablo, App Store Connect'te [anahtar oluştururken](SETUP_tr.md#api-anahtarı-oluşturun) *seçtiğiniz* rollerdir. Bunların üstüne birkaç kısıt daha geçerli:
+Yukarıdaki tablo, App Store Connect'te [anahtar oluştururken](SETUP_tr.md#api-anahtarı-oluşturun) *seçtiğiniz* rolü gösterir. Bunların üstüne birkaç kısıt daha geçerli:
 
 - **Analytics tipi raporlar hesaptan ilk defa istendiğinde Admin rolü gerekir.** Bir rapor türü hesabınızdan daha önce hiç istenmediyse onu başlatmak için Admin anahtarı gerekir. Rapor bir kez başlatıldıktan sonra **Sales** ya da **Finance** rolündeki bir anahtar onu okuyabilir. Yani Admin anahtarını yalnızca bu ilk iş için kullanın, günlük işlere dar rollü anahtarla devam edin.
 - **Account Holder alanına hiçbir rolle ulaşılamaz.** Sözleşmeler, vergi formları ve banka bilgileri yalnızca kendi web sayfasından yönetiliyor. İmzasız ya da süresi dolmuş bir sözleşme onaylanana kadar hesap kilitli kalır.

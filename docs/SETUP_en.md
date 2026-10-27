@@ -27,6 +27,8 @@ npx -y @erayendes/asc-mcp@beta setup
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
 
+<sub>Recorded with 2.x. In 3.0, setup first asks whether to continue in the browser or the terminal, then for your profiles, then for the key.</sub>
+
 ### Save your credentials once — the setup wizard
 
 The wizard asks in the order you'd think it through, in the browser and the terminal alike:
@@ -44,7 +46,7 @@ When it's done, restart your app and say *"Check my App Store Connect connection
 > - **Everything that isn't secret** goes into `~/.config/asc-mcp/config.json`. Every profile reads this shared file.
 > - **If you've run setup before**, it finds your saved Key ID and Issuer ID and offers to reuse them, so you only pick profiles again.
 > - **Xcode 27** installs plug-ins from a Git URL and has no settings file to write, so the wizard can't set it up. It has [its own section](#using-heimdall-in-xcode-27).
-> - **Having your AI install Heimdall?** It can only add profiles, with `register`. You run `setup` yourself for the key, and the key is never shown to the AI during setup. The rules are in [AGENTS.md](../AGENTS.md).
+> - **Having your AI install Heimdall?** It can register profiles with `register`; it never removes a profile you use, though it clears entries left over from 2.x. You run `setup` yourself for the key, and the key is never shown to the AI during setup. The rules are in [AGENTS.md](../AGENTS.md).
 
 ### ASC-Core comes along
 
@@ -85,13 +87,16 @@ You don't have to install everything up front. Start with the few profiles you n
 - **Run setup again**: `npx -y @erayendes/asc-mcp@beta setup`.
 - It reuses your credentials and shows the pickers again.
 - Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected. An app you untick loses Heimdall.
-- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so.
+- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so. A 2.x entry that ran without a profile is left alone; delete it from your app's MCP settings yourself.
 
 ## When you need a tool you haven't installed
 
 Ask the AI. Heimdall finds the tool and, if needed, tells you how to add it. So don't hesitate to start with just a few profiles; you'll be told when something is missing.
 
 ## Using Heimdall in Xcode 27
+
+> [!IMPORTANT]
+> Until 3.0.0 is out, Xcode installs the 2.8 plug-ins from this URL. The 3.0 plug-ins arrive once 3.0 reaches the repository's `main` branch.
 
 1. If you haven't yet, run `npx -y @erayendes/asc-mcp@beta setup` once. Your key goes into the Keychain.
 2. Xcode → Settings → Intelligence → Plug-ins → **Add Plug-in…**
@@ -124,9 +129,9 @@ Read-only mode, trying changes without making them, a second App Store Connect a
 | **`401 Unauthorized`** | The Key ID, Issuer ID and `.p8` file don't belong to the same key, or the key was revoked. | Run `setup` again and answer **n** when it asks whether to reuse your saved credentials. Enter the key again; setup checks it with Apple before saving. |
 | **`403 Forbidden`** | The key's role isn't enough for that action, or an App Store Connect agreement is unsigned or expired. | Ask the AI: *"Check my key's permissions."* Which role you need is in [Roles](ROLES_en.md). Only the Account Holder can accept an agreement, in App Store Connect; no key fixes it. |
 | **`409 Conflict` when updating a version** | App Store Connect only allows edits in certain version states. | A version that's in review or already released is locked. |
-| **A tool I need isn't there** | It's in another profile. | Ask the AI: *"Is there a tool for X?"* |
+| **A tool I need isn't there** | It's in another profile. | Ask the AI: *"Is there a tool for X?"* It names the profile; add it with `setup`, or let the AI run `register`, then restart the app. |
 | **A server has one tool that says its profile doesn't exist** | Its settings name a profile from an earlier version, such as `app-info`. | Run `setup` again and pick your profiles; it removes the old entry (`app-info` is now `general`). |
-| **No app lookup, tool search or screenshot tools** | ASC-Core isn't registered in this app. Setup leaves it out when the app's servers use different accounts. | Run `setup` again and read the plan; it says why ASC-Core was left out. |
+| **No app lookup, tool search or screenshot tools** | ASC-Core isn't registered in this app. Setup leaves it out when the app's servers use different accounts, carry credentials of their own in `env`, or sit in a settings file it can't read in full. | Run `setup` again and read the plan; it says why ASC-Core was left out. |
 | **`429 Too Many Requests`** | Apple applies an hourly request limit per key (currently 3,600), and it has been reached. | Heimdall waits a moment and retries on its own. If you see this often, another tool is using the same key (Fastlane in CI, for example); give it a key of its own. |
 | **Can't create a new app** | Apple's API doesn't allow creating new apps. | Create the app once on the App Store Connect website; from then on you can manage it with Heimdall. |
 

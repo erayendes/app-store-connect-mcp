@@ -24,9 +24,10 @@ so every pack below counts it.
 | ASO / marketing | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 97 |
 | Monetization | `core` + `monetization` | 168 |
-| Game developer | `core` + `game-center` + `distribution` | 245 |
-| Customer support | `core` + `monetization:transactions` | 28 |
+| Game developer | `core` + `game-center` + `distribution:version,publish` | 200 |
+| Customer support | `core` + `marketing:customer-reviews` + `monetization:transactions` | 42 |
 | Build & signing | `core` + `provisioning` + `xcode-cloud` | 101 |
+| Team admin | `core` + `access` | 33 |
 
 ```bash
 npx -y @erayendes/asc-mcp@beta register distribution general
@@ -39,8 +40,8 @@ Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-c
 
 Narrower is better than broader: `monetization:subscription-offers` is 17
 tools where `monetization` is 152, and the reads in the sub-profiles you
-skipped are one `asc__call` away — the proxy reaches any operation of its own
-profile, loaded or not.
+skipped are one `asc__call` away — the proxy reaches any read of its own
+profile, loaded or not; a write needs its sub-profile registered.
 
 ---
 
@@ -142,7 +143,7 @@ like a language model.
 
 Needs `distribution`. Keywords live on the *version* localization, one row per
 language, capped at 100 characters — and the cap counts commas. Name and
-subtitle live somewhere else entirely (`app_info_localizations`), because they
+subtitle live somewhere else entirely (`app_info_localizations`, in `general`), because they
 belong to the app rather than to a version.
 
 Ask for one locale by name. A listing with fifty languages is 264 KB fetched
@@ -204,9 +205,10 @@ taşımıyor; bu yüzden aşağıdaki her paket onu da sayar.
 | ASO / pazarlama | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 97 |
 | Monetizasyon | `core` + `monetization` | 168 |
-| Oyun geliştirici | `core` + `game-center` + `distribution` | 245 |
-| Müşteri desteği | `core` + `monetization:transactions` | 28 |
+| Oyun geliştirici | `core` + `game-center` + `distribution:version,publish` | 200 |
+| Müşteri desteği | `core` + `marketing:customer-reviews` + `monetization:transactions` | 42 |
 | Build ve imzalama | `core` + `provisioning` + `xcode-cloud` | 101 |
+| Ekip yöneticisi | `core` + `access` | 33 |
 
 ```bash
 npx -y @erayendes/asc-mcp@beta register distribution general
@@ -219,7 +221,7 @@ npx -y @erayendes/asc-mcp@beta register distribution general
 
 Dar olan geniş olandan iyidir: `monetization:subscription-offers` 17 araç,
 `monetization` 152. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
-uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her işleme ulaşır.
+uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her okumaya ulaşır; bir yazma için o alt profilin kayıtlı olması gerekir.
 
 ---
 
@@ -316,7 +318,7 @@ Cevaplar bir dil modeli gibi değil ekibiniz gibi konuşsun istiyorsanız
 
 `distribution` gerekir. Anahtar kelimeler *sürüm* yerelleştirmesinde yaşar, dil
 başına bir satır, 100 karakter sınırlı — ve sınır virgülleri de sayar. Ad ve
-alt başlık bambaşka bir yerde (`app_info_localizations`), çünkü sürüme değil
+alt başlık bambaşka bir yerde (`app_info_localizations`, `general` profilinde), çünkü sürüme değil
 uygulamaya aitler.
 
 Tek bir dili adıyla isteyin. Elli dilli bir liste bütün hâlde 264 KB ve işe

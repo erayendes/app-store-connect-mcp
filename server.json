@@ -50,7 +50,7 @@
         },
         {
           "name": "ASC_BUNDLE_ID",
-          "description": "Bundle ID of one app. Only needed by the StoreKit 2 transaction tools on the monetization profile.",
+          "description": "Optional default app (bundle ID) for the StoreKit 2 transaction tools on the monetization profile; they also take the app's name.",
           "isRequired": false
         }
       ]

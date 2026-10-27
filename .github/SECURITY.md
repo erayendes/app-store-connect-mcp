@@ -25,7 +25,7 @@ Reviewing the code only helps if the package you install is built from that same
 - **Pinned third-party actions.** A compromised or retagged action can't change what runs in the release job. Dependabot proposes updates as pull requests I review.
 - **Dependency review on every pull request**, failing at moderate severity and above.
 - **Version checks before publishing.** The version must match across `package.json`, `server.json`, `package-lock.json`, `CITATION.cff`, the git tag and the changelog, or the release stops.
-- **Betas only when you ask for one.** A beta goes through the same release pipeline, but only to npm's `beta` channel. `npx @erayendes/asc-mcp` never installs a beta; only `@erayendes/asc-mcp@beta` does, and running `setup` without it moves you back.
+- **Betas only when you ask for one.** A beta goes through the same release pipeline, but only to npm's `beta` channel. `npx @erayendes/asc-mcp` never installs a beta; only `@erayendes/asc-mcp@beta` does, and running `setup` without it moves you back to 2.8, where you pick your profiles again.
 
 ### What I collect: nothing
 
@@ -95,12 +95,12 @@ En iyi alışkanlık, bu projede ya da başka herhangi birinde, bir araca güven
 Kodu incelemek, ancak kurduğunuz paket aynı koddan üretiliyorsa işe yarar. Aradaki her adım, kimsenin sözüne güvenmeden kontrol edilebilir.
 
 - **Paketi bir insan değil, GitHub Actions yayınlıyor.** Her sürüm npm'den kısa ömürlü bir kimlik alıyor (trusted publishing); yani hiçbir yerde çalınabilecek kalıcı bir npm anahtarı yok.
-- **İmzalı köken bilgisi.** npm her sürümün hangi iş akışından, hangi commit'ten ve hangi depodan üretildiğini kaydediyor. `npm view @erayendes/asc-mcp` bunu gösterir.
+- **İmzalı provenance kaydı.** npm her sürümün hangi iş akışından, hangi commit'ten ve hangi depodan üretildiğini kaydediyor. `npm view @erayendes/asc-mcp` bunu gösterir.
 - **Her sürümde bağımlılık listesi.** Her GitHub sürümü kullandığı bağımlılıkların listesini taşıyor (SPDX SBOM).
 - **Sabitlenmiş üçüncü taraf eylemler.** Ele geçirilmiş ya da yeniden etiketlenmiş bir eylem, yayın sırasında çalışan kodu değiştiremiyor. Güncellemeleri Dependabot, benim incelediğim pull request'ler olarak açıyor.
 - **Her pull request'te bağımlılık kontrolü** yapılıyor; orta ve üzeri önemdeki bir açıkta kontrol başarısız oluyor.
 - **Yayından önce sürüm kontrolü.** Sürüm numarası `package.json`, `server.json`, `package-lock.json`, `CITATION.cff`, git etiketi ve sürüm notları arasında aynı olmak zorunda; değilse yayın durur.
-- **Beta yalnızca siz isterseniz.** Beta da aynı yayın sürecinden geçiyor, ama yalnızca npm'in `beta` kanalına gidiyor. `npx @erayendes/asc-mcp` hiçbir zaman beta kurmaz; bunu yalnızca `@erayendes/asc-mcp@beta` yapar ve `setup`'ı onsuz çalıştırmak sizi kararlı sürüme geri getirir.
+- **Beta yalnızca siz isterseniz.** Beta da aynı yayın sürecinden geçiyor, ama yalnızca npm'in `beta` kanalına gidiyor. `npx @erayendes/asc-mcp` hiçbir zaman beta kurmaz; bunu yalnızca `@erayendes/asc-mcp@beta` yapar ve `setup`'ı onsuz çalıştırmak sizi kararlı 2.8 sürümüne geri getirir; orada profillerinizi yeniden seçersiniz.
 
 ### Ne topluyorum: hiçbir şey
 
@@ -130,9 +130,9 @@ Heimdall'ın **kendine ait bir sunucusu ve telemetrisi yok**. Kapatmanız gereke
 
 ### Güvenlik önlemleri
 
-Canlı bir App Store sayfasında bir yapay zekâyı çalıştırmak biraz özen ister.
+Canlı bir App Store sayfasında yapay zekâya iş yaptırmak biraz özen ister.
 
-- **Riskli değişikliklerden önce onay (varsayılan olarak açık).** Fiyat değiştirmek, birine Admin yetkisi vermek, bir şeyi silmek ya da sertifikalara dokunmak gibi işlemlerden önce Heimdall, kullandığınız uygulamada bir onay penceresi açar ve neyin değişeceğini gösterir. Yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Uygulama bu onay penceresini gösteremiyorsa Heimdall, Mac'te yapay zekânın göremeyeceği ve cevaplayamayacağı kendi penceresini açar; böyle bir pencere yoksa değişiklik hiç yapılmaz.
+- **Riskli değişikliklerden önce onay (varsayılan olarak açık).** Fiyat değiştirmek, birine Admin yetkisi vermek, bir şeyi silmek ya da sertifikalara dokunmak gibi işlemlerden önce Heimdall, kullandığınız uygulamada bir onay penceresi açar ve neyin değişeceğini gösterir. Yanlış anlaşılmış bir talimat kontrolsüz çalışamaz. Uygulama bu onay penceresini gösteremiyorsa Heimdall, Mac'te yapay zekânın göremeyeceği ve cevaplayamayacağı kendi penceresini açar. Windows ve Linux'ta böyle bir pencere olmadığı için değişiklik hiç yapılmaz.
 - **Diğer değişiklikler** uygulamanın kendi araç onayından geçer; her uygulamada bu onay vardır.
 - **Salt okunur mod**, bir şeyi değiştirebilecek bütün araçları kaldırır. Yapay zekâ onları göremez, dolayısıyla çağıramaz. [Nasıl açılır](../docs/CONFIGURATION_tr.md#bayraklar).
 - **Her araçta etiket.** Her araç uygulamaya yalnızca okuyup okumadığını ya da geri alması zor bir değişiklik yapıp yapmadığını (fiyat, yayın, silme, erişim, sertifika) bildirir; uygulama da gereken yerde onay ister.
@@ -142,7 +142,7 @@ Canlı bir App Store sayfasında bir yapay zekâyı çalıştırmak biraz özen 
 
 ### Öneriler
 
-- API anahtarına işi gören en dar rolü verin. `Admin` nadiren gerekir; `App Manager` release işlerinin çoğunu karşılar. Bkz. [Roller](../docs/ROLES_tr.md).
+- API anahtarına işi gören en dar rolü verin. `Admin` nadiren gerekir; `App Manager` sürüm ve yayın işlerinin çoğunu karşılar. Bkz. [Roller](../docs/ROLES_tr.md).
 - `.p8`, `.pem` ya da `.env` dosyalarını asla bir depoya koymayın. Buradaki `.gitignore` bunları zaten dışarıda bırakıyor.
 - Bir silme işlemini onaylamadan önce neyi sileceğini okuyun.
 - Anahtarlarınızı ara sıra yenileyin; sızmış olabileceğini düşündüğünüz bir anahtarı App Store Connect'ten hemen iptal edin.
@@ -150,4 +150,4 @@ Canlı bir App Store sayfasında bir yapay zekâyı çalıştırmak biraz özen 
 ### Güvenlik açığı bildirme
 
 > [!IMPORTANT]
-> Güvenlik sorunları için lütfen açık bir issue **açmayın**. Bunun yerine, sorunu nasıl tekrarlayacağımı ve bir saldırganın onunla neler yapabileceğini yazarak özel bir [güvenlik bildirimi (security advisory)](https://github.com/erayendes/app-store-connect-mcp/security/advisories/new) açın. Bunu yalnızca ben görürüm.
+> Güvenlik sorunları için lütfen açık bir issue **açmayın**. Bunun yerine, sorunu yeniden oluşturma adımlarını ve bir saldırganın onunla neler yapabileceğini yazarak özel bir [güvenlik bildirimi (security advisory)](https://github.com/erayendes/app-store-connect-mcp/security/advisories/new) açın. Bunu yalnızca ben görürüm.

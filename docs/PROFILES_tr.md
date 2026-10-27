@@ -29,9 +29,9 @@ Setup ve `register` bir profil eklediklerinde ASC-Core'u kendiliğinden ekler, h
 
 - **En sıkı ayarınıza uyar.** Bir yapay zekâ uygulamasındaki Heimdall sunucularından biri `--read-only` çalışıyorsa ASC-Core da salt okunur kaydedilir.
 - **Hesap belirsizse eklenmez.** Oradaki sunucular farklı App Store Connect hesapları kullanıyorsa, biri `env` içinde kendi kimlik bilgilerini taşıyorsa ya da ayarlar veya bir kayıt tam okunamıyorsa (`envFile` yükleyen bir kayıt da buna girer) setup ASC-Core'u o yapay zekâ uygulamasına eklemez ve nedenini söyler.
-- **Tek sunucu çalıştırabilen bir yapay zekâ uygulaması** onu `--with-core` ile profilin içine alabilir. Xcode eklentileri bunu yapar.
+- **Yalnızca tek sunucu çalıştırabilen bir yapay zekâ uygulaması** onu `--with-core` ile profilin içine alabilir. Xcode eklentileri bunu yapar.
 
-Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve dosyayı yönetir. Mağaza sayfası medyası uygulamanızın görsel ve video kütüphanesi üzerinden gider: dosyayı kütüphaneye yüklersiniz, sonra sürüm sayfasına, özel ürün sayfasına, ürün sayfası denemesine ya da uygulama içi etkinliğe yerleştirirsiniz. Diğer görseller ve dosyalar doğrudan sahiplerine gider: App Clip, Game Center, uygulama içi satın alma ve abonelik görselleri, inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, yol tarifi kapsamı, background asset ve build yükleme dosyaları. Bütün hedefler [Medya hedefleri](MEDIA_TARGETS_tr.md) sayfasında.
+Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve dosyayı yönetir. Mağaza sayfası medyası uygulamanızın görsel ve video kütüphanesi üzerinden gider: dosyayı kütüphaneye yüklersiniz, sonra sürüm sayfasına, özel ürün sayfasına, ürün sayfası testine ya da uygulama içi etkinliğe yerleştirirsiniz. Diğer görseller ve dosyalar doğrudan sahiplerine gider: App Clip, Game Center, uygulama içi satın alma ve abonelik görselleri, inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, routing coverage dosyası, background asset ve build yükleme dosyaları. Bütün hedefler [Medya hedefleri](MEDIA_TARGETS_tr.md) sayfasında.
 
 ### `core` · 16 araç
 
@@ -49,13 +49,15 @@ Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve d
 - `asc__status` — Bağlantının ve kimlik bilgilerinin durumunu kontrol eder
 - `media__arrange` — Görselleri sıralar, sayfaya yerleştirir ya da kaldırır, kapak karesini ayarlar, arşivler ve yeniden adlandırır
 - `media__delete` — Seçilen görselleri veya videoları hedefinden siler; önce sahipliği doğrular ve adlarıyla gösterir
-- `media__list` — Sürüm sayfası, özel sayfa, deneme, etkinlik ve kütüphanedeki görsel ve videoları kimlikleri ve durumlarıyla listeler
-- `media__upload` — Görseli veya videoyu kütüphaneye yükler; istenirse sayfaya yerleştirir
+- `media__list` — Sürüm sayfası, özel ürün sayfası, ürün sayfası testi, etkinlik ve kütüphanedeki görsel ve videoları ya da bir görsel veya dosya hedefinin (uygulama içi satın alma görseli, inceleme ekran görüntüsü, build dosyası…) dosyalarını kimlikleri ve durumlarıyla listeler
+- `media__upload` — Görseli veya videoyu kütüphaneye yükler, istenirse sayfaya yerleştirir; ya da bir görsel veya dosya hedefine (uygulama içi satın alma görseli, inceleme ekran görüntüsü, build dosyası…) yükler
 
 ## Alt profiller
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/picker.gif" alt="Profil seçici: monetization işaretlenince alt profilleri, araç sayısı ve token tahminiyle açılıyor" width="720">
+
+<sub>2.x ile kaydedildi; o sürümde profillerin adları farklıydı (`app-info` artık `general`).</sub>
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
 Örneğin `monetization` 152 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 64 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
@@ -164,7 +166,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **Sunucu:** `ASC-AppClips` · **Anahtar rolü:** App Manager
 
-**İçinde ne var:** App Clip'ler: varsayılan ve gelişmiş deneyimler, başlık görselleri, inceleme bilgileri, beta başlatma bağlantıları.
+**İçinde ne var:** App Clip'ler: varsayılan ve gelişmiş deneyimler, başlık görselleri, inceleme bilgileri, beta başlatma bağlantıları. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Uygulamanızın anında açılan hafif sürümü için.
 
@@ -335,7 +337,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `distribution:version` · 24 araç
 
-**İçinde ne var:** App Store sürümleri ve dilleri: yenilikler, anahtar kelimeler, sürüm ön kontrolü ve çeviri araçları. Ekran görüntüleri ve önizlemeler ASC-Core'daki medya araçlarıyla.
+**İçinde ne var:** App Store sürümleri ve dilleri: yenilikler, anahtar kelimeler, sürüm ön kontrolü ve çeviri araçları. Ekran görüntüleri ve önizlemeler ASC-Core'daki medya araçlarıyla yönetilir.
 
 **Ne zaman gerekir:** Sürüm oluşturmak, yenilikleri ve anahtar kelimeleri yazıp çevirmek için. · **Anahtar rolü:** App Manager
 
@@ -371,7 +373,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `game-center:achievements` · 20 araç
 
-**İçinde ne var:** Başarımlar: sürümler, diller, görseller, oyuncu adına gönderimler.
+**İçinde ne var:** Başarımlar: sürümler, diller, görseller, oyuncu adına gönderimler. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Başarım oluşturmak, metinlerini ve görsellerini hazırlamak için. · **Anahtar rolü:** App Manager
 
@@ -395,7 +397,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `game-center:activities` · 25 araç
 
-**İçinde ne var:** Etkinlikler: sürümler, diller, görseller ve bağlı başarımlar ile sıralama tabloları.
+**İçinde ne var:** Etkinlikler: sürümler, diller, görseller ve bağlı başarımlar ile sıralama tabloları. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Oyuncuların katılabildiği etkinlikler ve bağlı oldukları şeyler için. · **Anahtar rolü:** App Manager
 
@@ -424,7 +426,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `game-center:challenges` · 21 araç
 
-**İçinde ne var:** Meydan okumalar: sürümler, diller, görseller ve kullandıkları sıralama tablosu.
+**İçinde ne var:** Meydan okumalar: sürümler, diller, görseller ve kullandıkları sıralama tablosu. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Oyuncuların birbirine gönderdiği meydan okumalar için. · **Anahtar rolü:** App Manager
 
@@ -471,7 +473,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `game-center:leaderboards` · 44 araç
 
-**İçinde ne var:** Sıralama tabloları ve setleri: sürümler, diller, görseller, skor gönderimi ve denetimi.
+**İçinde ne var:** Sıralama tabloları ve setleri: sürümler, diller, görseller, skor gönderimi ve denetimi. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Sıralama tabloları, setleri ve skorların denetimi için. · **Anahtar rolü:** App Manager
 
@@ -589,7 +591,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **İçinde ne var:** Geçiş için bir Android uygulamasını iOS karşılığıyla eşleme.
 
-**Ne zaman gerekir:** iPhone'a geçenlerin bu uygulamayı bulması için Android uygulamanızı bağlamak. · **Anahtar rolü:** App Manager
+**Ne zaman gerekir:** iPhone'a geçenlerin bu uygulamayı bulması için Android uygulamanızı bağlamak için. · **Anahtar rolü:** App Manager
 
 - `android_to_ios_app_mapping_details__create` — Android ve iOS uygulaması arasında eşleme kaydı oluşturur
 - `android_to_ios_app_mapping_details__delete` — Android ve iOS uygulama eşleme kaydını siler
@@ -661,7 +663,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **İçinde ne var:** Apple'ın uygulamaya verdiği etiketler ve uymayanları gizleme.
 
-**Ne zaman gerekir:** App Store'un uygulamanız için gösterdiği etiketler için. · **Anahtar rolü:** App Manager
+**Ne zaman gerekir:** App Store'un uygulamanıza verdiği etiketleri görmek ve uymayanları gizlemek için. · **Anahtar rolü:** App Manager
 
 - `app_tags__territories__list` — Uygulama etiketinin geçerli olduğu ülkeleri listeler
 - `app_tags__update` — Uygulama etiketinin mağazada görünürlük durumunu günceller
@@ -688,13 +690,13 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **Sunucu:** `ASC-Marketing` · **Anahtar rolü:** Marketing
 
-**İçinde ne var:** Sürüm sayfasının ötesindeki mağaza varlığı: özel ürün sayfaları, ürün sayfası denemeleri, uygulama içi etkinlikler, kullanıcı yorumları, öne çıkarılma başvuruları.
+**İçinde ne var:** Sürüm sayfasının ötesindeki mağaza varlığı: özel ürün sayfaları, ürün sayfası testleri, uygulama içi etkinlikler, kullanıcı yorumları, öne çıkarılma başvuruları.
 
 **Ne zaman gerekir:** Ürün sayfaları, uygulama içi etkinlikler, A/B testleri ve kullanıcı yorumları için.
 
 #### `marketing:app-events` · 14 araç
 
-**İçinde ne var:** Uygulama içi etkinlikler ve dilleri. Görselleri ve videoları ASC-Core'daki medya araçlarıyla.
+**İçinde ne var:** Uygulama içi etkinlikler ve dilleri. Görseller ve videolar ASC-Core'daki medya araçlarıyla yönetilir.
 
 **Ne zaman gerekir:** Uygulama içi etkinlikler ve her dildeki metinleri için. · **Anahtar rolü:** Marketing
 
@@ -712,27 +714,27 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `marketing:custom-pp` · 21 araç
 
-**İçinde ne var:** Özel ürün sayfaları: sürümler, diller, anahtar kelimeler. Ekran görüntüleri ve önizlemeler ASC-Core'daki medya araçlarıyla.
+**İçinde ne var:** Özel ürün sayfaları: sürümler, diller, anahtar kelimeler. Ekran görüntüleri ve önizlemeler ASC-Core'daki medya araçlarıyla yönetilir.
 
 **Ne zaman gerekir:** Reklamlar ve bağlantılar için ürün sayfanızın ek sürümleri. · **Anahtar rolü:** Marketing
 
-- `app_custom_product_page_localizations__create` — Özel mağaza sayfasına seçilen dilde tanıtım metni ekler
-- `app_custom_product_page_localizations__delete` — Özel mağaza sayfasının seçilen dildeki kaydını siler
-- `app_custom_product_page_localizations__get` — Özel mağaza sayfasının seçilen dildeki bilgilerini gösterir
-- `app_custom_product_page_localizations__search_keywords__add` — Özel mağaza sayfasının seçilen diline arama kelimeleri bağlar
-- `app_custom_product_page_localizations__search_keywords__list` — Özel mağaza sayfasının seçilen diline bağlı arama kelimelerini listeler
-- `app_custom_product_page_localizations__search_keywords__remove` — Arama kelimelerinin özel mağaza sayfasının seçilen diliyle bağlantısını kaldırır
-- `app_custom_product_page_localizations__update` — Özel mağaza sayfasının seçilen dildeki tanıtım metnini değiştirir
-- `app_custom_product_page_versions__app_custom_product_page_065izt` — Özel mağaza sayfası sürümünün farklı dillerdeki kayıtlarını listeler
-- `app_custom_product_page_versions__create` — Özel mağaza sayfasının yeni sürümünü oluşturur
-- `app_custom_product_page_versions__get` — Özel mağaza sayfası sürümünün bilgilerini gösterir
-- `app_custom_product_page_versions__update` — Özel mağaza sayfasından açılacak uygulama bağlantısını değiştirir
-- `app_custom_product_pages__app_custom_product_page_versions__list` — Özel mağaza sayfasının sürümlerini listeler
-- `app_custom_product_pages__create` — Uygulama için özel mağaza sayfası oluşturur
-- `app_custom_product_pages__delete` — Özel mağaza sayfasını siler
-- `app_custom_product_pages__get` — Özel mağaza sayfasının bilgilerini gösterir
-- `app_custom_product_pages__update` — Özel mağaza sayfasının adını ve görünürlüğünü değiştirir
-- `apps__app_custom_product_pages__list` — Uygulamanın özel mağaza sayfalarını listeler
+- `app_custom_product_page_localizations__create` — Özel ürün sayfasına seçilen dilde tanıtım metni ekler
+- `app_custom_product_page_localizations__delete` — Özel ürün sayfasının seçilen dildeki kaydını siler
+- `app_custom_product_page_localizations__get` — Özel ürün sayfasının seçilen dildeki bilgilerini gösterir
+- `app_custom_product_page_localizations__search_keywords__add` — Özel ürün sayfasının seçilen diline arama kelimeleri bağlar
+- `app_custom_product_page_localizations__search_keywords__list` — Özel ürün sayfasının seçilen diline bağlı arama kelimelerini listeler
+- `app_custom_product_page_localizations__search_keywords__remove` — Arama kelimelerinin özel ürün sayfasının seçilen diliyle bağlantısını kaldırır
+- `app_custom_product_page_localizations__update` — Özel ürün sayfasının seçilen dildeki tanıtım metnini değiştirir
+- `app_custom_product_page_versions__app_custom_product_page_065izt` — Özel ürün sayfası sürümünün farklı dillerdeki kayıtlarını listeler
+- `app_custom_product_page_versions__create` — Özel ürün sayfasının yeni sürümünü oluşturur
+- `app_custom_product_page_versions__get` — Özel ürün sayfası sürümünün bilgilerini gösterir
+- `app_custom_product_page_versions__update` — Özel ürün sayfasından açılacak uygulama bağlantısını değiştirir
+- `app_custom_product_pages__app_custom_product_page_versions__list` — Özel ürün sayfasının sürümlerini listeler
+- `app_custom_product_pages__create` — Uygulama için özel ürün sayfası oluşturur
+- `app_custom_product_pages__delete` — Özel ürün sayfasını siler
+- `app_custom_product_pages__get` — Özel ürün sayfasının bilgilerini gösterir
+- `app_custom_product_pages__update` — Özel ürün sayfasının adını ve görünürlüğünü değiştirir
+- `apps__app_custom_product_pages__list` — Uygulamanın özel ürün sayfalarını listeler
 - `release__submit_items` — Özel ürün sayfası sürümünü incelemeye gönderir
 
 #### `marketing:customer-reviews` · 14 araç
@@ -767,27 +769,27 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `marketing:pp-optimization` · 20 araç
 
-**İçinde ne var:** Ürün sayfası denemeleri: deneyler, seçenekler ve dilleri, kazanan seçeneği yayına alma.
+**İçinde ne var:** Ürün sayfası testleri: deneyler, seçenekler ve dilleri, kazanan seçeneği yayına alma.
 
 **Ne zaman gerekir:** Ürün sayfanızın simgesini, ekran görüntülerini ve önizlemelerini A/B testiyle denemek için. · **Anahtar rolü:** Marketing
 
-- `app_store_version_experiment_treatment_localizations__create` — Mağaza sayfası denemesindeki seçeneğe dil ekler
-- `app_store_version_experiment_treatment_localizations__delete` — Mağaza sayfası denemesindeki seçeneğin dil kaydını siler
-- `app_store_version_experiment_treatment_localizations__get` — Mağaza sayfası denemesindeki seçeneğin dil kaydını gösterir
-- `app_store_version_experiment_treatments__app_store_versio_0qaej7` — Mağaza sayfası denemesindeki seçeneğin dil kayıtlarını listeler
-- `app_store_version_experiment_treatments__create` — Mağaza sayfası denemesi için yeni seçenek oluşturur
-- `app_store_version_experiment_treatments__delete` — Mağaza sayfası denemesindeki seçeneği siler
-- `app_store_version_experiment_treatments__get` — Mağaza sayfası denemesindeki seçeneğin bilgilerini gösterir
-- `app_store_version_experiment_treatments__update` — Mağaza sayfası denemesindeki seçeneğin adını ve simgesini değiştirir
-- `app_store_version_experiments_v2__app_store_version_exper_0b7r4g` — Mağaza sayfası denemesinin seçeneklerini listeler
+- `app_store_version_experiment_treatment_localizations__create` — Ürün sayfası testindeki seçeneğe dil ekler
+- `app_store_version_experiment_treatment_localizations__delete` — Ürün sayfası testindeki seçeneğin dil kaydını siler
+- `app_store_version_experiment_treatment_localizations__get` — Ürün sayfası testindeki seçeneğin dil kaydını gösterir
+- `app_store_version_experiment_treatments__app_store_versio_0qaej7` — Ürün sayfası testindeki seçeneğin dil kayıtlarını listeler
+- `app_store_version_experiment_treatments__create` — Ürün sayfası testi için yeni seçenek oluşturur
+- `app_store_version_experiment_treatments__delete` — Ürün sayfası testindeki seçeneği siler
+- `app_store_version_experiment_treatments__get` — Ürün sayfası testindeki seçeneğin bilgilerini gösterir
+- `app_store_version_experiment_treatments__update` — Ürün sayfası testindeki seçeneğin adını ve simgesini değiştirir
+- `app_store_version_experiments_v2__app_store_version_exper_0b7r4g` — Ürün sayfası testinin seçeneklerini listeler
 - `app_store_version_experiments_v2__create` — Mağaza sayfasının farklı seçeneklerini karşılaştıran deneme oluşturur
-- `app_store_version_experiments_v2__delete` — Mağaza sayfası denemesini siler
-- `app_store_version_experiments_v2__get` — Mağaza sayfası denemesinin bilgilerini gösterir
-- `app_store_version_experiments_v2__update` — Mağaza sayfası denemesinin ayarlarını ve çalışıp çalışmadığını değiştirir
-- `app_store_version_promotions__create` — Mağaza sayfası denemesinde seçilen seçeneği sürümün asıl sayfası yapar
-- `app_store_versions__app_store_version_experiments_v2__list` — Uygulama sürümüne bağlı mağaza sayfası denemelerini listeler
-- `apps__app_store_version_experiments_v2__list` — Uygulamanın mağaza sayfası denemelerini listeler
-- `release__submit_items` — Ürün sayfası denemesini incelemeye gönderir
+- `app_store_version_experiments_v2__delete` — Ürün sayfası testini siler
+- `app_store_version_experiments_v2__get` — Ürün sayfası testinin bilgilerini gösterir
+- `app_store_version_experiments_v2__update` — Ürün sayfası testinin ayarlarını ve çalışıp çalışmadığını değiştirir
+- `app_store_version_promotions__create` — Ürün sayfası testinde seçilen seçeneği sürümün asıl sayfası yapar
+- `app_store_versions__app_store_version_experiments_v2__list` — Uygulama sürümüne bağlı ürün sayfası testlerini listeler
+- `apps__app_store_version_experiments_v2__list` — Uygulamanın ürün sayfası testlerini listeler
+- `release__submit_items` — Ürün sayfası testini incelemeye gönderir
 
 ### `monetization` · 152 araç
 
@@ -839,7 +841,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `monetization:in-app-purchases` · 34 araç
 
-**İçinde ne var:** Uygulama içi satın almalar: diller, görseller, sürümler, satış ülkeleri, fiyatlar, gönderim ve fiyat makroları.
+**İçinde ne var:** Uygulama içi satın almalar: diller, görseller, sürümler, satış ülkeleri, fiyatlar, gönderim ve fiyat makroları. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Uygulama içi satın almalar, metinleri, görselleri, fiyatları ve incelemesi için. · **Anahtar rolü:** App Manager
 
@@ -893,7 +895,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `monetization:subscription` · 52 araç
 
-**İçinde ne var:** Abonelikler ve grupları: diller, görseller, sürümler, fiyatlar, satış ülkeleri, ödeme aksadığında süre tanıma, gönderim, fiyat ve ön kontrol makroları.
+**İçinde ne var:** Abonelikler ve grupları: diller, görseller, sürümler, fiyatlar, satış ülkeleri, ödeme aksadığında süre tanıma, gönderim, fiyat ve ön kontrol makroları. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
 **Ne zaman gerekir:** Abonelikler ve grupları, metinleri, fiyatları ve incelemesi için. · **Anahtar rolü:** App Manager
 
@@ -977,19 +979,19 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 **Ne zaman gerekir:** Abonelikler için tanıtım ve promosyon teklifleri. · **Anahtar rolü:** App Manager
 
 - `subscription_groups__subscriptions__list` — Bir gruptaki abonelikleri listeler
-- `subscription_introductory_offers__create` — Bir ülkede ilk kez abone olacaklara özel teklif oluşturur
-- `subscription_introductory_offers__delete` — İlk kez abone olacaklara sunulan teklifi siler
-- `subscription_introductory_offers__update` — İlk kez abone olacaklara sunulan teklifin bitiş tarihini değiştirir
+- `subscription_introductory_offers__create` — Bir ülkede introductory offer oluşturur
+- `subscription_introductory_offers__delete` — Introductory offer'ı siler
+- `subscription_introductory_offers__update` — Introductory offer'ın bitiş tarihini değiştirir
 - `subscription_promotional_offers__create` — Mevcut veya eski abonelere özel teklif oluşturur
 - `subscription_promotional_offers__delete` — Mevcut veya eski abonelere özel teklifi siler
 - `subscription_promotional_offers__get` — Mevcut veya eski abonelere özel teklifin bilgilerini gösterir
 - `subscription_promotional_offers__prices__list` — Abonelik promosyonunun ülkelere göre fiyatlarını listeler
 - `subscription_promotional_offers__update` — Mevcut veya eski abonelere özel teklifin fiyatlarını değiştirir
-- `subscriptions__introductory_offers__list` — İlk kez abone olacaklara sunulan teklifleri listeler
-- `subscriptions__introductory_offers__remove` — Aboneliğin ilk kez abone olacaklara sunduğu seçilen teklifleri kaldırır
+- `subscriptions__introductory_offers__list` — Introductory offer'ları listeler
+- `subscriptions__introductory_offers__remove` — Aboneliğin seçilen introductory offer'larını kaldırır
 - `subscriptions__price_points__list` — Abonelik için seçilebilecek fiyatları listeler
 - `subscriptions__promotional_offers__list` — Mevcut veya eski abonelere sunulan teklifleri listeler
-- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı başlangıç, promosyon veya geri kazanma teklifi oluşturur
+- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon veya geri kazanma teklifi oluşturur
 
 #### `monetization:subscription-win-back` · 12 araç
 
@@ -1005,7 +1007,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `win_back_offers__get` — Eski aboneleri geri kazanma teklifinin ayrıntılarını gösterir
 - `win_back_offers__prices__list` — Eski aboneleri geri kazanma teklifinin ülkelere göre fiyatlarını listeler
 - `win_back_offers__update` — Geri kazanma teklifinin koşullarını, tarihlerini ve tanıtım ayarlarını değiştirir
-- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı başlangıç, promosyon veya geri kazanma teklifi oluşturur
+- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon veya geri kazanma teklifi oluşturur
 
 #### `monetization:transactions` · 12 araç
 
@@ -1027,7 +1029,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **Sunucu:** `ASC-Provisioning` · **Anahtar rolü:** Admin
 
-**İçinde ne var:** Kod imzalama: bundle ID'ler ve yetenekleri, sertifikalar, cihazlar, provisioning profilleri, satıcı ve kart türü kimlikleri.
+**İçinde ne var:** Kod imzalama: bundle ID'ler ve yetenekleri, sertifikalar, cihazlar, provisioning profilleri, Merchant ID'ler ve Pass Type ID'ler.
 
 **Ne zaman gerekir:** İmzalama sertifikaları, provisioning profilleri ve test cihazları için.
 
@@ -1065,7 +1067,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 **İçinde ne var:** Kayıtlı test cihazları.
 
-**Ne zaman gerekir:** Test için kayıtlı cihazlar için. · **Anahtar rolü:** Admin
+**Ne zaman gerekir:** Test cihazlarını kaydetmek ve yönetmek için. · **Anahtar rolü:** Admin
 
 - `devices__create` — Geliştirici hesabına test için yeni bir cihaz kaydeder
 - `devices__get` — Kayıtlı bir test cihazının ayrıntılarını getirir
@@ -1091,17 +1093,17 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `provisioning:wallet` · 16 araç
 
-**İçinde ne var:** Satıcı kimlikleri ve kart türü kimlikleri, sertifikalarıyla birlikte.
+**İçinde ne var:** Merchant ID'ler ve Pass Type ID'ler, sertifikalarıyla birlikte.
 
-**Ne zaman gerekir:** Apple Pay satıcı kimlikleri ve Wallet kart türü kimlikleri için. · **Anahtar rolü:** Admin
+**Ne zaman gerekir:** Apple Pay Merchant ID'leri ve Wallet Pass Type ID'leri için. · **Anahtar rolü:** Admin
 
 - `certificates__pass_type_id__get` — Sertifikanın bağlı olduğu Apple Cüzdan kartı tanıtıcısını getirir
-- `merchant_ids__certificates__list` — Apple Pay satıcı kimliğine bağlı sertifikaları listeler
-- `merchant_ids__create` — Apple Pay ödemeleri için yeni bir satıcı kimliği oluşturur
-- `merchant_ids__delete` — Bir Apple Pay satıcı kimliğini siler
-- `merchant_ids__get` — Bir Apple Pay satıcı kimliğinin ayrıntılarını getirir
-- `merchant_ids__list` — Hesaptaki tüm Apple Pay satıcı kimliklerini listeler
-- `merchant_ids__update` — Bir Apple Pay satıcı kimliğinin adını günceller
+- `merchant_ids__certificates__list` — Apple Pay Merchant ID'sine bağlı sertifikaları listeler
+- `merchant_ids__create` — Apple Pay ödemeleri için yeni bir Merchant ID oluşturur
+- `merchant_ids__delete` — Bir Apple Pay Merchant ID'sini siler
+- `merchant_ids__get` — Bir Apple Pay Merchant ID'sinin ayrıntılarını getirir
+- `merchant_ids__list` — Hesaptaki tüm Apple Pay Merchant ID'lerini listeler
+- `merchant_ids__update` — Bir Apple Pay Merchant ID'sinin adını günceller
 - `pass_type_ids__certificates__list` — Cüzdan kartı tanıtıcısına bağlı imzalama sertifikalarını listeler
 - `pass_type_ids__create` — Apple Cüzdan kartları için yeni bir tanıtıcı oluşturur
 - `pass_type_ids__delete` — Bir Apple Cüzdan kartı tanıtıcısını siler
@@ -1187,7 +1189,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `testflight:test-builds` · 27 araç
 
-**İçinde ne var:** Testteki build'ler: neyi test edin notları, beta ayrıntıları, testçi bildirimleri, pre-release sürümler.
+**İçinde ne var:** Testteki build'ler: “What to Test” notları, beta ayrıntıları, testçi bildirimleri, pre-release sürümler.
 
 **Ne zaman gerekir:** Neyi test edin notları ve testçilere giden build'ler için. · **Anahtar rolü:** Developer
 
@@ -1199,16 +1201,16 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `beta_app_localizations__get` — Bir dilin test bilgilerini getirir
 - `beta_app_localizations__list` — Test bilgilerini dillere göre listeler
 - `beta_app_localizations__update` — Bir dilin test bilgilerini günceller
-- `beta_build_localizations__create` — Build için bir dilde "neyi test edin" notu yazar
-- `beta_build_localizations__delete` — Build'in bir dildeki "neyi test edin" notunu siler
-- `beta_build_localizations__get` — Build'in bir dildeki "neyi test edin" notunu getirir
-- `beta_build_localizations__list` — Build'lerin "neyi test edin" notlarını listeler
-- `beta_build_localizations__update` — Build'in "neyi test edin" notunu günceller
+- `beta_build_localizations__create` — Build için bir dilde “What to Test” notu yazar
+- `beta_build_localizations__delete` — Build'in bir dildeki “What to Test” notunu siler
+- `beta_build_localizations__get` — Build'in bir dildeki “What to Test” notunu getirir
+- `beta_build_localizations__list` — Build'lerin “What to Test” notlarını listeler
+- `beta_build_localizations__update` — Build'in “What to Test” notunu günceller
 - `build_beta_details__get` — Build'in iç ve dış test durumunu ve otomatik bildirim ayarını gösterir
 - `build_beta_details__list` — Build'lerin iç ve dış test durumlarını ve otomatik bildirim ayarlarını listeler
 - `build_beta_details__update` — Build için testçilere otomatik bildirim gönderimini açar ya da kapatır
 - `build_beta_notifications__create` — Build'e erişen testçilere bildirim gönderir
-- `builds__beta_build_localizations__list` — Build'in "neyi test edin" notlarını dillere göre listeler
+- `builds__beta_build_localizations__list` — Build'in “What to Test” notlarını dillere göre listeler
 - `builds__build_beta_detail__get` — Build'in iç ve dış test durumunu ve otomatik bildirim ayarını getirir
 - `builds__pre_release_version__get` — Build'in ait olduğu pre-release sürümü getirir
 - `pre_release_versions__builds__list` — Pre-release sürümdeki build'leri listeler
@@ -1265,24 +1267,24 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 
 #### `xcode-cloud:repositories` · 17 araç
 
-**İçinde ne var:** Xcode Cloud'un arkasındaki kaynak kontrolü: sağlayıcılar, depolar, dallar, birleştirme istekleri.
+**İçinde ne var:** Xcode Cloud'un arkasındaki kaynak kontrolü: sağlayıcılar, depolar, branch'ler, pull request'ler.
 
-**Ne zaman gerekir:** Xcode Cloud'un derlediği Git depoları, dallar ve birleştirme istekleri için. · **Anahtar rolü:** Developer
+**Ne zaman gerekir:** Xcode Cloud'un derlediği Git depoları, branch'ler ve pull request'ler için. · **Anahtar rolü:** Developer
 
 - `ci_products__additional_repositories__list` — Bulut derlemesinin kullandığı ek kod depolarını listeler
 - `ci_products__list` — Xcode Cloud kullanan tüm uygulama ve kütüphaneleri listeler
 - `ci_products__primary_repositories__list` — Bir Xcode Cloud ürününün ana kod depolarını listeler
 - `ci_products__workflows__list` — Bir Xcode Cloud ürününün derleme akışlarını listeler
 - `ci_workflows__repository__get` — Bir derleme akışının hangi kod deposunu kullandığını gösterir
-- `scm_git_references__get` — Bir dal ya da etiketin ayrıntılarını gösterir
+- `scm_git_references__get` — Bir branch ya da tag'in ayrıntılarını gösterir
 - `scm_providers__get` — Bağlı kod barındırma hizmetinin ayrıntılarını gösterir
 - `scm_providers__list` — Bağlı kod barındırma hizmetlerini listeler
 - `scm_providers__repositories__list` — Bir kod barındırma hizmetindeki depoları listeler
-- `scm_pull_requests__get` — Bir birleştirme isteğinin ayrıntılarını gösterir
+- `scm_pull_requests__get` — Bir pull request'in ayrıntılarını gösterir
 - `scm_repositories__get` — Bir kod deposunun ayrıntılarını gösterir
-- `scm_repositories__git_references__list` — Bir kod deposundaki dalları ve etiketleri listeler
+- `scm_repositories__git_references__list` — Bir kod deposundaki branch'leri ve tag'leri listeler
 - `scm_repositories__list` — Bağlı tüm kod depolarını listeler
-- `scm_repositories__pull_requests__list` — Bir kod deposundaki birleştirme isteklerini listeler
+- `scm_repositories__pull_requests__list` — Bir kod deposundaki pull request'leri listeler
 
 #### `xcode-cloud:workflows` · 35 araç
 

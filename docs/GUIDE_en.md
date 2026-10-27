@@ -7,6 +7,8 @@
 **Confirmation before risky changes is on by default.**
 When you ask to change a price, give someone Admin access or delete a certificate, Heimdall opens a confirmation in the app you use (Claude, Cursor…) and shows what will change. So even if the AI reads "lower the price a bit" as `0.99`, nothing changes until you approve it.
 
+If your app can't show that question (like the Code tab in Claude Desktop), Heimdall opens a window of its own on a Mac, and its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer. If nothing seems to happen, look for that window.
+
 ## One call instead of a chain
 
 A question that looks simple in App Store Connect often takes a long series of requests. To answer *"What does this subscription cost in each country?"*, the AI has to find the app, then the subscription group, then the subscription, then look up the price in 175 countries one by one.
@@ -64,7 +66,7 @@ Three workflows are available as MCP prompts. Type `/` in your app (Claude, Curs
 | Prompt | What it runs | When it's available |
 |:--|:--|:--|
 | `release-readiness` | `preflight__check_version`, then `listing__diff_metadata`, ending in GO or NO-GO | `distribution:version` |
-| `review-triage` | briefing → triage → a draft reply per review, none of them sent | `marketing:customer-reviews` |
+| `review-triage` | briefing → triage → a draft reply per review, none of them sent. Takes the app's numeric Apple ID | `marketing:customer-reviews` |
 | `price-check` | prices worldwide in one call, then the ones that look like mistakes | `monetization:subscription` |
 
 A prompt only appears when all the tools it uses are installed. Each one stops before changing anything: submitting, replying and changing prices are your call.
@@ -81,7 +83,7 @@ A prompt only appears when all the tools it uses are installed. Each one stops b
 
 > **You:** Is there a tool for managing in-app events? *(you haven't installed `marketing`)*
 >
-> **AI:** *(calls `asc__search_tools`)* Yes: the `app_events__*` tools, in `marketing:app-events`, which isn't installed. To add it, run `setup` again and pick the `marketing` profile, or just its `app-events` part.
+> **AI:** *(calls `asc__search_tools`)* Yes: the `app_events__*` tools, in `marketing:app-events`, which isn't installed. With your yes I can run `npx -y @erayendes/asc-mcp@beta register marketing:app-events` to add it; then restart the app.
 
 > - Submit version 3.2 for review and start a phased release once it's approved.
 > - Show last week's TestFlight crash reports grouped by device model.

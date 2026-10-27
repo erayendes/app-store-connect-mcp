@@ -1,12 +1,32 @@
-# Medya dosyası hedefleri (3.0)
+# Medya hedefleri
 
 🇬🇧 [English](MEDIA_TARGETS_en.md) · 🇹🇷 Türkçe
 
-Mevcut `media__list`, `media__upload` ve `media__delete` araçlarını bu `target`
-değerleriyle kullanın. `page_id`, tablodaki sahip kaynağın tam ID'sidir;
-görselin ya da dosyanın ID'si değildir. `media__list` dosya ID'lerini, adlarını,
-işlenme durumlarını ve hatalarını döndürür. Listeyi süzmek ya da silinecek
-dosyaları seçmek için `file_ids` kullanın.
+Görselleri, videoları ve dosyaları listelemesini, yüklemesini, düzenlemesini ya
+da silmesini yapay zekânızdan isteyin. Yapay zekâ bunun için ASC-Core'daki dört
+medya aracını (`media__list`, `media__upload`, `media__arrange`,
+`media__delete`) aşağıdaki `target` değerlerinden biriyle kullanır.
+
+## Mağaza sayfaları ve asset library
+
+| Hedef | Ne olduğu | `page_id` | Düzenleme |
+|:--|:--|:--|:--|
+| `library` | Uygulamanın asset library'si: yerleştirilmiş ya da yerleştirilmemiş her görsel ve video | — | yeniden adlandırma, arşivleme, videonun kapak karesi |
+| `version` | App Store sürüm sayfası | — (sürümü ve `locale`'i belirtin) | yerleştirme, sıralama, kaldırma, kapak karesi |
+| `cpp` | Bir özel ürün sayfası | Yerelleştirmesi | yerleştirme, sıralama, kaldırma, kapak karesi |
+| `ppo` | Bir ürün sayfası testinin varyantı | Yerelleştirmesi | yerleştirme, sıralama, kaldırma, kapak karesi |
+| `event` | Bir uygulama içi etkinliğin kart ve detay görselleri | Yerelleştirmesi | yerleştirme, kaldırma |
+
+Bir sayfaya yüklenen dosya önce kütüphaneye girer, aynı adımda sayfaya
+yerleştirilir. Sayfadan kaldırılan dosya kütüphanede kalır; kütüphaneden
+silinen dosya yerleştirildiği her yerden kalkar.
+
+## Görsel ve dosya hedefleri
+
+`page_id`, tablodaki sahip kaynağın tam ID'sidir; görselin ya da dosyanın ID'si
+değildir. `media__list` dosya ID'lerini, adlarını, işlenme durumlarını ve
+hatalarını döndürür. Listeyi süzmek ya da silinecek dosyaları seçmek için
+`file_ids` kullanın.
 
 | Hedef | `page_id` sahibi | Listeleme | Yükleme | Silme | Yükleme riski | Dosya kontrolü |
 |:--|:--|:--:|:--:|:--:|:--|:--|
@@ -26,6 +46,10 @@ dosyaları seçmek için `file_ids` kullanın.
 | `routing_coverage` | App Store sürümü | ✓ | ✓ | ✓ | low | Ayrıştırılmış GeoJSON yapısı, ≤4 MiB |
 | `background_asset_file` | Background asset sürümü | ✓ | ✓ | — | low | Ham asset/manifest baytları |
 | `build_upload_file` | Build yüklemesi ya da hiçbiri | ✓ | ✓ | Yüklemenin tamamı | release | UTI'ye özgü imza |
+
+**Risk sizin için ne demek.** `public`, `low` ve `release` sormaz; onay yapay
+zekâ uygulamanızın kendisine kalır. Her silme ve `replace: true` ile yapılan
+yükleme `destructive` seviyesindedir ve CONFIRM yazmanızı ister.
 
 Bütün silmeler `destructive` seviyesindedir. Bu hedeflerin hiçbiri
 `media__arrange` desteklemez: Apple'ın bunlar için yerleşim sıralaması yoktur.
@@ -91,10 +115,12 @@ build yüklemesi (`page_id` olmadan) riski `release` olan `build_uploads.create`
 gönderir. Mevcut bir build yüklemesine dosya tamamlamak da build işlemeyi
 başlatır ve `release` seviyesindedir.
 
-## Dosya kontrolleri ve bellek
+## Katkıda bulunanlar için
+
+### Dosya kontrolleri ve bellek
 
 Her dosya boş olmamalı ve normal bir dosya olmalıdır: görseller için 50 MiB,
-yol tarifi kapsamı GeoJSON'u için 4 MiB, diğer dosyalar için 500 MiB. Bunlar
+routing coverage GeoJSON'u için 4 MiB, diğer dosyalar için 500 MiB. Bunlar
 yerel güvenlik sınırlarıdır, Apple'ın kabul sınırları hakkında bir iddia
 değildir. Okuma stat, open ve fstat ile yapılır; ardından dosya o tanımlayıcı
 üzerinden 1 MiB'lık parçalarla özetlenir (hash). Tanımlayıcı açık kalır: ayrılan
@@ -141,7 +167,7 @@ eder. Akış, gerekiyorsa `POST /v1/buildUploads`, ardından
 `PATCH /v1/buildUploadFiles/{id}`'dir. Dosya için DELETE yoktur;
 `DELETE /v1/buildUploads/{id}` bunun yerine sahibi siler.
 
-## Sahiplik, önizlemeler ve kapsam
+### Sahiplik, önizlemeler ve kapsam
 
 Sahiplik, tam üst kaynaktan istenen ilişkiler üzerinden adı verilen uygulamaya
 kadar kontrol edilir. Uygulama içi satın almalar ve abonelik grupları, ters
@@ -150,7 +176,7 @@ build yüklemeleri yukarıdaki süzülmüş koleksiyonu kullanır. Build ve back
 dosya koleksiyonları, include edilebilen bağlantı değil yalnızca link taşıdıkları
 için ilişki listesi uç noktalarını kullanır. Belirsiz sürüm/platform seçicileri
 ve eksik sahiplik verisi reddedilir. Seçilen her ID'nin doğrulaması herhangi
-bir yazmadan önce biter. Apple işlemleri işlem bütünlüğü (transaction) taşımaz;
+bir yazmadan önce biter. Apple'ın istekleri atomik değildir (transaction yoktur);
 sonraki bir istek başarısız olursa sonuç, silmesi gerçekleşmiş bir değiştirme
 de dahil, tamamlanan ve başarısız olan öğeleri belirtir.
 
@@ -158,23 +184,23 @@ de dahil, tamamlanan ve başarısız olan öğeleri belirtir.
 sahipleri, mevcut dosya ID'lerini ve boyutlarını, önerilen istekleri ve
 yüklemenin özetini kapsar; işlenme durumundaki değişiklikler onayı geçersiz
 kılmaz. Bir değiştirme, eski dosyayı silmeden hemen önce yerel dosyanın
-damgasını ve SHA-256 değerini yeniden kontrol eder. `page_id` verilmiş gelişmiş
+kimlik ve zaman bilgisini ve SHA-256 değerini yeniden kontrol eder. `page_id` verilmiş gelişmiş
 App Clip yüklemeleri yeni başlığı ancak tamamlamadan sonra bağlar. Tamamlama
 istekleri, şemanın alanı buysa MD5 `sourceFileChecksum`, background ve build
 dosyaları içinse MD5 `sourceFileChecksums.file` içerir (spec SHA-256'ya da izin
 veriyor, ama Apple gerçek bir build tamamlamasında bunu reddetti). Güncellemesi yalnızca
 `uploaded` kabul eden yedi görsel ailesi için checksum alanı gerekmez.
 
-PR-D2, 73 ham profil işlemini kaldırıp `MACRO_COVERED`'a kaydediyor: 17
+Medya araçlarının karşıladığı 97 ham işlemin (`MACRO_COVERED`) 73'ü bu dosya
+hedefleri; kalan 24'ü mağaza sayfası ve kütüphane medyası. Bu 73 işlem: 17
 oluşturma (16 dosya ailesi ve build yüklemeleri), 13 silme (12 dosya ailesi ve
 build yüklemeleri), on güncelleme ve 33 okuma (16 dosya okuyucusu ve iki sürüm
 varsayılan görseli dahil 17 sahip ilişkisi okuması). Güncellemeler; yalnızca
 `uploaded` kabul eden yedi güncelleme, müşteriye görünen iki App Clip görseli
 (güncellemeleri `uploaded` ve bir MD5 checksum'dır; bu tam olarak tamamlama
-adımıdır) ve `distribution:routing-coverage` alt profili makro lehine kaldırılan
-yol tarifi kapsamıdır. Tam eşleme
+adımıdır) ve routing coverage'dır. Tam eşleme
 [`scripts/generate-profiles.ts`](../scripts/generate-profiles.ts) içinde; her
-kapsanan hedef/eylem, include'u bilen HTTP sahtesine karşı
+kapsanan hedef/eylem, include'u bilen HTTP mock'una karşı
 [`tests/media-coverage.test.ts`](../tests/media-coverage.test.ts) içinde
 çalışır.
 
@@ -188,4 +214,4 @@ abonelik sürümlerinin varsayılan görsel okumaları da kalıyor, çünkü var
 görseli seçmek, seçilen sahibin bütün dosyalarını listelemekten farklıdır.
 
 Yerel testler sahte verilerle çalışır. Her hedef için Apple'a karşı gerçek kabul
-yüklemeleri, sahibinin elle yapacağı bir kontrol olarak kalıyor.
+yüklemeleri, proje sahibinin elle yapacağı bir kontrol olarak kalıyor.

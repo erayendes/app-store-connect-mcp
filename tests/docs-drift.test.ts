@@ -21,7 +21,7 @@ import { OPERATIONS } from '../src/generated/operations.js';
 import { toolNameFor } from '../src/core/registry.js';
 import { PACKAGE, serverName } from '../src/clients.js';
 import { NARROW_FIRST, ROLES } from '../src/setup.js';
-import { FILE_TARGETS } from '../src/tools/media-catalog.js';
+import { FILE_TARGETS, PAGE_TARGETS } from '../src/tools/media-catalog.js';
 
 const read = (path: string): string => readFileSync(path, 'utf8');
 
@@ -132,9 +132,9 @@ describe('advertised counts', () => {
 });
 
 describe.each(['docs/MEDIA_TARGETS_en.md', 'docs/MEDIA_TARGETS_tr.md'])('%s', (file) => {
-  it('lists every file target the media tools accept', () => {
+  it('lists every target the media tools accept', () => {
     const rows = [...read(file).matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]);
-    expect(rows.sort()).toEqual(Object.keys(FILE_TARGETS).sort());
+    expect(rows.sort()).toEqual(['library', ...Object.keys(PAGE_TARGETS), ...Object.keys(FILE_TARGETS)].sort());
   });
 });
 

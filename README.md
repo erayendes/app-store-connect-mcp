@@ -32,7 +32,7 @@ Almost anything you'd click through App Store Connect to do, you can now just as
 
 ### Heimdall
 
-One MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 50 sub-profiles, 751 tools.**
+One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 50 sub-profiles, 751 tools.** Each profile runs as its own small MCP server.
 
 Apple's specification lists 1011 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 807, 710 become tools, and 41 hand-written ones join them: 751 tools in all. The other 97 are covered by the media tools, which do in one call what took several raw ones.
 
@@ -63,6 +63,10 @@ Before changing a price, giving someone Admin access or deleting something, Heim
 
 Everything else goes through your AI app's own approval.
 
+**If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Buttons: Cancel and Remove." width="394">
+
 More in [Security](.github/SECURITY.md).
 
 ### Works alongside Fastlane
@@ -78,6 +82,8 @@ npx -y @erayendes/asc-mcp@beta setup
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
+
+<sub>Recorded with 2.x. In 3.0, setup first asks whether to continue in the browser or the terminal, then for your profiles, then for the key.</sub>
 
 This is the 3.0 beta; `@beta` picks it until 3.0.0 is out. For 2.8, leave `@beta` off.
 
