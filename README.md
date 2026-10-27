@@ -1,3 +1,6 @@
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<a href="#setup"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-en.png" alt="Heimdall 3.0 beta. Try it now: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
+
 # Heimdall — App Store Connect MCP
 
 **Your whole App Store Connect account, in one tool.**
