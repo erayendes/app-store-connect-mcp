@@ -22,7 +22,7 @@ describe('audit log', () => {
     expect(first).toMatchObject({ tool: 'pricing__set_iap_price', confirmation: 'typed CONFIRM', outcome: 'ok', args: { app: 'Notes' } });
     expect(typeof first.at).toBe('string');
     expect(second.outcome).toBe('not run');
-    expect(statSync(path).mode & 0o777).toBe(0o600);
+    if (process.platform !== 'win32') expect(statSync(path).mode & 0o777).toBe(0o600);
   });
 
   it('writes failures with Apple\'s request ID to a file of their own', () => {
