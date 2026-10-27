@@ -39,7 +39,7 @@ olmadığını gösterir.
 
 Görsel ve dosya sahiplerinin çoğu tam olarak tek dosya tutar: Apple bunları
 tekil (to-one) ilişki olarak modeller (`app_clip_header_image`, beş Game Center
-yerelleştirme görseli, iki sürüm varsayılan görseli, iki inceleme ekran
+yerelleştirme görseli, iki sürüm varsayılan görseli, IAP ve abonelik görselleri (Apple liste olarak verse de sürüm başına bir tane), iki inceleme ekran
 görüntüsü, `encryption_document`, `routing_coverage` ve gelişmiş deneyim
 başlığı). Boş bir tekil ilişki 404 ya da `data: null` döndürür; ikisi de
 "henüz dosya yok" diye okunur, böylece ilk yükleme çalışır. Diğer okuma

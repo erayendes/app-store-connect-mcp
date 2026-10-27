@@ -37,7 +37,7 @@ and whether a build is attached.
 
 Most image and file owners hold exactly one file: Apple models them as a to-one
 relationship (`app_clip_header_image`, the five Game Center localization images,
-both version default images, both review screenshots, `encryption_document`,
+both version default images, the in-app purchase and subscription images (one per version, although Apple lists them), both review screenshots, `encryption_document`,
 `routing_coverage` and the advanced experience header). An empty to-one answers
 404 or `data: null`; both read as "no file yet", so the first upload works.
 Other read failures (403, 5xx) stay errors.

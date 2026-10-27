@@ -62,7 +62,7 @@ function fakeHttp(target: Page = 'version') {
       if (path === '/v1/appAssetLibraryImages/img/placements') return { data: [rows[0]] };
       if (path === '/v1/appAssetLibraryVideos/vid/placements') return { data: [rows[1]] };
       if (path.endsWith('/placements')) return { data: rows.map((row) => withIncludes(row, query)), included: [structuredClone(imageRow), structuredClone(videoRow)] };
-      if (path === '/v1/appAssetLibraryRefData' || path === '/v1/appAssetLibraryRefData/ref') return { data: path.endsWith('/ref') ? { id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], placementTypes: [{ placementTypeId: 'APP_SCREENSHOT', acceptsAssetCategories: ['APP_SCREENSHOTS_AND_PREVIEWS'], specMappings: [{ placementGroupId: 'phone', specs: ['phone'] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } } : [{ id: 'ref', attributes: { features: [{ featureId: 'APP_STORE_PRODUCT_PAGE', placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] }], placementTypes: [{ placementTypeId: 'APP_SCREENSHOT', acceptsAssetCategories: ['APP_SCREENSHOTS_AND_PREVIEWS'], specMappings: [{ placementGroupId: 'phone', specs: ['phone'] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } }] };
+      if (path === '/v1/appAssetLibraryRefData' || path === '/v1/appAssetLibraryRefData/ref') return { data: path.endsWith('/ref') ? { id: 'ref', attributes: { features: ['APP_STORE_VERSIONS', 'CUSTOM_PRODUCT_PAGES', 'PRODUCT_PAGE_OPTIMIZATIONS', 'IN_APP_EVENTS'].map((featureId) => ({ featureId, placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] })), placementTypes: [{ placementTypeId: 'APP_SCREENSHOT', acceptsAssetCategories: ['APP_SCREENSHOTS_AND_PREVIEWS'], specMappings: [{ placementGroupId: 'phone', specs: ['phone'] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } } : [{ id: 'ref', attributes: { features: ['APP_STORE_VERSIONS', 'CUSTOM_PRODUCT_PAGES', 'PRODUCT_PAGE_OPTIMIZATIONS', 'IN_APP_EVENTS'].map((featureId) => ({ featureId, placementPolicies: [{ placementType: 'APP_SCREENSHOT', groupLimits: [{ groupIds: ['phone'], maxCount: 10 }] }] })), placementTypes: [{ placementTypeId: 'APP_SCREENSHOT', acceptsAssetCategories: ['APP_SCREENSHOTS_AND_PREVIEWS'], specMappings: [{ placementGroupId: 'phone', specs: ['phone'] }] }], imageSpecs: [{ specId: 'phone', maxFileSize: 1000000, dimensions: { minWidth: 1200 } }], videoSpecs: [{ specId: 'phone-video', maxFileSize: 500000000 }] } }] };
       throw new Error(`Unexpected GET ${path}`);
     }),
     post: vi.fn(async (path: string, body: any) => path === '/v1/appAssetLibraryPlacements' ? { data: { id: 'placed', attributes: { state: 'ASSET_PROCESSING' } } } : { data: { id: 'new', attributes: { uploadOperations: [{ method: 'PUT', url: 'https://upload.invalid/part', offset: 0, length: body.data.attributes?.fileSize ?? 12 }] } } }),
@@ -86,8 +86,10 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
       expect(result.assets[0]).toMatchObject({ name: 'Hero image', state: 'COMPLETE', width: 1200 });
       expect(result.assets[1].placements[0]).toMatchObject({ id: 'pv', assetId: 'vid', pageId: pages[target === 'library' ? 'version' : target] });
       if (target !== 'library') expect(result.pages[0].sets.map((s: any) => s.kind)).toEqual(['image', 'video']);
-      expect(result.limits[0].policies).toEqual([{ feature: 'APP_STORE_PRODUCT_PAGE', placementType: 'APP_SCREENSHOT', maxCount: 10,
-        categories: ['APP_SCREENSHOTS_AND_PREVIEWS'], groups: [{ id: 'phone', sizes: ['1200–*x* ≤1 MB'] }] }]);
+      const feature = { version: 'APP_STORE_VERSIONS', cpp: 'CUSTOM_PRODUCT_PAGES', ppo: 'PRODUCT_PAGE_OPTIMIZATIONS', event: 'IN_APP_EVENTS' }[target as Page];
+      expect(result.limits[0].policies.map((p: any) => p.feature)).toEqual(feature ? [feature] : ['APP_STORE_VERSIONS', 'CUSTOM_PRODUCT_PAGES', 'PRODUCT_PAGE_OPTIMIZATIONS', 'IN_APP_EVENTS']);
+      expect(result.limits[0].policies[0]).toMatchObject({ placementType: 'APP_SCREENSHOT', maxCount: 10,
+        categories: ['APP_SCREENSHOTS_AND_PREVIEWS'], groups: [{ id: 'phone', sizes: ['1200–*x* ≤976 KB'] }] });
       if (target === 'library') {
         expect(result.assets[0].placements[0]).toMatchObject({ pageId: 'loc', target: 'version' });
         expect(http.get.mock.calls.filter(([p]) => p.endsWith('/img/placements') || p.endsWith('/vid/placements'))).toHaveLength(2);
@@ -118,6 +120,7 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
     if (target === 'library') it('still asks for the category of a library-only upload', async () => {
       await fs.writeFile(file, PNG);
       await expect(executeMediaTool('media__upload', { ...args, file_path: file }, context(fakeHttp()))).rejects.toThrow(/category/);
+      await expect(executeMediaTool('media__upload', { ...args, file_path: file, placement_type: 'APP_SCREENSHOT' }, context(fakeHttp()))).rejects.toThrow(/page target/);
     });
     it('deletes only owned files/placements and names the target in the preview', async () => {
       const http = fakeHttp(target === 'library' ? 'version' : target);

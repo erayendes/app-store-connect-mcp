@@ -739,7 +739,8 @@ function specText(spec: any): string {
   return [
     d.minWidth !== undefined || d.maxWidth !== undefined || d.minHeight !== undefined || d.maxHeight !== undefined ? `${span(d.minWidth, d.maxWidth)}x${span(d.minHeight, d.maxHeight)}` : undefined,
     spec?.duration ? `${seconds(spec.duration.min)}–${seconds(spec.duration.max)}s` : undefined,
-    typeof spec?.maxFileSize === 'number' ? `≤${Math.round(spec.maxFileSize / 1048576)} MB` : undefined,
+    // Rounded down: a limit shown larger than Apple's lets a file through that Apple refuses.
+    typeof spec?.maxFileSize === 'number' ? (spec.maxFileSize >= 1048576 ? `≤${Math.floor(spec.maxFileSize / 104857.6) / 10} MB` : `≤${Math.floor(spec.maxFileSize / 1024)} KB`) : undefined,
   ].filter(Boolean).join(' ');
 }
 /**
@@ -751,7 +752,7 @@ function compactLimits(row: Row, target: Target['target']) {
   const a = row.attributes ?? {};
   const features: any[] = a.features ?? [];
   const wanted = FEATURE_OF[target];
-  const kept = wanted && features.some((f) => f.featureId === wanted) ? features.filter((f) => f.featureId === wanted) : features;
+  const kept = wanted ? features.filter((f) => f.featureId === wanted) : features;
   const specs = new Map<string, string>([...(a.imageSpecs ?? []), ...(a.videoSpecs ?? [])].map((s: any) => [s.specId, specText(s)]));
   const types = new Map<string, any>((a.placementTypes ?? []).map((t: any) => [t.placementTypeId, t]));
   return { id: row.id, policies: kept.flatMap((f) => (f.placementPolicies ?? []).flatMap((p: any) => (p.groupLimits ?? []).map((g: any) => {
@@ -795,12 +796,12 @@ async function planWrite(name: string, args: Args, http: AscHttpClient, intent: 
   const writes: Write[] = [];
   let files: File[] = [];
   if (upload) {
+    if (target.target === 'library' && (args.placement_type !== undefined || args.placement_group !== undefined)) fail('Choose a page target to place the uploaded library file.');
     // Apple's reference data gives each placement type one category: screenshots
     // and previews theirs, every other page asset CREATIVE_ASSETS.
     const placing = target.pages.length ? str(args, 'placement_type') : undefined;
     const category = str(args, 'category') ?? (placing ? (['APP_SCREENSHOT', 'IMESSAGE_APP_SCREENSHOT', 'APP_PREVIEW'].includes(placing) ? 'APP_SCREENSHOTS_AND_PREVIEWS' : 'CREATIVE_ASSETS') : str(args, 'category', true)!);
     if (!MEDIA_CATEGORIES.includes(category)) fail(`Unknown category: ${category}.`);
-    if (target.target === 'library' && (args.placement_type !== undefined || args.placement_group !== undefined)) fail('Choose a page target to place the uploaded library file.');
     const poster = str(args, 'preview_frame_time_code');
     if (poster && upload.kind !== 'video') fail('Poster frames require a video.');
     const operation = MEDIA_ASSETS[upload.kind].create;

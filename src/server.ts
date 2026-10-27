@@ -669,7 +669,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           // Some clients declare forms they never show (core/native-confirm.ts);
           // there the dialog goes first. Self-reported, but it only ever trades
           // a form for a dialog the agent can answer even less.
-          const canElicit = elicitDeclared && !(dialogAvailable && DIALOG_FIRST_CLIENTS.has(info?.name ?? ''));
+          const dialogFirst = dialogAvailable && DIALOG_FIRST_CLIENTS.has(info?.name ?? '');
+          const canElicit = elicitDeclared && !dialogFirst;
           // No prompt from the client: on macOS, ask in a dialog of our own,
           // which the agent can neither see nor answer (core/native-confirm.ts).
           const canDialog = !canElicit && dialogAvailable;
@@ -745,10 +746,13 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
             ?.replace(/\.$/, '');
           const dialog = dialogText(what, preview.message);
           if (MEDIA_TOOL_NAMES.has(name) && !nativeConfirmFits(dialog)) {
-            if (elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
+            // Not to a dialog-first client's form: it would be declined unseen.
+            if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
             return { content: [{ type: 'text' as const, text: `"${name}" was blocked: the full media preview exceeds the native macOS dialog limit. Use a client that can show the full elicitation prompt, or send fewer items. Nothing was changed.` }], isError: true };
           }
           const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);
+          // No GUI session (SSH, a headless Mac): the form it declared is the next best.
+          if (answer === 'unavailable' && elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
           if (answer === 'unavailable') return blocked;
           if (answer !== 'approved') {
             return {

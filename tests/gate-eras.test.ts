@@ -199,6 +199,19 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
     expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
   });
 
+  it('falls back to the form for a Claude Code client when the dialog cannot open', async () => {
+    const apple = stubApple();
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('unavailable');
+    const { client, prompts } = await connect(era, CONFIRM, { nativeConfirm: true, clientName: 'claude-code' });
+
+    const res: any = await client.callTool(CALL);
+
+    expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    expect(prompts).toHaveLength(1);
+    expect(res.isError ?? false).toBe(false);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
+  });
+
   it('keeps the form for a Claude Code client when the dialog is turned off', async () => {
     const apple = stubApple();
     const { client, prompts } = await connect(era, CONFIRM, { nativeConfirm: false, clientName: 'claude-code' });
