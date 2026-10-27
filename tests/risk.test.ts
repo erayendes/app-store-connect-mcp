@@ -480,9 +480,8 @@ describe('dry-run (writes never reach Apple)', () => {
     vi.stubGlobal('fetch', fetchMock);
     try {
       const registry = new ToolRegistry({
-        domains: ['testflight'],
+        operations: OPERATIONS.filter((o) => o.domain === 'testflight').map((o) => o.name),
         readOnly: false,
-        includeDeprecated: false,
         dryRun: true,
       });
       const http = new AscHttpClient(new TokenProvider(creds));
@@ -511,9 +510,8 @@ describe('dry-run (writes never reach Apple)', () => {
 
   it('still validates the body first — a bad write fails, not "would send"', async () => {
     const registry = new ToolRegistry({
-      domains: ['testflight'],
+      operations: OPERATIONS.filter((o) => o.domain === 'testflight').map((o) => o.name),
       readOnly: false,
-      includeDeprecated: false,
       dryRun: true,
     });
     const http = new AscHttpClient(new TokenProvider(creds));
@@ -536,9 +534,8 @@ describe('dry-run (writes never reach Apple)', () => {
     vi.stubGlobal('fetch', fetchMock);
     try {
       const registry = new ToolRegistry({
-        domains: ['testflight'],
+        operations: OPERATIONS.filter((o) => o.domain === 'testflight').map((o) => o.name),
         readOnly: false,
-        includeDeprecated: false,
         dryRun: true,
       });
       const http = new AscHttpClient(new TokenProvider(creds));

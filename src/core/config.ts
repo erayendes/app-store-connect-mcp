@@ -18,8 +18,6 @@ export interface ServerConfig {
     /** Paths to Apple's DER root certificates; enables verified decoding. */
     appleRootCerts?: string[];
   };
-  /** When set, only these domains are exposed as tools. */
-  domains?: string[];
   /** Blocks every mutating tool. */
   readOnly: boolean;
   /**
@@ -33,8 +31,6 @@ export interface ServerConfig {
    * ASC_NATIVE_CONFIRM=0; unset in a hand-built config means off.
    */
   nativeConfirm?: boolean;
-  /** Include operations Apple has marked deprecated. */
-  includeDeprecated: boolean;
   /**
    * Fold the core profile's tools (app lookup, tool search, the media macros)
    * into this profile server. For a channel that runs one process and so
@@ -188,7 +184,6 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
           // verifying would present unverified data as fact.
           appleRootCerts: parseList(env.ASC_APPLE_ROOT_CERTS),
         },
-    domains: parseList(option('domains') ?? env.ASC_DOMAINS),
     readOnly: readOnlyFromArgs(argv) || readOnlyFromEnv(env.ASC_READ_ONLY),
     // `strong` by default: ask on the four levels the risk manifest calls
     // revenue, destructive, infrastructure and access, and stay out of the way
@@ -210,8 +205,6 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
           ? 'off'
           : 'strong',
     nativeConfirm: env.ASC_NATIVE_CONFIRM !== '0' && env.ASC_NATIVE_CONFIRM !== 'false',
-    includeDeprecated:
-      flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
     withCore: flag('with-core'),
     baseUrl: env.ASC_BASE_URL || undefined,
     dryRun: flag('dry-run') || env.ASC_DRY_RUN === 'true' || env.ASC_DRY_RUN === '1',

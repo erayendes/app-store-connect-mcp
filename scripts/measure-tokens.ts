@@ -35,7 +35,6 @@ export async function measureServers(from: 'src' | 'dist' = 'src'): Promise<Serv
     credentials: { keyId: 'MEASURE', issuerId: 'measure', privateKey: 'not-used' },
     readOnly: false,
     confirmWrites: 'off',
-    includeDeprecated: false,
     dryRun: true,
   };
 

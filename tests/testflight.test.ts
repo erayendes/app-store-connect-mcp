@@ -143,7 +143,7 @@ describe('testflight__assign_build_to_groups', () => {
     expect(TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__assign_build_to_groups')!.annotations?.destructiveHint).toBe(true);
     const server = createServer({
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
-      readOnly: true, confirmWrites: 'off', includeDeprecated: false, dryRun: true,
+      readOnly: true, confirmWrites: 'off', dryRun: true,
     }, resolveSelection('testflight:groups'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
@@ -155,8 +155,7 @@ describe('testflight__assign_build_to_groups', () => {
   it('reaches the RELEASE write-confirmation gate before any Apple request', async () => {
     const server = createServer({
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
-      baseUrl: 'http://127.0.0.1:1', readOnly: false, confirmWrites: 'all',
-      includeDeprecated: false, dryRun: false,
+      baseUrl: 'http://127.0.0.1:1', readOnly: false, confirmWrites: 'all', dryRun: false,
     }, resolveSelection('testflight:groups'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });

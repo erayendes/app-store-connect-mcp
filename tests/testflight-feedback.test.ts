@@ -269,7 +269,7 @@ describe('MCP integration', () => {
     vi.spyOn(AscHttpClient.prototype, 'get').mockImplementation(http.get);
     const server = createServer({
       credentials: { keyId: 'TEST', issuerId: 'issuer', privateKey: 'unused' },
-      readOnly: true, confirmWrites: 'all', includeDeprecated: false, dryRun: false, withCore: true,
+      readOnly: true, confirmWrites: 'all', dryRun: false, withCore: true,
     }, resolveSelection('testflight'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' });

@@ -504,11 +504,10 @@ describe('contested intents', () => {
 describe('TestFlight digest search intents', () => {
   it('names the owning profile even when only the unloaded macro matches', async () => {
     const result: any = await executeMetaTool('asc__search_tools', { query: 'testflight__feedback_digest', limit: 1 }, {
-      registry: new ToolRegistry({}), loadedDomains: [], macroOffered: () => false,
+      registry: new ToolRegistry({ operations: [], readOnly: false }), loadedDomains: [], macroOffered: () => false,
     } as any);
     expect(result.matches[0]).toMatchObject({ tool: 'testflight__feedback_digest', loaded: false });
     expect(result.hint).toContain('register testflight');
-    expect(result.hint).not.toContain('--domains=macro');
   });
 
   it.each([
@@ -517,7 +516,7 @@ describe('TestFlight digest search intents', () => {
     'Summarize beta screenshot feedback',
   ])('offers the read macro before raw operations for %s', async (query) => {
     const result: any = await executeMetaTool('asc__search_tools', { query }, {
-      registry: new ToolRegistry({}), loadedDomains: [], config: {},
+      registry: new ToolRegistry({ operations: [], readOnly: false }), loadedDomains: [], config: {},
       macroOffered: (name: string) => name === 'testflight__feedback_digest',
     } as any);
     expect(result.matches[0]).toMatchObject({ tool: 'testflight__feedback_digest', loaded: true });

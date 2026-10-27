@@ -120,7 +120,7 @@ jobs:
               echo "> **The suite does not pass on that branch.** That is the finding rather than a blocker: Apple changed something a ratchet or a curated description depends on, and the fix belongs on the branch before it merges."
               echo
             fi
-            echo "**Read this diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation leaves every profile unless \`--include-deprecated\` is passed."
+            echo "**Read this diff first.** A count moving is routine; a rename is not — anyone whose config names a renamed tool loses it, and a newly deprecated operation is no longer built, so it leaves every profile that carried it."
             echo
             echo '```diff'
             echo "${REPORT:-REPORT.txt unchanged}"

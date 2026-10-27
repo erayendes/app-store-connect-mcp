@@ -26,6 +26,8 @@ The same tools now also take the other images and files App Store Connect holds:
 
 **`asc__load` is gone.** A server started with some of its sub-profiles still reads the rest through `asc__call`. For the tools themselves, the AI runs the `register` command the server names, with your yes.
 
+**Only what you can use is in the package.** The 185 operations Apple has deprecated or replaced are no longer built, and `--include-deprecated` is gone. So are the 19 that only repeat another operation from the other side or that no task needs. Heimdall now always runs with a profile: `--domains` and the combined server you got with no profile are gone, and a server started without a profile shows one tool telling the AI to run setup and to delete that entry.
+
 **Confirmations reach you in Claude Code.** Claude Code says it can show Heimdall's confirmation form, but its desktop Code tab turned every one down without showing it, so risky changes failed without a word. On a Mac, Heimdall now asks Claude Code in its own dialog, which the AI can neither see nor answer.
 
 **Try it.** Run `npx -y @erayendes/asc-mcp@beta setup` and pick your profiles again; old names are not carried over (`app-info` is now `general`). Setup removes the entries whose profile no longer exists when they are Heimdall's own and carry no credentials or `envFile` of their own; others it lists and leaves alone. It moves the entries you keep to the beta and adds ASC-Core. Until then, a server whose settings still name an old profile shows one tool telling the AI to run setup.
@@ -307,6 +309,8 @@ Aynı araçlar artık App Store Connect'teki diğer görselleri ve dosyaları da
 **Abonelikler ve uygulama içi satın almalar yalnızca Apple'ın yeni (v2) araçlarıyla.** Apple eski dil, görsel ve gönderim araçlarını 4.4.1 API'sinde kullanımdan kaldırdı; Heimdall da artık onları sunmuyor. `--include-deprecated` geri getiriyor. `preflight__check_subscription` artık taslak sürümü kontrol ediyor. Bir aboneliğin ya da uygulama içi satın almanın yeni sürümünü oluşturmak önce size soruyor ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
 
 **`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
+
+**Pakette yalnızca kullanılabilenler var.** Apple'ın kullanımdan kaldırdığı ya da yenisiyle değiştirdiği 185 işlem artık pakete girmiyor; `--include-deprecated` de kalktı. Başka bir işlemi öbür taraftan tekrarlayan ya da hiçbir işin gerekmediği 19 işlem de çıktı. Heimdall artık her zaman bir profille çalışıyor: `--domains` ve profil verilmeden açılan birleşik sunucu kalktı. Profilsiz başlatılan bir sunucu, yapay zekâya setup'ı çalıştırmasını ve o kaydı silmesini söyleyen tek bir araç gösteriyor.
 
 **Onaylar Claude Code'da size ulaşıyor.** Claude Code, Heimdall'ın onay formunu gösterebildiğini söylüyor; ama masaüstündeki Code sekmesi formu göstermeden reddediyordu ve riskli değişiklikler sessizce başarısız oluyordu. Heimdall artık Mac'te Claude Code'a kendi penceresiyle soruyor; yapay zekâ bu pencereyi ne görebiliyor ne de cevaplayabiliyor.
 

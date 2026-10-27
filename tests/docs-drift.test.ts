@@ -35,15 +35,25 @@ const allSpecs = PROFILES.flatMap((p) => [
 const placedOps = new Set(PROFILES.flatMap((p) => p.subProfiles.flatMap((s) => s.operations)));
 const manual = new Set(PROFILES.flatMap((p) => p.subProfiles.flatMap((s) => s.manualTools)));
 
+/** A count the generator wrote to src/generated/REPORT.txt. */
+function reported(re: RegExp): number {
+  const m = re.exec(readFileSync('src/generated/REPORT.txt', 'utf8'));
+  if (!m) throw new Error(`REPORT.txt has no match for ${re}`);
+  return Number(m[1]);
+}
+
 const COUNTS = {
   profiles: PROFILES.length,
   // What setup offers to pick: every profile but core, which comes with them.
   pickable: PROFILES.filter((p) => p.name !== CORE_PROFILE).length,
   subProfiles: PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length,
+  // Built operations; asc__search_tools searches these.
   operations: OPERATIONS.length,
-  deprecated: OPERATIONS.filter((op) => op.deprecated).length,
-  // What asc__search_tools searches without --include-deprecated.
-  searchable: OPERATIONS.filter((op) => !op.deprecated).length,
+  // Left out of the build: the generator reports both counts.
+  deprecated: reported(/deprecated dropped: (\d+)/),
+  sheetDropped: reported(/dropped by the profile sheet: (\d+)/),
+  // What Apple's spec lists, before Heimdall leaves anything out.
+  listed: OPERATIONS.length + reported(/deprecated dropped: (\d+)/) + reported(/dropped by the profile sheet: (\d+)/),
   placed: placedOps.size,
   handWritten: manual.size + PROXY_PAIR.length,
   // The headline, as server.json and the release pre-flight count it.
@@ -60,19 +70,19 @@ function numbers(text: string, re: RegExp, where: string): number[] {
 describe('advertised counts', () => {
   const claims: [string, RegExp, number[]][] = [
     ['README.md', /\*\*(\d+) profiles, (\d+) sub-profiles, (\d+) tools\.\*\*/, [COUNTS.profiles, COUNTS.subProfiles, COUNTS.tools]],
-    ['README.md', /lists (\d+) API operations/, [COUNTS.operations]],
-    ['README.md', /leaves out the (\d+) that/, [COUNTS.deprecated]],
+    ['README.md', /lists (\d+) API operations/, [COUNTS.listed]],
+    ['README.md', /leaves out the (\d+) that.*?, and (\d+) that repeat.*?Of the remaining (\d+)/, [COUNTS.deprecated, COUNTS.sheetDropped, COUNTS.operations]],
     ['README.md', /(\d+) become tools, and (\d+) hand-written ones join them: (\d+) tools in all/, [COUNTS.placed, COUNTS.handWritten, COUNTS.tools]],
     ['docs/README_tr.md', /\*\*(\d+) profil altında (\d+) alt profil ve (\d+) araç\*\*/, [COUNTS.profiles, COUNTS.subProfiles, COUNTS.tools]],
-    ['docs/README_tr.md', /(\d+) API operasyonu/, [COUNTS.operations]],
-    ['docs/README_tr.md', /değiştirdiği (\d+) tanesini/, [COUNTS.deprecated]],
-    ['docs/README_tr.md', /Kalanlardan (\d+)'.{0,40}elle yazılmış (\d+) araç ekleniyor: toplam (\d+) araç/, [COUNTS.placed, COUNTS.handWritten, COUNTS.tools]],
-    ['AGENTS.md', /serves (\d+) tools across (\d+) profiles: (\d+) generated from Apple's (\d+) operations \(the (\d+) that/, [COUNTS.tools, COUNTS.profiles, COUNTS.placed, COUNTS.operations, COUNTS.deprecated]],
+    ['docs/README_tr.md', /(\d+) API operasyonu/, [COUNTS.listed]],
+    ['docs/README_tr.md', /değiştirdiği (\d+) tanesini.*?gerekmediği (\d+) tanesini.*?Kalan (\d+) işlemden/, [COUNTS.deprecated, COUNTS.sheetDropped, COUNTS.operations]],
+    ['docs/README_tr.md', /işlemden (\d+)'.{0,40}elle yazılmış (\d+) araç ekleniyor: toplam (\d+) araç/, [COUNTS.placed, COUNTS.handWritten, COUNTS.tools]],
+    ['AGENTS.md', /serves (\d+) tools across (\d+) profiles: (\d+) generated from Apple's (\d+) operations \(the (\d+) that/, [COUNTS.tools, COUNTS.profiles, COUNTS.placed, COUNTS.listed, COUNTS.deprecated]],
     ['AGENTS.md', /and (\d+) hand-written\./, [COUNTS.handWritten]],
-    ['AGENTS.md', /Search covers the (\d+) operations Apple has not deprecated/, [COUNTS.searchable]],
-    ['skills/heimdall/SKILL.md', /Apple's API is (\d+) operations/, [COUNTS.operations]],
+    ['AGENTS.md', /Search covers the (\d+) operations Heimdall builds/, [COUNTS.operations]],
+    ['skills/heimdall/SKILL.md', /Apple's API is (\d+) operations/, [COUNTS.listed]],
     ['skills/heimdall/SKILL.md', /serves (\d+) distinct tools across (\d+) profiles: (\d+) reachable Apple operations plus (\d+) hand-written/, [COUNTS.tools, COUNTS.profiles, COUNTS.placed, COUNTS.handWritten]],
-    ['skills/heimdall/SKILL.md', /covers the (\d+) operations Apple has not\s+deprecated/, [COUNTS.searchable]],
+    ['skills/heimdall/SKILL.md', /covers the (\d+) operations Heimdall builds/, [COUNTS.operations]],
     ['CITATION.cff', /with (\d+) tools .*?, (\d+) curated profiles/, [COUNTS.tools, COUNTS.profiles]],
     ['.github/SECURITY.md', /The (\d+) hand-written ones/, [COUNTS.handWritten]],
     ['.github/SECURITY.md', /Elle yazılan (\d+) araç/, [COUNTS.handWritten]],

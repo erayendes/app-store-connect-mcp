@@ -8,12 +8,9 @@ import { readFileSync } from 'node:fs';
 import {
   PROFILES,
   PROFILE_DESCRIPTIONS,
-  PROFILELESS,
-  TWIN_OF,
   MACRO_COVERED,
   CORE_PROFILE,
   descriptionKey,
-  deprecatedOperationsFor,
   manualToolsFor,
   operationsFor,
   resolveSelection,
@@ -23,11 +20,11 @@ import {
 import { OPERATIONS } from '../src/generated/operations.js';
 import { PACKAGE } from '../src/clients.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
-import { ToolRegistry } from '../src/core/registry.js';
 import { FILE_TARGETS, type FileAdapter } from '../src/tools/media-catalog.js';
 import { helpText } from '../src/index.js';
+import { PROFILELESS_MARKER, TWIN_OF, readRows } from '../scripts/profile-sheet.js';
 
-const loadable = OPERATIONS.filter((o) => !o.deprecated);
+const PROFILELESS = readRows().filter((r) => r.profile === PROFILELESS_MARKER).map((r) => r.operation);
 const byName = new Map(OPERATIONS.map((o) => [o.name, o]));
 const coreOps = PROFILES.find((p) => p.name === CORE_PROFILE)!.subProfiles.flatMap((s) => s.operations);
 // Core macros are available next to each slice. Their covered reads still
@@ -205,38 +202,29 @@ describe('reachability — every sub-profile reaches its own resources from an a
 
 describe('coverage', () => {
   /**
-   * Every live operation is placed exactly one of four ways: in a profile, in
-   * no profile on purpose (a reverse read), dropped for its twin (the other end
-   * of the same relationship), or replaced by a macro.
+   * Every built operation is in a profile or replaced by a macro. Reverse reads
+   * in no profile and the dropped end of a relationship pair are not built.
    */
   it('leaves no operation orphaned', () => {
     const covered = new Set([
       ...PROFILES.flatMap((p) => p.subProfiles.flatMap((s) => s.operations)),
-      ...PROFILELESS,
-      ...Object.keys(TWIN_OF),
       ...Object.keys(MACRO_COVERED),
     ]);
-    const orphans = loadable.filter((o) => !covered.has(o.name)).map((o) => o.name);
+    const orphans = OPERATIONS.filter((o) => !covered.has(o.name)).map((o) => o.name);
     expect(orphans).toEqual([]);
   });
 
-  it('keeps one end of every twin pair loaded, and the other nowhere', () => {
+  it('keeps one end of every twin pair in a profile, and does not build the other', () => {
     const placed = new Set(PROFILES.flatMap((p) => p.subProfiles.flatMap((s) => s.operations)));
     for (const [dropped, twin] of Object.entries(TWIN_OF)) {
-      expect(byName.has(dropped), dropped).toBe(true);
       expect(placed.has(twin), `${twin} (twin of ${dropped}) is in no profile`).toBe(true);
-      expect(placed.has(dropped), `${dropped} was dropped but is loaded`).toBe(false);
+      expect(byName.has(dropped), `${dropped} was dropped but is built`).toBe(false);
     }
   });
 
-  it('keeps the profile-less operations reachable without a profile', () => {
-    const registry = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
-    const placed = new Set(PROFILES.flatMap((p) => p.subProfiles.flatMap((s) => s.operations)));
+  it('does not build the profile-less reverse reads', () => {
     expect(PROFILELESS.length).toBeGreaterThan(0);
-    for (const name of PROFILELESS) {
-      expect(registry.get(name), `${name} is not loadable with --domains=all`).toBeTruthy();
-      expect(placed.has(name), `${name} is profile-less and in a profile`).toBe(false);
-    }
+    expect(PROFILELESS.filter((name) => byName.has(name))).toEqual([]);
   });
 
   it('never promises a tool that does not exist', () => {
@@ -244,13 +232,6 @@ describe('coverage', () => {
       p.subProfiles.flatMap((s) => s.operations.filter((n) => !byName.has(n)))
     );
     expect(unknown).toEqual([]);
-  });
-
-  it('loads nothing Apple has deprecated', () => {
-    const bad = PROFILES.flatMap((p) =>
-      p.subProfiles.flatMap((s) => s.operations.filter((n) => byName.get(n)?.deprecated))
-    );
-    expect(bad).toEqual([]);
   });
 
   it('describes every profile and sub-profile', () => {
@@ -357,7 +338,7 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
    */
   const listing = (names: string[]) => readCollections(names.filter((n) => !byName.get(n)?.path.endsWith('}')));
   const creates = (names: string[]) => names.map((n) => byName.get(n)!).filter((o) => o?.method === 'POST' && o.path.split('/').length === 3).map((o) => norm(o.path.split('/')[2]));
-  const appleMade = INCLUDE_ONLY.filter((c) => !creates(loadable.map((o) => o.name)).includes(c));
+  const appleMade = INCLUDE_ONLY.filter((c) => !creates(OPERATIONS.map((o) => o.name)).includes(c));
   const standaloneCreates = Object.values(FILE_TARGETS as Record<string, FileAdapter>)
     .filter((a) => a.standalone && coreMacros.has(MACRO_COVERED[a.create])).map((a) => a.create);
 
@@ -436,6 +417,15 @@ describe('unknown profiles', () => {
     // Generic: every live profile, and no table of renames to keep in step.
     for (const p of PROFILES) expect(message).toContain(p.name);
   });
+
+  // The 2.x combined server, started with no profile: setup counts such an
+  // entry as the user's own and leaves it, so the message must not promise it goes.
+  it('tells a server started with no profile to delete its own entry', () => {
+    const message = unknownProfileMessage('', 'No profile given.');
+    expect(message).toContain('without an App Store Connect profile');
+    expect(message).toContain('delete it from their MCP client');
+    expect(message).not.toMatch(/removes entries|No profile given/);
+  });
 });
 
 describe('help text', () => {
@@ -473,8 +463,7 @@ describe('counts — curation output, not something that drifts on its own', () 
     // not spec operations: 9 storekit, 3 reviews_ai, 7 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 2
     // testflight, 1 ci, and core's 3 meta tools — 39.
-    const placed = loadable.length - PROFILELESS.length - Object.keys(TWIN_OF).length;
-    expect(new Set(tools).size).toBe(placed - Object.keys(MACRO_COVERED).length + 39);
+    expect(new Set(tools).size).toBe(OPERATIONS.length - Object.keys(MACRO_COVERED).length + 39);
   });
   it('places release__submit_items in exactly the ten approved slices', () => {
     const actual = SUBS.filter(({ sub }) => sub.manualTools.includes('release__submit_items')).map(({ label }) => label).sort();
@@ -550,36 +539,5 @@ describe('server.json stays in step with the profiles', () => {
     expect(m, 'the headline changed shape').toBeTruthy();
     expect(Number(m![1])).toBe(distinct.size + 2);
     expect(Number(m![2])).toBe(PROFILES.length);
-  });
-});
-
-/**
- * `--include-deprecated` was a no-op in profile mode and said nothing about it.
- * Membership is hand-curated in spec/profiles.csv and nobody curates an
- * endpoint Apple has retired, so 0 of the 123 deprecated operations were
- * reachable from any profile — the flag only ever worked on the no-profile
- * server with `--domains`.
- */
-describe('--include-deprecated in profile mode', () => {
-  const selection = resolveSelection('game-center');
-
-  it('adds nothing on its own — the curated set has no deprecated operations', () => {
-    const curated = operationsFor(selection);
-    const deprecated = new Set(OPERATIONS.filter((op) => op.deprecated).map((op) => op.name));
-    expect(curated.filter((name) => deprecated.has(name))).toEqual([]);
-  });
-
-  it('offers the retired operations of the domains the profile covers', () => {
-    const extra = deprecatedOperationsFor(selection);
-    expect(extra.length).toBeGreaterThan(0);
-    // Every one is genuinely deprecated, and genuinely in scope for this
-    // profile — the definition is by domain, since there is no curated answer.
-    const domains = new Set(
-      operationsFor(selection).map((n) => byName.get(n)?.domain).filter(Boolean)
-    );
-    for (const name of extra) {
-      expect(byName.get(name)?.deprecated, `${name} is not deprecated`).toBe(true);
-      expect(domains.has(byName.get(name)?.domain), `${name} is out of scope`).toBe(true);
-    }
   });
 });

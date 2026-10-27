@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { validateDeprecatedOverrides } from '../scripts/deprecated-overrides.js';
 import { OPERATIONS } from '../src/generated/operations.js';
-import { ToolRegistry } from '../src/core/registry.js';
 
 const spec = JSON.parse(readFileSync('spec/openapi.json', 'utf8'));
 const overrides = JSON.parse(readFileSync('spec/deprecated-overrides.json', 'utf8'));
@@ -37,31 +36,22 @@ describe('Apple deprecation overrides', () => {
       const entry = Object.entries<any>(spec.paths).flatMap(([path, methods]) =>
         Object.entries<any>(methods).map(([method, op]) => ({ path, method, op })))
         .find((row) => row.op?.operationId === record.operationId)!;
+      // Retired operations are not built at all.
       const generated = OPERATIONS.find((o) => o.path === entry.path && o.method === entry.method.toUpperCase());
-      // The generator omits GET /relationships twins when the related GET
-      // returns the same data. The override still guards the source spec ID.
-      if (generated) expect(generated.deprecated, record.operationId).toBe(true);
-      else {
-        expect(entry.path).toContain('/relationships/');
-        expect(spec.paths[entry.path.replace('/relationships/', '/')]?.get).toBeTruthy();
-      }
+      expect(generated, record.operationId).toBeUndefined();
     }
   });
   it('rejects an override missing from the spec', () => {
     expect(() => validateDeprecatedOverrides(spec, [...overrides, { operationId: 'missing_createInstance', url: 'https://example.com', apiVersion: '4.4.1' }])).toThrow(/absent from spec/);
   });
-  it('loads all six retired media families only with --include-deprecated in profile-less mode', () => {
+  it('builds none of the six retired media families', () => {
     const names = [
       'app_screenshot_sets.create', 'app_screenshots.create',
       'app_preview_sets.create', 'app_previews.create',
       'app_event_screenshots.create', 'app_event_video_clips.create',
     ];
-    const normal = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: false });
-    const legacy = new ToolRegistry({ domains: ['all'], readOnly: false, includeDeprecated: true });
-    for (const name of names) {
-      expect(normal.get(name), name).toBeUndefined();
-      expect(legacy.get(name), name).toBeTruthy();
-    }
+    const built = new Set(OPERATIONS.map((o) => o.name));
+    expect(names.filter((name) => built.has(name))).toEqual([]);
   });
   it('rejects an override once Apple marks it deprecated', () => {
     const copy = structuredClone(spec);

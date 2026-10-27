@@ -32,7 +32,6 @@ describe('profiles', () => {
     const registry = new ToolRegistry({
       operations: operationsFor(resolveSelection('analytics')),
       readOnly: false,
-      includeDeprecated: false,
     });
     const names = new Set(registry.listTools().map((t) => t.name));
     expect(names.has('sales_reports__list')).toBe(true);
@@ -73,7 +72,6 @@ describe('profiles', () => {
       const registry = new ToolRegistry({
         operations: operationsFor(resolveSelection(p.name)),
         readOnly: false,
-        includeDeprecated: false,
       });
       expect(registry.size).toBeGreaterThan(0);
       expect(registry.size).toBeLessThan(300);
@@ -84,7 +82,6 @@ describe('profiles', () => {
     const registry = new ToolRegistry({
       operations: operationsFor(resolveSelection('monetization:subscription')),
       readOnly: false,
-      includeDeprecated: false,
     });
     const before = registry.size;
     expect(registry.get('win_back_offers__create')).toBeUndefined();
@@ -100,8 +97,8 @@ describe('profiles', () => {
   });
 
   it('refuses to smuggle a write past --read-only when loading late', () => {
-    const registry = new ToolRegistry({ operations: [], readOnly: true, includeDeprecated: false });
-    const writes = OPERATIONS.filter((o) => !o.readOnly && !o.deprecated).slice(0, 5).map((o) => o.name);
+    const registry = new ToolRegistry({ operations: [], readOnly: true });
+    const writes = OPERATIONS.filter((o) => !o.readOnly).slice(0, 5).map((o) => o.name);
     expect(registry.loadOperations(writes)).toEqual([]);
   });
 
@@ -109,7 +106,6 @@ describe('profiles', () => {
     const registry = new ToolRegistry({
       operations: operationsFor(resolveSelection('analytics')),
       readOnly: false,
-      includeDeprecated: false,
       missingToolHint: (op) =>
         `It is served by the "asc-${profilesForOperation(op.name)[0]}" MCP server.`,
     });

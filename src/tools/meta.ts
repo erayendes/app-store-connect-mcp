@@ -3,7 +3,7 @@
  * explicit connection check.
  */
 import type { McpToolDefinition } from '../core/registry.js';
-import { ALL_DOMAINS, ToolRegistry } from '../core/registry.js';
+import { ToolRegistry } from '../core/registry.js';
 import { DOMAIN_DESCRIPTIONS } from '../generated/domain-info.js';
 import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
@@ -140,12 +140,6 @@ function tokenTest(token: string): (haystack: string) => boolean {
  * speaks all of them. The tool description now asks for English and an empty
  * result says so; translation belongs to the client, which is better at it than
  * any table we would maintain.
- *
- * Deprecated operations are excluded unless the server was started with
- * `--include-deprecated`, because the registry refuses to load them either.
- * Returning them looks helpful and is not: the agent reads "deprecated" as
- * "works but discouraged", calls the tool, and gets "no such tool". Measured
- * on "create leaderboard" — two of the top five were unreachable.
  */
 /**
  * How much of a tool's name the query did not ask about — the tie-break.
@@ -175,16 +169,12 @@ function unaskedNameParts(name: string, tokens: string[]): number {
     .filter((part) => !tokens.some((t) => part.includes(t) || t.includes(part))).length;
 }
 
-export function searchOperations(
-  query: string,
-  includeDeprecated = false
-): Array<(typeof OPERATIONS)[number]> {
+export function searchOperations(query: string): Array<(typeof OPERATIONS)[number]> {
   const tokens = tokenize(query);
   if (!tokens.length) return [];
 
   const tests = tokens.map(tokenTest);
-  const pool = includeDeprecated ? OPERATIONS : OPERATIONS.filter((op) => !op.deprecated);
-  const scored = pool
+  const scored = OPERATIONS
     .map((op) => {
       const haystack = `${op.name} ${op.description} ${op.path}`.toLowerCase();
       const score = tests.reduce((n, hit) => n + (hit(haystack) ? 1 : 0), 0);
@@ -452,19 +442,14 @@ export async function executeMetaTool(
     tokens: TokenProvider;
     readOnly: boolean;
     loadedDomains: string[];
-    /** In profile mode: how to reach operations this server doesn't carry. */
+    /** How to reach operations this server doesn't carry. */
     missingToolsHint?: (ops: Array<(typeof OPERATIONS)[number]>) => string;
-    /**
-     * In profile mode: what this server is, in profile terms. Domains are the
-     * wrong unit there — one domain is split across as many as four profiles.
-     */
+    /** What this server is, in profile terms: one domain is split across as many as four profiles. */
     profileReport?: () => Record<string, unknown>;
     /** Whether StoreKit (App Store Server API) tools are active on this server. */
     storekitEnabled?: boolean;
     /** Which macros this server offers — read-only servers hide the writes. */
     macroOffered?: (name: string) => boolean;
-    /** Mirrors --include-deprecated: search must offer only what can be loaded. */
-    includeDeprecated?: boolean;
     /** The profile this server serves, preferred when a tool lives in several. */
     ownProfile?: string;
     /** On core: discovery answers with every profile, not just this server. */
@@ -473,46 +458,21 @@ export async function executeMetaTool(
 ): Promise<unknown> {
   switch (name) {
     case 'asc__discover_domains': {
-      // Profile mode answers in profiles, not domains: registering a sibling
-      // server is the actual remedy, and a domain no longer names one server.
-      if (ctx.profileReport) {
-        return {
-          specVersion: SPEC_VERSION,
-          totalOperations: OPERATIONS.length,
-          loadedTools: ctx.registry.size,
-          ...ctx.profileReport(),
-          ...(ctx.catalogue
-            ? {
-                profiles: catalogue(),
-                register:
-                  `Add a profile with \`npx -y ${PACKAGE} register <profile>\` or ` +
-                  '`<profile>:<sub-profile>,…`, with the user\'s yes, then restart the client.',
-              }
-            : {}),
-        };
-      }
-
-      const counts = OPERATIONS.reduce<Record<string, number>>((acc, op) => {
-        acc[op.domain] = (acc[op.domain] ?? 0) + 1;
-        return acc;
-      }, {});
-      const unloaded = new Set(ctx.registry.unloadedDomains());
-
+      // Answered in profiles, not domains: registering a sibling server is the
+      // actual remedy, and a domain no longer names one server.
       return {
         specVersion: SPEC_VERSION,
         totalOperations: OPERATIONS.length,
         loadedTools: ctx.registry.size,
-        domains: ALL_DOMAINS.map((domain) => ({
-          domain,
-          tools: counts[domain] ?? 0,
-          loaded: !unloaded.has(domain),
-          description: DOMAIN_DESCRIPTIONS[domain] ?? '',
-        })),
-        hint:
-          unloaded.size > 0
-            ? `To load more, restart the server with --domains=${[...unloaded].slice(0, 3).join(',')} ` +
-              `(or --domains=all for every operation).`
-            : 'All domains are loaded.',
+        ...ctx.profileReport?.(),
+        ...(ctx.catalogue
+          ? {
+              profiles: catalogue(),
+              register:
+                `Add a profile with \`npx -y ${PACKAGE} register <profile>\` or ` +
+                '`<profile>:<sub-profile>,…`, with the user\'s yes, then restart the client.',
+            }
+          : {}),
       };
     }
 
@@ -521,7 +481,7 @@ export async function executeMetaTool(
       const limit = Number(args.limit ?? 25);
       if (!query) return { matches: [], count: 0 };
 
-      const apiHits = searchOperations(query, ctx.includeDeprecated).filter(
+      const apiHits = searchOperations(query).filter(
         (op) => !ctx.readOnly || op.readOnly
       );
       const apiMatches = apiHits.map((op) => ({
@@ -530,7 +490,6 @@ export async function executeMetaTool(
         endpoint: `${op.method} ${op.path}`,
         description: op.description,
         loaded: Boolean(ctx.registry.get(op.name)),
-        deprecated: op.deprecated,
         ...homeOf((s) => s.operations.includes(op.name), ctx.ownProfile),
       }));
 
@@ -550,7 +509,6 @@ export async function executeMetaTool(
           endpoint,
           description: t.description,
           loaded: loaded(t.name),
-          deprecated: false,
           ...homeOf((s) => s.manualTools.includes(t.name), ctx.ownProfile),
         }));
 
@@ -604,11 +562,8 @@ export async function executeMetaTool(
         const unloadedOps = apiHits.filter(
           (op) => matches.some((m) => m.tool === op.name && !m.loaded)
         );
-        hints.push(
-          ctx.missingToolsHint?.(unloadedOps) ??
-            `Restart the server with --domains=${unloadedApiDomains.join(',')} ` +
-              `(added to any domains you already load) to expose them.`
-        );
+        const hint = ctx.missingToolsHint?.(unloadedOps);
+        if (hint) hints.push(hint);
       }
       if (storekitUnloaded) {
         hints.push(
@@ -648,7 +603,7 @@ export async function executeMetaTool(
         readOnly: ctx.readOnly,
         // Nobody weighs a context budget during setup; they weigh it when a
         // session starts filling up. That is the moment this answer is read.
-        ...(ctx.profileReport?.() ?? {}),
+        ...ctx.profileReport?.(),
         token: ctx.tokens.status(),
         rateLimit: ctx.http.limiter.status(),
       };

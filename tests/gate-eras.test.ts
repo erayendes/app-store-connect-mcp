@@ -35,7 +35,6 @@ const config: ServerConfig = {
   credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey },
   readOnly: false,
   confirmWrites: 'strong',
-  includeDeprecated: false,
   dryRun: false,
 };
 

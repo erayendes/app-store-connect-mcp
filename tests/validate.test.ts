@@ -141,7 +141,7 @@ describe('registry execute validation (bad body never reaches Apple)', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     try {
-      const registry = new ToolRegistry({ domains: ['versions'], readOnly: false, includeDeprecated: false });
+      const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'versions').map((o) => o.name), readOnly: false });
       const http = new AscHttpClient(new TokenProvider(creds));
       const bad = goodBody();
       (bad.data.attributes as any).platform = 'ANDROID';

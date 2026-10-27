@@ -208,8 +208,6 @@ export const CURATED: Record<string, string> = {
     'Change a product page experiment — begin or halt it, or adjust its traffic split. Halting it keeps the results readable; deleting does not.',
   'app_store_version_experiments_v2.delete':
     'Delete a product page experiment and its results. Halt it with an update instead if you still want the numbers.',
-  'app_store_version_submissions.delete':
-    'Cancel a pending App Store review submission.',
   'app_store_version_phased_releases.create':
     'Start a phased (gradual) rollout for an approved version, releasing to a growing percentage of users over 7 days.',
   'app_store_version_phased_releases.update':
@@ -221,8 +219,6 @@ export const CURATED: Record<string, string> = {
   'customer_review_responses.delete': 'Delete your response to a customer review.',
   'beta_groups.create':
     'Create a TestFlight beta group. Internal groups are limited to team members; external groups require beta review.',
-  'beta_groups.beta_testers.add':
-    'Add existing beta testers to a TestFlight group.',
   'beta_testers.create':
     'Invite a new TestFlight tester by email and add them to one or more beta groups.',
   'builds.update':
@@ -424,12 +420,6 @@ export const CURATED: Record<string, string> = {
     'Read the reviewer screenshot attached to an in-app purchase.',
 
   // --- store listing screenshots (the ones users usually mean) ------------
-  'app_screenshots.create':
-    'Upload a store listing screenshot: reserve the upload for a screenshot set, then ' +
-    'transfer the image data. These are the screenshots customers see on the App Store page.',
-  'app_screenshot_sets.create':
-    'Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version ' +
-    'localization, then upload screenshots into it.',
 
   // --- asset library (spec 4.5.1) -----------------------------------------
   // One library per app holds images and videos; a placement puts one of them
@@ -483,15 +473,12 @@ interface DescribeInput {
   method: string;
   path: string;
   toolName: string;
-  deprecated: boolean;
 }
 
 /** Builds a readable one-line description for an operation. */
 export function describe(input: DescribeInput): string {
   const curated = CURATED[input.toolName];
-  if (curated) {
-    return input.deprecated ? `${curated} DEPRECATED by Apple.` : curated;
-  }
+  if (curated) return curated;
 
   const parts = input.operationId.split('_');
   const verb = parts.pop() ?? '';
@@ -552,5 +539,5 @@ export function describe(input: DescribeInput): string {
 
   sentence = sentence.replace(/\s+/g, ' ');
 
-  return input.deprecated ? `${sentence} DEPRECATED by Apple.` : sentence;
+  return sentence;
 }

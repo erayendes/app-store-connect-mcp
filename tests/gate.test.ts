@@ -37,6 +37,7 @@ import { META_TOOLS } from '../src/tools/meta.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, TYPED_BY_NAME, type RiskLevel } from '../src/core/risk.js';
 import { loadConfig } from '../src/core/config.js';
 import { CORE_POINTER, createServer, SERVER_INSTRUCTIONS } from '../src/server.js';
+import { PROFILES, resolveSelection } from '../src/profiles.js';
 import { MUTATING_TAILS } from '../scripts/ax-breach.js';
 
 /**
@@ -126,22 +127,25 @@ describe('write-gate annotations (offline)', () => {
       credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'unused' },
       readOnly: false,
       confirmWrites: 'off' as const,
-      includeDeprecated: false,
       dryRun: true,
     };
-    const server = createServer(config);
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-    const client = new Client({ name: 'catalog-test', version: '0' }, { capabilities: {} });
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    // Every macro is served by some profile, with the annotations the catalog gives it.
     const catalogNames = new Set(MACRO_TOOLS.map((t) => t.name));
-    const served = (await client.listTools()).tools.filter((t) => catalogNames.has(t.name));
-    expect(new Set(served.map((t) => t.name))).toEqual(catalogNames);
+    const served = new Map<string, { name: string; annotations?: { readOnlyHint?: boolean } }>();
+    for (const profile of PROFILES) {
+      const server = createServer(config, resolveSelection(profile.name));
+      const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+      const client = new Client({ name: 'catalog-test', version: '0' }, { capabilities: {} });
+      await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+      for (const tool of (await client.listTools()).tools) if (catalogNames.has(tool.name)) served.set(tool.name, tool);
+      await client.close();
+      await server.close();
+    }
+    expect(new Set(served.keys())).toEqual(catalogNames);
     const writes = MACRO_TOOLS.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort();
-    expect(served.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort()).toEqual(writes);
+    expect([...served.values()].filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort()).toEqual(writes);
     expect([...catalogNames].filter((name) => MUTATING_TAILS.has(name)).sort()).toEqual(writes);
     expect(catalogNames.has('pricing__make_offer')).toBe(true);
-    await client.close();
-    await server.close();
   });
 
   it('names only real tools in the default-mode release list', () => {

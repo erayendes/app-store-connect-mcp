@@ -10,7 +10,6 @@ export interface Operation {
   path: string;
   description: string;
   readOnly: boolean;
-  deprecated: boolean;
   pathParams: string[];
   queryParams: Array<{
     name: string;

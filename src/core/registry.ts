@@ -19,17 +19,9 @@ import {
 } from './report-parsing.js';
 
 export interface RegistryOptions {
-  /**
-   * Load exactly these operations (dotted names) and nothing else. Wins over
-   * `domains`, which is why it exists: profiles carry a curated list, and
-   * passing `domains: []` to mean "none" silently loaded the seven defaults
-   * instead (an empty array has no length).
-   */
-  operations?: string[];
-  /** Restrict to these domains. Undefined means the default working set. */
-  domains?: string[];
+  /** Load exactly these operations (dotted names), plus `extraOperations`. */
+  operations: string[];
   readOnly: boolean;
-  includeDeprecated: boolean;
   /**
    * Fallback values for required query params, keyed by Apple's parameter name.
    * Lets a caller configure `ASC_VENDOR_NUMBER` once instead of repeating it on
@@ -37,40 +29,19 @@ export interface RegistryOptions {
    */
   paramDefaults?: Record<string, string>;
   /**
-   * Operations (dotted names) exposed regardless of domain selection. Profiles
+   * Operations (dotted names) exposed beside `operations`. Profiles
    * inject `apps.list`/`apps.get` here: nearly every call needs an app ID, so
    * a profile without them cannot start a conversation.
    */
   extraOperations?: string[];
   /**
-   * Overrides the "not loaded here" remedy sentence for one operation. Profile
-   * mode points at the sibling MCP server (`use the ASC-Monetization server`)
-   * instead of the --domains flag, which is meaningless to a profile user.
+   * The "not loaded here" remedy sentence for one operation: profile mode
+   * points at the sibling MCP server (`use the ASC-Monetization server`).
    */
   missingToolHint?: (op: Operation) => string | undefined;
   /** Mutating calls stop after validation and return what WOULD have been sent. */
   dryRun?: boolean;
 }
-
-/**
- * Loaded when the caller doesn't ask for anything specific.
- *
- * The full spec is 982 operations, which costs well over 100k tokens of tool
- * definitions — more than most context windows can spare. This set covers the
- * everyday release, TestFlight, review and monetization workflows. Game Center
- * alone is 273 tools and is opt-in for that reason.
- */
-export const DEFAULT_DOMAINS = [
-  'meta',
-  'apps',
-  'versions',
-  'builds',
-  'testflight',
-  'reviews',
-  'analytics',
-] as const;
-
-export const ALL_DOMAINS = [...new Set(OPERATIONS.map((o) => o.domain))].sort();
 
 export interface McpToolDefinition {
   name: string;
@@ -328,27 +299,13 @@ export class ToolRegistry {
   private readonly byToolName = new Map<string, Operation>();
 
   constructor(private readonly options: RegistryOptions) {
-    const explicit = options.operations ? new Set(options.operations) : undefined;
-    const requested = options.domains?.length
-      ? options.domains
-      : [...DEFAULT_DOMAINS];
-
-    const wantsAll = !explicit && requested.includes('all');
-    const selected = new Set(requested);
-    const extras = new Set(options.extraOperations ?? []);
-
-    for (const op of OPERATIONS) {
-      const wanted = explicit
-        ? explicit.has(op.name) || extras.has(op.name)
-        : wantsAll || selected.has(op.domain) || extras.has(op.name);
-      if (wanted) this.add(op);
-    }
+    const wanted = new Set([...options.operations, ...(options.extraOperations ?? [])]);
+    for (const op of OPERATIONS) if (wanted.has(op.name)) this.add(op);
   }
 
   /** Returns the public tool name if the operation was added, undefined if filtered out. */
   private add(op: Operation): string | undefined {
     if (MACRO_COVERED[op.name]) return undefined;
-    if (op.deprecated && !this.options.includeDeprecated) return undefined;
     if (this.options.readOnly && !op.readOnly) return undefined;
     this.ops.set(op.name, op);
 
@@ -401,15 +358,6 @@ export class ToolRegistry {
     return [...new Set([...this.ops.values()].map((o) => o.domain))].sort();
   }
 
-  /**
-   * Domains with no loaded operation at all. Only meaningful in domain mode: a
-   * profile loads a curated slice, so a domain can be "loaded" here while most
-   * of its tools are elsewhere.
-   */
-  unloadedDomains(): string[] {
-    const loaded = new Set([...this.ops.values()].map((o) => o.domain));
-    return ALL_DOMAINS.filter((d) => !loaded.has(d));
-  }
 
   /**
    * An app named where an Apple ID belongs.
@@ -460,20 +408,9 @@ export class ToolRegistry {
           0
         );
       }
-      // Deprecation is checked before "not loaded here": a profile now carries a
-      // curated slice of several domains, so a domain being partly loaded says
-      // nothing about one tool. Asking the domain first made every missing tool
-      // look deprecated and sent users to a flag that could not help them.
-      if (known.deprecated && !this.options.includeDeprecated) {
-        throw new AscApiError(
-          `Tool "${name}" is deprecated by Apple and hidden. Restart with --include-deprecated to use it.`,
-          0
-        );
-      }
       throw new AscApiError(
-        `Tool "${name}" is not loaded on this server. ` +
-          `${this.options.missingToolHint?.(known) ??
-            `Restart the server with --domains=${known.domain} (alongside your current domains) to use it.`}`,
+        `Tool "${name}" is not loaded on this server.` +
+          `${this.options.missingToolHint?.(known) ? ` ${this.options.missingToolHint(known)}` : ''}`,
         0
       );
     }

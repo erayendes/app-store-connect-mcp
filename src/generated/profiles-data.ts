@@ -421,25 +421,6 @@ export const PROFILE_DATA: GeneratedProfile[] = [
   },
 ];
 
-/** In no profile on purpose (reverse reads); reachable only with --domains. */
-export const PROFILELESS: string[] = ["beta_app_localizations.app.get","beta_app_review_details.app.get","beta_build_localizations.build.get","beta_groups.app.get","beta_license_agreements.app.get","build_beta_details.build.get","pre_release_versions.app.get"];
-
-/** One direction of a relationship pair, dropped for its twin (operation -> twin). */
-export const TWIN_OF: Record<string, string> = {
-  "app_store_versions.app_clip_default_experience.set": "app_clip_default_experiences.release_with_app_store_version.set",
-  "beta_groups.beta_testers.add": "beta_testers.beta_groups.add",
-  "beta_groups.beta_testers.remove": "beta_testers.beta_groups.remove",
-  "beta_testers.apps.remove": "apps.beta_testers.remove",
-  "beta_testers.builds.add": "builds.individual_testers.add",
-  "beta_testers.builds.remove": "builds.individual_testers.remove",
-  "builds.beta_groups.add": "beta_groups.builds.add",
-  "builds.beta_groups.remove": "beta_groups.builds.remove",
-  "game_center_achievements_v2.activity.set": "game_center_activities.achievements_v2.add",
-  "game_center_leaderboards_v2.activity.set": "game_center_activities.leaderboards_v2.add",
-  "game_center_leaderboards_v2.challenge.set": "game_center_challenges.leaderboard_v2.set",
-  "in_app_purchase_contents.get": "in_app_purchases_v2.content.get",
-};
-
 /** Operations a hand-written macro replaces outright (operation -> macro). */
 export const MACRO_COVERED: Record<string, string> = {
   "app_asset_libraries.get": "media__list",
