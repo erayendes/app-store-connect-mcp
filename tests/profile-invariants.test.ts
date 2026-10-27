@@ -458,7 +458,7 @@ describe('counts — curation output, not something that drifts on its own', () 
     );
     // 811 CSV rows - 7 profile-less ones. Not a count of distinct tools:
     // a few entry reads deliberately sit in more than one slice.
-    expect(tools.length).toBe(804);
+    expect(tools.length).toBe(805);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 18 storekit, 3 reviews_ai, 8 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 3

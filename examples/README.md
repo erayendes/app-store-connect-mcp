@@ -20,7 +20,7 @@ so every pack below counts it.
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `core` + `distribution` + `general` | 145 |
+| Release manager | `core` + `distribution` + `general` | 146 |
 | ASO / marketing | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 98 |
 | Monetization | `core` + `monetization` | 178 |
@@ -201,7 +201,7 @@ taşımıyor; bu yüzden aşağıdaki her paket onu da sayar.
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `core` + `distribution` + `general` | 145 |
+| Yayın yöneticisi | `core` + `distribution` + `general` | 146 |
 | ASO / pazarlama | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 98 |
 | Monetizasyon | `core` + `monetization` | 178 |

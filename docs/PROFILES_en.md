@@ -12,7 +12,7 @@ Next to whatever you pick, setup registers **ASC-Core**: finding your apps, sear
 | `analytics` | `ASC-Analytics` | Sales and reports | 19 | — |
 | `app-clips` | `ASC-AppClips` | App Clips | 34 | — |
 | `background-assets` | `ASC-BackgroundAssets` | Downloadable content | 13 | — |
-| `distribution` | `ASC-Distribution` | Releases | 80 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
+| `distribution` | `ASC-Distribution` | Releases | 81 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | App details | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Store page and reviews | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
@@ -71,7 +71,7 @@ A quick answer to "Which profiles should I install?" The counts include ASC-Core
 
 | Role | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `general` | 145 |
+| Release manager | `distribution` + `general` | 146 |
 | ASO / marketing | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 98 |
 | Monetization | `monetization` | 178 |
@@ -223,7 +223,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `background_assets__versions__list` — Lists every version of a background asset
 - `release__submit_items` — Sends a background asset version to review
 
-### `distribution` · 80 tools
+### `distribution` · 81 tools
 
 **Server:** `ASC-Distribution` · **Key role:** App Manager
 
@@ -257,7 +257,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `app_store_review_details__update` — Updates the review contact and access details
 - `app_store_versions__app_store_review_detail__get` — Fetches a version's review contact and access details
 
-#### `distribution:builds` · 13 tools
+#### `distribution:builds` · 14 tools
 
 **What is inside:** Uploaded builds: upload sessions, bundles, file sizes, build details.
 
@@ -273,6 +273,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `builds__icons__list` — Lists a build's icons
 - `builds__list` — Lists uploaded builds
 - `builds__update` — Expires a build or records its encryption answer
+- `testflight__wait_for_build` — Waits for an uploaded build to finish processing and says whether it is valid
 
 #### `distribution:dma-distribution` · 25 tools
 

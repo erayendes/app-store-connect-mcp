@@ -104,7 +104,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "builds",
       operations: ["apps.build_uploads.list","build_bundles.build_bundle_file_sizes.list","build_upload_files.update","build_uploads.get","builds.app.get","builds.app_store_version.get","builds.get","builds.icons.list","builds.list","builds.update"],
-      manualTools: [],
+      manualTools: ["testflight__wait_for_build"],
       rootResources: ["apps","build_bundles","build_upload_files","build_uploads","builds"],
     },
     {

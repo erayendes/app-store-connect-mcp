@@ -12,7 +12,7 @@ Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı 
 | `analytics` | `ASC-Analytics` | Satış ve raporlar | 19 | — |
 | `app-clips` | `ASC-AppClips` | App Clip'ler | 34 | — |
 | `background-assets` | `ASC-BackgroundAssets` | İndirilebilir içerik | 13 | — |
-| `distribution` | `ASC-Distribution` | Sürümler ve yayın | 80 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
+| `distribution` | `ASC-Distribution` | Sürümler ve yayın | 81 | app-encryption, app-review-information, builds, dma-distribution, phased-releases, publish, version |
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | Uygulama bilgileri | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Mağaza sayfası ve yorumlar | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
@@ -71,7 +71,7 @@ Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçl
 
 | Rol | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `general` | 145 |
+| Yayın yöneticisi | `distribution` + `general` | 146 |
 | ASO / pazarlama | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 98 |
 | Monetizasyon | `monetization` | 178 |
@@ -223,7 +223,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `background_assets__versions__list` — Bir arka plan varlığına ait tüm sürümleri listeler
 - `release__submit_items` — Background asset sürümünü incelemeye gönderir
 
-### `distribution` · 80 araç
+### `distribution` · 81 araç
 
 **Sunucu:** `ASC-Distribution` · **Anahtar rolü:** App Manager
 
@@ -257,7 +257,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `app_store_review_details__update` — İnceleme iletişim ve erişim bilgilerini günceller
 - `app_store_versions__app_store_review_detail__get` — Sürümün inceleme iletişim ve erişim bilgilerini getirir
 
-#### `distribution:builds` · 13 araç
+#### `distribution:builds` · 14 araç
 
 **İçinde ne var:** Yüklenen build'ler: yükleme kayıtları, paketler, dosya boyutları, build ayrıntıları.
 
@@ -273,6 +273,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `builds__icons__list` — Build'in simgelerini listeler
 - `builds__list` — Yüklenmiş build'leri listeler
 - `builds__update` — Build'in süresini bitirir veya şifreleme cevabını kaydeder
+- `testflight__wait_for_build` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
 
 #### `distribution:dma-distribution` · 25 araç
 
