@@ -10,33 +10,64 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ### [3.0.0-beta.1] — 2026-10-26
 
-The first beta of 3.0. The first number changed because your AI app's settings need to change too: profile names are new, and so are some server names. You run `setup` once and pick your profiles again.
+Hi,
 
-**Profiles follow the work you do.** The profiles were cut again from scratch. There are 13 to pick from, and 50 sub-profiles: `general` replaces `app-info`, sandbox accounts moved to `access:sandbox`, beta groups and testers to `testflight`, and the money tools split into `monetization:subscription`, `in-app-purchases`, `subscription-offers`, `transactions` and more. [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) lists every profile and sub-profile, with every tool in it ([#187](https://github.com/erayendes/app-store-connect-mcp/pull/187)).
+3.0 is the biggest change I have made since I started building Heimdall. Through 2.x, as the tool count grew, we had to pile everything together. To keep tools reachable, the same ones were repeated on every server. And putting a single screenshot in place took five steps. In 3.0 I rebuilt all of this from scratch. More done with fewer tools, safer changes in fewer steps.
 
-**ASC-Core.** Finding your apps, searching every tool and the screenshot and video tools used to be copied into every server. Now they are one server of their own, `ASC-Core`, which setup registers next to your profiles in each AI app. If one of your Heimdall servers in an AI app is read-only, ASC-Core is too. Setup doesn't add ASC-Core to an AI app, and says why, when it can't show that ASC-Core would sign in as the same account: the servers there use different App Store Connect accounts, one of them carries credentials of its own (in its `env`, or through an `envFile`), or that AI app's settings can't be read in full. An AI app that runs only one server can fold ASC-Core in with `--with-core`; the Xcode plug-ins do. With every profile registered, the AI reads nearly a fifth fewer tokens of tool descriptions than before.
+**Profiles and sub-profiles**
+There are now 13 profiles and 50 sub-profiles: `general`, `distribution`, `marketing`, `monetization`, `testflight`, `access` and more.
 
-**Four tools for every screenshot, video, image and file.** `media__list`, `media__upload`, `media__arrange` and `media__delete` work through your app's image and video library on the version page, custom product pages, product page tests and in-app events. Upload a file and place it in one step, reorder or remove it, set a video's poster frame, archive or rename it. Deleting checks that every file belongs to that app and page before it deletes any, and asks you once. They replace the `listing__*` screenshot and library tools, and the temporary `marketing:asset-library` sub-profile is gone ([#189](https://github.com/erayendes/app-store-connect-mcp/pull/189)).
+`general` replaces `app-info`, as in App Store Connect.
 
-The same tools now also take the other images and files App Store Connect holds: App Clip header and advanced experience images, Game Center achievement, leaderboard, leaderboard set, activity and challenge images, in-app purchase and subscription images and review screenshots, export compliance documents, App Review attachments, routing coverage, background asset files and build upload files. Each upload checks the file and who owns it before anything is sent, and an owner that holds one file is only replaced when you ask for it. The 73 raw tools they replace for these files are no longer listed, and `distribution:routing-coverage` is gone. Every target and its rules: [Media targets](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/MEDIA_TARGETS_en.md) ([#191](https://github.com/erayendes/app-store-connect-mcp/pull/191)).
+Big profiles have more sub-profiles, so you can pick fewer tools. For example, `monetization:subscription` and `monetization:subscription-offers` are 64 tools, where all of `monetization` is 152.
 
-**Send anything to review in one call.** `release__submit_items` submits in-app purchases, subscriptions, in-app events, custom product pages, product page tests, Game Center items and background assets. It reads what is already in the submission, lists every item before you confirm, and can add the app's version when the item has to go with it, as an app's first subscription does. `release__submit` still sends an App Store version ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+Every profile and sub-profile, with every tool in it, is on the [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) page.
 
-**Subscriptions and in-app purchases use Apple's new (v2) tools only.** Apple retired the old localization, image and submission tools in its 4.4.1 API, and Heimdall no longer serves them; `--include-deprecated` brings them back. `preflight__check_subscription` now checks the draft version. Creating a new version of a subscription or in-app purchase asks you first ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+**Shared tools in one place: `ASC-Core`**
+Some tools Heimdall can't work without, such as finding your apps and searching the tools.
 
-**`asc__load` is gone.** A server started with some of its sub-profiles still reads the rest through `asc__call`. For the tools themselves, the AI runs the `register` command the server names, with your yes.
+They used to be installed again under every profile.
 
-**Only what you can use is in the package.** The 185 operations Apple has deprecated or replaced are no longer built, and `--include-deprecated` is gone. So are the 19 that only repeat another operation from the other side or that no task needs. Heimdall now always runs with a profile: `--domains` and the combined server you got with no profile are gone, and a server started without a profile shows one tool telling the AI to run setup and to delete that entry.
+Now they live in one server, `ASC-Core`, which comes with the install: setup adds `ASC-Core` next to your profiles on its own.
 
-**Confirmations reach you in Claude Code.** Claude Code says it can show Heimdall's confirmation form, but its desktop Code tab turned every one down without showing it, so risky changes failed without a word. On a Mac, Heimdall now asks Claude Code in its own dialog, which the AI can neither see nor answer. The dialog says the change in words ("Remove a screenshot from the App Store page?"), names the app, page and files without IDs, and its button says what it does: Remove, Delete, Upload.
+So even with every profile installed, the tool descriptions the AI reads take nearly a fifth less space.
 
-**Try it.** Run `npx -y @erayendes/asc-mcp@beta setup` and pick your profiles again; old names are not carried over (`app-info` is now `general`). Setup removes the entries whose profile no longer exists when they are Heimdall's own and carry no credentials or `envFile` of their own; others it lists and leaves alone. It moves the entries you keep to the beta and adds ASC-Core. Until then, a server whose settings still name an old profile shows one tool telling the AI to run setup.
+**Four tools for images, videos and files**
+App Store Connect's latest update added the Assets Library to its menu.
 
-**Your permission rules need the new names.** Rules in your AI app that allow Heimdall tools by server name, such as `mcp__ASC-AppInfo__*` or `mcp__ASC-Marketing__listing__upload_asset`, no longer match: `ASC-AppInfo` is now `ASC-General`, app lookup and the media tools live in `ASC-Core`, and the media tools have new names. Your AI app will ask again for those tools until you update the rules.
+Now `media__list`, `media__upload`, `media__arrange` and `media__delete` manage every image, video and file in App Store Connect: product page, custom product page, product page optimization, in-app events, Game Center, App Clip, subscription and in-app purchase images, review attachments, background assets, build files… Everything!
 
-**Going back.** Run `npx -y @erayendes/asc-mcp@2.8.0 setup` and pick your profiles again. If an `ASC-Core` entry or another 3.0 name is left in an AI app, delete it from that app's MCP settings.
+That retires 73 raw tools and the old `listing__*` tools. A huge gain in efficiency.
 
-Heimdall now has 751 tools.
+**Send everything to review in one call**
+With `release__submit_items`, send in-app purchases, subscriptions, in-app events, custom product pages, product page tests, Game Center items and background assets in one go.
+
+Don't worry: it lists every item before it sends.
+
+**Clearer confirmations**
+In apps that can't show the confirmation form (like the Code tab in Claude Desktop), Heimdall opens its own window on a Mac. The AI can neither see that window nor press it.
+
+<!-- SCREENSHOT: the new confirmation dialog -->
+
+The window asks what will happen in one sentence: "Remove a screenshot from the App Store page?" Below it are the app, the page and the files by name, with no IDs. And the button says what it does: Remove, Delete, Upload.
+
+**Subscriptions and in-app purchases use Apple's new (v2) tools**
+The 185 old operations Apple has deprecated are no longer in the package, and `--include-deprecated` is gone.
+
+**What to do when you switch**
+Run `npx -y @erayendes/asc-mcp@beta setup` once and pick your profiles again.
+
+Setup clears out the entries whose profile no longer exists and adds `ASC-Core`.
+
+Heimdall now always runs with a profile. If you have an old entry added without one, delete it from your AI app's settings; setup leaves it alone.
+
+If your AI app has rules that allow Heimdall tools by server name (such as `mcp__ASC-AppInfo__*`), update them to the new names. Until you do, those tools ask for approval again. Not a big deal :)
+
+`asc__load` is gone. For a missing tool, the AI suggests the `register` command to you.
+
+To go back to 2.x, `npx -y @erayendes/asc-mcp@2.8.0 setup` is all it takes.
+
+Heimdall now has 751 tools. If you see anything odd during the beta, I'd love to hear about it.
 
 ### [2.8.0] — 2026-10-26
 
@@ -294,33 +325,64 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ### [3.0.0-beta.1] — 2026-10-26
 
-3.0'ın ilk betası. İlk sayı değişti, çünkü yapay zekâ uygulamanızın ayarlarının da değişmesi gerekiyor: profil adları yeni, bazı sunucu adları da. `setup`'ı bir kez çalıştırıp profillerinizi yeniden seçersiniz.
+Selam,
 
-**Profiller yaptığınız işe göre.** Profiller baştan yeniden bölündü. Seçebileceğiniz 13 profil ve 50 alt profil var: `app-info`'nun yerini `general` aldı, sandbox hesapları `access:sandbox`'a, beta grupları ve testçiler `testflight`'a taşındı, gelirle ilgili araçlar da `monetization:subscription`, `in-app-purchases`, `subscription-offers`, `transactions` gibi parçalara ayrıldı. [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfası her profili ve alt profili, içindeki bütün araçlarla listeliyor ([#187](https://github.com/erayendes/app-store-connect-mcp/pull/187)).
+3.0, Heimdall'ı geliştirmeye başladığımdan beri yaptığım en büyük değişiklik. 2.x boyunca araç sayısı arttıkça her şeyi bir araya yığmak zorunda kalmıştık. Erişebilirliği artırmak için aynı araçlar her sunucuda tekrar ediyordu. Ya da bir ekran görüntüsünü yerine koymak bile beş adım sürüyordu. 3.0'da bunları baştan kurdum. Daha az araçla daha çok iş, daha az adımla daha güvenli değişiklik.
 
-**ASC-Core.** Uygulamalarınızı bulmak, bütün araçlarda aramak, ekran görüntüsü ve video araçları önceden her sunucuya ayrı ayrı kopyalanıyordu. Artık kendi başlarına tek bir sunucu: `ASC-Core`. Setup onu her yapay zekâ uygulamasında profillerinizin yanına kaydediyor. Bir yapay zekâ uygulamasındaki Heimdall sunucularınızdan biri salt okunursa ASC-Core da salt okunur oluyor. ASC-Core'un aynı hesapla oturum açacağını gösteremediği yerde setup onu eklemiyor ve nedenini söylüyor: oradaki sunucular farklı App Store Connect hesapları kullanıyorsa, biri kendi kimlik bilgilerini taşıyorsa (`env` içinde ya da bir `envFile` ile) ya da o yapay zekâ uygulamasının ayarları tam okunamıyorsa. Tek sunucu çalıştırabilen bir yapay zekâ uygulaması ASC-Core'u `--with-core` ile profilin içine alabiliyor; Xcode eklentileri böyle yapıyor. Bütün profiller kayıtlıyken yapay zekânın okuduğu araç açıklamaları öncekinden beşte bire yakın daha az token tutuyor.
+**Profiller ve Alt profiller**
+Artık 13 profil ve 50 alt profil var: `general`, `distribution`, `marketing`, `monetization`, `testflight`, `access` ve diğerleri.
 
-**Her ekran görüntüsü, video, görsel ve dosya için dört araç.** `media__list`, `media__upload`, `media__arrange` ve `media__delete`; sürüm sayfasında, özel ürün sayfalarında, ürün sayfası denemelerinde ve uygulama içi etkinliklerde uygulamanızın görsel ve video kütüphanesi üzerinden çalışıyor. Bir dosyayı yükleyip tek adımda yerleştirebilir, sıralayabilir, kaldırabilir, bir videonun kapak karesini seçebilir, arşivleyebilir ya da yeniden adlandırabilirsiniz. Silmeden önce her dosyanın o uygulamaya ve sayfaya ait olduğunu kontrol ediyor ve size bir kez soruyor. `listing__*` ekran görüntüsü ve kütüphane araçlarının yerini aldılar; geçici `marketing:asset-library` alt profili de kalktı ([#189](https://github.com/erayendes/app-store-connect-mcp/pull/189)).
+`app-info`'nun yerini App Store Connect'teki gibi `general` aldı.
 
-Aynı araçlar artık App Store Connect'teki diğer görselleri ve dosyaları da alıyor: App Clip başlık ve gelişmiş deneyim görselleri; Game Center başarım, sıralama tablosu, tablo seti, etkinlik ve meydan okuma görselleri; uygulama içi satın alma ve abonelik görselleri ile inceleme ekran görüntüleri; ihracat uyumluluğu belgeleri, App Review ekleri, yol tarifi kapsamı, background asset dosyaları ve build yükleme dosyaları. Her yükleme, hiçbir şey gönderilmeden önce dosyayı ve sahibini kontrol ediyor; tek dosya tutan bir sahibin dosyası ancak siz isterseniz değiştiriliyor. Bu dosyalar için yerini aldıkları 73 ham araç artık listelenmiyor, `distribution:routing-coverage` da kalktı. Bütün hedefler ve kuralları: [Medya hedefleri](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/MEDIA_TARGETS_tr.md) ([#191](https://github.com/erayendes/app-store-connect-mcp/pull/191)).
+Büyük profillerin alt profil sayısı arttı. Böylece daha az araç seçebilirsiniz. Örneğin `monetization:subscription` ve `monetization:subscription-offers` 64 araç, `monetization`'ın tamamı ise 152.
 
-**Her şeyi tek çağrıyla incelemeye gönderin.** `release__submit_items`; uygulama içi satın almaları, abonelikleri, uygulama içi etkinlikleri, özel ürün sayfalarını, ürün sayfası denemelerini, Game Center öğelerini ve background asset'leri gönderiyor. Başvuruda zaten ne olduğunu okuyor, onaylamadan önce her öğeyi listeliyor ve öğenin sürümle gitmesi gerekiyorsa (bir uygulamanın ilk aboneliği gibi) uygulamanın sürümünü de ekleyebiliyor. App Store sürümünü göndermek için yine `release__submit` var ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+Her profil ve alt profil, içindeki bütün araçlarla [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfasında.
 
-**Abonelikler ve uygulama içi satın almalar yalnızca Apple'ın yeni (v2) araçlarıyla.** Apple eski dil, görsel ve gönderim araçlarını 4.4.1 API'sinde kullanımdan kaldırdı; Heimdall da artık onları sunmuyor. `--include-deprecated` geri getiriyor. `preflight__check_subscription` artık taslak sürümü kontrol ediyor. Bir aboneliğin ya da uygulama içi satın almanın yeni sürümünü oluşturmak önce size soruyor ([#188](https://github.com/erayendes/app-store-connect-mcp/pull/188)).
+**Ortak araçlar tek yerde: `ASC-Core`**
+Heimdall'ın çalışması için gereken uygulama bulma, araç arama gibi bazı olmazsa olmaz araçlar var.
 
-**`asc__load` kalktı.** Alt profillerinin bir kısmıyla başlatılan bir sunucu, geri kalanını yine `asc__call` ile okuyabiliyor. Araçların kendisi için yapay zekâ, sunucunun söylediği `register` komutunu sizin onayınızla çalıştırıyor.
+Önceden bu araçlar her bir profilin altında defalarca kuruluyordu.
 
-**Pakette yalnızca kullanılabilenler var.** Apple'ın kullanımdan kaldırdığı ya da yenisiyle değiştirdiği 185 işlem artık pakete girmiyor; `--include-deprecated` de kalktı. Başka bir işlemi öbür taraftan tekrarlayan ya da hiçbir işte gerekmeyen 19 işlem de çıktı. Heimdall artık her zaman bir profille çalışıyor: `--domains` ve profil verilmeden açılan birleşik sunucu kalktı. Profilsiz başlatılan bir sunucu, yapay zekâya setup'ı çalıştırmasını ve o kaydı silmesini söyleyen tek bir araç gösteriyor.
+Bunlar tek bir sunucuda `ASC-Core` altında toplandı ve kurulumda varsayılan olarak geliyor. Yani Setup, `ASC-Core`'u profillerinizin yanına kendiliğinden ekliyor.
 
-**Onaylar Claude Code'da size ulaşıyor.** Claude Code, Heimdall'ın onay formunu gösterebildiğini söylüyor; ama masaüstündeki Code sekmesi formu göstermeden reddediyordu ve riskli değişiklikler sessizce başarısız oluyordu. Heimdall artık Mac'te Claude Code'a kendi penceresiyle soruyor; yapay zekâ bu pencereyi ne görebiliyor ne de cevaplayabiliyor. Pencere değişikliği açık bir cümleyle söylüyor ("Remove a screenshot from the App Store page?"), uygulamayı, sayfayı ve dosyaları ID'siz gösteriyor; düğmesi de ne yapacağını söylüyor: Remove, Delete, Upload.
+Böylece, bütün profiller kurulu olsa bile yapay zekânın okuduğu araç açıklamaları beşte bire yakın daha az yer tutuyor.
 
-**Denemek için** `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırıp profillerinizi yeniden seçin; eski adlar taşınmıyor (`app-info` artık `general`). Setup, profili artık olmayan kayıtları Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siliyor; diğerlerini listeleyip olduğu gibi bırakıyor. Tuttuğunuz kayıtları betaya geçiriyor ve ASC-Core'u ekliyor. O zamana kadar ayarlarında eski bir profil adı geçen bir sunucu, yapay zekâya setup'ı çalıştırmasını söyleyen tek bir araç gösteriyor.
+**Görseller, videolar ve dosyalar için dört araç**
+Yeni App Store Connect güncellemesiyle menüye Assets Library eklendi.
 
-**İzin kurallarınızın yeni adlara geçmesi gerekiyor.** Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren `mcp__ASC-AppInfo__*` ya da `mcp__ASC-Marketing__listing__upload_asset` gibi kurallar artık eşleşmiyor: `ASC-AppInfo` artık `ASC-General`, uygulama bulma ve medya araçları `ASC-Core`'da, medya araçlarının adları da değişti. Kuralları güncelleyene kadar yapay zekâ uygulamanız bu araçlar için yeniden onay isteyecek.
+Artık `media__list`, `media__upload`, `media__arrange` ve `media__delete`, App Store Connect'teki her görseli, videoyu ve dosyayı yönetiyor. product page, custom product page, product page optimization, in-app events, Game Center, App Clip, abonelik ve satın alma görselleri, inceleme ekleri, background asset'ler, build dosyaları… Her şey!
 
-**Geri dönmek için** `npx -y @erayendes/asc-mcp@2.8.0 setup` komutunu çalıştırıp profillerinizi yeniden seçin. Bir yapay zekâ uygulamasında `ASC-Core` ya da başka bir 3.0 adı kalırsa onu o uygulamanın MCP ayarlarından silin.
+Böylece 73 ham araç ve eski `listing__*` araçları kalktı. Muazzam bir verimlilik.
 
-Heimdall artık 751 araç içeriyor.
+**Her şeyi tek çağrıyla incelemeye gönderin**
+`release__submit_items` ile uygulama içi satın almaları, abonelikleri, etkinlikleri, özel ürün sayfalarını, ürün sayfası testlerini, Game Center öğelerini ve background asset'leri tek seferde gönderin.
+
+Merak etmeyin, göndermeden önce hepsini tek tek listeliyor.
+
+**Onaylar daha anlaşılır**
+Onay formu gösteremeyen uygulamalarda (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresini açıyor. Yapay zekâ bu pencereyi ne görebiliyor ne de basabiliyor.
+
+<!-- EKRAN GÖRÜNTÜSÜ: yeni onay penceresi -->
+
+Pencere ne olacağını tek cümleyle soruyor: "Remove a screenshot from the App Store page?" Altında uygulama, sayfa ve dosyalar adlarıyla yazıyor; ID yok. Düğme de ne yapacağını söylüyor: Remove, Delete, Upload.
+
+**Abonelikler ve satın almalar Apple'ın yeni (v2) araçlarıyla**
+Apple'ın kullanımdan kaldırdığı 185 eski işlem artık pakette yok; `--include-deprecated` de kalktı.
+
+**Geçerken yapmanız gerekenler**
+`npx -y @erayendes/asc-mcp@beta setup` komutunu bir kez çalıştırıp profillerinizi yeniden seçin.
+
+Setup, artık var olmayan profillerin kayıtlarını temizliyor ve `ASC-Core`'u ekliyor.
+
+Heimdall artık her zaman bir profille çalışıyor. Profil vermeden eklenmiş eski bir kaydınız varsa onu yapay zekâ uygulamanızın ayarlarından silin; setup ona dokunmuyor.
+
+Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren kurallar varsa (`mcp__ASC-AppInfo__*` gibi), yeni adlara göre güncelleyin. Güncellemezseniz bu araçlar için yeniden onay istenir. Çok da konu değil :)
+
+`asc__load` kalktı. Eksik araçlar için yapay zekâ size `register` komutunu öneriyor.
+
+2.x'e dönmek isterseniz `npx -y @erayendes/asc-mcp@2.8.0 setup` yeterli.
+
+Heimdall artık 751 araç içeriyor. Beta sürecinde gördüğünüz her tuhaflığı yazarsanız çok sevinirim.
 
 ### [2.8.0] — 2026-10-26
 
