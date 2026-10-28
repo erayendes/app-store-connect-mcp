@@ -150,7 +150,7 @@ export const TESTFLIGHT_TOOLS: McpToolDefinition[] = [{
   },
   annotations: { readOnlyHint: true, idempotentHint: true },
 }, {
-  name: 'testflight__wait_for_build',
+  name: 'build__wait_for_processing',
   description:
     'Wait until an uploaded build finishes processing, then say whether it is VALID — the step ' +
     'between an upload and assigning testers or submitting. Give the app and the build number ' +
@@ -214,7 +214,7 @@ export async function executeTestflightTool(
   ctx: { http: AscHttpClient; dryRun?: boolean; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal; progress?: Progress }
 ): Promise<unknown> {
   if (name === 'testflight__assign_build_to_groups') return assignBuildToGroups(args, ctx);
-  if (name === 'testflight__wait_for_build') return waitForBuild(args, ctx);
+  if (name === 'build__wait_for_processing') return waitForBuild(args, ctx);
   if (name !== 'testflight__feedback_digest') throw new Error(`Unknown TestFlight tool: ${name}`);
   if (typeof args.app !== 'string' || !args.app.trim()) throw new AscApiError('"app" is required.', 0);
   const days = args.days ?? 14;

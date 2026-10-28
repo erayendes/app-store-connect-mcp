@@ -273,7 +273,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `builds__icons__list` — Lists a build's icons
 - `builds__list` — Lists uploaded builds
 - `builds__update` — Expires a build or records its encryption answer
-- `testflight__wait_for_build` — Waits for an uploaded build to finish processing and says whether it is valid
+- `build__wait_for_processing` — Waits for an uploaded build to finish processing and says whether it is valid
 
 #### `distribution:dma-distribution` · 25 tools
 
@@ -1226,7 +1226,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `pre_release_versions__get` — Fetches a pre-release version
 - `pre_release_versions__list` — Lists pre-release versions
 - `testflight__assign_build_to_groups` — Gives a processed build to the chosen groups
-- `testflight__wait_for_build` — Waits for an uploaded build to finish processing and says whether it is valid
+- `build__wait_for_processing` — Waits for an uploaded build to finish processing and says whether it is valid
 
 #### `testflight:testers` · 18 tools
 
