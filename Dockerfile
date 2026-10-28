@@ -20,7 +20,7 @@
 # Generated rather than pasted. The literal that used to sit here was inert, and it was
 # still a PEM in a public repository: every secret scanner flags one, and a reader has to
 # take "throwaway" on trust. A fresh key per build costs nothing and claims nothing.
-FROM node:26-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a
+FROM node:26-alpine@sha256:6f08a523443ddedf52941874c203475b0ad503e859ad70cb26ab8be9a517dbd5
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
