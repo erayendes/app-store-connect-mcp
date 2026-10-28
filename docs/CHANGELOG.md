@@ -8,21 +8,37 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [3.0.0-beta.2] — 2026-10-27
+### [3.0.0-beta.2] — 2026-10-28
 
-**StoreKit catches up with Apple.** Nine new App Store Server API tools: extend renewal dates for every subscriber of a product at once, answer a refund's consumption request, link a purchase to your own account ID, finish a transaction, read the app transaction and a test notification's delivery, and set up retention messaging. Each one that touches a purchase or billing asks you to type CONFIRM, and changing the message customers see while cancelling asks yes or no. Transactions now arrive verified against Apple's own root, shipped with Heimdall, with nothing to configure; subscription statuses and the entitlement check return verified fields too, where they used to hand back Apple's signed envelopes (`raw: true` still returns them). A weekly check fails as soon as Apple's library gains a method no tool wraps.
+Hi,
 
-**A record of what changed.** Every write Heimdall carries out, or that you turn down, goes into `audit.jsonl` on your machine: when, which tool, its risk level, how you confirmed it or why it did not run, and Apple's answer. Dry-run calls are not recorded. Calls Apple refuses go into `failures.jsonl` with the request ID Apple support asks for. Of what each call was given, only names, IDs, codes and numbers are recorded; text, URLs and request bodies are left out, and keys and tokens are masked. `ASC_STATE_DIR` moves both files.
+The second beta, a day after the first. This time it's about StoreKit, keeping a record and the confirmations.
 
-**New one-call workflows.** `pricing__setup_subscription` builds a whole subscription under one confirmation: group, subscription, languages, countries and price. `build__wait_for_processing` waits until an uploaded build is processed. `testflight__feedback_digest` can attach the newest tester screenshots as images. `preflight__check_version` lists the steps only App Store Connect can do (App Privacy, EU trader status, agreements), and a `getting-started` prompt walks a new user through the first steps.
+**Nine new StoreKit tools**
+Push back the renewal date for every subscriber at once after an outage, send Apple the usage details for a refund request, set the message customers see when they're about to cancel. Every tool that touches a purchase or billing asks for CONFIRM.
 
-**Clearer confirmations.** A confirmation now asks about the thing by name, says values in words (countries, periods, roles) instead of codes and IDs, and ends with what the change really does. Prices, StoreKit, submissions and TestFlight have dialogs written for them. On a Mac the confirmation is now a panel of its own instead of the narrow system alert: the question in bold, the facts lined up, and what the change does set apart above the buttons.
+Transactions, subscription statuses and the entitlement check now arrive with Apple's signature verified, with nothing to set up.
+
+**What changed, and who did it**
+Every write Heimdall makes, or that you turn down, goes into `audit.jsonl` on your machine.
+
+Each line says which tool ran, how it was confirmed and what Apple answered.
+
+Calls Apple refuses go into `failures.jsonl`, with the request ID Apple support asks for.
+
+Text, URLs and request bodies aren't recorded, and keys are masked.
+
+**New one-call jobs**
+`pricing__setup_subscription` sets up a subscription with its group, languages, countries and price under one confirmation. `build__wait_for_processing` waits until an uploaded build is processed, in both `testflight` and `distribution`. `testflight__feedback_digest` brings back testers' screenshots as well.
+
+**Confirmations you can read**
+The confirmation window on a Mac was rebuilt; the old one was hard to read. The question is in bold, the details line up, and what the change does sits right above the buttons. No IDs, no codes like `ONE_MONTH` or `TUR`: countries, periods and names are written out.
 
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
-**Smaller things.** Sales and finance reports for finished periods are cached on your machine, kept apart per key. An analytics report with no rows says that is not a confirmed zero. The in-app event state filter says that an ended event is PAST, not ARCHIVED.
+Replying to a customer review now asks for your confirmation before the reply goes out.
 
-Heimdall now has 762 tools.
+Heimdall now has 762 tools. Tell me about anything odd you run into :)
 
 ### [3.0.0-beta.1] — 2026-10-27
 
@@ -339,21 +355,37 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [3.0.0-beta.2] — 2026-10-27
+### [3.0.0-beta.2] — 2026-10-28
 
-**StoreKit Apple'a yetişti.** Dokuz yeni App Store Server API aracı: bir ürünün tüm abonelerinin yenileme tarihini tek seferde ileri almak, bir iadenin tüketim talebini yanıtlamak, bir satın almayı kendi hesap kimliğinize bağlamak, bir işlemi tamamlamak, uygulama işlemini ve deneme bildiriminin teslimini okumak, elde tutma mesajlarını kurmak. Satın almaya ya da faturalandırmaya dokunan her biri CONFIRM yazmanızı ister; iptal eden müşteriye gösterilen mesajı değiştirmek de evet ya da hayır diye sorar. İşlemler artık hiçbir ayar gerekmeden, Heimdall'ın içinde gelen Apple kök sertifikasıyla doğrulanmış olarak gelir; abonelik durumları ve kullanım hakkı kontrolü de Apple'ın imzalı zarfları yerine doğrulanmış alanlar döndürür (`raw: true` zarfları yine verir). Apple'ın kütüphanesine hiçbir aracın karşılamadığı bir metot eklendiğinde haftalık bir kontrol hemen uyarır.
+Selam,
 
-**Neyin değiştiğinin kaydı.** Heimdall'ın yaptığı ya da sizin reddettiğiniz her yazma bilgisayarınızdaki `audit.jsonl` dosyasına girer: ne zaman, hangi araç, risk seviyesi, nasıl onayladığınız ya da neden çalışmadığı, Apple'ın cevabı. Dry-run çağrıları kaydedilmez. Apple'ın reddettiği çağrılar, Apple desteğinin ilk istediği request ID ile `failures.jsonl` dosyasına girer. Çağrıya verilenlerden yalnızca adlar, kimlikler, kodlar ve sayılar kaydedilir; metinler, URL'ler ve istek gövdeleri kaydedilmez, anahtarlar ve token'lar maskelenir. `ASC_STATE_DIR` iki dosyanın yerini değiştirir.
+Beta.1'den bir gün sonra ikinci beta. Bu sefer odakta StoreKit, kayıtlar ve onaylar var.
 
-**Tek çağrılık yeni iş akışları.** `pricing__setup_subscription` bir aboneliği tek onayla baştan kurar: grup, abonelik, diller, ülkeler ve fiyat. `build__wait_for_processing` yüklenen build işlenene kadar bekler. `testflight__feedback_digest` testçilerin en yeni ekran görüntülerini görsel olarak ekleyebilir. `preflight__check_version` yalnızca App Store Connect'te yapılabilen adımları (App Privacy, AB tüccar durumu, sözleşmeler) listeler; `getting-started` prompt'u yeni bir kullanıcıya ilk adımlarda yol gösterir.
+**StoreKit'e dokuz yeni araç**
+Bir kesintiden sonra bütün abonelerin yenileme tarihini tek seferde ileri alın, bir iade talebine kullanım bilgisini gönderin, iptal etmek üzere olan müşteriye gösterilecek mesajı kurun. Satın almaya ve faturalamaya dokunan her araç CONFIRM istiyor.
 
-**Daha anlaşılır onaylar.** Onay artık değişen şeyi adıyla soruyor, değerleri kod ve kimlik yerine sözle yazıyor (ülkeler, dönemler, roller) ve değişikliğin gerçekte ne yapacağıyla bitiyor. Fiyat, StoreKit, inceleme gönderimi ve TestFlight onaylarının kendilerine özel metinleri var. Mac'te onay artık dar sistem uyarısı yerine kendi penceresinde: soru kalın, bilgiler hizalı, değişikliğin ne yapacağı düğmelerin üstünde ayrı duruyor.
+İşlemler, abonelik durumları ve kullanım hakkı kontrolü artık Apple'ın imzası doğrulanmış olarak geliyor; ayar gerekmiyor.
+
+**Ne değişti, kim yaptı**
+Heimdall'ın yaptığı ya da sizin reddettiğiniz her yazma bilgisayarınızda `audit.jsonl`'a düşüyor.
+
+Her satırda hangi aracın çalıştığı, nasıl onaylandığı ve Apple'ın ne dediği yazıyor.
+
+Apple'ın reddettikleri, destekten isteyeceğiniz request ID ile `failures.jsonl`'da duruyor.
+
+Metin, URL ve istek gövdesi kaydedilmiyor; anahtarlar maskeleniyor.
+
+**Tek çağrıda yeni işler**
+`pricing__setup_subscription` bir aboneliği grubu, dilleri, ülkeleri ve fiyatıyla tek onayla kuruyor. `build__wait_for_processing` yüklenen build işlenene kadar bekliyor; hem `testflight`'ta hem `distribution`'da var. `testflight__feedback_digest` testçilerin ekran görüntülerini de getiriyor.
+
+**Onaylar artık okunuyor**
+Mac'teki onay penceresi baştan yapıldı. Öncekini okumak zordu. Soru kalın, bilgiler hizalı, değişikliğin ne yapacağı düğmelerin hemen üstünde. ID ya da `ONE_MONTH`, `TUR` gibi kodlar yok; ülkeler, süreler ve adlar düz yazıyla.
 
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
-**Küçük işler.** Bitmiş dönemlerin satış ve finans raporları bilgisayarınızda, her anahtar için ayrı önbelleğe alınır. Satırı olmayan bir analitik rapor bunun doğrulanmış bir sıfır olmadığını söyler. In-app event durum filtresi, bitmiş bir etkinliğin ARCHIVED değil PAST olduğunu söyler.
+Artık müşteri yorumlarına verdiğiniz yanıtı göndermeden önce onay istiyor.
 
-Heimdall artık 762 araç içeriyor.
+Heimdall artık 762 araç içeriyor. Gördüğünüz her tuhaflığı yazarsanız çok sevinirim :)
 
 ### [3.0.0-beta.1] — 2026-10-27
 
