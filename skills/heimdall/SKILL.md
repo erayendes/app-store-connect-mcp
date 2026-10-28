@@ -214,7 +214,7 @@ right choice for anything the macro does not cover.
 | open a submission, add the version, hand it over | `release__submit` (`distribution:publish`) |
 | the same for an in-app purchase, subscription, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — on each of those sub-profiles; `with_app_version: true` when the item has to go in with the app's editable version, as an app's first in-app purchase or subscription does |
 | resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`testflight:groups`); give the build number or ID |
-| polling a freshly uploaded build until it finishes processing | `testflight__wait_for_build` (`testflight:test-builds`) — 1 minute by default, up to 15 when asked, then says to call again |
+| polling a freshly uploaded build until it finishes processing | `build__wait_for_processing` (`testflight:test-builds`) — 1 minute by default, up to 15 when asked, then says to call again |
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` (`distribution:version`) |
 | drafting the store text for the languages asked for | `metadata_ai__draft_translation` (`distribution:version`) — your own model drafts it |
 | pasting a translation into each locale | `metadata_ai__apply_localizations` (`distribution:version`) |

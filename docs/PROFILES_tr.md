@@ -273,7 +273,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `builds__icons__list` — Build'in simgelerini listeler
 - `builds__list` — Yüklenmiş build'leri listeler
 - `builds__update` — Build'in süresini bitirir veya şifreleme cevabını kaydeder
-- `testflight__wait_for_build` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
+- `build__wait_for_processing` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
 
 #### `distribution:dma-distribution` · 25 araç
 
@@ -1226,7 +1226,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `pre_release_versions__get` — Pre-release sürümü getirir
 - `pre_release_versions__list` — Pre-release sürümleri listeler
 - `testflight__assign_build_to_groups` — İşlenmiş bir build'i seçilen gruplara verir
-- `testflight__wait_for_build` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
+- `build__wait_for_processing` — Yüklenen build'in işlenmesini bekler ve geçerli olup olmadığını söyler
 
 #### `testflight:testers` · 18 araç
 

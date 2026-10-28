@@ -133,7 +133,7 @@ const MACRO_COVERED: Record<string, string> = {
 };
 
 /** Hand-written tools live in these families; anything else is a typo. */
-const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'media__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__'];
+const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'media__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__', 'build__'];
 
 
 

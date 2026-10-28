@@ -1,5 +1,5 @@
 /**
- * testflight__wait_for_build polls, so what matters is when it stops: on a
+ * build__wait_for_processing polls, so what matters is when it stops: on a
  * final state, at the deadline with "call again", and never on a build Apple
  * has not listed yet — that is still processing, not missing.
  */
@@ -20,10 +20,10 @@ const run = (http: any, args: Record<string, unknown> = {}) => {
   let now = Date.parse('2026-10-27T12:00:00Z');
   vi.spyOn(Date, 'now').mockImplementation(() => now);
   const sleep = vi.fn(async (ms: number) => { now += ms; });
-  return executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42', ...args }, { http, sleep }) as Promise<any>;
+  return executeTestflightTool('build__wait_for_processing', { app: 'com.example.notes', build: '42', ...args }, { http, sleep }) as Promise<any>;
 };
 
-describe('testflight__wait_for_build', () => {
+describe('build__wait_for_processing', () => {
   it('waits through processing and an unlisted build, then reports VALID', async () => {
     const res = await run(fakeHttp([undefined, 'PROCESSING', 'VALID']));
     expect(res).toMatchObject({ state: 'VALID', ready: true, buildId: 'b-1', waitedSeconds: 40 });
@@ -45,7 +45,7 @@ describe('testflight__wait_for_build', () => {
     const controller = new AbortController();
     const http = fakeHttp(['PROCESSING']);
     const sleep = vi.fn(async () => { controller.abort(); });
-    await expect(executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' }, { http, sleep, signal: controller.signal }))
+    await expect(executeTestflightTool('build__wait_for_processing', { app: 'com.example.notes', build: '42' }, { http, sleep, signal: controller.signal }))
       .rejects.toThrow(/cancelled/);
     expect(http.collect).toHaveBeenCalledTimes(1);
   });
@@ -54,7 +54,7 @@ describe('testflight__wait_for_build', () => {
     let now = Date.parse('2026-10-27T12:00:00Z');
     vi.spyOn(Date, 'now').mockImplementation(() => now);
     const progress = vi.fn();
-    await executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' },
+    await executeTestflightTool('build__wait_for_processing', { app: 'com.example.notes', build: '42' },
       { http: fakeHttp([undefined, 'PROCESSING', 'VALID']), sleep: async (ms) => { now += ms; }, progress });
     expect(progress.mock.calls).toEqual([[0, 60, 'Build 42 is not listed yet.'], [20, 60, 'Build 42 is PROCESSING.']]);
   });
@@ -66,7 +66,7 @@ describe('testflight__wait_for_build', () => {
       const add = vi.spyOn(controller.signal, 'addEventListener');
       const remove = vi.spyOn(controller.signal, 'removeEventListener');
       const http = fakeHttp(['PROCESSING', 'VALID']);
-      const done = executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal });
+      const done = executeTestflightTool('build__wait_for_processing', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal });
       await vi.advanceTimersByTimeAsync(20_000);
       await expect(done).resolves.toMatchObject({ state: 'VALID' });
       expect(remove).toHaveBeenCalledTimes(add.mock.calls.length);
@@ -80,7 +80,7 @@ describe('testflight__wait_for_build', () => {
     const http = fakeHttp(['VALID']);
     const read = http.collect.getMockImplementation();
     http.collect.mockImplementation(async () => { controller.abort(); return read(); });
-    await expect(executeTestflightTool('testflight__wait_for_build', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal }))
+    await expect(executeTestflightTool('build__wait_for_processing', { app: 'com.example.notes', build: '42' }, { http, signal: controller.signal }))
       .rejects.toThrow(/cancelled/);
   });
 
@@ -88,7 +88,7 @@ describe('testflight__wait_for_build', () => {
     const res = await run(fakeHttp(['PROCESSING']));
     expect(res).toMatchObject({ timedOut: true });
     expect(res.waitedSeconds).toBeLessThanOrEqual(60);
-    const tool = TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__wait_for_build')!;
+    const tool = TESTFLIGHT_TOOLS.find((t) => t.name === 'build__wait_for_processing')!;
     expect((tool.inputSchema as any).properties.max_minutes).toMatchObject({ default: 1, maximum: 15 });
     expect(tool.description).toMatch(/default 1, max 15/);
     expect(tool.description).toMatch(/calling again/);

@@ -104,7 +104,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "builds",
       operations: ["apps.build_uploads.list","build_bundles.build_bundle_file_sizes.list","build_upload_files.update","build_uploads.get","builds.app.get","builds.app_store_version.get","builds.get","builds.icons.list","builds.list","builds.update"],
-      manualTools: ["testflight__wait_for_build"],
+      manualTools: ["build__wait_for_processing"],
       rootResources: ["apps","build_bundles","build_upload_files","build_uploads","builds"],
     },
     {
@@ -380,7 +380,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "test-builds",
       operations: ["apps.beta_app_localizations.list","apps.beta_groups.list","apps.pre_release_versions.list","beta_app_localizations.create","beta_app_localizations.delete","beta_app_localizations.get","beta_app_localizations.list","beta_app_localizations.update","beta_build_localizations.create","beta_build_localizations.delete","beta_build_localizations.get","beta_build_localizations.list","beta_build_localizations.update","build_beta_details.get","build_beta_details.list","build_beta_details.update","build_beta_notifications.create","builds.beta_build_localizations.list","builds.build_beta_detail.get","builds.pre_release_version.get","pre_release_versions.builds.list","pre_release_versions.get","pre_release_versions.list"],
-      manualTools: ["testflight__assign_build_to_groups","testflight__wait_for_build"],
+      manualTools: ["build__wait_for_processing","testflight__assign_build_to_groups"],
       rootResources: ["apps","beta_app_localizations","beta_build_localizations","build_beta_details","build_beta_notifications","builds","pre_release_versions"],
     },
     {
