@@ -37,7 +37,7 @@ Bir build'i bulup tek çağrıda beta gruplarına ekleyen `testflight__assign_bu
 
 Bazı yapay zekâ uygulamaları Heimdall'ın sorusunu gösteremez; Claude masaüstü uygulamasındaki Code sekmesi bunlardan biri. Mac'te Heimdall bu durumda aynı özetle kendi penceresini açar ve değişiklik ancak penceredeki düğmeye (ya da Enter'a) basarsanız yapılır. Düğme değişikliğin adını taşır: Remove, Delete, Upload; uygun bir fiil yoksa Allow. Cancel (Allow'un yanında Don't Allow) ya da Esc durdurur. Yapay zekâ bu pencereyi göremez ve tıklayamaz. Pencere siz cevap verene kadar açık kalır; yapay zekâ uygulaması çağrıyı iptal ederse pencere de kapanır.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552"> Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552"> Windows ve Linux'ta ya da `ASC_NATIVE_CONFIRM=0` ile bu değişiklikler orada reddedilir; onları App Store Connect'te yapın.
 
 ## Ortam değişkenleri
 

@@ -37,7 +37,7 @@ By default Heimdall asks in two ways:
 
 Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press its button, named for the change (Remove, Delete, Upload; Allow when no verb fits), or Return. Cancel (Don't Allow next to Allow) or Escape stops it. The AI can't see or click that dialog. It stays open until you answer; if the AI app cancels the call, the dialog closes with it.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 
