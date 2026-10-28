@@ -29,7 +29,7 @@ Calls Apple refuses go into `failures.jsonl`, with the request ID Apple support 
 Text, URLs and request bodies aren't recorded, and keys are masked.
 
 **New one-call jobs**
-`pricing__setup_subscription` sets up a subscription with its group, languages, countries and price under one confirmation. `testflight__wait_for_build` waits until an uploaded build is processed, and is now in `distribution` too. `testflight__feedback_digest` brings back testers' screenshots as well.
+`pricing__setup_subscription` sets up a subscription with its group, languages, countries and price under one confirmation. `build__wait_for_processing` waits until an uploaded build is processed, in both `testflight` and `distribution`. `testflight__feedback_digest` brings back testers' screenshots as well.
 
 **Confirmations you can read**
 The confirmation window on a Mac was rebuilt; the old one was hard to read. The question is in bold, the details line up, and what the change does sits right above the buttons. No IDs, no codes like `ONE_MONTH` or `TUR`: countries, periods and names are written out.
@@ -376,7 +376,7 @@ Apple'ın reddettikleri, destekten isteyeceğiniz request ID ile `failures.jsonl
 Metin, URL ve istek gövdesi kaydedilmiyor; anahtarlar maskeleniyor.
 
 **Tek çağrıda yeni işler**
-`pricing__setup_subscription` bir aboneliği grubu, dilleri, ülkeleri ve fiyatıyla tek onayla kuruyor. `testflight__wait_for_build` yüklenen build işlenene kadar bekliyor; artık `distribution`'da da var. `testflight__feedback_digest` testçilerin ekran görüntülerini de getiriyor.
+`pricing__setup_subscription` bir aboneliği grubu, dilleri, ülkeleri ve fiyatıyla tek onayla kuruyor. `build__wait_for_processing` yüklenen build işlenene kadar bekliyor; hem `testflight`'ta hem `distribution`'da var. `testflight__feedback_digest` testçilerin ekran görüntülerini de getiriyor.
 
 **Onaylar artık okunuyor**
 Mac'teki onay penceresi baştan yapıldı. Öncekini okumak zordu. Soru kalın, bilgiler hizalı, değişikliğin ne yapacağı düğmelerin hemen üstünde. ID ya da `ONE_MONTH`, `TUR` gibi kodlar yok; ülkeler, süreler ve adlar düz yazıyla.
