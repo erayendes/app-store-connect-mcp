@@ -55,7 +55,7 @@ Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve d
 ## Alt profiller
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
 Örneğin `monetization` 162 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 65 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.

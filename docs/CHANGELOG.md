@@ -34,7 +34,7 @@ Text, URLs and request bodies aren't recorded, and keys are masked.
 **Confirmations you can read**
 The confirmation window on a Mac was rebuilt; the old one was hard to read. The question is in bold, the details line up, and what the change does sits right above the buttons. No IDs, no codes like `ONE_MONTH` or `TUR`: countries, periods and names are written out.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 Replying to a customer review now asks for your confirmation before the reply goes out.
 
@@ -79,7 +79,7 @@ Don't worry: it lists every item before it sends.
 **Clearer confirmations**
 In apps that can't show the confirmation form (like the Code tab in Claude Desktop), Heimdall opens its own window on a Mac. The AI can neither see that window nor press it.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page and stays in the media library. Buttons: Cancel and Remove." width="394">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page and stays in the media library. Buttons: Cancel and Remove." width="394">
 
 The window asks what will happen in one sentence: "Remove a screenshot from the App Store page?" Below it are the app, the page and the files by name, with no IDs. And the button says what it does: Remove, Delete, Upload.
 
@@ -381,7 +381,7 @@ Metin, URL ve istek gövdesi kaydedilmiyor; anahtarlar maskeleniyor.
 **Onaylar artık okunuyor**
 Mac'teki onay penceresi baştan yapıldı. Öncekini okumak zordu. Soru kalın, bilgiler hizalı, değişikliğin ne yapacağı düğmelerin hemen üstünde. ID ya da `ONE_MONTH`, `TUR` gibi kodlar yok; ülkeler, süreler ve adlar düz yazıyla.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
 Artık müşteri yorumlarına verdiğiniz yanıtı göndermeden önce onay istiyor.
 
@@ -426,7 +426,7 @@ Merak etmeyin, göndermeden önce hepsini tek tek listeliyor.
 **Onaylar daha anlaşılır**
 Onay formu gösteremeyen uygulamalarda (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresini açıyor. Yapay zekâ bu pencereyi ne görebiliyor ne de basabiliyor.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak ve medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="394">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak ve medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="394">
 
 Pencere ne olacağını tek cümleyle soruyor: "Remove a screenshot from the App Store page?" Altında uygulama, sayfa ve dosyalar adlarıyla yazıyor; ID yok. Düğme de ne yapacağını söylüyor: Remove, Delete, Upload.
 
