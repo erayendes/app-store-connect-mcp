@@ -391,6 +391,9 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
       expect.arrayContaining(['subscriptions', 'subscriptionPricePoints'])
     );
     expect(bodyRefs('WinBackOfferCreateRequest')).not.toContain('winBackOfferPrices');
+    expect(bodyRefs('RetentionOfferCreateRequest')).toEqual(
+      expect.arrayContaining(['subscriptions', 'subscriptionPricePoints'])
+    );
   });
 
   it.each(SUBS.map((s) => s.label))('%s can obtain every id it writes to', (label) => {
@@ -446,32 +449,33 @@ describe('help text', () => {
 describe('counts — curation output, not something that drifts on its own', () => {
   it('matches the numbers the sheet was signed off with', () => {
     expect(PROFILES.length).toBe(14);
-    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(50);
+    expect(PROFILES.flatMap((p) => p.subProfiles.filter((s) => s.name)).length).toBe(51);
     const core = resolveSelection(CORE_PROFILE);
     expect(operationsFor(core).length).toBe(8);
     expect(manualToolsFor(core).length).toBe(8);
     expect(PROFILELESS.length).toBe(7);
     expect(Object.keys(TWIN_OF).length).toBe(12);
-    expect(Object.keys(MACRO_COVERED).length).toBe(97);
+    expect(Object.keys(MACRO_COVERED).length).toBe(98);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 811 CSV rows - 7 profile-less ones. Not a count of distinct tools:
+    // 840 CSV rows - 7 profile-less ones. Not a count of distinct tools:
     // a few entry reads deliberately sit in more than one slice.
-    expect(tools.length).toBe(805);
+    expect(tools.length).toBe(833);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 18 storekit, 3 reviews_ai, 8 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 3
     // testflight, 1 ci, and core's 3 meta tools — 50.
     expect(new Set(tools).size).toBe(OPERATIONS.length - Object.keys(MACRO_COVERED).length + 50);
   });
-  it('places release__submit_items in exactly the ten approved slices', () => {
+  it('places release__submit_items in exactly the eleven approved slices', () => {
     const actual = SUBS.filter(({ sub }) => sub.manualTools.includes('release__submit_items')).map(({ label }) => label).sort();
     expect(actual).toEqual([
       'background-assets/-', 'game-center/achievements', 'game-center/activities',
       'game-center/challenges', 'game-center/leaderboards', 'marketing/app-events',
       'marketing/custom-pp', 'marketing/pp-optimization',
       'monetization/in-app-purchases', 'monetization/subscription',
+      'monetization/subscription-retention',
     ]);
   });
 });

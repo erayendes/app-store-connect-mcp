@@ -1,19 +1,19 @@
-Spec version:   4.5.1
-Paths:          1001
-Tools:          807
-  id-only twins dropped: 292
-  read-only:    446
-  mutating:     361
+Spec version:   4.6
+Paths:          1027
+Tools:          832
+  id-only twins dropped: 301
+  read-only:    459
+  mutating:     373
   deprecated dropped: 185
   dropped by the profile sheet: 19
-Risk levels:    low:116 destructive:97 public:62 revenue:45 release:19 infrastructure:16 access:6
-Body schemas:   263 (259 KB resolved, avg 1009 chars)
+Risk levels:    low:117 destructive:99 public:64 revenue:51 release:20 infrastructure:16 access:6
+Body schemas:   271 (267 KB resolved, avg 1009 chars)
 
 By domain:
   game_center          172
-  apps                 114
+  apps                 115
+  subscriptions        108
   versions             91
-  subscriptions        84
   testflight           62
   iap                  55
   marketing            51

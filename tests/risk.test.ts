@@ -20,7 +20,7 @@ const creds = {
 
 describe('risk manifest', () => {
   it('treats draft version creation as an irreversible release step that asks by default', async () => {
-    for (const name of ['subscription_versions', 'subscription_group_versions', 'in_app_purchase_versions']) {
+    for (const name of ['subscription_versions', 'subscription_group_versions', 'in_app_purchase_versions', 'retention_message_versions']) {
       expect(riskFor(`${name}.create`, 'POST')).toBe('release');
       expect(ASK_BY_DEFAULT.has(`${name}__create`)).toBe(true);
       const op = OPERATIONS.find((o) => o.name === `${name}.create`)!;
@@ -521,5 +521,13 @@ describe('dry-run (writes never reach Apple)', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('retention message version labels', () => {
+  it('names the message and the version state instead of a raw id', async () => {
+    const { REF_RESOLVERS } = await import('../src/core/confirm.js');
+    const http: any = { get: async () => ({ data: { id: 'rmv', attributes: { state: 'PREPARE_FOR_SUBMISSION' } }, included: [{ type: 'retentionMessages', id: 'rm', attributes: { referenceName: 'Stay with us' } }] }) };
+    expect(await REF_RESOLVERS.retentionMessageVersions(http, 'rmv')).toBe('Stay with us — version (PREPARE_FOR_SUBMISSION)');
   });
 });

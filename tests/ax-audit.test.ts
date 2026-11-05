@@ -27,7 +27,9 @@ const CEILING = {
   // PR-V2 hides 28 unflagged v1 operations; PR-D1 hides six legacy media families.
   // The live beta run curated the app → encryption declarations path Apple 404s.
   // 3.0 stopped building twins and profile-less reverse reads (−18).
-  boilerplate: 613,
+  // Spec 4.6 (+25 retention message and offer tools, Apple's own summaries),
+  // five of them curated where the offer links and the inline prices need it.
+  boilerplate: 633,
   /**
    * AXIS2 — silent empty results: id-valued filters with no format hint.
    *
@@ -49,14 +51,18 @@ const CEILING = {
    * so a confirmation never shows one for it. Fourteen submit and request
    * creates left the list that way, spec 4.5.1's placement ordering among them.
    */
-  unresolvedRefTypes: 41,
+  // Spec 4.6 (+1): retentionOfferPrices, inline in a retention offer create like winBackOfferPrices.
+  unresolvedRefTypes: 42,
   /** AXIS4 — path length: writes that need a lookup call first. */
   // Spec 4.5.1 (+5): update and delete for asset library images, videos and
   // placements. Changing a file means naming it, so these cannot avoid the id.
   // 3.0 stopped building the dropped end of twelve relationship pairs (−11).
-  writesNeedingLookup: 230,
+  // Spec 4.6 (+8): retention message, localization and offer writes and subscription links.
+  writesNeedingLookup: 238,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
-  unfilterableLists: 90,
+  // Spec 4.6 (+5): an app's retention messages, a message's versions, a version's
+  // localizations, and a subscription's retention offers and message offers.
+  unfilterableLists: 95,
 };
 
 const debt = auditAx();

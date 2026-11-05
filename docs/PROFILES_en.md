@@ -16,7 +16,7 @@ Next to whatever you pick, setup registers **ASC-Core**: finding your apps, sear
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | App details | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Store page and reviews | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Prices and subscriptions | 162 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Prices and subscriptions | 186 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Certificates and devices | 41 | bundle, certificates, devices, profiles, wallet |
 | `testflight` | `ASC-TestFlight` | Beta testing | 82 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Notifications to your server | 9 | — |
@@ -58,7 +58,7 @@ Its media tools (`media__*`) handle every screenshot, video, image and file. Sto
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web-step1.png" alt="The browser setup, step 1: each profile with its tool count and token cost; Monetization is open, with two of its sub-profiles ticked" width="560">
 
 Tick a profile in the [setup](SETUP_en.md) picker. When you move the cursor onto it, its sub-profiles open, all ticked; untick the ones you don't want.
-For example, `monetization` has 162 tools, but if you only work on subscriptions and their offers, the 65 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
+For example, `monetization` has 186 tools, but if you only work on subscriptions and their offers, the 65 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
 
 The tool counts on this page are what the server lists: its own tools plus `asc__status`. A server started with only some of its sub-profiles also gets `asc__call` and `asc__describe`, which reach the reads of the parts you left out.
 
@@ -74,7 +74,7 @@ A quick answer to "Which profiles should I install?" The counts include ASC-Core
 | Release manager | `distribution` + `general` | 146 |
 | ASO / marketing | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 98 |
-| Monetization | `monetization` | 178 |
+| Monetization | `monetization` | 202 |
 | Game developer | `game-center` + `distribution:version,publish` | 200 |
 | Customer support | `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build and signing | `provisioning` + `xcode-cloud` | 101 |
@@ -790,7 +790,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `apps__app_store_version_experiments_v2__list` — Lists the app's product page tests
 - `release__submit_items` — Sends a product page test to review
 
-### `monetization` · 162 tools
+### `monetization` · 186 tools
 
 **Server:** `ASC-Monetization` · **Key role:** App Manager
 
@@ -991,7 +991,42 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscriptions__introductory_offers__remove` — Removes the chosen offers a subscription makes to first-time subscribers
 - `subscriptions__price_points__list` — Lists the prices a subscription can be set to
 - `subscriptions__promotional_offers__list` — Lists the offers for current or former subscribers
-- `pricing__make_offer` — Creates an introductory, promotional or win-back offer for a subscription, priced in every country
+- `pricing__make_offer` — Creates an introductory, promotional, win-back or retention offer for a subscription, priced in every country
+
+#### `monetization:subscription-retention` · 31 tools
+
+**What is inside:** Retention messages and offers shown to subscribers who start to cancel.
+
+**When you need it:** Messages and offers for subscribers who start to cancel. · **Key role:** Marketing
+
+- `apps__retention_messages__list` — Lists the retention messages for an app
+- `retention_message_localizations__create` — Adds a language to a retention message version with its header and body
+- `retention_message_localizations__delete` — Deletes a language from a retention message version
+- `retention_message_localizations__get` — Shows one language of a retention message
+- `retention_message_localizations__update` — Changes the header and body of a retention message in one language
+- `retention_message_versions__create` — Creates a new version of a retention message to edit and submit
+- `retention_message_versions__get` — Shows the details of a retention message version
+- `retention_message_versions__localizations__list` — Lists the languages of a retention message version
+- `retention_messages__create` — Creates a retention message for subscribers who start to cancel
+- `retention_messages__delete` — Deletes a retention message
+- `retention_messages__get` — Shows the details of a retention message
+- `retention_messages__subscriptions__list` — Lists the subscriptions a retention message is shown for
+- `retention_messages__versions__list` — Lists the versions of a retention message
+- `retention_offers__create` — Creates an offer shown with a retention message
+- `retention_offers__delete` — Deletes a retention offer
+- `retention_offers__get` — Shows the details of a retention offer
+- `retention_offers__prices__list` — Lists a retention offer's prices by country
+- `retention_offers__update` — Changes a retention offer's terms
+- `subscription_groups__subscriptions__list` — Lists the subscriptions in a group
+- `subscriptions__price_points__list` — Lists the prices a subscription can be set to
+- `subscriptions__retention_message__get` — Shows the retention message assigned to a subscription
+- `subscriptions__retention_message__set` — Assigns a retention message to a subscription
+- `subscriptions__retention_message_offers__add` — Adds offers to the retention message of a subscription
+- `subscriptions__retention_message_offers__list` — Lists the offers on a subscription's retention message
+- `subscriptions__retention_message_offers__remove` — Removes offers from a subscription's retention message
+- `subscriptions__retention_offers__list` — Lists the retention offers of a subscription
+- `release__submit_items` — Sends a retention message version to review
+- `pricing__make_offer` — Creates an introductory, promotional, win-back or retention offer for a subscription, priced in every country
 
 #### `monetization:subscription-win-back` · 12 tools
 
@@ -1007,7 +1042,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `win_back_offers__get` — Shows the details of a win-back offer
 - `win_back_offers__prices__list` — Lists a win-back offer's prices by country
 - `win_back_offers__update` — Changes a win-back offer's terms, dates and promotion settings
-- `pricing__make_offer` — Creates an introductory, promotional or win-back offer for a subscription, priced in every country
+- `pricing__make_offer` — Creates an introductory, promotional, win-back or retention offer for a subscription, priced in every country
 
 #### `monetization:transactions` · 21 tools
 

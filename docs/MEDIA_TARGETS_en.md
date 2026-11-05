@@ -15,6 +15,7 @@ uses the four media tools on ASC-Core (`media__list`, `media__upload`,
 | `cpp` | A custom product page | Its localization | place, reorder, remove, poster |
 | `ppo` | A product page test treatment | Its localization | place, reorder, remove, poster |
 | `event` | An in-app event's card and details images | Its localization | place, remove |
+| `retention` | The one image above a retention message (`RETENTION_MESSAGE_ASSET`) | Its message version | place, remove |
 
 An upload to a page goes into the library and is placed in one step. Removing
 from a page leaves the file in the library; deleting from the library removes

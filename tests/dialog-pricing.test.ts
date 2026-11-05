@@ -107,6 +107,16 @@ describe('pricingDialog', () => {
     expect(d.body).not.toMatch(/PAY_UP_FRONT|ONE_MONTH|win_back/);
   });
 
+  it('makes a retention offer in words', () => {
+    const d = pricingDialog('pricing__make_offer', {
+      app, subscription: 'heimdall.test.monthly', offer_type: 'retention', name: 'Stay 3m', offer_id: 'stay3m',
+      offer_mode: 'FREE_TRIAL', duration: 'ONE_MONTH', periods: 1, eligibility_paid_months: 3,
+    })!;
+    expect(d.title).toBe('Create the retention offer "Stay 3m"?');
+    expect(d.body).toContain('For subscribers who start to cancel after paying for 3 months, once a retention message carries it');
+    expect(d.body).not.toMatch(/retention_|FREE_TRIAL/);
+  });
+
   it('makes a pay-as-you-go promotional offer', () => {
     const d = pricingDialog('pricing__make_offer', {
       app, subscription: 'heimdall.test.monthly', offer_type: 'promotional', name: 'Spring', offer_id: 'spring',

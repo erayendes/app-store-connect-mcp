@@ -23,7 +23,7 @@ so every pack below counts it.
 | Release manager | `core` + `distribution` + `general` | 146 |
 | ASO / marketing | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 98 |
-| Monetization | `core` + `monetization` | 178 |
+| Monetization | `core` + `monetization` | 202 |
 | Game developer | `core` + `game-center` + `distribution:version,publish` | 200 |
 | Customer support | `core` + `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build & signing | `core` + `provisioning` + `xcode-cloud` | 101 |
@@ -39,7 +39,7 @@ drop `@beta`.
 Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
 Narrower is better than broader: `monetization:subscription-offers` is 17
-tools where `monetization` is 162, and the reads in the sub-profiles you
+tools where `monetization` is 186, and the reads in the sub-profiles you
 skipped are one `asc__call` away — the proxy reaches any read of its own
 profile, loaded or not; a write needs its sub-profile registered.
 
@@ -204,7 +204,7 @@ taşımıyor; bu yüzden aşağıdaki her paket onu da sayar.
 | Yayın yöneticisi | `core` + `distribution` + `general` | 146 |
 | ASO / pazarlama | `core` + `marketing` + `analytics` | 96 |
 | QA / TestFlight | `core` + `testflight` | 98 |
-| Monetizasyon | `core` + `monetization` | 178 |
+| Monetizasyon | `core` + `monetization` | 202 |
 | Oyun geliştirici | `core` + `game-center` + `distribution:version,publish` | 200 |
 | Müşteri desteği | `core` + `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build ve imzalama | `core` + `provisioning` + `xcode-cloud` | 101 |
@@ -220,7 +220,7 @@ npx -y @erayendes/asc-mcp@beta register distribution general
 “Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
 Dar olan geniş olandan iyidir: `monetization:subscription-offers` 17 araç,
-`monetization` 162. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
+`monetization` 186. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
 uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her okumaya ulaşır; bir yazma için o alt profilin kayıtlı olması gerekir.
 
 ---

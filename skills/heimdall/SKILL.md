@@ -5,7 +5,7 @@ description: Work with an Apple App Store Connect account through Heimdall's MCP
 
 Heimdall is one binary serving several separately scoped MCP servers, one per
 profile: `ASC-Monetization`, `ASC-Distribution`, `ASC-TestFlight` and so on.
-Apple's API is 1011 operations, which costs more in tool definitions than most
+Apple's API is 1036 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
 
@@ -178,11 +178,11 @@ default.
 
 A large profile takes a colon and a list of sub-profiles —
 `monetization:subscription,subscription-offers` is 65 tools where
-`monetization` is 162. Worth suggesting for `monetization`, `game-center`,
+`monetization` is 186. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `testflight`, `general` and `marketing`. The server is still
 `ASC-Monetization`.
 
-Heimdall serves 762 distinct tools across 14 profiles: 710 reachable Apple operations plus 52 hand-written tools.
+Heimdall serves 786 distinct tools across 14 profiles: 734 reachable Apple operations plus 52 hand-written tools.
 
 ## Prefer the macro over the chain
 
@@ -197,9 +197,9 @@ right choice for anything the macro does not cover.
 | rebuilding an IAP's whole price schedule to change one country | `pricing__set_iap_price` (`monetization:in-app-purchases`) — keeps every other price |
 | app → app price schedule → prices | `pricing__get_app_price` (`monetization:app-price`) |
 | setting a price country by country | `pricing__equalize_price` (`monetization:app-price`, `in-app-purchases` or `subscription`) — one anchor price, Apple derives the rest |
-| looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers` or `subscription-win-back`) — win-back, promotional or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
+| looking up a price point in every country, then building one offer body | `pricing__make_offer` (`monetization:subscription-offers`, `subscription-win-back` or `subscription-retention`) — win-back, promotional, retention or introductory offer, every country from one anchor price; introductory goes country by country and resumes |
 | group → subscription → version → localizations → availability → price for a new subscription | `pricing__setup_subscription` (`monetization:subscription`) — one confirmation; reuses an existing group without editing it |
-| page → localizations → library placements → images and videos | `media__list` (ASC-Core) — the version page, a custom product page, a product page test, an in-app event or the library itself |
+| page → localizations → library placements → images and videos | `media__list` (ASC-Core) — the version page, a custom product page, a product page test, an in-app event, a retention message or the library itself |
 | an owner → its image or file → reserve, upload, commit | `media__list` / `media__upload` / `media__delete` (ASC-Core) with a file `target`: App Clip header and advanced experience images, Game Center achievement, leaderboard, leaderboard set, activity and challenge images, in-app purchase and subscription images and review screenshots, encryption documents, App Review attachments, routing coverage, background asset files, build upload files — the targets and their rules are in [MEDIA_TARGETS_en.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/MEDIA_TARGETS_en.md) |
 | reserving a library image or video, uploading it, then placing it | `media__upload` (ASC-Core) |
 | placing, reordering, removing, archiving or renaming page media | `media__arrange` (ASC-Core) |
@@ -212,7 +212,7 @@ right choice for anything the macro does not cover.
 | comparing two versions' store text language by language | `listing__diff_metadata` (`distribution:version`) |
 | checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription`, read-only, capped, no approval prediction |
 | open a submission, add the version, hand it over | `release__submit` (`distribution:publish`) |
-| the same for an in-app purchase, subscription, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — on each of those sub-profiles; `with_app_version: true` when the item has to go in with the app's editable version, as an app's first in-app purchase or subscription does |
+| the same for an in-app purchase, subscription, retention message, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — on each of those sub-profiles; `with_app_version: true` when the item has to go in with the app's editable version, as an app's first in-app purchase or subscription does |
 | resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`testflight:groups`); give the build number or ID |
 | polling a freshly uploaded build until it finishes processing | `build__wait_for_processing` (`testflight:test-builds`) — 1 minute by default, up to 15 when asked, then says to call again |
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` (`distribution:version`) |
@@ -241,7 +241,7 @@ the report, where the raw chain ends holding a link.
   any tool that can change something; asking for a write there is asking for a
   tool that is not loaded, not a permission problem.
 - A tool that is not in this session's list may still belong to this account.
-  `asc__search_tools` (on ASC-Core) covers the 807 operations Heimdall builds,
+  `asc__search_tools` (on ASC-Core) covers the 832 operations Heimdall builds,
   plus the StoreKit tools
   and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names
   the profile that owns each one, and the server's own error messages print the

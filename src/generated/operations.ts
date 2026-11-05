@@ -1,10 +1,10 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.5.1
+// Source: Apple App Store Connect OpenAPI specification v4.6
 // Regenerate with: npm run generate
 
 import type { Operation } from '../core/types.js';
 
-export const SPEC_VERSION = "4.5.1";
+export const SPEC_VERSION = "4.6";
 
 export const OPERATIONS: Operation[] = [
   {
@@ -1170,7 +1170,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -1276,7 +1277,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       },
       {
@@ -1289,7 +1291,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -1542,7 +1545,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -2649,7 +2653,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -3348,7 +3353,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -4432,7 +4438,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -4870,7 +4877,8 @@ export const OPERATIONS: Operation[] = [
           "appEventLocalization",
           "appStoreVersionLocalization",
           "appCustomProductPageLocalization",
-          "appStoreVersionExperimentTreatmentLocalization"
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -7220,13 +7228,13 @@ export const OPERATIONS: Operation[] = [
           "appAvailabilityV2",
           "inAppPurchases",
           "subscriptionGroups",
+          "retentionMessages",
           "gameCenterEnabledVersions",
           "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
           "inAppPurchasesV2",
-          "promotedPurchases",
-          "appEvents"
+          "promotedPurchases"
         ]
       },
       {
@@ -7249,6 +7257,7 @@ export const OPERATIONS: Operation[] = [
           "endUserLicenseAgreement",
           "inAppPurchases",
           "subscriptionGroups",
+          "retentionMessages",
           "gameCenterEnabledVersions",
           "appCustomProductPages",
           "inAppPurchasesV2",
@@ -7524,13 +7533,13 @@ export const OPERATIONS: Operation[] = [
           "appAvailabilityV2",
           "inAppPurchases",
           "subscriptionGroups",
+          "retentionMessages",
           "gameCenterEnabledVersions",
           "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
           "inAppPurchasesV2",
-          "promotedPurchases",
-          "appEvents"
+          "promotedPurchases"
         ]
       },
       {
@@ -7558,6 +7567,7 @@ export const OPERATIONS: Operation[] = [
           "endUserLicenseAgreement",
           "inAppPurchases",
           "subscriptionGroups",
+          "retentionMessages",
           "gameCenterEnabledVersions",
           "appCustomProductPages",
           "inAppPurchasesV2",
@@ -7733,6 +7743,44 @@ export const OPERATIONS: Operation[] = [
     "hasBody": true,
     "bodyRef": "AppPromotedPurchasesLinkagesRequest",
     "risk": "revenue"
+  },
+  {
+    "name": "apps.retention_messages.list",
+    "domain": "apps",
+    "method": "GET",
+    "path": "/v1/apps/{id}/retentionMessages",
+    "description": "List the retention messages belonging to an app.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[retentionMessages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type retentionMessages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "versions",
+          "subscriptions"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "versions",
+          "subscriptions"
+        ]
+      }
+    ],
+    "hasBody": false
   },
   {
     "name": "apps.review_submissions.list",
@@ -9765,13 +9813,13 @@ export const OPERATIONS: Operation[] = [
           "appAvailabilityV2",
           "inAppPurchases",
           "subscriptionGroups",
+          "retentionMessages",
           "gameCenterEnabledVersions",
           "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
           "inAppPurchasesV2",
-          "promotedPurchases",
-          "appEvents"
+          "promotedPurchases"
         ]
       },
       {
@@ -12139,6 +12187,7 @@ export const OPERATIONS: Operation[] = [
           "endUserLicenseAgreement",
           "inAppPurchases",
           "subscriptionGroups",
+          "retentionMessages",
           "gameCenterEnabledVersions",
           "appCustomProductPages",
           "inAppPurchasesV2",
@@ -19891,6 +19940,499 @@ export const OPERATIONS: Operation[] = [
     "risk": "revenue"
   },
   {
+    "name": "retention_message_localizations.create",
+    "domain": "subscriptions",
+    "method": "POST",
+    "path": "/v1/retentionMessageLocalizations",
+    "description": "Create a retention message localization.",
+    "readOnly": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "RetentionMessageLocalizationCreateRequest",
+    "risk": "public"
+  },
+  {
+    "name": "retention_message_localizations.delete",
+    "domain": "subscriptions",
+    "method": "DELETE",
+    "path": "/v1/retentionMessageLocalizations/{id}",
+    "description": "Delete a retention message localization.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": false,
+    "risk": "destructive"
+  },
+  {
+    "name": "retention_message_localizations.get",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessageLocalizations/{id}",
+    "description": "Read one retention message localization by ID.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[retentionMessageLocalizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type retentionMessageLocalizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "locale",
+          "header",
+          "body",
+          "retentionMessageVersion"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "retentionMessageVersion"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_message_localizations.update",
+    "domain": "subscriptions",
+    "method": "PATCH",
+    "path": "/v1/retentionMessageLocalizations/{id}",
+    "description": "Change the header and body text of a retention message in one language.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "RetentionMessageLocalizationUpdateRequest",
+    "risk": "public"
+  },
+  {
+    "name": "retention_message_versions.create",
+    "domain": "subscriptions",
+    "method": "POST",
+    "path": "/v1/retentionMessageVersions",
+    "description": "Start a new version of a retention message to edit its text and submit for review; the approved version stays live meanwhile.",
+    "readOnly": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "RetentionMessageVersionCreateRequest",
+    "risk": "release"
+  },
+  {
+    "name": "retention_message_versions.get",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessageVersions/{id}",
+    "description": "Read one retention message version by ID.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[retentionMessageVersions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type retentionMessageVersions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "state",
+          "retentionMessage",
+          "localizations",
+          "placement"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "retentionMessage",
+          "localizations",
+          "placement"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_message_versions.localizations.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessageVersions/{id}/localizations",
+    "description": "List the localizations belonging to a retention message version.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "retentionMessageVersion"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_message_versions.placement.get",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessageVersions/{id}/placement",
+    "description": "Read the placement for a retention message version.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "image",
+          "video",
+          "appEventLocalization",
+          "appStoreVersionLocalization",
+          "appCustomProductPageLocalization",
+          "appStoreVersionExperimentTreatmentLocalization",
+          "retentionMessageVersion"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_messages.create",
+    "domain": "subscriptions",
+    "method": "POST",
+    "path": "/v1/retentionMessages",
+    "description": "Create a retention message for an app: what a subscriber sees on starting to cancel a subscription. An app holds at most 10 retention messages.",
+    "readOnly": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "RetentionMessageCreateRequest",
+    "risk": "low"
+  },
+  {
+    "name": "retention_messages.delete",
+    "domain": "subscriptions",
+    "method": "DELETE",
+    "path": "/v1/retentionMessages/{id}",
+    "description": "Delete a retention message.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": false,
+    "risk": "destructive"
+  },
+  {
+    "name": "retention_messages.get",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessages/{id}",
+    "description": "Read one retention message by ID.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[retentionMessages]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type retentionMessages Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "versions",
+          "subscriptions"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "versions",
+          "subscriptions"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_messages.subscriptions.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessages/{id}/subscriptions",
+    "description": "List the subscriptions belonging to a retention message.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[productId]",
+        "type": "array",
+        "description": "filter by attribute 'productId'"
+      },
+      {
+        "name": "filter[name]",
+        "type": "array",
+        "description": "filter by attribute 'name'"
+      },
+      {
+        "name": "filter[state]",
+        "type": "array",
+        "description": "filter by attribute 'state'",
+        "enum": [
+          "MISSING_METADATA",
+          "READY_TO_SUBMIT",
+          "WAITING_FOR_REVIEW",
+          "IN_REVIEW",
+          "DEVELOPER_ACTION_NEEDED",
+          "PENDING_BINARY_APPROVAL",
+          "APPROVED",
+          "DEVELOPER_REMOVED_FROM_SALE",
+          "REMOVED_FROM_SALE",
+          "REJECTED"
+        ]
+      },
+      {
+        "name": "sort",
+        "type": "array",
+        "description": "comma-separated list of sort expressions; resources will be sorted as specified",
+        "enum": [
+          "name",
+          "-name"
+        ]
+      },
+      {
+        "name": "fields[subscriptions]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptions Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "name",
+          "productId",
+          "familySharable",
+          "state",
+          "subscriptionPeriod",
+          "reviewNote",
+          "groupLevel",
+          "multiSeatStatus",
+          "marketSettings",
+          "subscriptionLocalizations",
+          "appStoreReviewScreenshot",
+          "group",
+          "introductoryOffers",
+          "promotionalOffers",
+          "offerCodes",
+          "prices",
+          "pricePoints",
+          "promotedPurchase",
+          "subscriptionAvailability",
+          "winBackOffers",
+          "images",
+          "planAvailabilities",
+          "versions",
+          "retentionOffers",
+          "retentionMessage",
+          "retentionMessageOffers"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "subscriptionLocalizations",
+          "appStoreReviewScreenshot",
+          "group",
+          "introductoryOffers",
+          "promotionalOffers",
+          "offerCodes",
+          "prices",
+          "promotedPurchase",
+          "subscriptionAvailability",
+          "winBackOffers",
+          "images",
+          "planAvailabilities",
+          "versions",
+          "retentionOffers",
+          "retentionMessage",
+          "retentionMessageOffers"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_messages.versions.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionMessages/{id}/versions",
+    "description": "List the versions belonging to a retention message.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "retentionMessage",
+          "localizations",
+          "placement"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_offers.create",
+    "domain": "subscriptions",
+    "method": "POST",
+    "path": "/v1/retentionOffers",
+    "description": "Create a retention offer for a subscription, shown to subscribers who start to cancel. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it. At most 10 per subscription and billing plan.",
+    "readOnly": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "RetentionOfferCreateRequest",
+    "risk": "revenue"
+  },
+  {
+    "name": "retention_offers.delete",
+    "domain": "subscriptions",
+    "method": "DELETE",
+    "path": "/v1/retentionOffers/{id}",
+    "description": "Delete a retention offer.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": false,
+    "risk": "revenue"
+  },
+  {
+    "name": "retention_offers.get",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionOffers/{id}",
+    "description": "Read one retention offer by ID.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[retentionOffers]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type retentionOffers Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "offerId",
+          "duration",
+          "offerMode",
+          "periodCount",
+          "customerEligibilityPaidSubscriptionDurationInMonths",
+          "customerEligibilityWaitBetweenOffersInMonths",
+          "targetSubscriptionPlanType",
+          "subscription",
+          "prices"
+        ]
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "subscription",
+          "prices"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_offers.prices.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/retentionOffers/{id}/prices",
+    "description": "List the prices belonging to a retention offer.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[territory]",
+        "type": "array",
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
+        "enum": [
+          "territory",
+          "subscriptionPricePoint"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "retention_offers.update",
+    "domain": "subscriptions",
+    "method": "PATCH",
+    "path": "/v1/retentionOffers/{id}",
+    "description": "Update a retention offer.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "RetentionOfferUpdateRequest",
+    "risk": "revenue"
+  },
+  {
     "name": "review_submission_items.create",
     "domain": "versions",
     "method": "POST",
@@ -20022,7 +20564,8 @@ export const OPERATIONS: Operation[] = [
           "gameCenterLeaderboardVersion",
           "inAppPurchaseVersion",
           "subscriptionVersion",
-          "subscriptionGroupVersion"
+          "subscriptionGroupVersion",
+          "retentionMessageVersion"
         ]
       }
     ],
@@ -20200,7 +20743,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "analytics",
     "method": "GET",
     "path": "/v1/salesReports",
-    "description": "Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.",
+    "description": "Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key. Apple stopped producing the INSTALLS type on 2026-11-04; only earlier dates still download.",
     "readOnly": true,
     "pathParams": [],
     "queryParams": [
@@ -21030,7 +21573,10 @@ export const OPERATIONS: Operation[] = [
           "winBackOffers",
           "images",
           "planAvailabilities",
-          "versions"
+          "versions",
+          "retentionOffers",
+          "retentionMessage",
+          "retentionMessageOffers"
         ]
       },
       {
@@ -21055,7 +21601,10 @@ export const OPERATIONS: Operation[] = [
           "winBackOffers",
           "images",
           "planAvailabilities",
-          "versions"
+          "versions",
+          "retentionOffers",
+          "retentionMessage",
+          "retentionMessageOffers"
         ]
       }
     ],
@@ -22171,7 +22720,10 @@ export const OPERATIONS: Operation[] = [
           "winBackOffers",
           "images",
           "planAvailabilities",
-          "versions"
+          "versions",
+          "retentionOffers",
+          "retentionMessage",
+          "retentionMessageOffers"
         ]
       },
       {
@@ -22191,7 +22743,10 @@ export const OPERATIONS: Operation[] = [
           "winBackOffers",
           "images",
           "planAvailabilities",
-          "versions"
+          "versions",
+          "retentionOffers",
+          "retentionMessage",
+          "retentionMessageOffers"
         ]
       }
     ],
@@ -22450,6 +23005,147 @@ export const OPERATIONS: Operation[] = [
         "name": "filter[territory]",
         "type": "array",
         "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "subscription",
+          "prices"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "subscriptions.retention_message_offers.add",
+    "domain": "subscriptions",
+    "method": "POST",
+    "path": "/v1/subscriptions/{id}/relationships/retentionMessageOffers",
+    "description": "Show existing retention offers of this subscription with its retention message.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "SubscriptionRetentionMessageOffersLinkagesRequest",
+    "risk": "revenue"
+  },
+  {
+    "name": "subscriptions.retention_message_offers.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/subscriptions/{id}/retentionMessageOffers",
+    "description": "List the retention offers this subscription shows with its retention message.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "subscription",
+          "prices"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "subscriptions.retention_message_offers.remove",
+    "domain": "subscriptions",
+    "method": "DELETE",
+    "path": "/v1/subscriptions/{id}/relationships/retentionMessageOffers",
+    "description": "Unlink retention message offers from a subscription.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "SubscriptionRetentionMessageOffersLinkagesRequest",
+    "risk": "revenue"
+  },
+  {
+    "name": "subscriptions.retention_message.get",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/subscriptions/{id}/retentionMessage",
+    "description": "Read the retention message for a subscription.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "versions",
+          "subscriptions"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "subscriptions.retention_message.set",
+    "domain": "subscriptions",
+    "method": "PATCH",
+    "path": "/v1/subscriptions/{id}/relationships/retentionMessage",
+    "description": "Set the retention message linked to a subscription.",
+    "readOnly": false,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "SubscriptionRetentionMessageLinkageRequest",
+    "risk": "revenue"
+  },
+  {
+    "name": "subscriptions.retention_offers.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/subscriptions/{id}/retentionOffers",
+    "description": "List every retention offer created for a subscription, whether or not its retention message shows it.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "fields[retentionOffers]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type retentionOffers Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "referenceName",
+          "offerId",
+          "duration",
+          "offerMode",
+          "periodCount",
+          "customerEligibilityPaidSubscriptionDurationInMonths",
+          "customerEligibilityWaitBetweenOffersInMonths",
+          "targetSubscriptionPlanType",
+          "subscription",
+          "prices"
+        ]
       },
       {
         "name": "limit",

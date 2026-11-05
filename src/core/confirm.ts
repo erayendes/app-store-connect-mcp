@@ -121,8 +121,9 @@ function questionFor(
       return yes(a.expired) ? { title: 'Expire this build?', covered: ['expired'] } : {};
     case 'subscription_versions__create':
     case 'subscription_group_versions__create':
-    case 'in_app_purchase_versions__create': {
-      const owner = rel('subscription') ?? rel('subscriptionGroup') ?? rel('inAppPurchase');
+    case 'in_app_purchase_versions__create':
+    case 'retention_message_versions__create': {
+      const owner = rel('subscription') ?? rel('subscriptionGroup') ?? rel('inAppPurchase') ?? rel('retentionMessage');
       return { title: owner ? `Create a review version for "${owner}"?` : 'Create a review version?' };
     }
   }
@@ -211,6 +212,7 @@ const PLACEMENT_PAGES: Record<string, string | undefined> = {
   appCustomProductPageLocalizations: 'custom product page',
   appStoreVersionExperimentTreatmentLocalizations: 'product page test',
   appEventLocalizations: 'in-app event',
+  retentionMessageVersions: 'retention message',
 };
 
 /**
@@ -233,7 +235,7 @@ const libraryAsset =
 
     const placement: any = await http.get(`/v1/appAssetLibraryPlacements/${encodeURIComponent(placements[0].id)}`, {
       include:
-        'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization,appEventLocalization',
+        'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization,appEventLocalization,retentionMessageVersion',
     });
     const page = (placement?.included ?? []).find((i: any) => i?.type in PLACEMENT_PAGES);
     const where: string[] = [placement?.data?.attributes?.placementType].filter(Boolean);
@@ -291,6 +293,11 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
     const a = res?.data?.attributes;
     const product = (res?.included ?? []).find((x: any) => x.type === 'inAppPurchases')?.attributes?.name;
     return `${product ?? 'In-app purchase'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  retentionMessageVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/retentionMessageVersions/${encodeURIComponent(id)}`, { include: 'retentionMessage' });
+    const message = (res?.included ?? []).find((x: any) => x.type === 'retentionMessages')?.attributes?.referenceName;
+    return `${message ?? 'Retention message'} — version (${res?.data?.attributes?.state ?? 'unknown'})`;
   },
   apps: async (http, id) => {
     const res: any = await http.get(`/v1/apps/${encodeURIComponent(id)}`);

@@ -240,13 +240,30 @@ export const CURATED: Record<string, string> = {
   'profiles.create':
     'Create a provisioning profile from a bundle ID, certificate and (for development) device list.',
   'sales_reports.list':
-    'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.',
+    'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key. Apple stopped producing the INSTALLS type on 2026-11-04; only earlier dates still download.',
   'finance_reports.list':
     'Download a finance report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance role on the API key.',
   'in_app_purchases_v2.create':
     'Create an in-app purchase. Set the product ID, type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION) and reference name.',
   'subscriptions.create':
     'Create an auto-renewable subscription inside a subscription group.',
+  // Retention (spec 4.6): an offer belongs to a subscription, and showing it
+  // with the retention message is a second, separate link.
+  'retention_offers.create':
+    'Create a retention offer for a subscription, shown to subscribers who start to cancel. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it. At most 10 per subscription and billing plan.',
+  // Apple's limit, from the App Store Connect help page; the API says nothing.
+  'retention_messages.create':
+    'Create a retention message for an app: what a subscriber sees on starting to cancel a subscription. An app holds at most 10 retention messages.',
+  'retention_message_localizations.update':
+    'Change the header and body text of a retention message in one language.',
+  'retention_message_versions.create':
+    'Start a new version of a retention message to edit its text and submit for review; the approved version stays live meanwhile.',
+  'subscriptions.retention_offers.list':
+    'List every retention offer created for a subscription, whether or not its retention message shows it.',
+  'subscriptions.retention_message_offers.list':
+    'List the retention offers this subscription shows with its retention message.',
+  'subscriptions.retention_message_offers.add':
+    'Show existing retention offers of this subscription with its retention message.',
   'subscriptions.delete':
     'Remove a recurring product entirely: delete a subscription from the catalogue. Possible only before Apple has ever approved it; anything that has been on sale is withdrawn by emptying the countries it sells in.',
   'subscription_plan_availabilities.create':

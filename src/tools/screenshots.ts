@@ -31,7 +31,7 @@ const idsField = { type: 'array', items: textField, minItems: 1, maxItems: MAX_I
 const targetFields = {
   app: { ...textField, description: 'App name, bundle ID or Apple ID.' },
   target: { type: 'string', enum: ['library', ...Object.keys(MEDIA_TARGETS)], description: 'Library, page, or a named image/file target.' },
-  page_id: { ...textField, description: 'Page localization ID, or the owning resource ID for an image/file target.' },
+  page_id: { ...textField, description: 'Page localization ID (retention: the message version ID), or the owning resource ID for an image/file target.' },
   locale: { ...textField, description: 'Version locale, e.g. en-US. Omit on list to inspect all locales.' },
   version: { ...textField, description: 'Version string. Required if multiple versions match.' },
   platform: { type: 'string', enum: PLATFORMS, description: 'Required if multiple platforms match.' },
@@ -178,7 +178,7 @@ async function getRow(http: AscHttpClient, operation: string, id: string, query?
 /** A localization ID is not proof that it belongs to the named app. */
 async function resolvePage(http: AscHttpClient, app: Target['app'], target: PageTarget, id: string): Promise<Page> {
   const adapter = PAGE_TARGETS[target];
-  const loc = await getRow(http, adapter.get, id, { include: target === 'cpp' ? 'appCustomProductPageVersion' : target === 'ppo' ? 'appStoreVersionExperimentTreatment' : target === 'event' ? 'appEvent' : 'appStoreVersion' });
+  const loc = await getRow(http, adapter.get, id, { include: target === 'cpp' ? 'appCustomProductPageVersion' : target === 'ppo' ? 'appStoreVersionExperimentTreatment' : target === 'event' ? 'appEvent' : target === 'retention' ? 'retentionMessage' : 'appStoreVersion' });
   let parent: Row, label: string, owner: string;
   if (target === 'cpp') {
     const version = await getRow(http, 'app_custom_product_page_versions.get', relId(loc, 'appCustomProductPageVersion'), { include: 'appCustomProductPage' });
@@ -199,6 +199,12 @@ async function resolvePage(http: AscHttpClient, app: Target['app'], target: Page
     parent = events.rows.find((e) => e.id === eventId) ?? fail(`Event ${eventId} does not belong to ${app.name}.`);
     owner = app.id;
     label = `event ${parent.attributes?.referenceName ?? eventId}`;
+  } else if (target === 'retention') {
+    // A retention message names no app; the app's own list is the ownership proof.
+    const messageId = relId(loc, 'retentionMessage');
+    const messages = await readMediaRows(http, 'apps.retention_messages.list', app.id, { limit: 200 });
+    const message = messages.rows.find((m) => m.id === messageId) ?? fail(`Retention message ${messageId} does not belong to ${app.name}.`);
+    return { target, id, label: `retention message ${message.attributes?.referenceName ?? messageId}`, locale: null, state: loc.attributes?.state ?? null };
   } else {
     parent = await getRow(http, 'app_store_versions.get', relId(loc, 'appStoreVersion'), { include: 'app' });
     owner = relId(parent, 'app');
@@ -215,9 +221,9 @@ async function resolveTarget(args: Args, http: AscHttpClient, single: boolean): 
   const pageId = str(args, 'page_id'), locale = str(args, 'locale'), version = str(args, 'version'), platform = str(args, 'platform');
   if (platform && !PLATFORMS.includes(platform)) fail(`Unknown platform: ${platform}.`);
   if (target === 'library' && (pageId || locale || version || platform)) fail('A library target cannot carry page selectors. Choose a page target to place a library file.');
-  if (target !== 'library' && target !== 'version' && (locale || version || platform)) fail('For cpp, ppo and event, use page_id (localization ID) only.');
+  if (target !== 'library' && target !== 'version' && (locale || version || platform)) fail('For cpp, ppo and event, use page_id (localization ID) only; for retention, the message version ID.');
   if (pageId && (locale || version || platform)) fail('Use page_id or version/platform/locale, not both.');
-  if (target !== 'library' && target !== 'version' && !pageId) fail('"page_id" (localization ID) is required for this target.');
+  if (target !== 'library' && target !== 'version' && !pageId) fail(`"page_id" (${target === 'retention' ? 'retention message version ID' : 'localization ID'}) is required for this target.`);
   const app = await resolveApp(http, appName);
   const library: any = await http.get(mediaPath(MEDIA_OPS.library, app.id));
   const libraryId: string = library?.data?.id ?? fail(`${app.name} has no asset library.`);
@@ -281,6 +287,13 @@ async function populatePlacementPages(http: AscHttpClient, target: Target, files
   target.pages = [...seen.values()];
 }
 async function pagePlacements(http: AscHttpClient, page: Page) {
+  if (page.target === 'retention') {
+    // To-one: the version's single placement, or none yet (null data or a 404).
+    let res: any;
+    try { res = await http.get(mediaPath(PAGE_TARGETS.retention.placements, page.id), { include: 'image,video' }); }
+    catch (err) { if (err instanceof AscApiError && err.status === 404) res = null; else throw err; }
+    return { rows: (res?.data ? [res.data] : []) as Row[], included: (res?.included ?? []) as Row[] };
+  }
   return readMediaRows(http, PAGE_TARGETS[page.target].placements, page.id, { include: 'image,video', ...(PAGE_TARGETS[page.target].ordered ? { sort: 'placementGroupPosition' } : {}), limit: 200 });
 }
 const errorsOf = (row: Row): string[] => (row.attributes?.stateDetails ?? row.attributes?.assetDeliveryState?.errors ?? []).map((e: any) => [e.code, e.description ?? e.detail].filter(Boolean).join(': '));
@@ -733,7 +746,7 @@ function placeBody(args: Args, page: Page, kind: MediaKind, id: string) {
 }
 
 /** Apple's reference feature behind each page target; the library answers for all of them. */
-const FEATURE_OF: Partial<Record<Target['target'], string>> = { version: 'APP_STORE_VERSIONS', cpp: 'CUSTOM_PRODUCT_PAGES', ppo: 'PRODUCT_PAGE_OPTIMIZATIONS', event: 'IN_APP_EVENTS' };
+const FEATURE_OF: Partial<Record<Target['target'], string>> = { version: 'APP_STORE_VERSIONS', cpp: 'CUSTOM_PRODUCT_PAGES', ppo: 'PRODUCT_PAGE_OPTIMIZATIONS', event: 'IN_APP_EVENTS', retention: 'RETENTION_MESSAGING' };
 const span = (min?: number, max?: number): string => (min === max ? `${min ?? '*'}` : `${min ?? '*'}–${max ?? '*'}`);
 const seconds = (iso?: string): string => iso?.match(/^PT(\d+(?:\.\d+)?)S$/)?.[1] ?? iso ?? '*';
 function specText(spec: any): string {
@@ -826,7 +839,7 @@ async function planWrite(name: string, args: Args, http: AscHttpClient, intent: 
           page = await resolvePage(http, target.app, found[0] as PageTarget, relId(checked.rows[0], found[1].relationship));
           target.pages.push(page);
         }
-        if (!PAGE_TARGETS[page.target].ordered) fail('Event placements have no order in Apple’s schema.');
+        if (!PAGE_TARGETS[page.target].ordered) fail(`${PAGE_NAMES[page.target]} placements have no order in Apple’s schema.`);
         const group = str(args, 'placement_group', true)!;
         // Apple orders each placement type on its own (409 otherwise), so a
         // group holding screenshots and previews is two lists.
@@ -879,7 +892,7 @@ async function planWrite(name: string, args: Args, http: AscHttpClient, intent: 
 // The macOS dialog's own text (core/native-confirm.ts): what happens, to which
 // files, on which page, in words. The form keeps the full plan with ids.
 const PLATFORM_NAMES: Record<string, string> = { IOS: 'iOS', MAC_OS: 'macOS', TV_OS: 'tvOS', VISION_OS: 'visionOS' };
-const PAGE_NAMES: Record<PageTarget, string> = { version: 'App Store page', cpp: 'custom product page', ppo: 'product page test', event: 'in-app event' };
+const PAGE_NAMES: Record<PageTarget, string> = { version: 'App Store page', cpp: 'custom product page', ppo: 'product page test', event: 'in-app event', retention: 'retention message' };
 const language = (locale: string): string => {
   try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) ?? locale; } catch { return locale; }
 };
@@ -891,7 +904,7 @@ function pageWhere(app: string, page?: Page): string {
   return [app, label, page.locale && language(page.locale)].filter(Boolean).join(' · ');
 }
 function mediaNoun(kinds: MediaKind[], page?: Page): string {
-  const screens = page && page.target !== 'event';
+  const screens = page && page.target !== 'event' && page.target !== 'retention';
   const one = (k: MediaKind) => (k === 'video' ? (screens ? 'app preview' : 'video') : screens ? 'screenshot' : 'image');
   const words = [...new Set(kinds.map(one))];
   const word = words.length === 1 ? words[0] : 'file';

@@ -9,7 +9,7 @@ This page shows what each App Store Connect role can do and what's at risk if th
 | **Admin** | Everything, including the team (`access`), code signing (`provisioning`), webhooks (`webhooks`) and EU alternative distribution (`distribution:dma-distribution`). | **Highest.** It can revoke other people's access and delete certificates and profiles, which breaks signing for the whole team. The damage reaches beyond your own app. |
 | **App Manager** | Runs the app end to end: app details (`general`), versions and releases (`distribution`), subscriptions, in-app purchases and prices (`monetization`), Game Center (`game-center`), App Clips (`app-clips`) and sandbox accounts (`access:sandbox`). | **High.** It can submit or pull a live version and delete an in-app purchase or a subscription group. It directly affects your live listing and your revenue. |
 | **Developer** | Builds and testing only: uploaded builds (`distribution:builds`), TestFlight (`testflight`), Xcode Cloud (`xcode-cloud`), Background Assets (`background-assets`). It can upload, not submit. | **Medium.** It can delete testers, builds and beta groups, but it can't touch pricing or live metadata, or submit for review. |
-| **Marketing** | Runs your store presence: custom product pages, product page tests, in-app events, nominations and reviews (`marketing`). | **Medium.** It can remove product pages, previews and in-app events that customers already see. |
+| **Marketing** | Runs your store presence: custom product pages, product page tests, in-app events, nominations and reviews (`marketing`), and subscription retention messages (`monetization:subscription-retention`). | **Medium.** It can remove product pages, previews and in-app events that customers already see. |
 | **Sales** | Reads sales and trend reports (`analytics`). | **Low.** Almost entirely read-only; report requests don't change your listing. |
 | **Finance** | Reads finance and payment reports (`analytics`; you also need to enter your Vendor number in setup). | **Low.** Same as Sales: the mostly read-only `analytics` area. |
 | **Customer Support** | Reads and replies to customer reviews (`marketing:customer-reviews`, including `reviews_ai__*`). | **Low to medium.** A reply is public. You can take it back, but customers may see a mistake before you notice it. |
@@ -21,7 +21,7 @@ This page shows what each App Store Connect role can do and what's at risk if th
 
 ## Which roles each profile works with
 
-Setup works from the same table: from what you pick, it suggests the narrowest role that covers all of it. A key has one role, so a mix that no single narrow role covers lands on Admin. ASC-Core's app lookup and tool search work with any role; its media tools need the role that owns what you upload to (Marketing or App Manager for store pages, App Manager for in-app purchase and Game Center images, Developer for build files).
+Setup works from the same table: from what you pick, it suggests the narrowest role that covers all of it. A key has one role, so a mix that no single narrow role covers lands on Admin. ASC-Core's app lookup and tool search work with any role; its media tools need the role that owns what you upload to (Marketing or App Manager for store pages and retention message images, App Manager for in-app purchase and Game Center images, Developer for build files).
 
 | Profile or sub-profile | Roles that work |
 |:--|:--|
@@ -71,6 +71,7 @@ Setup works from the same table: from what you pick, it suggests the narrowest r
 | `monetization:subscription` | App Manager, Admin |
 | `monetization:subscription-codes` | App Manager, Admin |
 | `monetization:subscription-offers` | App Manager, Admin |
+| `monetization:subscription-retention` | Marketing, App Manager, Admin |
 | `monetization:subscription-win-back` | App Manager, Admin |
 | `monetization:transactions` | App Manager, Admin |
 | `provisioning` | Admin |

@@ -41,6 +41,8 @@ export const PAGE_TARGETS = {
   cpp: { relationship: 'appCustomProductPageLocalization', get: 'app_custom_product_page_localizations.get', placements: 'app_custom_product_page_localizations.placements.list', ordered: true },
   ppo: { relationship: 'appStoreVersionExperimentTreatmentLocalization', get: 'app_store_version_experiment_treatment_localizations.get', placements: 'app_store_version_experiment_treatment_localizations.placements.list', ordered: true },
   event: { relationship: 'appEventLocalization', get: 'app_event_localizations.get', placements: 'app_event_localizations.placements.list', ordered: false },
+  // A retention message version holds one image, on the version rather than a localization.
+  retention: { relationship: 'retentionMessageVersion', get: 'retention_message_versions.get', placements: 'retention_message_versions.placement.get', ordered: false },
 } as const;
 export type PageTarget = keyof typeof PAGE_TARGETS;
 

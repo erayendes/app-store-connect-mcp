@@ -51,6 +51,12 @@ const COVERAGE: Coverage[] = [
     { target, action: 'rename', macro: 'media__arrange', operations: libraryUpdates },
     ...(target === 'event' ? [] : [{ target, action: 'reorder', macro: 'media__arrange', operations: [reorder] }]),
   ]),
+  // A retention message version holds one image, so it has no order and no video poster.
+  { target: 'retention', action: 'list', macro: 'media__list', operations: ['retention_message_versions.placement.get', 'app_asset_library_images.get'] },
+  { target: 'retention', action: 'upload', macro: 'media__upload', operations: [...assetCreates, placementCreate] },
+  { target: 'retention', action: 'place', macro: 'media__arrange', operations: [placementCreate] },
+  { target: 'retention', action: 'remove', macro: 'media__arrange', operations: [placementDelete] },
+  { target: 'retention', action: 'delete', macro: 'media__delete', operations: [placementDelete] },
 ];
 
 describe('media target × action coverage', () => {
@@ -60,9 +66,10 @@ describe('media target × action coverage', () => {
     expect(actionsFor('library')).toEqual(['list', 'upload', 'reorder', 'poster', 'archive', 'rename', 'delete'].sort());
     for (const target of ['version', 'cpp', 'ppo']) expect(actionsFor(target)).toEqual(pageActions);
     expect(actionsFor('event')).toEqual(pageActions.filter((action) => action !== 'reorder'));
+    expect(actionsFor('retention')).toEqual(['delete', 'list', 'place', 'remove', 'upload']);
     for (const [target, adapter] of Object.entries(PAGE_TARGETS)) {
       expect(COVERAGE.find((row) => row.target === target && row.action === 'list')?.operations).toContain(adapter.placements);
-      expect(adapter.ordered).toBe(target !== 'event');
+      expect(adapter.ordered).toBe(target !== 'event' && target !== 'retention');
     }
     const shared = new Set([`${placementGet}|media__arrange`, `${placementCreate}|media__upload`, `${placementDelete}|media__arrange`]);
     for (const row of COVERAGE) for (const operation of row.operations) {
@@ -114,7 +121,7 @@ describe('media target × action coverage', () => {
   });
   it.each(COVERAGE)('executes $target/$action through $macro against include-aware responses', async (cell) => {
     const page = cell.target === 'library' ? 'version' : cell.target;
-    const pageId = { version: 'loc', cpp: 'cpp-loc', ppo: 'ppo-loc', event: 'event-loc' }[page]!;
+    const pageId = { version: 'loc', cpp: 'cpp-loc', ppo: 'ppo-loc', event: 'event-loc', retention: 'rmv' }[page]!;
     const relationship = PAGE_TARGETS[page as keyof typeof PAGE_TARGETS].relationship;
     const link = (id: string) => ({ data: { id } });
     const select = (row: any, query?: any) => {
@@ -145,6 +152,10 @@ describe('media target × action coverage', () => {
         if (path === '/v2/appStoreVersionExperiments/exp') return single('exp', { name: 'Color' }, { app: link('app') }, query);
         if (path === '/v1/appEventLocalizations/event-loc') return single('event-loc', { locale: 'en-US' }, { appEvent: link('event') }, query);
         if (path === '/v1/apps/app/appEvents') return { data: [{ id: 'event', attributes: { referenceName: 'Launch' } }] };
+        if (path === '/v1/retentionMessageVersions/rmv') return single('rmv', { state: 'PREPARE_FOR_SUBMISSION' }, { retentionMessage: link('rm') }, query);
+        if (path === '/v1/apps/app/retentionMessages') return { data: [{ id: 'rm', attributes: { referenceName: 'Stay' } }] };
+        // To-one: a retention message version holds a single placement.
+        if (path === '/v1/retentionMessageVersions/rmv/placement') return { data: select(rows[0], query), included: cell.action === 'list' ? [] : [image] };
         if (path === '/v1/appAssetLibraries/lib/images' || path === '/v1/appAssetLibraries/lib/videos') {
           const row: any = structuredClone(path.endsWith('/images') ? image : video);
           const selected = !query?.['filter[id]'] || query['filter[id]'].split(',').includes(row.id);

@@ -85,6 +85,10 @@ const TRANSACTION_FIELDS = [
   'storefront',
   'currency',
   'price',
+  'billingPlanType',
+  'commitmentInfo',
+  'revocationType',
+  'revocationPercentage',
 ] as const;
 
 /** The renewal info worth showing; like a transaction, it leaves `appAccountToken` out. */
@@ -102,6 +106,8 @@ const RENEWAL_FIELDS = [
   'currency',
   'offerType',
   'recentSubscriptionStartDate',
+  'renewalBillingPlanType',
+  'commitmentInfo',
 ] as const;
 
 /**
@@ -591,7 +597,11 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
           },
         },
         file_path: { type: 'string', description: 'upload_image: local PNG file.' },
-        image_size: { type: 'string', enum: ['FULL_SIZE', 'BULLET_POINT'] },
+        image_size: {
+          type: 'string',
+          enum: ['FULL_SIZE', 'UNIVERSAL_ASSET', 'BULLET_POINT'],
+          description: 'upload_image: FULL_SIZE (3840 wide, 160–2160 high) or UNIVERSAL_ASSET (5244 × 2950) above the body; BULLET_POINT (1024 × 1024) for a bullet icon.',
+        },
         product_id: { type: 'string', description: 'set_default_message / delete_default_message.' },
         locale: { type: 'string', description: 'set_default_message / delete_default_message, e.g. en-US.' },
         url: { type: 'string', description: 'set_realtime_url: your HTTPS endpoint.' },
@@ -759,7 +769,7 @@ function retentionDialog(
     case 'upload_image':
       return dialog('Upload a retention image?', 'Upload', [
         `File: ${String(args.file_path ?? '').split('/').pop()}`,
-        `Size: ${args.image_size === 'BULLET_POINT' ? 'bullet point' : 'full size'}`,
+        `Size: ${({ BULLET_POINT: 'bullet point', UNIVERSAL_ASSET: 'universal asset' } as Record<string, string>)[String(args.image_size)] ?? 'full size'}`,
       ], 'Customers see it only in a message that uses it.');
     case 'delete_image':
       return dialog('Delete a retention image?', 'Delete', [`Image ${prefix(args.image_id)}`],

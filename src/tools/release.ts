@@ -33,7 +33,7 @@ export const REVIEW_ITEM_TYPES = [
   'appEvent', 'appAssetLibraryImage', 'appAssetLibraryVideo', 'backgroundAssetVersion',
   'gameCenterAchievementVersion', 'gameCenterActivityVersion', 'gameCenterChallengeVersion',
   'gameCenterLeaderboardVersion', 'gameCenterLeaderboardSetVersion',
-  'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion',
+  'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion', 'retentionMessageVersion',
 ] as const;
 const ITEM_INCLUDES = ['appStoreVersion', ...REVIEW_ITEM_TYPES].join(',');
 type ReviewItem = { type: string; id: string };
@@ -49,7 +49,8 @@ export const REVIEW_RESOURCE_TYPES: Record<string, string> = {
   gameCenterLeaderboardVersion: 'gameCenterLeaderboardVersions',
   gameCenterLeaderboardSetVersion: 'gameCenterLeaderboardSetVersions',
   inAppPurchaseVersion: 'inAppPurchaseVersions', subscriptionVersion: 'subscriptionVersions',
-  subscriptionGroupVersion: 'subscriptionGroupVersions', appStoreVersion: 'appStoreVersions',
+  subscriptionGroupVersion: 'subscriptionGroupVersions', retentionMessageVersion: 'retentionMessageVersions',
+  appStoreVersion: 'appStoreVersions',
 };
 const RESOURCE_TYPES = REVIEW_RESOURCE_TYPES;
 const VERSIONED_ITEMS = new Set([
@@ -136,7 +137,7 @@ export const RELEASE_TOOLS: McpToolDefinition[] = [
   },
   {
     name: 'release__submit_items',
-    description: 'Submit reviewable product, marketing, Game Center or asset versions to Apple in one call. Set with_app_version=true when the first item needs the platform’s editable App Store version in the same submission. The confirmation lists every existing and new item before submission.',
+    description: 'Submit reviewable product, retention message, marketing, Game Center or asset versions to Apple in one call. Set with_app_version=true when the first item needs the platform’s editable App Store version in the same submission. The confirmation lists every existing and new item before submission.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -315,6 +316,9 @@ const VERSION_PARENTS: Record<string, { relationship: string; path: string }> = 
   subscriptionVersion: { relationship: 'subscription', path: '/v1/subscriptions/{id}/versions' },
   subscriptionGroupVersion: { relationship: 'subscriptionGroup', path: '/v1/subscriptionGroups/{id}/versions' },
 };
+/** Source: https://developer.apple.com/help/app-store-connect/manage-subscriptions/configure-retention-messages
+ * "You can submit a retention message as soon as you add text": no app version, first time or not. */
+const STANDALONE_ITEMS = new Set(['retentionMessageVersion']);
 async function hasEarlierApprovedVersion(http: AscHttpClient, type: string, current: any): Promise<boolean | undefined> {
   const parent = VERSION_PARENTS[type];
   const id = parent && current?.relationships?.[parent.relationship]?.data?.id;
@@ -388,7 +392,7 @@ async function checkCompanions(http: AscHttpClient, appId: string, platform: str
   const hasAppVersion = plan.items.some((i) => i.type === 'appStoreVersion');
   const historyByType = new Map<string, boolean | undefined>();
   for (const item of plan.items) {
-    if (item.type === 'appStoreVersion') continue;
+    if (item.type === 'appStoreVersion' || STANDALONE_ITEMS.has(item.type)) continue;
     let first: boolean | undefined;
     let version: any;
     let product: any;
@@ -560,6 +564,7 @@ const ITEM_NOUNS: Record<string, string> = {
   gameCenterActivityVersion: 'Game Center activity', gameCenterChallengeVersion: 'Game Center challenge',
   gameCenterLeaderboardVersion: 'Game Center leaderboard', gameCenterLeaderboardSetVersion: 'Game Center leaderboard set',
   inAppPurchaseVersion: 'in-app purchase', subscriptionVersion: 'subscription', subscriptionGroupVersion: 'subscription group',
+  retentionMessageVersion: 'retention message',
 };
 /** Items by name where the preview carries one, else counted by kind ("2 in-app purchases"); never by id. */
 function itemPhrases(items: ReviewItem[], shown: Record<string, unknown>): string[] {
