@@ -1218,6 +1218,46 @@ describe('pricing__make_offer', () => {
     expect(preview).toMatch(/cannot|does not allow/);
     expect(buildPricingPreview(promoFree, 'pricing__make_offer')).toMatch(/free in every country/);
   });
+
+  const retention = {
+    app: 'Ask Quran',
+    subscription: 'yearly.1',
+    offer_type: 'retention',
+    name: 'Stay 1y',
+    offer_id: 'stay_1y',
+    offer_mode: 'PAY_UP_FRONT',
+    duration: 'ONE_YEAR',
+    periods: 1,
+    territory: 'TUR',
+    price: '29.99',
+    eligibility_paid_months: 3,
+    eligibility_wait_months: 6,
+  };
+
+  it('makes a retention offer in ONE request, priced in every country, with its own eligibility only', async () => {
+    const { http, posts } = offerHttp();
+    const result: any = await run(retention, http);
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0].path).toBe('/v1/retentionOffers');
+    expect(posts[0].body.data.attributes).toEqual({
+      referenceName: 'Stay 1y', offerId: 'stay_1y', duration: 'ONE_YEAR', offerMode: 'PAY_UP_FRONT', periodCount: 1,
+      customerEligibilityPaidSubscriptionDurationInMonths: 3, customerEligibilityWaitBetweenOffersInMonths: 6,
+    });
+    expect(posts[0].body.included.map((p: any) => p.type)).toEqual(['retentionOfferPrices', 'retentionOfferPrices', 'retentionOfferPrices']);
+    expect(validateBody(schemaFor('retention_offers.create'), posts[0].body)).toEqual([]);
+    expect(result.note).toMatch(/only once a retention message carries it/);
+  });
+
+  it('refuses a retention offer without paid-months eligibility before reading anything', async () => {
+    const { http } = offerHttp();
+    await expect(run({ ...retention, eligibility_paid_months: undefined }, http)).rejects.toThrow(/eligibility_paid_months.*retention/);
+    expect(http.get).not.toHaveBeenCalled();
+  });
+
+  it('previews a retention offer as shown only through a message', () => {
+    expect(buildPricingPreview(retention, 'pricing__make_offer')).toMatch(/only once a retention message carries it/);
+  });
 });
 
 /**

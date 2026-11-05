@@ -36,8 +36,7 @@ function fake(options: { open?: boolean; existing?: any[]; platforms?: string[];
     if (path === '/v1/reviewSubmissions/open-1/items' || path === '/v1/reviewSubmissions/new-1/items') return shownItems(currentItems, query);
     if (/^\/v1\/reviewSubmissions\/prior-\d+\/items$/.test(path)) return shownItems(options.priorItems ?? [], query);
     if (path === '/v2/inAppPurchases/iap-product-1/versions' || path === '/v1/subscriptions/product-1/versions' ||
-        path === '/v1/appCustomProductPages/cpp-product-1/appCustomProductPageVersions' || path === '/v1/backgroundAssets/background-product-1/versions' ||
-        path === '/v1/retentionMessages/retention-1/versions') {
+        path === '/v1/appCustomProductPages/cpp-product-1/appCustomProductPageVersions' || path === '/v1/backgroundAssets/background-product-1/versions') {
       if (path.includes('/backgroundAssets/')) return { data: options.earlierApproved ? [{ id: 'earlier', attributes: { state: 'COMPLETE' }, relationships: { appStoreRelease: { data: { id: 'asset-release' } } } }] : [], included: [{ id: 'asset-release', type: 'backgroundAssetVersionAppStoreReleases', attributes: { state: options.assetReleaseState ?? 'ACCEPTED' } }] };
       return { data: options.earlierApproved ? [{ id: 'earlier', attributes: { state: 'APPROVED' } }] : [] };
     }
@@ -320,10 +319,11 @@ describe('item release history and state regressions', () => {
     await executeReleaseTool('release__submit_items', { app: 'Example', platform: 'IOS', items: [{ type: 'backgroundAssetVersion', id: 'new' }] }, { http });
     expect(writes.at(-1)?.method).toBe('PATCH');
   });
-  it('submits a retention message version on its own once an earlier version was approved', async () => {
-    const { http, writes, reads } = fake({ earlierApproved: true });
+  it('submits even the first retention message version on its own, with no app version', async () => {
+    const { http, writes, reads } = fake();
     await executeReleaseTool('release__submit_items', { app: 'Example', platform: 'IOS', items: [{ type: 'retentionMessageVersion', id: 'new' }] }, { http });
-    expect(reads.some((r) => r.path === '/v1/retentionMessages/retention-1/versions')).toBe(true);
+    // No history read: Apple takes a retention message without an app version, first time or not.
+    expect(reads.some((r) => r.path === '/v1/apps/1/reviewSubmissions' && r.query?.limit === 200)).toBe(false);
     expect(writes.find((w) => w.path === '/v1/reviewSubmissionItems')?.body.data.relationships).toEqual({
       reviewSubmission: { data: { type: 'reviewSubmissions', id: 'new-1' } },
       retentionMessageVersion: { data: { type: 'retentionMessageVersions', id: 'new' } },

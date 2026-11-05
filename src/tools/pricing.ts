@@ -204,11 +204,11 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
   {
     name: 'pricing__make_offer',
     description:
-      'Make a subscription win-back, promotional or introductory offer, priced in every ' +
+      'Make a subscription win-back, promotional, retention or introductory offer, priced in every ' +
       'country where the subscription is sold, in one call. Give the app, the subscription, ' +
       'the offer kind, mode, duration and periods, and either an anchor territory and price ' +
       'or a free trial. Every other market comes from Apple\'s own equalizations of the ' +
-      'anchor. Win-back and promotional offers go to Apple as one request, so they exist ' +
+      'anchor. Win-back, promotional and retention offers go to Apple as one request, so they exist ' +
       'complete or not at all. Introductory offers are one write per country, taking a few ' +
       'minutes: everything is checked first, it stops at the first failure, and the same call ' +
       'again resumes. Once made, only an introductory offer\'s end date can change. Refuses ' +
@@ -230,18 +230,20 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
           description:
             'win_back: shown to lapsed subscribers who meet the eligibility below. ' +
             'promotional: redeemed by existing or lapsed subscribers through a signed offer in the app. ' +
-            'introductory: the first period for customers new to the subscription group.',
-          enum: ['win_back', 'promotional', 'introductory'],
+            'introductory: the first period for customers new to the subscription group. ' +
+            'retention: shown to a subscriber who starts to cancel, only once a retention message ' +
+            'carries it; up to 10 per subscription and billing plan.',
+          enum: ['win_back', 'promotional', 'introductory', 'retention'],
         },
         name: {
           type: 'string',
-          description: 'Win-back and promotional, required: reference name, seen only in App Store Connect.',
+          description: 'Win-back, promotional and retention, required: reference name, seen only in App Store Connect.',
         },
         offer_id: {
           type: 'string',
           description:
-            'Win-back and promotional, required: the identifier the app uses for this offer ' +
-            '(Apple\'s offerId for win-back, offerCode for promotional). Must not be used by any ' +
+            'Win-back, promotional and retention, required: the identifier the app uses for this offer ' +
+            '(Apple\'s offerId for win-back and retention, offerCode for promotional). Must not be used by any ' +
             'other offer of this subscription.',
         },
         offer_mode: {
@@ -275,7 +277,7 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         },
         eligibility_paid_months: {
           type: 'integer',
-          description: 'Win-back only, required: how many months the customer must have paid for before.',
+          description: 'Win-back and retention, required: how many months the customer must have paid for before.',
         },
         eligibility_last_subscribed_min_months: {
           type: 'integer',
@@ -287,13 +289,13 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         },
         eligibility_wait_months: {
           type: 'integer',
-          description: 'Win-back only, optional: months before the same customer can redeem this offer again.',
+          description: 'Win-back and retention, optional: months before the same customer can redeem this offer again.',
         },
         start_date: {
           type: 'string',
           description:
             'First day the offer runs (YYYY-MM-DD). Required for win-back; optional for ' +
-            'introductory (omit to start now); not used for promotional.',
+            'introductory (omit to start now); not used for promotional or retention.',
         },
         end_date: {
           type: 'string',
@@ -801,6 +803,9 @@ export function buildPricingPreview(args: Record<string, unknown>, toolName?: st
       ...(args.offer_type === 'win_back'
         ? [`Runs:         from ${String(args.start_date ?? '?')}${args.end_date ? ` to ${String(args.end_date)}` : ', open-ended'}`]
         : []),
+      ...(args.offer_type === 'retention'
+        ? [`Shown:        only once a retention message carries it.`]
+        : []),
       // Apple's own rule, and the reason a wrong price cannot be fixed later.
       `Permanent:    Apple does not allow an offer's countries or prices to be changed after creation.`,
       '',
@@ -974,7 +979,8 @@ export function pricingDialog(name: string, args: Record<string, unknown>): Dial
       ], 'Afterwards Apple lets only its end date change.', 'Add');
     }
     const winBack = args.offer_type === 'win_back';
-    return dialog(`Create the ${winBack ? 'win-back' : 'promotional'} offer "${String(args.name ?? '?')}"?`, [
+    const retention = args.offer_type === 'retention';
+    return dialog(`Create the ${winBack ? 'win-back' : retention ? 'retention' : 'promotional'} offer "${String(args.name ?? '?')}"?`, [
       `${app} · subscription ${sub}`, `Offer ID ${String(args.offer_id ?? '?')}`,
       offerTerms(args), ...(paid ? [derived] : []),
       ...(winBack
@@ -984,7 +990,12 @@ export function pricingDialog(name: string, args: Record<string, unknown>): Dial
             `Runs ${runs}`,
             ...(args.priority === 'HIGH' ? ['High priority against other offers'] : []),
           ]
-        : ['For current or lapsed subscribers, through a signed offer in the app']),
+        : retention
+          ? [
+              `For subscribers who start to cancel after paying for ${months(args.eligibility_paid_months)}, once a retention message carries it`,
+              ...(args.eligibility_wait_months !== undefined ? [`Each customer can redeem it again after ${months(args.eligibility_wait_months)}.`] : []),
+            ]
+          : ['For current or lapsed subscribers, through a signed offer in the app']),
     ], 'Its countries and prices can’t be changed later.', 'Create');
   }
   return undefined;
@@ -1693,7 +1704,7 @@ async function equalizePrice(
 }
 
 /**
- * A win-back or promotional offer, priced in every country in one request.
+ * A win-back, promotional or retention offer, priced in every country in one request.
  *
  * Both create endpoints take the offer and all of its per-territory prices in
  * one body, and Apple accepts or rejects it whole — unlike subscription prices,
@@ -1716,8 +1727,9 @@ const OFFER_MODES = ['PAY_AS_YOU_GO', 'PAY_UP_FRONT', 'FREE_TRIAL'];
 async function createOffer(args: Record<string, unknown>, ctx: PricingContext): Promise<unknown> {
   const winBack = args.offer_type === 'win_back';
   const intro = args.offer_type === 'introductory';
-  if (!winBack && !intro && args.offer_type !== 'promotional') {
-    throw new AscApiError(`"${args.offer_type ?? ''}" is not an offer type. One of: win_back, promotional, introductory.`, 0);
+  const retention = args.offer_type === 'retention';
+  if (!winBack && !intro && !retention && args.offer_type !== 'promotional') {
+    throw new AscApiError(`"${args.offer_type ?? ''}" is not an offer type. One of: win_back, promotional, introductory, retention.`, 0);
   }
   // Introductory offers carry no name or identifier at Apple.
   const required = intro
@@ -1771,6 +1783,13 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
     if (args.end_date !== undefined && !isDate(args.end_date)) throw new AscApiError('"end_date" must be YYYY-MM-DD.', 0);
     if (args.priority !== undefined && args.priority !== 'HIGH' && args.priority !== 'NORMAL') {
       throw new AscApiError('"priority" is HIGH or NORMAL.', 0);
+    }
+  } else if (retention) {
+    if (!isCount(args.eligibility_paid_months)) {
+      throw new AscApiError('"eligibility_paid_months" is required for a retention offer: a whole number of months.', 0);
+    }
+    if (args.eligibility_wait_months !== undefined && !isCount(args.eligibility_wait_months)) {
+      throw new AscApiError('"eligibility_wait_months" must be a whole number of months.', 0);
     }
   } else if (intro) {
     for (const field of ['start_date', 'end_date'] as const) {
@@ -1839,13 +1858,25 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
 
   const territories = [...currency.keys()].sort();
   if (intro) return introductoryOffers(args, ctx, { app, sub, territories, currency, points, free, anchorTerritory, mode, duration });
-  const priceType = winBack ? 'winBackOfferPrices' : 'subscriptionPromotionalOfferPrices';
+  const priceType = winBack ? 'winBackOfferPrices' : retention ? 'retentionOfferPrices' : 'subscriptionPromotionalOfferPrices';
   // Client-supplied placeholder ids: JSON:API's way of linking resources created in the same request.
   const ref = (code: string) => `\${price-${code}}`;
   const body = {
     data: {
-      type: winBack ? 'winBackOffers' : 'subscriptionPromotionalOffers',
-      attributes: winBack
+      type: winBack ? 'winBackOffers' : retention ? 'retentionOffers' : 'subscriptionPromotionalOffers',
+      attributes: retention
+        ? {
+            referenceName: String(args.name),
+            offerId: String(args.offer_id),
+            duration,
+            offerMode: mode,
+            periodCount: args.periods,
+            customerEligibilityPaidSubscriptionDurationInMonths: args.eligibility_paid_months,
+            ...(args.eligibility_wait_months !== undefined
+              ? { customerEligibilityWaitBetweenOffersInMonths: args.eligibility_wait_months }
+              : {}),
+          }
+        : winBack
         ? {
             referenceName: String(args.name),
             offerId: String(args.offer_id),
@@ -1885,7 +1916,7 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
       },
     })),
   };
-  const path = winBack ? '/v1/winBackOffers' : '/v1/subscriptionPromotionalOffers';
+  const path = winBack ? '/v1/winBackOffers' : retention ? '/v1/retentionOffers' : '/v1/subscriptionPromotionalOffers';
 
   const resolved = {
     app: `${app.name} (${app.id})`,
@@ -1928,7 +1959,9 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
     ok: true,
     created: { id: res?.data?.id ?? null, ...resolved },
     prices,
-    note: 'Apple created the offer with every country listed. Its countries and prices cannot be changed later.',
+    note:
+      'Apple created the offer with every country listed. Its countries and prices cannot be changed later.' +
+      (retention ? ' Subscribers see it only once a retention message carries it for this subscription.' : ''),
   };
 }
 

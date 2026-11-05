@@ -250,7 +250,12 @@ export const CURATED: Record<string, string> = {
   // Retention (spec 4.6): an offer belongs to a subscription, and showing it
   // with the retention message is a second, separate link.
   'retention_offers.create':
-    'Create a retention offer for a subscription. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it.',
+    'Create a retention offer for a subscription, shown to subscribers who start to cancel. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it. At most 10 per subscription and billing plan.',
+  // Apple's limit, from the App Store Connect help page; the API says nothing.
+  'retention_messages.create':
+    'Create a retention message for an app: what a subscriber sees on starting to cancel a subscription. An app holds at most 10 retention messages.',
+  'retention_message_localizations.update':
+    'Change the header and body text of a retention message in one language.',
   'retention_message_versions.create':
     'Start a new version of a retention message to edit its text and submit for review; the approved version stays live meanwhile.',
   'subscriptions.retention_offers.list':

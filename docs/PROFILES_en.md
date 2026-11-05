@@ -991,13 +991,13 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscriptions__introductory_offers__remove` — Removes the chosen offers a subscription makes to first-time subscribers
 - `subscriptions__price_points__list` — Lists the prices a subscription can be set to
 - `subscriptions__promotional_offers__list` — Lists the offers for current or former subscribers
-- `pricing__make_offer` — Creates an introductory, promotional or win-back offer for a subscription, priced in every country
+- `pricing__make_offer` — Creates an introductory, promotional, win-back or retention offer for a subscription, priced in every country
 
-#### `monetization:subscription-retention` · 30 tools
+#### `monetization:subscription-retention` · 31 tools
 
 **What is inside:** Retention messages and offers shown to subscribers who start to cancel.
 
-**When you need it:** Messages and offers for subscribers who start to cancel. · **Key role:** App Manager
+**When you need it:** Messages and offers for subscribers who start to cancel. · **Key role:** Marketing
 
 - `apps__retention_messages__list` — Lists the retention messages for an app
 - `retention_message_localizations__create` — Adds a language to a retention message version with its header and body
@@ -1026,6 +1026,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscriptions__retention_message_offers__remove` — Removes offers from a subscription's retention message
 - `subscriptions__retention_offers__list` — Lists the retention offers of a subscription
 - `release__submit_items` — Sends a retention message version to review
+- `pricing__make_offer` — Creates an introductory, promotional, win-back or retention offer for a subscription, priced in every country
 
 #### `monetization:subscription-win-back` · 12 tools
 
@@ -1041,7 +1042,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `win_back_offers__get` — Shows the details of a win-back offer
 - `win_back_offers__prices__list` — Lists a win-back offer's prices by country
 - `win_back_offers__update` — Changes a win-back offer's terms, dates and promotion settings
-- `pricing__make_offer` — Creates an introductory, promotional or win-back offer for a subscription, priced in every country
+- `pricing__make_offer` — Creates an introductory, promotional, win-back or retention offer for a subscription, priced in every country
 
 #### `monetization:transactions` · 21 tools
 

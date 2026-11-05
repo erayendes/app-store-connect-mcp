@@ -15,9 +15,11 @@ Hi,
 Apple opened retention messages to the App Store Connect API this week, so this beta is mostly about them.
 
 **Retention messages, in a sub-profile of their own**
-The message a subscriber sees when they start to cancel can now be set up end to end: the message, its versions, its text in each language, the offers shown with it, and which subscription it belongs to. It's all in `monetization:subscription-retention`. `release__submit_items` sends a message version to review as well.
+The message a subscriber sees when they start to cancel can now be set up end to end: the message, its versions, its text in each language, the offers shown with it, and which subscription it belongs to. It's all in `monetization:subscription-retention`. `release__submit_items` sends a message version to review as well, on its own: Apple needs no app version with it, not even the first time.
 
 The image above the message goes on with the media tools: `media__arrange` with the new `retention` target places a library image on a message version. A library that already has an image on a retention message lists and deletes as before.
+
+`pricing__make_offer` makes a retention offer too, priced in every country from one anchor price. A Marketing key is enough for all of it, as Apple allows.
 
 There are now 13 profiles and 51 sub-profiles.
 
@@ -383,9 +385,11 @@ Selam,
 Apple bu hafta elde tutma mesajlarını App Store Connect API'ye açtı; bu beta çoğunlukla onlarla ilgili.
 
 **Elde tutma mesajları kendi alt profilinde**
-Abone iptal etmeye başladığında gördüğü mesajı artık baştan sona kurabilirsiniz: mesajın kendisi, sürümleri, her dildeki metni, yanında gösterilen teklifler ve hangi aboneliğe ait olduğu. Hepsi `monetization:subscription-retention` içinde. `release__submit_items` mesaj sürümünü de incelemeye gönderiyor.
+Abone iptal etmeye başladığında gördüğü mesajı artık baştan sona kurabilirsiniz: mesajın kendisi, sürümleri, her dildeki metni, yanında gösterilen teklifler ve hangi aboneliğe ait olduğu. Hepsi `monetization:subscription-retention` içinde. `release__submit_items` mesaj sürümünü de incelemeye gönderiyor; Apple yanında uygulama sürümü istemediği için ilk mesaj da tek başına gidiyor.
 
 Mesajın üstündeki görsel medya araçlarıyla ekleniyor: yeni `retention` hedefiyle `media__arrange`, kütüphanedeki bir görseli mesaj sürümüne yerleştiriyor. Bir elde tutma mesajında görseli olan kütüphane de eskisi gibi listeleniyor ve siliniyor.
+
+`pricing__make_offer` elde tutma teklifini de kuruyor; tek çapa fiyattan her ülkenin fiyatı çıkıyor. Apple'ın izin verdiği gibi bunların hepsi için Marketing rolündeki bir anahtar yeterli.
 
 Artık 13 profil ve 51 alt profil var.
 

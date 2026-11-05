@@ -522,3 +522,32 @@ describe('TestFlight digest search intents', () => {
     expect(result.matches[0]).toMatchObject({ tool: 'testflight__feedback_digest', loaded: true });
   });
 });
+
+// Retention (spec 4.6). The curated descriptions say "start to cancel" so a
+// query about cancelling subscribers finds these before the win-back list.
+describe('retention message search intents', () => {
+  it.each([
+    ['create retention message', 'retention_messages.create'],
+    ['message shown when a subscriber cancels', 'retention_messages.create'],
+    ['list retention messages for app', 'apps.retention_messages.list'],
+    ['edit retention message header and body', 'retention_message_localizations.update'],
+    ['new retention message version', 'retention_message_versions.create'],
+    ['create retention offer', 'retention_offers.create'],
+    ['offer for subscribers who start to cancel', 'retention_offers.create'],
+    ['assign retention message to subscription', 'subscriptions.retention_message.set'],
+    ['show retention offer with message', 'subscriptions.retention_message_offers.add'],
+  ])('ranks the right tool in the top 3 for %s', (query, tool) => {
+    expect(searchOperations(query).slice(0, 3).map((op) => op.name)).toContain(tool);
+  });
+
+  it.each([
+    ['retention offer priced in every country', 'pricing__make_offer'],
+    ['submit retention message for review', 'release__submit_items'],
+  ])('offers the macro first for %s', async (query, macro) => {
+    const result: any = await executeMetaTool('asc__search_tools', { query, limit: 3 }, {
+      registry: new ToolRegistry({ operations: [], readOnly: false }), loadedDomains: [], config: {},
+      macroOffered: () => true,
+    } as any);
+    expect(result.matches[0]?.tool).toBe(macro);
+  });
+});

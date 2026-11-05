@@ -20004,7 +20004,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "PATCH",
     "path": "/v1/retentionMessageLocalizations/{id}",
-    "description": "Update a retention message localization.",
+    "description": "Change the header and body text of a retention message in one language.",
     "readOnly": false,
     "pathParams": [
       "id"
@@ -20122,7 +20122,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/retentionMessages",
-    "description": "Create a retention message.",
+    "description": "Create a retention message for an app: what a subscriber sees on starting to cancel a subscription. An app holds at most 10 retention messages.",
     "readOnly": false,
     "pathParams": [],
     "queryParams": [],
@@ -20322,7 +20322,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/retentionOffers",
-    "description": "Create a retention offer for a subscription. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it.",
+    "description": "Create a retention offer for a subscription, shown to subscribers who start to cancel. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it. At most 10 per subscription and billing plan.",
     "readOnly": false,
     "pathParams": [],
     "queryParams": [],

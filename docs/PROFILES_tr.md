@@ -991,13 +991,13 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscriptions__introductory_offers__remove` — Aboneliğin seçilen introductory offer'larını kaldırır
 - `subscriptions__price_points__list` — Abonelik için seçilebilecek fiyatları listeler
 - `subscriptions__promotional_offers__list` — Mevcut veya eski abonelere sunulan teklifleri listeler
-- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon veya geri kazanma teklifi oluşturur
+- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon, geri kazanma veya elde tutma teklifi oluşturur
 
-#### `monetization:subscription-retention` · 30 araç
+#### `monetization:subscription-retention` · 31 araç
 
 **İçinde ne var:** İptal etmeye başlayan abonelere gösterilen elde tutma mesajları ve teklifleri.
 
-**Ne zaman gerekir:** İptal etmeye başlayan aboneler için mesaj ve teklifler. · **Anahtar rolü:** App Manager
+**Ne zaman gerekir:** İptal etmeye başlayan aboneler için mesaj ve teklifler. · **Anahtar rolü:** Marketing
 
 - `apps__retention_messages__list` — Uygulamanın elde tutma mesajlarını listeler
 - `retention_message_localizations__create` — Elde tutma mesajı sürümüne başlık ve gövdesiyle bir dil ekler
@@ -1026,6 +1026,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscriptions__retention_message_offers__remove` — Aboneliğin elde tutma mesajından teklif çıkarır
 - `subscriptions__retention_offers__list` — Aboneliğin elde tutma tekliflerini listeler
 - `release__submit_items` — Elde tutma mesajı sürümünü incelemeye gönderir
+- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon, geri kazanma veya elde tutma teklifi oluşturur
 
 #### `monetization:subscription-win-back` · 12 araç
 
@@ -1041,7 +1042,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `win_back_offers__get` — Eski aboneleri geri kazanma teklifinin ayrıntılarını gösterir
 - `win_back_offers__prices__list` — Eski aboneleri geri kazanma teklifinin ülkelere göre fiyatlarını listeler
 - `win_back_offers__update` — Geri kazanma teklifinin koşullarını, tarihlerini ve tanıtım ayarlarını değiştirir
-- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon veya geri kazanma teklifi oluşturur
+- `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon, geri kazanma veya elde tutma teklifi oluşturur
 
 #### `monetization:transactions` · 21 araç
 

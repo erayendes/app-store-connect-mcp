@@ -151,7 +151,7 @@ export const ROLES: Record<string, string[]> = {
   'monetization:subscription': APP_MANAGER,
   'monetization:subscription-codes': APP_MANAGER,
   'monetization:subscription-offers': APP_MANAGER,
-  'monetization:subscription-retention': APP_MANAGER,
+  'monetization:subscription-retention': MARKETING, // Apple: Account Holder, Admin, App Manager or Marketing
   'monetization:subscription-win-back': APP_MANAGER,
   'monetization:transactions': APP_MANAGER,
   provisioning: ADMIN,

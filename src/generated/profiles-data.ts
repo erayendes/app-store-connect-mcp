@@ -310,7 +310,7 @@ export const PROFILE_DATA: GeneratedProfile[] = [
     {
       name: "subscription-retention",
       operations: ["apps.retention_messages.list","retention_message_localizations.create","retention_message_localizations.delete","retention_message_localizations.get","retention_message_localizations.update","retention_message_versions.create","retention_message_versions.get","retention_message_versions.localizations.list","retention_messages.create","retention_messages.delete","retention_messages.get","retention_messages.subscriptions.list","retention_messages.versions.list","retention_offers.create","retention_offers.delete","retention_offers.get","retention_offers.prices.list","retention_offers.update","subscription_groups.subscriptions.list","subscriptions.price_points.list","subscriptions.retention_message.get","subscriptions.retention_message.set","subscriptions.retention_message_offers.add","subscriptions.retention_message_offers.list","subscriptions.retention_message_offers.remove","subscriptions.retention_offers.list"],
-      manualTools: ["release__submit_items"],
+      manualTools: ["pricing__make_offer","release__submit_items"],
       rootResources: ["apps","retention_message_localizations","retention_message_versions","retention_messages","retention_offers","subscription_groups","subscriptions"],
     },
     {
