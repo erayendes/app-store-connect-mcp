@@ -3,7 +3,7 @@
 **Your whole App Store Connect account, in one tool.**
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<a href="#setup"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-en.png" alt="Heimdall 3.0 beta. Try it now: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
+<a href="#setup"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/beta-banner-en.png" alt="Heimdall 3.0 beta. Try it now: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
@@ -90,28 +90,16 @@ Before changing a price, giving someone Admin access or deleting something, Heim
 Everything else goes through your AI app's own approval.
 
 ```mermaid
-flowchart TD
-  call["A write is called"] --> dry{"Dry-run?"}
-  dry -- yes --> preview["Shows what it would send.<br/>Nothing reaches Apple."]
-  dry -- no --> level{"What does it change?"}
-  level -- "revenue, deletion,<br/>code signing, access" --> strong["Type CONFIRM"]
-  level -- "reaches customers,<br/>players or testers" --> yesno["Yes or no"]
-  level -- "anything else" --> client["Your AI app's own approval"]
-  strong --> where{"Can your AI app<br/>show the question?"}
-  yesno --> where
-  where -- yes --> form["Asked in your AI app"]
-  where -- "no, on a Mac" --> dialog["Asked in Heimdall's own window"]
-  where -- "no way to ask" --> blocked["Blocked. Nothing changed."]
-  form --> answer{"Your answer"}
-  dialog --> answer
-  answer -- approved --> run["Runs"]
-  answer -- "anything else" --> stop["Nothing changed"]
-  client --> run
+flowchart LR
+  w["A write"] --> q{"What does<br/>it change?"}
+  q -->|"money, deletion,<br/>signing, access"| c["You type CONFIRM"]
+  q -->|"reaches customers,<br/>players or testers"| y["You answer yes or no"]
+  q -->|"anything else"| a["Your AI app's approval"]
 ```
 
 **If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 More in [Security](.github/SECURITY.md).
 
@@ -127,7 +115,7 @@ npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
 
 <sub>Setup in the browser: pick what you need and see what it costs the AI as you go. All four steps are in [Setup](docs/SETUP_en.md#save-your-credentials-once--the-setup-wizard).</sub>
 

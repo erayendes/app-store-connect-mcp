@@ -3,7 +3,7 @@
 **App Store Connect hesabınızın tamamı, tek bir araçta.**
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<a href="#kurulum"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/beta-banner-tr.png" alt="Heimdall 3.0 betası. Hemen deneyin: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
+<a href="#kurulum"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/beta-banner-tr.png" alt="Heimdall 3.0 betası. Hemen deneyin: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
@@ -91,28 +91,16 @@ Fiyat değiştirmek, birine Admin yetkisi vermek ya da bir şeyi silmek istediğ
 Geri kalan her şeyde kullandığınız yapay zekâ uygulamasının kendi onay sistemi devrededir.
 
 ```mermaid
-flowchart TD
-  call["Bir yazma işlemi çağrılır"] --> dry{"Dry-run mı?"}
-  dry -- evet --> preview["Ne göndereceğini gösterir.<br/>Apple'a hiçbir şey gitmez."]
-  dry -- hayır --> level{"Neyi değiştiriyor?"}
-  level -- "gelir, silme,<br/>kod imzalama, erişim" --> strong["CONFIRM yazılır"]
-  level -- "müşteriye, oyuncuya<br/>ya da testçiye ulaşır" --> yesno["Evet ya da hayır"]
-  level -- "diğer her şey" --> client["Yapay zekâ uygulamanızın kendi onayı"]
-  strong --> where{"Yapay zekâ uygulamanız<br/>soruyu gösterebiliyor mu?"}
-  yesno --> where
-  where -- evet --> form["Yapay zekâ uygulamanızda sorulur"]
-  where -- "hayır, Mac'te" --> dialog["Heimdall'ın kendi penceresinde sorulur"]
-  where -- "sorulacak yer yok" --> blocked["Engellenir. Hiçbir şey değişmez."]
-  form --> answer{"Cevabınız"}
-  dialog --> answer
-  answer -- onay --> run["Çalışır"]
-  answer -- "diğer her cevap" --> stop["Hiçbir şey değişmez"]
-  client --> run
+flowchart LR
+  w["Bir yazma işlemi"] --> q{"Neyi<br/>değiştiriyor?"}
+  q -->|"para, silme,<br/>imzalama, erişim"| c["CONFIRM yazarsınız"]
+  q -->|"müşteriye, oyuncuya<br/>ya da testçiye ulaşır"| y["Evet ya da hayır dersiniz"]
+  q -->|"diğer her şey"| a["Yapay zekâ uygulamanızın onayı"]
 ```
 
 **Yapay zekâ uygulamanız soruyu gösteremiyorsa** (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresiyle sorar. Düğmesi ne yapacağını söyler: Remove, Upload, Delete. Yapay zekâ bu pencereyi ne görebilir ne de basabilir; siz cevap verene kadar bekler.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 
@@ -128,7 +116,7 @@ npx -y @erayendes/asc-mcp@beta setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle" width="560">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle" width="560">
 
 <sub>Tarayıcıda kurulum: neye ihtiyacınız olduğunu seçin, yapay zekâya maliyetini seçtikçe görün. Dört adımın hepsi [Kurulum](SETUP_tr.md#kimlik-bilgisini-bir-kez-kaydedin--setup-sihirbazı) sayfasında.</sub>
 
