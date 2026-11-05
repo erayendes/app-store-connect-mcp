@@ -182,6 +182,48 @@ for (const target of ['library', 'version', 'cpp', 'ppo', 'event'] as const) {
   });
 }
 
+describe('media on a retention message', () => {
+  const retentionPlacement = { type: 'appAssetLibraryPlacements', id: 'pr', attributes: { placementType: 'RETENTION_MESSAGE_ASSET', state: 'PARENT_APPROVED' }, relationships: { image: link('img'), retentionMessageVersion: link('rmv') } };
+  // Apple's placement for a retention message hangs off the message version, which names no app.
+  function retentionHttp(owner = 'app', placed = true) {
+    const http = fakeHttp('version'); const original = http.get.getMockImplementation()!;
+    http.get.mockImplementation(async (path: string, query?: any) => {
+      if (path === '/v1/retentionMessageVersions/rmv') return { data: withIncludes({ id: 'rmv', attributes: { state: 'PREPARE_FOR_SUBMISSION' }, relationships: { retentionMessage: link('rm') } }, query) };
+      if (path === '/v1/apps/app/retentionMessages') return { data: owner === 'app' ? [{ id: 'rm', attributes: { referenceName: 'Stay with us' } }] : [] };
+      if (path === '/v1/retentionMessageVersions/rmv/placement') return placed ? { data: retentionPlacement, included: [structuredClone(imageRow)] } : { data: null };
+      if (path === '/v1/appAssetLibraryImages/img/placements') return { data: [withIncludes(retentionPlacement, query)] };
+      if (path === '/v1/appAssetLibraryVideos/vid/placements') return { data: [] };
+      return original(path, query);
+    });
+    return http;
+  }
+  it('lists the library when a file is placed on a retention message', async () => {
+    const result: any = await executeMediaTool('media__list', pageArgs('library'), context(retentionHttp()));
+    expect(result.assets[0].placements[0]).toMatchObject({ id: 'pr', pageId: 'rmv', target: 'retention' });
+    expect(result.pages.map((p: any) => p.label)).toContain('retention message Stay with us');
+  });
+  it('lists the one image on a retention message version, or none', async () => {
+    const args = { app: 'Example', target: 'retention', page_id: 'rmv' };
+    const placed: any = await executeMediaTool('media__list', args, context(retentionHttp()));
+    expect(placed.pages[0].sets).toEqual([expect.objectContaining({ kind: 'image', placementType: 'RETENTION_MESSAGE_ASSET', count: 1 })]);
+    const empty: any = await executeMediaTool('media__list', args, context(retentionHttp('app', false)));
+    expect(empty.pages[0].sets).toEqual([]);
+  });
+  it('places a library image on a retention message version', async () => {
+    const http = retentionHttp('app', false);
+    await executeMediaTool('media__arrange', { app: 'Example', target: 'retention', page_id: 'rmv', action: 'place', asset_ids: ['img'], placement_type: 'RETENTION_MESSAGE_ASSET' }, context(http));
+    const [path, body] = http.post.mock.calls[0] as any[];
+    expect(path).toBe('/v1/appAssetLibraryPlacements');
+    expect(body.data.relationships.retentionMessageVersion.data.id).toBe('rmv');
+    expect(validateBody(BODY_SCHEMAS[mediaOperation(MEDIA_OPS.placement).bodyRef!], body)).toEqual([]);
+  });
+  it('refuses a retention message version from another app', async () => {
+    const http = retentionHttp('foreign-app');
+    await expect(executeMediaTool('media__arrange', { app: 'Example', target: 'retention', page_id: 'rmv', action: 'place', asset_ids: ['img'], placement_type: 'RETENTION_MESSAGE_ASSET' }, context(http))).rejects.toThrow(/does not belong/);
+    expect(http.post).not.toHaveBeenCalled();
+  });
+});
+
 describe('media resolution, confirmation and file safety', () => {
   const uploadArgs = () => ({ ...pageArgs('version'), file_path: file, category: 'APP_SCREENSHOTS_AND_PREVIEWS', placement_type: 'APP_SCREENSHOT' });
   it.each(['platform', 'version'])('refuses ambiguous %s for both preview and apply', async (ambiguous) => {

@@ -16,6 +16,7 @@ medya aracını (`media__list`, `media__upload`, `media__arrange`,
 | `cpp` | Bir özel ürün sayfası | Yerelleştirmesi | yerleştirme, sıralama, kaldırma, kapak karesi |
 | `ppo` | Bir ürün sayfası testinin varyantı | Yerelleştirmesi | yerleştirme, sıralama, kaldırma, kapak karesi |
 | `event` | Bir uygulama içi etkinliğin kart ve detay görselleri | Yerelleştirmesi | yerleştirme, kaldırma |
+| `retention` | Elde tutma mesajının üstündeki tek görsel (`RETENTION_MESSAGE_ASSET`) | Mesaj sürümü | yerleştirme, kaldırma |
 
 Bir sayfaya yüklenen dosya önce kütüphaneye girer, aynı adımda sayfaya
 yerleştirilir. Sayfadan kaldırılan dosya kütüphanede kalır; kütüphaneden

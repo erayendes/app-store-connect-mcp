@@ -6,8 +6,8 @@ Tools:          832
   mutating:     373
   deprecated dropped: 185
   dropped by the profile sheet: 19
-Risk levels:    low:118 destructive:99 public:64 revenue:51 release:19 infrastructure:16 access:6
-Body schemas:   271 (266 KB resolved, avg 1007 chars)
+Risk levels:    low:117 destructive:99 public:64 revenue:51 release:20 infrastructure:16 access:6
+Body schemas:   271 (267 KB resolved, avg 1009 chars)
 
 By domain:
   game_center          172

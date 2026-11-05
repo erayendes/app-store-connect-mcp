@@ -20019,13 +20019,13 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/retentionMessageVersions",
-    "description": "Create a retention message version.",
+    "description": "Start a new version of a retention message to edit its text and submit for review; the approved version stays live meanwhile.",
     "readOnly": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "RetentionMessageVersionCreateRequest",
-    "risk": "low"
+    "risk": "release"
   },
   {
     "name": "retention_message_versions.get",
@@ -20322,7 +20322,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/retentionOffers",
-    "description": "Create a retention offer.",
+    "description": "Create a retention offer for a subscription. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it.",
     "readOnly": false,
     "pathParams": [],
     "queryParams": [],
@@ -23028,7 +23028,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptions/{id}/relationships/retentionMessageOffers",
-    "description": "Link retention message offers to a subscription.",
+    "description": "Show existing retention offers of this subscription with its retention message.",
     "readOnly": false,
     "pathParams": [
       "id"
@@ -23043,7 +23043,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptions/{id}/retentionMessageOffers",
-    "description": "List the retention message offers belonging to a subscription.",
+    "description": "List the retention offers this subscription shows with its retention message.",
     "readOnly": true,
     "pathParams": [
       "id"
@@ -23124,7 +23124,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptions/{id}/retentionOffers",
-    "description": "List the retention offers belonging to a subscription.",
+    "description": "List every retention offer created for a subscription, whether or not its retention message shows it.",
     "readOnly": true,
     "pathParams": [
       "id"

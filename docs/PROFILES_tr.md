@@ -16,7 +16,7 @@ Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı 
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | Uygulama bilgileri | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Mağaza sayfası ve yorumlar | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 187 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 186 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Sertifikalar ve cihazlar | 41 | bundle, certificates, devices, profiles, wallet |
 | `testflight` | `ASC-TestFlight` | Beta testi | 82 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Sunucunuza bildirimler | 9 | — |
@@ -58,7 +58,7 @@ Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve d
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
-Örneğin `monetization` 187 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 65 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
+Örneğin `monetization` 186 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 65 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
 
 Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçları ve `asc__status`. Alt profillerinin yalnızca bir kısmıyla başlatılan bir sunucuya ayrıca `asc__call` ve `asc__describe` gelir; bunlar dışarıda bıraktığınız kısımlardaki okumalara ulaşır.
 
@@ -74,7 +74,7 @@ Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçl
 | Yayın yöneticisi | `distribution` + `general` | 146 |
 | ASO / pazarlama | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 98 |
-| Monetizasyon | `monetization` | 203 |
+| Monetizasyon | `monetization` | 202 |
 | Oyun geliştirici | `game-center` + `distribution:version,publish` | 200 |
 | Müşteri desteği | `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 101 |
@@ -790,7 +790,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `apps__app_store_version_experiments_v2__list` — Uygulamanın ürün sayfası testlerini listeler
 - `release__submit_items` — Ürün sayfası testini incelemeye gönderir
 
-### `monetization` · 187 araç
+### `monetization` · 186 araç
 
 **Sunucu:** `ASC-Monetization` · **Anahtar rolü:** App Manager
 
@@ -993,7 +993,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscriptions__promotional_offers__list` — Mevcut veya eski abonelere sunulan teklifleri listeler
 - `pricing__make_offer` — Abonelik için tüm ülkelerde fiyatlı introductory, promosyon veya geri kazanma teklifi oluşturur
 
-#### `monetization:subscription-retention` · 31 araç
+#### `monetization:subscription-retention` · 30 araç
 
 **İçinde ne var:** İptal etmeye başlayan abonelere gösterilen elde tutma mesajları ve teklifleri.
 
@@ -1007,7 +1007,6 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `retention_message_versions__create` — Düzenleyip göndermek için elde tutma mesajının yeni bir sürümünü oluşturur
 - `retention_message_versions__get` — Elde tutma mesajı sürümünün ayrıntılarını gösterir
 - `retention_message_versions__localizations__list` — Elde tutma mesajı sürümünün dillerini listeler
-- `retention_message_versions__placement__get` — Elde tutma mesajı sürümüne yerleştirilen görseli gösterir
 - `retention_messages__create` — İptal etmeye başlayan aboneler için elde tutma mesajı oluşturur
 - `retention_messages__delete` — Elde tutma mesajını siler
 - `retention_messages__get` — Elde tutma mesajının ayrıntılarını gösterir

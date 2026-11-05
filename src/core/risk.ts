@@ -54,6 +54,7 @@ export const ASK_BY_DEFAULT: ReadonlySet<string> = new Set([
   'subscription_versions__create',
   'subscription_group_versions__create',
   'in_app_purchase_versions__create',
+  'retention_message_versions__create',
   // Pauses, resumes or completes a rollout that real customers are on.
   'app_store_version_phased_releases__update',
   // Sends a build to Apple for external TestFlight review.
@@ -128,6 +129,7 @@ const CONSEQUENCES: Record<string, string> = {
   subscription_versions__create: 'Apple keeps this draft; it can’t be deleted.',
   subscription_group_versions__create: 'Apple keeps this draft; it can’t be deleted.',
   in_app_purchase_versions__create: 'Apple keeps this draft; it can’t be deleted.',
+  retention_message_versions__create: 'Apple keeps this draft; it can’t be deleted.',
   review_submissions__update: 'You can withdraw it until App Review starts.',
   app_store_version_release_requests__create: 'It goes live for everyone; this can’t be undone.',
   beta_app_review_submissions__create: 'External testers get it once Apple approves it.',
@@ -164,7 +166,7 @@ interface RiskRule {
 /** Ordered, hand-reviewed rules. First match wins. */
 export const RULES: RiskRule[] = [
   {
-    pattern: /^(subscription_versions|subscription_group_versions|in_app_purchase_versions)\.create$/,
+    pattern: /^(subscription_versions|subscription_group_versions|in_app_purchase_versions|retention_message_versions)\.create$/,
     level: 'release',
     why: 'creates a draft review version that cannot be deleted',
   },

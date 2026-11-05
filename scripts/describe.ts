@@ -247,6 +247,18 @@ export const CURATED: Record<string, string> = {
     'Create an in-app purchase. Set the product ID, type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION) and reference name.',
   'subscriptions.create':
     'Create an auto-renewable subscription inside a subscription group.',
+  // Retention (spec 4.6): an offer belongs to a subscription, and showing it
+  // with the retention message is a second, separate link.
+  'retention_offers.create':
+    'Create a retention offer for a subscription. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it.',
+  'retention_message_versions.create':
+    'Start a new version of a retention message to edit its text and submit for review; the approved version stays live meanwhile.',
+  'subscriptions.retention_offers.list':
+    'List every retention offer created for a subscription, whether or not its retention message shows it.',
+  'subscriptions.retention_message_offers.list':
+    'List the retention offers this subscription shows with its retention message.',
+  'subscriptions.retention_message_offers.add':
+    'Show existing retention offers of this subscription with its retention message.',
   'subscriptions.delete':
     'Remove a recurring product entirely: delete a subscription from the catalogue. Possible only before Apple has ever approved it; anything that has been on sale is withdrawn by emptying the countries it sells in.',
   'subscription_plan_availabilities.create':

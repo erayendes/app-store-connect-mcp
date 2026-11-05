@@ -17,6 +17,8 @@ Apple opened retention messages to the App Store Connect API this week, so this 
 **Retention messages, in a sub-profile of their own**
 The message a subscriber sees when they start to cancel can now be set up end to end: the message, its versions, its text in each language, the offers shown with it, and which subscription it belongs to. It's all in `monetization:subscription-retention`. `release__submit_items` sends a message version to review as well.
 
+The image above the message goes on with the media tools: `media__arrange` with the new `retention` target places a library image on a message version. A library that already has an image on a retention message lists and deletes as before.
+
 There are now 13 profiles and 51 sub-profiles.
 
 **StoreKit catches up**
@@ -25,7 +27,7 @@ There are now 13 profiles and 51 sub-profiles.
 **Sales reports**
 Apple stopped producing the `INSTALLS` sales report on November 4. Earlier days still download.
 
-Heimdall now has 787 tools. Tell me about anything odd you run into :)
+Heimdall now has 786 tools. Tell me about anything odd you run into :)
 
 ### [3.0.0-beta.2] — 2026-10-28
 
@@ -383,6 +385,8 @@ Apple bu hafta elde tutma mesajlarını App Store Connect API'ye açtı; bu beta
 **Elde tutma mesajları kendi alt profilinde**
 Abone iptal etmeye başladığında gördüğü mesajı artık baştan sona kurabilirsiniz: mesajın kendisi, sürümleri, her dildeki metni, yanında gösterilen teklifler ve hangi aboneliğe ait olduğu. Hepsi `monetization:subscription-retention` içinde. `release__submit_items` mesaj sürümünü de incelemeye gönderiyor.
 
+Mesajın üstündeki görsel medya araçlarıyla ekleniyor: yeni `retention` hedefiyle `media__arrange`, kütüphanedeki bir görseli mesaj sürümüne yerleştiriyor. Bir elde tutma mesajında görseli olan kütüphane de eskisi gibi listeleniyor ve siliniyor.
+
 Artık 13 profil ve 51 alt profil var.
 
 **StoreKit güncel**
@@ -391,7 +395,7 @@ Artık 13 profil ve 51 alt profil var.
 **Satış raporları**
 Apple 4 Kasım'dan beri `INSTALLS` satış raporunu üretmiyor. Önceki günler hâlâ indirilebiliyor.
 
-Heimdall artık 787 araç içeriyor. Gördüğünüz her tuhaflığı yazarsanız çok sevinirim :)
+Heimdall artık 786 araç içeriyor. Gördüğünüz her tuhaflığı yazarsanız çok sevinirim :)
 
 ### [3.0.0-beta.2] — 2026-10-28
 

@@ -27,8 +27,9 @@ const CEILING = {
   // PR-V2 hides 28 unflagged v1 operations; PR-D1 hides six legacy media families.
   // The live beta run curated the app → encryption declarations path Apple 404s.
   // 3.0 stopped building twins and profile-less reverse reads (−18).
-  // Spec 4.6 (+25 retention message and offer tools, Apple's own summaries).
-  boilerplate: 638,
+  // Spec 4.6 (+25 retention message and offer tools, Apple's own summaries),
+  // five of them curated where the offer links and the inline prices need it.
+  boilerplate: 633,
   /**
    * AXIS2 — silent empty results: id-valued filters with no format hint.
    *
@@ -59,7 +60,8 @@ const CEILING = {
   // Spec 4.6 (+8): retention message, localization and offer writes and subscription links.
   writesNeedingLookup: 238,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
-  // Spec 4.6 (+5): retention message, version, localization, offer and price lists.
+  // Spec 4.6 (+5): an app's retention messages, a message's versions, a version's
+  // localizations, and a subscription's retention offers and message offers.
   unfilterableLists: 95,
 };
 

@@ -487,13 +487,16 @@ async function tokenReport(verbose: boolean): Promise<string> {
  * configuring win-back offers" sends `relationships.territory` and
  * `relationships.subscriptionPricePoint` on every included price — there is no
  * other way to say what the price is. Borrow the shape from the WinBackOfferPrice
- * resource. Applied only while the gap exists, so a fixed spec makes it a no-op.
+ * resource. Spec 4.6 repeats the gap in RetentionOfferPriceInlineCreate.
+ * Applied only while the gap exists, so a fixed spec makes it a no-op.
  */
 function patchSpecGaps(schemas: Record<string, any>): void {
-  const inline = schemas.WinBackOfferPriceInlineCreate;
-  const relationships = schemas.WinBackOfferPrice?.properties?.relationships;
-  if (inline?.properties && !inline.properties.relationships && relationships) {
-    inline.properties.relationships = relationships;
+  for (const price of ['WinBackOfferPrice', 'RetentionOfferPrice']) {
+    const inline = schemas[`${price}InlineCreate`];
+    const relationships = schemas[price]?.properties?.relationships;
+    if (inline?.properties && !inline.properties.relationships && relationships) {
+      inline.properties.relationships = relationships;
+    }
   }
 }
 

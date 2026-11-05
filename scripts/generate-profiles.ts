@@ -57,6 +57,7 @@ const MACRO_COVERED: Record<string, string> = {
   "app_custom_product_page_localizations.placements.list": "media__list",
   "app_store_version_experiment_treatment_localizations.placements.list": "media__list",
   "app_event_localizations.placements.list": "media__list",
+  "retention_message_versions.placement.get": "media__list",
   "app_clip_header_images.create": "media__upload",
   "app_clip_advanced_experience_images.create": "media__upload",
   "game_center_achievement_images_v2.create": "media__upload",

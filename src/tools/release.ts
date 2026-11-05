@@ -56,7 +56,7 @@ const RESOURCE_TYPES = REVIEW_RESOURCE_TYPES;
 const VERSIONED_ITEMS = new Set([
   'appCustomProductPageVersion', 'backgroundAssetVersion', 'gameCenterActivityVersion',
   'gameCenterChallengeVersion', 'inAppPurchaseVersion', 'subscriptionVersion',
-  'subscriptionGroupVersion',
+  'subscriptionGroupVersion', 'retentionMessageVersion',
   'gameCenterAchievementVersion', 'gameCenterLeaderboardVersion', 'gameCenterLeaderboardSetVersion',
 ]);
 function itemKey(item: ReviewItem): string { return `${item.type}/${item.id}`; }
@@ -315,6 +315,7 @@ const VERSION_PARENTS: Record<string, { relationship: string; path: string }> = 
   inAppPurchaseVersion: { relationship: 'inAppPurchase', path: '/v2/inAppPurchases/{id}/versions' },
   subscriptionVersion: { relationship: 'subscription', path: '/v1/subscriptions/{id}/versions' },
   subscriptionGroupVersion: { relationship: 'subscriptionGroup', path: '/v1/subscriptionGroups/{id}/versions' },
+  retentionMessageVersion: { relationship: 'retentionMessage', path: '/v1/retentionMessages/{id}/versions' },
 };
 async function hasEarlierApprovedVersion(http: AscHttpClient, type: string, current: any): Promise<boolean | undefined> {
   const parent = VERSION_PARENTS[type];

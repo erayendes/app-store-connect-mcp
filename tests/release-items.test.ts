@@ -36,7 +36,8 @@ function fake(options: { open?: boolean; existing?: any[]; platforms?: string[];
     if (path === '/v1/reviewSubmissions/open-1/items' || path === '/v1/reviewSubmissions/new-1/items') return shownItems(currentItems, query);
     if (/^\/v1\/reviewSubmissions\/prior-\d+\/items$/.test(path)) return shownItems(options.priorItems ?? [], query);
     if (path === '/v2/inAppPurchases/iap-product-1/versions' || path === '/v1/subscriptions/product-1/versions' ||
-        path === '/v1/appCustomProductPages/cpp-product-1/appCustomProductPageVersions' || path === '/v1/backgroundAssets/background-product-1/versions') {
+        path === '/v1/appCustomProductPages/cpp-product-1/appCustomProductPageVersions' || path === '/v1/backgroundAssets/background-product-1/versions' ||
+        path === '/v1/retentionMessages/retention-1/versions') {
       if (path.includes('/backgroundAssets/')) return { data: options.earlierApproved ? [{ id: 'earlier', attributes: { state: 'COMPLETE' }, relationships: { appStoreRelease: { data: { id: 'asset-release' } } } }] : [], included: [{ id: 'asset-release', type: 'backgroundAssetVersionAppStoreReleases', attributes: { state: options.assetReleaseState ?? 'ACCEPTED' } }] };
       return { data: options.earlierApproved ? [{ id: 'earlier', attributes: { state: 'APPROVED' } }] : [] };
     }
@@ -47,6 +48,7 @@ function fake(options: { open?: boolean; existing?: any[]; platforms?: string[];
     if (path.startsWith('/v1/subscriptionGroupVersions/')) return { data: { attributes: { version: options.versionNumber ?? 2, state: options.versionState ?? 'PREPARE_FOR_SUBMISSION' } } };
     if (/^\/v[12]\/gameCenter\w+Versions\//.test(path)) return { data: { id: path.split('/').at(-1), attributes: { state: options.versionState, version: 1 } } };
     if (path.startsWith('/v1/appCustomProductPageVersions/')) return { data: { id: path.split('/').at(-1), attributes: { version: options.versionNumber ?? '2.0', state: options.productState ?? 'PREPARE_FOR_SUBMISSION' }, relationships: query?.include === 'appCustomProductPage' ? { appCustomProductPage: { data: { id: 'cpp-product-1' } } } : {} } };
+    if (path.startsWith('/v1/retentionMessageVersions/')) return { data: { id: path.split('/').at(-1), attributes: { state: options.versionState ?? 'PREPARE_FOR_SUBMISSION' }, relationships: query?.include === 'retentionMessage' ? { retentionMessage: { data: { id: 'retention-1' } } } : {} }, included: query?.include === 'retentionMessage' ? [{ id: 'retention-1', type: 'retentionMessages', attributes: { referenceName: 'Stay' } }] : [] };
     if (path.startsWith('/v1/backgroundAssetVersions/')) return { data: { id: path.split('/').at(-1), attributes: { version: options.versionNumber ?? '2.0', state: options.productState ?? 'PREPARE_FOR_SUBMISSION' }, relationships: query?.include?.includes('backgroundAsset') ? { backgroundAsset: { data: { id: 'background-product-1' } } } : {} } };
     throw new Error(`Unexpected read: ${path}`);
   };
@@ -316,6 +318,16 @@ describe('item release history and state regressions', () => {
   it.each(['ACCEPTED', 'PROCESSING_FOR_DISTRIBUTION', 'READY_FOR_DISTRIBUTION', 'SUPERSEDED'])('uses background asset App Store release state %s as approval', async (assetReleaseState) => {
     const { http, writes } = fake({ earlierApproved: true, assetReleaseState });
     await executeReleaseTool('release__submit_items', { app: 'Example', platform: 'IOS', items: [{ type: 'backgroundAssetVersion', id: 'new' }] }, { http });
+    expect(writes.at(-1)?.method).toBe('PATCH');
+  });
+  it('submits a retention message version on its own once an earlier version was approved', async () => {
+    const { http, writes, reads } = fake({ earlierApproved: true });
+    await executeReleaseTool('release__submit_items', { app: 'Example', platform: 'IOS', items: [{ type: 'retentionMessageVersion', id: 'new' }] }, { http });
+    expect(reads.some((r) => r.path === '/v1/retentionMessages/retention-1/versions')).toBe(true);
+    expect(writes.find((w) => w.path === '/v1/reviewSubmissionItems')?.body.data.relationships).toEqual({
+      reviewSubmission: { data: { type: 'reviewSubmissions', id: 'new-1' } },
+      retentionMessageVersion: { data: { type: 'retentionMessageVersions', id: 'new' } },
+    });
     expect(writes.at(-1)?.method).toBe('PATCH');
   });
   it('does not confuse a completed asset upload with App Store approval', async () => {

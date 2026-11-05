@@ -391,6 +391,9 @@ describe('chain integrity — a write needs a read that produces its ids', () =>
       expect.arrayContaining(['subscriptions', 'subscriptionPricePoints'])
     );
     expect(bodyRefs('WinBackOfferCreateRequest')).not.toContain('winBackOfferPrices');
+    expect(bodyRefs('RetentionOfferCreateRequest')).toEqual(
+      expect.arrayContaining(['subscriptions', 'subscriptionPricePoints'])
+    );
   });
 
   it.each(SUBS.map((s) => s.label))('%s can obtain every id it writes to', (label) => {
@@ -452,13 +455,13 @@ describe('counts — curation output, not something that drifts on its own', () 
     expect(manualToolsFor(core).length).toBe(8);
     expect(PROFILELESS.length).toBe(7);
     expect(Object.keys(TWIN_OF).length).toBe(12);
-    expect(Object.keys(MACRO_COVERED).length).toBe(97);
+    expect(Object.keys(MACRO_COVERED).length).toBe(98);
     const tools = PROFILES.flatMap((p) =>
       p.subProfiles.flatMap((s) => [...s.operations, ...s.manualTools])
     );
-    // 840 CSV rows - 7 profile-less ones. Not a count of distinct tools:
+    // 839 CSV rows - 7 profile-less ones. Not a count of distinct tools:
     // a few entry reads deliberately sit in more than one slice.
-    expect(tools.length).toBe(833);
+    expect(tools.length).toBe(832);
     // Placed operations plus the hand-written tools in the sheet, which are
     // not spec operations: 18 storekit, 3 reviews_ai, 8 pricing, 1 listing, 4 media, 1
     // analytics, 2 preflight, 1 account, 3 metadata_ai, 2 release, 3
