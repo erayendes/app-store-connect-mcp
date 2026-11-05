@@ -130,6 +130,7 @@ const DESCRIPTIONS: Record<string, string> = {
   'monetization/subscription-codes': 'Subscription offer codes: custom and one-time-use codes.',
   'monetization/subscription-offers':
     'Introductory and promotional offers on a subscription, and the one-call offer macro.',
+  'monetization/subscription-retention': 'Retention messages and offers shown to subscribers who start to cancel.',
   'monetization/subscription-win-back': 'Win-back offers for lapsed subscribers.',
   'monetization/transactions':
     'App Store Server API: customer transactions, refunds and their consumption answers, ' +

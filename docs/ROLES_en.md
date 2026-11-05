@@ -71,6 +71,7 @@ Setup works from the same table: from what you pick, it suggests the narrowest r
 | `monetization:subscription` | App Manager, Admin |
 | `monetization:subscription-codes` | App Manager, Admin |
 | `monetization:subscription-offers` | App Manager, Admin |
+| `monetization:subscription-retention` | App Manager, Admin |
 | `monetization:subscription-win-back` | App Manager, Admin |
 | `monetization:transactions` | App Manager, Admin |
 | `provisioning` | Admin |

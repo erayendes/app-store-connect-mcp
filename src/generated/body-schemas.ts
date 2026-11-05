@@ -1,5 +1,5 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.5.1
+// Source: Apple App Store Connect OpenAPI specification v4.6
 // Regenerate with: npm run generate
 
 /** Simplified JSON Schemas for request bodies, keyed by Operation.bodyRef. */
@@ -1416,6 +1416,31 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
          }
         },
         "additionalProperties": false
+       },
+       "retentionMessageVersion": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "retentionMessageVersions"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "additionalProperties": false
        }
       },
       "additionalProperties": false
@@ -1502,6 +1527,28 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
         "required": [
          "image",
          "appStoreVersionExperimentTreatmentLocalization"
+        ]
+       }
+      },
+      "required": [
+       "relationships",
+       "attributes"
+      ]
+     },
+     {
+      "type": "object",
+      "properties": {
+       "attributes": {
+        "type": "object",
+        "required": [
+         "placementType"
+        ]
+       },
+       "relationships": {
+        "type": "object",
+        "required": [
+         "image",
+         "retentionMessageVersion"
         ]
        }
       },
@@ -18677,6 +18724,509 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
   ],
   "additionalProperties": false
  },
+ "RetentionMessageLocalizationCreateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionMessageLocalizations"
+      ]
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "locale": {
+        "type": "string"
+       },
+       "header": {
+        "type": "string",
+        "nullable": true
+       },
+       "body": {
+        "type": "string",
+        "nullable": true
+       }
+      },
+      "required": [
+       "locale"
+      ],
+      "additionalProperties": false
+     },
+     "relationships": {
+      "type": "object",
+      "properties": {
+       "retentionMessageVersion": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "retentionMessageVersions"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "retentionMessageVersion"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "relationships",
+     "attributes",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "RetentionMessageLocalizationUpdateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionMessageLocalizations"
+      ]
+     },
+     "id": {
+      "type": "string"
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "header": {
+        "type": "string",
+        "nullable": true
+       },
+       "body": {
+        "type": "string",
+        "nullable": true
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "id",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "RetentionMessageVersionCreateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionMessageVersions"
+      ]
+     },
+     "relationships": {
+      "type": "object",
+      "properties": {
+       "retentionMessage": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "retentionMessages"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       },
+       "placement": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "appAssetLibraryPlacements"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "retentionMessage"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "relationships",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "RetentionMessageCreateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionMessages"
+      ]
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "referenceName": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "referenceName"
+      ],
+      "additionalProperties": false
+     },
+     "relationships": {
+      "type": "object",
+      "properties": {
+       "app": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "apps"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "app"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "relationships",
+     "attributes",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "RetentionOfferCreateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionOffers"
+      ]
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "referenceName": {
+        "type": "string"
+       },
+       "offerId": {
+        "type": "string"
+       },
+       "duration": {
+        "type": "string",
+        "enum": [
+         "THREE_DAYS",
+         "ONE_WEEK",
+         "TWO_WEEKS",
+         "ONE_MONTH",
+         "TWO_MONTHS",
+         "THREE_MONTHS",
+         "SIX_MONTHS",
+         "ONE_YEAR"
+        ]
+       },
+       "offerMode": {
+        "type": "string",
+        "enum": [
+         "PAY_AS_YOU_GO",
+         "PAY_UP_FRONT",
+         "FREE_TRIAL"
+        ]
+       },
+       "periodCount": {
+        "type": "integer"
+       },
+       "customerEligibilityPaidSubscriptionDurationInMonths": {
+        "type": "integer"
+       },
+       "customerEligibilityWaitBetweenOffersInMonths": {
+        "type": "integer",
+        "nullable": true
+       },
+       "targetSubscriptionPlanType": {
+        "type": "string",
+        "enum": [
+         "MONTHLY",
+         "UPFRONT"
+        ]
+       }
+      },
+      "required": [
+       "duration",
+       "periodCount",
+       "offerId",
+       "offerMode",
+       "customerEligibilityPaidSubscriptionDurationInMonths",
+       "referenceName"
+      ],
+      "additionalProperties": false
+     },
+     "relationships": {
+      "type": "object",
+      "properties": {
+       "subscription": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "subscriptions"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       },
+       "prices": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "type": {
+             "type": "string",
+             "enum": [
+              "retentionOfferPrices"
+             ]
+            },
+            "id": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "type"
+           ],
+           "additionalProperties": false
+          }
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "subscription",
+       "prices"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "relationships",
+     "attributes",
+     "type"
+    ],
+    "additionalProperties": false
+   },
+   "included": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "type": {
+       "type": "string",
+       "enum": [
+        "retentionOfferPrices"
+       ]
+      },
+      "id": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "type"
+     ],
+     "additionalProperties": false
+    }
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "RetentionOfferUpdateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionOffers"
+      ]
+     },
+     "id": {
+      "type": "string"
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "customerEligibilityPaidSubscriptionDurationInMonths": {
+        "type": "integer",
+        "nullable": true
+       },
+       "customerEligibilityWaitBetweenOffersInMonths": {
+        "type": "integer",
+        "nullable": true
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "id",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
  "ReviewSubmissionItemCreateRequest": {
   "type": "object",
   "properties": {
@@ -19105,6 +19655,31 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
             "type": "string",
             "enum": [
              "subscriptionGroupVersions"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "additionalProperties": false
+       },
+       "retentionMessageVersion": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "retentionMessageVersions"
             ]
            },
            "id": {
@@ -22261,6 +22836,59 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
          }
         },
         "additionalProperties": false
+       },
+       "retentionMessage": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "retentionMessages"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "additionalProperties": false
+       },
+       "retentionMessageOffers": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "type": {
+             "type": "string",
+             "enum": [
+              "retentionOffers"
+             ]
+            },
+            "id": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "type"
+           ],
+           "additionalProperties": false
+          }
+         }
+        },
+        "additionalProperties": false
        }
       },
       "additionalProperties": false
@@ -24339,6 +24967,65 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
        "type": "string",
        "enum": [
         "subscriptionPrices"
+       ]
+      },
+      "id": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "id",
+      "type"
+     ],
+     "additionalProperties": false
+    }
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "SubscriptionRetentionMessageLinkageRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "retentionMessages"
+      ]
+     },
+     "id": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "SubscriptionRetentionMessageOffersLinkagesRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "type": {
+       "type": "string",
+       "enum": [
+        "retentionOffers"
        ]
       },
       "id": {

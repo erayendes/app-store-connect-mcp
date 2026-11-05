@@ -240,7 +240,7 @@ export const CURATED: Record<string, string> = {
   'profiles.create':
     'Create a provisioning profile from a bundle ID, certificate and (for development) device list.',
   'sales_reports.list':
-    'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.',
+    'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key. Apple stopped producing the INSTALLS type on 2026-11-04; only earlier dates still download.',
   'finance_reports.list':
     'Download a finance report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance role on the API key.',
   'in_app_purchases_v2.create':

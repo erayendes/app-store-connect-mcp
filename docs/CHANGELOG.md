@@ -8,6 +8,25 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [3.0.0-beta.3] — 2026-11-05
+
+Hi,
+
+Apple opened retention messages to the App Store Connect API this week, so this beta is mostly about them.
+
+**Retention messages, in a sub-profile of their own**
+The message a subscriber sees when they start to cancel can now be set up end to end: the message, its versions, its text in each language, the offers shown with it, and which subscription it belongs to. It's all in `monetization:subscription-retention`. `release__submit_items` sends a message version to review as well.
+
+There are now 13 profiles and 51 sub-profiles.
+
+**StoreKit catches up**
+`storekit__manage_retention_messaging` takes Apple's new universal asset image size (5244 × 2950). Transactions and renewal info now show whether a subscription is a monthly plan with a 12-month commitment, and how a refund was given (`revocationType`, `revocationPercentage`).
+
+**Sales reports**
+Apple stopped producing the `INSTALLS` sales report on November 4. Earlier days still download.
+
+Heimdall now has 787 tools. Tell me about anything odd you run into :)
+
 ### [3.0.0-beta.2] — 2026-10-28
 
 Hi,
@@ -354,6 +373,25 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [3.0.0-beta.3] — 2026-11-05
+
+Selam,
+
+Apple bu hafta elde tutma mesajlarını App Store Connect API'ye açtı; bu beta çoğunlukla onlarla ilgili.
+
+**Elde tutma mesajları kendi alt profilinde**
+Abone iptal etmeye başladığında gördüğü mesajı artık baştan sona kurabilirsiniz: mesajın kendisi, sürümleri, her dildeki metni, yanında gösterilen teklifler ve hangi aboneliğe ait olduğu. Hepsi `monetization:subscription-retention` içinde. `release__submit_items` mesaj sürümünü de incelemeye gönderiyor.
+
+Artık 13 profil ve 51 alt profil var.
+
+**StoreKit güncel**
+`storekit__manage_retention_messaging` Apple'ın yeni universal asset görsel boyutunu (5244 × 2950) kabul ediyor. İşlemler ve yenileme bilgisi artık aboneliğin 12 ay taahhütlü aylık plan olup olmadığını ve iadenin nasıl yapıldığını (`revocationType`, `revocationPercentage`) da gösteriyor.
+
+**Satış raporları**
+Apple 4 Kasım'dan beri `INSTALLS` satış raporunu üretmiyor. Önceki günler hâlâ indirilebiliyor.
+
+Heimdall artık 787 araç içeriyor. Gördüğünüz her tuhaflığı yazarsanız çok sevinirim :)
 
 ### [3.0.0-beta.2] — 2026-10-28
 

@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 762 tools across 14 profiles: 710 generated from Apple's 1011 operations (the 185 that Apple deprecated or replaced are not built) and 52 hand-written.
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 787 tools across 14 profiles: 735 generated from Apple's 1036 operations (the 185 that Apple deprecated or replaced are not built) and 52 hand-written.
 
 Profiles are cut by the work the user does: `general`, `distribution`, `monetization`, `marketing`, `testflight`, `access` and so on. App lookup, `asc__search_tools`, `asc__discover_domains`, `asc__account_status` and the `media__*` tools are in none of them — they live in **ASC-Core** (`core`), a server of its own that `register` and `setup` add next to the profiles. A profile server carries them itself only when started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or not, has its own `asc__status`. If app lookup or search is missing from the session, ASC-Core is not registered for this client; the fix is `register` or `setup`, not another profile.
 
@@ -20,7 +20,7 @@ The install is two steps and they are not both yours. **You register. The user h
 
 Ask what the user works on. If they have not said, `analytics`, `marketing` and `general` are a sensible default. Each profile is a small scoped server; the table, down to every tool, is in [PROFILES_en.md](docs/PROFILES_en.md).
 
-A big profile takes a colon and a list of its sub-profiles — `monetization:subscription,subscription-offers` is 65 tools where `monetization` is 162. Worth suggesting for `monetization`, `game-center`, `distribution`, `testflight`, `general` and `marketing`. The server is still called `ASC-Monetization`.
+A big profile takes a colon and a list of its sub-profiles — `monetization:subscription,subscription-offers` is 65 tools where `monetization` is 187. Worth suggesting for `monetization`, `game-center`, `distribution`, `testflight`, `general` and `marketing`. The server is still called `ASC-Monetization`.
 
 **Say what you are about to do and wait for a yes**, then run:
 
@@ -66,7 +66,7 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 
 ## While helping the user
 
-- **Finding a tool that isn't loaded:** call `asc__search_tools` or `asc__discover_domains`, both on ASC-Core. Search covers the 807 operations Heimdall builds, plus the StoreKit tools and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names the profile that owns a tool and prints the exact command to add it. Do not conclude an operation does not exist because it is not in this session's list.
+- **Finding a tool that isn't loaded:** call `asc__search_tools` or `asc__discover_domains`, both on ASC-Core. Search covers the 832 operations Heimdall builds, plus the StoreKit tools and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names the profile that owns a tool and prints the exact command to add it. Do not conclude an operation does not exist because it is not in this session's list.
 - **There is no way to add tools mid-session.** Some clients never show a changed tool list (the Claude desktop app's Code tab among them), and the tools do not appear next turn either. On a server started with only some of its sub-profiles, reads from the rest work at once through `asc__call`. For the tools themselves, run the `register` command the server's reply names — e.g. `npx -y @erayendes/asc-mcp@beta register testflight:groups,testers` — after the user says yes, then ask them to restart their MCP client.
 - **When a 403 comes back,** call `asc__status` with `check_capabilities: true` before blaming the key: it probes `reports`, `metadata`, `reviews`, `userManagement` and `provisioning`, each `ok` / `forbidden` / `unauthorized` / `agreement` / `unknown`. `agreement` is an unsigned or expired agreement that only the Account Holder can clear, and no key fixes it; `unknown` is an inconclusive probe, not a denial. App Manager covers almost all day-to-day work; Admin is needed for user management and for the first-ever request of an analytics report type.
 - **Territories are ISO-3166 alpha-3:** `USA`, `TUR`, `DEU` — never `US`, `TR`, `DE`. The two-letter form is not rejected; it returns 200 and an empty list that reads as "no data here".

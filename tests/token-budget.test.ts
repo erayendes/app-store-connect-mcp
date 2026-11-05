@@ -18,7 +18,8 @@ import { measureServers } from '../scripts/measure-tokens.js';
 // selectors raise measured definitions from 7,837 to 8,418 (+581) tokens.
 // The enums make valid uploads discoverable without raw create tools.
 // Keep 12 tokens of headroom.
-const CORE_CEILING = 8_430;
+// Spec 4.6 adds retentionMessages to the apps field enums core tools carry (+1).
+const CORE_CEILING = 8_443;
 
 describe('what ASC-Core costs every session', () => {
   it(`stays under ${CORE_CEILING} definition tokens`, async () => {

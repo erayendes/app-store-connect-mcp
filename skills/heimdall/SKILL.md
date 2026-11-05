@@ -5,7 +5,7 @@ description: Work with an Apple App Store Connect account through Heimdall's MCP
 
 Heimdall is one binary serving several separately scoped MCP servers, one per
 profile: `ASC-Monetization`, `ASC-Distribution`, `ASC-TestFlight` and so on.
-Apple's API is 1011 operations, which costs more in tool definitions than most
+Apple's API is 1036 operations, which costs more in tool definitions than most
 context windows can spare, so a session carries one or a few profiles rather
 than all of them.
 
@@ -178,11 +178,11 @@ default.
 
 A large profile takes a colon and a list of sub-profiles —
 `monetization:subscription,subscription-offers` is 65 tools where
-`monetization` is 162. Worth suggesting for `monetization`, `game-center`,
+`monetization` is 187. Worth suggesting for `monetization`, `game-center`,
 `distribution`, `testflight`, `general` and `marketing`. The server is still
 `ASC-Monetization`.
 
-Heimdall serves 762 distinct tools across 14 profiles: 710 reachable Apple operations plus 52 hand-written tools.
+Heimdall serves 787 distinct tools across 14 profiles: 735 reachable Apple operations plus 52 hand-written tools.
 
 ## Prefer the macro over the chain
 
@@ -241,7 +241,7 @@ the report, where the raw chain ends holding a link.
   any tool that can change something; asking for a write there is asking for a
   tool that is not loaded, not a permission problem.
 - A tool that is not in this session's list may still belong to this account.
-  `asc__search_tools` (on ASC-Core) covers the 807 operations Heimdall builds,
+  `asc__search_tools` (on ASC-Core) covers the 832 operations Heimdall builds,
   plus the StoreKit tools
   and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names
   the profile that owns each one, and the server's own error messages print the

@@ -71,6 +71,7 @@ Setup aynı tabloyla çalışır: seçtiklerinize bakıp hepsini karşılayan en
 | `monetization:subscription` | App Manager, Admin |
 | `monetization:subscription-codes` | App Manager, Admin |
 | `monetization:subscription-offers` | App Manager, Admin |
+| `monetization:subscription-retention` | App Manager, Admin |
 | `monetization:subscription-win-back` | App Manager, Admin |
 | `monetization:transactions` | App Manager, Admin |
 | `provisioning` | Admin |

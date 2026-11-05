@@ -121,6 +121,11 @@ export const DOMAIN_MAP: Record<string, string> = {
   winBackOffers: 'subscriptions',
   winBackOfferPrices: 'subscriptions',
   subscriptionGracePeriods: 'subscriptions',
+  retentionMessages: 'subscriptions',
+  retentionMessageVersions: 'subscriptions',
+  retentionMessageLocalizations: 'subscriptions',
+  retentionOffers: 'subscriptions',
+  retentionOfferPrices: 'subscriptions',
 
   // Pricing
   appPriceSchedules: 'pricing',

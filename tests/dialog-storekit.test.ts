@@ -223,6 +223,11 @@ describe('storekitDialog: retention messaging', () => {
     expect(text.body).not.toContain('/tmp');
   });
 
+  it('upload_image names the universal asset size', () => {
+    const text = retention({ action: 'upload_image', image_id: IMAGE, file_path: '/tmp/x/hero.png', image_size: 'UNIVERSAL_ASSET' });
+    expect(text.body).toContain('Size: universal asset');
+  });
+
   it('delete_image', () => {
     const text = retention({ action: 'delete_image', image_id: IMAGE });
     expect(text.title).toBe('Delete a retention image?');
