@@ -43,7 +43,7 @@ import {
   PLAIN,
   applyPlan,
   buildRows,
-  planBits,
+  planLines,
   removedLabels,
   keyIsAdmin,
   isValidIssuerId,
@@ -227,36 +227,35 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         throw new HttpError(409, 'Claude Desktop is still open. Quit it (⌘Q), then press Apply again.');
       }
       const lines: string[] = [];
+      let next: string | undefined;
       const log = (line: string) => lines.push(line.replace(/^\n+/, ''));
 
       if (dryRun) {
         log('Dry run — nothing was written and Apple was not contacted.');
         // The terminal's own wording, so a dry run reads like the plan it rehearses.
-        for (const p of steps) {
-          const bits = planBits(p);
-          if (bits.length) log(`${p.client.label}: would ${bits.join('  ')}`);
-        }
+        for (const p of steps) for (const line of planLines(p)) if (line) log(line);
       } else {
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;
         const extras = {
           vendorNumber: text('vendorNumber'),
         };
         if (!reuse && verified) {
-          saveCredentials({ keyId: verified.keyId, issuerId: verified.issuerId, ...extras }, verified.pem, undefined, log);
+          saveCredentials({ keyId: verified.keyId, issuerId: verified.issuerId, ...extras }, verified.pem, undefined);
           verified = undefined;
         } else if (reuse && extras.vendorNumber) {
           // Keeping the saved key does not mean keeping it incomplete: what was
           // filled in now is added to it, and nothing else is touched.
           const saved = readSharedConfig()!;
           const defined = Object.fromEntries(Object.entries(extras).filter(([, v]) => v !== undefined));
-          log(`✓ Shared config updated at ${writeSharedConfig({ ...saved, ...defined })}.`);
+          writeSharedConfig({ ...saved, ...defined });
         }
-        if (steps.length) applyPlan(steps, log);
-        else log('No changes — every chosen client already matches your selection.');
+        // The page shows only one line per app; the key is already confirmed by step 2.
+        next = applyPlan(steps, log);
       }
       for (const line of lines) console.log(line);
+      if (next) console.log(`\n${next}`);
       setImmediate(finish);
-      return { lines };
+      return { lines, next };
     },
 
     async cancel() {

@@ -159,8 +159,9 @@ describe('setup --web, registration confirmation', () => {
     expect(pageData).not.toContain('secret-test-value');
     expect(pageData).not.toContain('another-secret-value');
     expect(pageData).not.toContain('secret-flag-value');
-    expect(SETUP_PAGE).toContain("'rewrite ' + p.rewrites.join(', ')");
-    expect(SETUP_PAGE).toContain("el('span', 'mv'");
+    // Shown file by file: a channel move only is not shown; why core is held back is.
+    expect(plan[0].files[0].rows.map((r) => r.name)).not.toContain('ASC-General');
+    expect(plan[0].files[0].note).toMatch(/ASC-Core not added: .*different App Store Connect accounts/);
     expect(SETUP_PAGE).toContain('reuse && !vendorChanged() && !r.plan.some');
     expect(readFileSync(path, 'utf8')).toContain('secret-test-value');
   });
@@ -198,15 +199,17 @@ describe('setup --web, registration confirmation', () => {
       'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'], env: { DEMO_MODE: 'secret-demo' } },
       'ASC-Access': { command: 'npx', args: ['-y', PACKAGE, 'access:users'], env: { ASC_CONFIG_DIR: '/secret/dir' } },
     } }));
-    const page = planForPage(planChanges([cursor], ['analytics'],
-      new Map([['cursor', readRegistrations(cursor)]]), { prune: true }))[0];
+    const steps = planChanges([cursor], ['analytics'], new Map([['cursor', readRegistrations(cursor)]]), { prune: true });
+    const page = planForPage(steps)[0];
     expect(page.add).toEqual(['ASC-Core (--read-only)']);
     expect(page.deadDeleted).toEqual(['ASC-AppInfo (app-info; --read-only; env DEMO_MODE)']);
     expect(page.remove).toEqual([]);
     expect(page.deadReported).toEqual(['ASC-Access (access:users; env ASC_CONFIG_DIR): user-managed']);
     expect(JSON.stringify(page)).not.toMatch(/secret-demo|\/secret\/dir/);
-    expect(SETUP_PAGE).toContain("'delete dead ' + p.deadDeleted.join(', ')");
-    expect(SETUP_PAGE).toContain("'ASC-Core not added (' + p.coreWithheld.join('; ')");
-    expect(SETUP_PAGE).toContain("'dead, left as is: ' + p.deadReported.join(', ')");
+    expect(steps[0].files[0].rows).toEqual([
+      { mark: '+', name: 'ASC-Core', note: '--read-only' },
+      { mark: '-', name: 'ASC-AppInfo', note: 'its profile app-info no longer exists' },
+      { mark: 'o', name: 'ASC-Access', note: 'its profile access:users no longer exists; left as it is' },
+    ]);
   });
 });

@@ -98,6 +98,8 @@ const home = (...parts: string[]): string => join(homedir(), ...parts);
 export type Target =
   | {
       kind: 'cli';
+      /** The app this file belongs to, when a client has more than one (Claude Code, Claude Desktop). */
+      label?: string;
       /** Binary that must be on PATH for this target to exist. */
       bin: string;
       where: string;
@@ -116,6 +118,7 @@ export type Target =
     }
   | {
       kind: 'json';
+      label?: string;
       path: string;
       where: string;
       key: string;
@@ -156,6 +159,7 @@ export const CLIENTS: McpClient[] = [
     targets: [
       {
         kind: 'cli',
+        label: 'Claude Code',
         bin: 'claude',
         where: '~/.claude.json',
         add: (name, spec) => ['mcp', 'add', '-s', 'user', name, '--', SERVER_COMMAND, ...serverArgs(spec)],
@@ -166,6 +170,7 @@ export const CLIENTS: McpClient[] = [
       },
       {
         kind: 'json',
+        label: 'Claude Desktop',
         path: home('Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
         where: '~/Library/Application Support/Claude/claude_desktop_config.json',
         key: 'mcpServers',
@@ -752,6 +757,11 @@ export interface ChangeResult {
    * entry left for the user. Not a failure: no paste-in block follows it.
    */
   withheld?: boolean;
+  /** For a failed change: why, without which entry — several entries in one file fail alike. */
+  reason?: string;
+  /** For a withheld change: the entry and the file, so it can be matched to the plan. */
+  name?: string;
+  where?: string;
 }
 
 /**
@@ -786,15 +796,15 @@ export function applyToClient(
   // Keyed by the change, so two targets doing the same thing collapse to one
   // line. Insertion order is the order the user picked, which is the order
   // they expect to read back.
-  const outcomes = new Map<string, { label: string; ok: boolean; why: string[]; withheld?: boolean }>();
+  const outcomes = new Map<string, { label: string; ok: boolean; why: string[]; withheld?: boolean; name?: string; where?: string }>();
   const record = (key: string, label: string, ok: boolean, why?: string): void => {
     const prev = outcomes.get(key) ?? { label, ok: true, why: [] };
     prev.ok &&= ok;
     if (why) prev.why.push(why);
     outcomes.set(key, prev);
   };
-  const withhold = (key: string, label: string): void => {
-    outcomes.set(key, { label, ok: false, why: [], withheld: true });
+  const withhold = (key: string, label: string, name?: string, where?: string): void => {
+    outcomes.set(key, { label, ok: false, why: [], withheld: true, name, where });
   };
   const addLabel = (spec: string, readOnly = false): string => {
     const name = serverName(spec);
@@ -818,7 +828,7 @@ export function applyToClient(
       return reg !== undefined && !deadAndDeletable(reg, block);
     }));
     for (const name of deadKept) {
-      withhold(`dead:${name}`, `${dead.get(name)} left in place: it is no longer ours to delete`);
+      withhold(`dead:${name}`, `${dead.get(name)} left in place: it is no longer ours to delete`, name, t.where);
     }
     // A rename moves an old entry's content to the new name and deletes the
     // old one, so its source is checked again here with this target's block:
@@ -831,7 +841,14 @@ export function applyToClient(
     // A target that already holds the profile as asked is left alone — the
     // other target may be why it is in the plan. Re-adding it here made the
     // CLI refuse the duplicate and remove and re-add a working server.
-    const profileAdds = toAdd.filter((spec) => spec !== CORE_SPEC && !holdsAsAsked(current, spec, moves));
+    // A profile this target holds set up by hand is left to it, as the plan
+    // said — not a failure, and nothing to paste in.
+    const byHand = (spec: string): boolean => !unknown && !block.canAdd(spec) && current.some((r) => r.name === serverName(spec));
+    for (const spec of toAdd.filter((s) => s !== CORE_SPEC && byHand(s))) {
+      withhold(`kept:${serverName(spec)}:${t.where}`, `${serverName(spec)} left as it is in ${t.where}: it is set up by hand there`,
+        serverName(spec), t.where);
+    }
+    const profileAdds = toAdd.filter((spec) => spec !== CORE_SPEC && !holdsAsAsked(current, spec, moves) && !byHand(spec));
     // What this target actually deletes. A name it holds as a user-managed
     // entry — kept here though another target deletes its copy, or turned
     // user-managed since the plan — stays, and is said to, not failed.
@@ -839,7 +856,7 @@ export function applyToClient(
     const actual = targetRemoves(current, named, dead);
     if (!unknown) {
       for (const name of named.filter((n) => has(n) && !actual.includes(n))) {
-        withhold(`kept:${name}:${t.where}`, `${name} left in place in ${t.where}: it is user-managed there`);
+        withhold(`kept:${name}:${t.where}`, `${name} left in place in ${t.where}: it is user-managed there`, name, t.where);
       }
     }
     // An unreadable target is still asked, so registrationBlock refuses and reports it.
@@ -991,11 +1008,11 @@ export function applyToClient(
     for (const [k, v] of rebuilt) outcomes.set(k, v);
   }
 
-  const results: ChangeResult[] = [...outcomes.values()].map(({ label, ok, why, withheld }) => ({
+  const results: ChangeResult[] = [...outcomes.values()].map(({ label, ok, why, withheld, name, where }) => ({
     ok,
     // Deduplicate: two targets failing the same way should say it once.
     message: ok || withheld ? label : `${label}: ${[...new Set(why)].join('; ')}`,
-    ...(withheld ? { withheld } : {}),
+    ...(withheld ? { withheld, name, where } : ok ? {} : { reason: [...new Set(why)].join('; ') }),
   }));
   return { results, needsManual: results.some((r) => !r.ok && !r.withheld) };
 }

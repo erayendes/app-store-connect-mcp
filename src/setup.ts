@@ -59,6 +59,8 @@ import {
   deadAndDeletable,
   describeEntry,
   isDead,
+  isUserManaged,
+  holdsAsAsked,
   writableTargets,
 } from './clients.js';
 
@@ -913,6 +915,26 @@ export interface ClientPlan {
   deadDeleted: Map<string, string>;
   /** Dead entries setup may not delete, only report. */
   deadReported: string[];
+  /** The same plan, file by file and entry by entry — what is shown. */
+  files: PlanFile[];
+}
+
+/** One entry in one file: added (+), removed (-), or kept with sub-profiles changing (o). */
+export interface PlanRow {
+  mark: '+' | '-' | 'o';
+  name: string;
+  /** An entry that stays but whose sub-profiles change: the ones added and removed. */
+  subs?: { added: string[]; removed: string[] };
+  /** Short words after the name: a new entry's sub-profiles, flags, a move. */
+  note?: string;
+}
+
+/** One config file's rows. Two files of one app with the same rows are one block. */
+export interface PlanFile {
+  label: string;
+  where: string[];
+  note?: string;
+  rows: PlanRow[];
 }
 
 /** An entry with its flags (values hidden) — what a plan line shows. */
@@ -978,6 +1000,112 @@ function planCore(
   const bare = new Set(out.added.map((a) => a.replace(/ in .*$/, '')));
   if (bare.size === 1 && out.added.length === targets.length) out.added = [...bare];
   return out;
+}
+
+const subsOf = (spec: string): string[] => {
+  try {
+    return resolveSelection(spec).subProfiles.map((s) => s.name).filter(Boolean);
+  } catch {
+    return [];
+  }
+};
+const flagsOf = (reg: Registration): string[] => (reg.entry?.args as string[] | undefined)
+  ?.filter((arg) => arg.startsWith('-') && arg !== '-y').map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
+const words = (parts: string[]): string | undefined => parts.filter(Boolean).join(', ') || undefined;
+
+/** A new entry: its sub-profiles when only some are picked, then its flags. */
+const newRow = (spec: string, flags: string[] = []): PlanRow => {
+  const sel = (() => { try { return resolveSelection(spec); } catch { return undefined; } })();
+  return { mark: '+', name: serverName(spec),
+    note: words([sel?.partial ? subsOf(spec).join(', ') : '', ...flags]) };
+};
+
+/**
+ * Each file of a client, entry by entry, from the same per-target calls the
+ * write makes (targetAdds, targetRemoves, coreActionFor), so what is shown is
+ * what is written.
+ */
+function planFiles(
+  client: McpClient,
+  entries: Registration[],
+  profileAdds: string[],
+  profileRemoves: string[],
+  explicit: boolean,
+  { asked, migrations, dead }: { asked: string[]; migrations: Map<string, string>; dead: Set<string> }
+): PlanFile[] {
+  // A profile asked for that no file of this app takes, because each holds it
+  // set up by hand, is said once: the user asked for something that will not happen.
+  const nowhere = asked.filter((spec) => !writableTargets(client).some((t) => {
+    const { here } = inTarget(entries, t.where);
+    return targetAdds(here, [spec], migrations).length || holdsAsAsked(here, spec, migrations);
+  }));
+  const files = writableTargets(client).map((t): PlanFile => {
+    const { here } = inTarget(entries, t.where);
+    const unreadable = here.some((r) => r.name === '*');
+    const adds = unreadable ? asked : targetAdds(here, profileAdds, migrations);
+    const removes = targetRemoves(here, profileRemoves, dead);
+    const core = coreActionFor(here, adds, removes, explicit, migrations);
+    // Only what changes: an entry left as it is, or only moved to this
+    // release's package, is not shown.
+    const added: PlanRow[] = [], changed: PlanRow[] = [], removed: PlanRow[] = [];
+    const done = new Set<string>(['*']);
+    for (const spec of adds) {
+      const name = serverName(spec);
+      const old = here.find((r) => r.name === name && r.spec && !isUserManaged(r)) ??
+        here.find((r) => r.name === migrations.get(name));
+      if (!old?.spec) {
+        added.push(newRow(spec));
+        continue;
+      }
+      done.add(old.name).add(name);
+      const was = subsOf(old.spec), now = subsOf(spec);
+      const subs = { added: now.filter((s) => !was.includes(s)), removed: was.filter((s) => !now.includes(s)) };
+      if (subs.added.length || subs.removed.length || old.name !== name) {
+        changed.push({ mark: 'o', name, ...(subs.added.length || subs.removed.length ? { subs } : {}),
+          note: old.name !== name ? `renamed from ${old.name}` : undefined });
+      }
+    }
+    if (core.kind === 'add') {
+      const old = here.find((r) => r.name === CORE_SERVER);
+      const flag = core.readOnly ? '--read-only' : '';
+      if (old) {
+        if (flag && !flagsOf(old).includes(flag)) changed.push({ mark: 'o', name: CORE_SERVER, note: 'becomes --read-only' });
+      } else {
+        added.push({ mark: '+', name: CORE_SERVER, note: words([flag]) });
+      }
+    }
+    for (const name of removes.filter((n) => !done.has(n))) {
+      done.add(name);
+      const reg = here.find((r) => r.name === name)!;
+      removed.push({ mark: '-', name, note: isDead(reg) ? `its profile ${reg.spec} no longer exists` : undefined });
+    }
+    if (core.kind === 'remove') {
+      done.add(CORE_SERVER);
+      removed.push({ mark: '-', name: CORE_SERVER, note: 'no profile left' });
+    }
+    const byHand = nowhere.map((spec) => here.find((r) => r.name === serverName(spec) && isUserManaged(r)))
+      .filter((r): r is Registration => r !== undefined && !done.has(r.name))
+      .map((r): PlanRow => (done.add(r.name), { mark: 'o', name: r.name, note: 'set up by hand; left as it is' }));
+    // A dead entry setup may not delete stays, but it serves nothing: said, not hidden.
+    const deadKept = here.filter((r) => !done.has(r.name) && isDead(r))
+      .map((r): PlanRow => ({ mark: 'o', name: r.name, note: `its profile ${r.spec} no longer exists; left as it is` }));
+    const rows = [...added, ...changed, ...removed, ...byHand, ...deadKept];
+    const notes: string[] = [];
+    if (unreadable) notes.push('Could not be read (unreadable).');
+    if (core.kind === 'withheld') notes.push(`${CORE_SERVER} not added: ${core.reason}.`);
+    if (core.kind === 'remove' && rows.every((r) => r.mark === '-')) {
+      notes.push('No profile left here, so every entry goes.');
+      for (const r of rows) if (r.name === CORE_SERVER) delete r.note;
+    }
+    return { label: client.targets.length > 1 ? t.label ?? client.label : client.label, where: [t.where],
+      ...(notes.length ? { note: notes.join(' ') } : {}), rows };
+  }).filter((f) => f.rows.length || f.note);
+  // Both of Claude's files changing the same way read as one app, not two.
+  const same = (f: PlanFile) => JSON.stringify({ note: f.note, rows: f.rows });
+  if (files.length > 1 && files.every((f) => same(f) === same(files[0]))) {
+    return [{ ...files[0], label: client.label, where: files.flatMap((f) => f.where) }];
+  }
+  return files;
 }
 
 /**
@@ -1088,6 +1216,10 @@ export function planChanges(
         deadReported: dead.filter((r) => !deletable.includes(r))
           .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`),
         toRemove: [...profileRemoves, ...(core.remove ? [CORE_SERVER] : [])],
+        files: targets.length
+          ? planFiles(client, entries, profilesToAdd, profileRemoves, explicitCore, {
+            asked: wanted.filter((s) => !isCore(s)), migrations, dead: new Set(deletable.map((r) => r.name)) })
+          : [{ label: client.label, where: [], rows: toAdd.map((spec) => newRow(spec)) }],
       };
     })
     .filter((p) => p.toAdd.length || p.toRemove.length || p.userManaged.length ||
@@ -1131,7 +1263,9 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
         coreAdded: [], coreWithheld: [], coreRemoved: core.removed, explicitCore: false,
         deadDeleted: new Map(deletable.map((r) => [r.name, `${describeEntry(r)}${at(r)}`])),
         deadReported: dead.filter((r) => !deletable.includes(r))
-          .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`) };
+          .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`),
+        files: planFiles(client, entries, [], profileRemoves, false,
+          { asked: [], migrations: new Map(), dead: new Set(deletable.map((r) => r.name)) }) };
     })
     .filter((p) => p.toRemove.length || p.userManaged.length || p.deadReported.length);
 }
@@ -1140,14 +1274,38 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
  * The plan, one line per client, includes each existing entry to rewrite.
  */
 export function printPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
-  const shown = plan.filter((p) => p.toRemove.length || p.toAdd.length || p.userManaged.length ||
-    p.coreWithheld.length || p.deadReported.length);
+  const shown = plan.filter((p) => p.files.length);
   if (!shown.length) {
     log('\n📋 Your profiles stay as they are.');
     return;
   }
-  log('\n📋 Planned changes:\n');
-  for (const p of shown) log(`  ${p.client.label.padEnd(24)} ${planBits(p).join('  ')}`);
+  log('\n📋 Planned changes  (+ added, - removed):');
+  for (const p of shown) for (const line of planLines(p)) log(line);
+}
+
+/** One client's files as the terminal shows them; plain rows of one mark share a line. */
+export function planLines(p: ClientPlan): string[] {
+  const out: string[] = [];
+  for (const f of p.files) {
+    out.push('', `  ${f.label}`, ...f.where.map((w) => `    ${w}`));
+    if (f.note) out.push(`    ${f.note}`);
+    for (let i = 0; i < f.rows.length; i++) {
+      const r = f.rows[i];
+      if (r.subs || r.note) {
+        // A kept entry is only a heading for the sub-profiles that change in it.
+        out.push(`    ${r.mark === 'o' ? ' ' : r.mark} ${r.name}${r.note ? `  ${r.note}` : ''}`);
+        if (r.subs?.added.length) out.push(`        + ${r.subs.added.join(', ')}`);
+        if (r.subs?.removed.length) out.push(`        - ${r.subs.removed.join(', ')}`);
+        continue;
+      }
+      const names = [r.name];
+      while (f.rows[i + 1] && f.rows[i + 1].mark === r.mark && !f.rows[i + 1].subs && !f.rows[i + 1].note) {
+        names.push(f.rows[++i].name);
+      }
+      out.push(`    ${r.mark} ${names.join(', ')}`);
+    }
+  }
+  return out;
 }
 
 /**
@@ -1194,70 +1352,46 @@ function nextStep(clients: McpClient[]): string {
 }
 
 /**
- * Carry out a plan, reporting per client.
+ * Carry out a plan: one line per app, "✓ App" or "✗ App: why".
  *
- * A client that fails does not stop the others — its block is printed instead,
- * so a Cursor config full of comments cannot cost anyone a working Claude
- * setup.
+ * A client that fails does not stop the others, so a Cursor config full of
+ * comments cannot cost anyone a working Claude setup. Returns what to do next,
+ * for the caller to print.
  */
-export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
+export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): string | undefined {
   const restart: McpClient[] = [];
-  for (const { client, toAdd, toRemove, toSwitch, userManaged, migrations, coreWithheld, deadDeleted, deadReported, explicitCore } of plan) {
-    if (userManaged.length) log(`${client.label}: user-managed, unchanged: ${userManaged.join(', ')}`);
-    // Said here only when nothing will be written: otherwise the write itself
-    // decides again per target and reports it.
-    if (!toAdd.includes(CORE_SPEC)) {
-      for (const why of coreWithheld) log(`${client.label}: ${CORE_SERVER} not added — ${why}`);
-    }
-    for (const entry of deadReported) log(`${client.label}: dead entry left as is — ${entry}`);
+  let failed = false;
+  for (const { client, toAdd, toRemove, migrations, deadDeleted, explicitCore, files } of plan) {
     if (!toAdd.length && !toRemove.length) continue;
-    // An entry that only moves to this release's package is written quietly:
-    // it is setting this release up, not a change the user made. A failure is
-    // still reported, and the client still needs restarting to pick it up.
-    const moved = new Set(toSwitch.map(serverName));
-    const quiet = (r: ChangeResult): boolean => r.ok && moved.has(/^added (\S+)/.exec(r.message)?.[1] ?? '');
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
-      log(`\n${client.label}`);
-      log('  add this to your client config:\n');
+      log(`\n${client.label}: add this to your client config:\n`);
       log(indent(manualBlock(client, toAdd)));
       continue;
     }
-    const { results, needsManual } = applyToClient(client, toAdd, toRemove, migrations, { dead: deadDeleted, explicitCore });
-    const shown = results.filter((r) => !quiet(r));
-    if (shown.length) log(`\n${client.label}`);
-    for (const r of shown) log(`  ${r.ok ? '✓' : r.withheld ? '–' : '✗'} ${r.message}`);
-    // A target the plan held core back from, and the write had nothing to do
-    // in (an unreadable one gets no profile either), is still said — once.
-    if (toAdd.includes(CORE_SPEC)) {
-      for (const why of coreWithheld) {
-        const where = why.split(': ', 1)[0];
-        if (!results.some((r) => r.message.startsWith(`${CORE_SERVER} not added to ${where}:`))) {
-          log(`  – ${CORE_SERVER} not added to ${why}`);
-        }
-      }
-    }
+    const { results } = applyToClient(client, toAdd, toRemove, migrations, { dead: deadDeleted, explicitCore });
+    // Held back on purpose is a failure only where the plan promised a change
+    // to that entry in that file; anywhere else the plan already said so.
+    const promised = (r: ChangeResult): boolean => files.some((f) => f.where.includes(r.where ?? '') &&
+      f.rows.some((row) => row.name === r.name && !/left as it is$/.test(row.note ?? '')));
+    // Several entries failing for one reason (an unwritable file) say it once;
+    // a lone failure keeps its entry's name. Node's file errors lose the
+    // syscall and full paths, as the file is already named.
+    const bad = results.filter((r) => r.withheld ? promised(r) : !r.ok);
+    const problems = bad.map((r) => (r.reason && bad.filter((o) => o.reason === r.reason).length > 1 ? r.reason : r.message)
+      .replace(/, \w+ '[^']*'( -> '[^']*')?/g, ''));
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
-    const stillRegistered = listRegistered(client).size > 0;
     const skill = results.some((r) => r.ok)
-      ? stillRegistered
-        ? installSkill(client.id)
-        : removeSkill(client.id)
+      ? listRegistered(client).size > 0 ? installSkill(client.id) : removeSkill(client.id)
       : undefined;
-    if (skill && (shown.length || !skill.ok)) log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
-    // Core held back on purpose is not something to paste in by hand.
-    const byHand = results.some((r) => r.withheld && r.message.startsWith(CORE_SERVER))
-      ? toAdd.filter((s) => s !== CORE_SPEC) : toAdd;
-    if (needsManual && byHand.length) {
-      log('\n  add these by hand:\n');
-      log(indent(manualBlock(client, byHand)));
-    }
+    if (skill && !skill.ok) problems.push(skill.message);
+    if (problems.length) failed = true;
+    log(problems.length ? `✗ ${client.label}: ${[...new Set(problems)].join('; ')}` : `✓ ${client.label}`);
     if (results.some((r) => r.ok)) restart.push(client);
   }
-  if (restart.length) {
-    log(`\n🎉 Done. ${nextStep(restart)}, then ask: "Check my App Store Connect connection."`);
-  }
+  if (!restart.length) return undefined;
+  return `${failed ? '' : '🎉 Done. '}${nextStep(restart)}, then ask: "Check my App Store Connect connection."`;
 }
 
 /**
@@ -1291,7 +1425,8 @@ export async function reconcileRegistration(
     console.log('Left registration unchanged.');
     return;
   }
-  applyPlan(plan);
+  const next = applyPlan(plan);
+  if (next) console.log(`\n${next}`);
 }
 
 const indent = (text: string): string =>
@@ -1353,7 +1488,9 @@ export function runRegister(specs: string[], clientIds?: string[]): void {
     console.log('No changes — every client already has these profiles.');
     return;
   }
-  applyPlan(plan);
+  printPlan(plan);
+  const next = applyPlan(plan);
+  if (next) console.log(`\n${next}`);
 
   // Registration and credentials are separate steps on purpose: this one has no
   // secret in it, which is why an agent may run it. Say so, or the user is left
