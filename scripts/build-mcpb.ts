@@ -14,12 +14,15 @@
  *
  * One bundle serves one profile — that is an MCPB constraint, not a choice.
  * A person who wants two areas installs it twice, which is why the profile is
- * install-time configuration rather than something baked in here.
+ * install-time configuration rather than something baked in here. For the same
+ * reason the manifest passes `--with-core`: a bundle cannot count on an
+ * ASC-Core server beside it, so each one carries the core tools itself, and
+ * `core` is not offered as a profile of its own.
  */
 import { execFileSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PROFILES } from '../src/profiles.js';
+import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 /** Hand-written and version-controlled. Nothing writes back to it. */
 const SOURCE = 'mcpb/manifest.json';
@@ -38,8 +41,9 @@ manifest.version = pkg.version;
 // typed, because a profile renamed here and not there is an installer offering
 // something that no longer exists.
 manifest.user_config.profile.description =
-  `${manifest.user_config.profile.description} One of: ${PROFILES.map((p) => p.name).join(', ')}. ` +
-  `Narrow further with a colon, e.g. monetization:subscription-pricing.`;
+  `${manifest.user_config.profile.description} One of: ` +
+  `${PROFILES.filter((p) => p.name !== CORE_PROFILE).map((p) => p.name).join(', ')}. ` +
+  `Narrow further with a colon, e.g. monetization:subscription.`;
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(join(OUT, 'server'), { recursive: true });

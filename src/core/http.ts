@@ -53,6 +53,11 @@ export class AscHttpClient {
     this.limiter = new RateLimiter(opts.rateLimit);
   }
 
+  /** The key and host this client signs for. */
+  get account(): string {
+    return `${this.tokens.identity}@${this.allowedHost}`;
+  }
+
   /**
    * Resolves a `links.next` URL returned by Apple.
    * Rejects anything pointing off-host — a redirected pagination cursor must
@@ -430,6 +435,21 @@ export const AGREEMENT_HINT =
   '(the "Agreements, Tax, and Banking" page in App Store Connect is a different agreement). ' +
   'Every App Store Connect API call stays blocked until then.';
 
+export const ENTITY_HINT =
+  'App Store Connect refused a value in the request, not the resource state: the text above ' +
+  'names the attribute or relationship. Fix that value; the issues[] entries carry the details.';
+
+/** The hint for an Apple error: by status, unless the error codes say the status hint is wrong. */
+export function hintFor(status: number, errors: AscApiErrorDetail[]): string | undefined {
+  // The agreement 403 is answered before the generic one: same status, and
+  // the generic text would send the reader to the roles that cannot fix it.
+  if (errors.some((e) => String(e.code ?? '').startsWith('FORBIDDEN.REQUIRED_AGREEMENTS'))) return AGREEMENT_HINT;
+  // Apple answers an invalid value with 409 too (ENTITY_ERROR); the locked-state
+  // hint sent readers of those to check a version that was never the problem.
+  if (status === 409 && errors.length > 0 && errors.every((e) => String(e.code ?? '').startsWith('ENTITY_ERROR'))) return ENTITY_HINT;
+  return STATUS_HINTS[status];
+}
+
 async function toApiError(res: Response): Promise<AscApiError> {
   let errors: AscApiErrorDetail[] = [];
   let message = `App Store Connect API returned ${res.status}`;
@@ -447,12 +467,7 @@ async function toApiError(res: Response): Promise<AscApiError> {
     // Non-JSON error body; the status line is all we have.
   }
 
-  // The agreement 403 is answered before the generic one: same status, and
-  // the generic text would send the reader to the roles that cannot fix it.
-  const agreement = errors.some((e) =>
-    String(e.code ?? '').startsWith('FORBIDDEN.REQUIRED_AGREEMENTS')
-  );
-  const hint = agreement ? AGREEMENT_HINT : STATUS_HINTS[res.status];
+  const hint = hintFor(res.status, errors);
   if (hint) message += `. ${hint}`;
 
   return new AscApiError(

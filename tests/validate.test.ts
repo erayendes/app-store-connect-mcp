@@ -134,6 +134,38 @@ describe('generated body schemas (invariants)', () => {
     };
     expect(validateBody(BODY_SCHEMAS[op.bodyRef!], body)).toEqual([]);
   });
+
+  it('accepts a retention offer create with priced countries (same spec gap as win-back)', () => {
+    const op = OPERATIONS.find((o) => o.name === 'retention_offers.create')!;
+    const body = {
+      data: {
+        type: 'retentionOffers',
+        attributes: {
+          referenceName: 'Stay a month',
+          offerId: 'stay_1',
+          duration: 'ONE_MONTH',
+          offerMode: 'PAY_AS_YOU_GO',
+          periodCount: 1,
+          customerEligibilityPaidSubscriptionDurationInMonths: 3,
+        },
+        relationships: {
+          subscription: { data: { type: 'subscriptions', id: '6449000000' } },
+          prices: { data: [{ type: 'retentionOfferPrices', id: '${price-usa}' }] },
+        },
+      },
+      included: [
+        {
+          type: 'retentionOfferPrices',
+          id: '${price-usa}',
+          relationships: {
+            territory: { data: { type: 'territories', id: 'USA' } },
+            subscriptionPricePoint: { data: { type: 'subscriptionPricePoints', id: 'eyJzIjoiNjQ0OSJ9' } },
+          },
+        },
+      ],
+    };
+    expect(validateBody(BODY_SCHEMAS[op.bodyRef!], body)).toEqual([]);
+  });
 });
 
 describe('registry execute validation (bad body never reaches Apple)', () => {
@@ -141,7 +173,7 @@ describe('registry execute validation (bad body never reaches Apple)', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     try {
-      const registry = new ToolRegistry({ domains: ['versions'], readOnly: false, includeDeprecated: false });
+      const registry = new ToolRegistry({ operations: OPERATIONS.filter((o) => o.domain === 'versions').map((o) => o.name), readOnly: false });
       const http = new AscHttpClient(new TokenProvider(creds));
       const bad = goodBody();
       (bad.data.attributes as any).platform = 'ANDROID';

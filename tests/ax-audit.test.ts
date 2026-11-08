@@ -24,7 +24,12 @@ import type { Operation } from '../src/core/types.js';
 const CEILING = {
   /** AXIS1 — findability: descriptions still in Apple's words, not a user's. */
   // Spec 4.5 (+5 tools, Apple's own summaries) raised four ceilings by 2–4.
-  boilerplate: 696,
+  // PR-V2 hides 28 unflagged v1 operations; PR-D1 hides six legacy media families.
+  // The live beta run curated the app → encryption declarations path Apple 404s.
+  // 3.0 stopped building twins and profile-less reverse reads (−18).
+  // Spec 4.6 (+25 retention message and offer tools, Apple's own summaries),
+  // five of them curated where the offer links and the inline prices need it.
+  boilerplate: 633,
   /**
    * AXIS2 — silent empty results: id-valued filters with no format hint.
    *
@@ -46,13 +51,18 @@ const CEILING = {
    * so a confirmation never shows one for it. Fourteen submit and request
    * creates left the list that way, spec 4.5.1's placement ordering among them.
    */
-  unresolvedRefTypes: 41,
+  // Spec 4.6 (+1): retentionOfferPrices, inline in a retention offer create like winBackOfferPrices.
+  unresolvedRefTypes: 42,
   /** AXIS4 — path length: writes that need a lookup call first. */
   // Spec 4.5.1 (+5): update and delete for asset library images, videos and
   // placements. Changing a file means naming it, so these cannot avoid the id.
-  writesNeedingLookup: 263,
+  // 3.0 stopped building the dropped end of twelve relationship pairs (−11).
+  // Spec 4.6 (+8): retention message, localization and offer writes and subscription links.
+  writesNeedingLookup: 238,
   /** AXIS4 — lists with no `filter[*]`, so an oversized response cannot be narrowed. */
-  unfilterableLists: 99,
+  // Spec 4.6 (+5): an app's retention messages, a message's versions, a version's
+  // localizations, and a subscription's retention offers and message offers.
+  unfilterableLists: 95,
 };
 
 const debt = auditAx();
@@ -73,19 +83,11 @@ describe('AX debt ratchet', () => {
 
   it('audits every loadable operation, not a subset', () => {
     // Guards against an import or filter silently emptying the audit — a
-    // ratchet over zero findings would pass forever. The set is every
-    // operation a profile can actually load: 982 minus the 123 Apple marked
-    // deprecated, which the registry refuses by default.
+    // ratchet over zero findings would pass forever. Deprecated operations are
+    // not built, so the set is every operation a profile can load.
     expect(debt.totalOps).toBeGreaterThan(800);
     expect(debt.totalWrites).toBeGreaterThan(350);
     expect(debt.totalLists).toBeGreaterThan(200);
-  });
-
-  it('excludes deprecated operations — no agent can reach them', () => {
-    const names = new Set(debt.boilerplate.map((f) => f.name));
-    const deprecated = OPERATIONS.filter((op) => op.deprecated);
-    expect(deprecated.length).toBeGreaterThan(0);
-    expect(deprecated.filter((op) => names.has(op.name))).toEqual([]);
   });
 });
 
@@ -122,7 +124,6 @@ describe('AX wins stay won', () => {
         path: '/v1/widgets/{id}',
         description: 'Create a widget.', // boilerplate, and needs an id first
         readOnly: false,
-        deprecated: false,
         pathParams: ['id'],
         queryParams: [],
         hasBody: false,
@@ -134,7 +135,6 @@ describe('AX wins stay won', () => {
         path: '/v1/widgets',
         description: 'List widgets.',
         readOnly: true,
-        deprecated: false,
         pathParams: [],
         queryParams: [
           { name: 'filter[gadget]', type: 'array', description: "filter by id(s) of related 'gadget'" },
@@ -148,7 +148,6 @@ describe('AX wins stay won', () => {
         path: '/v1/gadgets',
         description: 'List gadgets.',
         readOnly: true,
-        deprecated: false,
         pathParams: [],
         queryParams: [], // no filter at all
         hasBody: false,

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { installSkill, removeSkill, skillPathFor, clientTakesSkill } from '../src/skill.js';
 import { CLIENTS, SERVER_COMMAND, serverArgs, serverName } from '../src/clients.js';
-import { PROFILES } from '../src/profiles.js';
+import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const homes: string[] = [];
 const fakeHome = () => {
@@ -100,18 +100,25 @@ describe('the packaged skill is loadable as a plugin', () => {
     // server names. Sources tie the two together.
     const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
     const entries: { name: string; source: string }[] = marketplace.plugins;
-    expect(entries.map((e) => e.source)).toEqual(['./', ...PROFILES.map((p) => `./plugins/${p.name}`)]);
+    // No plug-in for core itself: each one already carries the core tools.
+    const pluginProfiles = PROFILES.filter((p) => p.name !== CORE_PROFILE);
+    expect(entries.map((e) => e.source)).toEqual(['./', ...pluginProfiles.map((p) => `./plugins/${p.name}`)]);
+    expect(existsSync(`plugins/${CORE_PROFILE}`)).toBe(false);
+    expect(existsSync('plugins/app-info')).toBe(false);
     expect(entries[0].name).toBe('Heimdall | ASC Skill');
     for (const e of entries) expect(e.name).toMatch(/^Heimdall \| ASC [A-Z][A-Za-z ]+$/);
     expect(entries.find((e) => e.source === './plugins/testflight')!.name).toBe('Heimdall | ASC TestFlight');
-    for (const p of PROFILES) {
+    for (const p of pluginProfiles) {
       const dir = `plugins/${p.name}`;
       const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));
       // Plug-in ids stay kebab-case; the server key inside is the readable name.
       expect(manifest.name).toBe(`asc-${p.name}`);
       expect(manifest.description).toBe(p.description);
       const { mcpServers } = JSON.parse(readFileSync(`${dir}/.mcp.json`, 'utf8'));
-      expect(mcpServers).toEqual({ [serverName(p.name)]: { command: SERVER_COMMAND, args: serverArgs(p.name) } });
+      // Xcode runs each plug-in alone, so each folds core in.
+      expect(mcpServers).toEqual({
+        [serverName(p.name)]: { command: SERVER_COMMAND, args: [...serverArgs(p.name), '--with-core'] },
+      });
     }
     // The root carries the skill and nothing that would start a server: a
     // root .mcp.json is what made the first cut install all thirteen at once.

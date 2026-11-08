@@ -11,6 +11,8 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { domainFor } from './domains.js';
 import { describe } from './describe.js';
+import { validateDeprecatedOverrides, type DeprecatedOverride } from './deprecated-overrides.js';
+import { TWIN_OF, droppedOperations } from './profile-sheet.js';
 import { riskFor } from '../src/core/risk.js';
 import { estimateTokens, measureSchema, sharedDefsCeiling } from './schema-defs.js';
 
@@ -42,7 +44,6 @@ interface GeneratedTool {
   path: string;
   description: string;
   readOnly: boolean;
-  deprecated: boolean;
   pathParams: string[];
   queryParams: Array<{
     name: string;
@@ -193,8 +194,15 @@ const PARAM_NOTES: Array<[RegExp, string]> = [
   // knows an app by is the bundle ID, which matches nothing here.
   [
     /^filter\[app\]$/,
-    'The numeric Apple ID from apps__list, not the bundle ID. A bundle ID matches ' +
+    'The numeric Apple ID from apps__list (ASC-Core), not the bundle ID. A bundle ID matches ' +
       'nothing and comes back as 200 with an empty list.',
+  ],
+  // An agent filtered on ARCHIVED, found nothing recent and reported "no event
+  // in 268 days" when the last one had ended twelve days earlier.
+  [
+    /^filter\[eventState\]$/,
+    'An event that has ended is PAST, set by Apple on its own. ARCHIVED is only an event ' +
+      'someone archived by hand. Filter on both to see every finished event.',
   ],
 ];
 
@@ -479,23 +487,33 @@ async function tokenReport(verbose: boolean): Promise<string> {
  * configuring win-back offers" sends `relationships.territory` and
  * `relationships.subscriptionPricePoint` on every included price — there is no
  * other way to say what the price is. Borrow the shape from the WinBackOfferPrice
- * resource. Applied only while the gap exists, so a fixed spec makes it a no-op.
+ * resource. Spec 4.6 repeats the gap in RetentionOfferPriceInlineCreate.
+ * Applied only while the gap exists, so a fixed spec makes it a no-op.
  */
 function patchSpecGaps(schemas: Record<string, any>): void {
-  const inline = schemas.WinBackOfferPriceInlineCreate;
-  const relationships = schemas.WinBackOfferPrice?.properties?.relationships;
-  if (inline?.properties && !inline.properties.relationships && relationships) {
-    inline.properties.relationships = relationships;
+  for (const price of ['WinBackOfferPrice', 'RetentionOfferPrice']) {
+    const inline = schemas[`${price}InlineCreate`];
+    const relationships = schemas[price]?.properties?.relationships;
+    if (inline?.properties && !inline.properties.relationships && relationships) {
+      inline.properties.relationships = relationships;
+    }
   }
 }
 
 function main(): void {
   const specPath = resolve(ROOT, 'spec/openapi.json');
   const spec = JSON.parse(readFileSync(specPath, 'utf8'));
+  const overrides: DeprecatedOverride[] =
+    JSON.parse(readFileSync(resolve(ROOT, 'spec/deprecated-overrides.json'), 'utf8'));
+  const overrideIds = validateDeprecatedOverrides(spec, overrides);
 
   const tools: GeneratedTool[] = [];
   const seen = new Set<string>();
   let droppedTwins = 0;
+  let droppedDeprecated = 0;
+  // Profile-less reverse reads and the dropped side of a relationship pair.
+  const sheetDropped = droppedOperations();
+  const droppedBySheet = new Set<string>();
   /** bodyRef -> simplified, self-contained JSON Schema (deduped across ops). */
   const bodySchemas: Record<string, unknown> = {};
   const componentSchemas: Record<string, any> = spec.components?.schemas ?? {};
@@ -511,6 +529,18 @@ function main(): void {
       const twinPath = relationshipTwinPath(path, method, op.operationId);
       if (twinPath && spec.paths?.[twinPath]?.get) {
         droppedTwins++;
+        continue;
+      }
+      // Checked first, so an operation the sheet drops still counts as the
+      // sheet's when Apple later deprecates it.
+      if (sheetDropped.has(toolNameFrom(op.operationId, method))) {
+        droppedBySheet.add(toolNameFrom(op.operationId, method));
+        continue;
+      }
+      // Deprecated by Apple, or retired in its release notes before the spec
+      // caught up (spec/deprecated-overrides.json): never served, so not built.
+      if (op.deprecated || overrideIds.has(op.operationId)) {
+        droppedDeprecated++;
         continue;
       }
 
@@ -576,13 +606,11 @@ function main(): void {
             method: method.toUpperCase(),
             path,
             toolName: name,
-            deprecated: Boolean(op.deprecated),
           }),
         ]
           .filter(Boolean)
           .join(' '),
         readOnly: method === 'get',
-        deprecated: Boolean(op.deprecated),
         pathParams,
         queryParams,
         hasBody: Boolean(bodySchema),
@@ -592,6 +620,13 @@ function main(): void {
       });
     }
   }
+
+  // A sheet row naming an operation the spec no longer has would drop nothing.
+  const stale = [...sheetDropped].filter((n) => !droppedBySheet.has(n));
+  if (stale.length) throw new Error(`spec/profiles.csv drops operations that are not in the spec: ${stale.join(', ')}`);
+  const names = new Set(tools.map((t) => t.name));
+  const orphaned = Object.entries(TWIN_OF).filter(([, twin]) => !names.has(twin));
+  if (orphaned.length) throw new Error(`TWIN_OF drops operations whose twin is not built: ${orphaned.map(([d, t]) => `${d} -> ${t}`).join(', ')}`);
 
   tools.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -649,7 +684,8 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {${descMatch ? descMa
     `  id-only twins dropped: ${droppedTwins}`,
     `  read-only:    ${tools.filter((t) => t.readOnly).length}`,
     `  mutating:     ${tools.filter((t) => !t.readOnly).length}`,
-    `  deprecated:   ${tools.filter((t) => t.deprecated).length}`,
+    `  deprecated dropped: ${droppedDeprecated}`,
+    `  dropped by the profile sheet: ${droppedBySheet.size}`,
     `Risk levels:    ${Object.entries(
       tools.reduce<Record<string, number>>((acc, t) => {
         if (t.risk) acc[t.risk] = (acc[t.risk] ?? 0) + 1;

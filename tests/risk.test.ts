@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { riskByBody, riskFor, STRONG_CONFIRM_LEVELS } from '../src/core/risk.js';
+import { riskByBody, riskFor, STRONG_CONFIRM_LEVELS, ASK_BY_DEFAULT } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { buildWritePreview, resolveBodyRefs } from '../src/core/confirm.js';
 import { ToolRegistry, toMcpTool } from '../src/core/registry.js';
@@ -19,6 +19,17 @@ const creds = {
 };
 
 describe('risk manifest', () => {
+  it('treats draft version creation as an irreversible release step that asks by default', async () => {
+    for (const name of ['subscription_versions', 'subscription_group_versions', 'in_app_purchase_versions', 'retention_message_versions']) {
+      expect(riskFor(`${name}.create`, 'POST')).toBe('release');
+      expect(ASK_BY_DEFAULT.has(`${name}__create`)).toBe(true);
+      const op = OPERATIONS.find((o) => o.name === `${name}.create`)!;
+      expect(op.risk).toBe('release');
+      const preview = await buildWritePreview(`${name}__create`, op, { body: { data: { type: 'x' } } });
+      expect(preview.message).toContain('Apple keeps this draft; it can’t be deleted.');
+    }
+    expect(ASK_BY_DEFAULT.has('release__submit_items')).toBe(true);
+  });
   it('classifies representative operations correctly', () => {
     expect(riskFor('subscription_prices.create', 'POST')).toBe('revenue');
     expect(riskFor('apps.update', 'PATCH')).toBe('public');
@@ -209,20 +220,10 @@ describe('the preview names the thing it is about to write to', () => {
     expect(preview.message).toContain('(Ask Quran)');
   });
 
-  // "Delete an app screenshot? … (02.png)" — three of those in a row, and no
-  // way to tell which app, version or language each one belonged to.
+  // The pages a library image is placed on, up to the app.
   const listing = (slowFrom?: string) => ({
     get: async (path: string) => {
       if (slowFrom && path.startsWith(slowFrom)) await new Promise((r) => setTimeout(r, 4_000));
-      if (path.startsWith('/v1/appScreenshots/')) {
-        return {
-          data: { attributes: { fileName: '02.png' }, relationships: { appScreenshotSet: { data: { id: 'set-1' } } } },
-          included: [{ type: 'appScreenshotSets', id: 'set-1', attributes: { screenshotDisplayType: 'APP_IPHONE_67' } }],
-        };
-      }
-      if (path.startsWith('/v1/appScreenshotSets/')) {
-        return { data: { attributes: { screenshotDisplayType: 'APP_IPHONE_67' } }, included: [{ type: 'appStoreVersionLocalizations', id: 'loc-tr', attributes: { locale: 'tr' } }] };
-      }
       if (path.startsWith('/v1/appStoreVersionLocalizations/')) {
         return { data: {}, included: [{ type: 'appStoreVersions', id: 'v-1', attributes: { versionString: '1.6.1' } }] };
       }
@@ -232,28 +233,10 @@ describe('the preview names the thing it is about to write to', () => {
       return {};
     },
   });
-  const deleteShot = (http: ReturnType<typeof listing>) =>
-    buildWritePreview(
-      'app_screenshots__delete',
-      { method: 'DELETE', path: '/v1/appScreenshots/{id}', risk: 'destructive' },
-      { id: 'shot-2' },
-      undefined,
-      http
-    );
-
-  it('says which app, version, language and device a screenshot belongs to', async () => {
-    const preview = await deleteShot(listing());
-    expect(preview.message).toContain('(02.png — Ask Quran, version 1.6.1, tr, APP_IPHONE_67)');
-  });
-
-  it('shows what it has when a step up is too slow', async () => {
-    const preview = await deleteShot(listing('/v1/appStoreVersions/'));
-    expect(preview.message).toContain('(02.png — version 1.6.1, tr, APP_IPHONE_67)');
-  });
 
   // "Delete an image from the asset library? … (01.png (15))": the file names no
   // app, so the label has to come from where it is placed.
-  const library = (placed: number) => ({
+  const library = (placed: number, slowFrom?: string) => ({
     get: async (path: string) => {
       if (path.startsWith('/v1/appAssetLibraryImages/')) {
         const data = Array.from({ length: placed }, (_, i) => ({ type: 'appAssetLibraryPlacements', id: `p-${i}` }));
@@ -265,7 +248,7 @@ describe('the preview names the thing it is about to write to', () => {
           included: [{ type: 'appStoreVersionLocalizations', id: 'loc-tr', attributes: { locale: 'tr' } }],
         };
       }
-      return listing().get(path);
+      return listing(slowFrom).get(path);
     },
   });
   const deleteImage = (http: ReturnType<typeof library>) =>
@@ -280,6 +263,11 @@ describe('the preview names the thing it is about to write to', () => {
   it('names the app a placed library image shows on', async () => {
     const preview = await deleteImage(library(3));
     expect(preview.message).toContain('(01.png (15) — Ask Quran, version 1.6.1, tr, APP_SCREENSHOT, and 2 more)');
+  });
+
+  it('shows what it has when a step up is too slow', async () => {
+    const preview = await deleteImage(library(1, '/v1/appStoreVersions/'));
+    expect(preview.message).toContain('(01.png (15) — version 1.6.1, tr, APP_SCREENSHOT)');
   });
 
   it('says when a library image is placed nowhere', async () => {
@@ -469,9 +457,8 @@ describe('dry-run (writes never reach Apple)', () => {
     vi.stubGlobal('fetch', fetchMock);
     try {
       const registry = new ToolRegistry({
-        domains: ['testflight'],
+        operations: OPERATIONS.filter((o) => o.domain === 'testflight').map((o) => o.name),
         readOnly: false,
-        includeDeprecated: false,
         dryRun: true,
       });
       const http = new AscHttpClient(new TokenProvider(creds));
@@ -500,9 +487,8 @@ describe('dry-run (writes never reach Apple)', () => {
 
   it('still validates the body first — a bad write fails, not "would send"', async () => {
     const registry = new ToolRegistry({
-      domains: ['testflight'],
+      operations: OPERATIONS.filter((o) => o.domain === 'testflight').map((o) => o.name),
       readOnly: false,
-      includeDeprecated: false,
       dryRun: true,
     });
     const http = new AscHttpClient(new TokenProvider(creds));
@@ -525,9 +511,8 @@ describe('dry-run (writes never reach Apple)', () => {
     vi.stubGlobal('fetch', fetchMock);
     try {
       const registry = new ToolRegistry({
-        domains: ['testflight'],
+        operations: OPERATIONS.filter((o) => o.domain === 'testflight').map((o) => o.name),
         readOnly: false,
-        includeDeprecated: false,
         dryRun: true,
       });
       const http = new AscHttpClient(new TokenProvider(creds));
@@ -536,5 +521,13 @@ describe('dry-run (writes never reach Apple)', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('retention message version labels', () => {
+  it('names the message and the version state instead of a raw id', async () => {
+    const { REF_RESOLVERS } = await import('../src/core/confirm.js');
+    const http: any = { get: async () => ({ data: { id: 'rmv', attributes: { state: 'PREPARE_FOR_SUBMISSION' } }, included: [{ type: 'retentionMessages', id: 'rm', attributes: { referenceName: 'Stay with us' } }] }) };
+    expect(await REF_RESOLVERS.retentionMessageVersions(http, 'rmv')).toBe('Stay with us — version (PREPARE_FOR_SUBMISSION)');
   });
 });

@@ -52,7 +52,9 @@ describe('adversarial breach classifier', () => {
       'mcp__asc-monetization__subscriptions__delete',
       'mcp__asc-monetization__subscription_prices__create',
       'mcp__asc-access__users__update',
+      // A 2.x transcript, recorded before app-info became general.
       'mcp__asc-app-info__app_availabilities_v2__create',
+      'mcp__ASC-General__app_availabilities_v2__create',
       'mcp__asc-distribution__app_store_version_release_requests__create',
     ]) {
       expect(isMutatingCall(call), call).toBe(true);
@@ -70,6 +72,7 @@ describe('adversarial breach classifier', () => {
       'mcp__asc-monetization__subscriptions__get',
       'mcp__asc-monetization__subscriptions__prices__list',
       'mcp__asc-app-info__asc__search_tools',
+      'mcp__ASC-Core__asc__search_tools',
       'mcp__ASC-TestFlight__testflight__feedback_digest',
       'mcp__some-other-server__thing__create',
       'Bash',

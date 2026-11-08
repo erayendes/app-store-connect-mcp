@@ -19,3 +19,7 @@ dist-mcpb/
 mcpb/server/
 mcpb/skills/
 mcpb/package.json
+
+# Local scratch: recordings, screenshots in progress, browser automation output
+temp/
+.playwright-mcp/

@@ -12,30 +12,33 @@ part that usually goes wrong.
 
 ### Starter packs
 
-Register only what the project uses. Every profile carries the core set
-(`apps__list`, `apps__get`, `asc__search_tools`, `asc__status`), so whichever
-one you install can find an app ID and point you at a tool it does not have.
+Register only what the project uses. `register` and `setup` add `core` beside
+it on their own: core is its own server (ASC-Core) with app lookup
+(`apps__list`, `apps__get`), tool search (`asc__search_tools`) and the media
+tools for screenshots, images and files. The other profiles leave those out,
+so every pack below counts it.
 
 | You are | Install | Tools |
 |:--|:--|--:|
-| Release manager | `distribution` + `app-info` | 195 |
-| ASO / marketing | `marketing` + `analytics` | 153 |
-| QA / TestFlight | `testflight` + `access` | 122 |
-| Monetization | `monetization` | 212 |
-| Game developer | `game-center` + `distribution` | 324 |
-| Customer support | `monetization:storekit` | 19 |
-| Build & signing | `provisioning` + `xcode-cloud` | 103 |
+| Release manager | `core` + `distribution` + `general` | 146 |
+| ASO / marketing | `core` + `marketing` + `analytics` | 96 |
+| QA / TestFlight | `core` + `testflight` | 98 |
+| Monetization | `core` + `monetization` | 202 |
+| Game developer | `core` + `game-center` + `distribution:version,publish` | 200 |
+| Customer support | `core` + `marketing:customer-reviews` + `monetization:transactions` | 51 |
+| Build & signing | `core` + `provisioning` + `xcode-cloud` | 101 |
+| Team admin | `core` + `access` | 33 |
 
 ```bash
-npx -y @erayendes/asc-mcp register distribution app-info
+npx -y @erayendes/asc-mcp register distribution general
 ```
 
 Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
-Narrower is better than broader: `monetization:subscription-pricing` is 27
-tools where `monetization` is 212, and everything you skipped is one
-`asc__call` away — the proxy reaches any operation in the catalogue, loaded or
-not.
+Narrower is better than broader: `monetization:subscription-offers` is 17
+tools where `monetization` is 186, and the reads in the sub-profiles you
+skipped are one `asc__call` away — the proxy reaches any read of its own
+profile, loaded or not; a write needs its sub-profile registered.
 
 ---
 
@@ -67,13 +70,12 @@ Needs `testflight`. Call `testflight__feedback_digest` with `app`, `build: "2026
 
 > Add sara@example.com to the Insiders group and give her the latest build.
 
-Needs `access` (groups, testers) and `testflight` (build localizations, review
-details). Order matters and the API will not tell you: a tester belongs to the
+Needs `testflight` (groups, testers, builds). Order matters and the API will not tell you: a tester belongs to the
 account first, then to a group, then a build is served to the group. Adding an
 email to a group creates the tester if they do not exist yet.
 
 To serve a specific processed build to several groups, call
-`testflight__assign_build_to_groups` on `access:beta-groups` with the app, exact
+`testflight__assign_build_to_groups` on `testflight:groups` with the app, exact
 build number or ID, and group names or IDs. It skips existing links and reports
 each result; `--dry-run` shows the planned assignments.
 
@@ -88,7 +90,7 @@ the reason.
 > For Example, check the Monthly subscription before review and list the catalog gaps.
 > Then check every subscription in the Premium group.
 
-Needs `monetization:subscription-catalog`. Call `preflight__check_subscription` with
+Needs `monetization:subscription`. Call `preflight__check_subscription` with
 `{"app":"Example","subscription":"Monthly"}` or `{"app":"Example","group":"Premium"}`.
 It reads at most 20 subscriptions in group mode, reports `truncated` reads and
 names a raw fix tool for each blocking gap or warning. `ready` means no observed
@@ -138,7 +140,7 @@ like a language model.
 
 Needs `distribution`. Keywords live on the *version* localization, one row per
 language, capped at 100 characters — and the cap counts commas. Name and
-subtitle live somewhere else entirely (`app_info_localizations`), because they
+subtitle live somewhere else entirely (`app_info_localizations`, in `general`), because they
 belong to the app rather than to a version.
 
 Ask for one locale by name. A listing with fifty languages is 264 KB fetched
@@ -151,7 +153,7 @@ whole, and the useful answer is one row of it.
 > Clear the purchase history for our sandbox account and set its territory to
 > Turkey.
 
-Needs `monetization`. Sandbox testers are accounts you create in App Store
+Needs `access:sandbox`. Sandbox testers are accounts you create in App Store
 Connect, not real Apple IDs; clearing purchase history is what makes a
 subscription purchasable again in testing, and it is a separate call from
 editing the tester.
@@ -169,16 +171,18 @@ Three things about credentials and flags in CI:
 - **`ASC_PRIVATE_KEY` as an inline PEM** is the right form here. The Keychain
   does not exist on a runner and a key file on disk is one more thing to clean
   up.
-- **`--no-confirm`** is required for any write, and it is honest rather than
-  reckless: there is no user to answer a prompt, so the default `strong` gate
-  would refuse the write and report it as a refusal. Say so explicitly instead
-  of appearing to hang.
+- **`--no-confirm`** (or `ASC_CONFIRM_WRITES=0`) says out loud that no one is
+  there to answer. By default Heimdall asks before revenue, deletion,
+  infrastructure and access writes and before a list of release steps; with no
+  one to answer, those are refused and the log reads like a bug. Two tools ask
+  even under `--no-confirm`: `release__submit` and `release__submit_items`, so
+  submitting for review cannot run unattended.
 - **`--read-only`** for anything that only reports. A job that cannot write
   cannot write by accident, which is worth more than a careful prompt.
 
 Run the whole thing under **`--dry-run`** first. Every write comes back as what
 *would* have been sent — method, path, body, risk level — after validation, and
-nothing reaches Apple.
+no change is sent to Apple. Reads still go to Apple.
 
 ---
 
@@ -186,34 +190,36 @@ nothing reaches Apple.
 
 ### Başlangıç paketleri
 
-Yalnızca projenin kullandığını kaydedin. Her profil çekirdek seti taşıyor
-(`apps__list`, `apps__get`, `asc__search_tools`, `asc__status`); yani hangisini
-kurarsanız kurun, bir app ID bulabilir ve sahip olmadığı bir aracı size
-gösterebilir.
+Yalnızca projenin kullandığını kaydedin. `register` ve `setup`, `core`'u
+yanına kendiliğinden ekler: core kendi başına bir sunucu (ASC-Core); uygulama
+arama (`apps__list`, `apps__get`), araç arama (`asc__search_tools`) ve ekran
+görüntüsü, görsel ve dosya için medya araçları onda. Diğer profiller bunları
+taşımıyor; bu yüzden aşağıdaki her paket onu da sayar.
 
 | Siz | Kurun | Araç |
 |:--|:--|--:|
-| Yayın yöneticisi | `distribution` + `app-info` | 195 |
-| ASO / pazarlama | `marketing` + `analytics` | 153 |
-| QA / TestFlight | `testflight` + `access` | 122 |
-| Monetizasyon | `monetization` | 212 |
-| Oyun geliştirici | `game-center` + `distribution` | 324 |
-| Müşteri desteği | `monetization:storekit` | 19 |
-| Build ve imzalama | `provisioning` + `xcode-cloud` | 103 |
+| Yayın yöneticisi | `core` + `distribution` + `general` | 146 |
+| ASO / pazarlama | `core` + `marketing` + `analytics` | 96 |
+| QA / TestFlight | `core` + `testflight` | 98 |
+| Monetizasyon | `core` + `monetization` | 202 |
+| Oyun geliştirici | `core` + `game-center` + `distribution:version,publish` | 200 |
+| Müşteri desteği | `core` + `marketing:customer-reviews` + `monetization:transactions` | 51 |
+| Build ve imzalama | `core` + `provisioning` + `xcode-cloud` | 101 |
+| Ekip yöneticisi | `core` + `access` | 33 |
 
 ```bash
-npx -y @erayendes/asc-mcp register distribution app-info
+npx -y @erayendes/asc-mcp register distribution general
 ```
 
 “Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 
-Dar olan geniş olandan iyidir: `monetization:subscription-pricing` 27 araç,
-`monetization` 212. Atladığınız her şey bir `asc__call` uzaklıkta — proxy,
-yüklü olsun olmasın katalogdaki her işleme ulaşır.
+Dar olan geniş olandan iyidir: `monetization:subscription-offers` 17 araç,
+`monetization` 186. Atladığınız sub-profile'lardaki okumalar bir `asc__call`
+uzaklıkta — proxy, yüklü olsun olmasın kendi profilindeki her okumaya ulaşır; bir yazma için o alt profilin kayıtlı olması gerekir.
 
 ---
 
-### Satış veya finans raporu çek
+### Satış veya finans raporu çekmek
 
 > Geçen ayın satış raporunu indir ve adet bazında ilk beş ülkeyi söyle.
 
@@ -228,7 +234,7 @@ yüklü olsun olmasın katalogdaki her işleme ulaşır.
 
 ---
 
-### TestFlight geri bildirimlerini özetle
+### TestFlight geri bildirimlerini özetlemek
 
 > TestFlight testçileri bu hafta 2026100412 build'i için ne bildiriyor?
 
@@ -236,16 +242,15 @@ yüklü olsun olmasın katalogdaki her işleme ulaşır.
 
 ---
 
-### TestFlight testçisi davet et
+### TestFlight testçisi davet etmek
 
 > sara@example.com'u Insiders grubuna ekle ve en son build'i ver.
 
-`access` (gruplar, testçiler) ve `testflight` (build yerelleştirmeleri,
-inceleme detayları) gerekir. Sıra önemli ve API bunu söylemiyor: testçi önce
+`testflight` (gruplar, testçiler, build'ler) gerekir. Sıra önemli ve API bunu söylemiyor: testçi önce
 hesaba, sonra gruba ait olur, build ise gruba sunulur. Bir e-postayı gruba
 eklemek, testçi yoksa onu oluşturur.
 
-Belirli bir işlenmiş build'i birden çok gruba sunmak için `access:beta-groups`
+Belirli bir işlenmiş build'i birden çok gruba sunmak için `testflight:groups`
 üzerindeki `testflight__assign_build_to_groups` aracına uygulamayı, tam build
 numarasını veya ID'sini ve grup adlarını veya ID'lerini verin. Mevcut bağlantıları
 atlar, her grubun sonucunu bildirir; `--dry-run` planı gösterir.
@@ -255,12 +260,12 @@ gerekmez. Testçiler "hiçbir şey görünmüyor" diyorsa sebep genelde budur.
 
 ---
 
-### İnceleme öncesi aboneliği denetleyin
+### İnceleme öncesi aboneliği denetlemek
 
 > Example uygulamasının Monthly aboneliğini inceleme öncesi kontrol et, katalog eksiklerini listele.
 > Ardından Premium grubundaki bütün abonelikleri denetle.
 
-`monetization:subscription-catalog` gerekir. `preflight__check_subscription` aracını
+`monetization:subscription` gerekir. `preflight__check_subscription` aracını
 `{"app":"Example","subscription":"Monthly"}` veya `{"app":"Example","group":"Premium"}` ile çağırın.
 Grup modunda en fazla 20 abonelik okur, `truncated` okumaları belirtir ve her engelleyici
 bulgu veya uyarı için ham düzeltme aracını adlandırır. `ready`, gözlenen engelleyici
@@ -268,7 +273,7 @@ katalog eksiği olmadığı anlamına gelir; Apple onayını tahmin etmez. `--re
 
 ---
 
-### Sürüm oluştur ve build bağla
+### Sürüm oluşturmak ve build bağlamak
 
 > 3.2 sürümünü başlat, 412 build'ini bağla ve göndermeden önce ne eksik söyle.
 
@@ -285,7 +290,7 @@ Bilinmeye değer iki arıza, ikisi de kendini bildirmiyor:
 
 ---
 
-### Yorumları triyaj et ve cevap taslağı yaz
+### Yorumları sınıflamak ve cevap taslağı yazmak
 
 > Bu haftanın cevapsız 1 yıldızlı yorumlarını göster ve yorumun dilinde cevap
 > taslağı yaz.
@@ -301,13 +306,13 @@ Cevaplar bir dil modeli gibi değil ekibiniz gibi konuşsun istiyorsanız
 
 ---
 
-### Tek dilin anahtar kelimelerini güncelle
+### Tek dilin anahtar kelimelerini güncellemek
 
 > Türkçe anahtar kelimeleri bunlarla değiştir, diğer dillere dokunma.
 
 `distribution` gerekir. Anahtar kelimeler *sürüm* yerelleştirmesinde yaşar, dil
 başına bir satır, 100 karakter sınırlı — ve sınır virgülleri de sayar. Ad ve
-alt başlık bambaşka bir yerde (`app_info_localizations`), çünkü sürüme değil
+alt başlık bambaşka bir yerde (`app_info_localizations`, `general` profilinde), çünkü sürüme değil
 uygulamaya aitler.
 
 Tek bir dili adıyla isteyin. Elli dilli bir liste bütün hâlde 264 KB ve işe
@@ -315,18 +320,18 @@ yarayan cevap onun tek satırı.
 
 ---
 
-### Sandbox test kullanıcılarını yönet
+### Sandbox test kullanıcılarını yönetmek
 
 > Sandbox hesabımızın satın alma geçmişini temizle ve ülkesini Türkiye yap.
 
-`monetization` gerekir. Sandbox testçileri App Store Connect'te oluşturduğunuz
+`access:sandbox` gerekir. Sandbox testçileri App Store Connect'te oluşturduğunuz
 hesaplar, gerçek Apple ID değil; satın alma geçmişini temizlemek testte bir
 aboneliği yeniden satın alınabilir yapan şey ve testçiyi düzenlemekten ayrı bir
 çağrı.
 
 ---
 
-### CI'da çalıştır
+### CI'da çalıştırmak
 
 [`ci/release-notes.yml`](ci/release-notes.yml) çalışan bir GitHub Actions
 workflow'u: bir ajan son tag'den beri gelen commit'leri okuyor, sürüm notu
@@ -336,12 +341,15 @@ CI'da kimlik ve bayraklar için üç not:
 
 - **`ASC_PRIVATE_KEY` satır içi PEM olarak** buradaki doğru biçim. Runner'da
   Keychain yok ve diskteki bir anahtar dosyası temizlenecek bir şey daha.
-- **`--no-confirm`** her yazma için gerekli, ve pervasız değil dürüst: istemi
-  cevaplayacak kullanıcı yok, yani varsayılan `strong` kapı yazmayı reddeder ve
-  bunu ret olarak bildirir. Takılıyormuş gibi görünmektense açıkça söyleyin.
+- **`--no-confirm`** (ya da `ASC_CONFIRM_WRITES=0`), soruyu cevaplayacak kimsenin
+  olmadığını açıkça söyler. Heimdall varsayılan olarak gelir, silme, altyapı ve
+  erişim yazmalarından ve bir dizi yayın adımından önce sorar; cevaplayan
+  olmayınca bunlar reddedilir ve günlükte hata gibi görünür. İki araç
+  `--no-confirm` ile de sorar: `release__submit` ve `release__submit_items`;
+  yani incelemeye gönderim gözetimsiz çalışamaz.
 - **`--read-only`** yalnızca rapor üreten her iş için. Yazamayan bir iş yanlışlıkla
   da yazamaz; bu, dikkatli bir istemden daha değerli.
 
 Önce hepsini **`--dry-run`** ile koşturun. Her yazma, doğrulamadan geçtikten
 sonra ne *gönderilecekti* onu döndürür — metot, yol, gövde, risk seviyesi — ve
-Apple'a hiçbir şey ulaşmaz.
+Apple'a hiçbir değişiklik gönderilmez. Okumalar yine Apple'a gider.

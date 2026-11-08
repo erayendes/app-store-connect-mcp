@@ -5,7 +5,8 @@
       "args": [
         "-y",
         "@erayendes/asc-mcp",
-        "provisioning"
+        "provisioning",
+        "--with-core"
       ]
     }
   }

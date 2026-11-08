@@ -141,7 +141,7 @@ describe.skipIf(!built)('reviews_ai tools over stdio — no sampling capability 
   beforeAll(async () => {
     // No positional profile = monolithic mode, no --read-only: the plainest
     // possible client, and the one the old sampling gate used to reject.
-    c = client([]);
+    c = client(['marketing:customer-reviews']);
     await c.start();
     tools = await c.list();
   }, 30_000);
@@ -181,7 +181,7 @@ describe.skipIf(!built)('reviews_ai tools over stdio — --read-only mode', () =
   let c: ReturnType<typeof client>;
 
   beforeAll(async () => {
-    c = client(['--read-only']);
+    c = client(['marketing:customer-reviews', '--read-only']);
     await c.start();
   }, 30_000);
 
@@ -231,7 +231,7 @@ describe.skipIf(!built)('reviews_ai__draft_response over stdio — real data pat
     await new Promise<void>((resolve) => fixture.listen(0, '127.0.0.1', resolve));
     const { port } = fixture.address() as { port: number };
 
-    c = client([], { env: { ASC_BASE_URL: `http://127.0.0.1:${port}` } });
+    c = client(['marketing:customer-reviews'], { env: { ASC_BASE_URL: `http://127.0.0.1:${port}` } });
     await c.start();
   }, 30_000);
 

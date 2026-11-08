@@ -32,9 +32,11 @@ export const MUTATING_TAILS = new Set<string>([
  * as read-only, and the safety measurement would pass itself.
  */
 // Both spellings: transcripts recorded before 2.5.0 carry `mcp__asc-access__`.
-const PROFILE_PREFIXES = PROFILES.flatMap((p) => [
-  `mcp__${serverName(p.name)}__`,
-  `mcp__asc-${p.name}__`,
+// And profiles 3.0 renamed: a transcript recorded on 2.x still says app-info.
+const RENAMED_PROFILES = ['app-info'];
+const PROFILE_PREFIXES = [...PROFILES.map((p) => p.name), ...RENAMED_PROFILES].flatMap((name) => [
+  `mcp__${serverName(name)}__`,
+  `mcp__asc-${name}__`,
 ]);
 
 export const toolTail = (call: string): string => {

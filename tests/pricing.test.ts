@@ -643,6 +643,16 @@ describe('pricing__equalize_price', () => {
     expect(result.written).toBe(3);
   });
 
+  it('prices only the countries a new subscription is sold in', async () => {
+    const { http, posts } = equalizeHttp();
+    await run(
+      { app: 'Ask Quran', product_type: 'subscription', product: 'weekly.1', territory: 'TUR', price: '3.99',
+        preserve_current_price: true, only_territories: ['TUR', 'DEU'] },
+      http
+    );
+    expect(posts.map((p) => p.body.data.relationships.subscriptionPricePoint.data.id)).toEqual(['pp-tur', 'pp-deu']);
+  });
+
   it('reports exactly where it stopped instead of leaving an unknown state', async () => {
     const { http, posts } = equalizeHttp({ failAt: 'pp-deu' });
     const result: any = await run(
@@ -1027,6 +1037,8 @@ describe('pricing__set_iap_price', () => {
  */
 function offerHttp(opts: {
   sold?: string[];
+  /** Sold through plan availabilities (API 4.5): one list per plan. */
+  plans?: string[][];
   equalized?: string[];
   equalizationsHaveMore?: boolean;
   /** Introductory offers already on the subscription. */
@@ -1047,7 +1059,15 @@ function offerHttp(opts: {
           included: [{ id: 's1', type: 'subscriptions', attributes: { name: 'Yearly', productId: 'yearly.1' } }],
         };
       }
-      if (path === '/v1/subscriptions/s1/subscriptionAvailability') return { data: { id: 'av-1' } };
+      if (path === '/v1/subscriptions/s1/planAvailabilities') {
+        return { data: (opts.plans ?? []).map((_, i) => ({ type: 'subscriptionPlanAvailabilities', id: `plan-${i}` })) };
+      }
+      const plan = /^\/v1\/subscriptionPlanAvailabilities\/plan-(\d+)\/availableTerritories$/.exec(path);
+      if (plan) return { data: opts.plans![Number(plan[1])].map((id) => ({ type: 'territories', id, attributes: { currency: currency[id] } })) };
+      if (path === '/v1/subscriptions/s1/subscriptionAvailability') {
+        if (opts.plans) throw new Error('the deprecated availability was read');
+        return { data: { id: 'av-1' } };
+      }
       if (path === '/v1/subscriptionAvailabilities/av-1/availableTerritories') {
         return { data: sold.map((id) => ({ type: 'territories', id, attributes: { currency: currency[id] } })) };
       }
@@ -1143,6 +1163,13 @@ describe('pricing__make_offer', () => {
     expect(result.created.id).toBe('offer-1');
   });
 
+  it('prices in every country of every plan availability, without the deprecated one', async () => {
+    const { http, posts } = offerHttp({ plans: [['TUR', 'USA'], ['DEU', 'USA']] });
+    const result: any = await run(winBack, http);
+    expect(result.ok).toBe(true);
+    expect(posts[0].body.included.map((p: any) => p.relationships.territory.data.id)).toEqual(['DEU', 'TUR', 'USA']);
+  });
+
   it('makes a free promotional offer with a country on every row and no price point', async () => {
     const { http, posts } = offerHttp();
     await run(promoFree, http);
@@ -1207,6 +1234,46 @@ describe('pricing__make_offer', () => {
     expect(preview).toMatch(/29\.99 in TUR/);
     expect(preview).toMatch(/cannot|does not allow/);
     expect(buildPricingPreview(promoFree, 'pricing__make_offer')).toMatch(/free in every country/);
+  });
+
+  const retention = {
+    app: 'Ask Quran',
+    subscription: 'yearly.1',
+    offer_type: 'retention',
+    name: 'Stay 1y',
+    offer_id: 'stay_1y',
+    offer_mode: 'PAY_UP_FRONT',
+    duration: 'ONE_YEAR',
+    periods: 1,
+    territory: 'TUR',
+    price: '29.99',
+    eligibility_paid_months: 3,
+    eligibility_wait_months: 6,
+  };
+
+  it('makes a retention offer in ONE request, priced in every country, with its own eligibility only', async () => {
+    const { http, posts } = offerHttp();
+    const result: any = await run(retention, http);
+
+    expect(posts).toHaveLength(1);
+    expect(posts[0].path).toBe('/v1/retentionOffers');
+    expect(posts[0].body.data.attributes).toEqual({
+      referenceName: 'Stay 1y', offerId: 'stay_1y', duration: 'ONE_YEAR', offerMode: 'PAY_UP_FRONT', periodCount: 1,
+      customerEligibilityPaidSubscriptionDurationInMonths: 3, customerEligibilityWaitBetweenOffersInMonths: 6,
+    });
+    expect(posts[0].body.included.map((p: any) => p.type)).toEqual(['retentionOfferPrices', 'retentionOfferPrices', 'retentionOfferPrices']);
+    expect(validateBody(schemaFor('retention_offers.create'), posts[0].body)).toEqual([]);
+    expect(result.note).toMatch(/only once a retention message carries it/);
+  });
+
+  it('refuses a retention offer without paid-months eligibility before reading anything', async () => {
+    const { http } = offerHttp();
+    await expect(run({ ...retention, eligibility_paid_months: undefined }, http)).rejects.toThrow(/eligibility_paid_months.*retention/);
+    expect(http.get).not.toHaveBeenCalled();
+  });
+
+  it('previews a retention offer as shown only through a message', () => {
+    expect(buildPricingPreview(retention, 'pricing__make_offer')).toMatch(/only once a retention message carries it/);
   });
 });
 

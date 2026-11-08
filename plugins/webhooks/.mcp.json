@@ -5,7 +5,8 @@
       "args": [
         "-y",
         "@erayendes/asc-mcp",
-        "webhooks"
+        "webhooks",
+        "--with-core"
       ]
     }
   }

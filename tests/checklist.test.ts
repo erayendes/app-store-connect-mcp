@@ -130,13 +130,13 @@ describe('profile size hint inputs', () => {
     expect(byName['analytics']).toBeLessThan(byName['monetization']);
     expect(byName['webhooks']).toBeLessThan(30);
     expect(byName['game-center']).toBeGreaterThan(100);
-    // core means even the smallest profile can look up an app
-    expect(byName['webhooks']).toBeGreaterThanOrEqual(3 + 2);
+    // its own eight tools and asc__status; app lookup lives in core now
+    expect(byName['webhooks']).toBeGreaterThanOrEqual(8 + 1);
   });
 
   it('a sub-profile selection is smaller than the whole profile', () => {
     const whole = toolCountFor(resolveSelection('monetization'));
-    const part = toolCountFor(resolveSelection('monetization:subscription-catalog'));
+    const part = toolCountFor(resolveSelection('monetization:subscription'));
     expect(part).toBeLessThan(whole);
     expect(part).toBeGreaterThan(0);
   });

@@ -1,7 +1,7 @@
 /**
  * A profile is one purpose-built MCP server carved out of the full spec: a
  * name, the tools it loads, and the extras it carries. The same binary serves
- * any profile — `asc-mcp monetization` — so one install backs seventeen
+ * any profile — `asc-mcp monetization` — so one install backs fourteen
  * differently-scoped servers and a client config picks per project.
  *
  * Membership is hand-curated in `spec/profiles.csv` and generated into
@@ -9,10 +9,20 @@
  * put every app relationship (`/v1/apps/{id}/subscriptionGroups`) in the
  * app-info profile while the resource itself lived elsewhere — so eight of
  * eleven profiles could not reach their own resources from an app.
+ *
+ * `core` is a profile like the others since 3.0. It used to be folded into
+ * every server, which paid for app lookup, tool search and the media macros
+ * once per registered profile; now it is its own server (`ASC-Core`),
+ * registered next to the rest, or folded into one server with `--with-core`.
  */
-import { CORE, PROFILE_DATA, type GeneratedSubProfile } from './generated/profiles-data.js';
+import { MACRO_COVERED, PROFILE_DATA, type GeneratedSubProfile } from './generated/profiles-data.js';
 import { OPERATIONS } from './generated/operations.js';
 import { PACKAGE, serverName } from './clients.js';
+
+export { MACRO_COVERED };
+
+/** The profile that carries app lookup, tool search and the media macros. */
+export const CORE_PROFILE = 'core';
 
 export interface SubProfile extends GeneratedSubProfile {
   description: string;
@@ -32,96 +42,127 @@ export interface Profile {
  * fails if either is missing, so a new sub-profile cannot ship nameless.
  */
 const DESCRIPTIONS: Record<string, string> = {
-  access: 'Team and tester access: beta groups, individual testers, invitations, team members.',
-  'access/beta-groups':
-    'Beta groups: membership, which builds they get, recruitment criteria, public links.',
-  'access/beta-testers': 'Individual testers: create, invite, assign to groups and builds.',
-  'access/users': 'Team members, their roles and app visibility, invitations.',
+  core:
+    'App lookup, tool search, account status and the media tools for every screenshot, video, ' +
+    'image and file — register it next to any other profile.',
 
-  analytics: 'Sales and finance reports, analytics report requests, performance metrics.',
+  access: 'Your App Store Connect team: members and roles, invitations, sandbox test accounts.',
+  'access/sandbox': 'Sandbox test accounts for in-app purchase testing, and clearing their purchase history.',
+  'access/user-invitations': 'Invite people to the team and manage pending invitations.',
+  'access/user-management': 'Team members, their roles and which apps they can see.',
 
-  'app-clips': 'App Clips: default and advanced experiences, header images, beta invocations.',
+  analytics:
+    'Sales and finance reports, analytics report requests, performance and diagnostic data — ' +
+    'for questions about downloads, revenue and crashes.',
 
-  'app-info':
-    'App identity and store metadata: names, bundle IDs, categories, availability, age ratings, ' +
-    'accessibility labels, the end user license agreement, Android-to-iOS mapping.',
+  'app-clips':
+    'App Clips: default and advanced experiences, header images, review details, beta invocations.',
 
-  'background-assets': 'Background Assets (iOS 26): asset packs downloaded outside the app binary.',
+  'background-assets':
+    'Background Assets (iOS 26): asset packs downloaded outside the app binary, and their releases.',
 
   distribution:
-    'Release pipeline: App Store versions, localizations, phased releases, review submissions, ' +
-    'builds, export compliance, EU alternative distribution.',
-  'distribution/version':
-    'App Store versions: localizations, search keywords, screenshots and previews, ' +
-    'phased release, submit and release.',
+    'Shipping a version: App Store versions and localizations, builds, review details, ' +
+    'submission and release, export compliance, EU alternative distribution.',
+  'distribution/app-encryption':
+    'Export compliance: encryption declarations, their documents, and attaching one to a build.',
+  'distribution/app-review-information':
+    'What App Review sees: contact info, demo account, review notes and attachments.',
+  'distribution/builds': 'Uploaded builds: upload sessions, bundles, file sizes, build details.',
   'distribution/dma-distribution':
     'Distribution outside the App Store under the EU Digital Markets Act: web distribution ' +
     'domains, alternative marketplace listings, signing keys, packages.',
-  'distribution/builds': 'Uploaded builds: upload sessions, bundles, file sizes, diagnostics.',
-  'distribution/encryption':
-    'Export compliance: encryption declarations, their documents, and attaching one to a build.',
-  'distribution/coverages': 'Routing app coverage files for apps that show maps.',
-  'distribution/pre-release': 'Pre-release versions and the builds under them.',
-  'distribution/review': 'Review submissions and the items inside them.',
-  'distribution/submission':
-    'App Review details and attachments: contact info, demo account, review notes.',
+  'distribution/phased-releases': 'Phased release of a version: start, pause, resume, release to all.',
+  'distribution/publish':
+    'Submitting for review and releasing: review submissions and their items, release requests, ' +
+    'the one-call submit macro.',
+  'distribution/version':
+    'App Store versions and their localizations: what is new, keywords, the version preflight ' +
+    "and the translation tools. Screenshots and previews go through ASC-Core's media tools.",
 
-
-  'game-center': 'Game Center: achievements, leaderboards, activities, challenges, matchmaking.',
-  'game-center/gc-achievement': 'Achievements: versions, localizations, images.',
-  'game-center/gc-activities':
+  'game-center': 'Game Center: achievements, leaderboards, activities, challenges, groups, matchmaking.',
+  'game-center/achievements': 'Achievements: versions, localizations, images, player submissions.',
+  'game-center/activities':
     'Activities: versions, localizations, images, and the achievements and leaderboards they link.',
-  'game-center/gc-challenge': 'Challenges: versions, localizations, images.',
-  'game-center/gc-default': 'Game Center enablement per app version, and compatibility versions.',
-  'game-center/gc-details':
-    "The app's Game Center detail: which achievements, leaderboards and activities it exposes.",
-  'game-center/gc-groups': 'Game Center groups sharing achievements and leaderboards across apps.',
-  'game-center/gc-leaderboard':
-    'Leaderboards and leaderboard sets: versions, localizations, images, entry submissions.',
-  'game-center/gc-matchmaking': 'Matchmaking queues, rule sets, rule set tests and their metrics.',
+  'game-center/challenges': 'Challenges: versions, localizations, images, and the leaderboard each uses.',
+  'game-center/groups': 'Game Center groups sharing achievements and leaderboards across apps.',
+  'game-center/leaderboards':
+    'Leaderboards and leaderboard sets: versions, localizations, images, score submissions and moderation.',
+  'game-center/matchmaking': 'Matchmaking queues, rule sets, rules, teams, rule set tests.',
+  'game-center/setup':
+    'Turning Game Center on for an app: its Game Center detail, app versions, blocked players.',
+
+  general:
+    "The app's identity and store facts: names and subtitles, categories, availability by country, " +
+    'age rating, EULA, accessibility labels, tags.',
+  'general/android-link': 'Mapping an Android app to its iOS counterpart for migration.',
+  'general/app-accessibility': 'Accessibility nutrition labels: which features the app supports, per device.',
+  'general/app-availabilities': 'Which countries the app is sold in, pre-orders, territory availability.',
+  'general/app-categories': 'Primary and secondary categories and subcategories.',
+  'general/app-information': 'App info and its localizations: name, subtitle, privacy policy URL.',
+  'general/app-tags': 'The tags Apple assigns to an app, and hiding ones that do not fit.',
+  'general/legal': 'Age rating declaration and the end user license agreement.',
 
   marketing:
-    'Store presence: screenshots, previews, custom product pages, in-app events, customer reviews, the asset library.',
-  'marketing/asset-library':
-    'Asset library: upload images and videos once, then place them on version, custom product page, experiment and event pages.',
-  'marketing/app-event': 'In-app events: localizations, screenshots, video clips.',
-  'marketing/customer-review':
+    'Store presence beyond the version page: custom product pages, product page optimization, ' +
+    'in-app events, customer reviews, nominations.',
+  'marketing/app-events':
+    "In-app events and their localizations. Their images and videos go through ASC-Core's media tools.",
+  'marketing/custom-pp':
+    "Custom product pages: versions, localizations, keywords. Screenshots and previews go through ASC-Core's media tools.",
+  'marketing/customer-reviews':
     'Customer reviews, responses, summaries, and the AI triage and reply-draft tools.',
   'marketing/nominations': 'Nominations submitted to Apple for editorial featuring.',
-  'marketing/custom-product-page':
-    'Custom product pages: versions, localizations, search keywords, screenshots and previews.',
-  'marketing/product-page-optimization':
-    'Product page optimization: version experiments, treatments, their localizations, ' +
-    'screenshots and previews.',
+  'marketing/pp-optimization':
+    'Product page optimization: experiments, treatments and their localizations, promotions.',
 
-  monetization: 'Money: subscriptions, in-app purchases, offers, app pricing, StoreKit 2 transactions.',
-  'monetization/subscription-catalog':
-    'The subscription products themselves: groups, plans, localizations, images, versions, ' +
-    'availability, submissions.',
-  'monetization/subscription-pricing':
-    'What a subscription costs: price points per territory, current prices, equalizations, ' +
-    'and the one-call price macro.',
-  'monetization/subscription-offers':
-    'Discounts on a subscription: introductory, promotional and win-back offers, offer codes.',
-  'monetization/iap-catalog':
-    'The in-app purchase products themselves: localizations, images, versions, availability, ' +
-    'hosted content, promoted placements, sandbox test accounts.',
-  'monetization/iap-pricing':
-    'What an in-app purchase costs: price schedules, price points per territory, equalizations.',
-  'monetization/iap-offers': 'Discounts on an in-app purchase: offer codes, custom and one-time-use.',
+  monetization:
+    'Money: subscriptions, in-app purchases, offers and codes, app pricing, StoreKit 2 transactions.',
   'monetization/app-price': "The app's own price schedule and price points (not in-app purchases).",
-  'monetization/storekit':
-    'App Store Server API: customer transactions, refunds, subscription status, renewal dates.',
+  'monetization/iap-offers': 'Offer codes for in-app purchases: custom and one-time-use codes.',
+  'monetization/in-app-purchases':
+    'In-app purchases: localizations, images, versions, availability, prices, submissions, ' +
+    'and the price macros.',
+  'monetization/plan-promote': 'Promoted purchases: which subscriptions and in-app purchases the store page shows.',
+  'monetization/subscription':
+    'Subscriptions and their groups: localizations, images, versions, prices, availability, ' +
+    'grace period, submissions, and the price and preflight macros.',
+  'monetization/subscription-codes': 'Subscription offer codes: custom and one-time-use codes.',
+  'monetization/subscription-offers':
+    'Introductory and promotional offers on a subscription, and the one-call offer macro.',
+  'monetization/subscription-retention': 'App Store Connect API: retention messages, their versions, text and image, and the offers shown to subscribers who start to cancel.',
+  'monetization/subscription-win-back': 'Win-back offers for lapsed subscribers.',
+  'monetization/transactions':
+    'App Store Server API: customer transactions, refunds and their consumption answers, ' +
+    'subscription status, renewal dates for one subscriber or all, retention messaging.',
 
-  provisioning: 'Code signing infrastructure: bundle IDs, certificates, devices, provisioning profiles.',
+  provisioning:
+    'Code signing: bundle IDs and capabilities, certificates, devices, provisioning profiles, ' +
+    'merchant and pass type IDs.',
+  'provisioning/bundle': 'Bundle IDs and their capabilities.',
+  'provisioning/certificates': 'Signing certificates: create, list, revoke.',
+  'provisioning/devices': 'Registered test devices.',
+  'provisioning/profiles': 'Provisioning profiles and the bundle ID, certificates and devices they bind.',
+  'provisioning/wallet': 'Merchant IDs and pass type IDs, with their certificates.',
 
   testflight:
-    'TestFlight build metadata: beta app localizations, review details, crash feedback, ' +
-    'the beta license agreement testers accept.',
+    'TestFlight: builds for testing, beta groups and testers, external review, crash and ' +
+    'screenshot feedback.',
+  'testflight/external-testing':
+    'External testing: beta app review, recruitment criteria, public links, the beta license agreement.',
+  'testflight/feedbacks': 'Tester feedback: crash reports, screenshot submissions, the feedback digest.',
+  'testflight/groups': 'Beta groups: create, configure, assign builds.',
+  'testflight/test-builds':
+    'Builds under test: what to test notes, beta details, tester notifications, pre-release versions.',
+  'testflight/testers': 'Individual testers: invite, add to groups and builds, remove.',
 
-  webhooks: 'Webhooks pushing App Store Connect events to your endpoint.',
+  webhooks: 'Webhooks pushing App Store Connect events to your endpoint, their deliveries and pings.',
 
-  'xcode-cloud': "Apple's CI/CD: workflows, build runs, artifacts, source control.",
+  'xcode-cloud': "Apple's CI/CD: workflows, build runs, artifacts, test results, source control.",
+  'xcode-cloud/repositories': 'Source control behind Xcode Cloud: providers, repositories, branches, pull requests.',
+  'xcode-cloud/workflows':
+    'Xcode Cloud products, workflows and build runs: actions, artifacts, issues, test results, ' +
+    'and the run diagnosis macro.',
 };
 
 /** The description key for a sub-profile; unnamed ones inherit the profile's. */
@@ -142,18 +183,8 @@ export const PROFILES: Profile[] = PROFILE_DATA.map((p) => ({
 export const PROFILE_DESCRIPTIONS = DESCRIPTIONS;
 
 /**
- * Injected into every profile. Almost every call in the API needs an app ID
- * first, and four relationship listings are needed by more than one profile —
- * without these a profile cannot start a conversation.
- */
-export const CORE_OPERATIONS: string[] = CORE.operations;
-
-/** Kept for the meta tools, which ship with every server regardless of profile. */
-export const CORE_MANUAL_TOOLS: string[] = CORE.manualTools;
-
-/**
  * A profile plus the sub-profiles actually asked for. `monetization` selects
- * them all; `monetization:subscriptions,iap` selects two.
+ * them all; `monetization:subscription,transactions` selects two.
  */
 export interface ProfileSelection {
   profile: Profile;
@@ -167,7 +198,7 @@ export function resolveProfile(name: string): Profile | undefined {
 }
 
 /**
- * Parse a CLI profile argument: `monetization` or `monetization:subscriptions,iap`.
+ * Parse a CLI profile argument: `monetization` or `monetization:subscription,transactions`.
  * Throws with the available names — an unknown sub-profile is otherwise silent,
  * and the user only finds out by counting tools.
  */
@@ -175,13 +206,9 @@ export function resolveSelection(spec: string): ProfileSelection {
   const [profileName, subList] = spec.split(':', 2);
   const profile = resolveProfile(profileName);
   if (!profile) {
-    const removed = REMOVED_PROFILES[profileName];
     throw new Error(
-      removed
-        ? `Profile "${profileName}" was removed. ${removed.summary}`
-        : `Unknown profile "${profileName}".\n` +
-          `Available: ${PROFILES.map((p) => p.name).join(', ')}\n` +
-          `Or run with no profile for the combined server.`
+      `Unknown profile "${profileName}".\n` +
+        `Available: ${PROFILES.map((p) => p.name).join(', ')}`
     );
   }
 
@@ -209,35 +236,33 @@ export function resolveSelection(spec: string): ProfileSelection {
   return { profile, subProfiles: picked, partial: picked.length < named.length };
 }
 
-/** Every spec operation a selection serves, core included. */
-export function operationsFor(selection: ProfileSelection): string[] {
-  return [...new Set([...CORE_OPERATIONS, ...selection.subProfiles.flatMap((s) => s.operations)])];
-}
-
 /**
- * The deprecated operations `--include-deprecated` should add to a selection.
- *
- * They are in no profile: membership is hand-curated in spec/profiles.csv and
- * nobody curates an endpoint Apple has retired, so 0 of 123 were reachable in
- * profile mode and the flag silently did nothing there — it only ever worked on
- * the no-profile server with `--domains`.
- *
- * Membership by DOMAIN rather than by curation, and that is the honest
- * definition rather than a shortcut: "everything retired in the areas this
- * profile covers" is what someone passing this flag is asking for, and there is
- * no curated answer to inherit. Most of it is Game Center — 102 of the 123 —
- * so `game-center --include-deprecated` is the case this visibly changes.
+ * One spec per profile: `monetization:a monetization:b` is one server, and
+ * written as two the second would replace the first. A bare profile wins over
+ * its sub-profiles; all of them named is the bare profile too.
  */
-export function deprecatedOperationsFor(selection: ProfileSelection): string[] {
-  const domains = new Set(
-    operationsFor(selection)
-      .map((name) => OPERATIONS.find((op) => op.name === name)?.domain)
-      .filter(Boolean) as string[]
-  );
-  return OPERATIONS.filter((op) => op.deprecated && domains.has(op.domain)).map((op) => op.name);
+export function mergeSpecs(specs: string[]): string[] {
+  const subs = new Map<string, string[] | undefined>();
+  for (const spec of specs) {
+    const [name, list] = spec.split(':', 2);
+    const prev = subs.has(name) ? subs.get(name) : [];
+    subs.set(name, prev === undefined || list === undefined
+      ? undefined
+      : [...new Set([...prev, ...list.split(',').map((s) => s.trim()).filter(Boolean)])]);
+  }
+  return [...subs].map(([name, list]) => {
+    if (!list) return name;
+    const named = resolveProfile(name)?.subProfiles.filter((s) => s.name) ?? [];
+    return named.length && named.every((s) => list.includes(s.name!)) ? name : `${name}:${list.join(',')}`;
+  });
 }
 
-/** Hand-written tools a selection serves (StoreKit, reviews-AI, pricing macros). */
+/** Every spec operation a selection serves. */
+export function operationsFor(selection: ProfileSelection): string[] {
+  return [...new Set(selection.subProfiles.flatMap((s) => s.operations))];
+}
+
+/** Hand-written tools a selection serves (StoreKit, reviews-AI, pricing macros, core's meta tools). */
 export function manualToolsFor(selection: ProfileSelection): string[] {
   return [...new Set(selection.subProfiles.flatMap((s) => s.manualTools))];
 }
@@ -253,17 +278,23 @@ export function manualToolsFor(selection: ProfileSelection): string[] {
  * to 264 — because on a delete or a relationship read `id` is the only
  * parameter, and an undescribed one is a tool that documents nothing about its
  * input — and telling the 46 app-rooted tools that their `id` also takes a name
- * or bundle ID to 268. Two of those moves had already landed without the
- * constant following them; it is 4 too low across the whole catalogue, which is
- * most of what `asc__status` reports.
+ * or bundle ID to 268, then 3.0's descriptions naming ASC-Core and the
+ * profile-less reads to 274 (277,164 / 1011). Two of those moves had already
+ * landed without the constant following them, which is most of what
+ * `asc__status` reports. `scripts/measure-tokens.ts` sums the
+ * real definitions per server when an estimate is not enough.
  */
-export const TOKENS_PER_TOOL = 268;
+export const TOKENS_PER_TOOL = 274;
 
-/** How many tools a selection serves, meta tools included. */
+/**
+ * How many tools a selection serves: its own, plus `asc__status` on a profile
+ * server (core already lists it) and the `asc__call`/`asc__describe` pair when
+ * some sub-profiles were left out.
+ */
 export function toolCountFor(selection: ProfileSelection): number {
-  return (
-    operationsFor(selection).length + manualToolsFor(selection).length + CORE_MANUAL_TOOLS.length
-  );
+  const own = new Set([...operationsFor(selection), ...manualToolsFor(selection)]);
+  const status = own.has('asc__status') ? 0 : 1;
+  return own.size + status + (selection.partial ? 2 : 0);
 }
 
 /**
@@ -272,7 +303,6 @@ export function toolCountFor(selection: ProfileSelection): number {
  * so answering "where does this tool live" per domain named the wrong server.
  */
 export function profilesForOperation(operation: string): string[] {
-  if (CORE_OPERATIONS.includes(operation)) return PROFILES.map((p) => p.name);
   return PROFILES.filter((p) => p.subProfiles.some((s) => s.operations.includes(operation))).map(
     (p) => p.name
   );
@@ -290,46 +320,34 @@ export function registerCommand(spec: string): string {
 }
 
 /**
- * Profiles that existed in an earlier version and no longer do. Naming one
- * doesn't fail the launch: the server starts with a single tool that explains
- * the split, because a config error only reaches stderr and the user sees
- * nothing but `asc-user-management ✗ failed`. A tool the agent can call turns
- * an invisible log line into a sentence in the conversation.
+ * What a server started with a profile argument that does not resolve says —
+ * a name from an earlier version (`app-info`, `user-management`) or a typo.
+ *
+ * Such a server still starts, with this as its only tool's answer, because a
+ * config error only reaches stderr and all the user sees is `ASC-AppInfo ✗
+ * failed`. A tool the agent can call turns an invisible log line into a
+ * sentence in the conversation. Generic on purpose: a list of renamed profiles
+ * is one more table to keep in step. `setup` does not map an old name to a new
+ * one: it removes the dead entry (when it is ours and clean) and the user picks
+ * from the current profiles listed below.
  */
-export interface RemovedProfile {
-  /** Profiles that took over its tools. Every name must exist — a test checks. */
-  replacements: Array<{ name: string; covers: string }>;
-  summary: string;
-}
-
-export const REMOVED_PROFILES: Record<string, RemovedProfile> = {
-  'user-management': {
-    replacements: [
-      { name: 'access', covers: 'beta groups, testers, invitations, team members' },
-      { name: 'monetization', covers: 'sandbox test accounts (they belong with in-app purchases)' },
-      {
-        name: 'testflight',
-        covers: 'beta app localizations, beta review details, crash feedback, the beta license agreement',
-      },
-      { name: 'app-clips', covers: 'App Clip beta invocations' },
-    ],
-    summary:
-      'It was split into access, testflight, app-clips and monetization — replace it in your ' +
-      'config with whichever ones you need.',
-  },
-};
-
-/** The message the tombstone server hands back, in full. */
-export function removedProfileMessage(name: string): string | undefined {
-  const removed = REMOVED_PROFILES[name];
-  if (!removed) return undefined;
+export function unknownProfileMessage(spec: string, reason?: string): string {
   return (
-    `The "${name}" App Store Connect profile was removed and split into ` +
-    `${removed.replacements.length} smaller profiles:\n` +
-    removed.replacements.map((r) => `  ${r.name.padEnd(12)} ${r.covers}`).join('\n') +
-    `\n\nThis server carries no App Store Connect tools. Tell the user to replace ` +
-    `"asc-${name}" in their MCP client config with the profile they need, for example:\n` +
-    removed.replacements.map((r) => `  ${registerCommand(r.name)}`).join('\n') +
-    `\nThen restart the client.`
+    (spec
+      ? `This MCP server was started with the App Store Connect profile "${spec}", which does ` +
+        `not exist in Heimdall — it was renamed or removed, or it is a typo.`
+      : // The combined server of 2.x, started with no profile (and maybe --domains).
+        `This MCP server was started without an App Store Connect profile. Heimdall serves ` +
+        `App Store Connect only through profiles since 3.0.`) +
+    (spec && reason ? `\n${reason.split('\n')[0]}` : '') +
+    `\n\nThis server carries no App Store Connect tools. Tell the user to run ` +
+    `\`npx -y ${PACKAGE} setup\` in a terminal: it ` +
+    (spec
+      ? `removes entries whose profile no longer exists and lets them pick`
+      : // setup counts an entry without a profile as the user's own and leaves it.
+        `lets them pick profiles, but leaves this entry alone, so they also delete it from ` +
+        `their MCP client's settings. They pick`) +
+    ` from the current profiles below. Then restart the client.\n\nCurrent profiles:\n` +
+    PROFILES.map((p) => `  ${p.name.padEnd(18)} ${p.description}`).join('\n')
   );
 }

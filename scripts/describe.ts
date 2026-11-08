@@ -101,6 +101,9 @@ export const CURATED: Record<string, string> = {
   'apps.list':
     'List all apps in your App Store Connect account. Start here when you need an app ID.',
   'apps.get': 'Read one app by ID, including bundle ID, SKU and primary locale.',
+  // Live 404 "relationship does not exist" (2026-10-27) while the spec keeps it.
+  'apps.app_encryption_declarations.list':
+    'List the app encryption declarations belonging to an app. Apple answers this path with 404; list the encryption declarations filtered by app instead.',
   'apps.app_store_versions.list':
     'List App Store versions for an app, with their review state (e.g. PREPARE_FOR_SUBMISSION, WAITING_FOR_REVIEW, READY_FOR_SALE).',
   'apps.builds.list':
@@ -109,6 +112,36 @@ export const CURATED: Record<string, string> = {
     'List customer reviews for an app. Filter by rating or territory; sort by -createdDate for the newest.',
   'app_store_versions.create':
     'Start the next release: create a new App Store version to prepare. Do this before attaching a build and submitting for review.',
+  'subscription_versions.create':
+    'Create one editable subscription review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.',
+  'subscription_versions.get':
+    'Read a subscription review version by ID, including its version number and review state.',
+  'subscription_group_versions.create':
+    'Create one editable subscription group review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.',
+  'subscription_group_versions.get':
+    'Read a subscription group review version by ID, including its version number and review state.',
+  'in_app_purchase_versions.create':
+    'Create one editable in-app purchase review version. List versions first and reuse an existing PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED draft. Apple permits one open draft per product; if create returns 409 ALREADY_EXISTS, list again and use the draft ID in the error detail. Draft versions cannot be deleted.',
+  'in_app_purchase_versions.get':
+    'Read a in-app purchase review version by ID, including its version number and review state.',
+  'subscription_localizations_v2.create':
+    'Create a subscription localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.',
+  'subscription_localizations_v2.update':
+    'Update a subscription localization by ID on its editable version draft.',
+  'subscription_localizations_v2.get':
+    'Read a subscription localization by ID and see its version relationship.',
+  'subscription_group_localizations_v2.create':
+    'Create a subscription group localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.',
+  'subscription_group_localizations_v2.update':
+    'Update a subscription group localization by ID on its editable version draft.',
+  'subscription_group_localizations_v2.get':
+    'Read a subscription group localization by ID and see its version relationship.',
+  'in_app_purchase_localizations_v2.create':
+    'Create a in-app purchase localization on an existing editable version ID. List versions and reuse the open draft; after 409 ALREADY_EXISTS, list again to find its ID.',
+  'in_app_purchase_localizations_v2.update':
+    'Update a in-app purchase localization by ID on its editable version draft.',
+  'in_app_purchase_localizations_v2.get':
+    'Read a in-app purchase localization by ID and see its version relationship.',
   'app_store_versions.update':
     'Update an App Store version, including its release type and earliest release date.',
   // Apple's names hide a three-step dance, and the old description here got it
@@ -175,8 +208,6 @@ export const CURATED: Record<string, string> = {
     'Change a product page experiment — begin or halt it, or adjust its traffic split. Halting it keeps the results readable; deleting does not.',
   'app_store_version_experiments_v2.delete':
     'Delete a product page experiment and its results. Halt it with an update instead if you still want the numbers.',
-  'app_store_version_submissions.delete':
-    'Cancel a pending App Store review submission.',
   'app_store_version_phased_releases.create':
     'Start a phased (gradual) rollout for an approved version, releasing to a growing percentage of users over 7 days.',
   'app_store_version_phased_releases.update':
@@ -188,8 +219,6 @@ export const CURATED: Record<string, string> = {
   'customer_review_responses.delete': 'Delete your response to a customer review.',
   'beta_groups.create':
     'Create a TestFlight beta group. Internal groups are limited to team members; external groups require beta review.',
-  'beta_groups.beta_testers.add':
-    'Add existing beta testers to a TestFlight group.',
   'beta_testers.create':
     'Invite a new TestFlight tester by email and add them to one or more beta groups.',
   'builds.update':
@@ -211,13 +240,30 @@ export const CURATED: Record<string, string> = {
   'profiles.create':
     'Create a provisioning profile from a bundle ID, certificate and (for development) device list.',
   'sales_reports.list':
-    'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key.',
+    'Download a sales or subscription report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance or Sales role on the API key. Apple stopped producing the INSTALLS type on 2026-11-04; only earlier dates still download.',
   'finance_reports.list':
     'Download a finance report as gzipped TSV. Requires ASC_VENDOR_NUMBER and a Finance role on the API key.',
   'in_app_purchases_v2.create':
     'Create an in-app purchase. Set the product ID, type (CONSUMABLE, NON_CONSUMABLE, NON_RENEWING_SUBSCRIPTION) and reference name.',
   'subscriptions.create':
     'Create an auto-renewable subscription inside a subscription group.',
+  // Retention (spec 4.6): an offer belongs to a subscription, and showing it
+  // with the retention message is a second, separate link.
+  'retention_offers.create':
+    'Create a retention offer for a subscription, shown to subscribers who start to cancel. Each country price goes inline: included retentionOfferPrices, each with a territory and a subscription price point. Link it to the retention message offers to show it. At most 10 per subscription and billing plan.',
+  // Apple's limit, from the App Store Connect help page; the API says nothing.
+  'retention_messages.create':
+    'Create a retention message for an app: what a subscriber sees on starting to cancel a subscription. An app holds at most 10 retention messages.',
+  'retention_message_localizations.update':
+    'Change the header and body text of a retention message in one language.',
+  'retention_message_versions.create':
+    'Start a new version of a retention message to edit its text and submit for review; the approved version stays live meanwhile.',
+  'subscriptions.retention_offers.list':
+    'List every retention offer created for a subscription, whether or not its retention message shows it.',
+  'subscriptions.retention_message_offers.list':
+    'List the retention offers this subscription shows with its retention message.',
+  'subscriptions.retention_message_offers.add':
+    'Show existing retention offers of this subscription with its retention message.',
   'subscriptions.delete':
     'Remove a recurring product entirely: delete a subscription from the catalogue. Possible only before Apple has ever approved it; anything that has been on sale is withdrawn by emptying the countries it sells in.',
   'subscription_plan_availabilities.create':
@@ -391,12 +437,6 @@ export const CURATED: Record<string, string> = {
     'Read the reviewer screenshot attached to an in-app purchase.',
 
   // --- store listing screenshots (the ones users usually mean) ------------
-  'app_screenshots.create':
-    'Upload a store listing screenshot: reserve the upload for a screenshot set, then ' +
-    'transfer the image data. These are the screenshots customers see on the App Store page.',
-  'app_screenshot_sets.create':
-    'Create a screenshot set for one display size (e.g. APP_IPHONE_67) in a version ' +
-    'localization, then upload screenshots into it.',
 
   // --- asset library (spec 4.5.1) -----------------------------------------
   // One library per app holds images and videos; a placement puts one of them
@@ -450,15 +490,12 @@ interface DescribeInput {
   method: string;
   path: string;
   toolName: string;
-  deprecated: boolean;
 }
 
 /** Builds a readable one-line description for an operation. */
 export function describe(input: DescribeInput): string {
   const curated = CURATED[input.toolName];
-  if (curated) {
-    return input.deprecated ? `${curated} DEPRECATED by Apple.` : curated;
-  }
+  if (curated) return curated;
 
   const parts = input.operationId.split('_');
   const verb = parts.pop() ?? '';
@@ -519,5 +556,5 @@ export function describe(input: DescribeInput): string {
 
   sentence = sentence.replace(/\s+/g, ' ');
 
-  return input.deprecated ? `${sentence} DEPRECATED by Apple.` : sentence;
+  return sentence;
 }

@@ -9,6 +9,8 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { executePreflightTool, PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
+import { RELEASE_TOOLS } from '../src/tools/release.js';
+import { METADATA_I18N_TOOLS } from '../src/tools/metadata-i18n.js';
 import { AscApiError } from '../src/core/errors.js';
 import { readFileSync } from 'node:fs';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -19,6 +21,7 @@ interface Overrides {
   review?: Record<string, unknown> | null;
   localizations?: Record<string, unknown>[];
   screenshots?: Record<string, unknown>[];
+  placements?: Record<string, unknown>[];
   submission?: boolean;
 }
 
@@ -56,6 +59,7 @@ function fakeHttp(o: Overrides = {}) {
     if (path === '/v1/apps') {
       return { data: [{ id: '6636549188', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } }] };
     }
+    if (path.endsWith('/placements')) return { data: o.placements ?? [] };
     if (path.includes('/appStoreVersionLocalizations')) {
       return {
         data: localizations.map((l, i) => ({
@@ -103,6 +107,8 @@ describe('preflight__check_version', () => {
     const res = await run();
     expect(res.ready).toBe(true);
     expect(res.blocking).toEqual([]);
+    // Ready never covers what the API cannot see; those are named every time.
+    expect(res.manualChecks.map((c: any) => c.check)).toEqual(['App Privacy', 'EU trader status', 'Agreements, tax and banking']);
     expect(res.checked).toContain('export compliance answered');
     expect(res.version).toBe('3.2.0');
   });
@@ -146,10 +152,18 @@ describe('preflight__check_version', () => {
 
   it('catches a screenshot set that holds no images, and one that failed to deliver', async () => {
     const empty = await run({ screenshots: [] });
-    expect(empty.blocking.map((b: any) => b.problem).join()).toContain('no images');
+    expect(empty.blocking.map((b: any) => b.problem).join()).toMatch(/No locale has screenshot images/);
 
     const failed = await run({ screenshots: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'FAILED' } } }] });
     expect(failed.blocking.map((b: any) => b.problem).join()).toContain('failed to deliver');
+  });
+
+  it('counts library image placements and reports a failed placement', async () => {
+    const image = { id: 'placement-1', attributes: { placementType: 'APP_SCREENSHOT', state: 'PARENT_APPROVED' }, relationships: { image: { data: { id: 'asset-1' } } } };
+    const ready = await run({ screenshots: [], placements: [image] });
+    expect(ready.blocking.filter((b: any) => b.check === 'screenshots')).toEqual([]);
+    const failed = await run({ screenshots: [], placements: [{ ...image, attributes: { ...image.attributes, state: 'FAILED' } }] });
+    expect(failed.blocking).toEqual(expect.arrayContaining([expect.objectContaining({ check: 'screenshots', fixWith: 'media__upload' })]));
   });
 
   it('says an open review submission does not carry this version', async () => {
@@ -165,6 +179,8 @@ describe('preflight__check_version', () => {
     expect(res.blocking).toEqual([]);
     expect(res.checked).toEqual([]);
     expect(res.warnings[0]).toContain('IN_REVIEW');
+    // Required by the output schema, so a strict client accepts this answer too.
+    expect(res.manualChecks.map((c: any) => c.check)).toContain('App Privacy');
   });
 });
 
@@ -186,18 +202,21 @@ function catalogHttp(overrides: Record<string, any> = {}) {
     '/v1/apps': { data: [{ id: '1', attributes: { name: 'Example', bundleId: 'com.example' } }] },
     '/v1/apps/1/subscriptionGroups': { data: [catalogGroup()] },
     '/v1/subscriptionGroups/g1/subscriptions': { data: [catalogSubscription()] },
-    '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [groupLocale()] },
+    '/v1/subscriptionGroups/g1/versions': { data: [{ id: 'gv1', attributes: { version: 1, state: 'PREPARE_FOR_SUBMISSION' } }] },
+    '/v1/subscriptionGroupVersions/gv1/localizations': { data: [groupLocale()] },
     ...overrides,
   };
   const get = vi.fn(async (path: string, _params?: any) => {
     const fallback: Record<string, any> = {
-      subscriptionLocalizations: { data: [subscriptionLocale()] },
+      versions: { data: [{ id: 'sv1', attributes: { version: 1, state: 'PREPARE_FOR_SUBMISSION' } }] },
+      localizations: { data: [subscriptionLocale()] },
       prices: { data: [{ id: 'price1' }] },
       planAvailabilities: { data: [{ id: 'plan1' }] },
       availableTerritories: { data: [{ id: 'USA' }] },
       appStoreReviewScreenshot: { data: { id: 'shot1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } } },
     };
-    const response = Object.hasOwn(routes, path) ? routes[path] : fallback[path.split('/').at(-1)!];
+    const response = Object.hasOwn(routes, path) ? routes[path] :
+      path.match(/^\/v1\/subscriptions\/[^/]+\/versions$/) ? fallback.versions : fallback[path.split('/').at(-1)!];
     if (response instanceof Error) throw response;
     if (!response) throw new Error(`Unexpected read: ${path}`);
     return response;
@@ -208,6 +227,21 @@ const runCatalog = (overrides: Record<string, any> = {}, args: Record<string, un
   executePreflightTool(subscriptionTool, args, { http: catalogHttp(overrides) }) as Promise<any>;
 
 describe(subscriptionTool, () => {
+  it('does not tell an approved group to create an undeletable new draft', async () => {
+    const result = await runCatalog({ '/v1/subscriptionGroups/g1/versions': { data: [{ id: 'approved-group', attributes: { version: 1, state: 'APPROVED' } }] } });
+    expect(result.subscriptions[0].findings.some((f: any) => f.fixWith === 'subscription_group_versions__create')).toBe(false);
+    expect(result.subscriptions[0].ready).toBe(true);
+  });
+  it('gives an actionable group-draft ambiguity error without suggesting version_id', async () => {
+    const versions = { data: [
+      { id: 'gv1', attributes: { version: 1, state: 'PREPARE_FOR_SUBMISSION' } },
+      { id: 'gv2', attributes: { version: 2, state: 'DEVELOPER_REJECTED' } },
+    ] };
+    await expect(runCatalog({ '/v1/subscriptionGroups/g1/versions': versions }, { app: '1', group: 'g1' }))
+      .rejects.toThrow(/Resolve the duplicate group drafts in App Store Connect/);
+    await expect(runCatalog({ '/v1/subscriptionGroups/g1/versions': versions }, { app: '1', group: 'g1' }))
+      .rejects.not.toThrow(/Pass version_id/);
+  });
   it('uses current spec endpoints, valid sparse fields and explicit one-page limits', async () => {
     const http = catalogHttp();
     await executePreflightTool(subscriptionTool, { app: '1', group: 'g1' }, { http });
@@ -217,6 +251,7 @@ describe(subscriptionTool, () => {
       expect(route, path).toBeTruthy();
       const operation = spec.paths[route!].get;
       expect(operation.deprecated).not.toBe(true);
+      expect(JSON.parse(readFileSync('spec/deprecated-overrides.json', 'utf8')).some((x: any) => x.operationId === operation.operationId)).toBe(false);
       const parameters = operation.parameters ?? [];
       if (parameters.some((p: any) => p.name === 'limit')) expect(params.limit, path).toBeGreaterThan(0);
       for (const [name, value] of Object.entries(params ?? {})) {
@@ -228,27 +263,30 @@ describe(subscriptionTool, () => {
       }
     }
   });
-  it('every finding names an existing, current raw fix tool in the curation sheet', async () => {
+  it('every finding names an existing current fix tool in the curation sheet', async () => {
     const sub = catalogSubscription();
     Object.assign(sub.attributes, { name: '', productId: '', subscriptionPeriod: '', familySharable: null, reviewNote: '' });
     const result = await runCatalog({
       '/v1/subscriptionGroups/g1/subscriptions': { data: [sub] },
-      '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [] },
-      '/v1/subscriptions/s1/subscriptionLocalizations': { data: [] },
+      '/v1/subscriptionGroupVersions/gv1/localizations': { data: [] },
+      '/v1/subscriptionVersions/sv1/localizations': { data: [] },
       '/v1/subscriptions/s1/prices': { data: [] },
       '/v1/subscriptions/s1/planAvailabilities': { data: [] },
       '/v1/subscriptions/s1/appStoreReviewScreenshot': { data: null },
     }, { app: '1', subscription: 's1' });
     const csv = readFileSync('spec/profiles.csv', 'utf8');
     const fixes = [...result.subscriptions[0].findings.map((f: any) => f.fixWith),
-      'subscription_localizations__update', 'subscription_group_localizations__update',
+      'subscription_localizations_v2__update', 'subscription_group_localizations_v2__update',
       'subscription_plan_availabilities__available_territories__replace'];
     for (const fix of fixes) {
+      if (fix === 'media__upload') {
+        expect(csv).toMatch(/core,,media__upload,/);
+        continue;
+      }
       const op = OPERATIONS.find((o) => o.name.replaceAll('.', '__') === fix);
       expect(op, fix).toBeTruthy();
-      expect(op!.deprecated, fix).toBe(false);
       expect(op!.readOnly, fix).toBe(false);
-      expect(csv).toMatch(new RegExp(`monetization,subscription-(?:catalog|pricing),${fix},`));
+      expect(csv).toMatch(new RegExp(`monetization,subscription,${fix},`));
     }
   });
   it('treats only screenshot 404 as absence and propagates other API errors', async () => {
@@ -271,6 +309,7 @@ describe(subscriptionTool, () => {
     const result = await runCatalog();
     expect(result.subscriptions).toEqual([{
       id: 's1', productId: 'com.example.s1', name: 'Monthly', state: 'READY_TO_SUBMIT',
+      version: { id: 'sv1', number: 1, state: 'PREPARE_FOR_SUBMISSION' }, otherVersions: [],
       ready: true, findings: [], truncated: [],
     }]);
     expect(result.group).toBeUndefined();
@@ -284,12 +323,12 @@ describe(subscriptionTool, () => {
     expect((await runCatalog({}, { app, subscription: 's1' })).app).toBe('Example (1)');
   });
   it.each([
-    ['subscriptionLocalizations', 'localizations', 'subscription_localizations__create'],
+    ['localizations', 'localizations', 'subscription_localizations_v2__create'],
     ['prices', 'price', 'subscription_prices__create'],
     ['planAvailabilities', 'availability', 'subscription_plan_availabilities__create'],
-    ['appStoreReviewScreenshot', 'review screenshot', 'subscription_app_store_review_screenshots__create'],
+    ['appStoreReviewScreenshot', 'review screenshot', 'media__upload'],
   ])('blocks on empty %s', async (relationship, check, fixWith) => {
-    const result = await runCatalog({ [`/v1/subscriptions/s1/${relationship}`]: { data: relationship === 'appStoreReviewScreenshot' ? null : [] } });
+    const result = await runCatalog({ [relationship === 'localizations' ? '/v1/subscriptionVersions/sv1/localizations' : `/v1/subscriptions/s1/${relationship}`]: { data: relationship === 'appStoreReviewScreenshot' ? null : [] } });
     expect(result.subscriptions[0].ready).toBe(false);
     expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ check, severity: 'blocking', fixWith }));
   });
@@ -326,23 +365,23 @@ describe(subscriptionTool, () => {
   it.each(['name', 'description'])('blocks on a localization missing %s', async (field) => {
     const loc = subscriptionLocale();
     (loc.attributes as any)[field] = ' ';
-    const result = await runCatalog({ '/v1/subscriptions/s1/subscriptionLocalizations': { data: [loc] } });
-    expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ severity: 'blocking', problem: `Localization en-US is missing ${field}.`, fixWith: 'subscription_localizations__update' }));
+    const result = await runCatalog({ '/v1/subscriptionVersions/sv1/localizations': { data: [loc] } });
+    expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ severity: 'blocking', problem: `Localization en-US is missing ${field}.`, fixWith: 'subscription_localizations_v2__update' }));
   });
   it('warns on locales present on the group but missing on the subscription', async () => {
-    const result = await runCatalog({ '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [groupLocale(), groupLocale('tr')] } });
+    const result = await runCatalog({ '/v1/subscriptionGroupVersions/gv1/localizations': { data: [groupLocale(), groupLocale('tr')] } });
     expect(result.subscriptions[0].ready).toBe(true);
     expect(result.subscriptions[0].findings).toEqual([expect.objectContaining({ check: 'locale coverage', severity: 'warning', problem: expect.stringContaining('tr') })]);
   });
   it('blocks both the group and each subscription when group localizations are absent', async () => {
-    const result = await runCatalog({ '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [] } }, { app: '1', group: 'Premium' });
+    const result = await runCatalog({ '/v1/subscriptionGroupVersions/gv1/localizations': { data: [] } }, { app: '1', group: 'Premium' });
     expect(result.group.ready).toBe(false);
-    expect(result.group.findings).toEqual([expect.objectContaining({ check: 'group localizations', severity: 'blocking', fixWith: 'subscription_group_localizations__create' })]);
+    expect(result.group.findings).toEqual([expect.objectContaining({ check: 'group localizations', severity: 'blocking', fixWith: 'subscription_group_localizations_v2__create' })]);
     expect(result.subscriptions[0].ready).toBe(false);
   });
   it('blocks on a group localization missing its display name', async () => {
-    const result = await runCatalog({ '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [{ id: 'gl1', attributes: { locale: 'tr', name: '' } }] } });
-    expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ severity: 'blocking', fixWith: 'subscription_group_localizations__update' }));
+    const result = await runCatalog({ '/v1/subscriptionGroupVersions/gv1/localizations': { data: [{ id: 'gl1', attributes: { locale: 'tr', name: '' } }] } });
+    expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ severity: 'blocking', fixWith: 'subscription_group_localizations_v2__update' }));
   });
   it('checks every subscription in a group up to the cap and never follows next', async () => {
     const http = catalogHttp({ '/v1/subscriptionGroups/g1/subscriptions': { data: Array.from({ length: 21 }, (_, i) => catalogSubscription(`s${i}`)), links: { next: '/do-not-follow' } } });
@@ -366,6 +405,33 @@ describe(subscriptionTool, () => {
     expect(result.subscriptions.map((s: any) => s.ready)).toEqual([true, false]);
     expect(result.group.ready).toBe(false);
   });
+  it('selects an editable draft by state and reports approved versions separately', async () => {
+    const result = await runCatalog({ '/v1/subscriptions/s1/versions': { data: [
+      { id: 'approved', attributes: { version: 9, state: 'APPROVED' } },
+      { id: 'sv1', attributes: { version: 2, state: 'PREPARE_FOR_SUBMISSION' } },
+    ] } });
+    expect(result.subscriptions[0].version).toEqual({ id: 'sv1', number: 2, state: 'PREPARE_FOR_SUBMISSION' });
+    expect(result.subscriptions[0].otherVersions).toEqual([{ id: 'approved', number: 9, state: 'APPROVED' }]);
+  });
+  it('accepts an explicit version_id and rejects multiple editable drafts', async () => {
+    const versions = { data: [
+      { id: 'sv1', attributes: { version: 1, state: 'PREPARE_FOR_SUBMISSION' } },
+      { id: 'sv2', attributes: { version: 2, state: 'DEVELOPER_REJECTED' } },
+    ] };
+    const overrides = { '/v1/subscriptions/s1/versions': versions };
+    await expect(runCatalog(overrides)).rejects.toThrow(/Multiple editable/);
+    const result = await runCatalog(overrides, { app: '1', subscription: 's1', version_id: 'sv1' });
+    expect(result.subscriptions[0].version.id).toBe('sv1');
+  });
+  it('suggests only creating a version when no draft exists and never marks a truncated result ready', async () => {
+    const result = await runCatalog({ '/v1/subscriptions/s1/versions': { data: [{ id: 'approved', attributes: { version: 1, state: 'APPROVED' } }] } });
+    expect(result.subscriptions[0].ready).toBe(false);
+    expect(result.subscriptions[0].findings.filter((f: any) => f.check === 'version').map((f: any) => f.fixWith)).toEqual(['subscription_versions__create']);
+    expect(result.subscriptions[0].otherVersions[0].state).toBe('APPROVED');
+    const truncated = await runCatalog({ '/v1/subscriptionVersions/sv1/localizations': { data: [subscriptionLocale()], links: { next: '/more' } } });
+    expect(truncated.subscriptions[0].ready).toBe(false);
+  });
+
   it('rejects absent and ambiguous subscriptions rather than selecting the first', async () => {
     await expect(runCatalog({}, { app: '1', subscription: 'unknown' })).rejects.toThrow('No subscription matching');
     await expect(runCatalog({ '/v1/subscriptionGroups/g1/subscriptions': { data: [catalogSubscription(), catalogSubscription('s2')] } }, { app: '1', subscription: 'Monthly' })).rejects.toThrow('ambiguous');
@@ -389,26 +455,25 @@ describe(subscriptionTool, () => {
     await expect(executePreflightTool(subscriptionTool, args, { http })).rejects.toThrow();
     expect(http.get).not.toHaveBeenCalled();
   });
-  it('reports truncation for every paginated list and does not infer missing unseen locales', async () => {
+  it('reports truncation for inspected lists and does not infer missing unseen locales', async () => {
     const more = { next: '/unread' };
     const result = await runCatalog({
-      '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [groupLocale('tr')], links: more },
-      '/v1/subscriptions/s1/subscriptionLocalizations': { data: [subscriptionLocale()], links: more },
+      '/v1/subscriptionGroupVersions/gv1/localizations': { data: [groupLocale('tr')], links: more },
+      '/v1/subscriptionVersions/sv1/localizations': { data: [subscriptionLocale()], links: more },
       '/v1/subscriptions/s1/prices': { data: [{ id: 'price1' }], meta: { paging: { total: 10 } } },
       '/v1/subscriptions/s1/planAvailabilities': { data: [{ id: 'plan1' }], links: more },
       '/v1/subscriptionPlanAvailabilities/plan1/availableTerritories': { data: [{ id: 'USA' }], links: more },
     });
-    // Prices and territories are presence checks: the one row read answers them,
-    // so the rows behind it are not reported. Live data had every subscription
-    // flagged as truncated because of these two.
+    // Only full-list checks carry truncation debt; presence is conclusive.
     expect(result.subscriptions[0].truncated).toHaveLength(3);
+    expect(result.subscriptions[0].ready).toBe(false);
     expect(result.subscriptions[0].truncated.join()).not.toMatch(/prices|availableTerritories/);
     expect(result.subscriptions[0].findings).toEqual([]);
   });
   it('names each missing group locale once, though Apple lists a draft beside the approved copy', async () => {
     const result = await runCatalog({
-      '/v1/subscriptionGroups/g1/subscriptionGroupLocalizations': { data: [groupLocale('tr'), groupLocale('tr'), groupLocale('en-US')] },
-      '/v1/subscriptions/s1/subscriptionLocalizations': { data: [subscriptionLocale()] },
+      '/v1/subscriptionGroupVersions/gv1/localizations': { data: [groupLocale('tr'), groupLocale('tr'), groupLocale('en-US')] },
+      '/v1/subscriptionVersions/sv1/localizations': { data: [subscriptionLocale()] },
     });
     const coverage = result.subscriptions[0].findings.find((f: any) => f.check === 'locale coverage');
     expect(coverage?.problem.match(/\btr\b/g)).toHaveLength(1);
@@ -417,10 +482,11 @@ describe(subscriptionTool, () => {
     const result = await runCatalog({
       '/v1/subscriptions/s1/planAvailabilities': { data: [{ id: 'plan1' }], links: { next: '/unread' } },
       '/v1/subscriptionPlanAvailabilities/plan1/availableTerritories': { data: [] },
-      '/v1/subscriptions/s1/subscriptionLocalizations': { data: [], links: { next: '/unread' } },
+      '/v1/subscriptionVersions/sv1/localizations': { data: [], links: { next: '/unread' } },
     });
     expect(result.subscriptions[0].findings).toEqual([]);
     expect(result.subscriptions[0].truncated).toHaveLength(2);
+    expect(result.subscriptions[0].ready).toBe(false);
   });
   it('reports truncated resolution, and refuses to claim an unambiguous name in a partial catalog', async () => {
     const overrides = { '/v1/apps/1/subscriptionGroups': { data: [catalogGroup()], links: { next: '/unread' } } };
@@ -428,5 +494,66 @@ describe(subscriptionTool, () => {
     await expect(runCatalog(overrides, { app: '1', subscription: 'unknown' })).rejects.toThrow('Search truncated');
     await expect(runCatalog(overrides, { app: '1', subscription: 'Monthly' })).rejects.toThrow('cannot establish');
     await expect(runCatalog({ '/v1/subscriptionGroups/g1/subscriptions': { data: [catalogSubscription()], meta: { paging: { total: 100 } } } }, { app: '1', subscription: 'Monthly' })).rejects.toThrow('Search truncated');
+  });
+});
+
+describe('subscription preflight review regressions', () => {
+  it('treats prices and available territories as presence checks even with more pages', async () => {
+    const result = await runCatalog({
+      '/v1/subscriptions/s1/prices': { data: [{ id: 'price' }], links: { next: '/unread' }, meta: { paging: { total: 175 } } },
+      '/v1/subscriptionPlanAvailabilities/plan1/availableTerritories': { data: [{ id: 'USA' }], links: { next: '/unread' } },
+    });
+    expect(result.subscriptions[0]).toMatchObject({ ready: true, truncated: [], findings: [] });
+  });
+  it('does not claim absence or readiness from an empty partial price page', async () => {
+    const result = await runCatalog({ '/v1/subscriptions/s1/prices': { data: [], links: { next: '/unread' } } });
+    expect(result.subscriptions[0].ready).toBe(false);
+    expect(result.subscriptions[0].truncated).toHaveLength(1);
+    expect(result.subscriptions[0].findings.some((f: any) => f.check === 'price')).toBe(false);
+  });
+  it.each(['REJECTED', 'WAITING_FOR_REVIEW', 'IN_REVIEW'])('reports subscription %s without suggesting another draft', async (state) => {
+    for (const explicit of [false, true]) {
+      const result = await runCatalog({ '/v1/subscriptions/s1/versions': { data: [{ id: 'sv1', attributes: { version: 1, state } }] } }, { app: '1', subscription: 's1', ...(explicit ? { version_id: 'sv1' } : {}) });
+      expect(result.subscriptions[0].version.state).toBe(state);
+      expect(result.subscriptions[0].ready).toBe(false);
+      expect(result.subscriptions[0].findings).toContainEqual(expect.objectContaining({ check: 'version state', problem: expect.stringContaining(state), fixWith: 'subscription_versions__get' }));
+      expect(result.subscriptions[0].findings.some((f: any) => f.fixWith === 'subscription_versions__create')).toBe(false);
+    }
+  });
+  it.each(['REJECTED', 'WAITING_FOR_REVIEW', 'IN_REVIEW'])('reports group %s without suggesting another draft', async (state) => {
+    const result = await runCatalog({ '/v1/subscriptionGroups/g1/versions': { data: [{ id: 'gv1', attributes: { version: 1, state } }] } }, { app: '1', group: 'g1' });
+    expect(result.group.version.state).toBe(state);
+    expect(result.group.ready).toBe(false);
+    expect(result.group.findings).toContainEqual(expect.objectContaining({ check: 'group version state', problem: expect.stringContaining(state), fixWith: 'subscription_group_versions__get' }));
+    expect(result.group.findings.some((f: any) => f.fixWith === 'subscription_group_versions__create')).toBe(false);
+  });
+});
+
+describe('shared version lookup in preflight', () => {
+  it('checks a version on the second page with its included build and refuses hidden pages', async () => {
+    const http = fakeHttp({ version: { platform: 'IOS' } });
+    const original = http.get.getMockImplementation()!;
+    const versionPage = await original('/v1/apps/6636549188/appStoreVersions');
+    http.get.mockImplementation(async (path: string) => path.endsWith('/appStoreVersions')
+      ? { data: [], links: { next: '/next-version' } } as any
+      : path === '/next-version' ? versionPage : original(path));
+    expect((await executePreflightTool('preflight__check_version', { app: 'Ask Quran' }, { http }) as any).ready).toBe(true);
+    http.get.mockImplementation(async (path: string) => path.endsWith('/appStoreVersions')
+      ? { ...versionPage, meta: { paging: { total: 2 } } } as any : original(path));
+    await expect(executePreflightTool('preflight__check_version', { app: 'Ask Quran' }, { http })).rejects.toThrow(/truncated/);
+  });
+});
+
+describe('distribution:version write and check descriptions', () => {
+  it('says ready: true leaves App Privacy, EU trader status and agreements to manualChecks', () => {
+    const d = PREFLIGHT_TOOLS.find((t) => t.name === 'preflight__check_version')!.description;
+    expect(d).toMatch(/ready: true does not cover App Privacy, EU trader status or agreements/);
+    expect(d).toMatch(/manualChecks/);
+  });
+
+  it('flags submitting and writing store text as destructive writes', () => {
+    const writes = [...RELEASE_TOOLS, ...METADATA_I18N_TOOLS.filter((t) => t.name === 'metadata_ai__apply_localizations')];
+    expect(writes.map((t) => t.name)).toEqual(['release__submit', 'release__submit_items', 'metadata_ai__apply_localizations']);
+    for (const t of writes) expect(t.annotations, t.name).toEqual({ readOnlyHint: false, destructiveHint: true, idempotentHint: false });
   });
 });

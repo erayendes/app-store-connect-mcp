@@ -18,8 +18,6 @@ export interface ServerConfig {
     /** Paths to Apple's DER root certificates; enables verified decoding. */
     appleRootCerts?: string[];
   };
-  /** When set, only these domains are exposed as tools. */
-  domains?: string[];
   /** Blocks every mutating tool. */
   readOnly: boolean;
   /**
@@ -33,8 +31,12 @@ export interface ServerConfig {
    * ASC_NATIVE_CONFIRM=0; unset in a hand-built config means off.
    */
   nativeConfirm?: boolean;
-  /** Include operations Apple has marked deprecated. */
-  includeDeprecated: boolean;
+  /**
+   * Fold the core profile's tools (app lookup, tool search, the media macros)
+   * into this profile server. For a channel that runs one process and so
+   * cannot register ASC-Core next to it; everywhere else core is its own server.
+   */
+  withCore?: boolean;
   /**
    * Override the API origin (ASC_BASE_URL) — for tests against a local
    * fixture server. Host-pinning then pins to this origin instead of Apple's.
@@ -61,6 +63,29 @@ export interface ServerConfig {
     bannedPhrases?: string[];
     supportUrl?: string;
   };
+}
+
+/**
+ * Whether a server's arguments make it read-only: `--read-only`, or the same
+ * with `=true` / `=1`. `=false`, `=0` and anything else do not. One rule for
+ * the server and for setup, which reads it off client configs to decide how
+ * ASC-Core is registered — a reading that differs from the server's would
+ * register core more open than the profile it serves beside.
+ */
+export function readOnlyFromArgs(args: readonly unknown[]): boolean {
+  return args.some((a) => a === '--read-only' || a === '--read-only=true' || a === '--read-only=1');
+}
+
+/**
+ * `ASC_READ_ONLY` as the server reads it: on for "true", "1" and "yes" in any
+ * case, off for everything else ("false", "0", "no", empty). A JSON config may
+ * hold a boolean or a number; a client passes it on as its text, so `true` and
+ * `1` read as on and `false` as off. Wider than the "true" alone it once was,
+ * which only ever makes a server stricter.
+ */
+export function readOnlyFromEnv(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  return typeof value === 'string' && ['true', '1', 'yes'].includes(value.trim().toLowerCase());
 }
 
 function parseList(value: string | undefined): string[] | undefined {
@@ -159,8 +184,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
           // verifying would present unverified data as fact.
           appleRootCerts: parseList(env.ASC_APPLE_ROOT_CERTS),
         },
-    domains: parseList(option('domains') ?? env.ASC_DOMAINS),
-    readOnly: flag('read-only') || env.ASC_READ_ONLY === 'true',
+    readOnly: readOnlyFromArgs(argv) || readOnlyFromEnv(env.ASC_READ_ONLY),
     // `strong` by default: ask on the four levels the risk manifest calls
     // revenue, destructive, infrastructure and access, and stay out of the way
     // on the rest.
@@ -181,8 +205,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
           ? 'off'
           : 'strong',
     nativeConfirm: env.ASC_NATIVE_CONFIRM !== '0' && env.ASC_NATIVE_CONFIRM !== 'false',
-    includeDeprecated:
-      flag('include-deprecated') || env.ASC_INCLUDE_DEPRECATED === 'true',
+    withCore: flag('with-core'),
     baseUrl: env.ASC_BASE_URL || undefined,
     dryRun: flag('dry-run') || env.ASC_DRY_RUN === 'true' || env.ASC_DRY_RUN === '1',
     rateLimit:

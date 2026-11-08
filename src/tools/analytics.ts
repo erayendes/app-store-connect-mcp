@@ -297,6 +297,11 @@ export async function executeAnalyticsTool(
     rows,
     totalRows,
     truncated: totalRows > rows.length,
+    // An empty table is not a zero: Apple leaves out rows under its privacy
+    // threshold, and a period it has not processed yet looks the same.
+    ...(totalRows === 0
+      ? { note: 'Apple produced this report with no rows. That is not a confirmed zero: rows under Apple\'s privacy threshold are left out, and so are days not processed yet.' }
+      : {}),
     ...(totalRows > rows.length
       ? { note: `Showing ${rows.length} of ${totalRows} rows — raise max_rows to see more.` }
       : {}),

@@ -1,23 +1,23 @@
 import { createRequire } from 'node:module';
 import {
   CLIENT_CAPABILITIES_META_KEY,
+  CLIENT_INFO_META_KEY,
   Server,
   type CallToolResult,
   type ClientCapabilities,
 } from '@modelcontextprotocol/server';
 import { TokenProvider } from './core/jwt.js';
-import { AscHttpClient, STATUS_HINTS } from './core/http.js';
+import { AscHttpClient, hintFor } from './core/http.js';
 import {
   ToolRegistry,
-  DEFAULT_DOMAINS,
   toMcpTool,
   toolNameFor,
   type McpToolDefinition,
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName } from './core/confirm.js';
-import { dialogText, nativeConfirm, nativeConfirmAvailable } from './core/native-confirm.js';
+import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName, type WritePreview } from './core/confirm.js';
+import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits, type DialogText } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
 import { MACRO_TOOLS } from './tools/catalog.js';
@@ -27,39 +27,42 @@ import {
   METADATA_I18N_WRITE_TOOLS,
   executeMetadataI18nTool,
 } from './tools/metadata-i18n.js';
-import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService } from './storekit/index.js';
+import { STOREKIT_TOOLS, STOREKIT_TOOL_NAMES, StoreKitService, storekitDialog, storekitRisk } from './storekit/index.js';
 import {
   PRICING_TOOL_NAMES,
   executePricingTool,
   buildPricingPreview,
+  pricingDialog,
 } from './tools/pricing.js';
-import { buildAssetDeletePreview, executeScreenshotTool } from './tools/screenshots.js';
+import { buildMediaPreview, executeMediaTool, MEDIA_TOOL_NAMES, mediaRisk } from './tools/screenshots.js';
 import { PREFLIGHT_TOOL_NAMES, executePreflightTool } from './tools/preflight.js';
 import { METADATA_TOOL_NAMES, executeMetadataTool } from './tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES, executeAccountTool } from './tools/account.js';
 import { availablePrompts } from './prompts.js';
-import { RELEASE_TOOL_NAMES, executeReleaseTool, releasePreviewArgs } from './tools/release.js';
-import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview } from './tools/testflight.js';
+import { RELEASE_TOOL_NAMES, executeReleaseTool, releaseDialog, releasePreviewArgs, releaseItemsPreviewArgs } from './tools/release.js';
+import { TESTFLIGHT_TOOL_NAMES, executeTestflightTool, buildTestflightPreview, testflightDialog, testflightPreviewArgs, IMAGE_CONTENT, type ImageContent } from './tools/testflight.js';
 import { ANALYTICS_TOOL_NAMES, executeAnalyticsTool } from './tools/analytics.js';
 import { CI_TOOL_NAMES, executeCiTool } from './tools/ci.js';
 import { OPERATIONS, SPEC_VERSION } from './generated/operations.js';
 import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } from './core/risk.js';
+import { logFailure, logWrite, type Confirmation } from './core/audit-log.js';
 import {
-  CORE_OPERATIONS,
+  CORE_PROFILE,
   manualToolsFor,
-  deprecatedOperationsFor,
   operationsFor,
-  CORE_MANUAL_TOOLS,
   profilesForOperation,
   registerCommand,
-  removedProfileMessage,
+  resolveProfile,
+  resolveSelection,
   subProfileOwning,
   toolCountFor,
   TOKENS_PER_TOOL,
+  unknownProfileMessage,
   type ProfileSelection,
   type SubProfile,
+  mergeSpecs,
 } from './profiles.js';
 import {
   stripApiNoise,
@@ -69,6 +72,27 @@ import {
   truncateText,
   DEFAULT_MAX_RESPONSE_CHARS,
 } from './core/shape.js';
+
+/** Progress notifications for a long tool call, when the client asked for them with a progressToken. */
+function progressSender(req: { _meta?: { progressToken?: string | number }; notify: (n: { method: 'notifications/progress'; params: Record<string, unknown> }) => Promise<void> }) {
+  const progressToken = req._meta?.progressToken;
+  if (progressToken === undefined) return undefined;
+  // A lost progress note must not fail the call it reports on.
+  return (progress: number, total: number, message: string) =>
+    void req.notify({ method: 'notifications/progress', params: { progressToken, progress, total, message } }).catch(() => {});
+}
+
+/**
+ * A tool's own dialog text, shown at the top of the form too: the generic
+ * preview lists only scalar arguments and would leave out a message body or a
+ * country list. The generic lines stay below it, with the full ids the
+ * dialog shortens.
+ */
+function withDialog(preview: WritePreview, dialog: DialogText | undefined): WritePreview {
+  if (!dialog) return preview;
+  const [head, ...rest] = preview.message.split('\n');
+  return { ...preview, dialog, message: [head, '', dialog.title, dialog.body, ...rest].join('\n') };
+}
 
 /** Configurable response ceiling (chars of pretty-printed JSON). */
 function maxResponseChars(): number {
@@ -116,6 +140,15 @@ export const SERVER_INSTRUCTIONS = [
 ].join('\n');
 
 /**
+ * Added to a profile server that does not carry core. Without it the model
+ * looks for `apps__list` here, finds a tool list with no way to turn an app
+ * name into an id, and concludes the server cannot do the task.
+ */
+export const CORE_POINTER =
+  'App lookup (apps__list), tool search (asc__search_tools) and the media tools ' +
+  '(media__*) live in the ASC-Core server, not here.';
+
+/**
  * How many tools each server actually serves, by server.
  *
  * A WeakMap rather than a field on the SDK's `Server`: the count has to be read
@@ -129,26 +162,30 @@ export function servedToolCount(server: Server): number | undefined {
   return toolCounts.get(server)?.();
 }
 
-export function createServer(config: ServerConfig, selection?: ProfileSelection): Server {
+export function createServer(config: ServerConfig, selection: ProfileSelection): Server {
   const tokens = new TokenProvider(config.credentials);
   // ASC_BASE_URL redirects everything to a local fixture server for testing;
   // host-pinning then pins to that origin instead of Apple's.
   const http = new AscHttpClient(tokens, { baseUrl: config.baseUrl, rateLimit: config.rateLimit });
 
-  // In profile mode, "how do I reach that tool" answers name the sibling MCP
-  // server; the --domains flag only makes sense on the monolithic server.
-  const missingToolHint = selection
-    ? (op: Operation): string => {
+  const isCore = selection.profile.name === CORE_PROFILE;
+  /**
+   * The core profile's tools — app lookup, the meta tools, the media macros.
+   * Served by ASC-Core itself, and folded into a profile server started with
+   * `--with-core`, for a channel that can run only one process.
+   */
+  const core = isCore || config.withCore ? resolveSelection(CORE_PROFILE) : undefined;
+
+  // "How do I reach that tool" answers name the sibling MCP server.
+  const missingToolHint = (op: Operation): string | undefined => {
         const ownSub = subProfileOwning(selection.profile, op.name);
         if (ownSub) {
           // Same server, unselected sub-profile: the remedy is a startup
           // argument here, not a different server.
           return (
             `It belongs to this profile's "${ownSub.name}" sub-profile, which this server ` +
-            `did not load. Restart it as \`${selection.profile.name}\` for everything, or ` +
-            `\`${selection.profile.name}:${[...selection.subProfiles.map((s) => s.name), ownSub.name]
-              .filter(Boolean)
-              .join(',')}\` to add just this one.`
+            `did not load. Read it now through asc__call. For the tool itself, with the ` +
+            `user's yes run \`${registerWith(ownSub)}\` and ask them to restart their MCP client.`
           );
         }
         const homes = profilesForOperation(op.name).filter((n) => n !== selection.profile.name);
@@ -156,24 +193,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? `It is served by the "${serverName(homes[0])}" MCP server. Register it with:\n` +
             `  ${registerCommand(homes[0])}\n` +
             `(or add the same entry to your MCP client config), then restart your client.`
-          : `Run the server without a profile and with --domains=${op.domain} to reach it.`;
-      }
-    : undefined;
+          : undefined;
+      };
 
   const registry = new ToolRegistry({
-    // A profile carries an explicit, hand-curated list; core (apps.list/get and
-    // the four shared relationship listings) is already folded into it.
-    operations: selection
-      ? [
-          ...operationsFor(selection),
-          // Deprecated operations are in no profile, so without this the flag
-          // was a no-op in profile mode — see deprecatedOperationsFor.
-          ...(config.includeDeprecated ? deprecatedOperationsFor(selection) : []),
-        ]
-      : undefined,
-    domains: selection ? undefined : config.domains,
+    // A profile carries an explicit, hand-curated list, plus core's when it
+    // rides along.
+    operations: [...operationsFor(selection), ...(core && !isCore ? operationsFor(core) : [])],
     readOnly: config.readOnly,
-    includeDeprecated: config.includeDeprecated,
     paramDefaults: config.vendorNumber
       ? { 'filter[vendorNumber]': config.vendorNumber }
       : undefined,
@@ -181,34 +208,23 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
     dryRun: config.dryRun,
   });
 
-  const loadedDomains = selection
-    ? registry.loadedDomains()
-    : config.domains?.length
-      ? config.domains
-      : [...DEFAULT_DOMAINS];
+  const loadedDomains = registry.loadedDomains();
 
-  // Which sub-profiles are live right now. Mutable because `asc__load` can add
-  // one mid-session; everything that reports or gates on the selection reads
-  // this rather than the startup argument.
-  const loadedSubs = new Set(selection?.subProfiles ?? []);
-  const unloadedSubs = (): SubProfile[] =>
-    selection ? selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s)) : [];
+  const loadedSubs = new Set(selection.subProfiles);
+  const unloadedSubs = (): SubProfile[] => selection.profile.subProfiles.filter((s) => s.name && !loadedSubs.has(s));
   /**
-   * The command that makes `sub` part of this server for good. asc__load only
-   * changes this session, and only for a client that re-reads the tool list
-   * when told to — Claude Code in the desktop app does not — so this is the
-   * path that works everywhere: rewrite the config, restart the client.
+   * The command that makes `sub` part of this server. There is no way to add
+   * it mid-session that works everywhere: a server may revise its tool list,
+   * but some clients never hand the revision to the model (the Claude desktop
+   * app's Code tab among them). Rewriting the config and restarting does.
    */
   const registerWith = (sub: SubProfile): string =>
-    selection
-      ? `npx -y ${PACKAGE} register ${selection.profile.name}:` +
-        // What the user registered first, in their order, then what was added.
-        [...new Set([...loadedSubs, sub])].map((s) => s.name).join(',')
-      : '';
+    `npx -y ${PACKAGE} register ${selection.profile.name}:` +
+    // What the user registered first, in their order, then what was added.
+    [...new Set([...loadedSubs, sub])].map((s) => s.name).join(',');
 
   /** What this server is, in the unit a user configures: profiles. */
-  const profileReport = selection
-    ? (): Record<string, unknown> => ({
+  const profileReport = (): Record<string, unknown> => ({
         profile: selection.profile.name,
         subProfiles: selection.profile.subProfiles
           .filter((s) => s.name)
@@ -224,24 +240,39 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         ...(unloadedSubs().length
           ? {
               hint:
-                `Some sub-profiles are not loaded. Call asc__load to add one for this ` +
-                `session, or restart as \`${selection.profile.name}\` for all of them.`,
+                `Some sub-profiles are not loaded. Reads work through asc__call. For the ` +
+                `tools themselves, register \`npx -y ${PACKAGE} register ${selection.profile.name}\` ` +
+                `and restart the client.`,
             }
           : {}),
-      })
-    : undefined;
+      });
 
   // Which hand-written tool families this selection carries. The curation
   // sheet decides — a sub-profile listing `storekit__*` is what turns them on,
-  // so unchecking that sub-profile turns them off with no second switch. The
-  // core rows are in every selection by definition, and leaving them out here
-  // is how a core macro ships unreachable from every profile-mode server while
-  // the sheet says otherwise.
-  const manualTools = selection
-    ? new Set([...manualToolsFor(selection), ...CORE_MANUAL_TOOLS])
-    : undefined;
+  // so unchecking that sub-profile turns them off with no second switch. Core's
+  // rows count when core rides along; leaving them out here is how a core
+  // macro ships unreachable while the sheet says otherwise.
+  const manualTools = new Set([...manualToolsFor(selection), ...(core ? manualToolsFor(core) : [])]);
+
+  /**
+   * The meta tools. Search and discovery answer for the whole catalogue, so
+   * they live in core and are not repeated in every profile server; each
+   * server keeps `asc__status`, which reports on that server itself. Filtered
+   * from one list, so core cannot register `asc__status` twice.
+   */
+  const metaTools = META_TOOLS.filter(
+    (t) => manualTools.has(t.name) || t.name === 'asc__status'
+  );
+  const metaOffered = (name: string): boolean => metaTools.some((t) => t.name === name);
+
+  /**
+   * asc__call and asc__describe stand in for the sub-profiles a server left
+   * out, so they exist only where something was left out. On a full profile
+   * every tool they could reach is already in the list.
+   */
+  const proxyOffered = Boolean(selection.partial);
   const wantsFamily = (prefix: string): boolean =>
-    manualTools ? [...manualTools].some((t) => t.startsWith(prefix)) : true;
+    [...manualTools].some((t) => t.startsWith(prefix));
 
   // StoreKit tools come with the profile that opts in (monetization's storekit
   // sub-profile). Apple scopes each call to one app, which the service looks
@@ -268,7 +299,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    */
   const macroTools = MACRO_TOOLS.filter(
     (t) =>
-      (!manualTools || manualTools.has(t.name)) &&
+      manualTools.has(t.name) &&
       (!config.readOnly || t.annotations?.readOnlyHint === true)
   );
   const macroOffered = (name: string): boolean => macroTools.some((t) => t.name === name);
@@ -281,16 +312,17 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const gate = createWriteGate();
 
   const server = new Server(
-    { name: selection ? serverName(selection.profile.name) : 'app-store-connect-mcp', version: VERSION },
+    { name: serverName(selection.profile.name), version: VERSION },
     {
-      // listChanged: the tool list can grow mid-session via asc__load, and a
-      // resource appears whenever a response is too big to send whole.
+      // listChanged: the tool list can grow mid-session when asc__call loads
+      // the operation it proxied, and a resource appears whenever a response
+      // is too big to send whole.
       capabilities: {
         tools: { listChanged: true },
         resources: { listChanged: true },
         prompts: {},
       },
-      instructions: SERVER_INSTRUCTIONS,
+      instructions: !core ? `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}` : SERVER_INSTRUCTIONS,
       // A confirmation's state comes back through the client: forged, expired
       // or tampered state is refused before the handler ever sees it.
       requestState: { verify: gate.verify },
@@ -324,8 +356,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 
   /**
    * Whether a tool mutates, so the write guard knows what to confirm. Computed
-   * per call rather than once: `asc__load` can add write tools after startup,
-   * and a set captured at boot would wave them through unconfirmed.
+   * per call rather than once, so a tool added after startup can never be
+   * waved through on a set captured at boot.
    */
   const isWriteTool = (name: string): boolean => {
     const op = registry.get(name);
@@ -339,40 +371,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   };
 
   /**
-   * On-demand loading, kept deliberately minimal while we find out whether
-   * clients hand a revised tool list to the model within the same turn. If they
-   * do, a profile can start small and grow; if they don't, the agent has to say
-   * "loaded, ask again", which is worse than starting wide.
-   */
-  const loadTool = (): McpToolDefinition | undefined => {
-    const available = unloadedSubs().filter((s) => s.operations.length);
-    if (!available.length) return undefined;
-    return {
-      name: 'asc__load',
-      description:
-        `Add one of this server's unloaded sub-profiles to the tool list for the rest of ` +
-        `this session, without restarting. Use it when the tool you need belongs to this ` +
-        `profile but is not loaded. Available: ` +
-        available.map((s) => `${s.name} (${s.operations.length} tools — ${s.description})`).join(' '),
-      inputSchema: {
-        type: 'object' as const,
-        properties: {
-          sub_profile: { type: 'string', description: 'Sub-profile to load.', enum: available.map((s) => s.name) },
-        },
-        required: ['sub_profile'],
-      },
-      annotations: { readOnlyHint: true },
-    };
-  };
-
-  /**
    * Every operation this profile owns, whether its sub-profile is loaded or
-   * not — the reachable set for the proxy below.
+   * not — the reachable set for the proxy below. Its own profile only: core's
+   * tools and a sibling profile's are another server's to serve.
    */
-  const profileOperations = (): string[] =>
-    selection
-      ? [...new Set([...CORE_OPERATIONS, ...selection.profile.subProfiles.flatMap((s) => s.operations)])]
-      : [];
+  const profileOperations = (): string[] => [...new Set(selection.profile.subProfiles.flatMap((s) => s.operations))];
 
   /** Accepts either the dotted operation name or the public `a__b` tool name. */
   const resolveProfileOperation = (raw: string): Operation | undefined => {
@@ -386,11 +389,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   /**
    * The escape hatch that does not depend on the client.
    *
-   * asc__load revises the tool list, and MCP lets a server do that — but the
-   * spec says nothing about when a client hands the revised list to the model.
-   * Measured: Claude Code in a terminal does it inside the turn, Codex only
-   * between turns, and Claude Code in the desktop app's Code tab not at all —
-   * the model is left naming tools it cannot call and the work stalls.
+   * MCP lets a server revise its tool list, but the spec says nothing about
+   * when a client hands the revised list to the model. Measured: Claude Code in
+   * a terminal does it inside the turn, Codex only between turns, and Claude
+   * Code in the desktop app's Code tab not at all — the model is left naming
+   * tools it cannot call and the work stalls. That is why `asc__load` is gone.
    *
    * These two tools sidestep the question entirely. They are in the list from
    * the start, so any operation this profile owns is one call away on any
@@ -399,14 +402,14 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * validation, dry-run, risk level, typed confirmation — and loads the
    * operation on the way, so it also becomes a native tool for whoever refreshes.
    */
-  const PROXY_TOOLS: McpToolDefinition[] = selection
+  const PROXY_TOOLS: McpToolDefinition[] = proxyOffered
     ? [
         {
           name: 'asc__describe',
           description:
-            `Show the exact input schema of any tool this profile owns, including ones not ` +
-            `currently loaded. Use it before asc__call to build valid arguments. Find tool ` +
-            `names with asc__search_tools.`,
+            `Show the exact input schema of any tool this profile owns, including ones in ` +
+            `sub-profiles this server did not load. Use it before asc__call to build valid ` +
+            `arguments.`,
           inputSchema: {
             type: 'object' as const,
             properties: { tool: { type: 'string', description: 'Tool or operation name.' } },
@@ -419,9 +422,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           description:
             `Read through any tool this profile owns, even one that is not in your tool list — ` +
             `its sub-profile does not have to be loaded and nothing needs a restart. Use this ` +
-            `whenever asc__search_tools names a tool you cannot see. Get its arguments from ` +
-            `asc__describe first. Read-only: to change something, load the sub-profile with ` +
-            `asc__load and call the tool itself, so the confirmation prompt reaches the user.`,
+            `whenever a tool of this profile is named that you cannot see. Get its arguments ` +
+            `from asc__describe first. Read-only: to change something, the tool itself has to ` +
+            `be registered — with the user's yes run \`npx -y ${PACKAGE} register ` +
+            `${selection.profile.name}\` and ask them to restart their MCP client, so the ` +
+            `confirmation prompt reaches the user.`,
           inputSchema: {
             type: 'object' as const,
             properties: {
@@ -446,14 +451,12 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   const unreachableMessage = (raw: string): string => {
     const known = OPERATIONS.find((op) => op.name === raw || toolNameFor(op) === raw);
     if (!known) {
-      return `Unknown tool "${raw}". Use asc__search_tools to find the right name.`;
+      return `Unknown tool "${raw}". Use asc__search_tools (on ASC-Core) to find the right name.`;
     }
-    const homes = profilesForOperation(known.name).filter((n) => n !== selection?.profile.name);
+    const homes = profilesForOperation(known.name).filter((n) => n !== selection.profile.name);
     return (
-      `"${raw}" is not part of this profile. ` +
-      (homes.length
-        ? `It is served by the "${serverName(homes[0])}" MCP server:\n  ${registerCommand(homes[0])}`
-        : `Run the server without a profile and with --domains=${known.domain} to reach it.`)
+      `"${raw}" is not part of this profile.` +
+      (homes.length ? ` It is served by the "${serverName(homes[0])}" MCP server:\n  ${registerCommand(homes[0])}` : '')
     );
   };
 
@@ -464,16 +467,13 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
    * client receives. It used to quote `toolCountFor`, which counts the
    * operations the profile MAPS — a number that is stable, easy to put in a
    * changelog, and wrong in every client: `asc__call` and `asc__describe` are
-   * always served and mapped nowhere, StoreKit only loads with a bundle id, and
-   * since #66 `--include-deprecated` adds tools too. Someone reading "24" and
+   * served and mapped nowhere, and StoreKit only loads with a bundle id. Someone reading "24" and
    * seeing 29 has no way to tell whether they misconfigured something.
    */
   const servedTools = (): McpToolDefinition[] => {
-    const onDemand = loadTool();
     const tools: McpToolDefinition[] = [
-      ...META_TOOLS,
+      ...metaTools,
       ...PROXY_TOOLS,
-      ...(onDemand ? [onDemand] : []),
       ...(reviewsAiWanted ? REVIEWS_AI_TOOLS : []),
       ...macroTools,
       ...registry.listTools(),
@@ -533,9 +533,32 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
   server.setRequestHandler('tools/call', async (request, ctx) => {
     let name = request.params.name;
     let args = (request.params.arguments ?? {}) as Record<string, unknown>;
+    let audited = false;
+    let auditRisk: RiskLevel | 'unrated' = 'unrated';
+    let confirmation: Confirmation = 'not asked';
 
     try {
-      if (name === 'asc__describe' && selection) {
+      // Refused by name, not left to fall through: the generic "unknown tool"
+      // would send the model looking for a spelling mistake.
+      if ((name === 'asc__describe' || name === 'asc__call') && !proxyOffered) {
+        throw new Error(
+          `${name} is not offered here: this server loads every sub-profile of ` +
+            `"${selection.profile.name}", so call the tool itself. Tools of other profiles ` +
+            `are served by their own ASC server.`
+        );
+      }
+      if (META_TOOL_NAMES.has(name) && !metaOffered(name)) {
+        throw new Error(
+          `${name} is served by the ASC-Core server, not this one. If it is in your tool ` +
+            `list, call it there; otherwise, with the user's yes, run ` +
+            `\`npx -y ${PACKAGE} register ${CORE_PROFILE}\` and ask them to restart their MCP client.`
+        );
+      }
+      if (MACRO_TOOLS.some((tool) => tool.name === name) && !macroOffered(name)) {
+        throw new Error(`Unknown tool "${name}": this server does not offer it. Nothing was changed.`);
+      }
+
+      if (name === 'asc__describe') {
         const op = resolveProfileOperation(String(args.tool ?? ''));
         if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
         const tool = toMcpTool(op, config.vendorNumber ? { 'filter[vendorNumber]': config.vendorNumber } : undefined);
@@ -552,7 +575,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         });
       }
 
-      if (name === 'asc__call' && selection) {
+      if (name === 'asc__call') {
         const op = resolveProfileOperation(String(args.tool ?? ''));
         if (!op) throw new Error(unreachableMessage(String(args.tool ?? '')));
         if (!op.readOnly) {
@@ -563,21 +586,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           throw new Error(
             `"${op.name}" changes data, and asc__call is read-only.\n` +
               (sub && !loadedSubs.has(sub)
-                ? `Load its sub-profile first — asc__load({ sub_profile: "${sub.name}" }) — then call ` +
-                  `${toolNameFor(op)} directly. If it does not appear in your tool list, your client ` +
-                  `is not picking up the change and waiting a turn will not help: with the user's ` +
-                  `yes, run \`${registerWith(sub)}\` and ask them to restart their MCP client.`
+                ? `Its sub-profile "${sub.name}" is not loaded on this server. With the user's ` +
+                  `yes, run \`${registerWith(sub)}\` and ask them to restart their MCP client, ` +
+                  `then call ${toolNameFor(op)} directly.`
                 : `Call ${toolNameFor(op)} directly.`)
           );
         }
         // Load it as well: the call works either way, but a client that does
         // refresh gets the real tool with its own schema from here on.
-        registry.loadOperations([op.name]);
-        const sub = subProfileOwning(selection.profile, op.name);
-        if (sub && !loadedSubs.has(sub)) {
-          loadedSubs.add(sub);
-          await server.sendToolListChanged();
-        }
+        if (registry.loadOperations([op.name]).length) await server.sendToolListChanged();
         name = toolNameFor(op);
         args = (args.arguments ?? {}) as Record<string, unknown>;
       }
@@ -597,7 +614,15 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         };
       }
 
-      if (config.confirmWrites !== 'off' && !config.dryRun && isWriteTool(name)) {
+      let approvedPlanFingerprint: string | undefined;
+      // What the audit log records about this call: a write that runs for real.
+      audited = !config.dryRun && isWriteTool(name);
+      const refuse = <T,>(how: Confirmation, response: T): T => {
+        logWrite({ tool: name, risk: auditRisk, confirmation: how, outcome: 'not run', args });
+        return response;
+      };
+      // The risk is worked out for every real write, so the audit log rates it even with confirmation off.
+      if (audited) {
         const op = registry.get(name);
         // Decided from the risk level alone, before the preview is built:
         // buildWritePreview resolves reference ids over the network, and a
@@ -608,8 +633,8 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           ? bodyRisk
           : PRICING_TOOL_NAMES.has(name)
           ? 'revenue'
-          : name === 'listing__delete_assets'
-            ? 'destructive'
+          : MEDIA_TOOL_NAMES.has(name)
+            ? mediaRisk(name, args)
           : RELEASE_TOOL_NAMES.has(name) || TESTFLIGHT_TOOL_NAMES.has(name)
             ? // A macro that moves a build or version toward users carries
               // the same release risk as its raw calls.
@@ -620,17 +645,17 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               // at once is not forty times as reversible.
               'public'
             : ((op?.risk ??
-                (name.includes('extend_renewal_date')
-                  ? 'revenue'
+                (STOREKIT_TOOL_NAMES.has(name)
+                  ? storekitRisk(name, args)
                   : // A write macro with no spec operation behind it (the
                     // screenshot upload) changes what customers see.
                     macroOffered(name)
                     ? 'public'
                     : 'low')) as RiskLevel);
+        auditRisk = risk;
         if (
-          config.confirmWrites === 'all' ||
-          STRONG_CONFIRM_LEVELS.has(risk) ||
-          ASK_BY_DEFAULT.has(name)
+          (config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) &&
+          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name))
         ) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.
@@ -640,10 +665,17 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           // 2025 client once at initialize. (The SDK types the envelope as `{}`.)
           const envelope = ctx.mcpReq.envelope as Record<string, ClientCapabilities | undefined> | undefined;
           const caps = envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? server.getClientCapabilities();
-          const canElicit = Boolean(caps?.elicitation?.form);
+          const elicitDeclared = Boolean(caps?.elicitation?.form);
+          const info = (ctx.mcpReq.envelope as Record<string, { name?: string } | undefined> | undefined)?.[CLIENT_INFO_META_KEY] ?? server.getClientVersion();
+          const dialogAvailable = config.nativeConfirm === true && nativeConfirmAvailable();
+          // Some clients declare forms they never show (core/native-confirm.ts);
+          // there the dialog goes first. Self-reported, but it only ever trades
+          // a form for a dialog the agent can answer even less.
+          const dialogFirst = dialogAvailable && DIALOG_FIRST_CLIENTS.has(info?.name ?? '');
+          const canElicit = elicitDeclared && !dialogFirst;
           // No prompt from the client: on macOS, ask in a dialog of our own,
           // which the agent can neither see nor answer (core/native-confirm.ts).
-          const canDialog = !canElicit && config.nativeConfirm === true && nativeConfirmAvailable();
+          const canDialog = !canElicit && dialogAvailable;
           // No way to ask at all. The user asked for a guard, so say it can't
           // run here rather than proceed under a guard that stopped guarding.
           // Worded for the agent to relay, not to act on: the last version
@@ -656,63 +688,78 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                   `"${name}" was blocked: it is a ${risk.toUpperCase()}-level write and no ` +
                   `confirmation prompt could be shown to the user here. Nothing was changed. ` +
                   `A yes in chat does not count, because this server cannot see the chat. Tell ` +
-                  `the user to make this change in App Store Connect, or to change Heimdall's ` +
-                  `confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit ` +
+                  (RELEASE_TOOL_NAMES.has(name)
+                    ? `the user to use a client with confirmation forms or enable native confirmation on macOS, then retry and approve the item list; they can also submit in App Store Connect. Release tools always require this confirmation. Do not edit `
+                    : `the user to make this change in App Store Connect, or to change Heimdall's confirmation setting themselves (docs/CONFIGURATION_en.md). Do not edit `) +
                   `client config, set ASC_CONFIRM_WRITES, or call Apple another way.`,
               },
             ],
             isError: true,
           };
-          if (!canElicit && !canDialog) return blocked;
+          if (!canElicit && !canDialog) return refuse('blocked', blocked);
           // What the prompt shows; the fingerprint stays on the arguments as sent.
-          const shown = op
+          const mediaPreview = MEDIA_TOOL_NAMES.has(name) ? await buildMediaPreview(name, args, http) : undefined;
+          const shownWithPlan = mediaPreview
+            ? { ...args, planFingerprint: mediaPreview.planFingerprint }
+            : op
             ? args
             : RELEASE_TOOL_NAMES.has(name)
-              ? await releasePreviewArgs(args, http)
+              ? await (name === 'release__submit_items' ? releaseItemsPreviewArgs(args, http) : releasePreviewArgs(args, http))
               : await withAppName(args, http);
+          const planFingerprint = typeof shownWithPlan.planFingerprint === 'string' ? shownWithPlan.planFingerprint : undefined;
+          const { planFingerprint: _internalPlanFingerprint, ...shown } = shownWithPlan;
           const preview = PRICING_TOOL_NAMES.has(name)
             ? // Macro parameters are already human language — no lookups needed.
-              { message: buildPricingPreview(shown, name), strong: true }
+              { message: buildPricingPreview(shown, name), strong: true, dialog: pricingDialog(name, shown) }
             : TESTFLIGHT_TOOL_NAMES.has(name)
             ? // The generic macro preview drops the group list and calls this PUBLIC.
-              { message: buildTestflightPreview(shown), strong: true }
-            : name === 'listing__delete_assets'
-            ? // The arguments are bare ids; the prompt names the app and each file.
-              await buildAssetDeletePreview(args, http)
+              { message: buildTestflightPreview(shown), strong: true, dialog: testflightDialog(await testflightPreviewArgs(shown, http)) }
+            : mediaPreview
+            ? mediaPreview
             : op
             ? await buildWritePreview(name, bodyRisk ? { ...op, risk: bodyRisk } : op, args, config.credentials.keyId, http)
             : macroOffered(name)
-            ? // Other write macros: no spec operation behind them, but their
-              // arguments are already the human-readable facts, so the generic
-              // preview renders them without any lookups.
-              await buildWritePreview(
-                name,
-                { method: 'POST', path: `${name} (macro)`, risk },
-                shown,
-                config.credentials.keyId
-              )
-            : await buildWritePreview(
-                name,
-                // StoreKit tools live outside the spec; renewal-date extension is
-                // the one that moves money.
-                {
-                  method: 'POST',
-                  path: 'App Store Server API',
-                  risk: name.includes('extend_renewal_date') ? 'revenue' : 'low',
-                },
-                shown
+            ? // Macros carry readable arguments; review item references still
+              // use the same bounded name resolvers as raw writes.
+              {
+                // The form keeps its item list; the dialog says it in words.
+                ...(await buildWritePreview(
+                  name,
+                  { method: 'POST', path: `${name} (macro)`, risk },
+                  shown,
+                  config.credentials.keyId,
+                  http
+                )),
+                dialog: releaseDialog(name, shown),
+              }
+            : withDialog(
+                await buildWritePreview(
+                  name,
+                  // StoreKit tools live outside the spec and carry their own risk.
+                  { method: 'POST', path: 'App Store Server API', risk },
+                  shown
+                ),
+                storekitDialog(name, shown, { environment: config.storekit?.environment === 'Sandbox' ? 'Sandbox' : 'Production' })
               );
-          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview);
+          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
           const what = servedTools()
             .find((t) => t.name === name)
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const answer = await nativeConfirm(dialogText(what, preview.message), ctx.mcpReq.signal);
-          if (answer === 'unavailable') return blocked;
+          const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message, 'covered' in preview ? preview.covered : undefined);
+          if (!nativeConfirmFits(dialog)) {
+            // Not to a dialog-first client's form: it would be declined unseen.
+            if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
+            return refuse('blocked', { content: [{ type: 'text' as const, text: `"${name}" was blocked: its confirmation is too long for the native macOS dialog. Use a client that can show the full elicitation prompt, or send fewer items or shorter text. Nothing was changed.` }], isError: true });
+          }
+          const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);
+          // No GUI session (SSH, a headless Mac): the form it declared is the next best.
+          if (answer === 'unavailable' && elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
+          if (answer === 'unavailable') return refuse('blocked', blocked);
           if (answer !== 'approved') {
-            return {
+            return refuse('declined', {
               content: [
                 {
                   type: 'text' as const,
@@ -722,8 +769,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 },
               ],
               isError: true,
-            };
+            });
           }
+          confirmation = 'macOS dialog';
+          approvedPlanFingerprint = planFingerprint;
           // Approved in the dialog: fall through and run the write.
         }
         if (decision && !decision.allowed) {
@@ -733,12 +782,18 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
               `Nothing was changed. If no confirmation prompt appeared on your screen, ` +
               `this client declared elicitation support but cannot actually show the ` +
               `form, and answered for you — the protocol reports that identically to a ` +
-              `real refusal. In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and ` +
-              `let the client's own tool approval be the gate.`;
-          return {
+              `real refusal. ` +
+              (RELEASE_TOOL_NAMES.has(name)
+                ? `Use a client that can display Heimdall's confirmation form, or a macOS client with native confirmation enabled, then retry and approve the displayed item list. Release tools always require this confirmation. You can also submit in App Store Connect.`
+                : `Tell the user what happened and let them decide: retry and approve the prompt, or use a client that can show it. Do not turn confirmation off or edit their config yourself.`);
+          return refuse(decision.stale ? 'blocked' : 'declined', {
             content: [{ type: 'text' as const, text }],
             isError: true,
-          };
+          });
+        }
+        if (decision?.allowed) {
+          approvedPlanFingerprint = decision.planFingerprint;
+          confirmation = decision.strong ? 'typed CONFIRM' : 'checkbox';
         }
         }
       }
@@ -748,49 +803,7 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
       let uncapped: unknown;
       let structured = false;
 
-      if (name === 'asc__load' && selection) {
-        const wanted = String(args.sub_profile ?? '');
-        const sub = unloadedSubs().find((s) => s.name === wanted);
-        if (!sub) {
-          const available = unloadedSubs().filter((s) => s.operations.length).map((s) => s.name);
-          throw new Error(
-            selection.profile.subProfiles.some((s) => s.name === wanted)
-              ? `"${wanted}" is already loaded.`
-              : `Unknown sub-profile "${wanted}" for "${selection.profile.name}". ` +
-                (available.length ? `Available to load: ${available.join(', ')}.` : 'Everything is loaded.')
-          );
-        }
-        const added = registry.loadOperations(sub.operations);
-        loadedSubs.add(sub);
-        await server.sendToolListChanged();
-
-        // Measured: Claude Code in a terminal hands the revised list to the
-        // model inside the same turn, Codex only between turns, and Claude
-        // Code in the desktop app's Code tab never (2.7.0-beta.7) — though the
-        // notification reaches it, as tests/proxy.test.ts proves for both
-        // eras. So the reply carries the tools itself, and does not promise
-        // they will show up later: it names the fix that works on any client.
-        const SHOWN = 25;
-        result = {
-          loaded: sub.name,
-          description: sub.description,
-          toolsAdded: added.length,
-          tools: added.slice(0, SHOWN).map((name) => ({
-            name,
-            description: registry.get(name)?.description ?? '',
-          })),
-          ...(added.length > SHOWN ? { andMore: added.length - SHOWN } : {}),
-          nextStep:
-            `These tools are live on this server now. If they are in your tool list, use them. ` +
-            `If not, your client is not picking up the change, and they will not appear next ` +
-            `turn either. Reads work now through asc__call. To get the tools themselves, tell ` +
-            `the user the fix and, with their yes, run \`${registerWith(sub)}\` — then ask them ` +
-            `to restart their MCP client. Do not call a tool you cannot see.`,
-          ...(sub.manualTools.length
-            ? { note: `${sub.manualTools.join(', ')} need a restart — they are not spec operations.` }
-            : {}),
-        };
-      } else if (META_TOOL_NAMES.has(name)) {
+      if (META_TOOL_NAMES.has(name)) {
         result = await executeMetaTool(name, args, {
           registry,
           http,
@@ -799,40 +812,49 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           loadedDomains,
           storekitEnabled: Boolean(storekit),
           macroOffered,
-          includeDeprecated: config.includeDeprecated,
           profileReport,
-          missingToolsHint: selection
-            ? (ops) => {
+          ownProfile: selection.profile.name,
+          // Core answers for the whole catalogue: it is the one server every
+          // setup registers, so "what else is there" is its question to answer.
+          catalogue: Boolean(core),
+          missingToolsHint: (ops) => {
                 const own = ops
-                  .map((op) => subProfileOwning(selection.profile, op.name)?.name)
-                  .filter((n): n is string => Boolean(n));
-                const homes = [
+                  .map((op) => subProfileOwning(selection.profile, op.name))
+                  .filter((s): s is SubProfile => Boolean(s) && !loadedSubs.has(s!));
+                // profile:sub, so the command registers the slice that has the
+                // tool rather than a whole profile.
+                const specs = [
                   ...new Set(
-                    ops.flatMap((op) => profilesForOperation(op.name)).filter((n) => n !== selection.profile.name)
+                    ops
+                      .filter((op) => !subProfileOwning(selection.profile, op.name))
+                      .map((op) => {
+                        const home = profilesForOperation(op.name)[0];
+                        const sub = home ? subProfileOwning(resolveProfile(home)!, op.name) : undefined;
+                        return home ? (sub?.name ? `${home}:${sub.name}` : home) : undefined;
+                      })
+                      .filter((s): s is string => Boolean(s))
                   ),
                 ];
                 const lines: string[] = [];
                 if (own.length) {
                   lines.push(
-                    `Some are in sub-profiles this server did not load ` +
-                      `(${[...new Set(own)].join(', ')}) — restart it as ` +
-                      `\`${selection.profile.name}\` to load all of them.`
+                    `Some are in this profile's sub-profiles this server did not load ` +
+                      `(${[...new Set(own.map((s) => s.name))].join(', ')}): read them through ` +
+                      `asc__call, or register \`npx -y ${PACKAGE} register ${selection.profile.name}\` ` +
+                      `for the tools themselves.`
                   );
                 }
-                if (homes.length) {
+                if (specs.length) {
                   lines.push(
-                    `The rest live on sibling MCP servers. Register the ones you need — ` +
-                      `the command is the same everywhere:\n` +
-                      homes.map((n) => `  ${serverName(n)}  ->  npx -y ${PACKAGE} ${n}`).join('\n') +
-                      `\nFor example, in Claude Code:\n` +
-                      homes.map((n) => `  ${registerCommand(n)}`).join('\n') +
-                      `\nOn other clients (Codex, Antigravity, Claude Desktop, …) add the same ` +
-                      `command/args to their config. Then restart your client.`
+                    `The rest are served by other ASC servers ` +
+                      `(${[...new Set(specs.map((s) => serverName(s)))].join(', ')}). If one is in ` +
+                      `your tool list, call it there; otherwise, with the user's yes, run ` +
+                      `\`npx -y ${PACKAGE} register ${mergeSpecs(specs).join(' ')}\` and ask them to restart ` +
+                      `their MCP client.`
                   );
                 }
-                return lines.join('\n') || `Run the server without a profile to combine domains freely.`;
-              }
-            : undefined,
+                return lines.join('\n');
+              },
         });
       } else if (macroOffered(name) && METADATA_I18N_TOOL_NAMES.has(name) && !METADATA_I18N_WRITE_TOOLS.has(name)) {
         // The audit and the draft answer with data plus an instruction for the
@@ -856,10 +878,11 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           : METADATA_I18N_WRITE_TOOLS.has(name)
           ? await executeMetadataI18nTool(name, args, { http, dryRun: config.dryRun })
           : RELEASE_TOOL_NAMES.has(name)
-          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun })
+          ? await executeReleaseTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint,
+              requireApprovedPlan: !config.dryRun })
           : TESTFLIGHT_TOOL_NAMES.has(name)
-          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun })
-          : await executeScreenshotTool(name, args, { http, dryRun: config.dryRun });
+          ? await executeTestflightTool(name, args, { http, dryRun: config.dryRun, signal: ctx.mcpReq.signal, progress: progressSender(ctx.mcpReq) })
+          : await executeMediaTool(name, args, { http, dryRun: config.dryRun, approvedPlanFingerprint });
         // Macro results are hand-built and small, so the read ones can also go
         // back as structuredContent against their declared outputSchema. Apple
         // payloads cannot: they are reshaped on the way out (stripApiNoise,
@@ -909,6 +932,22 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
         result = capResponseSize(result, maxResponseChars());
       }
 
+      // A macro that stops part-way reports ok: false instead of throwing.
+      if (audited) {
+        // A macro that stops partway answers { ok: false, error, requestId } instead of throwing.
+        const failed = (result as any)?.ok === false;
+        const text = (v: unknown) => (failed && typeof v === 'string' ? v : undefined);
+        logWrite({ tool: name, risk: auditRisk, confirmation, outcome: failed ? 'error' : 'ok', args,
+          error: text((result as any)?.error), appleRequestId: text((result as any)?.requestId) });
+      }
+      // Images a macro attached go out as image content, never as base64 in the text.
+      const images = ((result as any)?.[IMAGE_CONTENT] ?? []) as ImageContent[];
+      // The SDK validates structuredContent and refuses a symbol key.
+      if (images.length) {
+        const { [IMAGE_CONTENT]: _images, ...plain } = result as Record<string | symbol, unknown>;
+        result = plain;
+      }
+
       const text = truncateText(
         JSON.stringify(result ?? { ok: true }, null, 2),
         maxResponseChars()
@@ -941,6 +980,10 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
                 },
               ]
             : []),
+          ...images.flatMap((image) => [
+            { type: 'text' as const, text: image.caption },
+            { type: 'image' as const, data: image.data, mimeType: image.mimeType },
+          ]),
         ],
         // The text block stays either way: a client that ignores structured
         // output must still see the whole answer.
@@ -949,6 +992,16 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
           : {}),
       };
     } catch (err) {
+      const message = err instanceof AscApiError ? err.summary : (err as Error).message;
+      if (err instanceof AscApiError && err.status) {
+        logFailure({ tool: name, status: err.status, appleRequestId: err.requestId, error: message });
+      }
+      if (audited) {
+        logWrite({
+          tool: name, risk: auditRisk, confirmation, outcome: 'error', args, error: message,
+          appleRequestId: err instanceof AscApiError ? err.requestId : undefined,
+        });
+      }
       return {
         content: [{ type: 'text' as const, text: formatError(err, name) }],
         isError: true,
@@ -960,31 +1013,33 @@ export function createServer(config: ServerConfig, selection?: ProfileSelection)
 }
 
 /**
- * A server for a profile that no longer exists. It starts normally and serves
- * exactly one tool, which explains the split.
+ * A server for a profile argument that does not resolve — a name from an
+ * earlier version (`app-info`) or a typo. It starts normally and serves exactly
+ * one tool, which says to run setup and lists the current profiles.
  *
  * Exiting with an error would be more honest to a script and useless to a
  * person: the message goes to stderr and all the user sees in their client is
- * `asc-user-management ✗ failed`. Starting instead means the next time they ask
- * for something that profile used to do, the agent calls the one tool available
+ * `ASC-AppInfo ✗ failed`. Starting instead means the next time they ask for
+ * something that profile used to do, the agent calls the one tool available
  * and relays the answer as a sentence. It needs no credentials — a config error
  * would put us back where we started.
  */
-export function createRemovedProfileServer(name: string): Server {
-  const message = removedProfileMessage(name);
-  if (!message) throw new Error(`"${name}" is not a removed profile.`);
+export function createUnknownProfileServer(spec: string, reason?: string): Server {
+  const message = unknownProfileMessage(spec, reason);
 
   const server = new Server(
-    { name: `asc-${name}`, version: VERSION },
+    { name: spec ? serverName(spec) : 'app-store-connect-mcp', version: VERSION },
     { capabilities: { tools: {} } }
   );
 
   const tool = {
-    name: 'asc__profile_removed',
+    name: 'asc__profile_unknown',
     description:
-      `This MCP server is configured for the App Store Connect profile "${name}", which was ` +
-      `removed and split into smaller profiles. It carries no other tools. Call this for the ` +
-      `replacement list and the exact config change to tell the user about.`,
+      (spec
+        ? `This MCP server is configured for the App Store Connect profile "${spec}", which does ` +
+          `not exist — renamed, removed or mistyped.`
+        : `This MCP server is configured with no App Store Connect profile, which Heimdall no longer serves.`) +
+      ` It carries no other tools. Call this for the current profiles and the fix to tell the user about.`,
     inputSchema: { type: 'object' as const, properties: {} },
     annotations: { readOnlyHint: true },
   };
@@ -1028,7 +1083,7 @@ export function formatError(err: unknown, toolName: string): string {
         status: err.status || undefined,
         retryable: err.retryable,
         appleRequestId: err.requestId,
-        suggestedAction: STATUS_HINTS[err.status],
+        suggestedAction: hintFor(err.status, err.errors),
         issues: err.errors.length ? err.errors : undefined,
       },
     },

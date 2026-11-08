@@ -45,7 +45,7 @@ describe('the write gate', () => {
 
   it('allows the write when the user ticks the box', async () => {
     const { gate, state } = await prompt();
-    expect(gate.settle(ctx(state, accept({ confirm: true })), 'beta_groups__delete', { id: '1' })).toEqual({ allowed: true });
+    expect(gate.settle(ctx(state, accept({ confirm: true })), 'beta_groups__delete', { id: '1' })).toMatchObject({ allowed: true });
   });
 
   it('blocks when the box is left unticked', async () => {
@@ -66,7 +66,7 @@ describe('the write gate', () => {
 
   it('takes CONFIRM in any case and padding on a strong write, and nothing else', async () => {
     const yes = await prompt(undefined, typed);
-    expect(yes.gate.settle(ctx(yes.state, accept({ confirmation: '  confirm ' })), 'beta_groups__delete', { id: '1' })).toEqual({ allowed: true });
+    expect(yes.gate.settle(ctx(yes.state, accept({ confirmation: '  confirm ' })), 'beta_groups__delete', { id: '1' })).toMatchObject({ allowed: true });
 
     const no = await prompt(undefined, typed);
     expect(no.gate.settle(ctx(no.state, accept({ confirmation: 'yes' })), 'beta_groups__delete', { id: '1' })).toEqual({
@@ -109,12 +109,12 @@ describe('the write gate', () => {
     const { gate, state } = await prompt({ id: '1', body: { b: 1, a: [{ y: 2, x: 1 }] } });
     expect(
       gate.settle(ctx(state, accept({ confirm: true })), 'beta_groups__delete', { body: { a: [{ x: 1, y: 2 }], b: 1 }, id: '1' })
-    ).toEqual({ allowed: true });
+    ).toMatchObject({ allowed: true });
   });
 
   it('spends a yes once', async () => {
     const { gate, state } = await prompt();
-    expect(gate.settle(ctx(state, accept({ confirm: true })), 'beta_groups__delete', { id: '1' })).toEqual({ allowed: true });
+    expect(gate.settle(ctx(state, accept({ confirm: true })), 'beta_groups__delete', { id: '1' })).toMatchObject({ allowed: true });
     const again = gate.settle(ctx(state, accept({ confirm: true })), 'beta_groups__delete', { id: '1' });
     expect(again).toMatchObject({ allowed: false, stale: true });
     expect(again?.reason).toMatch(/already used/);

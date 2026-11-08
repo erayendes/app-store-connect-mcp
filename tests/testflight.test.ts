@@ -130,6 +130,9 @@ describe('testflight__assign_build_to_groups', () => {
     const result = await run(http);
     expect(result.groups.map((g: any) => g.status)).toEqual(['assigned', 'failed']);
     expect(result.groups[1].error).toMatch(/Conflict: Build not eligible/);
+    // The audit log records the call as an error from this flag.
+    expect(result.ok).toBe(false);
+    expect((await run(fakeHttp().http)).ok).toBeUndefined();
   });
 
   it('refuses an incomplete assignment check before any POST', async () => {
@@ -143,8 +146,8 @@ describe('testflight__assign_build_to_groups', () => {
     expect(TESTFLIGHT_TOOLS.find((t) => t.name === 'testflight__assign_build_to_groups')!.annotations?.destructiveHint).toBe(true);
     const server = createServer({
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
-      readOnly: true, confirmWrites: 'off', includeDeprecated: false, dryRun: true,
-    }, resolveSelection('access:beta-groups'));
+      readOnly: true, confirmWrites: 'off', dryRun: true,
+    }, resolveSelection('testflight:groups'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
     await Promise.all([server.connect(st), client.connect(ct)]);
@@ -155,9 +158,8 @@ describe('testflight__assign_build_to_groups', () => {
   it('reaches the RELEASE write-confirmation gate before any Apple request', async () => {
     const server = createServer({
       credentials: { keyId: 'test', issuerId: 'test', privateKey: 'unused' },
-      baseUrl: 'http://127.0.0.1:1', readOnly: false, confirmWrites: 'all',
-      includeDeprecated: false, dryRun: false,
-    }, resolveSelection('access:beta-groups'));
+      baseUrl: 'http://127.0.0.1:1', readOnly: false, confirmWrites: 'all', dryRun: false,
+    }, resolveSelection('testflight:groups'));
     const [ct, st] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test', version: '0' }, { capabilities: {} });
     await Promise.all([server.connect(st), client.connect(ct)]);

@@ -18,6 +18,8 @@
  *      it reads as a capability and fails at the first step.
  */
 
+import { PACKAGE } from './clients.js';
+
 export interface PromptArgument {
   name: string;
   description: string;
@@ -59,6 +61,7 @@ export const PROMPTS: PromptDefinition[] = [
         `2. Call listing__diff_metadata for ${app} to see what the store text changes against the version on sale. Read it for the two things preflight cannot judge: a whatsNew still describing the previous release, and a locale that has gone blank.`,
         '3. If either call reports a blocking gap, stop and report NO-GO with the gaps in the order they must be fixed, each with the tool that fixes it. Do not fix anything yourself — these are the user’s decisions and several are writes.',
         '4. If nothing blocks, report GO, then list the metadata changes the reviewer will see, and any warnings, so the user is agreeing to something specific rather than to a green light.',
+        '5. Either way, go through the manualChecks preflight returns — App Privacy, EU trader status, agreements — and ask the user whether each is done. The API cannot see them, so GO never covers them.',
         '',
         'Report the version and its state at the top. Everything here is read-only; do not submit anything.',
       ].join('\n');
@@ -111,6 +114,23 @@ export const PROMPTS: PromptDefinition[] = [
         '4. If the user then wants a change, tell them the price is set with pricing__set_subscription_price and that Apple’s own equalization can fill the rest of the world from one territory. Do not call it — that is a revenue write and it is theirs to confirm.',
       ].join('\n');
     },
+  },
+  {
+    name: 'getting-started',
+    description:
+      'First steps with Heimdall: check the App Store Connect connection, see the account at a ' +
+      'glance, and learn how to find the tool for a job.',
+    arguments: [],
+    requires: ['asc__status', 'asc__account_status', 'asc__search_tools'],
+    body: () =>
+      [
+        'Help the user take their first steps with App Store Connect through Heimdall.',
+        '',
+        `1. Call asc__status. If the connection fails, stop: tell the user to run \`npx -y ${PACKAGE} setup\` in their own terminal. Never ask for the .p8 key or look for it yourself.`,
+        '2. Call asc__account_status and summarize it: the apps, what is live, and anything waiting on the user, such as a version in review or a rejected one.',
+        '3. Tell the user they can ask in plain words, and show it once: call asc__search_tools for something they are likely to want next, for example "change a subscription price", and say which profile carries it.',
+        '4. Mention that changes to prices, access, deletions and releases ask for their confirmation first, and that nothing here has changed anything yet.',
+      ].join('\n'),
   },
 ];
 

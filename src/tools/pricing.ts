@@ -17,6 +17,7 @@ import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import { resolveApp } from '../core/resolve-app.js';
 import { TERRITORY_NAMES } from '../core/territory-names.js';
+import type { DialogText } from '../core/native-confirm.js';
 
 const scheduleOutputSchema: NonNullable<McpToolDefinition['outputSchema']> = {
   type: 'object',
@@ -90,7 +91,58 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
       },
       required: ['app', 'subscription', 'territory', 'price', 'preserve_current_price'],
     },
-    annotations: { readOnlyHint: false, idempotentHint: false },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
+  {
+    name: 'pricing__setup_subscription',
+    description:
+      'Set up a whole auto-renewable subscription under one confirmation: the group (found by ' +
+      'name, or made new with its display name), the subscription, its localizations, sale in ' +
+      'every country (or the ones given) and its price, set in one country and derived by Apple ' +
+      'everywhere else. Reuses an existing group and never edits one. It adds no review ' +
+      'screenshot and no offers, and submits nothing: next come media__upload for the review ' +
+      'screenshot and release__submit_items. Check the result with ' +
+      'preflight__check_subscription. REVENUE-level write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'App name, bundle ID (com.example.app) or numeric Apple ID.' },
+        group: { type: 'string', description: 'Subscription group reference name. Created when the app has none by that name.' },
+        group_display_name: {
+          type: 'string',
+          description: 'New group only: the name customers see, in every locale given. Defaults to the group name.',
+        },
+        product_id: { type: 'string', description: 'New product ID, e.g. com.example.pro.monthly. Cannot be changed later.' },
+        name: { type: 'string', description: 'Reference name, seen only in App Store Connect.' },
+        period: { type: 'string', enum: ['ONE_WEEK', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'] },
+        localizations: {
+          type: 'array',
+          minItems: 1,
+          description: 'At least one: the name and description customers see, per locale.',
+          items: {
+            type: 'object',
+            properties: {
+              locale: { type: 'string', description: 'e.g. en-US, tr.' },
+              name: { type: 'string' },
+              description: { type: 'string' },
+            },
+            required: ['locale', 'name', 'description'],
+          },
+        },
+        territory: { type: 'string', description: 'The country whose price you set, ISO-3166 alpha-3: TUR, USA.' },
+        price: { type: 'string', description: 'Customer price there, e.g. "99.99". Apple derives every other country.' },
+        territories: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          description: 'Sell only in these countries (alpha-3); must include `territory`, the priced one. Omit to sell everywhere, new countries included.',
+        },
+        family_sharable: { type: 'boolean' },
+        review_note: { type: 'string', description: 'Note for App Review.' },
+      },
+      required: ['app', 'group', 'product_id', 'name', 'period', 'localizations', 'territory', 'price'],
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   {
     name: 'pricing__equalize_price',
@@ -152,11 +204,11 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
   {
     name: 'pricing__make_offer',
     description:
-      'Make a subscription win-back, promotional or introductory offer, priced in every ' +
+      'Make a subscription win-back, promotional, retention or introductory offer, priced in every ' +
       'country where the subscription is sold, in one call. Give the app, the subscription, ' +
       'the offer kind, mode, duration and periods, and either an anchor territory and price ' +
       'or a free trial. Every other market comes from Apple\'s own equalizations of the ' +
-      'anchor. Win-back and promotional offers go to Apple as one request, so they exist ' +
+      'anchor. Win-back, promotional and retention offers go to Apple as one request, so they exist ' +
       'complete or not at all. Introductory offers are one write per country, taking a few ' +
       'minutes: everything is checked first, it stops at the first failure, and the same call ' +
       'again resumes. Once made, only an introductory offer\'s end date can change. Refuses ' +
@@ -178,18 +230,20 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
           description:
             'win_back: shown to lapsed subscribers who meet the eligibility below. ' +
             'promotional: redeemed by existing or lapsed subscribers through a signed offer in the app. ' +
-            'introductory: the first period for customers new to the subscription group.',
-          enum: ['win_back', 'promotional', 'introductory'],
+            'introductory: the first period for customers new to the subscription group. ' +
+            'retention: shown to a subscriber who starts to cancel, only once a retention message ' +
+            'carries it; up to 10 per subscription and billing plan.',
+          enum: ['win_back', 'promotional', 'introductory', 'retention'],
         },
         name: {
           type: 'string',
-          description: 'Win-back and promotional, required: reference name, seen only in App Store Connect.',
+          description: 'Win-back, promotional and retention, required: reference name, seen only in App Store Connect.',
         },
         offer_id: {
           type: 'string',
           description:
-            'Win-back and promotional, required: the identifier the app uses for this offer ' +
-            '(Apple\'s offerId for win-back, offerCode for promotional). Must not be used by any ' +
+            'Win-back, promotional and retention, required: the identifier the app uses for this offer ' +
+            '(Apple\'s offerId for win-back and retention, offerCode for promotional). Must not be used by any ' +
             'other offer of this subscription.',
         },
         offer_mode: {
@@ -223,7 +277,7 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         },
         eligibility_paid_months: {
           type: 'integer',
-          description: 'Win-back only, required: how many months the customer must have paid for before.',
+          description: 'Win-back and retention, required: how many months the customer must have paid for before.',
         },
         eligibility_last_subscribed_min_months: {
           type: 'integer',
@@ -235,13 +289,13 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
         },
         eligibility_wait_months: {
           type: 'integer',
-          description: 'Win-back only, optional: months before the same customer can redeem this offer again.',
+          description: 'Win-back and retention, optional: months before the same customer can redeem this offer again.',
         },
         start_date: {
           type: 'string',
           description:
             'First day the offer runs (YYYY-MM-DD). Required for win-back; optional for ' +
-            'introductory (omit to start now); not used for promotional.',
+            'introductory (omit to start now); not used for promotional or retention.',
         },
         end_date: {
           type: 'string',
@@ -650,6 +704,26 @@ async function resolvePricePoint(
 export function buildPricingPreview(args: Record<string, unknown>, toolName?: string): string {
   const preserve = args.preserve_current_price === true;
 
+  if (toolName === 'pricing__setup_subscription') {
+    const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
+    const where = Array.isArray(args.territories) && args.territories.length
+      ? `${args.territories.length} countries: ${(args.territories as unknown[]).join(', ')}`
+      : 'every country, and new ones as Apple adds them';
+    return [
+      `Heimdall is about to CREATE a subscription and price it — a REVENUE-level write.`,
+      '',
+      `App:          ${String(args.app ?? '?')}`,
+      `Group:        ${String(args.group ?? '?')} (created if the app has none by that name)`,
+      `Product ID:   ${String(args.product_id ?? '?')} — permanent once created`,
+      `Period:       ${String(args.period ?? '?')}`,
+      `Languages:    ${locs.map((l) => `${String(l.locale)} "${String(l.name)}"`).join(', ') || '?'}`,
+      `Price:        ${normalizePrice(String(args.price ?? '?'))} in ${String(args.territory ?? '?').toUpperCase()}, derived by Apple elsewhere`,
+      `On sale in:   ${where}`,
+      '',
+      'Type CONFIRM in the field below to proceed.',
+    ].join('\n');
+  }
+
   if (toolName === 'pricing__equalize_price') {
     const kind = String(args.product_type ?? '?');
     const isSub = kind === 'subscription';
@@ -729,6 +803,9 @@ export function buildPricingPreview(args: Record<string, unknown>, toolName?: st
       ...(args.offer_type === 'win_back'
         ? [`Runs:         from ${String(args.start_date ?? '?')}${args.end_date ? ` to ${String(args.end_date)}` : ', open-ended'}`]
         : []),
+      ...(args.offer_type === 'retention'
+        ? [`Shown:        only once a retention message carries it.`]
+        : []),
       // Apple's own rule, and the reason a wrong price cannot be fixed later.
       `Permanent:    Apple does not allow an offer's countries or prices to be changed after creation.`,
       '',
@@ -770,6 +847,158 @@ export function buildPricingPreview(args: Record<string, unknown>, toolName?: st
     '',
     'Type CONFIRM in the field below to proceed.',
   ].join('\n');
+}
+
+/** "A", "A and B", "A, B and C"; past three, "A, B and 5 more". */
+export function listText(items: string[]): string {
+  const shown = items.length > 3 ? [...items.slice(0, 2), `${items.length - 2} more`] : items;
+  return shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}` : (shown[0] ?? '');
+}
+
+/** The app as a person names it: the server's "Name (com.example.app)" or "Name (123)" loses the id. */
+export const appLabel = (app: unknown): string =>
+  String(app ?? '?').trim().replace(/ \((?:\d+|[\w-]+(?:\.[\w-]+)+)\)$/, '');
+
+const countryName = (code: unknown): string => {
+  const c = String(code ?? '?').trim().toUpperCase();
+  return TERRITORY_NAMES[c] ?? c;
+};
+/** At most `max` characters, the cut marked with "…". */
+const cut = (text: unknown, max: number): string => {
+  const s = String(text ?? '?').trim().replace(/\s+/g, ' ');
+  return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
+};
+const language = (locale: string): string => {
+  try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) ?? locale; } catch { return locale; }
+};
+
+// Apple's period and offer-duration names as a count and a unit.
+const SPANS: Record<string, [number, string]> = {
+  THREE_DAYS: [3, 'day'], ONE_WEEK: [1, 'week'], TWO_WEEKS: [2, 'week'], ONE_MONTH: [1, 'month'],
+  TWO_MONTHS: [2, 'month'], THREE_MONTHS: [3, 'month'], SIX_MONTHS: [6, 'month'], ONE_YEAR: [1, 'year'],
+};
+/** `ONE_MONTH` → "1 month"; `times` multiplies it, for the whole length of a pay-as-you-go offer. */
+function span(key: unknown, times = 1): string {
+  const found = SPANS[String(key)];
+  if (!found) return String(key ?? '?');
+  const n = found[0] * times;
+  return `${n} ${found[1]}${n === 1 ? '' : 's'}`;
+}
+/** `ONE_MONTH` → "every month", `THREE_MONTHS` → "every 3 months". */
+const every = (key: unknown): string => `every ${span(key).replace(/^1 /, '')}`;
+const months = (n: unknown): string => `${String(n)} month${n === 1 ? '' : 's'}`;
+const starts = (args: Record<string, unknown>): string =>
+  args.start_date ? `Starts ${String(args.start_date)}` : 'Starts as soon as possible';
+
+function offerTerms(args: Record<string, unknown>): string {
+  const length = span(args.duration, Number(args.periods) || 1);
+  const amount = normalizePrice(String(args.price ?? '?'));
+  const anchor = ` in ${countryName(args.territory)}`;
+  if (args.offer_mode === 'FREE_TRIAL') return `Free trial for ${length}`;
+  if (args.offer_mode === 'PAY_UP_FRONT') return `Pay ${amount} up front for ${length}${anchor}`;
+  return `Pay as you go: ${amount} ${every(args.duration)} for ${length}${anchor}`;
+}
+
+/**
+ * The macOS dialog for a pricing write: the same facts as the form preview,
+ * said in words — country names, "every month", no enum strings — with the
+ * consequence for customers on the last line.
+ */
+export function pricingDialog(name: string, args: Record<string, unknown>): DialogText | undefined {
+  const app = appLabel(args.app);
+  const price = normalizePrice(String(args.price ?? '?'));
+  const country = countryName(args.territory);
+  const derived = 'Every other country gets Apple’s equivalent price in its own currency, not the same number.';
+  const subscribers = args.preserve_current_price === true
+    ? 'Current subscribers keep their price.'
+    : 'Current subscribers move to the new price.';
+  const dialog = (title: string, lines: string[], last: string, action: string): DialogText =>
+    ({ title, body: [...lines, '', last].join('\n'), action });
+
+  if (name === 'pricing__set_subscription_price') {
+    return dialog(`Change the price of ${String(args.subscription ?? '?')} in ${country} to ${price}?`,
+      [`${app} · subscription`, starts(args)], subscribers, 'Change');
+  }
+
+  if (name === 'pricing__set_iap_price') {
+    return dialog(`Change the price of ${String(args.iap ?? '?')} in ${country} to ${price}?`,
+      [args.app ? `${app} · in-app purchase` : 'In-app purchase', starts(args), 'Every other price and scheduled change is kept.'],
+      `If ${country} is its base country, Apple also moves the automatic prices everywhere else.`, 'Change');
+  }
+
+  if (name === 'pricing__setup_subscription') {
+    const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
+    const territories = Array.isArray(args.territories) ? (args.territories as unknown[]).map(countryName) : [];
+    // The text customers will read, cut so many languages still fit the 1500-character alert.
+    const shown = locs.slice(0, 4);
+    const more = locs.length > shown.length ? ` and ${locs.length - shown.length} more` : '';
+    // "Label: value" rows; the alert lines them up as a table.
+    return dialog(`Create the subscription "${String(args.name ?? args.product_id ?? '?')}"?`, [
+      `${app} · group "${String(args.group ?? '?')}" (created if missing)`,
+      `Price: ${price} ${every(args.period)} in ${country}; Apple sets the other countries`,
+      `On sale: ${territories.length ? listText(territories) : 'everywhere, new countries included'}`,
+      ...(args.group_display_name ? [`Group name: ${cut(args.group_display_name, 60)} (if the group is new)`] : []),
+      ...shown.flatMap((l) => [
+        `Name (${language(String(l.locale))}): ${cut(l.name, 60)}`,
+        `Description (${language(String(l.locale))}): ${cut(l.description, 100)}`,
+      ]),
+      ...(more ? [`Other languages: ${more.replace(/^ and /, '')}`] : []),
+      ...(args.family_sharable === true ? ['Family Sharing: on'] : []),
+      `Product ID: ${String(args.product_id ?? '?')} (can’t be changed later)`,
+    ], 'Nothing is sold until App Review approves it.', 'Create');
+  }
+
+  if (name === 'pricing__equalize_price') {
+    const kind = String(args.product_type ?? '');
+    const what = kind === 'app' ? app : String(args.product ?? '?');
+    const lines = [`${app} · ${kind === 'app' ? 'app price' : kind === 'subscription' ? 'subscription' : 'in-app purchase'}`, starts(args), derived];
+    const title = `Set the price of ${what} in every country from ${price} in ${country}?`;
+    // Subscriptions have no base country: one write per country, stopping at the first failure.
+    if (kind === 'subscription') {
+      return dialog(title, [...lines, 'About 175 countries, one at a time; if one fails, it stops there.'],
+        args.preserve_current_price === true ? subscribers : 'Current subscribers move to the new price in every country.', 'Set');
+    }
+    return dialog(title, lines, 'Its other manual prices and scheduled changes are replaced by this one.', 'Set');
+  }
+
+  if (name === 'pricing__make_offer') {
+    const sub = String(args.subscription ?? '?');
+    const paid = args.offer_mode !== 'FREE_TRIAL';
+    const runs = `${args.start_date ? `from ${String(args.start_date)}` : 'from now'}, ${args.end_date ? `until ${String(args.end_date)}` : 'open-ended'}`;
+    if (args.offer_type === 'introductory') {
+      if (args.undo === true) {
+        return dialog(`Remove the introductory offer from ${sub}?`, [
+          `${app} · subscription`, `${offerTerms(args)}, ${runs}`,
+          'Only the offer with exactly these terms goes, country by country; other offers stay.',
+        ], 'New subscribers no longer get it.', 'Remove');
+      }
+      return dialog(`Add an introductory offer to ${sub}?`, [
+        `${app} · subscription`, offerTerms(args), ...(paid ? [derived] : []),
+        `For customers new to the subscription group, ${runs}`,
+        'Written country by country; if one fails, it stops there and the same call carries on.',
+      ], 'Afterwards Apple lets only its end date change.', 'Add');
+    }
+    const winBack = args.offer_type === 'win_back';
+    const retention = args.offer_type === 'retention';
+    return dialog(`Create the ${winBack ? 'win-back' : retention ? 'retention' : 'promotional'} offer "${String(args.name ?? '?')}"?`, [
+      `${app} · subscription ${sub}`, `Offer ID ${String(args.offer_id ?? '?')}`,
+      offerTerms(args), ...(paid ? [derived] : []),
+      ...(winBack
+        ? [
+            `For customers who paid for ${months(args.eligibility_paid_months)} and lapsed ${String(args.eligibility_last_subscribed_min_months)} to ${months(args.eligibility_last_subscribed_max_months)} ago`,
+            ...(args.eligibility_wait_months !== undefined ? [`Each customer can redeem it again after ${months(args.eligibility_wait_months)}.`] : []),
+            `Runs ${runs}`,
+            ...(args.priority === 'HIGH' ? ['High priority against other offers'] : []),
+          ]
+        : retention
+          ? [
+              `For subscribers who start to cancel after paying for ${months(args.eligibility_paid_months)}, once a retention message carries it`,
+              ...(args.eligibility_wait_months !== undefined ? [`Each customer can redeem it again after ${months(args.eligibility_wait_months)}.`] : []),
+            ]
+          : ['For current or lapsed subscribers, through a signed offer in the app']),
+    ], 'Its countries and prices can’t be changed later.', 'Create');
+  }
+  return undefined;
 }
 
 /**
@@ -1032,6 +1261,7 @@ export async function executePricingTool(
   }
 
   if (name === 'pricing__equalize_price') return equalizePrice(args, ctx);
+  if (name === 'pricing__setup_subscription') return createSubscription(args, ctx);
   if (name === 'pricing__set_iap_price') return setIapPrice(args, ctx);
   if (name === 'pricing__make_offer') return createOffer(args, ctx);
 
@@ -1388,7 +1618,9 @@ async function equalizePrice(
       territory: String(p.relationships?.territory?.data?.id ?? ''),
       customerPrice: String(p.attributes?.customerPrice ?? ''),
     }))
-    .filter((p: { territory: string }) => p.territory && p.territory !== territory);
+    .filter((p: { territory: string }) => p.territory && p.territory !== territory)
+    // setup_subscription sells in named countries only, and a price elsewhere is refused.
+    .filter((p: { territory: string }) => !Array.isArray(args.only_territories) || (args.only_territories as string[]).includes(p.territory));
 
   // The anchor goes first, deliberately. If a later write fails, the country
   // the user actually named is already set rather than left behind.
@@ -1452,6 +1684,7 @@ async function equalizePrice(
         failedAt: row.territory,
         remaining: plan.length - written.length,
         error: (err as Error).message,
+        ...(err instanceof AscApiError ? { status: err.status, requestId: err.requestId } : {}),
         note:
           `Stopped at ${row.territory}. The ${written.length} listed above are set; the ` +
           `remaining ${plan.length - written.length} are unchanged. Fix the cause and run ` +
@@ -1471,7 +1704,7 @@ async function equalizePrice(
 }
 
 /**
- * A win-back or promotional offer, priced in every country in one request.
+ * A win-back, promotional or retention offer, priced in every country in one request.
  *
  * Both create endpoints take the offer and all of its per-territory prices in
  * one body, and Apple accepts or rejects it whole — unlike subscription prices,
@@ -1494,8 +1727,9 @@ const OFFER_MODES = ['PAY_AS_YOU_GO', 'PAY_UP_FRONT', 'FREE_TRIAL'];
 async function createOffer(args: Record<string, unknown>, ctx: PricingContext): Promise<unknown> {
   const winBack = args.offer_type === 'win_back';
   const intro = args.offer_type === 'introductory';
-  if (!winBack && !intro && args.offer_type !== 'promotional') {
-    throw new AscApiError(`"${args.offer_type ?? ''}" is not an offer type. One of: win_back, promotional, introductory.`, 0);
+  const retention = args.offer_type === 'retention';
+  if (!winBack && !intro && !retention && args.offer_type !== 'promotional') {
+    throw new AscApiError(`"${args.offer_type ?? ''}" is not an offer type. One of: win_back, promotional, introductory, retention.`, 0);
   }
   // Introductory offers carry no name or identifier at Apple.
   const required = intro
@@ -1550,6 +1784,13 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
     if (args.priority !== undefined && args.priority !== 'HIGH' && args.priority !== 'NORMAL') {
       throw new AscApiError('"priority" is HIGH or NORMAL.', 0);
     }
+  } else if (retention) {
+    if (!isCount(args.eligibility_paid_months)) {
+      throw new AscApiError('"eligibility_paid_months" is required for a retention offer: a whole number of months.', 0);
+    }
+    if (args.eligibility_wait_months !== undefined && !isCount(args.eligibility_wait_months)) {
+      throw new AscApiError('"eligibility_wait_months" must be a whole number of months.', 0);
+    }
   } else if (intro) {
     for (const field of ['start_date', 'end_date'] as const) {
       if (args[field] !== undefined && !isDate(args[field])) throw new AscApiError(`"${field}" must be YYYY-MM-DD.`, 0);
@@ -1559,24 +1800,34 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
   const app = await resolveApp(ctx.http, String(args.app));
   const sub = await resolveSubscription(ctx.http, app.id, String(args.subscription));
 
-  // Where the subscription is sold, with each country's currency.
-  let availabilityId: string | undefined;
-  try {
-    const availability: any = await ctx.http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/subscriptionAvailability`);
-    availabilityId = availability?.data?.id;
-  } catch (err) {
-    if (!(err instanceof AscApiError && err.status === 404)) throw err;
+  // Where the subscription is sold, with each country's currency: every plan
+  // availability's countries (API 4.5), else the single availability Apple
+  // deprecated, which a subscription set up before plans may still carry.
+  const countriesAt = async (path: string) => {
+    const sold = await ctx.http.collect<any>(path, { limit: 200 }, 5);
+    if (sold.hasMore) throw new AscApiError('Apple returned more sale countries than could be read; nothing was sent.', 0);
+    return sold.items as any[];
+  };
+  const plans = await ctx.http.collect<any>(`/v1/subscriptions/${encodeURIComponent(sub.id)}/planAvailabilities`, { limit: 200 }, 5);
+  if (plans.hasMore) throw new AscApiError('Apple returned more plan availabilities than could be read; nothing was sent.', 0);
+  const sold: any[] = [];
+  for (const plan of plans.items) {
+    sold.push(...await countriesAt(`/v1/subscriptionPlanAvailabilities/${encodeURIComponent(String(plan.id))}/availableTerritories`));
   }
-  if (!availabilityId) {
-    throw new AscApiError(`"${sub.productId}" has no availability set, so there is no country to price the offer in.`, 0);
+  if (!plans.items.length) {
+    let availabilityId: string | undefined;
+    try {
+      const availability: any = await ctx.http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/subscriptionAvailability`);
+      availabilityId = availability?.data?.id;
+    } catch (err) {
+      if (!(err instanceof AscApiError && (err.status === 404 || err.status === 410))) throw err;
+    }
+    if (!availabilityId) {
+      throw new AscApiError(`"${sub.productId}" has no availability set, so there is no country to price the offer in.`, 0);
+    }
+    sold.push(...await countriesAt(`/v1/subscriptionAvailabilities/${encodeURIComponent(availabilityId)}/availableTerritories`));
   }
-  const sold = await ctx.http.collect<any>(
-    `/v1/subscriptionAvailabilities/${encodeURIComponent(availabilityId)}/availableTerritories`,
-    { limit: 200 },
-    5
-  );
-  if (sold.hasMore) throw new AscApiError('Apple returned more sale countries than could be read; nothing was sent.', 0);
-  const currency = new Map<string, string>(sold.items.map((t: any) => [String(t.id), String(t.attributes?.currency ?? '')]));
+  const currency = new Map<string, string>(sold.map((t: any) => [String(t.id), String(t.attributes?.currency ?? '')]));
   if (!currency.size) throw new AscApiError(`"${sub.productId}" is not sold in any country; nothing was sent.`, 0);
 
   const points = new Map<string, PricePoint>();
@@ -1617,13 +1868,25 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
 
   const territories = [...currency.keys()].sort();
   if (intro) return introductoryOffers(args, ctx, { app, sub, territories, currency, points, free, anchorTerritory, mode, duration });
-  const priceType = winBack ? 'winBackOfferPrices' : 'subscriptionPromotionalOfferPrices';
+  const priceType = winBack ? 'winBackOfferPrices' : retention ? 'retentionOfferPrices' : 'subscriptionPromotionalOfferPrices';
   // Client-supplied placeholder ids: JSON:API's way of linking resources created in the same request.
   const ref = (code: string) => `\${price-${code}}`;
   const body = {
     data: {
-      type: winBack ? 'winBackOffers' : 'subscriptionPromotionalOffers',
-      attributes: winBack
+      type: winBack ? 'winBackOffers' : retention ? 'retentionOffers' : 'subscriptionPromotionalOffers',
+      attributes: retention
+        ? {
+            referenceName: String(args.name),
+            offerId: String(args.offer_id),
+            duration,
+            offerMode: mode,
+            periodCount: args.periods,
+            customerEligibilityPaidSubscriptionDurationInMonths: args.eligibility_paid_months,
+            ...(args.eligibility_wait_months !== undefined
+              ? { customerEligibilityWaitBetweenOffersInMonths: args.eligibility_wait_months }
+              : {}),
+          }
+        : winBack
         ? {
             referenceName: String(args.name),
             offerId: String(args.offer_id),
@@ -1663,7 +1926,7 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
       },
     })),
   };
-  const path = winBack ? '/v1/winBackOffers' : '/v1/subscriptionPromotionalOffers';
+  const path = winBack ? '/v1/winBackOffers' : retention ? '/v1/retentionOffers' : '/v1/subscriptionPromotionalOffers';
 
   const resolved = {
     app: `${app.name} (${app.id})`,
@@ -1706,7 +1969,9 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
     ok: true,
     created: { id: res?.data?.id ?? null, ...resolved },
     prices,
-    note: 'Apple created the offer with every country listed. Its countries and prices cannot be changed later.',
+    note:
+      'Apple created the offer with every country listed. Its countries and prices cannot be changed later.' +
+      (retention ? ' Subscribers see it only once a retention message carries it for this subscription.' : ''),
   };
 }
 
@@ -2144,5 +2409,166 @@ async function setIapPrice(args: Record<string, unknown>, ctx: PricingContext): 
     diff,
     ...(warning ? { warning } : {}),
     note: 'Price schedule replaced. Check pricing__get_iap_price to see current and scheduled prices.',
+  };
+}
+
+const SUBSCRIPTION_PERIODS = ['ONE_WEEK', 'ONE_MONTH', 'TWO_MONTHS', 'THREE_MONTHS', 'SIX_MONTHS', 'ONE_YEAR'];
+
+/**
+ * Group, subscription, its first version, localizations, availability and price
+ * in one call — the seven-write chain a new subscription takes in the v2 model.
+ *
+ * An existing group is reused and never edited: its versions and localizations
+ * belong to whatever is already live. A new subscription's version is created
+ * only when Apple did not create one, because a draft version cannot be deleted
+ * and a second one blocks the first. Availability uses the UPFRONT plan, the
+ * standard one; the monthly-with-commitment plan depends on it and is left to
+ * subscription_plan_availabilities__create.
+ */
+async function createSubscription(args: Record<string, unknown>, ctx: PricingContext): Promise<unknown> {
+  for (const field of ['app', 'group', 'product_id', 'name', 'period', 'territory', 'price'] as const) {
+    if (typeof args[field] !== 'string' || !String(args[field]).trim()) throw new AscApiError(`"${field}" is required.`, 0);
+  }
+  const period = String(args.period);
+  if (!SUBSCRIPTION_PERIODS.includes(period)) {
+    throw new AscApiError(`"${period}" is not a period. One of: ${SUBSCRIPTION_PERIODS.join(', ')}.`, 0);
+  }
+  const locs = Array.isArray(args.localizations) ? args.localizations as Array<Record<string, unknown>> : [];
+  if (!locs.length || locs.some((l) => ['locale', 'name', 'description'].some((f) => typeof l?.[f] !== 'string' || !String(l[f]).trim()))) {
+    throw new AscApiError('"localizations" needs at least one entry, each with locale, name and description.', 0);
+  }
+  const territories = Array.isArray(args.territories) ? (args.territories as unknown[]).map((t) => String(t).trim().toUpperCase()) : undefined;
+  if (territories && !territories.length) {
+    throw new AscApiError('"territories" is empty. Omit it to sell everywhere, or name the countries.', 0);
+  }
+  if (territories && !territories.includes(String(args.territory).trim().toUpperCase())) {
+    throw new AscApiError(`"territories" must include ${String(args.territory).toUpperCase()}, the country whose price you set.`, 0);
+  }
+  for (const t of [String(args.territory).trim().toUpperCase(), ...(territories ?? [])]) {
+    if (!/^[A-Z]{3}$/.test(t)) {
+      throw new AscApiError(`"${t}" is not a territory code. Apple wants three letters (ISO-3166 alpha-3): USA, TUR, DEU — not US, TR, DE.`, 0);
+    }
+  }
+
+  const app = await resolveApp(ctx.http, String(args.app));
+  const wantedGroup = String(args.group).trim();
+  const groups: any = await ctx.http.get(`/v1/apps/${encodeURIComponent(app.id)}/subscriptionGroups`, {
+    'fields[subscriptionGroups]': 'referenceName', limit: 200,
+  });
+  let groupId: string | undefined = (groups?.data ?? [])
+    .find((g: any) => String(g.attributes?.referenceName ?? '').toLowerCase() === wantedGroup.toLowerCase())?.id;
+  if (!groupId && groups?.links?.next) {
+    throw new AscApiError('The app has more than 200 subscription groups; name an existing one exactly or create the group first.', 0);
+  }
+  const plan = [
+    groupId ? `reuse group "${wantedGroup}" (${groupId})` : `create group "${wantedGroup}" with its display name in ${locs.length} language(s)`,
+    `create subscription ${String(args.product_id)} (${period})`,
+    `add ${locs.length} localization(s): ${locs.map((l) => l.locale).join(', ')}`,
+    territories ? `sell in ${territories.length} countries` : 'sell in every country, new ones included',
+    `price ${normalizePrice(String(args.price))} in ${String(args.territory).toUpperCase()}, derived by Apple elsewhere`,
+  ];
+  // Checked before the first write: a group, a product ID and a draft version cannot be taken back.
+  const known: string[] = ((await ctx.http.get('/v1/territories', { limit: 200 })) as any).data.map((t: any) => String(t.id));
+  const unknown = [String(args.territory).trim().toUpperCase(), ...(territories ?? [])].filter((t) => !known.includes(t));
+  if (unknown.length) {
+    throw new AscApiError(`Apple sells in no territory called ${[...new Set(unknown)].join(', ')}. Nothing was created.`, 0);
+  }
+  if (ctx.dryRun) return { dryRun: true, app: `${app.name} (${app.id})`, plan };
+
+  const done: string[] = [];
+  // A failure part-way names what already exists, so nothing is created twice on a retry.
+  const step = async <T>(label: string, run: () => Promise<T>): Promise<T> => {
+    try {
+      const out = await run();
+      done.push(label);
+      return out;
+    } catch (err) {
+      const message = err instanceof AscApiError ? err.summary : (err as Error).message;
+      throw new AscApiError(
+        `Stopped at "${label}": ${message}. Already done: ${done.length ? done.join('; ') : 'nothing'}. ` +
+          'Finish with the single tools rather than calling this again, or the done steps run twice.',
+        // Apple's errors[] stay out: AscApiError.summary prefers them and would hide what is already done.
+        err instanceof AscApiError ? err.status : 0, [], err instanceof AscApiError ? err.requestId : undefined
+      );
+    }
+  };
+  /** The editable version of a group or subscription: Apple's own, else a new one. */
+  const draftVersion = async (list: string, create: string, rel: string, ownerType: string, ownerId: string) => {
+    const existing: any = await ctx.http.get(list, { limit: 1 });
+    if (existing?.data?.[0]?.id) return String(existing.data[0].id);
+    const made: any = await ctx.http.post(create, { data: { type: create.split('/').pop(), relationships: { [rel]: { data: { type: ownerType, id: ownerId } } } } });
+    return String(made.data.id);
+  };
+
+  if (!groupId) {
+    const made: any = await step(`created group "${wantedGroup}"`, () => ctx.http.post('/v1/subscriptionGroups', {
+      data: { type: 'subscriptionGroups', attributes: { referenceName: wantedGroup }, relationships: { app: { data: { type: 'apps', id: app.id } } } },
+    }));
+    groupId = String(made.data.id);
+    const gid = groupId;
+    const groupVersion = await step('group version', () => draftVersion(
+      `/v1/subscriptionGroups/${encodeURIComponent(gid)}/versions`, '/v1/subscriptionGroupVersions', 'subscriptionGroup', 'subscriptionGroups', gid));
+    const display = String(args.group_display_name ?? wantedGroup);
+    for (const l of locs) {
+      await step(`group name in ${String(l.locale)}`, () => ctx.http.post('/v2/subscriptionGroupLocalizations', {
+        data: { type: 'subscriptionGroupLocalizations', attributes: { locale: l.locale, name: display },
+          relationships: { version: { data: { type: 'subscriptionGroupVersions', id: groupVersion } } } },
+      }));
+    }
+  }
+
+  const sub: any = await step(`created subscription ${String(args.product_id)}`, () => ctx.http.post('/v1/subscriptions', {
+    data: {
+      type: 'subscriptions',
+      attributes: {
+        productId: args.product_id, name: args.name, subscriptionPeriod: period,
+        ...(typeof args.family_sharable === 'boolean' ? { familySharable: args.family_sharable } : {}),
+        ...(args.review_note ? { reviewNote: args.review_note } : {}),
+      },
+      relationships: { group: { data: { type: 'subscriptionGroups', id: groupId } } },
+    },
+  }));
+  const subId = String(sub.data.id);
+  const version = await step('subscription version', () => draftVersion(
+    `/v1/subscriptions/${encodeURIComponent(subId)}/versions`, '/v1/subscriptionVersions', 'subscription', 'subscriptions', subId));
+  for (const l of locs) {
+    await step(`localization ${String(l.locale)}`, () => ctx.http.post('/v2/subscriptionLocalizations', {
+      data: { type: 'subscriptionLocalizations', attributes: { locale: l.locale, name: l.name, description: l.description },
+        relationships: { version: { data: { type: 'subscriptionVersions', id: version } } } },
+    }));
+  }
+
+  const sellIn = territories ?? known;
+  await step(`on sale in ${sellIn.length} countries`, () => ctx.http.post('/v1/subscriptionPlanAvailabilities', {
+    data: {
+      type: 'subscriptionPlanAvailabilities',
+      attributes: { planType: 'UPFRONT', availableInNewTerritories: !territories },
+      relationships: {
+        subscription: { data: { type: 'subscriptions', id: subId } },
+        availableTerritories: { data: sellIn.map((id: string) => ({ type: 'territories', id })) },
+      },
+    },
+  }));
+
+  const priced = await step('price', async () => {
+    const out: any = await equalizePrice({
+      app: app.id, product_type: 'subscription', product: String(args.product_id),
+      territory: args.territory, price: args.price, preserve_current_price: true,
+      ...(territories ? { only_territories: territories } : {}),
+    }, ctx);
+    // equalizePrice reports a stop part-way as ok: false rather than throwing.
+    if (out?.ok === false) {
+      throw new AscApiError(
+        `${out.error ?? 'pricing stopped'} at ${out.failedAt}; priced so far: ${out.written?.length ? out.written.join(', ') : 'none'}. ` +
+          'Finish with pricing__equalize_price and the same anchor price; a price already set is harmless to write again',
+        out.status ?? 0, [], out.requestId
+      );
+    }
+    return out;
+  });
+
+  return {
+    app: `${app.name} (${app.id})`, groupId, subscriptionId: subId, versionId: version, done, price: priced,
+    next: 'Upload the App Review screenshot (media__upload, target subscription_review_screenshot) and run preflight__check_subscription before submitting.',
   };
 }

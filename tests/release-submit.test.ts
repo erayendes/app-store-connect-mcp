@@ -12,13 +12,16 @@
  * of raw calls remembers.
  */
 import { describe, it, expect } from 'vitest';
-import { executeReleaseTool, RELEASE_TOOLS } from '../src/tools/release.js';
+import { executeReleaseTool, RELEASE_TOOLS, releasePreviewArgs } from '../src/tools/release.js';
 
 interface Options {
+  olderAppVersions?: number;
   build?: Record<string, unknown> | null;
   state?: string;
   openSubmission?: boolean;
   itemAlreadyThere?: boolean;
+  extraItem?: boolean;
+  extraUnknown?: boolean;
   /** null models Apple answering with no platform at all. */
   platform?: string | null;
   /** Which platform the already-open submission belongs to. */
@@ -26,7 +29,13 @@ interface Options {
 }
 
 function fakeHttp(o: Options = {}) {
+  const reads: Array<{ path: string; query?: Record<string, unknown> }> = [];
   const writes: Array<{ method: string; path: string; body?: any }> = [];
+  const currentItems: any[] = [
+    ...(o.itemAlreadyThere ? [{ type: 'reviewSubmissionItems', id: 'i-1', relationships: { appStoreVersion: { data: { id: 'v-320' } } } }] : []),
+    ...(o.extraItem ? [{ type: 'reviewSubmissionItems', id: 'extra-1', relationships: { appEvent: { data: { id: 'event-7' } } } }] : []),
+    ...(o.extraUnknown ? [{ type: 'reviewSubmissionItems', id: 'unknown-1' }] : []),
+  ];
   const included: any[] = [
     {
       type: 'builds',
@@ -49,6 +58,9 @@ function fakeHttp(o: Options = {}) {
    * how the iOS-default bug survived a test written to catch it.
    */
   const applyFieldset = (res: any, query?: Record<string, unknown>) => {
+    const old = Array.from({ length: o.olderAppVersions ?? 0 }, (_, i) => ({ id: `old-${i}`, attributes: { versionString: `0.${i}`, appStoreState: 'READY_FOR_SALE', platform: 'IOS' } }));
+    const all = [...old, ...res.data].filter((v) => ['platform', 'versionString', 'appStoreState'].every((f) => (f === 'platform' && o.platform === null) || !query?.[`filter[${f}]`] || String(query[`filter[${f}]`]).split(',').includes(v.attributes[f])));
+    res = { ...res, data: all.slice(0, Number(query?.limit ?? 20)), ...(all.length > Number(query?.limit ?? 20) ? { links: { next: '/unread' } } : {}) };
     const fields = query?.['fields[appStoreVersions]'];
     if (typeof fields !== 'string' || !Array.isArray(res?.data)) return res;
     const keep = new Set(fields.split(','));
@@ -64,6 +76,7 @@ function fakeHttp(o: Options = {}) {
   };
 
   const get = async (path: string, query?: Record<string, unknown>) => {
+    reads.push({ path, query });
     if (path === '/v1/apps') {
       return { data: [{ id: '663', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } }] };
     }
@@ -81,6 +94,9 @@ function fakeHttp(o: Options = {}) {
     }
     if (path.includes('/appScreenshots')) {
       return { data: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } }] };
+    }
+    if (path === '/v1/reviewSubmissions/sub-1/items' || path === '/v1/reviewSubmissions/sub-new/items') {
+      return { data: currentItems.map((row) => query?.include ? row : { id: row.id, type: row.type }) };
     }
     if (path.includes('/reviewSubmissions')) {
       // Apple filters by platform here, so the fake must too: an app on iOS and
@@ -123,9 +139,10 @@ function fakeHttp(o: Options = {}) {
   const request = async (method: string, path: string, opts?: { body?: unknown }) => {
     writes.push({ method, path, body: opts?.body });
     if (path === '/v1/reviewSubmissions') return { data: { id: 'sub-new' } };
+    if (path === '/v1/reviewSubmissionItems') currentItems.push({ type: 'reviewSubmissionItems', id: `added-${currentItems.length}`, relationships: (opts?.body as any)?.data?.relationships });
     return { data: { id: 'sub-1', attributes: { state: 'WAITING_FOR_REVIEW' } } };
   };
-  return { writes, http: { get, request } as never };
+  return { reads, writes, currentItems, http: { get, request } as never };
 }
 
 const run = (args: Record<string, unknown>, http: never, dryRun = false) =>
@@ -174,6 +191,29 @@ describe('release__submit', () => {
     const res = await run({ app: 'Ask Quran' }, http);
     expect(writes.map((w) => w.method)).toEqual(['POST', 'PATCH']);
     expect(res.steps[0]).toContain('Reused');
+  });
+
+  it('previews every reused submission item and submits the same set', async () => {
+    const { http } = fakeHttp({ openSubmission: true, extraItem: true });
+    const preview = await releasePreviewArgs({ app: 'Ask Quran' }, http);
+    expect(preview.items).toEqual([
+      { type: 'appEvent', id: 'event-7' },
+      { type: 'appStoreVersion', id: 'v-320' },
+    ]);
+    const result = await run({ app: 'Ask Quran' }, http);
+    expect(result.items).toEqual(preview.items);
+  });
+  it('refuses an unidentified existing item in the app-version preview', async () => {
+    const { http, writes } = fakeHttp({ openSubmission: true, extraUnknown: true });
+    await expect(releasePreviewArgs({ app: 'Ask Quran' }, http)).rejects.toThrow(/unknown-1/);
+    expect(writes).toEqual([]);
+  });
+  it('refuses a changed app-version submission after approval', async () => {
+    const { http, writes, currentItems } = fakeHttp({ openSubmission: true });
+    const preview = await releasePreviewArgs({ app: 'Ask Quran' }, http);
+    currentItems.push({ type: 'reviewSubmissionItems', id: 'added-later', relationships: { appEvent: { data: { id: 'event-9' } } } });
+    await expect(executeReleaseTool('release__submit', { app: 'Ask Quran' }, { http, approvedPlanFingerprint: preview.planFingerprint as string, requireApprovedPlan: true })).rejects.toThrow(/changed since confirmation/);
+    expect(writes).toEqual([]);
   });
 
   it('does not add the version twice when it is already an item', async () => {
@@ -230,5 +270,20 @@ describe('release__submit', () => {
 
   it('is a write, and says so in the tool list', () => {
     expect(RELEASE_TOOLS[0].annotations?.readOnlyHint).not.toBe(true);
+  });
+});
+
+describe('version lookup in long release histories', () => {
+  it.each([{}, { version: '3.2.0', platform: 'IOS' }])('previews and submits an app with 30 older versions: %j', async (selection) => {
+    const { http, reads, writes } = fakeHttp({ olderAppVersions: 30 });
+    const args = { app: 'Ask Quran', ...selection };
+    const preview = await releasePreviewArgs(args, http);
+    const result = await run(args, http);
+    expect(preview.version).toBe('3.2.0');
+    expect(result.version).toBe('3.2.0');
+    expect(writes.at(-1)?.method).toBe('PATCH');
+    const queries = reads.filter((r) => r.path.endsWith('/appStoreVersions')).map((r) => r.query!);
+    expect(queries.every((q) => q['filter[versionString]'] || q['filter[appStoreState]'])).toBe(true);
+    expect(queries.at(-1)).toMatchObject({ 'filter[versionString]': '3.2.0', 'filter[platform]': 'IOS' });
   });
 });

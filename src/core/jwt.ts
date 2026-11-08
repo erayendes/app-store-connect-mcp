@@ -61,6 +61,11 @@ export class TokenProvider {
   private key?: KeyObject;
   private cached?: { token: string; expiresAt: number };
 
+  /** Which key signs: the report cache keys on it, so one account never reads another's reports. */
+  get identity(): string {
+    return `${this.creds.issuerId}/${this.creds.keyId}`;
+  }
+
   constructor(private readonly creds: JwtCredentials) {
     if (!creds.keyId) throw new Error('Missing key ID (ASC_KEY_ID).');
     if (!creds.issuerId) throw new Error('Missing issuer ID (ASC_ISSUER_ID).');

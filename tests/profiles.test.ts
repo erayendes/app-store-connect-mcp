@@ -4,11 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   PROFILES,
-  CORE_OPERATIONS,
+  CORE_PROFILE,
   resolveProfile,
   resolveSelection,
   operationsFor,
   profilesForOperation,
+  mergeSpecs,
 } from '../src/profiles.js';
 import { ToolRegistry } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -17,7 +18,7 @@ import { readSharedConfig, writeSharedConfig } from '../src/core/shared-config.j
 
 describe('profiles', () => {
   it('resolves a known profile and rejects an unknown one', () => {
-    expect(resolveProfile('monetization')?.subProfiles.map((s) => s.name)).toContain('subscription-catalog');
+    expect(resolveProfile('monetization')?.subProfiles.map((s) => s.name)).toContain('subscription');
     expect(resolveProfile('nonsense')).toBeUndefined();
     expect(profilesForOperation('game_center_details.get')).toEqual(['game-center']);
   });
@@ -28,45 +29,42 @@ describe('profiles', () => {
     expect(resolveProfile('account-management')).toBeUndefined(); // renamed, no alias
   });
 
-  it('loads the profile tools plus the core set, and nothing else', () => {
+  it('loads the profile tools, and nothing else — core is its own server', () => {
     const registry = new ToolRegistry({
       operations: operationsFor(resolveSelection('analytics')),
       readOnly: false,
-      includeDeprecated: false,
     });
     const names = new Set(registry.listTools().map((t) => t.name));
     expect(names.has('sales_reports__list')).toBe(true);
-    expect(names.has('apps__list')).toBe(true); // core
-    expect(names.has('apps__get')).toBe(true); // core
+    expect(names.has('apps__list')).toBe(false); // core
     expect(names.has('game_center_details__get')).toBe(false);
-    // core must not drag the whole apps domain in
     expect(names.has('apps__app_infos__list')).toBe(false);
   });
 
   /**
    * The reason this profile structure exists: `asc-monetization` could not list
-   * an app's subscription groups, because the entry point sat in app-info.
+   * an app's subscription groups, because the entry point sat in app-info. Now
+   * core lists them, next to every profile.
    */
-  it('reaches an app\'s subscription groups from the monetization profile', () => {
-    const ops = operationsFor(resolveSelection('monetization'));
-    expect(ops).toContain('apps.subscription_groups.list');
+  it('reaches an app\'s subscription groups from core, and each profile its own entry points', () => {
+    expect(operationsFor(resolveSelection(CORE_PROFILE))).toContain('apps.subscription_groups.list');
     expect(operationsFor(resolveSelection('marketing'))).toContain('apps.customer_reviews.list');
-    expect(operationsFor(resolveSelection('access'))).toContain('apps.beta_groups.list');
+    expect(operationsFor(resolveSelection('testflight'))).toContain('apps.beta_groups.list');
     expect(operationsFor(resolveSelection('webhooks'))).toContain('apps.webhooks.list');
   });
 
   it('narrows a profile to some of its sub-profiles', () => {
     const whole = operationsFor(resolveSelection('monetization'));
-    const part = operationsFor(resolveSelection('monetization:subscription-catalog'));
+    const part = operationsFor(resolveSelection('monetization:subscription'));
     expect(part.length).toBeLessThan(whole.length);
-    expect(part).toContain('apps.subscription_groups.list');
+    expect(part).toContain('subscriptions.update');
     expect(part).not.toContain('win_back_offers.create');
-    // core rides along whatever is selected
-    for (const op of CORE_OPERATIONS) expect(part).toContain(op);
+    // core no longer rides along: it is a server of its own
+    expect(part).not.toContain('apps.list');
   });
 
   it('names the available sub-profiles when one is misspelled', () => {
-    expect(() => resolveSelection('monetization:subscriptons')).toThrow(/subscription-catalog/);
+    expect(() => resolveSelection('monetization:subscriptons')).toThrow(/subscription-win-back/);
     expect(() => resolveSelection('webhooks:anything')).toThrow(/no sub-profiles/);
   });
 
@@ -75,7 +73,6 @@ describe('profiles', () => {
       const registry = new ToolRegistry({
         operations: operationsFor(resolveSelection(p.name)),
         readOnly: false,
-        includeDeprecated: false,
       });
       expect(registry.size).toBeGreaterThan(0);
       expect(registry.size).toBeLessThan(300);
@@ -84,14 +81,13 @@ describe('profiles', () => {
 
   it('grows the tool list on demand without restarting', () => {
     const registry = new ToolRegistry({
-      operations: operationsFor(resolveSelection('monetization:subscription-catalog')),
+      operations: operationsFor(resolveSelection('monetization:subscription')),
       readOnly: false,
-      includeDeprecated: false,
     });
     const before = registry.size;
     expect(registry.get('win_back_offers__create')).toBeUndefined();
 
-    const winback = resolveProfile('monetization')!.subProfiles.find((s) => s.name === 'subscription-offers')!;
+    const winback = resolveProfile('monetization')!.subProfiles.find((s) => s.name === 'subscription-win-back')!;
     const added = registry.loadOperations(winback.operations);
 
     expect(added).toContain('win_back_offers__create');
@@ -102,8 +98,8 @@ describe('profiles', () => {
   });
 
   it('refuses to smuggle a write past --read-only when loading late', () => {
-    const registry = new ToolRegistry({ operations: [], readOnly: true, includeDeprecated: false });
-    const writes = OPERATIONS.filter((o) => !o.readOnly && !o.deprecated).slice(0, 5).map((o) => o.name);
+    const registry = new ToolRegistry({ operations: [], readOnly: true });
+    const writes = OPERATIONS.filter((o) => !o.readOnly).slice(0, 5).map((o) => o.name);
     expect(registry.loadOperations(writes)).toEqual([]);
   });
 
@@ -111,7 +107,6 @@ describe('profiles', () => {
     const registry = new ToolRegistry({
       operations: operationsFor(resolveSelection('analytics')),
       readOnly: false,
-      includeDeprecated: false,
       missingToolHint: (op) =>
         `It is served by the "asc-${profilesForOperation(op.name)[0]}" MCP server.`,
     });
@@ -239,12 +234,14 @@ describe('classifyVerifyError (offline saves, 401 re-prompts)', () => {
 });
 
 import { registerCommand } from '../src/profiles.js';
+import { PACKAGE } from '../src/clients.js';
 import { STOREKIT_TOOLS } from '../src/storekit/index.js';
 
 describe('AI-136 improvements', () => {
   it('registerCommand emits a runnable claude mcp add line', () => {
+    // PACKAGE carries @beta on a prerelease, so the line runs the same channel.
     expect(registerCommand('monetization')).toBe(
-      'claude mcp add -s user ASC-Monetization -- npx -y @erayendes/asc-mcp monetization'
+      `claude mcp add -s user ASC-Monetization -- npx -y ${PACKAGE} monetization`
     );
   });
 
@@ -257,5 +254,15 @@ describe('AI-136 improvements', () => {
     for (const t of STOREKIT_TOOLS) {
       expect(t.inputSchema.required ?? []).not.toContain('environment');
     }
+  });
+});
+
+describe('mergeSpecs', () => {
+  it('makes one spec per profile, a bare profile winning over its parts', () => {
+    expect(mergeSpecs(['monetization:subscription-offers', 'analytics', 'monetization:subscription-codes,subscription-offers']))
+      .toEqual(['monetization:subscription-offers,subscription-codes', 'analytics']);
+    expect(mergeSpecs(['monetization:subscription', 'monetization'])).toEqual(['monetization']);
+    const all = resolveProfile('testflight')!.subProfiles.map((s) => s.name).join(',');
+    expect(mergeSpecs([`testflight:${all}`])).toEqual(['testflight']);
   });
 });

@@ -14,81 +14,130 @@
  *
  * Run with `npm run generate`.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OPERATIONS } from '../src/generated/operations.js';
+import { MANUAL_MARKER, PROFILELESS_MARKER, TWIN_OF, readRows, type Row } from './profile-sheet.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-/**
- * The profile injected into every server. Named `core` in the sheet; it carries
- * `apps.list`/`apps.get` (nearly every call needs an app ID first) plus the four
- * relationship listings more than one profile needs.
- */
-const CORE_PROFILE = 'core';
 
-/** Rows whose tool is written by hand rather than generated from Apple's spec. */
-const MANUAL_MARKER = '(elle yazılmış)';
+
+
+/**
+ * Operations a hand-written macro replaces outright — operation -> macro name.
+ * The raw tool is then not loaded anywhere, and the orphan test counts it as
+ * placed through the macro. Validated that
+ * the macro is a hand-written tool the sheet knows.
+ */
+const MACRO_COVERED: Record<string, string> = {
+  "apps.asset_library.get": "media__list",
+  "app_asset_libraries.get": "media__list",
+  "app_asset_libraries.images.list": "media__list",
+  "app_asset_libraries.videos.list": "media__list",
+  "app_asset_library_images.create": "media__upload",
+  "app_asset_library_images.get": "media__list",
+  "app_asset_library_images.update": "media__arrange",
+  "app_asset_library_images.delete": "media__delete",
+  "app_asset_library_images.placements.list": "media__list",
+  "app_asset_library_videos.create": "media__upload",
+  "app_asset_library_videos.get": "media__list",
+  "app_asset_library_videos.update": "media__arrange",
+  "app_asset_library_videos.delete": "media__delete",
+  "app_asset_library_videos.placements.list": "media__list",
+  "app_asset_library_placements.create": "media__arrange",
+  "app_asset_library_placements.get": "media__list",
+  "app_asset_library_placements.delete": "media__delete",
+  "app_asset_library_placement_ordering_requests.create": "media__arrange",
+  "app_asset_library_ref_data.list": "media__list",
+  "app_asset_library_ref_data.get": "media__list",
+  "app_store_version_localizations.placements.list": "media__list",
+  "app_custom_product_page_localizations.placements.list": "media__list",
+  "app_store_version_experiment_treatment_localizations.placements.list": "media__list",
+  "app_event_localizations.placements.list": "media__list",
+  "retention_message_versions.placement.get": "media__list",
+  "app_clip_header_images.create": "media__upload",
+  "app_clip_advanced_experience_images.create": "media__upload",
+  "game_center_achievement_images_v2.create": "media__upload",
+  "game_center_leaderboard_images_v2.create": "media__upload",
+  "game_center_leaderboard_set_images_v2.create": "media__upload",
+  "game_center_activity_images.create": "media__upload",
+  "game_center_challenge_images.create": "media__upload",
+  "in_app_purchase_images_v2.create": "media__upload",
+  "in_app_purchase_app_store_review_screenshots.create": "media__upload",
+  "subscription_images_v2.create": "media__upload",
+  "subscription_app_store_review_screenshots.create": "media__upload",
+  "app_encryption_declaration_documents.create": "media__upload",
+  "app_store_review_attachments.create": "media__upload",
+  "routing_app_coverages.create": "media__upload",
+  "background_asset_upload_files.create": "media__upload",
+  "build_upload_files.create": "media__upload",
+  "app_clip_header_images.delete": "media__delete",
+  "game_center_achievement_images_v2.delete": "media__delete",
+  "game_center_leaderboard_images_v2.delete": "media__delete",
+  "game_center_leaderboard_set_images_v2.delete": "media__delete",
+  "game_center_activity_images.delete": "media__delete",
+  "game_center_challenge_images.delete": "media__delete",
+  "in_app_purchase_images_v2.delete": "media__delete",
+  "in_app_purchase_app_store_review_screenshots.delete": "media__delete",
+  "subscription_images_v2.delete": "media__delete",
+  "subscription_app_store_review_screenshots.delete": "media__delete",
+  "app_store_review_attachments.delete": "media__delete",
+  "routing_app_coverages.delete": "media__delete",
+  "build_uploads.create": "media__upload",
+  "build_uploads.delete": "media__delete",
+  "game_center_achievement_images_v2.update": "media__upload",
+  "game_center_leaderboard_images_v2.update": "media__upload",
+  "game_center_leaderboard_set_images_v2.update": "media__upload",
+  "game_center_activity_images.update": "media__upload",
+  "game_center_challenge_images.update": "media__upload",
+  "in_app_purchase_images_v2.update": "media__upload",
+  "subscription_images_v2.update": "media__upload",
+  "app_clip_header_images.update": "media__upload",
+  "app_clip_advanced_experience_images.update": "media__upload",
+  "routing_app_coverages.update": "media__upload",
+  "game_center_activity_versions.default_image.get": "media__list",
+  "game_center_challenge_versions.default_image.get": "media__list",
+  "app_clip_header_images.get": "media__list",
+  "app_clip_default_experience_localizations.app_clip_header_image.get": "media__list",
+  "app_clip_advanced_experience_images.get": "media__list",
+  "game_center_achievement_images_v2.get": "media__list",
+  "game_center_achievement_localizations_v2.image.get": "media__list",
+  "game_center_leaderboard_images_v2.get": "media__list",
+  "game_center_leaderboard_localizations_v2.image.get": "media__list",
+  "game_center_leaderboard_set_images_v2.get": "media__list",
+  "game_center_leaderboard_set_localizations_v2.image.get": "media__list",
+  "game_center_activity_images.get": "media__list",
+  "game_center_activity_localizations.image.get": "media__list",
+  "game_center_challenge_images.get": "media__list",
+  "game_center_challenge_localizations.image.get": "media__list",
+  "in_app_purchase_images_v2.get": "media__list",
+  "in_app_purchase_versions.images.list": "media__list",
+  "in_app_purchase_app_store_review_screenshots.get": "media__list",
+  "in_app_purchases_v2.app_store_review_screenshot.get": "media__list",
+  "subscription_images_v2.get": "media__list",
+  "subscription_versions.images.list": "media__list",
+  "subscription_app_store_review_screenshots.get": "media__list",
+  "subscriptions.app_store_review_screenshot.get": "media__list",
+  "app_encryption_declaration_documents.get": "media__list",
+  "app_encryption_declarations.app_encryption_declaration_document.get": "media__list",
+  "app_store_review_attachments.get": "media__list",
+  "app_store_review_details.app_store_review_attachments.list": "media__list",
+  "routing_app_coverages.get": "media__list",
+  "app_store_versions.routing_app_coverage.get": "media__list",
+  "background_asset_upload_files.get": "media__list",
+  "background_asset_versions.background_asset_upload_files.list": "media__list",
+  "build_upload_files.get": "media__list",
+  "build_uploads.build_upload_files.list": "media__list"
+};
 
 /** Hand-written tools live in these families; anything else is a typo. */
-const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__'];
+const MANUAL_PREFIXES = ['asc__', 'reviews_ai__', 'storekit__', 'pricing__', 'listing__', 'media__', 'analytics__', 'ci__', 'preflight__', 'metadata_ai__', 'release__', 'testflight__', 'build__'];
 
-interface Row {
-  profile: string;
-  subProfile: string;
-  tool: string;
-  operation: string;
-  rootResource: string;
-  line: number;
-}
 
-/**
- * Minimal RFC 4180 reader — enough for a spreadsheet export (quoted fields,
- * doubled quotes, newlines inside quotes). Not worth a dependency.
- */
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = '';
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else quoted = false;
-      } else field += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (c !== '\r') field += c;
-  }
-  if (field || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
 
-function readRows(): Row[] {
-  const table = parseCsv(readFileSync(resolve(ROOT, 'spec/profiles.csv'), 'utf8'));
-  const head = table[0];
-  const col = (name: string): number => {
-    const i = head.indexOf(name);
-    if (i < 0) throw new Error(`spec/profiles.csv is missing the "${name}" column.`);
-    return i;
-  };
-  const [p, s, t, op, root] = ['profile', 'sub-profile', 'tools', 'operasyon', 'kaynak_kok'].map(col);
-  return table
-    .slice(1)
-    .map((r, i) => ({
-      profile: r[p]?.trim() ?? '',
-      subProfile: r[s]?.trim() ?? '',
-      tool: r[t]?.trim() ?? '',
-      operation: r[op]?.trim() ?? '',
-      rootResource: r[root]?.trim() ?? '',
-      line: i + 2, // 1-based, past the header — matches what an editor shows
-    }))
-    .filter((r) => r.profile && r.tool);
-}
 
 /**
  * Every rule below fails the build rather than dropping a row. A silently
@@ -110,13 +159,9 @@ function validate(rows: Row[]): void {
             `(${MANUAL_PREFIXES.join(', ')}).`
         );
       }
-    } else {
-      const op = byName.get(row.operation);
-      if (!op) {
-        problems.push(`${where}: operation "${row.operation}" is not in the spec.`);
-      } else if (op.deprecated) {
-        problems.push(`${where}: operation "${row.operation}" is deprecated by Apple and never loads.`);
-      }
+    } else if (row.profile !== PROFILELESS_MARKER && !byName.has(row.operation)) {
+      // Deprecated operations are left out of the build too (scripts/generate.ts).
+      problems.push(`${where}: operation "${row.operation}" is not in the build: not in the spec, or deprecated.`);
     }
 
     // The same tool in two profiles is deliberate (M:N). The same tool twice in
@@ -124,6 +169,32 @@ function validate(rows: Row[]): void {
     const triple = `${row.profile}\u0000${row.subProfile}\u0000${row.tool}`;
     if (seen.has(triple)) problems.push(`${where}: duplicate row.`);
     seen.add(triple);
+  }
+
+  const placed = new Set(
+    rows.filter((r) => r.profile !== PROFILELESS_MARKER && r.operation !== MANUAL_MARKER).map((r) => r.operation)
+  );
+  for (const [dropped, twin] of Object.entries(TWIN_OF)) {
+    if (!byName.has(twin)) problems.push(`TWIN_OF: twin "${twin}" of "${dropped}" is not in the spec.`);
+    else if (!placed.has(twin)) {
+      problems.push(`TWIN_OF: "${dropped}" was dropped for "${twin}", which is in no profile.`);
+    }
+    if (placed.has(dropped)) problems.push(`TWIN_OF: "${dropped}" is marked dropped but has a row.`);
+  }
+
+  for (const row of rows) {
+    if (row.profile === PROFILELESS_MARKER && placed.has(row.operation)) {
+      problems.push(`line ${row.line}: "${row.tool}" is marked ${PROFILELESS_MARKER} but also sits in a profile.`);
+    }
+  }
+
+  const macros = new Set(rows.filter((r) => r.operation === MANUAL_MARKER).map((r) => r.tool));
+  for (const [covered, macro] of Object.entries(MACRO_COVERED)) {
+    if (placed.has(covered)) problems.push(`MACRO_COVERED: "${covered}" still has a profile row.`);
+    if (!byName.has(covered)) problems.push(`MACRO_COVERED: "${covered}" is not in the spec.`);
+    if (!macros.has(macro)) {
+      problems.push(`MACRO_COVERED: "${covered}" names "${macro}", which is no hand-written tool in the sheet.`);
+    }
   }
 
   if (problems.length) {
@@ -144,10 +215,11 @@ interface ProfileData {
   subProfiles: SubProfileData[];
 }
 
-function build(rows: Row[]): { core: SubProfileData; profiles: ProfileData[] } {
+function build(rows: Row[]): ProfileData[] {
   const profiles = new Map<string, Map<string, SubProfileData>>();
 
   for (const row of rows) {
+    if (row.profile === PROFILELESS_MARKER) continue;
     if (!profiles.has(row.profile)) profiles.set(row.profile, new Map());
     const subs = profiles.get(row.profile)!;
     if (!subs.has(row.subProfile)) {
@@ -161,31 +233,21 @@ function build(rows: Row[]): { core: SubProfileData; profiles: ProfileData[] } {
     const sub = subs.get(row.subProfile)!;
     if (row.operation === MANUAL_MARKER) sub.manualTools.push(row.tool);
     else sub.operations.push(row.operation);
-    if (row.rootResource && !sub.rootResources.includes(row.rootResource)) {
+    // A macro row names `(makro)` here: not an Apple resource, nothing to reach.
+    if (row.rootResource && row.rootResource !== '(makro)' && !sub.rootResources.includes(row.rootResource)) {
       sub.rootResources.push(row.rootResource);
     }
   }
 
-  const coreSubs = profiles.get(CORE_PROFILE);
-  if (!coreSubs) throw new Error(`spec/profiles.csv has no "${CORE_PROFILE}" profile.`);
-  const core = [...coreSubs.values()][0];
-  if (coreSubs.size !== 1) {
-    throw new Error(`"${CORE_PROFILE}" must be a flat set, but has sub-profiles: ${[...coreSubs.keys()]}`);
-  }
-  profiles.delete(CORE_PROFILE);
-
-  // Core rides along in every server, so repeating it inside a sub-profile only
-  // inflates the tool counts the picker shows.
-  const coreOps = new Set(core.operations);
-  for (const subs of profiles.values()) {
-    for (const sub of subs.values()) {
-      sub.operations = sub.operations.filter((name) => !coreOps.has(name));
+  // A profile is either flat (one unnamed sub-profile) or split into named
+  // ones. A mix would leave rows that no `profile:sub` argument can select.
+  for (const [name, subs] of profiles) {
+    if (subs.size > 1 && subs.has('')) {
+      throw new Error(`"${name}" mixes rows without a sub-profile with named sub-profiles.`);
     }
   }
 
-  return {
-    core,
-    profiles: [...profiles.entries()]
+  return [...profiles.entries()]
       .map(([name, subs]) => ({
         name,
         // Alphabetical, not sheet order: the CSV's row order is an artifact of
@@ -193,11 +255,10 @@ function build(rows: Row[]): { core: SubProfileData; profiles: ProfileData[] } {
         // also keeps families together — every iap-* next to the others.
         subProfiles: [...subs.values()].sort((a, b) => a.name.localeCompare(b.name)),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  };
+      .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function emit(core: SubProfileData, profiles: ProfileData[]): string {
+function emit(profiles: ProfileData[]): string {
   const sub = (s: SubProfileData): string =>
     `    {\n` +
     `      name: ${JSON.stringify(s.name)},\n` +
@@ -205,6 +266,11 @@ function emit(core: SubProfileData, profiles: ProfileData[]): string {
     `      manualTools: ${JSON.stringify(s.manualTools.sort())},\n` +
     `      rootResources: ${JSON.stringify(s.rootResources.sort())},\n` +
     `    },`;
+  const record = (r: Record<string, string>): string => {
+    const keys = Object.keys(r).sort();
+    if (!keys.length) return '{}';
+    return `{\n` + keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(r[k])},`).join('\n') + `\n}`;
+  };
 
   return (
     `// AUTO-GENERATED — do not edit by hand.\n` +
@@ -224,36 +290,33 @@ function emit(core: SubProfileData, profiles: ProfileData[]): string {
     `  name: string;\n` +
     `  subProfiles: GeneratedSubProfile[];\n` +
     `}\n\n` +
-    `/** Injected into every profile: without an app ID no workflow can start. */\n` +
-    `export const CORE: GeneratedSubProfile = {\n` +
-    `  name: ${JSON.stringify(core.name)},\n` +
-    `  operations: ${JSON.stringify(core.operations.sort())},\n` +
-    `  manualTools: ${JSON.stringify(core.manualTools.sort())},\n` +
-    `  rootResources: ${JSON.stringify(core.rootResources.sort())},\n` +
-    `};\n\n` +
     `export const PROFILE_DATA: GeneratedProfile[] = [\n` +
     profiles
       .map((p) => `  {\n    name: ${JSON.stringify(p.name)},\n    subProfiles: [\n` +
         p.subProfiles.map(sub).join('\n') + `\n    ],\n  },`)
       .join('\n') +
-    `\n];\n`
+    `\n];\n\n` +
+    `/** Operations a hand-written macro replaces outright (operation -> macro). */\n` +
+    `export const MACRO_COVERED: Record<string, string> = ${record(MACRO_COVERED)};\n`
   );
 }
 
 function main(): void {
   const rows = readRows();
   validate(rows);
-  const { core, profiles } = build(rows);
+  const profiles = build(rows);
+  const profileless = rows.filter((r) => r.profile === PROFILELESS_MARKER);
 
-  writeFileSync(resolve(ROOT, 'src/generated/profiles-data.ts'), emit(core, profiles));
+  writeFileSync(resolve(ROOT, 'src/generated/profiles-data.ts'), emit(profiles));
 
-  const count = (s: SubProfileData): number => s.operations.length + s.manualTools.length;
   const named = profiles.reduce((n, p) => n + p.subProfiles.filter((s) => s.name).length, 0);
   const report = [
-    `Profiles:       ${profiles.length} (+ core: ${count(core)} tools, injected everywhere)`,
+    `Profiles:       ${profiles.length}`,
     `Sub-profiles:   ${named} named, ` +
       `${profiles.filter((p) => p.subProfiles.length === 1 && !p.subProfiles[0].name).length} profiles without`,
-    `Rows:           ${rows.length}`,
+    `Rows:           ${rows.length} (${profileless.length} profile-less and ` +
+      `${Object.keys(TWIN_OF).length} twins left out of the build, ` +
+      `${Object.keys(MACRO_COVERED).length} covered by a macro)`,
     '',
     ...profiles.map((p) => {
       // Union, not sum: a tool may sit in several sub-profiles on purpose, and

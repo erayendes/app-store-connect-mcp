@@ -3,13 +3,14 @@ import { riskFor } from '../src/core/risk.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { PRICING_TOOL_NAMES } from '../src/tools/pricing.js';
 import { REVIEWS_AI_TOOL_NAMES } from '../src/tools/reviews-ai.js';
-import { SCREENSHOT_TOOL_NAMES } from '../src/tools/screenshots.js';
+import { MEDIA_TOOL_NAMES } from '../src/tools/screenshots.js';
 import { ANALYTICS_TOOL_NAMES } from '../src/tools/analytics.js';
 import { CI_TOOL_NAMES } from '../src/tools/ci.js';
 import { PREFLIGHT_TOOL_NAMES } from '../src/tools/preflight.js';
 import { METADATA_TOOL_NAMES } from '../src/tools/metadata.js';
 import { ACCOUNT_TOOL_NAMES } from '../src/tools/account.js';
 import { TESTFLIGHT_TOOL_NAMES } from '../src/tools/testflight.js';
+import { RELEASE_TOOL_NAMES } from '../src/tools/release.js';
 import { INTENTS } from './eval/intents.js';
 
 const operationNames = new Set(OPERATIONS.map((operation) => operation.name));
@@ -17,13 +18,14 @@ const operationsByName = new Map(OPERATIONS.map((operation) => [operation.name, 
 const macroNames = new Set([
   ...PRICING_TOOL_NAMES,
   ...REVIEWS_AI_TOOL_NAMES,
-  ...SCREENSHOT_TOOL_NAMES,
+  ...MEDIA_TOOL_NAMES,
   ...ANALYTICS_TOOL_NAMES,
   ...CI_TOOL_NAMES,
   ...PREFLIGHT_TOOL_NAMES,
   ...METADATA_TOOL_NAMES,
   ...ACCOUNT_TOOL_NAMES,
   ...TESTFLIGHT_TOOL_NAMES,
+  ...RELEASE_TOOL_NAMES,
 ]);
 const SHARED_NORMAL_ADVERSARIAL_TOOLS = [
   'app_store_version_release_requests.create',
@@ -60,24 +62,6 @@ describe('AX evaluation intent corpus', () => {
     expect(missing, 'expected tools missing from generated operations').toEqual([]);
   });
 
-  /**
-   * "Exists in the spec" is not the same as "an agent can call it". The
-   * registry refuses deprecated operations unless --include-deprecated, and
-   * search no longer offers them — so an intent aimed at one measures a
-   * failure the product cannot fix. Three intents shipped this way
-   * (subscription_availabilities, game_center_achievements,
-   * game_center_leaderboards) and the existence check above waved them past.
-   */
-  it('never expects a deprecated tool — the registry would refuse to load it', () => {
-    const unreachable = INTENTS.flatMap(({ intent, expectedTool }) =>
-      (Array.isArray(expectedTool) ? expectedTool : [expectedTool])
-        .filter((tool) => operationsByName.get(tool)?.deprecated)
-        .map((tool) => `${intent}: ${tool}`)
-    );
-
-    expect(unreachable, 'expected tools that no profile can load').toEqual([]);
-  });
-
   it('only names installed macro tools', () => {
     const missing = INTENTS
       .filter((intent) => intent.macro)
@@ -90,7 +74,7 @@ describe('AX evaluation intent corpus', () => {
   it('has the frozen core, adversarial, and corpus sizes', () => {
     expect(INTENTS.filter((intent) => intent.core).length).toBe(15);
     expect(INTENTS.filter((intent) => intent.adversarial).length).toBe(8);
-    expect(INTENTS).toHaveLength(52);
+    expect(INTENTS).toHaveLength(60);
   });
 
   it('does not repeat every expected-tool token in a search query', () => {

@@ -30,6 +30,10 @@ describe('pickVersion', () => {
   it('refuses the same version string on two platforms', () => {
     expect(() => pickVersion('Ask Quran', [v('3.0', 'IOS'), v('3.0', 'TV_OS')], '3.0')).toThrow(/more than one platform/);
   });
+  it('refuses the first-version fallback when no editable version spans multiple platforms', () => {
+    expect(() => pickVersion('Ask Quran', [v('2.0', 'IOS', 'READY_FOR_SALE'), v('1.0', 'MAC_OS', 'READY_FOR_SALE')]))
+      .toThrow(/no editable version and has versions on more than one platform/);
+  });
 
   it('says when the platform has no such version', () => {
     expect(() => pickVersion('Ask Quran', both, '2.1.3', 'TV_OS')).toThrow(/no version "2\.1\.3" on tvOS\. Found: 1\.8\.1/);
@@ -39,16 +43,17 @@ describe('pickVersion', () => {
 describe('the release prompt', () => {
   const http = {
     get: async (path: string) =>
-      path === '/v1/apps/6636549188'
+      path.includes('/reviewSubmissions') ? { data: [] } : path === '/v1/apps/6636549188'
         ? { data: { id: '6636549188', attributes: { name: 'Ask Quran', bundleId: 'com.milowda.askquranai' } } }
         : { data: both },
   } as any;
 
   it('names the app, version and platform it will submit', async () => {
-    expect(await releasePreviewArgs({ app: '6636549188', platform: 'IOS' }, http)).toEqual({
+    expect(await releasePreviewArgs({ app: '6636549188', platform: 'IOS' }, http)).toMatchObject({
       app: 'Ask Quran (6636549188)',
       version: '2.1.3',
       platform: 'iOS',
+      items: [{ type: 'appStoreVersion', id: both[0].id }],
     });
   });
 
@@ -73,5 +78,30 @@ describe('withAppName', () => {
 
   it('keeps the id when the lookup fails', async () => {
     expect(await withAppName({ app: '6636549188' }, { get: async () => { throw new Error('down'); } })).toEqual({ app: '6636549188' });
+  });
+});
+
+describe('bounded shared version selection', () => {
+  it('retains includes across pages for preflight and rejects total-only truncation', async () => {
+    const { readAppStoreVersions } = await import('../src/tools/preflight.js');
+    const paths: string[] = [];
+    const http = { get: async (path: string) => {
+      paths.push(path);
+      return paths.length === 1
+        ? { data: [v('1', 'IOS')], included: [{ id: 'build-1' }], links: { next: '/next' }, meta: { paging: { total: 2 } } }
+        : { data: [v('2', 'IOS')], included: [{ id: 'build-2' }] };
+    } } as any;
+    const result = await readAppStoreVersions(http, 'app');
+    expect(result.data.map((r) => r.id)).toEqual(['IOS-1', 'IOS-2']);
+    expect(result.included.map((r) => r.id)).toEqual(['build-1', 'build-2']);
+    await expect(readAppStoreVersions({ get: async () => ({ data: [v('1', 'IOS')], meta: { paging: { total: 2 } } }) } as any, 'app')).rejects.toThrow(/truncated/);
+  });
+  it('bounds pagination and refuses repeated cursors', async () => {
+    const { readAppStoreVersions } = await import('../src/tools/preflight.js');
+    let calls = 0;
+    const http = { get: async () => ({ data: [v(String(++calls), 'IOS')], links: { next: `/page/${calls}` } }) } as any;
+    await expect(readAppStoreVersions(http, 'app')).rejects.toThrow(/truncated after at most 10 pages/);
+    expect(calls).toBe(10);
+    await expect(readAppStoreVersions({ get: async () => ({ data: [v('1', 'IOS')], links: { next: '/same' } }) } as any, 'app')).rejects.toThrow(/repeated pagination cursor/);
   });
 });

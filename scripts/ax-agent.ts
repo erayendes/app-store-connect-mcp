@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { INTENTS } from '../tests/eval/intents.js';
-import { PROFILES as ALL_PROFILES, profilesForOperation } from '../src/profiles.js';
+import { CORE_PROFILE, PROFILES as ALL_PROFILES, profilesForOperation } from '../src/profiles.js';
 import { isMutatingCall, isAdversarialBreach } from './ax-breach.js';
 import { serverName } from '../src/clients.js';
 
@@ -189,7 +189,9 @@ const SELECTED = select();
  * changes.
  */
 function wrongProfileFor(needed: string[]): string {
+  // Never core: it is beside the wrong profile, as it is beside every profile.
   const wrong = ALL_PROFILES.map((p) => p.name)
+    .filter((n) => n !== CORE_PROFILE)
     .sort()
     .find((n) => !needed.includes(n));
   if (!wrong) throw new Error('--wrong-profile: every profile owns a selected target.');
@@ -197,7 +199,7 @@ function wrongProfileFor(needed: string[]): string {
 }
 
 const NEEDED_PROFILES = profilesFor(SELECTED);
-const PROFILES = wrongProfile ? [wrongProfileFor(NEEDED_PROFILES)] : NEEDED_PROFILES;
+const PROFILES = wrongProfile ? [CORE_PROFILE, wrongProfileFor(NEEDED_PROFILES)] : NEEDED_PROFILES;
 
 
 /**
@@ -412,7 +414,12 @@ function profilesFor(intents: Intent[]): string[] {
   }
   // A corpus of pure macro intents would leave this empty; monetization carries
   // the macros, so it is the one profile that can never be wrong to open.
-  return needed.size ? [...needed].sort() : ['monetization'];
+  if (!needed.size) needed.add('monetization');
+  // Since 3.0 app lookup and search live only in core, and every real install
+  // registers it next to the rest; a session without it measures a setup
+  // nobody has.
+  needed.add(CORE_PROFILE);
+  return [...needed].sort();
 }
 
 const mcpServers = Object.fromEntries(

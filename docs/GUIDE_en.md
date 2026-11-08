@@ -7,6 +7,8 @@
 **Confirmation before risky changes is on by default.**
 When you ask to change a price, give someone Admin access or delete a certificate, Heimdall opens a confirmation in the app you use (Claude, Cursor…) and shows what will change. So even if the AI reads "lower the price a bit" as `0.99`, nothing changes until you approve it.
 
+If your app can't show that question (like the Code tab in Claude Desktop), Heimdall opens a window of its own on a Mac, and its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer. If nothing seems to happen, look for that window.
+
 ## One call instead of a chain
 
 A question that looks simple in App Store Connect often takes a long series of requests. To answer *"What does this subscription cost in each country?"*, the AI has to find the app, then the subscription group, then the subscription, then look up the price in 175 countries one by one.
@@ -17,31 +19,37 @@ The workflows below turn chains like that into a single step. You don't have to 
 
 | Instead of this chain | One workflow | Profile it needs |
 |:--|:--|:--|
-| app → group → subscription → price points | `pricing__get_subscription_price` — one country, or prices in ~175 countries grouped by amount if you don't name one | `monetization:subscription-pricing` |
-| app → in-app purchase → price schedule → prices | `pricing__get_iap_price` — current and scheduled prices by country | `monetization:iap-pricing` |
+| app → group → subscription → price points | `pricing__get_subscription_price` — one country, or prices in ~175 countries grouped by amount if you don't name one | `monetization:subscription` |
+| app → in-app purchase → price schedule → prices | `pricing__get_iap_price` — current and scheduled prices by country | `monetization:in-app-purchases` |
 | app → price schedule → prices | `pricing__get_app_price` — current and scheduled prices by country | `monetization:app-price` |
-| the same chain, plus the change | `pricing__set_subscription_price` | `monetization:subscription-pricing` |
-| in-app purchase → price points → a new price schedule built by hand | `pricing__set_iap_price` — one country's price; every other manual and scheduled price is kept | `monetization:iap-pricing` |
-| setting prices country by country | `pricing__equalize_price` — you set one base price and Apple works out every other market; for apps, in-app purchases or subscriptions | `monetization:subscription-pricing` |
-| pricing a win-back, promotional or introductory offer country by country | `pricing__make_offer` — you set one base price (or a free trial) and the offer is made in every country the subscription is sold in; an introductory offer goes country by country and picks up where it stopped | `monetization:subscription-offers` |
-| create a submission, add the version, submit — three calls in that order | `release__submit` | `distribution:submission` |
-| find the build, look up the beta groups, add the missing links | `testflight__assign_build_to_groups` | `access:beta-groups` |
+| the same chain, plus the change | `pricing__set_subscription_price` | `monetization:subscription` |
+| in-app purchase → price points → a new price schedule built by hand | `pricing__set_iap_price` — one country's price; every other manual and scheduled price is kept | `monetization:in-app-purchases` |
+| setting prices country by country | `pricing__equalize_price` — you set one base price and Apple works out every other market; for apps, in-app purchases or subscriptions | `monetization:app-price`, `in-app-purchases` or `subscription` |
+| pricing a win-back, promotional, retention or introductory offer country by country | `pricing__make_offer` — you set one base price (or a free trial) and the offer is made in every country the subscription is sold in; an introductory offer goes country by country and picks up where it stopped | `monetization:subscription-offers`, `subscription-win-back` or `subscription-retention` |
+| group → subscription → version → localizations → availability → price, seven kinds of write | `pricing__setup_subscription` — one confirmation; an existing group is reused, never edited | `monetization:subscription` |
+| create a submission, add the version, submit — three calls in that order | `release__submit` | `distribution:publish` |
+| the same for an in-app purchase, subscription, retention message, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — several items in one submission; it reads what is already in it, lists everything before you confirm, and can add the app's version when the item has to go with it | the item's own sub-profile, e.g. `monetization:in-app-purchases` |
+| find the build, look up the beta groups, add the missing links | `testflight__assign_build_to_groups` | `testflight:groups` |
+| checking again and again whether an uploaded build has finished processing | `build__wait_for_processing` — waits 1 minute by default, up to 15 when asked, and says whether it is VALID; past that, call it again | `testflight:test-builds` |
 | comparing store text across forty languages by eye | `metadata_ai__audit_localizations` | `distribution:version` |
 | pasting translations into each language by hand | `metadata_ai__apply_localizations` — from a CSV or JSON file | `distribution:version` |
 | version + build + review details + localizations + screenshots, to answer "can I submit?" | `preflight__check_version` | `distribution:version` |
-| subscription + group localizations + prices + availability + review screenshot | `preflight__check_subscription` — what's missing before review | `monetization:subscription-catalog` |
+| subscription + group localizations + prices + availability + review screenshot | `preflight__check_subscription` — what's missing before review | `monetization:subscription` |
 | comparing two versions language by language | `listing__diff_metadata` — only the fields that differ, plus languages added or dropped | `distribution:version` |
-| version → 50 localizations → screenshot sets → screenshots | `listing__get_screenshots` | `distribution:version` |
-| reserving a screenshot slot and uploading the bytes yourself | `listing__upload_screenshot` | `distribution:version` |
-| reserving an asset library image or video, uploading it, then placing it on a page | `listing__upload_asset` | `marketing:asset-library` |
-| deleting several asset library images or videos, under one confirmation | `listing__delete_assets` | `marketing:asset-library` |
+| page → localizations → library placements → images and videos | `media__list` — the version page, a custom product page, a product page test, an in-app event, a retention message or the library itself, with Apple's count and size limits | ASC-Core |
+| an App Clip, Game Center item, in-app purchase or subscription → its image → reserve, upload, commit | `media__list` / `media__upload` / `media__delete` with a file `target` — also review screenshots and attachments, encryption documents, routing coverage, background asset and build upload files; one check of the file and its owner before anything is sent. Every target and its rules: [Media targets](MEDIA_TARGETS_en.md) | ASC-Core |
+| reserving a library image or video, uploading the bytes, then placing it on a page | `media__upload` — into the library, and onto a page if you name one | ASC-Core |
+| placing, reordering, removing from a page, setting a video's poster frame, archiving or renaming | `media__arrange` | ASC-Core |
+| deleting several library files, or taking them off a page, under one confirmation | `media__delete` — checks every file belongs to that app and page before it deletes any | ASC-Core |
 | request → report → instance → segment → signed URL | `analytics__get_report` — returns rows, not a link | `analytics` |
-| app → crash and screenshot feedback → crash logs | `testflight__feedback_digest` — counts per build, device and OS, tester comments and short crash log excerpts | `testflight` |
-| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` — finds the most recent failure among the last 40 runs and lists its issues and failed tests | `xcode-cloud` |
-| pulling reviews and sorting them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-review` |
-| listing your apps, checking each one's version, then making sense of their App Store status | `asc__account_status` — which app is live, which is on its way, and whether the next move is yours or Apple's | core, so every profile |
+| app → crash and screenshot feedback → crash logs | `testflight__feedback_digest` — counts per build, device and OS, tester comments and short crash log excerpts | `testflight:feedbacks` |
+| app → Xcode Cloud product → run → actions → issues and tests | `ci__diagnose_run` — finds the most recent failure among the last 40 runs and lists its issues and failed tests | `xcode-cloud:workflows` |
+| pulling reviews and sorting them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-reviews` |
+| listing your apps, checking each one's version, then making sense of their App Store status | `asc__account_status` — which app is live, which is on its way, and whether the next move is yours or Apple's | ASC-Core |
 
-`pricing__equalize_price` changes prices in about 175 countries at once, so it goes straight to your revenue. That's why it always asks for your approval before it runs.
+"ASC-Core" means the tool is on ASC-Core, the server setup registers next to your profiles. A profile server does not carry it; an app that runs only one server gets it with `--with-core`.
+
+`pricing__equalize_price` changes prices in about 175 countries at once, so it goes straight to your revenue. That's why it asks for your approval before it runs, unless you turned confirmations off with `--no-confirm`.
 
 ## Calling an app by name
 
@@ -51,7 +59,7 @@ This applies to apps. For other records it isn't a general rule: some workflows 
 ## StoreKit 2 — customer transactions
 
 The App Store Server API answers questions about individual customers rather than your store listing: purchase history, entitlements, refunds, subscription status.
-It comes with `monetization:storekit`. Name the app in your request (*"Ask Quran's refunds for this transaction"*); Heimdall looks up its bundle ID. With only one app on the account you don't even need to name it.
+It comes with `monetization:transactions`. Name the app in your request (*"Ask Quran's refunds for this transaction"*); Heimdall looks up its bundle ID. With only one app on the account you don't even need to name it.
 
 ## Prompts
 
@@ -60,8 +68,9 @@ Three workflows are available as MCP prompts. Type `/` in your app (Claude, Curs
 | Prompt | What it runs | When it's available |
 |:--|:--|:--|
 | `release-readiness` | `preflight__check_version`, then `listing__diff_metadata`, ending in GO or NO-GO | `distribution:version` |
-| `review-triage` | briefing → triage → a draft reply per review, none of them sent | `marketing:customer-review` |
-| `price-check` | prices worldwide in one call, then the ones that look like mistakes | `monetization:subscription-pricing` |
+| `review-triage` | briefing → triage → a draft reply per review, none of them sent. Takes the app's numeric Apple ID | `marketing:customer-reviews` |
+| `price-check` | prices worldwide in one call, then the ones that look like mistakes | `monetization:subscription` |
+| `getting-started` | the connection check, the account at a glance, then how to find a tool by asking | ASC-Core |
 
 A prompt only appears when all the tools it uses are installed. Each one stops before changing anything: submitting, replying and changing prices are your call.
 
@@ -77,7 +86,7 @@ A prompt only appears when all the tools it uses are installed. Each one stops b
 
 > **You:** Is there a tool for managing in-app events? *(you haven't installed `marketing`)*
 >
-> **AI:** *(calls `asc__search_tools`)* Yes: the `app_events__*` tools, in `ASC-Marketing`, which isn't installed. To add it, run `setup` again and pick the `marketing` profile.
+> **AI:** *(calls `asc__search_tools`)* Yes: the `app_events__*` tools, in `marketing:app-events`, which isn't installed. With your yes I can run `npx -y @erayendes/asc-mcp register marketing:app-events` to add it; then restart the app.
 
 > - Submit version 3.2 for review and start a phased release once it's approved.
 > - Show last week's TestFlight crash reports grouped by device model.

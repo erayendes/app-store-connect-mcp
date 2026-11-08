@@ -5,7 +5,8 @@
       "args": [
         "-y",
         "@erayendes/asc-mcp",
-        "app-clips"
+        "app-clips",
+        "--with-core"
       ]
     }
   }

@@ -23,7 +23,7 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -36,7 +36,8 @@ import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
 import { META_TOOLS } from '../src/tools/meta.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, TYPED_BY_NAME, type RiskLevel } from '../src/core/risk.js';
 import { loadConfig } from '../src/core/config.js';
-import { createServer, SERVER_INSTRUCTIONS } from '../src/server.js';
+import { CORE_POINTER, createServer, SERVER_INSTRUCTIONS } from '../src/server.js';
+import { PROFILES, resolveSelection } from '../src/profiles.js';
 import { MUTATING_TAILS } from '../scripts/ax-breach.js';
 
 /**
@@ -94,19 +95,26 @@ describe('write-gate annotations (offline)', () => {
     ]);
     expect([...shouldWrite].sort()).toEqual([
       'storekit__extend_renewal_date',
+      'storekit__finish_transaction',
+      'storekit__manage_retention_messaging',
+      'storekit__mass_extend_renewal_date',
       'storekit__request_test_notification',
+      'storekit__send_consumption_info',
+      'storekit__set_app_account_token',
       'pricing__set_subscription_price',
       'pricing__equalize_price',
       'pricing__set_iap_price',
       'pricing__make_offer',
-      'listing__upload_screenshot',
-      'listing__upload_asset',
-      'listing__delete_assets',
+      'pricing__setup_subscription',
+      'media__upload',
+      'media__arrange',
+      'media__delete',
       'metadata_ai__apply_localizations',
       'release__submit',
+      'release__submit_items',
       'testflight__assign_build_to_groups',
     ].sort());
-    // The listing and analytics families were outside this check until the
+    // The media and analytics families were outside this check until the
     // upload macro made one of them a write — an unchecked family is exactly
     // where a mislabelled write hides.
     const wrong = [
@@ -125,22 +133,25 @@ describe('write-gate annotations (offline)', () => {
       credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'unused' },
       readOnly: false,
       confirmWrites: 'off' as const,
-      includeDeprecated: false,
       dryRun: true,
     };
-    const server = createServer(config);
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-    const client = new Client({ name: 'catalog-test', version: '0' }, { capabilities: {} });
-    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    // Every macro is served by some profile, with the annotations the catalog gives it.
     const catalogNames = new Set(MACRO_TOOLS.map((t) => t.name));
-    const served = (await client.listTools()).tools.filter((t) => catalogNames.has(t.name));
-    expect(new Set(served.map((t) => t.name))).toEqual(catalogNames);
+    const served = new Map<string, { name: string; annotations?: { readOnlyHint?: boolean } }>();
+    for (const profile of PROFILES) {
+      const server = createServer(config, resolveSelection(profile.name));
+      const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+      const client = new Client({ name: 'catalog-test', version: '0' }, { capabilities: {} });
+      await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+      for (const tool of (await client.listTools()).tools) if (catalogNames.has(tool.name)) served.set(tool.name, tool);
+      await client.close();
+      await server.close();
+    }
+    expect(new Set(served.keys())).toEqual(catalogNames);
     const writes = MACRO_TOOLS.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort();
-    expect(served.filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort()).toEqual(writes);
+    expect([...served.values()].filter((t) => t.annotations?.readOnlyHint !== true).map((t) => t.name).sort()).toEqual(writes);
     expect([...catalogNames].filter((name) => MUTATING_TAILS.has(name)).sort()).toEqual(writes);
     expect(catalogNames.has('pricing__make_offer')).toBe(true);
-    await client.close();
-    await server.close();
   });
 
   it('names only real tools in the default-mode release list', () => {
@@ -149,6 +160,7 @@ describe('write-gate annotations (offline)', () => {
       ...OPERATIONS.map((op) => op.name.replace(/\./g, '__')),
       ...RELEASE_TOOLS.map((t) => t.name),
       ...TESTFLIGHT_TOOLS.map((t) => t.name),
+      ...STOREKIT_TOOLS.map((t) => t.name),
     ]);
     expect([...ASK_BY_DEFAULT].filter((n) => !real.has(n))).toEqual([]);
     expect([...TYPED_BY_NAME].filter((n) => !ASK_BY_DEFAULT.has(n))).toEqual([]);
@@ -180,10 +192,10 @@ const live = configured && existsSync(ENTRY);
 
 /** One write per risk level, with ids that match nothing. Every call is cancelled. */
 const SAMPLES: Array<{ profile: string; tool: string; args: Record<string, unknown>; risk: RiskLevel }> = [
-  { profile: 'access', tool: 'beta_groups__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'destructive' },
+  { profile: 'testflight', tool: 'beta_groups__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'destructive' },
   { profile: 'access', tool: 'users__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'users', id: 'gate-test-not-a-real-id', attributes: { roles: ['ADMIN'] } } } }, risk: 'access' },
   { profile: 'provisioning', tool: 'certificates__delete', args: { id: 'gate-test-not-a-real-id' }, risk: 'infrastructure' },
-  { profile: 'app-info', tool: 'apps__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'apps', id: 'gate-test-not-a-real-id', attributes: {} } } }, risk: 'public' },
+  { profile: 'general', tool: 'apps__update', args: { id: 'gate-test-not-a-real-id', body: { data: { type: 'apps', id: 'gate-test-not-a-real-id', attributes: {} } } }, risk: 'public' },
 ];
 
 interface Elicitation { message: string; schema: any }
@@ -251,7 +263,11 @@ function client(profile: string, args: string[] = ['--confirm']) {
       // The rules only work if the client is actually handed them. Asserting on
       // the constant would prove nothing — this is the one place the wiring is
       // visible, in the same handshake every real client performs.
-      expect(hello.result?.instructions, 'server sent no instructions').toBe(SERVER_INSTRUCTIONS);
+      // Every server here is a profile server without core, so it also says
+      // where app lookup and search went.
+      expect(hello.result?.instructions, 'server sent no instructions').toBe(
+        `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}`
+      );
       send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     },
     async call(name: string, args: Record<string, unknown>) {
@@ -289,6 +305,10 @@ describe.skipIf(!live)('write gate, end to end (live)', () => {
     expect(schema.includes('CONFIRM'), `${sample.tool} (${sample.risk}) prompt strength`).toBe(wantsTyped);
 
     expect(text, `${sample.tool} did not report the cancellation`).toMatch(/Nothing was changed|cancelled/i);
+
+    // And the refusal is on the record, not only in the reply.
+    const audit = readFileSync(join(process.env.ASC_STATE_DIR!, 'audit.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    expect(audit.some((e) => e.tool === sample.tool && e.outcome === 'not run' && e.confirmation === 'declined')).toBe(true);
   }, 60_000);
 });
 

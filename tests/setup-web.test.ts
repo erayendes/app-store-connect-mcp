@@ -140,24 +140,31 @@ describe('setup --web, registration confirmation', () => {
     mkdirSync(join(isolatedHome, '.cursor'), { recursive: true });
     const other = PACKAGE.endsWith('@beta') ? '@erayendes/asc-mcp' : '@erayendes/asc-mcp@beta';
     writeFileSync(path, JSON.stringify({ mcpServers: {
-      'ASC-AppInfo': { command: 'npx', args: ['-y', other, 'app-info', '--read-only', '--x=secret-flag-value'], env: { DEMO_TOKEN: 'secret-test-value' } },
+      'ASC-General': { command: 'npx', args: ['-y', other, 'general', '--read-only', '--x=secret-flag-value'], env: { DEMO_TOKEN: 'secret-test-value' } },
       'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'], env: { ASC_KEY_ID: 'another-secret-value' } },
     } }));
     const entries = readRegistrations(cursor);
-    const plan = planChanges([cursor], ['app-info', 'analytics'], new Map([['cursor', entries]]),
-      { prune: true, stale: new Map([['cursor', new Set(['ASC-AppInfo'])]]) });
+    const plan = planChanges([cursor], ['general', 'analytics'], new Map([['cursor', entries]]),
+      { prune: true, stale: new Map([['cursor', new Set(['ASC-General'])]]) });
     const pagePlan = planForPage(plan)[0];
     const pageData = JSON.stringify(pagePlan);
-    expect(pageData).toContain('ASC-AppInfo (--read-only --x=<hidden>)');
+    expect(pageData).toContain('ASC-General (--read-only --x=<hidden>)');
     expect(pagePlan.userManaged).toContain('ASC-Analytics');
-    expect(pagePlan.rewrites).toEqual(['ASC-AppInfo (--read-only --x=<hidden>)']);
+    expect(pagePlan.rewrites).toEqual(['ASC-General (--read-only --x=<hidden>)']);
     expect(pagePlan.rewrites).not.toContain('ASC-Analytics');
+    // One entry signs in with its own key, the other with the shared one: core
+    // is held back and the page says why, without either credential.
+    expect(pagePlan.add).not.toContain('ASC-Core');
+    expect(pagePlan.coreWithheld.join(' ')).toMatch(/different App Store Connect accounts/);
     expect(pageData).not.toContain('secret-test-value');
     expect(pageData).not.toContain('another-secret-value');
     expect(pageData).not.toContain('secret-flag-value');
-    expect(SETUP_PAGE).toContain("'rewrite ' + p.rewrites.join(', ')");
-    expect(SETUP_PAGE).toContain("el('span', 'mv'");
+    // Shown file by file: a channel move only is not shown; why core is held back is.
+    expect(plan[0].files[0].rows.map((r) => r.name)).not.toContain('ASC-General');
+    expect(plan[0].files[0].note).toMatch(/ASC-Core not added: .*different App Store Connect accounts/);
     expect(SETUP_PAGE).toContain('reuse && !vendorChanged() && !r.plan.some');
+    // The page says why core is held back before Apply, since the result will not.
+    expect(SETUP_PAGE).toContain("p.coreWithheld.forEach(function (why)");
     expect(readFileSync(path, 'utf8')).toContain('secret-test-value');
   });
 
@@ -166,13 +173,14 @@ describe('setup --web, registration confirmation', () => {
     const path = join(isolatedHome, '.cursor', 'mcp.json');
     mkdirSync(join(isolatedHome, '.cursor'), { recursive: true });
     writeFileSync(path, JSON.stringify({ mcpServers: {
-      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info'],
+      'ASC-General': { command: 'npx', args: ['-y', PACKAGE, 'general'],
         env: { ASC_ISSUER_ID: 'test-only' } },
     } }));
-    const pagePlan = planForPage(planChanges([cursor], ['app-info'],
+    const pagePlan = planForPage(planChanges([cursor], ['general'],
       new Map([['cursor', readRegistrations(cursor)]]), { prune: true }));
     expect(pagePlan).toHaveLength(1);
-    expect(pagePlan[0]).toMatchObject({ add: [], remove: [], rewrites: [], userManaged: ['ASC-AppInfo'] });
+    expect(pagePlan[0]).toMatchObject({ add: [], remove: [], rewrites: [], userManaged: ['ASC-General'], deadDeleted: [] });
+    expect(pagePlan[0].coreWithheld).toHaveLength(1);
     const expression = SETUP_PAGE.match(/\$\('apply'\)\.disabled = (reuse[\s\S]*?\n      \}\));/)?.[1];
     expect(expression).toBeDefined();
     const disabled = (reuse: boolean, changed: boolean, plan: typeof pagePlan): boolean =>
@@ -181,5 +189,29 @@ describe('setup --web, registration confirmation', () => {
     expect(disabled(false, false, pagePlan)).toBe(false);
     expect(disabled(true, true, pagePlan)).toBe(false);
     expect(disabled(true, false, [{ ...pagePlan[0], add: ['ASC-Analytics'] }])).toBe(false);
+    expect(disabled(true, false, [{ ...pagePlan[0], deadDeleted: ['ASC-AppInfo (app-info)'] }])).toBe(false);
+  });
+
+  it('shows core coming, read-only when inherited, and dead entries deleted or only reported', () => {
+    const cursor = CLIENTS.find((c) => c.id === 'cursor')!;
+    const path = join(isolatedHome, '.cursor', 'mcp.json');
+    mkdirSync(join(isolatedHome, '.cursor'), { recursive: true });
+    writeFileSync(path, JSON.stringify({ mcpServers: {
+      'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'], env: { ASC_READ_ONLY: 'true' } },
+      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'], env: { DEMO_MODE: 'secret-demo' } },
+      'ASC-Access': { command: 'npx', args: ['-y', PACKAGE, 'access:users'], env: { ASC_CONFIG_DIR: '/secret/dir' } },
+    } }));
+    const steps = planChanges([cursor], ['analytics'], new Map([['cursor', readRegistrations(cursor)]]), { prune: true });
+    const page = planForPage(steps)[0];
+    expect(page.add).toEqual(['ASC-Core (--read-only)']);
+    expect(page.deadDeleted).toEqual(['ASC-AppInfo (app-info; --read-only; env DEMO_MODE)']);
+    expect(page.remove).toEqual([]);
+    expect(page.deadReported).toEqual(['ASC-Access (access:users; env ASC_CONFIG_DIR): user-managed']);
+    expect(JSON.stringify(page)).not.toMatch(/secret-demo|\/secret\/dir/);
+    expect(steps[0].files[0].rows).toEqual([
+      { mark: '+', name: 'ASC-Core', note: '--read-only' },
+      { mark: '-', name: 'ASC-AppInfo', note: 'its profile app-info no longer exists' },
+      { mark: 'o', name: 'ASC-Access', note: 'its profile access:users no longer exists; left as it is' },
+    ]);
   });
 });

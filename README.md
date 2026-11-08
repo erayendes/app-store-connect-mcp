@@ -2,9 +2,6 @@
 
 **Your whole App Store Connect account, in one tool.**
 
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/brand/heimdall-social-card.png" alt="Heimdall — App Store Connect MCP" width="720">
-
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
@@ -12,6 +9,20 @@
 [![Yerli üretim](https://img.shields.io/badge/YERL%C4%B0%20%C3%9CRET%C4%B0M-red?style=flat&label=%F0%9F%A4%9D&color=red&link=https%3A%2F%2Fmilowda.com)](https://milowda.com)
 
 🇬🇧 English · 🇹🇷 [Türkçe](docs/README_tr.md)
+
+> **Heimdall 3.0 is here! 🎉**
+>
+> I released Heimdall three months ago. Since then it has been **downloaded more than 6,800 times** from npm, about 1,700 installs a month. It has passed **50 stars** on GitHub, with **37 releases** in 3 months. Thank you all; 3.0 is built on exactly the feedback you sent.
+>
+> 3.0 is the biggest update Heimdall has had:
+> - **Profiles are cut by the work you do:** 13 profiles, 50 sub-profiles.
+> - **Images and files now take just four tools:** we removed 73 separate ones. `media__list`, `media__upload`, `media__arrange` and `media__delete` handle everything from screenshots to build files.
+> - **Everything you send to review goes in one call.**
+> - **The confirmation dialog** is clear and plain.
+>
+> Everything that changed is in the [changelog](docs/CHANGELOG.md).
+>
+> If you see anything odd, I'd love to [hear about it](https://github.com/erayendes/app-store-connect-mcp/issues).
 
 **Ask, and it answers. Tell it, and it's done.**
 
@@ -32,15 +43,17 @@ Almost anything you'd click through App Store Connect to do, you can now just as
 
 ### Heimdall
 
-One MCP server for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **13 profiles, 33 sub-profiles, 929 tools.**
+One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 51 sub-profiles, 786 tools.** Each profile runs as its own small MCP server.
 
-Apple's specification lists 1011 API operations. Heimdall leaves out the 123 that Apple has deprecated, so 888 become tools, and adds 41 hand-written ones: 929 tools in all.
+Apple's specification lists 1036 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 832, 734 become tools, and 52 hand-written ones join them: 786 tools in all. The other 98 are covered by the media tools, which do in one call what took several raw ones.
 
 Most App Store Connect MCP servers give you a hand-picked slice of the API. That works until you need the one endpoint they left out, and then **you're off hunting for yet another tool.**
 
-**Heimdall does the opposite: it gives you the whole API, organized into profiles.** Apps and metadata, versions, TestFlight, subscriptions and in-app purchases, pricing, reviews, Game Center, Xcode Cloud, provisioning, webhooks, sales and finance reports — all of it. **You pick what you need**, and add or remove profiles whenever you like.
+**Heimdall does the opposite: it gives you the whole API, cut by the work you do.** Releases, TestFlight, subscriptions and in-app purchases, the store page and reviews, Game Center, Xcode Cloud, provisioning, webhooks, sales and finance reports: each is a profile, and a big one splits into sub-profiles, so `monetization:subscription` loads subscriptions without the rest of the money tools. **You pick what you need**, and add or remove profiles whenever you like.
 
-[Profiles](docs/PROFILES_en.md) shows what each one covers. You don't have to memorize any of it, though: ask *"Is there a tool for in-app events?"* and Heimdall tells you which profile has it.
+**ASC-Core comes with every profile.** Finding your apps, searching every tool, and the media tools are the same whatever you work on, so they run once, in a server of their own that setup registers next to your picks. The media tools handle every screenshot, video, image and file App Store Connect takes: store page media, App Clip and Game Center images, in-app purchase and subscription images, review screenshots and attachments, encryption documents, routing coverage, background asset and build upload files ([the full list](docs/MEDIA_TARGETS_en.md)).
+
+[Profiles](docs/PROFILES_en.md) shows what each one covers, down to every tool. You don't have to memorize any of it, though: ask *"Is there a tool for in-app events?"* and Heimdall tells you which profile has it.
 
 **Not sure which profiles you need?** The [starter packs](docs/PROFILES_en.md#starter-packs) suggest a set for your role.
 
@@ -49,12 +62,41 @@ Most App Store Connect MCP servers give you a hand-picked slice of the API. That
 Most MCP guides recommend remote HTTP servers.
 **Heimdall runs locally instead.** It reads your App Store Connect key from the Keychain, signs a short-lived token and talks to Apple directly. Nothing sits in between, so your key stays with you.
 
+```mermaid
+flowchart LR
+  ai["Your AI app"] -->|"stdio, no network"| h
+  subgraph mac["Your machine"]
+    h["Heimdall<br/>read-only mode hides every write"] --> gate["Asks before risky changes"]
+    gate --> rl["Paces requests under<br/>Apple's rate limit"]
+    rl --> sign["Signs a 20-minute token"]
+    kc[("Keychain")] -.->|"key, read when needed"| sign
+  end
+  sign -->|HTTPS| apple["App Store Connect API"]
+```
+
 > [!NOTE]
 > Give your key the narrowest role that does the job. [Roles](docs/ROLES_en.md) explains what each App Store Connect role can do.
 
 ### Asks before risky changes
 
-Before changing a price, giving someone Admin access or deleting something, Heimdall asks you to confirm and shows what will change. This is on by default for changes that are hard to undo: revenue, deletions, infrastructure and access, and for the release steps that reach users: sending a version to review, releasing it, changing a phased rollout, and opening a build to external testers. Everything else goes through your app's own approval.
+Before changing a price, giving someone Admin access or deleting something, Heimdall asks you to confirm and shows what will change. By default it asks in two ways:
+
+- **You type CONFIRM** for changes to revenue, deletions, code signing and access, and for the few steps that cannot be walked back: releasing a version, ending a pre-order, expiring a build. Assigning a build to beta groups in one call (`testflight__assign_build_to_groups`) asks for CONFIRM too.
+- **You answer yes or no** for the other steps that reach customers, players or testers: sending something to review, starting a new subscription or in-app purchase version, changing a phased rollout, sending a build to external review, selling in a country, changing a product page test, sending a score or achievement for a player, changing the message customers see while cancelling a subscription, replying to a customer review.
+
+Everything else goes through your AI app's own approval.
+
+```mermaid
+flowchart LR
+  w["A write"] --> q{"What does<br/>it change?"}
+  q -->|"money, deletion,<br/>signing, access"| c["You type CONFIRM"]
+  q -->|"reaches customers,<br/>players or testers"| y["You answer yes or no"]
+  q -->|"anything else"| a["Your AI app's approval"]
+```
+
+**If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 More in [Security](.github/SECURITY.md).
 
@@ -70,9 +112,15 @@ npx -y @erayendes/asc-mcp setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup.gif" alt="The setup wizard: key, issuer ID, credential check, profile and sub-profile selection, key stored in the Keychain" width="720">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
+
+<sub>Setup in the browser: pick what you need and see what it costs the AI as you go. All four steps are in [Setup](docs/SETUP_en.md#save-your-credentials-once--the-setup-wizard).</sub>
+
+Coming from 2.x? Run setup once more and pick your profiles again; the old ones no longer exist. To stay on 2.x, use `@erayendes/asc-mcp@2.8.0`.
 
 It asks whether to continue in your browser (recommended) or the terminal. You'll need an [App Store Connect API key](docs/SETUP_en.md#create-an-api-key); the browser page tells you which role to give it from what you pick, so you can run setup before creating the key. Node.js 20.19 or later.
+
+Setup does two things: it saves your key, and it registers the profiles you pick, with ASC-Core beside them, in every AI app it finds. Your AI can do the second half for you with `register`; the key is always yours to hand over, through `setup`.
 
 Want your AI to install it for you, or to use it in [Xcode 27](docs/SETUP_en.md#using-heimdall-in-xcode-27)? Everything else is in [Setup](docs/SETUP_en.md).
 

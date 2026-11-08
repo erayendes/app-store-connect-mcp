@@ -146,11 +146,13 @@ textarea.input { height: auto; min-height: 96px; padding: var(--sp-2); font-fami
 .opt .t { font-weight: 500; }
 .opt .h { color: var(--fg-muted); font-size: var(--fs-ui); }
 .found { font-size: var(--fs-micro); color: var(--green); margin-left: var(--sp-2); }
-.plan { margin: var(--sp-3) 0 0; padding-left: var(--sp-5); }
-.plan li { margin: var(--sp-1) 0; }
-.plan .add { color: var(--green); font-family: var(--font-mono); font-size: var(--fs-label); }
-.plan .rm { color: var(--red); font-family: var(--font-mono); font-size: var(--fs-label); }
-.plan .mv { color: var(--fg-secondary); font-family: var(--font-mono); font-size: var(--fs-label); }
+.hint { font-size: var(--fs-ui); color: var(--fg-secondary); margin: var(--sp-3) 0 0; white-space: pre-line; }
+.hint:empty { display: none; }
+.res { list-style: none; padding: 0; margin: var(--sp-3) 0 0; font-family: var(--font-mono); font-size: var(--fs-label); line-height: 1.8; }
+.copywrap { position: relative; }
+.copywrap pre.out { padding-right: 64px; }
+#copy { position: absolute; top: var(--sp-2); right: var(--sp-2); }
+.res .ok { color: var(--green); } .res .bad { color: var(--red); }
 pre.out { white-space: pre-wrap; background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-md);
   padding: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-label); margin: var(--sp-3) 0 0; }
 a { color: var(--fg); }
@@ -238,14 +240,20 @@ a { color: var(--fg); }
   </section>
 
   <section id="s4" class="locked">
-    <h2><span class="n" id="n4">4/4</span>Check and finish</h2>
-    <p class="lead" style="margin:0">What will change in each app. Nothing is written until you press Apply.</p>
-    <ul id="plan" class="plan"></ul>
+    <h2><span class="n" id="n4">4/4</span>Finish</h2>
+    <p class="lead" style="margin:0">Press Apply to set up Heimdall in the apps you ticked.</p>
+    <p id="plan" class="hint"></p>
+    <p id="notes" class="hint"></p>
     <div class="row">
       <button class="btn btn-primary" id="apply" disabled>Apply</button>
       <button class="btn btn-link-primary" id="cancel">Cancel</button>
     </div>
-    <pre id="out" class="out hidden"></pre>
+    <ul id="res" class="res"></ul>
+    <div class="copywrap">
+      <pre id="out" class="out hidden"></pre>
+      <button class="btn btn-link-primary hidden" id="copy">Copy</button>
+    </div>
+    <p id="bye" class="hint hidden">All set. You can close this tab.</p>
   </section>
   <div class="totals" id="totals" aria-live="polite"></div>
 </main>
@@ -287,6 +295,7 @@ a { color: var(--fg); }
     $('apply').disabled = true;
     clearTimeout(planTimer);
     planSeq++; // an answer already on its way is for a selection that no longer stands
+    $('notes').textContent = '';
     // Say why Apply is off rather than leave a dead button.
     if (!keyReady) { say('Add your key in step 2 first.'); return; }
     planTimer = setTimeout(refreshPlan, 250);
@@ -295,36 +304,31 @@ a { color: var(--fg); }
     var v = $('vendor').value.trim();
     return v !== '' && !(state.existing && state.existing.vendorNumber === v);
   }
-  function say(text) { var list = $('plan'); list.innerHTML = ''; list.appendChild(el('li', '', text)); }
+  function say(text) { $('plan').textContent = text; }
   function refreshPlan() {
-    var sel = selection(), seq = ++planSeq, list = $('plan');
+    var sel = selection(), seq = ++planSeq;
     // Nothing picked would unregister every profile: that is an uninstall, not a setup.
     if (!leaves().length) { say('Pick at least one thing in step 1.'); return; }
     if (!sel.clients.length) { say('Tick at least one app in step 3.'); return; }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq || applying || finished) return;
-      list.innerHTML = '';
-      var shown = r.plan.filter(function (p) { return p.add.length || p.remove.length || p.rewrites.length || p.userManaged.length; });
-      if (!shown.length) {
-        list.appendChild(el('li', '', r.plan.length
-          ? 'Your profiles stay as they are.'
-          : reuse && !vendorChanged()
-            ? 'No changes — your apps already match this selection.'
-            : 'Your apps already match this selection. Apply saves your key details.'));
-      }
-      shown.forEach(function (p) {
-        var li = el('li'); li.appendChild(el('b', '', p.client + ': '));
-        if (p.add.length) li.appendChild(el('span', 'add', '+ ' + p.add.join(', ') + ' '));
-        if (p.remove.length) li.appendChild(el('span', 'rm', '− ' + p.remove.join(', ') + ' '));
-        if (p.rewrites.length) li.appendChild(el('span', 'mv', 'rewrite ' + p.rewrites.join(', ') + ' '));
-        if (p.userManaged.length) li.appendChild(el('span', 'mv', 'user-managed, unchanged: ' + p.userManaged.join(', ') + ' '));
-        list.appendChild(li);
+      // What Apply cannot do, said before it is pressed: the result only
+      // reports what was tried.
+      var notes = [];
+      r.plan.forEach(function (p) {
+        p.coreWithheld.forEach(function (why) { notes.push('⚠️ ' + p.client + ': ASC-Core will not be added — ' + why); });
       });
+      $('notes').textContent = notes.join('\\n');
+      // Only say something when Apply has nothing to do.
+      say(r.plan.some(function (p) { return p.add.length || p.remove.length || p.rewrites.length || p.deadDeleted.length; })
+        ? '' : reuse && !vendorChanged()
+          ? 'No changes — your apps already match this selection.'
+          : 'Your apps already match this selection. Apply saves your key details.');
       // Nothing to change and nothing new to save: Apply would do nothing.
       $('apply').disabled = reuse && !vendorChanged() && !r.plan.some(function (p) {
-        return p.add.length || p.remove.length || p.rewrites.length;
+        return p.add.length || p.remove.length || p.rewrites.length || p.deadDeleted.length;
       });
-    }).catch(function (e) { if (seq === planSeq && !applying && !finished) list.textContent = e.message; });
+    }).catch(function (e) { if (seq === planSeq && !applying && !finished) say(e.message); });
   }
 
   /* ---- step 1: needs ---------------------------------------------------- */
@@ -394,7 +398,7 @@ a { color: var(--fg); }
           t.appendChild(document.createTextNode(' '));
           t.appendChild(el('span', 'count', size(c)));
           var cp = pills(c); if (cp) t.appendChild(cp);
-          txt.appendChild(t); txt.appendChild(el('div', 'h', c.hint.replace(/^~[0-9]+k · /, '')));
+          txt.appendChild(t); txt.appendChild(el('div', 'h', c.does || c.hint.replace(/^~[0-9]+k · /, '')));
           line.appendChild(cb); line.appendChild(txt); list.appendChild(line);
           cb.addEventListener('change', function () {
             // Ticking a part picks its profile; unticking the last one drops it.
@@ -628,14 +632,28 @@ a { color: var(--fg); }
     this.disabled = true; $('cancel').disabled = true;
     var body = selection();
     body.reuse = reuse; body.vendorNumber = $('vendor').value;
-    var out = $('out'); out.classList.remove('hidden'); out.textContent = 'Applying…';
+    var out = $('out'), res = $('res'); say('Applying…'); out.classList.add('hidden');
     call('apply', body).then(function (r) {
-      finished = true; mark(1); mark(3); mark(4);
-      out.textContent = r.lines.join('\\n') + '\\n\\nAll set. You can close this tab.';
+      finished = true; mark(1); mark(3); mark(4); say('');
+      // One line per app: ✓ App, or ✗ App: why. Anything else (a dry run, the
+      // block for "Other") goes in the box below as it is.
+      var rest = [];
+      r.lines.forEach(function (l) {
+        if (/^[✓✗] /.test(l)) res.appendChild(el('li', l.charAt(0) === '✓' ? 'ok' : 'bad', l));
+        else if (l) rest.push(l);
+      });
+      if (r.next) rest.push(r.next);
+      if (rest.length) { out.textContent = rest.join('\\n\\n'); out.classList.remove('hidden'); $('copy').classList.remove('hidden'); }
+      $('bye').classList.remove('hidden');
     }).catch(function (e) {
       // Nothing was applied: let the user fix what the message says and try again.
-      applying = false; out.textContent = e.message; $('apply').disabled = false; $('cancel').disabled = false;
+      applying = false; say(e.message); $('apply').disabled = false; $('cancel').disabled = false;
     });
+  };
+
+  $('copy').onclick = function () {
+    var b = this;
+    navigator.clipboard.writeText($('out').textContent).then(function () { b.textContent = 'Copied'; });
   };
 
   $('cancel').onclick = function () {

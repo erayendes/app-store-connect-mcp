@@ -19,12 +19,14 @@ import {
   type SharedConfig,
 } from './core/shared-config.js';
 import {
+  CORE_PROFILE,
   PROFILES,
   TOKENS_PER_TOOL,
   manualToolsFor,
   resolveSelection,
   type Profile,
   type SubProfile,
+  mergeSpecs,
 } from './profiles.js';
 import { TokenProvider, type JwtCredentials } from './core/jwt.js';
 import { loadConfig } from './core/config.js';
@@ -50,6 +52,17 @@ import {
   readRegistrations,
   registrationBlock,
   type Registration,
+  CORE_SPEC,
+  CORE_SERVER,
+  coreActionFor,
+  targetAdds,
+  targetRemoves,
+  deadAndDeletable,
+  describeEntry,
+  isDead,
+  isUserManaged,
+  holdsAsAsked,
+  writableTargets,
 } from './clients.js';
 
 type Ask = (q: string, required?: boolean) => Promise<string>;
@@ -85,18 +98,223 @@ const profileToolCount = (p: Profile): number =>
  * covers any mix.
  */
 const APP_MANAGER = ['App Manager', 'Admin'];
+const ADMIN = ['Admin'];
+const DEVELOPER = ['Developer', 'App Manager', 'Admin'];
+const MARKETING = ['Marketing', 'App Manager', 'Admin'];
+/**
+ * Every profile and sub-profile has an entry, so a role is a decision someone
+ * wrote down and never a fallback nobody chose — the test that keeps it so
+ * (setup-picker.test.ts) fails on a new sub-profile without one.
+ */
 export const ROLES: Record<string, string[]> = {
-  access: ['App Manager', 'Developer', 'Admin'],
-  'access:users': ['Admin'],
+  // Looking an app up works under any role; core is never picked, only added.
+  core: ['Customer Support', 'Sales', 'Finance', 'Marketing', 'Developer', 'App Manager', 'Admin'],
+  access: ADMIN,
+  'access:sandbox': APP_MANAGER,
+  'access:user-invitations': ADMIN,
+  'access:user-management': ADMIN,
   analytics: ['Sales', 'Finance', 'Admin'],
-  'distribution:builds': ['Developer', 'App Manager', 'Admin'],
-  marketing: ['Marketing', 'App Manager', 'Admin'],
-  'marketing:customer-review': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
-  provisioning: ['Admin'],
-  testflight: ['Developer', 'App Manager', 'Admin'],
-  webhooks: ['Admin'],
-  'xcode-cloud': ['Developer', 'App Manager', 'Admin'],
+  'app-clips': APP_MANAGER,
+  'background-assets': DEVELOPER,
+  distribution: APP_MANAGER,
+  'distribution:app-encryption': APP_MANAGER,
+  'distribution:app-review-information': APP_MANAGER,
+  'distribution:builds': DEVELOPER,
+  'distribution:dma-distribution': ADMIN,
+  'distribution:phased-releases': APP_MANAGER,
+  'distribution:publish': APP_MANAGER,
+  'distribution:version': APP_MANAGER,
+  'game-center': APP_MANAGER,
+  'game-center:achievements': APP_MANAGER,
+  'game-center:activities': APP_MANAGER,
+  'game-center:challenges': APP_MANAGER,
+  'game-center:groups': APP_MANAGER,
+  'game-center:leaderboards': APP_MANAGER,
+  'game-center:matchmaking': APP_MANAGER,
+  'game-center:setup': APP_MANAGER,
+  general: APP_MANAGER,
+  'general:android-link': APP_MANAGER,
+  'general:app-accessibility': APP_MANAGER,
+  'general:app-availabilities': APP_MANAGER,
+  'general:app-categories': APP_MANAGER,
+  'general:app-information': APP_MANAGER,
+  'general:app-tags': APP_MANAGER,
+  'general:legal': APP_MANAGER,
+  marketing: MARKETING,
+  'marketing:app-events': MARKETING,
+  'marketing:custom-pp': MARKETING,
+  'marketing:customer-reviews': ['Customer Support', 'Marketing', 'App Manager', 'Admin'],
+  'marketing:nominations': MARKETING,
+  'marketing:pp-optimization': MARKETING,
+  monetization: APP_MANAGER,
+  'monetization:app-price': APP_MANAGER,
+  'monetization:iap-offers': APP_MANAGER,
+  'monetization:in-app-purchases': APP_MANAGER,
+  'monetization:plan-promote': APP_MANAGER,
+  'monetization:subscription': APP_MANAGER,
+  'monetization:subscription-codes': APP_MANAGER,
+  'monetization:subscription-offers': APP_MANAGER,
+  'monetization:subscription-retention': MARKETING, // Apple: Account Holder, Admin, App Manager or Marketing
+  'monetization:subscription-win-back': APP_MANAGER,
+  'monetization:transactions': APP_MANAGER,
+  provisioning: ADMIN,
+  'provisioning:bundle': ADMIN,
+  'provisioning:certificates': ADMIN,
+  'provisioning:devices': ADMIN,
+  'provisioning:profiles': ADMIN,
+  'provisioning:wallet': ADMIN,
+  testflight: DEVELOPER,
+  'testflight:external-testing': DEVELOPER,
+  'testflight:feedbacks': DEVELOPER,
+  'testflight:groups': DEVELOPER,
+  'testflight:test-builds': DEVELOPER,
+  'testflight:testers': DEVELOPER,
+  webhooks: ADMIN,
+  'xcode-cloud': DEVELOPER,
+  'xcode-cloud:repositories': DEVELOPER,
+  'xcode-cloud:workflows': DEVELOPER,
 };
+
+/** A plain name beside the profile's own, for someone who does not know the API's areas. */
+export const PLAIN: Record<string, string> = {
+  core: 'App lookup and screenshots',
+  access: 'Your team',
+  'access:sandbox': 'Sandbox test accounts',
+  'access:user-invitations': 'Team invitations',
+  'access:user-management': 'Team members and roles',
+  analytics: 'Sales and reports',
+  'app-clips': 'App Clips',
+  'background-assets': 'Downloadable content',
+  distribution: 'Releases',
+  'distribution:app-encryption': 'Export compliance',
+  'distribution:app-review-information': 'Notes for App Review',
+  'distribution:builds': 'Uploaded builds',
+  'distribution:dma-distribution': 'EU alternative distribution',
+  'distribution:phased-releases': 'Phased release',
+  'distribution:publish': 'Submit and release',
+  'distribution:version': 'Versions and their text',
+  'game-center': 'Game Center',
+  'game-center:achievements': 'Achievements',
+  'game-center:activities': 'Activities',
+  'game-center:challenges': 'Challenges',
+  'game-center:groups': 'Shared Game Center groups',
+  'game-center:leaderboards': 'Leaderboards',
+  'game-center:matchmaking': 'Matchmaking',
+  'game-center:setup': 'Turning Game Center on',
+  general: 'App details',
+  'general:android-link': 'Android app link',
+  'general:app-accessibility': 'Accessibility labels',
+  'general:app-availabilities': 'Countries and pre-orders',
+  'general:app-categories': 'Categories',
+  'general:app-information': 'Name and subtitle',
+  'general:app-tags': 'App tags',
+  'general:legal': 'Age rating and license',
+  marketing: 'Store page and reviews',
+  'marketing:app-events': 'In-app events',
+  'marketing:custom-pp': 'Custom product pages',
+  'marketing:customer-reviews': 'Customer reviews',
+  'marketing:nominations': 'Featuring nominations',
+  'marketing:pp-optimization': 'Product page tests',
+  monetization: 'Prices and subscriptions',
+  'monetization:app-price': 'App price',
+  'monetization:iap-offers': 'In-app purchase offer codes',
+  'monetization:in-app-purchases': 'In-app purchases',
+  'monetization:plan-promote': 'Promoted purchases',
+  'monetization:subscription': 'Subscriptions',
+  'monetization:subscription-codes': 'Subscription offer codes',
+  'monetization:subscription-offers': 'Subscription offers',
+  'monetization:subscription-retention': 'Retention messages',
+  'monetization:subscription-win-back': 'Win-back offers',
+  'monetization:transactions': 'Customer purchases',
+  provisioning: 'Certificates and devices',
+  'provisioning:bundle': 'Bundle IDs',
+  'provisioning:certificates': 'Certificates',
+  'provisioning:devices': 'Test devices',
+  'provisioning:profiles': 'Provisioning profiles',
+  'provisioning:wallet': 'Apple Pay and Wallet IDs',
+  testflight: 'Beta testing',
+  'testflight:external-testing': 'External testing',
+  'testflight:feedbacks': 'Tester feedback',
+  'testflight:groups': 'Beta groups',
+  'testflight:test-builds': 'Builds under test',
+  'testflight:testers': 'Testers',
+  webhooks: 'Notifications to your server',
+  'xcode-cloud': 'Builds in the cloud',
+  'xcode-cloud:repositories': 'Source repositories',
+  'xcode-cloud:workflows': 'Workflows and build runs',
+};
+
+/** What each choice is for, in the words someone setting it up would use. */
+export const DOES: Record<string, string> = {
+  core: 'Finds your apps, searches every tool, and uploads screenshots, images and files — added with every pick.',
+  access: 'Invite people to your team, set their roles, and manage sandbox test accounts.',
+  'access:sandbox': 'Sandbox Apple Accounts for testing purchases, and clearing their history.',
+  'access:user-invitations': 'Invite someone to your team and see who has not accepted yet.',
+  'access:user-management': 'Who is on your team, what role they have and which apps they see.',
+  analytics: 'Downloads, sales, proceeds and how the app performs.',
+  'app-clips': 'The instant, lightweight version of your app.',
+  'background-assets': 'Content packs your app downloads after it is installed.',
+  distribution: 'New versions, builds, sending to review and phased release.',
+  'distribution:app-encryption': 'Answer the export compliance questions for a build.',
+  'distribution:app-review-information': 'The contact, demo account and notes App Review reads.',
+  'distribution:builds': 'The builds you uploaded, their sizes and details.',
+  'distribution:dma-distribution': 'Selling outside the App Store in the EU: web distribution and marketplaces.',
+  'distribution:phased-releases': 'Release a version gradually, pause it, or release it to everyone.',
+  'distribution:publish': 'Send a version to App Review and release it once approved.',
+  'distribution:version': 'Create a version, write What’s New and keywords, translate them.',
+  'game-center': 'Achievements, leaderboards and challenges.',
+  'game-center:achievements': 'Create achievements, their text and images.',
+  'game-center:activities': 'Activities players can jump into, and what they link to.',
+  'game-center:challenges': 'Challenges players send each other.',
+  'game-center:groups': 'Share achievements and leaderboards across several of your games.',
+  'game-center:leaderboards': 'Leaderboards and sets of them, and moderating scores.',
+  'game-center:matchmaking': 'Matchmaking queues and the rules that pair players.',
+  'game-center:setup': 'Turn Game Center on for an app and its versions.',
+  general: 'Name, category, age rating and the countries your app is sold in.',
+  'general:android-link': 'Link your Android app so people moving to iPhone find this one.',
+  'general:app-accessibility': 'Which accessibility features your app supports, per device.',
+  'general:app-availabilities': 'The countries your app is sold in, and pre-orders.',
+  'general:app-categories': 'The category and subcategory your app is listed under.',
+  'general:app-information': 'App name, subtitle and privacy policy link, per language.',
+  'general:app-tags': 'The tags the App Store shows for your app.',
+  'general:legal': 'The age rating questionnaire and your license agreement.',
+  marketing: 'Product pages, in-app events, A/B tests and customer reviews.',
+  'marketing:app-events': 'In-app events and their text in every language.',
+  'marketing:custom-pp': 'Extra versions of your product page for ads and links.',
+  'marketing:customer-reviews': 'Read reviews, draft and post replies.',
+  'marketing:nominations': 'Ask Apple to feature an app or event.',
+  'marketing:pp-optimization': 'A/B test your product page’s icon, screenshots and previews.',
+  monetization: 'Subscriptions, in-app purchases, offers and prices.',
+  'monetization:app-price': 'What the app itself costs, per country.',
+  'monetization:iap-offers': 'Offer codes for in-app purchases.',
+  'monetization:in-app-purchases': 'In-app purchases, their text, images, prices and review.',
+  'monetization:plan-promote': 'Which purchases your product page promotes.',
+  'monetization:subscription': 'Subscriptions and their groups, text, prices and review.',
+  'monetization:subscription-codes': 'Offer codes for subscriptions.',
+  'monetization:subscription-offers': 'Introductory and promotional subscription offers.',
+  'monetization:subscription-retention': 'Messages and offers for subscribers who start to cancel, set up in App Store Connect.',
+  'monetization:subscription-win-back': 'Offers that bring lapsed subscribers back.',
+  'monetization:transactions': 'Customer purchases, refunds and subscription status; renewal extensions and retention messages through the App Store Server API.',
+  provisioning: 'Signing certificates, provisioning profiles and test devices.',
+  'provisioning:bundle': 'Bundle IDs and the capabilities they turn on.',
+  'provisioning:certificates': 'Signing certificates: create, list and revoke.',
+  'provisioning:devices': 'The devices registered for testing.',
+  'provisioning:profiles': 'Provisioning profiles that tie an app, certificates and devices together.',
+  'provisioning:wallet': 'Merchant IDs for Apple Pay and pass type IDs for Wallet.',
+  testflight: 'Beta builds, groups and testers, and what testers report.',
+  'testflight:external-testing': 'Beta App Review, public links and who can join.',
+  'testflight:feedbacks': 'Crashes and screenshots testers send, summed up.',
+  'testflight:groups': 'Beta groups and which builds they get.',
+  'testflight:test-builds': 'What to test notes and the builds testers receive.',
+  'testflight:testers': 'Invite testers, add them to groups and builds, remove them.',
+  webhooks: 'Let App Store Connect tell your own server when something happens.',
+  'xcode-cloud': 'Build workflows and why a build failed.',
+  'xcode-cloud:repositories': 'The Git repositories, branches and pull requests Xcode Cloud builds.',
+  'xcode-cloud:workflows': 'Workflows, build runs, test results and why a run failed.',
+};
+
+/** The rows setup offers: every profile but core, which comes with them. */
+const PICKABLE = PROFILES.filter((p) => p.name !== CORE_PROFILE);
 
 /** Key roles from narrowest to widest: the first one every pick allows is the one to suggest. */
 export const NARROW_FIRST = ['Customer Support', 'Sales', 'Finance', 'Marketing', 'Developer', 'App Manager', 'Admin'];
@@ -179,7 +397,8 @@ export function buildRows(): Row[] {
   // Drop the leading "Category: " heading; lowercase for a uniform look.
   const detail = (text: string): string => text.replace(/^[^:]*:\s*/, '').toLowerCase();
 
-  for (const profile of PROFILES) {
+  // Core is not a choice: it comes with whatever is picked (see planChanges).
+  for (const profile of PICKABLE) {
     const subs = profile.subProfiles.filter((s) => s.name);
     const total = profileToolCount(profile);
     const parent = rows.length;
@@ -357,7 +576,7 @@ async function selectProfiles(
   const answer = (
     await ask('Profiles to register — comma-separated names, or "all" (default): ', false)
   ).trim();
-  if (!answer || answer.toLowerCase() === 'all') return PROFILES.map((p) => p.name);
+  if (!answer || answer.toLowerCase() === 'all') return PICKABLE.map((p) => p.name);
   const wanted = answer.split(',').map((s) => s.trim().replace(/^asc-/i, '').toLowerCase()).filter(Boolean);
   return wanted.filter((spec) => {
     try {
@@ -534,6 +753,9 @@ export async function runSetup(): Promise<void> {
     // Claude Desktop writes its own settings back while it runs; a change made
     // while it is open never reaches it. Say so before anything is asked.
     const desktop = claudeDesktop();
+    // Left out of this run when it cannot be written: reported as a failure
+    // otherwise, beside a Claude Code that took every change.
+    let skipDesktop = desktop === 'inside';
     if (desktop === 'inside') {
       console.log(
         `\n⚠️  This setup is running inside Claude Desktop. Desktop writes its own settings back while it is open,\n` +
@@ -548,7 +770,8 @@ export async function runSetup(): Promise<void> {
       );
       for (;;) {
         const answer = await ask('Press Enter once it is closed (or type s to skip Claude Desktop): ', false);
-        if (/^s/i.test(answer) || !isRunning('Claude')) break;
+        if (!isRunning('Claude')) break;
+        if (/^s/i.test(answer)) { skipDesktop = true; break; }
         console.log('   Claude Desktop is still open.');
       }
     }
@@ -663,7 +886,12 @@ export async function runSetup(): Promise<void> {
       console.log('\nApp selection cancelled — registration left unchanged.');
       return;
     }
-    await reconcileRegistration(clients, chosen, registeredAcross(clients), ask);
+    const writable = (c: McpClient): McpClient => {
+      const kept = skipDesktop ? c.targets.filter((t) => !(t.kind === 'json' && t.heldBy)) : c.targets;
+      return kept.length && kept.length < c.targets.length ? { ...c, targets: kept } : c;
+    };
+    const reachable = clients.map(writable);
+    await reconcileRegistration(reachable, chosen, registeredAcross(reachable), ask, CLIENTS.map(writable));
   } finally {
     rl.close();
     // The picker leaves stdin flowing so later prompts work; release it now so
@@ -685,13 +913,210 @@ export interface ClientPlan {
   /** Existing entries whose arguments will be rewritten, with flags only. */
   rewrites: string[];
   migrations: Map<string, string>;
+  /** How ASC-Core is added, e.g. `ASC-Core (--read-only)`; empty when it is not. */
+  coreAdded: string[];
+  /** Targets ASC-Core is held back from, each with the reason. */
+  coreWithheld: string[];
+  /** Targets that lose ASC-Core because no profile is left in them. */
+  coreRemoved: string[];
+  /** ASC-Core was asked for by name, so it stays even with no profile beside it. */
+  explicitCore: boolean;
+  /** Dead entries to delete, name -> name with spec, flags and env keys. */
+  deadDeleted: Map<string, string>;
+  /** Dead entries setup may not delete, only report. */
+  deadReported: string[];
+  /** The same plan, file by file and entry by entry — what is shown. */
+  files: PlanFile[];
 }
 
+/** One entry in one file: added (+), removed (-), or kept with sub-profiles changing (o). */
+export interface PlanRow {
+  mark: '+' | '-' | 'o';
+  name: string;
+  /** An entry that stays but whose sub-profiles change: the ones added and removed. */
+  subs?: { added: string[]; removed: string[] };
+  /** Short words after the name: a new entry's sub-profiles, flags, a move. */
+  note?: string;
+}
+
+/** One config file's rows. Two files of one app with the same rows are one block. */
+export interface PlanFile {
+  label: string;
+  where: string[];
+  note?: string;
+  rows: PlanRow[];
+}
+
+/** An entry with its flags (values hidden) — what a plan line shows. */
 const shownEntry = (reg: Registration): string => {
   const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && arg !== '-y')
     .map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
   return `${reg.name}${flags.length ? ` (${flags.join(' ')})` : ''}`;
 };
+
+const isCore = (spec: string): boolean => spec.split(':', 1)[0] === CORE_SPEC;
+
+/** Why a dead entry is reported rather than deleted. */
+const deadReason = (reg: Registration, block: ReturnType<typeof registrationBlock>): string =>
+  !reg.pkg ? 'not ours' : !block.canRemove(reg.name) || block.managed.includes(reg) ? 'user-managed' : 'left in place';
+
+/** The entries one target holds, and the block that guards them. */
+const inTarget = (entries: Registration[], where: string) => {
+  const here = entries.filter((r) => r.target.where === where);
+  return { here, block: registrationBlock(here) };
+};
+
+/**
+ * ASC-Core across a client's targets, each decided by coreActionFor on that
+ * target's own entries and the changes this run makes to it — the very call
+ * the write makes again, so the plan shows what the write will do.
+ */
+function planCore(
+  client: McpClient,
+  entries: Registration[],
+  profileAdds: string[],
+  profileRemoves: string[],
+  explicit: boolean,
+  {
+    asked = profileAdds,
+    migrations = new Map<string, string>(),
+    dead = new Set<string>(),
+  }: { asked?: string[]; migrations?: Map<string, string>; dead?: Set<string> } = {}
+): { add: boolean; remove: boolean; added: string[]; withheld: string[]; removed: string[] } {
+  // "Other" has no target to read: the paste-in block carries core plainly.
+  if (!client.targets.length) {
+    const add = explicit || profileAdds.some((s) => !isCore(s));
+    return { add, remove: false, added: add ? [CORE_SERVER] : [], withheld: [], removed: [] };
+  }
+  const targets = writableTargets(client);
+  const where = (w: string): string => (targets.length > 1 ? ` in ${w}` : '');
+  const out = { add: false, remove: false, added: [] as string[], withheld: [] as string[], removed: [] as string[] };
+  for (const t of targets) {
+    const { here } = inTarget(entries, t.where);
+    // What this target itself gets and loses — the write computes the same.
+    const adds = here.some((r) => r.name === '*') ? asked : targetAdds(here, profileAdds, migrations);
+    const action = coreActionFor(here, adds, targetRemoves(here, profileRemoves, dead), explicit, migrations);
+    if (action.kind === 'add') {
+      out.add = true;
+      out.added.push(`${CORE_SERVER}${action.readOnly ? ' (--read-only)' : ''}${where(t.where)}`);
+    } else if (action.kind === 'withheld') {
+      out.withheld.push(`${t.where}: ${action.reason}`);
+    } else if (action.kind === 'remove') {
+      out.remove = true;
+      out.removed.push(t.where);
+    }
+  }
+  // One label when every target agrees; per target only when they differ.
+  const bare = new Set(out.added.map((a) => a.replace(/ in .*$/, '')));
+  if (bare.size === 1 && out.added.length === targets.length) out.added = [...bare];
+  return out;
+}
+
+const subsOf = (spec: string): string[] => {
+  try {
+    return resolveSelection(spec).subProfiles.map((s) => s.name).filter(Boolean);
+  } catch {
+    return [];
+  }
+};
+const flagsOf = (reg: Registration): string[] => (reg.entry?.args as string[] | undefined)
+  ?.filter((arg) => arg.startsWith('-') && arg !== '-y').map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
+const words = (parts: string[]): string | undefined => parts.filter(Boolean).join(', ') || undefined;
+
+/** A new entry: its sub-profiles when only some are picked, then its flags. */
+const newRow = (spec: string, flags: string[] = []): PlanRow => {
+  const sel = (() => { try { return resolveSelection(spec); } catch { return undefined; } })();
+  return { mark: '+', name: serverName(spec),
+    note: words([sel?.partial ? subsOf(spec).join(', ') : '', ...flags]) };
+};
+
+/**
+ * Each file of a client, entry by entry, from the same per-target calls the
+ * write makes (targetAdds, targetRemoves, coreActionFor), so what is shown is
+ * what is written.
+ */
+function planFiles(
+  client: McpClient,
+  entries: Registration[],
+  profileAdds: string[],
+  profileRemoves: string[],
+  explicit: boolean,
+  { asked, migrations, dead }: { asked: string[]; migrations: Map<string, string>; dead: Set<string> }
+): PlanFile[] {
+  // A profile asked for that no file of this app takes, because each holds it
+  // set up by hand, is said once: the user asked for something that will not happen.
+  const nowhere = asked.filter((spec) => !writableTargets(client).some((t) => {
+    const { here } = inTarget(entries, t.where);
+    return targetAdds(here, [spec], migrations).length || holdsAsAsked(here, spec, migrations);
+  }));
+  const files = writableTargets(client).map((t): PlanFile => {
+    const { here } = inTarget(entries, t.where);
+    const unreadable = here.some((r) => r.name === '*');
+    const adds = unreadable ? asked : targetAdds(here, profileAdds, migrations);
+    const removes = targetRemoves(here, profileRemoves, dead);
+    const core = coreActionFor(here, adds, removes, explicit, migrations);
+    // Only what changes: an entry left as it is, or only moved to this
+    // release's package, is not shown.
+    const added: PlanRow[] = [], changed: PlanRow[] = [], removed: PlanRow[] = [];
+    const done = new Set<string>(['*']);
+    for (const spec of adds) {
+      const name = serverName(spec);
+      const old = here.find((r) => r.name === name && r.spec && !isUserManaged(r)) ??
+        here.find((r) => r.name === migrations.get(name));
+      if (!old?.spec) {
+        added.push(newRow(spec));
+        continue;
+      }
+      done.add(old.name).add(name);
+      const was = subsOf(old.spec), now = subsOf(spec);
+      const subs = { added: now.filter((s) => !was.includes(s)), removed: was.filter((s) => !now.includes(s)) };
+      if (subs.added.length || subs.removed.length || old.name !== name) {
+        changed.push({ mark: 'o', name, ...(subs.added.length || subs.removed.length ? { subs } : {}),
+          note: old.name !== name ? `renamed from ${old.name}` : undefined });
+      }
+    }
+    if (core.kind === 'add') {
+      const old = here.find((r) => r.name === CORE_SERVER);
+      const flag = core.readOnly ? '--read-only' : '';
+      if (old) {
+        if (flag && !flagsOf(old).includes(flag)) changed.push({ mark: 'o', name: CORE_SERVER, note: 'becomes --read-only' });
+      } else {
+        added.push({ mark: '+', name: CORE_SERVER, note: words([flag]) });
+      }
+    }
+    for (const name of removes.filter((n) => !done.has(n))) {
+      done.add(name);
+      const reg = here.find((r) => r.name === name)!;
+      removed.push({ mark: '-', name, note: isDead(reg) ? `its profile ${reg.spec} no longer exists` : undefined });
+    }
+    if (core.kind === 'remove') {
+      done.add(CORE_SERVER);
+      removed.push({ mark: '-', name: CORE_SERVER, note: 'no profile left' });
+    }
+    const byHand = nowhere.map((spec) => here.find((r) => r.name === serverName(spec) && isUserManaged(r)))
+      .filter((r): r is Registration => r !== undefined && !done.has(r.name))
+      .map((r): PlanRow => (done.add(r.name), { mark: 'o', name: r.name, note: 'set up by hand; left as it is' }));
+    // A dead entry setup may not delete stays, but it serves nothing: said, not hidden.
+    const deadKept = here.filter((r) => !done.has(r.name) && isDead(r))
+      .map((r): PlanRow => ({ mark: 'o', name: r.name, note: `its profile ${r.spec} no longer exists; left as it is` }));
+    const rows = [...added, ...changed, ...removed, ...byHand, ...deadKept];
+    const notes: string[] = [];
+    if (unreadable) notes.push('Could not be read (unreadable).');
+    if (core.kind === 'withheld') notes.push(`${CORE_SERVER} not added: ${core.reason}.`);
+    if (core.kind === 'remove' && rows.every((r) => r.mark === '-')) {
+      notes.push('No profile left here, so every entry goes.');
+      for (const r of rows) if (r.name === CORE_SERVER) delete r.note;
+    }
+    return { label: client.targets.length > 1 ? t.label ?? client.label : client.label, where: [t.where],
+      ...(notes.length ? { note: notes.join(' ') } : {}), rows };
+  }).filter((f) => f.rows.length || f.note);
+  // Both of Claude's files changing the same way read as one app, not two.
+  const same = (f: PlanFile) => JSON.stringify({ note: f.note, rows: f.rows });
+  if (files.length > 1 && files.every((f) => same(f) === same(files[0]))) {
+    return [{ ...files[0], label: client.label, where: files.flatMap((f) => f.where) }];
+  }
+  return files;
+}
 
 /**
  * What each client would gain and lose.
@@ -699,6 +1124,11 @@ const shownEntry = (reg: Registration): string => {
  * A profile whose sub-profile selection changed counts as an add: same server
  * name, different argument. Comparing names alone would miss a profile that
  * stayed checked while its sub-profiles were trimmed.
+ *
+ * ASC-Core is not picked: it comes with any profile, and goes only when no
+ * profile is left in that client. Dead entries — profile arguments this
+ * release no longer serves — are deleted when deadAndDeletable allows it and
+ * reported otherwise.
  */
 export function planChanges(
   clients: McpClient[],
@@ -706,12 +1136,25 @@ export function planChanges(
   registeredPerClient: Map<string, Registration[]>,
   { prune, stale }: { prune: boolean; stale?: Map<string, Set<string>> }
 ): ClientPlan[] {
+  chosen = mergeSpecs(chosen);
   const chosenNames = new Set(chosen.map(serverName));
+  const explicitCore = chosen.some(isCore);
   return clients
     .map((client) => {
       const entries = registeredPerClient.get(client.id) ?? [];
-      const block = registrationBlock(entries);
-      const registered = new Map(entries.filter((r) => !block.managed.includes(r)).map((r) => [r.name, r.spec!]));
+      const targets = client.targets.length ? writableTargets(client) : [];
+      // Every rule below is asked of the target that holds the entry, never
+      // of the client: Claude's two configs can hold different things, and a
+      // user-managed entry in one says nothing about the other.
+      const blockOf = (r: Registration) => inTarget(entries, r.target.where).block;
+      const managed = entries.filter((r) => blockOf(r).managed.includes(r));
+      const dead = entries.filter(isDead);
+      const deletable = dead.filter((r) => deadAndDeletable(r, blockOf(r)));
+      const live = entries.filter((r) => !isDead(r));
+      const ours = live.filter((r) => !managed.includes(r));
+      const removable = (name: string): boolean =>
+        ours.some((r) => r.name === name && blockOf(r).canRemove(name));
+      const registered = new Map(ours.map((r) => [r.name, r.spec!]));
       // A name older versions wrote (`ASC-Analytics` before 2.5.0) is the same
       // server under another key; left beside the new one, Claude lists it
       // twice. It moves to the new name — unless setup is pruning it anyway.
@@ -719,31 +1162,85 @@ export function planChanges(
       const migrate = legacy
         .map(([, spec]) => spec)
         .filter((spec) => !prune || chosenNames.has(serverName(spec)));
-      const wanted = [...new Set([...chosen, ...migrate])];
-      // An entry on the other channel is rewritten even when its profiles
-      // match: that is how a beta tester's servers follow them back to stable.
-      const toAdd = client.targets.length
-        ? wanted.filter((spec) => block.canAdd(spec) &&
-          (registered.get(serverName(spec)) !== spec || stale?.get(client.id)?.has(serverName(spec))))
-        : chosen;
+      // `register` adds: sub-profiles named for a profile this client already
+      // has narrowed join the ones it holds instead of replacing them.
+      const widen = (spec: string): string => {
+        const held = prune ? undefined : ours.find((r) => r.name === serverName(spec) && !isCore(r.spec!));
+        return held ? mergeSpecs([held.spec!, spec])[0] : spec;
+      };
+      const wanted = [...new Set([...chosen.map(widen), ...migrate])];
       const migrations = new Map(legacy.map(([name, spec]) => [serverName(spec), name]));
+      // A profile the user wants goes into every target that may take it and
+      // does not already hold it as asked — decided per target, by the same
+      // targetAdds the write uses. Claude Code holding it says nothing about
+      // Claude Desktop. "Not as asked" includes the other release channel:
+      // that is how a beta tester's servers follow them back to stable.
+      const needsWrite = (spec: string): boolean => targets.some((t) =>
+        targetAdds(inTarget(entries, t.where).here, [spec], migrations).length > 0);
+      const profilesToAdd = wanted.filter((spec) => !isCore(spec) && (!targets.length ? true : needsWrite(spec)));
+      // `register` never prunes: an agent adding one profile must not silently
+      // drop the six the user set up last week.
+      const profileRemoves = [...new Set([
+        ...legacy.map(([n]) => n).filter(removable),
+        ...deletable.map((r) => r.name),
+        ...(prune ? [...registered.keys()].filter((n) => removable(n) && !chosenNames.has(n) &&
+          profileOfServer(n) !== CORE_SPEC && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
+      ])];
+      // What the write will give each target — and, for a target that could
+      // not be read, what was asked of it, so its core is reported as withheld.
+      const core = planCore(client, entries, profilesToAdd, profileRemoves, explicitCore, {
+        asked: wanted.filter((s) => !isCore(s)),
+        migrations,
+        dead: new Set(deletable.map((r) => r.name)),
+      });
+      const toAdd = [...profilesToAdd, ...(core.add ? [CORE_SPEC] : [])];
+      const multi = targets.length > 1;
+      const at = (r: Registration): string => (multi ? ` in ${r.target.where}` : '');
+      const joined = (rs: Registration[], show: (r: Registration) => string): Map<string, string> => {
+        const out = new Map<string, string[]>();
+        for (const r of rs) out.set(r.name, [...(out.get(r.name) ?? []), show(r)]);
+        return new Map([...out].map(([n, all]) => [n, [...new Set(all)].join(' and ')]));
+      };
+      // The targets a spec is actually written to, with what each holds now —
+      // what the confirmation describes, so it never names an entry in a
+      // target the write leaves alone.
+      const writtenTo = (spec: string) => targets.length
+        ? targets.map((t) => inTarget(entries, t.where).here)
+          .filter((here) => targetAdds(here, [spec], migrations).length > 0)
+        : [];
+      // Only a channel move when every target written already holds this very
+      // spec: a target that lacks it gains a profile, which is shown.
+      const toSwitch = profilesToAdd.filter((spec) => {
+        const heres = writtenTo(spec);
+        return heres.length > 0 && heres.every((here) =>
+          here.some((r) => r.name === serverName(spec) && r.spec === spec && !managed.includes(r)));
+      });
       return {
         client,
         toAdd,
-        toSwitch: toAdd.filter((spec) => registered.get(serverName(spec)) === spec),
-        userManaged: block.managed.map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : shownEntry(r)),
-        rewrites: toAdd.flatMap((spec) => entries.filter((r) => !block.managed.includes(r) &&
-          (r.name === serverName(spec) || r.name === migrations.get(serverName(spec)))).map(shownEntry)),
+        toSwitch,
+        userManaged: [...new Set(managed.filter((r) => !isDead(r))
+          .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : `${shownEntry(r)}${at(r)}`))],
+        rewrites: [...new Set(profilesToAdd.flatMap((spec) => writtenTo(spec).flatMap((here) => here.filter((r) =>
+          ours.includes(r) && (r.name === serverName(spec) || r.name === migrations.get(serverName(spec)))))
+          .map(shownEntry)))],
         migrations,
-        // `register` never prunes: an agent adding one profile must not silently
-        // drop the six the user set up last week.
-        toRemove: [
-          ...legacy.map(([n]) => n).filter(block.canRemove),
-          ...(prune ? [...registered.keys()].filter((n) => block.canRemove(n) && !chosenNames.has(n) && profileOfServer(n) && !legacy.some(([l]) => l === n)) : []),
-        ],
+        coreAdded: core.added,
+        coreWithheld: core.withheld,
+        coreRemoved: core.removed,
+        explicitCore,
+        deadDeleted: joined(deletable, (r) => `${describeEntry(r)}${at(r)}`),
+        deadReported: dead.filter((r) => !deletable.includes(r))
+          .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`),
+        toRemove: [...profileRemoves, ...(core.remove ? [CORE_SERVER] : [])],
+        files: targets.length
+          ? planFiles(client, entries, profilesToAdd, profileRemoves, explicitCore, {
+            asked: wanted.filter((s) => !isCore(s)), migrations, dead: new Set(deletable.map((r) => r.name)) })
+          : [{ label: client.label, where: [], rows: toAdd.map((spec) => newRow(spec)) }],
       };
     })
-    .filter((p) => p.toAdd.length || p.toRemove.length || p.userManaged.length);
+    .filter((p) => p.toAdd.length || p.toRemove.length || p.userManaged.length ||
+      p.coreWithheld.length || p.deadReported.length);
 }
 
 /**
@@ -760,34 +1257,106 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
     .filter((c) => c.targets.length && !ids.has(c.id))
     .map((client) => {
       const entries = readRegistrations(client);
-      const block = registrationBlock(entries);
+      const blockOf = (r: Registration) => inTarget(entries, r.target.where).block;
+      const managed = entries.filter((r) => blockOf(r).managed.includes(r));
+      const dead = entries.filter(isDead);
+      const deletable = dead.filter((r) => deadAndDeletable(r, blockOf(r)));
+      // Names, not entries: Claude holds the same name in two configs, and
+      // each target removes its own copy (applyToClient), once.
+      const profileRemoves = [...new Set(entries
+        .filter((r) => !managed.includes(r) && blockOf(r).canRemove(r.name) && profileOfServer(r.name) !== CORE_SPEC)
+        .map((r) => r.name))];
+      // Core goes wherever no profile is left — not where a user-managed one
+      // stays: each target's own removals decide (targetRemoves), never the
+      // name list, which also names user-managed entries other targets hold.
+      const core = planCore(client, entries, [], profileRemoves, false, { dead: new Set(deletable.map((r) => r.name)) });
+      const multi = client.targets.length > 1;
+      const at = (r: Registration): string => (multi ? ` in ${r.target.where}` : '');
       return { client, toAdd: [], toSwitch: [],
-        toRemove: entries.filter((r) => !block.managed.includes(r) && block.canRemove(r.name)).map((r) => r.name),
-        userManaged: block.managed.map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : shownEntry(r)),
-        rewrites: [], migrations: new Map<string, string>() };
+        toRemove: [...profileRemoves, ...(core.remove ? [CORE_SERVER] : [])],
+        userManaged: [...new Set(managed.filter((r) => !isDead(r))
+          .map((r) => r.name === '*' ? `${r.target.where} (unreadable)` : `${shownEntry(r)}${at(r)}`))],
+        rewrites: [], migrations: new Map<string, string>(),
+        coreAdded: [], coreWithheld: [], coreRemoved: core.removed, explicitCore: false,
+        deadDeleted: new Map(deletable.map((r) => [r.name, `${describeEntry(r)}${at(r)}`])),
+        deadReported: dead.filter((r) => !deletable.includes(r))
+          .map((r) => `${describeEntry(r)}${at(r)}: ${deadReason(r, blockOf(r))}`),
+        files: planFiles(client, entries, [], profileRemoves, false,
+          { asked: [], migrations: new Map(), dead: new Set(deletable.map((r) => r.name)) }) };
     })
-    .filter((p) => p.toRemove.length || p.userManaged.length);
+    .filter((p) => p.toRemove.length || p.userManaged.length || p.deadReported.length);
 }
 
 /**
  * The plan, one line per client, includes each existing entry to rewrite.
  */
 export function printPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
-  const shown = plan.filter((p) => p.toRemove.length || p.toAdd.length || p.userManaged.length);
+  const shown = plan.filter((p) => p.files.length);
+  // A move between release channels is no change to the profiles, but it is
+  // a write: say so, or "stay as they are" is followed by "Apply?".
+  const moving = plan.filter((p) => p.toSwitch.length).map((p) => p.client.label);
+  const channel = moving.length ? `Heimdall moves to ${PACKAGE} in ${list(moving)}.` : '';
   if (!shown.length) {
-    log('\n📋 Your profiles stay as they are.');
+    log(`\n📋 Your profiles stay as they are.${channel ? ` ${channel}` : ''}`);
     return;
   }
-  log('\n📋 Planned changes:\n');
-  for (const { client, toAdd, toRemove, toSwitch, rewrites, userManaged } of shown) {
-    const bits: string[] = [];
-    const added = toAdd.filter((s) => !toSwitch.includes(s));
-    if (added.length) bits.push(`+ ${added.map(serverName).join(', ')}`);
-    if (toRemove.length) bits.push(`- ${toRemove.join(', ')}`);
-    if (rewrites.length) bits.push(`rewrite ${rewrites.join(', ')}`);
-    if (userManaged.length) bits.push(`user-managed, unchanged: ${userManaged.join(', ')}`);
-    log(`  ${client.label.padEnd(24)} ${bits.join('  ')}`);
+  log('\n📋 Planned changes  (+ added, - removed):');
+  for (const p of shown) for (const line of planLines(p)) log(line);
+  if (channel) log(`\n  ${channel}`);
+}
+
+/** One client's files as the terminal shows them; plain rows of one mark share a line. */
+export function planLines(p: ClientPlan): string[] {
+  const out: string[] = [];
+  for (const f of p.files) {
+    out.push('', `  ${f.label}`, ...f.where.map((w) => `    ${w}`));
+    if (f.note) out.push(`    ${f.note}`);
+    for (let i = 0; i < f.rows.length; i++) {
+      const r = f.rows[i];
+      if (r.subs || r.note) {
+        // A kept entry is only a heading for the sub-profiles that change in it.
+        out.push(`    ${r.mark === 'o' ? ' ' : r.mark} ${r.name}${r.note ? `  ${r.note}` : ''}`);
+        if (r.subs?.added.length) out.push(`        + ${r.subs.added.join(', ')}`);
+        if (r.subs?.removed.length) out.push(`        - ${r.subs.removed.join(', ')}`);
+        continue;
+      }
+      const names = [r.name];
+      while (f.rows[i + 1] && f.rows[i + 1].mark === r.mark && !f.rows[i + 1].subs && !f.rows[i + 1].note) {
+        names.push(f.rows[++i].name);
+      }
+      out.push(`    ${r.mark} ${names.join(', ')}`);
+    }
   }
+  return out;
+}
+
+/**
+ * What a plan removes, as shown: dead entries apart (they have their own
+ * line), and ASC-Core with where it goes from — on a two-target client it may
+ * leave one config and stay in the other.
+ */
+export function removedLabels(p: ClientPlan): string[] {
+  const removed = p.toRemove.filter((n) => !p.deadDeleted.has(n) && n !== CORE_SERVER);
+  if (p.toRemove.includes(CORE_SERVER)) {
+    removed.push(`${CORE_SERVER} (no profile left${p.client.targets.length > 1 ? ` in ${p.coreRemoved.join(', ')}` : ''})`);
+  }
+  return removed;
+}
+
+/** One client's plan as the short pieces both setups print. */
+export function planBits(p: ClientPlan): string[] {
+  const bits: string[] = [];
+  const added = p.toAdd.filter((s) => !p.toSwitch.includes(s) && s !== CORE_SPEC).map(serverName);
+  if (p.toAdd.includes(CORE_SPEC)) added.push(...(p.coreAdded.length ? p.coreAdded : [CORE_SERVER]));
+  if (added.length) bits.push(`+ ${added.join(', ')}`);
+  const removed = removedLabels(p);
+  if (removed.length) bits.push(`- ${removed.join(', ')}`);
+  if (p.deadDeleted.size) bits.push(`delete dead ${[...p.deadDeleted.values()].join(', ')}`);
+  if (p.rewrites.length) bits.push(`rewrite ${p.rewrites.join(', ')}`);
+  if (p.coreWithheld.length) bits.push(`${CORE_SERVER} not added (${p.coreWithheld.join('; ')})`);
+  if (p.deadReported.length) bits.push(`dead, left as is: ${p.deadReported.join(', ')}`);
+  if (p.userManaged.length) bits.push(`user-managed, unchanged: ${p.userManaged.join(', ')}`);
+  return bits;
 }
 
 /** "Restart" an app that is open, "open" one that is not; a CLI is restarted. */
@@ -805,51 +1374,46 @@ function nextStep(clients: McpClient[]): string {
 }
 
 /**
- * Carry out a plan, reporting per client.
+ * Carry out a plan: one line per app, "✓ App" or "✗ App: why".
  *
- * A client that fails does not stop the others — its block is printed instead,
- * so a Cursor config full of comments cannot cost anyone a working Claude
- * setup.
+ * A client that fails does not stop the others, so a Cursor config full of
+ * comments cannot cost anyone a working Claude setup. Returns what to do next,
+ * for the caller to print.
  */
-export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
+export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): string | undefined {
   const restart: McpClient[] = [];
-  for (const { client, toAdd, toRemove, toSwitch, userManaged, migrations } of plan) {
-    if (userManaged.length) log(`${client.label}: user-managed, unchanged: ${userManaged.join(', ')}`);
+  let failed = false;
+  for (const { client, toAdd, toRemove, migrations, deadDeleted, explicitCore, files } of plan) {
     if (!toAdd.length && !toRemove.length) continue;
-    // An entry that only moves to this release's package is written quietly:
-    // it is setting this release up, not a change the user made. A failure is
-    // still reported, and the client still needs restarting to pick it up.
-    const moved = new Set(toSwitch.map(serverName));
-    const quiet = (r: ChangeResult): boolean => r.ok && moved.has(/^added (\S+)/.exec(r.message)?.[1] ?? '');
     if (!client.targets.length) {
       // "Other" — nothing to write into, so the block is the whole answer.
-      log(`\n${client.label}`);
-      log('  add this to your client config:\n');
+      log(`\n${client.label}: add this to your client config:\n`);
       log(indent(manualBlock(client, toAdd)));
       continue;
     }
-    const { results, needsManual } = applyToClient(client, toAdd, toRemove, migrations);
-    const shown = results.filter((r) => !quiet(r));
-    if (shown.length) log(`\n${client.label}`);
-    for (const r of shown) log(`  ${r.ok ? '✓' : '✗'} ${r.message}`);
+    const { results } = applyToClient(client, toAdd, toRemove, migrations, { dead: deadDeleted, explicitCore });
+    // Held back on purpose is a failure only where the plan promised a change
+    // to that entry in that file; anywhere else the plan already said so.
+    const promised = (r: ChangeResult): boolean => files.some((f) => f.where.includes(r.where ?? '') &&
+      f.rows.some((row) => row.name === r.name && !/left as it is$/.test(row.note ?? '')));
+    // Several entries failing for one reason (an unwritable file) say it once;
+    // a lone failure keeps its entry's name. Node's file errors lose the
+    // syscall and full paths, as the file is already named.
+    const bad = results.filter((r) => r.withheld ? promised(r) : !r.ok);
+    const problems = bad.map((r) => (r.reason && bad.filter((o) => o.reason === r.reason).length > 1 ? r.reason : r.message)
+      .replace(/, \w+ '[^']*'( -> '[^']*')?/g, ''));
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
-    const stillRegistered = listRegistered(client).size > 0;
     const skill = results.some((r) => r.ok)
-      ? stillRegistered
-        ? installSkill(client.id)
-        : removeSkill(client.id)
+      ? listRegistered(client).size > 0 ? installSkill(client.id) : removeSkill(client.id)
       : undefined;
-    if (skill && (shown.length || !skill.ok)) log(`  ${skill.ok ? '✓' : '✗'} ${skill.message}`);
-    if (needsManual && toAdd.length) {
-      log('\n  add these by hand:\n');
-      log(indent(manualBlock(client, toAdd)));
-    }
+    if (skill && !skill.ok) problems.push(skill.message);
+    if (problems.length) failed = true;
+    log(problems.length ? `✗ ${client.label}: ${[...new Set(problems)].join('; ')}` : `✓ ${client.label}`);
     if (results.some((r) => r.ok)) restart.push(client);
   }
-  if (restart.length) {
-    log(`\n🎉 Done. ${nextStep(restart)}, then ask: "Check my App Store Connect connection."`);
-  }
+  if (!restart.length) return undefined;
+  return `${failed ? '' : '🎉 Done. '}${nextStep(restart)}, then ask: "Check my App Store Connect connection."`;
 }
 
 /**
@@ -883,7 +1447,8 @@ export async function reconcileRegistration(
     console.log('Left registration unchanged.');
     return;
   }
-  applyPlan(plan);
+  const next = applyPlan(plan);
+  if (next) console.log(`\n${next}`);
 }
 
 const indent = (text: string): string =>
@@ -945,7 +1510,9 @@ export function runRegister(specs: string[], clientIds?: string[]): void {
     console.log('No changes — every client already has these profiles.');
     return;
   }
-  applyPlan(plan);
+  printPlan(plan);
+  const next = applyPlan(plan);
+  if (next) console.log(`\n${next}`);
 
   // Registration and credentials are separate steps on purpose: this one has no
   // secret in it, which is why an agent may run it. Say so, or the user is left

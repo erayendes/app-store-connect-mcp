@@ -69,7 +69,7 @@ describe('asc__search_tools speaks English and says so', () => {
  */
 describe('asc__search_tools finds the macros', () => {
   const ctx = (): any => ({
-    registry: { get: () => undefined, size: 0, unloadedDomains: () => [] },
+    registry: { get: () => undefined, size: 0 },
     http: { limiter: { status: () => ({}) } },
     tokens: { status: () => ({}) },
     readOnly: false,
@@ -81,6 +81,12 @@ describe('asc__search_tools finds the macros', () => {
       (m: any) => m.tool
     );
 
+  // Served nowhere, so naming a server for it would be a dead end.
+  it('points a raw operation a macro replaced at that macro', async () => {
+    const res: any = await executeMetaTool('asc__search_tools', { query: 'app_clip_header_images.create', limit: 50 }, ctx());
+    expect(res.matches.find((m: any) => m.tool === 'app_clip_header_images.create')).toMatchObject({ loaded: false, useInstead: 'media__upload' });
+  });
+
   it('ranks the one-call tool above the chain it replaces', async () => {
     expect(await search('change subscription price')).toContain('pricing__set_subscription_price');
   });
@@ -91,14 +97,22 @@ describe('asc__search_tools finds the macros', () => {
     );
   });
 
-  it('finds subscription preflight and routes an unloaded match to subscription-catalog', async () => {
+  it('finds subscription preflight and routes an unloaded match to its server and sub-profile', async () => {
     expect(await search('subscription review readiness')).toContain('preflight__check_subscription');
     const result: any = await executeMetaTool('asc__search_tools',
       { query: 'subscription review readiness', limit: 3 }, { ...ctx(), macroOffered: () => false });
     const hit = result.matches.find((m: any) => m.tool === 'preflight__check_subscription');
-    expect(hit.loaded).toBe(false);
-    expect(JSON.stringify(result)).toContain('monetization');
-    expect(JSON.stringify(result)).toContain('subscription-catalog');
+    expect(hit).toMatchObject({ loaded: false, server: 'ASC-Monetization', subProfile: 'subscription' });
+    expect(result.hint).toMatch(/register monetization:subscription/);
+    // A sibling server the client already runs comes first; registering is the fallback.
+    expect(result.hint).toMatch(/if that tool is in your tool list, call it there; otherwise register/);
+  });
+
+  it('names the server and sub-profile on a generated match, preferring its own profile', async () => {
+    const result: any = await executeMetaTool('asc__search_tools',
+      { query: 'create beta group', limit: 5 }, { ...ctx(), ownProfile: 'testflight' });
+    const hit = result.matches.find((m: any) => m.tool === 'beta_groups.create');
+    expect(hit).toMatchObject({ server: 'ASC-TestFlight', subProfile: 'groups' });
   });
 
   it('finds the Xcode Cloud diagnosis macro from a failure question', async () => {
@@ -222,7 +236,7 @@ describe('short tokens do not match mid-word', () => {
  */
 describe('asc__status check_capabilities', () => {
   const baseCtx = (http: any): any => ({
-    registry: { get: () => undefined, size: 0, unloadedDomains: () => [] },
+    registry: { get: () => undefined, size: 0 },
     http,
     tokens: { status: () => ({}) },
     readOnly: false,

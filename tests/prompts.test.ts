@@ -13,9 +13,15 @@ import { PRICING_TOOLS } from '../src/tools/pricing.js';
 import { PREFLIGHT_TOOLS } from '../src/tools/preflight.js';
 import { METADATA_TOOLS } from '../src/tools/metadata.js';
 import { REVIEWS_AI_TOOLS } from '../src/tools/reviews-ai.js';
+import { META_TOOLS } from '../src/tools/meta.js';
+import { ACCOUNT_TOOLS } from '../src/tools/account.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
+import { createServer } from '../src/server.js';
+import { PROFILES, resolveSelection } from '../src/profiles.js';
+import { PACKAGE } from '../src/clients.js';
 
 const ALL_TOOLS = new Set(
-  [...PRICING_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...REVIEWS_AI_TOOLS].map((t) => t.name)
+  [...PRICING_TOOLS, ...PREFLIGHT_TOOLS, ...METADATA_TOOLS, ...REVIEWS_AI_TOOLS, ...META_TOOLS, ...ACCOUNT_TOOLS].map((t) => t.name)
 );
 
 describe('the prompt list', () => {
@@ -34,6 +40,33 @@ describe('the prompt list', () => {
     expect(half.map((p) => p.name)).not.toContain('release-readiness');
     const whole = availablePrompts(new Set(['preflight__check_version', 'listing__diff_metadata']));
     expect(whole.map((p) => p.name)).toContain('release-readiness');
+  });
+
+  /**
+   * Checked against real servers, not a hand-made tool set: moving a macro to
+   * another sub-profile (or into core, which no profile server carries) is how
+   * a prompt ends up offered nowhere while every unit check above still passes.
+   */
+  it.each(PROMPTS.map((p) => p.name))('%s is offered by a single sub-profile server', async (name) => {
+    const homes: string[] = [];
+    for (const p of PROFILES) {
+      for (const s of p.subProfiles) {
+        const spec = s.name ? `${p.name}:${s.name}` : p.name;
+        const server = createServer(
+          {
+            credentials: { keyId: 'TESTKEY123', issuerId: 'issuer', privateKey: 'not-used-here' },
+            readOnly: false, confirmWrites: 'off', dryRun: true,
+          },
+          resolveSelection(spec)
+        );
+        const [ct, st] = InMemoryTransport.createLinkedPair();
+        const client = new Client({ name: 'prompts', version: '0' }, { capabilities: {} });
+        await Promise.all([server.connect(st), client.connect(ct)]);
+        if ((await client.listPrompts()).prompts.some((x) => x.name === name)) homes.push(spec);
+        await client.close();
+      }
+    }
+    expect(homes, `${name} is offered by no sub-profile`).not.toEqual([]);
   });
 
   it('earns its place by chaining calls, not by wrapping one tool', () => {
@@ -77,5 +110,13 @@ describe('a prompt body', () => {
   it('tells the model that review text is untrusted, where reviews are read', () => {
     const text = PROMPTS.find((p) => p.name === 'review-triage')!.body({});
     expect(text).toMatch(/untrusted/i);
+  });
+});
+
+describe('the getting-started prompt', () => {
+  it('names the package on the channel this server came from, not a hard-coded @beta', () => {
+    const body = PROMPTS.find((p) => p.name === 'getting-started')!.body({});
+    expect(body).toContain(`npx -y ${PACKAGE} setup`);
+    expect(PACKAGE).toMatch(/^@erayendes\/asc-mcp(@beta)?$/);
   });
 });

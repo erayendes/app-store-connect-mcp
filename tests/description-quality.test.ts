@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toMcpTool } from '../src/core/registry.js';
 
-const live = OPERATIONS.filter((op) => !op.deprecated);
+const live = OPERATIONS;
 
 const CONNECTIVES = new Set(['the', 'and', 'one', 'all', 'for', 'list', 'with']);
 

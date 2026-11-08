@@ -33,15 +33,21 @@ import {
   type InputRequiredResult,
   type ServerContext,
 } from '@modelcontextprotocol/server';
-import { STRONG_CONFIRM_LEVELS, REVERSIBILITY, TYPED_BY_NAME, type RiskLevel } from './risk.js';
+import { STRONG_CONFIRM_LEVELS, TYPED_BY_NAME, consequenceFor, type RiskLevel } from './risk.js';
 import { OPERATIONS } from '../generated/operations.js';
+import { REVIEW_RESOURCE_TYPES } from '../tools/release.js';
+import type { DialogText } from './native-confirm.js';
 
 export interface ConfirmDecision {
   allowed: boolean;
+  /** Signed review-item snapshot approved by the user, when this is a release macro. */
+  planFingerprint?: string;
   /** Present when blocked: the client's action ('decline', 'cancel'), what the answer lacked, or why a stale answer was refused. */
   reason?: string;
   /** The answer was for another call, or already spent: ask again rather than blame the user. */
   stale?: true;
+  /** Approved by typing CONFIRM rather than ticking a box. */
+  strong?: boolean;
 }
 
 /** What the user sees before approving a write. */
@@ -49,6 +55,79 @@ export interface WritePreview {
   message: string;
   /** True for high-stakes levels: the user must type CONFIRM, not tick a box. */
   strong: boolean;
+  /** The macOS dialog's own text, when the tool can say it better than the form preview. */
+  dialog?: DialogText;
+  /** The dialog's question, when the body decides what the write does (pause or resume, submit or withdraw). */
+  title?: string;
+  /** Body fields that question already says, left out of the dialog's lines. */
+  covered?: string[];
+}
+
+/**
+ * The question and its consequence for writes whose body decides what they
+ * do. These all ask in the default mode (risk.ts, ASK_BY_DEFAULT), and their
+ * one-line summaries cover every case at once: "Pause, resume or complete…".
+ */
+function questionFor(
+  toolName: string,
+  data: any,
+  labelOf: (type: string, id: string) => string | undefined
+): { title?: string; consequence?: string; covered?: string[] } {
+  const a = data?.attributes ?? {};
+  const rel = (name: string): string | undefined => {
+    const r = data?.relationships?.[name]?.data;
+    return r && !Array.isArray(r) ? labelOf(r.type, r.id) : undefined;
+  };
+  const yes = (v: unknown) => v === true || v === 'true';
+  switch (toolName) {
+    // Summaries that read as a manual, or start with a verb no button can carry.
+    case 'review_submission_items__delete':
+      return { title: 'Remove this item from the submission?' };
+    case 'subscription_plan_availabilities__create':
+      return { title: 'Change where the subscription is sold?' };
+    case 'subscription_prices__delete':
+      return { title: 'Remove the scheduled price change?', consequence: 'The current price stays; the change can be scheduled again.' };
+    case 'profiles__create':
+      return { title: 'Create the provisioning profile?' };
+    case 'review_submissions__update':
+      if (yes(a.canceled)) return { title: 'Withdraw this submission from App Review?', consequence: 'You can submit it again later.', covered: ['canceled'] };
+      return yes(a.submitted) ? { title: 'Submit this submission to App Review?', covered: ['submitted'] } : {};
+    case 'app_store_version_release_requests__create': {
+      const version = rel('appStoreVersion');
+      return { title: version ? `Release version ${version} on the App Store now?` : 'Release this version on the App Store now?' };
+    }
+    case 'app_store_version_phased_releases__update':
+      if (a.phasedReleaseState === 'PAUSED') return { title: 'Pause the phased release?', consequence: 'Automatic updates stop; people can still download it.', covered: ['phasedReleaseState'] };
+      if (a.phasedReleaseState === 'ACTIVE') return { title: 'Resume the phased release?', consequence: 'Automatic updates continue where they stopped.', covered: ['phasedReleaseState'] };
+      if (a.phasedReleaseState === 'COMPLETE') return { title: 'Release the update to all users now?', consequence: 'The rollout can’t be restarted.', covered: ['phasedReleaseState'] };
+      return { title: 'Change the phased release?' };
+    case 'beta_app_review_submissions__create': {
+      const build = rel('build');
+      return { title: build ? `Send build ${build} to TestFlight review?` : 'Send this build to TestFlight review?' };
+    }
+    case 'territory_availabilities__update':
+      if (a.available === false) return { title: 'Stop selling the app in this country?', consequence: 'New customers there can no longer download it.', covered: ['available'] };
+      if (yes(a.preOrderEnabled)) return { title: 'Open pre-orders for the app in this country?', covered: ['available', 'preOrderEnabled'] };
+      return a.available === true ? { title: 'Start selling the app in this country?', covered: ['available'] } : {};
+    case 'end_app_availability_pre_orders__create':
+      return { title: 'End the pre-order and release the app now?' };
+    case 'app_store_version_experiments_v2__update':
+      return yes(a.started) ? { title: 'Start the product page test?', covered: ['started'] } : {};
+    case 'game_center_leaderboard_entry_submissions__create':
+      return { title: a.score !== undefined ? `Post a score of ${a.score} for a player?` : 'Post a score for a player?', covered: ['score'] };
+    case 'game_center_player_achievement_submissions__create':
+      return { title: a.percentageAchieved !== undefined ? `Post ${a.percentageAchieved}% achievement progress for a player?` : 'Post achievement progress for a player?', covered: ['percentageAchieved'] };
+    case 'builds__update':
+      return yes(a.expired) ? { title: 'Expire this build?', covered: ['expired'] } : {};
+    case 'subscription_versions__create':
+    case 'subscription_group_versions__create':
+    case 'in_app_purchase_versions__create':
+    case 'retention_message_versions__create': {
+      const owner = rel('subscription') ?? rel('subscriptionGroup') ?? rel('inAppPurchase') ?? rel('retentionMessage');
+      return { title: owner ? `Create a review version for "${owner}"?` : 'Create a review version?' };
+    }
+  }
+  return {};
 }
 
 /** The slice of an Operation the preview needs (StoreKit tools fake one). */
@@ -106,42 +185,6 @@ type RefResolver = (
   progress?: (label: string) => void
 ) => Promise<string | undefined>;
 
-/** Screenshots and previews: the asset, its set, and the set's device attribute. */
-const LISTING_ASSETS = {
-  appScreenshots: { setRel: 'appScreenshotSet', setType: 'appScreenshotSets', size: 'screenshotDisplayType' },
-  appPreviews: { setRel: 'appPreviewSet', setType: 'appPreviewSets', size: 'previewType' },
-} as const;
-const LISTING_SET_SIZE: Record<string, string> = { appScreenshotSets: 'screenshotDisplayType', appPreviewSets: 'previewType' };
-
-/**
- * Where a screenshot or preview set sits: which app, version, language and
- * device, or which custom product page or product page test. A delete prompt
- * that said only "02.png" could not tell one app's screenshot from another's.
- * Up to three reads, one step up each; `say` is called after every step.
- */
-async function listingSetContext(
-  http: RefReader,
-  setType: string,
-  setId: string,
-  say: (where: string[]) => void,
-  device?: string
-): Promise<string[]> {
-  const where: string[] = device ? [device] : [];
-  const set: any = await http.get(`/v1/${setType}/${encodeURIComponent(setId)}`, {
-    include: 'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization',
-  });
-  const size = set?.data?.attributes?.[LISTING_SET_SIZE[setType]];
-  if (!device && size) where.push(size);
-  const loc = (set?.included ?? [])[0];
-  const locale = loc?.attributes?.locale;
-  if (locale) where.unshift(locale);
-  if (loc?.type === 'appCustomProductPageLocalizations') where.unshift('custom product page');
-  if (loc?.type === 'appStoreVersionExperimentTreatmentLocalizations') where.unshift('product page test');
-  say(where);
-  if (loc?.type === 'appStoreVersionLocalizations') await versionPageContext(http, loc.id, where, say);
-  return where;
-}
-
 /** From a version page's locale up to its version and app: two reads, prepended to `where`. */
 async function versionPageContext(
   http: RefReader,
@@ -169,6 +212,7 @@ const PLACEMENT_PAGES: Record<string, string | undefined> = {
   appCustomProductPageLocalizations: 'custom product page',
   appStoreVersionExperimentTreatmentLocalizations: 'product page test',
   appEventLocalizations: 'in-app event',
+  retentionMessageVersions: 'retention message',
 };
 
 /**
@@ -191,7 +235,7 @@ const libraryAsset =
 
     const placement: any = await http.get(`/v1/appAssetLibraryPlacements/${encodeURIComponent(placements[0].id)}`, {
       include:
-        'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization,appEventLocalization',
+        'appStoreVersionLocalization,appCustomProductPageLocalization,appStoreVersionExperimentTreatmentLocalization,appEventLocalization,retentionMessageVersion',
     });
     const page = (placement?.included ?? []).find((i: any) => i?.type in PLACEMENT_PAGES);
     const where: string[] = [placement?.data?.attributes?.placementType].filter(Boolean);
@@ -205,38 +249,6 @@ const libraryAsset =
         if (current) progress?.(current);
       });
     }
-    return current;
-  };
-
-const listingAsset =
-  (type: keyof typeof LISTING_ASSETS): RefResolver =>
-  async (http, id, progress) => {
-    const { setRel, setType, size } = LISTING_ASSETS[type];
-    const res: any = await http.get(`/v1/${type}/${encodeURIComponent(id)}`, { include: setRel });
-    const fileName: string | undefined = res?.data?.attributes?.fileName;
-    const set = (res?.included ?? []).find((i: any) => i?.type === setType);
-    const setId: string | undefined = set?.id ?? res?.data?.relationships?.[setRel]?.data?.id;
-    const device: string | undefined = set?.attributes?.[size];
-    const label = (where: string[]) =>
-      [fileName, where.join(', ')].filter(Boolean).join(' — ') || undefined;
-    let current = label(device ? [device] : []);
-    if (current) progress?.(current);
-    if (!setId) return current;
-    await listingSetContext(http, setType, setId, (where) => {
-      current = label(where);
-      if (current) progress?.(current);
-    }, device);
-    return current;
-  };
-
-const listingSet =
-  (type: string): RefResolver =>
-  async (http, id, progress) => {
-    let current: string | undefined;
-    await listingSetContext(http, type, id, (where) => {
-      current = where.join(', ') || undefined;
-      if (current) progress?.(current);
-    });
     return current;
   };
 
@@ -264,6 +276,29 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
     const a = res?.data?.attributes;
     return a?.name ? `${a.name}${a.productId ? ` (${a.productId})` : ''}` : undefined;
   },
+  subscriptionVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionVersions/${encodeURIComponent(id)}`, { include: 'subscription' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'subscriptions')?.attributes?.name;
+    return `${product ?? 'Subscription'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  subscriptionGroupVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/subscriptionGroupVersions/${encodeURIComponent(id)}`, { include: 'subscriptionGroup' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'subscriptionGroups')?.attributes?.referenceName;
+    return `${product ?? 'Subscription group'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  inAppPurchaseVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/inAppPurchaseVersions/${encodeURIComponent(id)}`, { include: 'inAppPurchase' });
+    const a = res?.data?.attributes;
+    const product = (res?.included ?? []).find((x: any) => x.type === 'inAppPurchases')?.attributes?.name;
+    return `${product ?? 'In-app purchase'} — version ${a?.version ?? '?'} (${a?.state ?? 'unknown'})`;
+  },
+  retentionMessageVersions: async (http, id) => {
+    const res: any = await http.get(`/v1/retentionMessageVersions/${encodeURIComponent(id)}`, { include: 'retentionMessage' });
+    const message = (res?.included ?? []).find((x: any) => x.type === 'retentionMessages')?.attributes?.referenceName;
+    return `${message ?? 'Retention message'} — version (${res?.data?.attributes?.state ?? 'unknown'})`;
+  },
   apps: async (http, id) => {
     const res: any = await http.get(`/v1/apps/${encodeURIComponent(id)}`);
     const a = res?.data?.attributes;
@@ -273,10 +308,6 @@ export const REF_RESOLVERS: Record<string, RefResolver> = {
     const res: any = await http.get(`/v1/betaGroups/${encodeURIComponent(id)}`);
     return res?.data?.attributes?.name ?? undefined;
   },
-  appScreenshots: listingAsset('appScreenshots'),
-  appPreviews: listingAsset('appPreviews'),
-  appScreenshotSets: listingSet('appScreenshotSets'),
-  appPreviewSets: listingSet('appPreviewSets'),
   appAssetLibraryImages: libraryAsset('appAssetLibraryImages'),
   appAssetLibraryVideos: libraryAsset('appAssetLibraryVideos'),
 };
@@ -329,12 +360,14 @@ const LABEL_ATTRIBUTES = [
   'referenceName',
   'title',
   'versionString',
+  'version',
   'productId',
   'bundleId',
   'fileName',
   'nickname',
   'locale',
   'email',
+  'username',
   'deviceClass',
   'platform',
   // An asset library placement has no name; what it is placed as is the label.
@@ -558,6 +591,12 @@ export async function buildWritePreview(
   const targets = pathTargets(op.path, args);
   const bodyRefs: Array<{ type: string; id: string }> = [];
   if (body) collectRefs(body, bodyRefs);
+  const submissionItems = Array.isArray(args.items) ? args.items as Array<{ type: string; id: string }> : [];
+  const itemNames = (args.itemNames ?? {}) as Record<string, string>;
+  for (const item of submissionItems) {
+    const type = REVIEW_RESOURCE_TYPES[item.type];
+    if (type && !itemNames[`${item.type}/${item.id}`]) bodyRefs.push({ type, id: item.id });
+  }
   const labels = http ? await resolveRefs(http, [...targets, ...bodyRefs]) : new Map<string, string>();
 
   const ids = Object.entries(args)
@@ -598,12 +637,22 @@ export async function buildWritePreview(
       for (const c of flat.slice(0, MAX_CHANGE_LINES)) lines.push(`  ${c}`);
       if (flat.length > MAX_CHANGE_LINES) lines.push('  …');
     }
+    if (Array.isArray(args.items)) {
+      lines.push('Items in submission:');
+      const existing = new Set((Array.isArray(args.existingItems) ? args.existingItems : []).map((i: any) => `${i.type}/${i.id}`));
+      for (const item of submissionItems) {
+        const key = `${item.type}/${item.id}`;
+        const label = itemNames[key] ?? labels.get(`${REVIEW_RESOURCE_TYPES[item.type]}/${item.id}`);
+        lines.push(`  ${item.type ?? 'unknown'}: ${item.id ?? 'unknown'}${label ? ` (${label})` : ''} — ${existing.has(key) ? 'already in submission' : 'will be added'}`);
+      }
+    }
   }
 
-  lines.push(`Risk:       ${risk} — ${REVERSIBILITY[risk]}`);
+  const question = questionFor(toolName, body, (type, id) => labels.get(`${type}/${id}`));
+  lines.push(`Risk:       ${risk} — ${question.consequence ?? consequenceFor(toolName, risk, op.method)}`);
   if (strong) lines.push('', 'Type CONFIRM in the field below to proceed.');
 
-  return { message: lines.join('\n'), strong };
+  return { message: lines.join('\n'), strong, ...(question.title ? { title: question.title, covered: question.covered } : {}) };
 }
 
 /** What the signed `requestState` carries from the prompt to the retry. */
@@ -612,6 +661,7 @@ interface PendingWrite {
   call: string;
   nonce: string;
   strong: boolean;
+  planFingerprint?: string;
 }
 
 /** Key order is not meaning: a client that re-serializes the arguments still matches. */
@@ -664,7 +714,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
     verify: codec.verify,
 
     /** The question, as a result the client answers by calling again. */
-    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview): Promise<InputRequiredResult> {
+    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview, planFingerprint?: string): Promise<InputRequiredResult> {
       const now = Date.now();
       for (const [n, expiry] of open) if (expiry < now) open.delete(n);
       const nonce = randomUUID();
@@ -693,7 +743,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
             requestedSchema: { type: 'object', properties: field, required: Object.keys(field) },
           }),
         },
-        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong }, ctx),
+        requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong, planFingerprint }, ctx),
       });
     },
 
@@ -732,7 +782,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
       const confirmed = state.strong
         ? typeof content?.confirmation === 'string' && /^confirm$/i.test(content.confirmation.trim())
         : content?.confirm === true;
-      if (confirmed) return { allowed: true };
+      if (confirmed) return { allowed: true, strong: state.strong, planFingerprint: state.planFingerprint };
       const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
       const unconfirmed = state.strong ? 'the answer was not CONFIRM' : 'the box was left unticked';
       return { allowed: false, reason: content ? unconfirmed : (action ?? 'no answer') };

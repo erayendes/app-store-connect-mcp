@@ -1,7 +1,7 @@
 /**
  * Does every tool hold up its end of the bargain?
  *
- * The agent eval covers 50 goals — about 5% of the 982 operations. It measures
+ * The agent eval covers 50 goals — about 5% of the operations. It measures
  * whether someone can get something done, which is the question that matters,
  * but it says nothing about the other 95%. A tool can be broken in ways no goal
  * happens to touch: a path parameter that never gets substituted, a body schema
@@ -31,7 +31,8 @@ import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { BODY_SCHEMAS } from '../src/generated/body-schemas.js';
-import { ALL_DOMAINS, encodeParamName } from '../src/core/registry.js';
+import { encodeParamName } from '../src/core/registry.js';
+import { profilesForOperation } from '../src/profiles.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const entry = join(here, '..', 'dist', 'index.js');
@@ -53,7 +54,8 @@ if (!existsSync(entry)) {
 }
 
 type Op = (typeof OPERATIONS)[number];
-const OPS = (OPERATIONS as Op[]).filter((op) => !onlyDomain || op.domain === onlyDomain);
+// The macros' raw operations are served by no profile; their checks are the macros' own tests.
+const OPS = (OPERATIONS as Op[]).filter((op) => profilesForOperation(op.name).length && (!onlyDomain || op.domain === onlyDomain));
 
 /** `subscription_prices.create` is exposed as `subscription_prices__create`. */
 const toolName = (op: Op) => op.name.replace(/\./g, '__');
@@ -198,10 +200,30 @@ const KNOWN_BROKEN_READS = new Set([
   'finance_reports.list', // needs a real ASC_VENDOR_NUMBER
 ]);
 
-/** Every domain in one server: this drives the whole surface, not a profile's slice. */
-const serverArgs = [`--domains=${ALL_DOMAINS.join(',')}`, '--include-deprecated', '--dry-run'];
+/**
+ * The whole surface, one dry-run profile server per profile, each started on
+ * first use: a tool is called on the profile that serves it.
+ */
+function router() {
+  const servers = new Map<string, ReturnType<typeof client>>();
+  const homes = new Map(OPERATIONS.map((op) => [toolName(op), profilesForOperation(op.name)[0]]));
+  return {
+    async call(name: string, callArgs: Record<string, unknown>) {
+      const profile = homes.get(name) ?? 'core';
+      let mcp = servers.get(profile);
+      if (!mcp) {
+        mcp = client([profile, '--dry-run']);
+        await mcp.start();
+        servers.set(profile, mcp);
+      }
+      return mcp.call(name, callArgs);
+    },
+    stop: () => servers.forEach((mcp) => mcp.stop()),
+  };
+}
+type Mcp = ReturnType<typeof router>;
 
-async function checkWrites(mcp: ReturnType<typeof client>): Promise<Result[]> {
+async function checkWrites(mcp: Mcp): Promise<Result[]> {
   const writes = OPS.filter((op) => !op.readOnly);
   const results: Result[] = [];
 
@@ -263,7 +285,7 @@ async function checkWrites(mcp: ReturnType<typeof client>): Promise<Result[]> {
  * (`betaGroups` → `/v1/betaGroups/{id}`), so harvesting types is enough to seed
  * a large part of the read surface without hand-written chains.
  */
-async function harvestIds(mcp: ReturnType<typeof client>, appId: string) {
+async function harvestIds(mcp: Mcp, appId: string) {
   const byType = new Map<string, string>();
   byType.set('apps', appId);
 
@@ -285,7 +307,7 @@ async function harvestIds(mcp: ReturnType<typeof client>, appId: string) {
   return byType;
 }
 
-async function checkReads(mcp: ReturnType<typeof client>, appId: string): Promise<Result[]> {
+async function checkReads(mcp: Mcp, appId: string): Promise<Result[]> {
   const seeds = await harvestIds(mcp, appId);
   console.log(dim(`  harvested ids for ${seeds.size} resource types`));
 
@@ -343,8 +365,7 @@ async function main(): Promise<void> {
       `\n${dim('No model, no tokens. Writes are dry-run and never reach Apple.')}\n`
   );
 
-  const mcp = client(serverArgs);
-  await mcp.start();
+  const mcp = router();
 
   const results = await checkWrites(mcp);
 

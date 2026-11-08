@@ -11,7 +11,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { PROFILES } from '../src/profiles.js';
+import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
 
@@ -40,6 +40,13 @@ describe('Dockerfile introspection command', () => {
           `not fail loudly — it reaches the tombstone and boots with one tool.`
       ).toBe(true);
     }
+  });
+
+  it('folds core in, since a container cannot run ASC-Core beside it', () => {
+    // Without it the scan sees a profile with no way to look up an app.
+    const cmd = /^CMD\s+(\[.*\])\s*$/m.exec(dockerfile)!;
+    expect(JSON.parse(cmd[1])).toContain('--with-core');
+    expect(cmdProfiles()).not.toContain(CORE_PROFILE);
   });
 
   it('names sub-profiles that still exist', () => {
