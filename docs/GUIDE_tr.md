@@ -86,7 +86,7 @@ Bir prompt yalnızca kullandığı araçların hepsi yüklüyse görünür. Her 
 
 > **Siz:** Uygulama içi etkinlikleri yönetecek bir araç var mı? *(`marketing`'i yüklememişsiniz)*
 >
-> **Yapay zekâ:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `marketing:app-events`'te. Onay verirseniz eklemek için `npx -y @erayendes/asc-mcp@beta register marketing:app-events` komutunu çalıştırabilirim; ardından uygulamanızı yeniden başlatın.
+> **Yapay zekâ:** *(`asc__search_tools` çağırır)* Evet — `app_events__*` araçları, yüklü olmayan `marketing:app-events`'te. Onay verirseniz eklemek için `npx -y @erayendes/asc-mcp register marketing:app-events` komutunu çalıştırabilirim; ardından uygulamanızı yeniden başlatın.
 
 > - 3.2 sürümünü incelemeye gönder, onaylandıktan sonra kademeli yayına başla.
 > - Son bir haftadaki TestFlight crash gönderimlerini cihaz modeline göre grupla göster.

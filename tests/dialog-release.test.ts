@@ -53,6 +53,20 @@ describe('releaseDialog', () => {
     expect(d.body).not.toContain('Already in');
   });
 
+  it('names every item in the body when the title shortens the list', () => {
+    const d = releaseDialog('release__submit_items', {
+      ...base, existingItems: [],
+      items: [iap, { type: 'subscriptionVersion', id: 's1' }, { type: 'appEvent', id: 'e1' }, { type: 'retentionMessageVersion', id: 'r1' }],
+    })!;
+    expect(d.title).toBe('Submit an in-app purchase, a subscription and 2 more for App Review?');
+    expect(d.body).toContain('Going: an in-app purchase, a subscription, an in-app event, a retention message');
+  });
+
+  it('warns when the platform was guessed and the app has others', () => {
+    const d = releaseDialog('release__submit_items', { ...base, items: [iap], existingItems: [], platformNote: 'Goes to macOS, guessed from its editable version; the app also has iOS. Pass platform to choose another.' })!;
+    expect(d.body).toContain('⚠️ Goes to macOS, guessed');
+  });
+
   it('leaves other tools to the generic dialog', () => {
     expect(releaseDialog('preflight__check_version', base)).toBeUndefined();
   });

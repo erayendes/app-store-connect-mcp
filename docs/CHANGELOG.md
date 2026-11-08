@@ -8,6 +8,113 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [3.0.0] — 2026-11-08
+
+Hi,
+
+3.0 is the biggest change I have made since I started building Heimdall.
+
+Through 2.x, as the tool count grew, we had to pile everything together.
+To keep every tool usable, the same ones were repeated on every server.
+And putting a single screenshot in place took five steps.
+
+In 3.0 I rebuilt all of this from scratch. **More done with fewer tools, safer changes in fewer steps.**
+
+#### Profiles and sub-profiles
+
+There are now 13 profiles and **51** sub-profiles: `general`, `distribution`, `marketing`, `monetization`, `testflight`, `access` and more.
+
+Big profiles have more sub-profiles, so you can pick fewer tools. For example, `monetization:subscription` and `monetization:subscription-offers` are **65** tools, where all of `monetization` is **186**.
+
+> Every profile and sub-profile, with every tool in it, is on the [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md) page.
+
+#### Shared tools in one place: `ASC-Core`
+
+Some tools Heimdall can't work without, such as finding your apps and searching the tools.
+
+They used to be installed again under every profile.
+
+Now they live in one server, `ASC-Core`, which comes with the install: setup adds `ASC-Core` next to your profiles on its own.
+
+So even with every profile installed, the tool descriptions the AI reads take **nearly a fifth** less space.
+
+> `general` replaces `app-info`, as in App Store Connect.
+
+#### Four tools for images, videos and files
+
+App Store Connect's latest update added the Assets Library to its menu.
+
+Now `media__list`, `media__upload`, `media__arrange` and `media__delete` manage every image, video and file in App Store Connect: *product page, custom product page, product page optimization, in-app events, Game Center, App Clip, subscription and in-app purchase images, retention messages, review attachments, background assets, build files…* **Everything!**
+
+That retires 73 raw tools and the old `listing__*` tools. *A huge gain in efficiency.*
+
+#### Retention messages
+
+Apple opened retention messages to the App Store Connect API. The message a subscriber sees when they start to cancel can now be set up end to end: the message, its versions, its text in each language, the offers shown with it, and which subscription it belongs to. It's all in `monetization:subscription-retention`.
+
+`pricing__make_offer` makes a retention offer too, priced in every country from one anchor price.
+
+#### New jobs in one call
+
+- `pricing__setup_subscription` sets up a subscription with its group, languages, countries and price under one confirmation.
+- `build__wait_for_processing` waits until an uploaded build finishes processing.
+- `testflight__feedback_digest` brings testers' screenshots too.
+
+#### Nine new StoreKit tools
+
+- After an outage, push every subscriber's renewal date forward in one go,
+- send consumption information for a refund request,
+- set up the message a customer about to cancel sees.
+
+> Every tool that touches purchases or billing asks for CONFIRM.
+
+Transactions, subscription statuses and the entitlement check now come with Apple's signature verified; nothing to set up.
+
+#### Clearer confirmations
+
+In apps that can't show the confirmation form (like the Code tab in Claude Desktop), Heimdall opens its own window on a Mac. **The AI can neither see that window nor press it.**
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page and stays in the media library. Buttons: Cancel and Remove." width="394">
+
+The window asks what will happen in one sentence: *"Remove a screenshot from the App Store page?"* Below it are the app, the page and the files by name, with no IDs. And the button says what it does: **Remove**, **Delete**, **Upload**.
+
+#### What changed, and who did it
+
+- Every write Heimdall makes, or that you refuse, lands in `audit.jsonl` on your computer.
+- The ones Apple rejects stay in `failures.jsonl` with the request ID support will ask for.
+- Text, URLs and request bodies are not recorded; keys are masked.
+
+#### Subscriptions and in-app purchases use Apple's new (v2) tools
+
+The 185 old operations Apple has deprecated are no longer in the package, and `--include-deprecated` is gone.
+
+> Apple stopped producing the `INSTALLS` sales report on November 4. Earlier days still download.
+
+#### Send everything to review in one call
+
+With `release__submit_items`, send in-app purchases, subscriptions, in-app events, custom product pages, product page tests, Game Center items, background assets and retention messages in one go.
+
+*Don't worry: it lists every item before it sends.*
+
+#### What to do when you switch
+
+Run `npx -y @erayendes/asc-mcp setup` once and pick your profiles again.
+
+- Setup clears out the entries whose profile no longer exists and adds `ASC-Core`.
+- Heimdall now always runs with a profile. If you have an old entry added without one, delete it from your AI app's settings; setup leaves it alone.
+- If your AI app has rules that allow Heimdall tools by server name (such as `mcp__ASC-AppInfo__*`), update them to the new names. Until you do, those tools ask for approval again. *Not a big deal :)*
+- `asc__load` is gone. For a missing tool, the AI suggests the `register` command to you.
+
+> To go back to 2.x, `npx -y @erayendes/asc-mcp@2.8.0 setup` is all it takes.
+
+#### If you were on the beta
+
+Nothing to do: entries that run `@beta` get 3.0.0 on their next start.
+
+---
+
+Heimdall now has **786 tools**. If you see anything odd, I'd love to hear about it :)
+
 ### [3.0.0-beta.3] — 2026-11-05
 
 Hi,
@@ -57,7 +164,7 @@ Text, URLs and request bodies aren't recorded, and keys are masked.
 **Confirmations you can read**
 The confirmation window on a Mac was rebuilt; the old one was hard to read. The question is in bold, the details line up, and what the change does sits right above the buttons. No IDs, no codes like `ONE_MONTH` or `TUR`: countries, periods and names are written out.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 Replying to a customer review now asks for your confirmation before the reply goes out.
 
@@ -102,7 +209,7 @@ Don't worry: it lists every item before it sends.
 **Clearer confirmations**
 In apps that can't show the confirmation form (like the Code tab in Claude Desktop), Heimdall opens its own window on a Mac. The AI can neither see that window nor press it.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page and stays in the media library. Buttons: Cancel and Remove." width="394">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall's confirmation dialog on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page and stays in the media library. Buttons: Cancel and Remove." width="394">
 
 The window asks what will happen in one sentence: "Remove a screenshot from the App Store page?" Below it are the app, the page and the files by name, with no IDs. And the button says what it does: Remove, Delete, Upload.
 
@@ -378,6 +485,113 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
+### [3.0.0] — 2026-11-08
+
+Selam,
+
+3.0, Heimdall'ı geliştirmeye başladığımdan beri yaptığım en büyük değişiklik.
+
+2.x sürümleri boyunca araç sayısı arttıkça her şeyi bir araya yığmak zorunda kalmıştık.
+Tam araçları kullanabilmek için aynı araçlar her sunucuda tekrar ediyordu.
+Ya da bir ekran görüntüsünü yerine koymak bile beş adım sürüyordu.
+
+3.0'da bunları baştan kurdum. **Daha az araçla daha çok iş, daha az adımla daha güvenli değişiklik.**
+
+#### Profiller ve Alt profiller
+
+Artık 13 profil ve **51** alt profil var: `general`, `distribution`, `marketing`, `monetization`, `testflight`, `access` ve diğerleri.
+
+Büyük profillerin alt profil sayısı arttı. Böylece daha az araç seçebilirsiniz. Örneğin `monetization:subscription` ve `monetization:subscription-offers` **65** araç, `monetization`'ın tamamı ise **186**.
+
+> Her profil ve alt profil, içindeki bütün araçlarla [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfasında.
+
+#### Ortak araçlar tek yerde: `ASC-Core`
+
+Heimdall'ın çalışması için gereken uygulama bulma, araç arama gibi bazı olmazsa olmaz araçlar var.
+
+Önceden bu araçlar her bir profilin altında defalarca kuruluyordu.
+
+Bunlar tek bir sunucuda `ASC-Core` altında toplandı ve kurulumda varsayılan olarak geliyor. Yani Setup, `ASC-Core`'u profillerinizin yanına kendiliğinden ekliyor.
+
+Böylece, bütün profiller kurulu olsa bile yapay zekânın okuduğu araç açıklamaları **beşte bire yakın** daha az yer tutuyor.
+
+> `app-info`'nun yerini App Store Connect'teki gibi `general` aldı.
+
+#### Görseller, videolar ve dosyalar için dört araç
+
+Yeni App Store Connect güncellemesiyle menüye Assets Library eklendi.
+
+Artık `media__list`, `media__upload`, `media__arrange` ve `media__delete`, App Store Connect'teki her görseli, videoyu ve dosyayı yönetiyor. *product page, custom product page, product page optimization, in-app events, Game Center, App Clip, abonelik ve satın alma görselleri, elde tutma mesajları, inceleme ekleri, background asset'ler, build dosyaları…* **Her şey!**
+
+Böylece 73 ham araç ve eski `listing__*` araçları kalktı. *Muazzam bir verimlilik.*
+
+#### Elde tutma mesajları
+
+Apple elde tutma mesajlarını App Store Connect API'ye açtı. Abone iptal etmeye başladığında gördüğü mesajı artık baştan sona kurabilirsiniz: mesajın kendisi, sürümleri, her dildeki metni, yanında gösterilen teklifler ve hangi aboneliğe ait olduğu. Hepsi `monetization:subscription-retention` içinde.
+
+`pricing__make_offer` elde tutma teklifini de kuruyor; tek çapa fiyattan her ülkenin fiyatı çıkıyor.
+
+#### Tek çağrıda yeni işler
+
+- `pricing__setup_subscription` bir aboneliği grubu, dilleri, ülkeleri ve fiyatıyla tek onayla kuruyor.
+- `build__wait_for_processing` yüklenen build işlenene kadar bekliyor.
+- `testflight__feedback_digest` testçilerin ekran görüntülerini de getiriyor.
+
+#### StoreKit'e dokuz yeni araç
+
+- Bir kesintiden sonra bütün abonelerin yenileme tarihini tek seferde ileri alın,
+- bir iade talebine kullanım bilgisini gönderin,
+- iptal etmek üzere olan müşteriye gösterilecek mesajı kurun.
+
+> Satın almaya ve faturalamaya dokunan her araç CONFIRM istiyor.
+
+İşlemler, abonelik durumları ve kullanım hakkı kontrolü artık Apple'ın imzası doğrulanmış olarak geliyor; ayar gerekmiyor.
+
+#### Onaylar daha anlaşılır
+
+Onay formu gösteremeyen uygulamalarda (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresini açıyor. **Yapay zekâ bu pencereyi ne görebiliyor ne de basabiliyor.**
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak ve medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="394">
+
+Pencere ne olacağını tek cümleyle soruyor: *"Remove a screenshot from the App Store page?"* Altında uygulama, sayfa ve dosyalar adlarıyla yazıyor; ID yok. Düğme de ne yapacağını söylüyor: **Remove**, **Delete**, **Upload**.
+
+#### Ne değişti, kim yaptı
+
+- Heimdall'ın yaptığı ya da sizin reddettiğiniz her yazma bilgisayarınızda `audit.jsonl`'a düşüyor.
+- Apple'ın reddettikleri, destekten isteyeceğiniz request ID ile `failures.jsonl`'da duruyor.
+- Metin, URL ve istek gövdesi kaydedilmiyor; anahtarlar maskeleniyor.
+
+#### Abonelikler ve satın almalar Apple'ın yeni (v2) araçlarıyla
+
+Apple'ın kullanımdan kaldırdığı 185 eski işlem artık pakette yok; `--include-deprecated` de kalktı.
+
+> Apple 4 Kasım'dan beri `INSTALLS` satış raporunu üretmiyor. Önceki günler hâlâ indirilebiliyor.
+
+#### Her şeyi tek çağrıyla incelemeye gönderin
+
+`release__submit_items` ile uygulama içi satın almaları, abonelikleri, etkinlikleri, özel ürün sayfalarını, ürün sayfası testlerini, Game Center öğelerini, background asset'leri ve elde tutma mesajlarını tek seferde gönderin.
+
+*Merak etmeyin, göndermeden önce hepsini tek tek listeliyor.*
+
+#### Geçerken yapmanız gerekenler
+
+`npx -y @erayendes/asc-mcp setup` komutunu bir kez çalıştırıp profillerinizi yeniden seçin.
+
+- Setup, artık var olmayan profillerin kayıtlarını temizliyor ve `ASC-Core`'u ekliyor.
+- Heimdall artık her zaman bir profille çalışıyor. Profil vermeden eklenmiş eski bir kaydınız varsa onu yapay zekâ uygulamanızın ayarlarından silin; setup ona dokunmuyor.
+- Yapay zekâ uygulamanızda Heimdall araçlarına sunucu adıyla izin veren kurallar varsa (`mcp__ASC-AppInfo__*` gibi), yeni adlara göre güncelleyin. Güncellemezseniz bu araçlar için yeniden onay istenir. *Çok da konu değil :)*
+- `asc__load` kalktı. Eksik araçlar için yapay zekâ size `register` komutunu öneriyor.
+
+> 2.x'e dönmek isterseniz `npx -y @erayendes/asc-mcp@2.8.0 setup` yeterli.
+
+#### Beta'yı kullananlar için
+
+Bir şey yapmanıza gerek yok: `@beta` ile çalışan kayıtlar bir sonraki açılışta 3.0.0'ı alıyor.
+
+---
+
+Heimdall artık **786 araç** içeriyor. Gördüğünüz her tuhaflığı yazarsanız çok sevinirim :)
+
 ### [3.0.0-beta.3] — 2026-11-05
 
 Selam,
@@ -427,7 +641,7 @@ Metin, URL ve istek gövdesi kaydedilmiyor; anahtarlar maskeleniyor.
 **Onaylar artık okunuyor**
 Mac'teki onay penceresi baştan yapıldı. Öncekini okumak zordu. Soru kalın, bilgiler hizalı, değişikliğin ne yapacağı düğmelerin hemen üstünde. ID ya da `ONE_MONTH`, `TUR` gibi kodlar yok; ülkeler, süreler ve adlar düz yazıyla.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
 Artık müşteri yorumlarına verdiğiniz yanıtı göndermeden önce onay istiyor.
 
@@ -472,7 +686,7 @@ Merak etmeyin, göndermeden önce hepsini tek tek listeliyor.
 **Onaylar daha anlaşılır**
 Onay formu gösteremeyen uygulamalarda (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresini açıyor. Yapay zekâ bu pencereyi ne görebiliyor ne de basabiliyor.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak ve medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="394">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-dialog.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak ve medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="394">
 
 Pencere ne olacağını tek cümleyle soruyor: "Remove a screenshot from the App Store page?" Altında uygulama, sayfa ve dosyalar adlarıyla yazıyor; ID yok. Düğme de ne yapacağını söylüyor: Remove, Delete, Upload.
 

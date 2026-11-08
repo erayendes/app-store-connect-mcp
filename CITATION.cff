@@ -10,8 +10,8 @@ authors:
 repository-code: "https://github.com/erayendes/app-store-connect-mcp"
 url: "https://github.com/erayendes/app-store-connect-mcp"
 license: MIT
-version: 3.0.0-beta.3
-date-released: "2026-11-05"
+version: 3.0.0
+date-released: "2026-11-08"
 keywords:
   - mcp
   - model-context-protocol

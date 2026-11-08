@@ -2,9 +2,6 @@
 
 **Your whole App Store Connect account, in one tool.**
 
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<a href="#setup"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/beta-banner-en.png" alt="Heimdall 3.0 beta. Try it now: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
-
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
@@ -13,7 +10,7 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](docs/README_tr.md)
 
-> **Heimdall 3.0 beta is here! 🎉**
+> **Heimdall 3.0 is here! 🎉**
 >
 > I released Heimdall three months ago. Since then it has been **downloaded more than 6,800 times** from npm, about 1,700 installs a month. It has passed **50 stars** on GitHub, with **37 releases** in 3 months. Thank you all; 3.0 is built on exactly the feedback you sent.
 >
@@ -25,7 +22,7 @@
 >
 > Everything that changed is in the [changelog](docs/CHANGELOG.md).
 >
-> If you see anything odd during the beta, I'd love to [hear about it](https://github.com/erayendes/app-store-connect-mcp/issues). To stay on the stable release, just leave `@beta` off.
+> If you see anything odd, I'd love to [hear about it](https://github.com/erayendes/app-store-connect-mcp/issues).
 
 **Ask, and it answers. Tell it, and it's done.**
 
@@ -99,7 +96,7 @@ flowchart LR
 
 **If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
 
 More in [Security](.github/SECURITY.md).
 
@@ -111,15 +108,15 @@ Heimdall doesn't replace [Fastlane](https://fastlane.tools/); it complements it.
 One command:
 
 ```bash
-npx -y @erayendes/asc-mcp@beta setup
+npx -y @erayendes/asc-mcp setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="The browser setup, step 1: each profile with its tool count and token cost" width="560">
 
 <sub>Setup in the browser: pick what you need and see what it costs the AI as you go. All four steps are in [Setup](docs/SETUP_en.md#save-your-credentials-once--the-setup-wizard).</sub>
 
-This is the 3.0 beta; `@beta` picks it until 3.0.0 is out. For 2.8, leave `@beta` off.
+Coming from 2.x? Run setup once more and pick your profiles again; the old ones no longer exist. To stay on 2.x, use `@erayendes/asc-mcp@2.8.0`.
 
 It asks whether to continue in your browser (recommended) or the terminal. You'll need an [App Store Connect API key](docs/SETUP_en.md#create-an-api-key); the browser page tells you which role to give it from what you pick, so you can run setup before creating the key. Node.js 20.19 or later.
 

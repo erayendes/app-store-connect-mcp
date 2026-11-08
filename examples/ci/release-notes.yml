@@ -61,8 +61,7 @@ jobs:
         # cannot reach the pricing tools cannot touch a price by accident.
         # `register` adds ASC-Core beside it on its own: finding the app by name
         # (apps__list) lives there, and nowhere else since 3.0.
-        # `@beta` while 3.0 is in beta: the stable 2.x has no ASC-Core.
-        run: npx -y @erayendes/asc-mcp@beta register distribution --clients=claude
+        run: npx -y @erayendes/asc-mcp register distribution --clients=claude
 
       - name: Write the release notes
         env:

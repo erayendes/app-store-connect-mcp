@@ -163,6 +163,8 @@ describe('setup --web, registration confirmation', () => {
     expect(plan[0].files[0].rows.map((r) => r.name)).not.toContain('ASC-General');
     expect(plan[0].files[0].note).toMatch(/ASC-Core not added: .*different App Store Connect accounts/);
     expect(SETUP_PAGE).toContain('reuse && !vendorChanged() && !r.plan.some');
+    // The page says why core is held back before Apply, since the result will not.
+    expect(SETUP_PAGE).toContain("p.coreWithheld.forEach(function (why)");
     expect(readFileSync(path, 'utf8')).toContain('secret-test-value');
   });
 

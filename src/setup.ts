@@ -26,6 +26,7 @@ import {
   resolveSelection,
   type Profile,
   type SubProfile,
+  mergeSpecs,
 } from './profiles.js';
 import { TokenProvider, type JwtCredentials } from './core/jwt.js';
 import { loadConfig } from './core/config.js';
@@ -752,6 +753,9 @@ export async function runSetup(): Promise<void> {
     // Claude Desktop writes its own settings back while it runs; a change made
     // while it is open never reaches it. Say so before anything is asked.
     const desktop = claudeDesktop();
+    // Left out of this run when it cannot be written: reported as a failure
+    // otherwise, beside a Claude Code that took every change.
+    let skipDesktop = desktop === 'inside';
     if (desktop === 'inside') {
       console.log(
         `\n⚠️  This setup is running inside Claude Desktop. Desktop writes its own settings back while it is open,\n` +
@@ -766,7 +770,8 @@ export async function runSetup(): Promise<void> {
       );
       for (;;) {
         const answer = await ask('Press Enter once it is closed (or type s to skip Claude Desktop): ', false);
-        if (/^s/i.test(answer) || !isRunning('Claude')) break;
+        if (!isRunning('Claude')) break;
+        if (/^s/i.test(answer)) { skipDesktop = true; break; }
         console.log('   Claude Desktop is still open.');
       }
     }
@@ -881,7 +886,12 @@ export async function runSetup(): Promise<void> {
       console.log('\nApp selection cancelled — registration left unchanged.');
       return;
     }
-    await reconcileRegistration(clients, chosen, registeredAcross(clients), ask);
+    const writable = (c: McpClient): McpClient => {
+      const kept = skipDesktop ? c.targets.filter((t) => !(t.kind === 'json' && t.heldBy)) : c.targets;
+      return kept.length && kept.length < c.targets.length ? { ...c, targets: kept } : c;
+    };
+    const reachable = clients.map(writable);
+    await reconcileRegistration(reachable, chosen, registeredAcross(reachable), ask, CLIENTS.map(writable));
   } finally {
     rl.close();
     // The picker leaves stdin flowing so later prompts work; release it now so
@@ -1126,6 +1136,7 @@ export function planChanges(
   registeredPerClient: Map<string, Registration[]>,
   { prune, stale }: { prune: boolean; stale?: Map<string, Set<string>> }
 ): ClientPlan[] {
+  chosen = mergeSpecs(chosen);
   const chosenNames = new Set(chosen.map(serverName));
   const explicitCore = chosen.some(isCore);
   return clients
@@ -1151,7 +1162,13 @@ export function planChanges(
       const migrate = legacy
         .map(([, spec]) => spec)
         .filter((spec) => !prune || chosenNames.has(serverName(spec)));
-      const wanted = [...new Set([...chosen, ...migrate])];
+      // `register` adds: sub-profiles named for a profile this client already
+      // has narrowed join the ones it holds instead of replacing them.
+      const widen = (spec: string): string => {
+        const held = prune ? undefined : ours.find((r) => r.name === serverName(spec) && !isCore(r.spec!));
+        return held ? mergeSpecs([held.spec!, spec])[0] : spec;
+      };
+      const wanted = [...new Set([...chosen.map(widen), ...migrate])];
       const migrations = new Map(legacy.map(([name, spec]) => [serverName(spec), name]));
       // A profile the user wants goes into every target that may take it and
       // does not already hold it as asked — decided per target, by the same
@@ -1275,12 +1292,17 @@ export function plansForUnticked(chosen: McpClient[], candidates: McpClient[] = 
  */
 export function printPlan(plan: ClientPlan[], log: (line: string) => void = console.log): void {
   const shown = plan.filter((p) => p.files.length);
+  // A move between release channels is no change to the profiles, but it is
+  // a write: say so, or "stay as they are" is followed by "Apply?".
+  const moving = plan.filter((p) => p.toSwitch.length).map((p) => p.client.label);
+  const channel = moving.length ? `Heimdall moves to ${PACKAGE} in ${list(moving)}.` : '';
   if (!shown.length) {
-    log('\n📋 Your profiles stay as they are.');
+    log(`\n📋 Your profiles stay as they are.${channel ? ` ${channel}` : ''}`);
     return;
   }
   log('\n📋 Planned changes  (+ added, - removed):');
   for (const p of shown) for (const line of planLines(p)) log(line);
+  if (channel) log(`\n  ${channel}`);
 }
 
 /** One client's files as the terminal shows them; plain rows of one mark share a line. */

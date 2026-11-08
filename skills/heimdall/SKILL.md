@@ -18,10 +18,6 @@ not, has its own `asc__status`. If app lookup or search is missing from the
 session, ASC-Core is not registered for this client; the fix is `register` or
 `setup` (below), not another profile.
 
-**This is the 3.0 beta.** Every command below uses `@erayendes/asc-mcp@beta`;
-the stable `@erayendes/asc-mcp` is still 2.x and knows none of these profiles.
-The commands the server itself prints already carry the right one.
-
 ## The credential boundary
 
 Going after the API key is the single most common way a session goes wrong: in
@@ -94,7 +90,7 @@ user did not open, usually more than the one you are talking through, and the
 command has no prompt of its own:
 
 ```bash
-npx -y @erayendes/asc-mcp@beta register monetization:subscription,subscription-offers analytics
+npx -y @erayendes/asc-mcp register monetization:subscription,subscription-offers analytics
 ```
 
 `--clients=claude,codex` limits which configs it touches (ids: `claude`,
@@ -131,7 +127,7 @@ Relay that reason; do not add ASC-Core by hand to get around it.
 **2. Send the user to `setup`.**
 
 ```bash
-npx -y @erayendes/asc-mcp@beta setup
+npx -y @erayendes/asc-mcp setup
 ```
 
 **Never run this yourself, and never ask for the `.p8`.** It is an App Store
@@ -259,5 +255,5 @@ the report, where the raw chain ends holding a link.
   does not help. On a server started with only some of its sub-profiles, reads
   from the rest work at once through `asc__call`. For the tools themselves, run
   the `register` command the server's reply names — for example
-  `npx -y @erayendes/asc-mcp@beta register testflight:groups,testers` — once the user
+  `npx -y @erayendes/asc-mcp register testflight:groups,testers` — once the user
   says yes, then ask them to restart their MCP client.

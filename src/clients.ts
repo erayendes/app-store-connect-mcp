@@ -574,6 +574,12 @@ export function coreActionFor(
   const moved = new Set([...migrations]
     .filter(([to, from]) => adds.some((spec) => serverName(spec) === to) && regs.some((r) => r.name === from))
     .map(([, from]) => from));
+  // So does an entry rewritten under its own name — a dead `access:users`
+  // becoming `access` keeps its --read-only, which binds core as the profile
+  // it becomes, not as the dead one it was.
+  const reAdded = new Map(adds.filter((spec) => removes.includes(serverName(spec))).map((spec) => [serverName(spec), spec]));
+  for (const name of reAdded.keys()) moved.add(name);
+  regs = regs.map((r) => reAdded.has(r.name) ? { ...r, spec: reAdded.get(r.name) } : r);
   const isCoreName = (name: string): boolean => profileOfServer(name) === CORE_SPEC;
   // Any ASC-named entry that stays counts, ours or not: one run through a
   // local checkout (`node dist/index.js general`) is Heimdall all the same.
@@ -1047,7 +1053,9 @@ function writeJsonServers(
     mkdirSync(dirname(t.path), { recursive: true });
   }
   const servers = (doc[t.key] as Record<string, unknown>) ?? {};
-  const migrated = new Map(toAdd.map((spec) => [serverName(spec), servers[migrations.get(serverName(spec)) ?? '']]));
+  // Taken before the removals: an entry removed and re-added under its own
+  // name (a dead profile's) keeps its flags and env, as the CLI path does.
+  const migrated = new Map(toAdd.map((spec) => [serverName(spec), servers[migrations.get(serverName(spec)) ?? serverName(spec)]]));
   for (const name of toRemove) delete servers[name];
   for (const spec of toAdd) {
     const name = serverName(spec);

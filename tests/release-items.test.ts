@@ -299,6 +299,10 @@ describe('PR-V2 review regressions', () => {
     const yes = fake({ versionPages: pages, priorItems: [{ id: 'old', attributes: { state: 'APPROVED' }, relationships: { appEvent: { data: { id: 'event' } } } }], history: [{ id: 'prior-1', attributes: { state: 'COMPLETE', platform: 'MAC_OS', submittedDate: '2026-01-01' } }] });
     const preview = await releaseItemsPreviewArgs({ app: 'Example', items: [{ type: 'appEvent', id: 'new-event' }] }, yes.http);
     expect(preview.platform).toBe('macOS');
+    // Guessed, and said: the app has iOS versions too.
+    expect(preview.platformNote).toMatch(/^Goes to macOS, guessed from its editable version; the app also has .*iOS.*Pass platform/);
+    const withPlatform = await releaseItemsPreviewArgs({ app: 'Example', platform: 'MAC_OS', items: [{ type: 'appEvent', id: 'new-event' }] }, fake({ versionPages: pages, priorItems: [{ id: 'old', attributes: { state: 'APPROVED' }, relationships: { appEvent: { data: { id: 'event' } } } }], history: [{ id: 'prior-1', attributes: { state: 'COMPLETE', platform: 'MAC_OS', submittedDate: '2026-01-01' } }] }).http);
+    expect(withPlatform.platformNote).toBeUndefined();
     pages[0].data[0].attributes.appStoreState = 'PREPARE_FOR_SUBMISSION';
     const ambiguous = fake({ versionPages: pages });
     await expect(releaseItemsPreviewArgs({ app: 'Example', items: [{ type: 'appEvent', id: 'new-event' }] }, ambiguous.http)).rejects.toThrow(/more than one platform/);
@@ -312,7 +316,9 @@ describe('item release history and state regressions', () => {
     expect((await releaseItemsPreviewArgs(args, http)).platform).toBe('iOS');
     await executeReleaseTool('release__submit_items', args, { http });
     expect(writes.at(-1)?.method).toBe('PATCH');
-    expect(reads.filter((r) => r.path.endsWith('/appStoreVersions')).every((r) => r.query?.['filter[appStoreState]'] || r.query?.['filter[versionString]'])).toBe(true);
+    // Filtered reads only: by state or version, or one row per platform to tell whether the app has others.
+    expect(reads.filter((r) => r.path.endsWith('/appStoreVersions')).every((r) => r.query?.['filter[appStoreState]'] || r.query?.['filter[versionString]'] ||
+      (r.query?.['filter[platform]'] && r.query?.limit === 1))).toBe(true);
   });
   it.each(['ACCEPTED', 'PROCESSING_FOR_DISTRIBUTION', 'READY_FOR_DISTRIBUTION', 'SUPERSEDED'])('uses background asset App Store release state %s as approval', async (assetReleaseState) => {
     const { http, writes } = fake({ earlierApproved: true, assetReleaseState });

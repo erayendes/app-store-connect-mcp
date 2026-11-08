@@ -9,6 +9,7 @@ import {
   resolveSelection,
   operationsFor,
   profilesForOperation,
+  mergeSpecs,
 } from '../src/profiles.js';
 import { ToolRegistry } from '../src/core/registry.js';
 import { OPERATIONS } from '../src/generated/operations.js';
@@ -253,5 +254,15 @@ describe('AI-136 improvements', () => {
     for (const t of STOREKIT_TOOLS) {
       expect(t.inputSchema.required ?? []).not.toContain('environment');
     }
+  });
+});
+
+describe('mergeSpecs', () => {
+  it('makes one spec per profile, a bare profile winning over its parts', () => {
+    expect(mergeSpecs(['monetization:subscription-offers', 'analytics', 'monetization:subscription-codes,subscription-offers']))
+      .toEqual(['monetization:subscription-offers,subscription-codes', 'analytics']);
+    expect(mergeSpecs(['monetization:subscription', 'monetization'])).toEqual(['monetization']);
+    const all = resolveProfile('testflight')!.subProfiles.map((s) => s.name).join(',');
+    expect(mergeSpecs([`testflight:${all}`])).toEqual(['testflight']);
   });
 });

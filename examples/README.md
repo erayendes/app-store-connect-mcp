@@ -30,11 +30,8 @@ so every pack below counts it.
 | Team admin | `core` + `access` | 33 |
 
 ```bash
-npx -y @erayendes/asc-mcp@beta register distribution general
+npx -y @erayendes/asc-mcp register distribution general
 ```
-
-While 3.0 is in beta the package is `@erayendes/asc-mcp@beta`; from 3.0.0 on,
-drop `@beta`.
 
 Ask “why did my Xcode Cloud build fail?” with `ci__diagnose_run` on `xcode-cloud`. It defaults to the newest failed or errored run within the newest 40, and lists only failed tests.
 
@@ -211,11 +208,8 @@ taşımıyor; bu yüzden aşağıdaki her paket onu da sayar.
 | Ekip yöneticisi | `core` + `access` | 33 |
 
 ```bash
-npx -y @erayendes/asc-mcp@beta register distribution general
+npx -y @erayendes/asc-mcp register distribution general
 ```
-
-3.0 beta aşamasındayken paket `@erayendes/asc-mcp@beta`; 3.0.0'dan sonra
-`@beta`'yı kaldırın.
 
 “Xcode Cloud derlemem neden başarısız oldu?” sorusu için `xcode-cloud` profilinde `ci__diagnose_run` kullanın. En yeni 40 koşu içindeki en yeni hata vermiş (FAILED ya da ERRORED) koşuyu seçer ve yalnızca başarısız testleri listeler.
 

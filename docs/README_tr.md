@@ -2,9 +2,6 @@
 
 **App Store Connect hesabınızın tamamı, tek bir araçta.**
 
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<a href="#kurulum"><img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/beta-banner-tr.png" alt="Heimdall 3.0 betası. Hemen deneyin: npx -y @erayendes/asc-mcp@beta setup" width="720"></a>
-
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
@@ -13,7 +10,7 @@
 
 🇬🇧 [English](../README.md) · 🇹🇷 Türkçe
 
-> **Heimdall 3.0 betası çıktı! 🎉**
+> **Heimdall 3.0 çıktı! 🎉**
 >
 > Heimdall'ı üç ay önce yayınladım. O günden bu yana npm'den **6.800'den fazla indirildi**, her ay ortalama 1.700 kez kuruluyor. GitHub'da **50'yi aşkın yıldız** topladı ve 3 ayda **37 sürüm** çıktı. Bu ilgi için hepinize teşekkür ederim; 3.0'ı da tam olarak sizden gelen geri bildirimlerle kurdum.
 >
@@ -25,7 +22,7 @@
 >
 > Ne değiştiğinin hepsi [sürüm notlarında](CHANGELOG.md).
 >
-> Beta sürecinde gördüğünüz her tuhaflığı [yazarsanız](https://github.com/erayendes/app-store-connect-mcp/issues) çok sevinirim. Kararlı sürümü kullanmaya devam etmek isterseniz `@beta`'yı yazmamanız yeterli.
+> Gördüğünüz her tuhaflığı [yazarsanız](https://github.com/erayendes/app-store-connect-mcp/issues) çok sevinirim.
 
 **Sorun yanıtlasın, isteyin yapsın.**
 
@@ -100,7 +97,7 @@ flowchart LR
 
 **Yapay zekâ uygulamanız soruyu gösteremiyorsa** (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresiyle sorar. Düğmesi ne yapacağını söyler: Remove, Upload, Delete. Yapay zekâ bu pencereyi ne görebilir ne de basabilir; siz cevap verene kadar bekler.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 
@@ -112,15 +109,15 @@ Heimdall, [Fastlane](https://fastlane.tools/)'in alternatifi değil, tamamlayıc
 Tek komut.
 
 ```bash
-npx -y @erayendes/asc-mcp@beta setup
+npx -y @erayendes/asc-mcp setup
 ```
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle" width="560">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle" width="560">
 
 <sub>Tarayıcıda kurulum: neye ihtiyacınız olduğunu seçin, yapay zekâya maliyetini seçtikçe görün. Dört adımın hepsi [Kurulum](SETUP_tr.md#kimlik-bilgisini-bir-kez-kaydedin--setup-sihirbazı) sayfasında.</sub>
 
-Bu 3.0 betası; 3.0.0 çıkana kadar `@beta` onu seçer. 2.8 için `@beta`'yı yazmayın.
+2.x'ten mi geliyorsunuz? Setup'ı bir kez daha çalıştırıp profillerinizi yeniden seçin; eski profiller artık yok. 2.x'te kalmak isterseniz `@erayendes/asc-mcp@2.8.0` kullanın.
 
 Tarayıcıda mı (önerilir) terminalde mi devam etmek istediğinizi sorar. Bir [App Store Connect API anahtarı](SETUP_tr.md#api-anahtarı-oluşturun) gerekir; tarayıcı sayfası seçtiklerinize göre anahtara hangi rolü vermeniz gerektiğini söyler, yani anahtarı oluşturmadan da setup'ı başlatabilirsiniz. Node.js 20.19 veya üstü gerekir.
 

@@ -1800,24 +1800,34 @@ async function createOffer(args: Record<string, unknown>, ctx: PricingContext): 
   const app = await resolveApp(ctx.http, String(args.app));
   const sub = await resolveSubscription(ctx.http, app.id, String(args.subscription));
 
-  // Where the subscription is sold, with each country's currency.
-  let availabilityId: string | undefined;
-  try {
-    const availability: any = await ctx.http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/subscriptionAvailability`);
-    availabilityId = availability?.data?.id;
-  } catch (err) {
-    if (!(err instanceof AscApiError && err.status === 404)) throw err;
+  // Where the subscription is sold, with each country's currency: every plan
+  // availability's countries (API 4.5), else the single availability Apple
+  // deprecated, which a subscription set up before plans may still carry.
+  const countriesAt = async (path: string) => {
+    const sold = await ctx.http.collect<any>(path, { limit: 200 }, 5);
+    if (sold.hasMore) throw new AscApiError('Apple returned more sale countries than could be read; nothing was sent.', 0);
+    return sold.items as any[];
+  };
+  const plans = await ctx.http.collect<any>(`/v1/subscriptions/${encodeURIComponent(sub.id)}/planAvailabilities`, { limit: 200 }, 5);
+  if (plans.hasMore) throw new AscApiError('Apple returned more plan availabilities than could be read; nothing was sent.', 0);
+  const sold: any[] = [];
+  for (const plan of plans.items) {
+    sold.push(...await countriesAt(`/v1/subscriptionPlanAvailabilities/${encodeURIComponent(String(plan.id))}/availableTerritories`));
   }
-  if (!availabilityId) {
-    throw new AscApiError(`"${sub.productId}" has no availability set, so there is no country to price the offer in.`, 0);
+  if (!plans.items.length) {
+    let availabilityId: string | undefined;
+    try {
+      const availability: any = await ctx.http.get(`/v1/subscriptions/${encodeURIComponent(sub.id)}/subscriptionAvailability`);
+      availabilityId = availability?.data?.id;
+    } catch (err) {
+      if (!(err instanceof AscApiError && (err.status === 404 || err.status === 410))) throw err;
+    }
+    if (!availabilityId) {
+      throw new AscApiError(`"${sub.productId}" has no availability set, so there is no country to price the offer in.`, 0);
+    }
+    sold.push(...await countriesAt(`/v1/subscriptionAvailabilities/${encodeURIComponent(availabilityId)}/availableTerritories`));
   }
-  const sold = await ctx.http.collect<any>(
-    `/v1/subscriptionAvailabilities/${encodeURIComponent(availabilityId)}/availableTerritories`,
-    { limit: 200 },
-    5
-  );
-  if (sold.hasMore) throw new AscApiError('Apple returned more sale countries than could be read; nothing was sent.', 0);
-  const currency = new Map<string, string>(sold.items.map((t: any) => [String(t.id), String(t.attributes?.currency ?? '')]));
+  const currency = new Map<string, string>(sold.map((t: any) => [String(t.id), String(t.attributes?.currency ?? '')]));
   if (!currency.size) throw new AscApiError(`"${sub.productId}" is not sold in any country; nothing was sent.`, 0);
 
   const points = new Map<string, PricePoint>();

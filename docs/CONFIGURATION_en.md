@@ -9,7 +9,7 @@ There are two kinds of settings. **Flags** go at the end of `args` in your app's
 ```json
 "ASC-General": {
   "command": "npx",
-  "args": ["-y", "@erayendes/asc-mcp@beta", "general", "--read-only"],
+  "args": ["-y", "@erayendes/asc-mcp", "general", "--read-only"],
   "env": { "ASC_RATE_LIMIT_PER_HOUR": "1200" }
 }
 ```
@@ -37,7 +37,7 @@ By default Heimdall asks in two ways:
 
 Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press its button, named for the change (Remove, Delete, Upload; Allow when no verb fits), or Return. Cancel (Don't Allow next to Allow) or Escape stops it. The AI can't see or click that dialog. It stays open until you answer; if the AI app cancels the call, the dialog closes with it.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 
@@ -126,7 +126,7 @@ Two ways, no extra setup needed:
   ```json
   "ASC-ClientB": {
     "command": "npx",
-    "args": ["-y", "@erayendes/asc-mcp@beta", "general"],
+    "args": ["-y", "@erayendes/asc-mcp", "general"],
     "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/path/AuthKey_B.p8" }
   }
   ```
@@ -134,7 +134,7 @@ Two ways, no extra setup needed:
 - **A separate settings folder.** Run setup once for the second account with its own folder:
 
   ```bash
-  ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp@beta setup
+  ASC_CONFIG_DIR=~/.config/asc-clientB npx -y @erayendes/asc-mcp setup
   ```
 
   Setup removes Heimdall from every app you leave unticked, so do not untick them. Choose the terminal when it asks, and answer **n** at *Apply these changes?*: the key is saved by then, and your first account's servers stay as they are. Then put the same `ASC_CONFIG_DIR` in the second server's `env` block. Each folder keeps its own key, Vendor number and Bundle ID.

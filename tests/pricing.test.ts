@@ -1037,6 +1037,8 @@ describe('pricing__set_iap_price', () => {
  */
 function offerHttp(opts: {
   sold?: string[];
+  /** Sold through plan availabilities (API 4.5): one list per plan. */
+  plans?: string[][];
   equalized?: string[];
   equalizationsHaveMore?: boolean;
   /** Introductory offers already on the subscription. */
@@ -1057,7 +1059,15 @@ function offerHttp(opts: {
           included: [{ id: 's1', type: 'subscriptions', attributes: { name: 'Yearly', productId: 'yearly.1' } }],
         };
       }
-      if (path === '/v1/subscriptions/s1/subscriptionAvailability') return { data: { id: 'av-1' } };
+      if (path === '/v1/subscriptions/s1/planAvailabilities') {
+        return { data: (opts.plans ?? []).map((_, i) => ({ type: 'subscriptionPlanAvailabilities', id: `plan-${i}` })) };
+      }
+      const plan = /^\/v1\/subscriptionPlanAvailabilities\/plan-(\d+)\/availableTerritories$/.exec(path);
+      if (plan) return { data: opts.plans![Number(plan[1])].map((id) => ({ type: 'territories', id, attributes: { currency: currency[id] } })) };
+      if (path === '/v1/subscriptions/s1/subscriptionAvailability') {
+        if (opts.plans) throw new Error('the deprecated availability was read');
+        return { data: { id: 'av-1' } };
+      }
       if (path === '/v1/subscriptionAvailabilities/av-1/availableTerritories') {
         return { data: sold.map((id) => ({ type: 'territories', id, attributes: { currency: currency[id] } })) };
       }
@@ -1151,6 +1161,13 @@ describe('pricing__make_offer', () => {
     expect(validateBody(schemaFor('win_back_offers.create'), posts[0].body)).toEqual([]);
     expect(result.ok).toBe(true);
     expect(result.created.id).toBe('offer-1');
+  });
+
+  it('prices in every country of every plan availability, without the deprecated one', async () => {
+    const { http, posts } = offerHttp({ plans: [['TUR', 'USA'], ['DEU', 'USA']] });
+    const result: any = await run(winBack, http);
+    expect(result.ok).toBe(true);
+    expect(posts[0].body.included.map((p: any) => p.relationships.territory.data.id)).toEqual(['DEU', 'TUR', 'USA']);
   });
 
   it('makes a free promotional offer with a country on every row and no price point', async () => {

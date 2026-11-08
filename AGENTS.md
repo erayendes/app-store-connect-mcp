@@ -10,8 +10,6 @@ Heimdall is an MCP server for the App Store Connect API and the App Store Server
 
 Profiles are cut by the work the user does: `general`, `distribution`, `monetization`, `marketing`, `testflight`, `access` and so on. App lookup, `asc__search_tools`, `asc__discover_domains`, `asc__account_status` and the `media__*` tools are in none of them — they live in **ASC-Core** (`core`), a server of its own that `register` and `setup` add next to the profiles. A profile server carries them itself only when started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or not, has its own `asc__status`. If app lookup or search is missing from the session, ASC-Core is not registered for this client; the fix is `register` or `setup`, not another profile.
 
-**This is the 3.0 beta.** Every command below uses `@erayendes/asc-mcp@beta`; the stable `@erayendes/asc-mcp` is still 2.x and knows none of these profiles. The commands the server itself prints already carry the right one.
-
 ## If a user asks you to install it
 
 The install is two steps and they are not both yours. **You register. The user hands over the key.**
@@ -25,7 +23,7 @@ A big profile takes a colon and a list of its sub-profiles — `monetization:sub
 **Say what you are about to do and wait for a yes**, then run:
 
 ```
-npx -y @erayendes/asc-mcp@beta register monetization:subscription,subscription-offers analytics
+npx -y @erayendes/asc-mcp register monetization:subscription,subscription-offers analytics
 ```
 
 This edits MCP client configs the user did not open — by default every client it finds, which is usually more than the one you are talking through. There is no confirmation prompt in the command, so the confirmation has to happen in the conversation. `--clients=codex,claude` limits it; `--clients` ids are `claude`, `codex`, `antigravity`, `vscode`, `cursor`, `windsurf`.
@@ -47,7 +45,7 @@ Relay that reason; do not add ASC-Core by hand to get around it.
 ### 2. Send the user to `setup` for the credentials
 
 ```
-npx -y @erayendes/asc-mcp@beta setup
+npx -y @erayendes/asc-mcp setup
 ```
 
 **Never run this yourself, and never ask for the `.p8`.** It is an App Store Connect private key: do not ask the user to paste its contents into the chat, do not read it, do not write it into a config file. `setup` reads the file directly and puts the key in the macOS Keychain (or references its path off macOS).
@@ -67,7 +65,7 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 ## While helping the user
 
 - **Finding a tool that isn't loaded:** call `asc__search_tools` or `asc__discover_domains`, both on ASC-Core. Search covers the 832 operations Heimdall builds, plus the StoreKit tools and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names the profile that owns a tool and prints the exact command to add it. Do not conclude an operation does not exist because it is not in this session's list.
-- **There is no way to add tools mid-session.** Some clients never show a changed tool list (the Claude desktop app's Code tab among them), and the tools do not appear next turn either. On a server started with only some of its sub-profiles, reads from the rest work at once through `asc__call`. For the tools themselves, run the `register` command the server's reply names — e.g. `npx -y @erayendes/asc-mcp@beta register testflight:groups,testers` — after the user says yes, then ask them to restart their MCP client.
+- **There is no way to add tools mid-session.** Some clients never show a changed tool list (the Claude desktop app's Code tab among them), and the tools do not appear next turn either. On a server started with only some of its sub-profiles, reads from the rest work at once through `asc__call`. For the tools themselves, run the `register` command the server's reply names — e.g. `npx -y @erayendes/asc-mcp register testflight:groups,testers` — after the user says yes, then ask them to restart their MCP client.
 - **When a 403 comes back,** call `asc__status` with `check_capabilities: true` before blaming the key: it probes `reports`, `metadata`, `reviews`, `userManagement` and `provisioning`, each `ok` / `forbidden` / `unauthorized` / `agreement` / `unknown`. `agreement` is an unsigned or expired agreement that only the Account Holder can clear, and no key fixes it; `unknown` is an inconclusive probe, not a denial. App Manager covers almost all day-to-day work; Admin is needed for user management and for the first-ever request of an analytics report type.
 - **Territories are ISO-3166 alpha-3:** `USA`, `TUR`, `DEU` — never `US`, `TR`, `DE`. The two-letter form is not rejected; it returns 200 and an empty list that reads as "no data here".
 - **StoreKit / customer transactions** live on `monetization:transactions`. Each tool takes an optional `app` (name, bundle ID or Apple ID) and looks the bundle ID up; it can be left out when the account has one app or `ASC_BUNDLE_ID` is set. `environment` (`Production` by default, or `Sandbox`) is optional too.

@@ -775,6 +775,9 @@ describe('a channel move alone', () => {
       stale: new Map([['temp', stale]]),
     });
     const lines: string[] = [];
+    printPlan(plan, (l) => lines.push(l));
+    expect(lines.join('\n')).toContain(`Your profiles stay as they are. Heimdall moves to ${PACKAGE} in Temp.`);
+    lines.length = 0;
     expect(applyPlan(plan, (l) => lines.push(l))).toMatch(/Done\. Restart Temp/);
     expect(lines).toEqual(['✓ Temp']);
     expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-Analytics'].args[1]).toBe(PACKAGE);
@@ -1262,6 +1265,24 @@ describe('dead entries — profile arguments 3.0 no longer serves', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: servers }));
   const plan = (chosen: string[], prune: boolean) =>
     planChanges([jsonClient()], chosen, new Map([['temp', readRegistrations(jsonClient())]]), { prune });
+
+  it('register adds sub-profiles to a narrowed profile instead of replacing them, and merges its own', () => {
+    seed({ 'ASC-Monetization': { command: 'npx', args: serverArgs('monetization:subscription') } });
+    const p = plan(['monetization:subscription-offers', 'monetization:subscription-codes'], false);
+    applyPlan(p, () => {});
+    expect(file()['ASC-Monetization'].args).toEqual(serverArgs('monetization:subscription,subscription-offers,subscription-codes'));
+    // Already there: nothing to write.
+    expect(plan(['monetization:subscription'], false)[0]?.toAdd ?? []).not.toContain('monetization:subscription');
+  });
+
+  it('keeps flags and env when the profile comes back under the same name, and core follows its read-only', () => {
+    seed({ 'ASC-Access': { command: 'npx', args: [...serverArgs('access:users'), '--read-only'], env: { ASC_DRY_RUN: '1' } } });
+    const p = plan(['access'], true);
+    expect(p[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
+    applyPlan(p, () => {});
+    expect(file()['ASC-Access']).toEqual({ command: 'npx', args: [...serverArgs('access'), '--read-only'], env: { ASC_DRY_RUN: '1' } });
+    expect(file()['ASC-Core'].args).toContain('--read-only');
+  });
 
   it.each([true, false])('deletes one that is ours and clean, naming its flags and env keys (prune=%s)', (prune) => {
     seed({ 'ASC-AppInfo': { command: 'npx', args: [...serverArgs('app-info'), '--read-only'], env: { DEMO_MODE: 'demo-secret' } } });

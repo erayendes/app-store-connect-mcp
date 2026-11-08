@@ -517,14 +517,27 @@ function parseRequested(value: unknown): ReviewItem[] {
   });
   return [...new Map(parsed.map((item: ReviewItem) => [itemKey(item), item])).values()] as ReviewItem[];
 }
-async function itemTarget(http: AscHttpClient, appId: string, requested: string | undefined, withAppVersion: boolean): Promise<{ platform: string; appVersion?: ReviewItem; version?: string }> {
+async function itemTarget(http: AscHttpClient, appId: string, requested: string | undefined, withAppVersion: boolean): Promise<{ platform: string; appVersion?: ReviewItem; version?: string; otherPlatforms?: string[] }> {
   if (requested && !PLATFORMS.includes(requested)) throw new AscApiError(`Unknown platform ${requested}.`, 0);
   if (requested && !withAppVersion) return { platform: requested };
   const { data: versions } = await readAppStoreVersions(http, appId, undefined, requested);
   const selected = pickVersion(appId, versions, undefined, requested);
   const platform = String(requested ?? selected.attributes?.platform ?? '');
   if (!platform) throw new AscApiError('Platform is missing; pass platform explicitly.', 0);
-  if (!withAppVersion) return { platform };
+  if (!withAppVersion) {
+    // Inferred from the one editable version: an app live elsewhere with no
+    // draft there would not show. Said, not refused — the user sees it before
+    // approving and can pass platform.
+    const otherPlatforms: string[] = [];
+    if (!requested) {
+      for (const other of PLATFORMS.filter((p) => p !== platform)) {
+        const found: any = await http.get(`/v1/apps/${encodeURIComponent(appId)}/appStoreVersions`,
+          { 'filter[platform]': other, 'fields[appStoreVersions]': 'platform', limit: 1 });
+        if (found?.data?.length) otherPlatforms.push(other);
+      }
+    }
+    return { platform, ...(otherPlatforms.length ? { otherPlatforms } : {}) };
+  }
   const editable = versions.filter((v: any) => v.attributes?.platform === platform &&
     EDITABLE_STATES.has(v.attributes?.appStoreState));
   if (editable.length !== 1) throw new AscApiError(`Expected exactly one editable App Store version on ${platform}; found ${editable.length}. Pass a platform with one editable version or prepare one first.`, 0);
@@ -533,6 +546,11 @@ async function itemTarget(http: AscHttpClient, appId: string, requested: string 
   if (!preflight.ready) throw new AscApiError(`App version ${version} cannot accompany these items: ${preflight.blocking.map((b: any) => `${b.check}: ${b.problem} (fix with ${b.fixWith})`).join('; ') || preflight.state}. Nothing was submitted.`, 0);
   return { platform, version, appVersion: { type: 'appStoreVersion', id: String(editable[0].id) } };
 }
+/** Said wherever the platform was guessed while the app has others. */
+const platformNote = (platform: string, others?: string[]): string | undefined => others?.length
+  ? `Goes to ${PLATFORM_NAMES[platform] ?? platform}, guessed from its editable version; the app also has ${others.map((o) => PLATFORM_NAMES[o] ?? o).join(', ')}. Pass platform to choose another.`
+  : undefined;
+
 async function submitItems(args: Record<string, unknown>, ctx: { http: AscHttpClient; dryRun?: boolean; approvedPlanFingerprint?: string; requireApprovedPlan?: boolean }) {
   const requested = parseRequested(args.items);
   const app = await resolveApp(ctx.http, String(args.app));
@@ -540,7 +558,8 @@ async function submitItems(args: Record<string, unknown>, ctx: { http: AscHttpCl
   if (target.appVersion) requested.unshift(target.appVersion);
   const plan = await planSubmission(ctx.http, app.id, target.platform, requested);
   const result = await submitPlan(ctx.http, app.id, target.platform, plan, Boolean(ctx.dryRun), ctx.approvedPlanFingerprint, ctx.requireApprovedPlan);
-  return { ...result, app: `${app.name} (${app.id})` };
+  const note = platformNote(target.platform, target.otherPlatforms);
+  return { ...result, app: `${app.name} (${app.id})`, ...(note ? { platformNote: note } : {}) };
 }
 
 export async function releaseItemsPreviewArgs(args: Record<string, unknown>, http: AscHttpClient): Promise<Record<string, unknown>> {
@@ -553,6 +572,7 @@ export async function releaseItemsPreviewArgs(args: Record<string, unknown>, htt
   return { app: `${app.name} (${app.id})`, platform: PLATFORM_NAMES[target.platform] ?? target.platform, items: plan.items,
     existingItems: plan.existing,
     ...(target.appVersion ? { version: target.version, itemNames: { [itemKey(target.appVersion)]: `Version ${target.version}` } } : {}),
+    ...(target.otherPlatforms ? { platformNote: platformNote(target.platform, target.otherPlatforms) } : {}),
     planFingerprint: planFingerprint(app.id, target.platform, plan.submission?.id, plan.items) };
 }
 
@@ -595,12 +615,16 @@ export function releaseDialog(name: string, shown: Record<string, unknown>): Dia
   const added = items.filter((i) => !existing.has(itemKey(i)));
   // The version is in the title of release__submit; it is not news when it was already there.
   const along = items.filter((i) => existing.has(itemKey(i)) && !(name === 'release__submit' && i.type === 'appStoreVersion'));
+  const going = itemPhrases(added.length ? added : items, shown);
   const title = name === 'release__submit'
     ? `Submit ${[app, shown.version].filter(Boolean).join(' ')} for App Review?`
-    : `Submit ${listText(itemPhrases(added.length ? added : items, shown))} for App Review?`;
+    : `Submit ${listText(going)} for App Review?`;
+  // The title shortens a long list to "and 2 more"; the body names every item.
   const lines = [
     [app, shown.platform].filter(Boolean).join(' · '),
-    ...(along.length && (name === 'release__submit' || added.length) ? [`Already in the open submission and going too: ${listText(itemPhrases(along, shown))}`] : []),
+    ...(name !== 'release__submit' && going.length > 3 ? [`Going: ${going.join(', ')}`] : []),
+    ...(along.length && (name === 'release__submit' || added.length) ? [`Already in the open submission and going too: ${itemPhrases(along, shown).join(', ')}`] : []),
+    ...(typeof shown.platformNote === 'string' ? [`⚠️ ${shown.platformNote}`] : []),
     ...(shown.skip_preflight === true ? ['Submitted even if the pre-flight finds blocking gaps.'] : []),
   ];
   const last = items.length > 1

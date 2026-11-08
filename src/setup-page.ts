@@ -146,7 +146,8 @@ textarea.input { height: auto; min-height: 96px; padding: var(--sp-2); font-fami
 .opt .t { font-weight: 500; }
 .opt .h { color: var(--fg-muted); font-size: var(--fs-ui); }
 .found { font-size: var(--fs-micro); color: var(--green); margin-left: var(--sp-2); }
-.hint { font-size: var(--fs-ui); color: var(--fg-secondary); margin: var(--sp-3) 0 0; }
+.hint { font-size: var(--fs-ui); color: var(--fg-secondary); margin: var(--sp-3) 0 0; white-space: pre-line; }
+.hint:empty { display: none; }
 .res { list-style: none; padding: 0; margin: var(--sp-3) 0 0; font-family: var(--font-mono); font-size: var(--fs-label); line-height: 1.8; }
 .copywrap { position: relative; }
 .copywrap pre.out { padding-right: 64px; }
@@ -242,6 +243,7 @@ a { color: var(--fg); }
     <h2><span class="n" id="n4">4/4</span>Finish</h2>
     <p class="lead" style="margin:0">Press Apply to set up Heimdall in the apps you ticked.</p>
     <p id="plan" class="hint"></p>
+    <p id="notes" class="hint"></p>
     <div class="row">
       <button class="btn btn-primary" id="apply" disabled>Apply</button>
       <button class="btn btn-link-primary" id="cancel">Cancel</button>
@@ -293,6 +295,7 @@ a { color: var(--fg); }
     $('apply').disabled = true;
     clearTimeout(planTimer);
     planSeq++; // an answer already on its way is for a selection that no longer stands
+    $('notes').textContent = '';
     // Say why Apply is off rather than leave a dead button.
     if (!keyReady) { say('Add your key in step 2 first.'); return; }
     planTimer = setTimeout(refreshPlan, 250);
@@ -309,6 +312,13 @@ a { color: var(--fg); }
     if (!sel.clients.length) { say('Tick at least one app in step 3.'); return; }
     call('plan', sel).then(function (r) {
       if (seq !== planSeq || applying || finished) return;
+      // What Apply cannot do, said before it is pressed: the result only
+      // reports what was tried.
+      var notes = [];
+      r.plan.forEach(function (p) {
+        p.coreWithheld.forEach(function (why) { notes.push('⚠️ ' + p.client + ': ASC-Core will not be added — ' + why); });
+      });
+      $('notes').textContent = notes.join('\\n');
       // Only say something when Apply has nothing to do.
       say(r.plan.some(function (p) { return p.add.length || p.remove.length || p.rewrites.length || p.deadDeleted.length; })
         ? '' : reuse && !vendorChanged()

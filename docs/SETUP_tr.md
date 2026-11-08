@@ -18,11 +18,8 @@ Hesapta ilk kez API anahtarı oluşturuluyorsa API erişimini önce Account Hold
 
 Terminali açın.
 ```bash
-npx -y @erayendes/asc-mcp@beta setup
+npx -y @erayendes/asc-mcp setup
 ```
-
-> [!NOTE]
-> Bu sayfa 3.0 betasını anlatıyor; bu yüzden buradaki her komut `@erayendes/asc-mcp@beta` kullanır. Yalın `@erayendes/asc-mcp`, 3.0.0 yayınlanana kadar hâlâ 2.x'tir.
 
 **Tarayıcıda yapın.** Setup önce tarayıcıda mı terminalde mi devam etmek istediğinizi sorar; tarayıcıyı seçin. Kendi bilgisayarınızda bir sayfa açılır ve sizi aşağıdaki dört adımdan geçirir.
 
@@ -33,22 +30,22 @@ Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 1. **Neye ihtiyacınız var.** [Profil](PROFILES_tr.md) seçicinin her satırı araç sayısını ve kabaca token maliyetini gösterir; `[Admin key]` ve `[vendor no.]` bunlardan birini isteyen satırları işaretler. Toplam, seçtikçe gösterilir.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
 
 2. **Anahtarınız.** Seçtiklerinize göre bunları karşılayan en dar anahtar [rolünü](ROLES_tr.md) söyler. Kayıtlı bir anahtar varsa önce o önerilir, Admin olup olmadığıyla birlikte. Yeni anahtarda `Key ID` ve `Issuer ID` yazarken kontrol edilir, `.p8` yolunu alır (sürükle-bırak da olur) ve hepsini Apple'a doğrulatır; Apple reddederse yeniden girersiniz. `Vendor number` yalnızca satış ve finans raporlarını seçtiyseniz sorulur.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web-step2.png" alt="2. adım: sayfa, seçtiklerinize göre hangi rolde anahtar oluşturacağınızı ve nasıl oluşturacağınızı söyler; .p8 dosyasını sürükle-bırakla alır" width="560">
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step2.png" alt="2. adım: sayfa, seçtiklerinize göre hangi rolde anahtar oluşturacağınızı ve nasıl oluşturacağınızı söyler; .p8 dosyasını sürükle-bırakla alır" width="560">
 
 3. **Yapay zekâ uygulamalarınız.** Cihazınızda kurulu olanları bulur. Doğrudan düzenlenen ayar dosyalarının önce yedeği alınır. Claude Desktop açıkken kendi ayarlarını geri yazdığı için kurulum önce onu kapatmanızı ister. Kurulumu Claude Desktop'ın içinden çalıştırıyorsanız, Desktop'ı da kapsaması için Desktop'ı kapatıp kurulumu Terminal'den çalıştırın.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web-step3.png" alt="3. adım: bu bilgisayarda bulunan yapay zekâ uygulamaları, her biri işaretli" width="560">
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step3.png" alt="3. adım: bu bilgisayarda bulunan yapay zekâ uygulamaları, her biri işaretli" width="560">
 
 4. **Plan.** Her uygulamada neyin değişeceği gösterilir ve bir kez onay istenir.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/3.0.0/assets/setup-web-step4.png" alt="4. adım: her uygulamaya neyin ekleneceği, Apply ve Cancel düğmeleriyle" width="560">
+   <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step4.png" alt="4. adım: her uygulamaya neyin ekleneceği, Apply ve Cancel düğmeleriyle" width="560">
 
 Setup anahtar bilgilerini kaydetmeden önce Apple'a doğrular. Apple'ın reddettiği anahtar kaydedilmez; Apple'a ulaşılamazsa setup bunu söyler ve bilgileri yine de kaydeder. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
@@ -96,7 +93,7 @@ Adımlar aynı, yalnızca daha rahat: neye ihtiyacınız olduğunu seçersiniz, 
 
 Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birkaç profille başlayın, proje ihtiyaç duydukça daha fazlasını ekleyin.
 
-- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp@beta setup`.
+- **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
 - Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
 - 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir. Profil vermeden çalışan eski bir 2.x kaydına setup dokunmaz; onu uygulamanızın MCP ayarlarından kendiniz silin.
@@ -107,10 +104,7 @@ Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini sö
 
 ## Xcode 27'de Heimdall kullanmak
 
-> [!IMPORTANT]
-> 3.0.0 çıkana kadar Xcode bu adresten 2.8 eklentilerini kurar. 3.0 eklentileri, 3.0 deponun `main` dalına alınınca gelir.
-
-1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp@beta setup` komutunu çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir.
+1. Henüz yapmadıysanız bir kez `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın. Anahtar bilgileriniz Keychain'e kaydedilir.
 2. Xcode → Settings → Intelligence → Plug-ins → **Add Plug-in…**
 3. **Add from URL** seçin, `https://github.com/erayendes/app-store-connect-mcp` yapıştırın.
 

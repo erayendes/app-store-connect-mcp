@@ -293,15 +293,22 @@ describe('version surfaces', () => {
    * with a version these docs do not describe: on a beta, the bare package is
    * still the previous major.
    */
-  it.each(['AGENTS.md', 'skills/heimdall/SKILL.md', 'docs/SETUP_en.md', 'docs/SETUP_tr.md', 'server.json', 'examples/README.md', 'examples/ci/release-notes.yml'])(
-    '%s gives commands for this channel',
-    (file) => {
-      const commands = [...read(file).matchAll(/npx -y (@erayendes\/asc-mcp(?:@[\w.-]+)?)/g)].map((m) => m[1]);
-      expect(commands.length, file).toBeGreaterThan(0);
-      // A pinned older version (`@2.8.0`) is a way back, not an install.
-      for (const pkg of commands.filter((c) => !/@\d/.test(c.slice(1)))) expect(pkg, file).toBe(PACKAGE);
-    }
-  );
+  const CHANNEL_DOCS = [
+    'README.md', 'AGENTS.md', 'skills/heimdall/SKILL.md', 'server.json', 'examples/README.md', 'examples/ci/release-notes.yml',
+    ...['README_tr', 'SETUP_en', 'SETUP_tr', 'CONFIGURATION_en', 'CONFIGURATION_tr', 'GUIDE_en', 'GUIDE_tr'].map((d) => `docs/${d}.md`),
+  ];
+
+  it.each(CHANNEL_DOCS)('%s gives commands for this channel', (file) => {
+    const commands = [...read(file).matchAll(/npx -y (@erayendes\/asc-mcp(?:@[\w.-]+)?)/g)].map((m) => m[1]);
+    expect(commands.length, file).toBeGreaterThan(0);
+    // A pinned older version (`@2.8.0`) is a way back, not an install.
+    for (const pkg of commands.filter((c) => !/@\d/.test(c.slice(1)))) expect(pkg, file).toBe(PACKAGE);
+  });
+
+  // Config examples carry the package inside JSON args, where no `npx -y` precedes it.
+  it.skipIf(PACKAGE.endsWith('@beta')).each(CHANNEL_DOCS)('%s names no beta package on a stable release', (file) => {
+    expect(read(file)).not.toContain('@erayendes/asc-mcp@beta');
+  });
 
   it('open both changelog sections with this version', () => {
     const changelog = read('docs/CHANGELOG.md');

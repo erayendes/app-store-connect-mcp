@@ -86,7 +86,7 @@ A prompt only appears when all the tools it uses are installed. Each one stops b
 
 > **You:** Is there a tool for managing in-app events? *(you haven't installed `marketing`)*
 >
-> **AI:** *(calls `asc__search_tools`)* Yes: the `app_events__*` tools, in `marketing:app-events`, which isn't installed. With your yes I can run `npx -y @erayendes/asc-mcp@beta register marketing:app-events` to add it; then restart the app.
+> **AI:** *(calls `asc__search_tools`)* Yes: the `app_events__*` tools, in `marketing:app-events`, which isn't installed. With your yes I can run `npx -y @erayendes/asc-mcp register marketing:app-events` to add it; then restart the app.
 
 > - Submit version 3.2 for review and start a phased release once it's approved.
 > - Show last week's TestFlight crash reports grouped by device model.

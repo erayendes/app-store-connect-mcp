@@ -62,6 +62,7 @@ import {
   unknownProfileMessage,
   type ProfileSelection,
   type SubProfile,
+  mergeSpecs,
 } from './profiles.js';
 import {
   stripApiNoise,
@@ -784,7 +785,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
               `real refusal. ` +
               (RELEASE_TOOL_NAMES.has(name)
                 ? `Use a client that can display Heimdall's confirmation form, or a macOS client with native confirmation enabled, then retry and approve the displayed item list. Release tools always require this confirmation. You can also submit in App Store Connect.`
-                : `In that case set ASC_CONFIRM_WRITES=0 (or --no-confirm) and let the client's own tool approval be the gate.`);
+                : `Tell the user what happened and let them decide: retry and approve the prompt, or use a client that can show it. Do not turn confirmation off or edit their config yourself.`);
           return refuse(decision.stale ? 'blocked' : 'declined', {
             content: [{ type: 'text' as const, text }],
             isError: true,
@@ -848,7 +849,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                     `The rest are served by other ASC servers ` +
                       `(${[...new Set(specs.map((s) => serverName(s)))].join(', ')}). If one is in ` +
                       `your tool list, call it there; otherwise, with the user's yes, run ` +
-                      `\`npx -y ${PACKAGE} register ${specs.join(' ')}\` and ask them to restart ` +
+                      `\`npx -y ${PACKAGE} register ${mergeSpecs(specs).join(' ')}\` and ask them to restart ` +
                       `their MCP client.`
                   );
                 }
@@ -932,7 +933,13 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
       }
 
       // A macro that stops part-way reports ok: false instead of throwing.
-      if (audited) logWrite({ tool: name, risk: auditRisk, confirmation, outcome: (result as any)?.ok === false ? 'error' : 'ok', args });
+      if (audited) {
+        // A macro that stops partway answers { ok: false, error, requestId } instead of throwing.
+        const failed = (result as any)?.ok === false;
+        const text = (v: unknown) => (failed && typeof v === 'string' ? v : undefined);
+        logWrite({ tool: name, risk: auditRisk, confirmation, outcome: failed ? 'error' : 'ok', args,
+          error: text((result as any)?.error), appleRequestId: text((result as any)?.requestId) });
+      }
       // Images a macro attached go out as image content, never as base64 in the text.
       const images = ((result as any)?.[IMAGE_CONTENT] ?? []) as ImageContent[];
       // The SDK validates structuredContent and refuses a symbol key.

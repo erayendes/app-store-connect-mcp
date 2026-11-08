@@ -236,6 +236,27 @@ export function resolveSelection(spec: string): ProfileSelection {
   return { profile, subProfiles: picked, partial: picked.length < named.length };
 }
 
+/**
+ * One spec per profile: `monetization:a monetization:b` is one server, and
+ * written as two the second would replace the first. A bare profile wins over
+ * its sub-profiles; all of them named is the bare profile too.
+ */
+export function mergeSpecs(specs: string[]): string[] {
+  const subs = new Map<string, string[] | undefined>();
+  for (const spec of specs) {
+    const [name, list] = spec.split(':', 2);
+    const prev = subs.has(name) ? subs.get(name) : [];
+    subs.set(name, prev === undefined || list === undefined
+      ? undefined
+      : [...new Set([...prev, ...list.split(',').map((s) => s.trim()).filter(Boolean)])]);
+  }
+  return [...subs].map(([name, list]) => {
+    if (!list) return name;
+    const named = resolveProfile(name)?.subProfiles.filter((s) => s.name) ?? [];
+    return named.length && named.every((s) => list.includes(s.name!)) ? name : `${name}:${list.join(',')}`;
+  });
+}
+
 /** Every spec operation a selection serves. */
 export function operationsFor(selection: ProfileSelection): string[] {
   return [...new Set(selection.subProfiles.flatMap((s) => s.operations))];
