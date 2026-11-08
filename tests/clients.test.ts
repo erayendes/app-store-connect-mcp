@@ -996,7 +996,8 @@ describe('ASC-Core comes with the profiles', () => {
       chmodSync(dir, 0o755);
     }
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toMatch(/^✗ Temp: [^;]*EACCES: permission denied$/);
+    // Windows reports a read-only file as EPERM, the others as EACCES.
+    expect(lines[0]).toMatch(/^✗ Temp: [^;]*(EACCES: permission denied|EPERM: operation not permitted)$/);
   });
 
   it('is withheld, and says why, when the entries use different accounts', () => {
