@@ -490,6 +490,10 @@ export async function executePreflightTool(
         if (p.attributes?.state === 'FAILED' || asset?.attributes?.state === 'FAILED') blocking.push({
           check: 'screenshots', problem: `Screenshot placement ${p.id} in ${loc.attributes?.locale} failed.`, fixWith: MEDIA_NAMES.upload,
         });
+        // Apple answers a submission with 409 while any placement is still processing.
+        else if (p.attributes?.state === 'ASSET_PROCESSING' || ['AWAITING_UPLOAD', 'UPLOAD_COMPLETE'].includes(asset?.attributes?.state)) blocking.push({
+          check: 'screenshots', problem: `Screenshot placement ${p.id} in ${loc.attributes?.locale} is still processing; Apple refuses the submission until it finishes. Check again later, and replace it if it stays stuck.`, fixWith: MEDIA_NAMES.list,
+        });
       }
       next = placements.links?.next || undefined;
     }
