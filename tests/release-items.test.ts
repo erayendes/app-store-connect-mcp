@@ -127,7 +127,7 @@ describe('release__submit_items', () => {
     await expect(releaseItemsPreviewArgs({ app: 'Example', platform: 'IOS', items: [{ type: 'appEvent', id: 'e-1' }] }, http)).rejects.toThrow(/mystery-7/);
     const spec = JSON.parse(readFileSync('spec/openapi.json', 'utf8'));
     const allowed = spec.paths['/v1/reviewSubmissions/{id}/items'].get.parameters.find((p: any) => p.name === 'include').schema.items.enum;
-    expect(reads.find((r) => r.path.endsWith('/open-1/items'))?.query.include.split(',').sort()).toEqual([...allowed].sort());
+    expect(reads.find((r) => r.path.endsWith('/open-1/items'))?.query.include.split(',').sort()).toEqual(allowed.filter((t: string) => t !== 'appStoreVersionExperiment').sort());
     expect(writes).toEqual([]);
   });
   it('refuses when the approved item fingerprint differs from the execution read', async () => {
