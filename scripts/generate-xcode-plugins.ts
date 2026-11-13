@@ -16,13 +16,13 @@
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SERVER_COMMAND, serverName } from '../src/clients.js';
+import { SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(resolve(root, '.claude-plugin', 'plugin.json'), 'utf8'));
 const { version } = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
-const { author, license, repository, privacyPolicyUrl } = manifest;
+const { author, homepage, keywords, license, repository, privacyPolicyUrl } = manifest;
 // Directory releases must keep running the reviewed version, including the
 // exact prerelease. Client registration deliberately follows release channels.
 const pinnedPackage = `@erayendes/asc-mcp@${version}`;
@@ -111,12 +111,16 @@ for (const p of PLUGIN_PROFILES) {
   write(`plugins/${p.name}/.claude-plugin/plugin.json`, {
     // Plug-in ids are kebab-case; only the server key below is for people.
     name: pluginName(p.name),
+    // The directory shows this; without it a listing read "Asc Monetization".
+    displayName: `Heimdall · ${profileLabel(p.name)}`,
     version,
     description: p.description,
     author,
+    homepage,
     license,
     privacyPolicyUrl,
     repository,
+    keywords,
   });
   write(`plugins/${p.name}/.mcp.json`, {
     mcpServers: { [name]: { command: SERVER_COMMAND, args: ['-y', pinnedPackage, p.name, '--with-core'] } },

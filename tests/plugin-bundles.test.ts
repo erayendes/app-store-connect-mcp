@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import { transformSync } from 'esbuild';
 import { describe, expect, it } from 'vitest';
-import { SERVER_COMMAND, serverName } from '../src/clients.js';
+import { SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
@@ -18,7 +18,7 @@ const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const GENERIC_WORDS = ['mcp', 'plugin', 'claude'];
 // Manifest fields the validator knows. A field outside this list is at best
 // ignored and at worst rejected, so a new one is added here on purpose.
-const MANIFEST_FIELDS = ['name', 'version', 'description', 'author', 'homepage', 'repository', 'license', 'privacyPolicyUrl', 'keywords'];
+const MANIFEST_FIELDS = ['name', 'displayName', 'version', 'description', 'author', 'homepage', 'repository', 'license', 'privacyPolicyUrl', 'keywords'];
 const ENTRY_FIELDS = ['name', 'source', 'description', 'version'];
 
 describe('plugin generation', () => {
@@ -41,7 +41,7 @@ describe('plugin generation', () => {
           writeFileSync: (path: string, value: string) => files.set(path, value),
           copyFileSync: (from: string, to: string) => files.set(to, readFileSync(from)),
         };
-        if (id === '../src/clients.js') return { SERVER_COMMAND, serverName };
+        if (id === '../src/clients.js') return { SERVER_COMMAND, profileLabel, serverName };
         if (id === '../src/profiles.js') return { CORE_PROFILE, PROFILES };
         return require(id);
       },

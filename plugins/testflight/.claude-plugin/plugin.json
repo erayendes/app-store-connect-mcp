@@ -1,12 +1,24 @@
 {
   "name": "asc-testflight",
+  "displayName": "Heimdall · TestFlight",
   "version": "3.1.0",
   "description": "TestFlight: builds for testing, beta groups and testers, external review, crash and screenshot feedback.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"
   },
+  "homepage": "https://github.com/erayendes/app-store-connect-mcp",
   "license": "MIT",
   "privacyPolicyUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md",
-  "repository": "https://github.com/erayendes/app-store-connect-mcp"
+  "repository": "https://github.com/erayendes/app-store-connect-mcp",
+  "keywords": [
+    "app-store-connect",
+    "testflight",
+    "xcode",
+    "ios",
+    "macos",
+    "mcp",
+    "storekit",
+    "subscriptions"
+  ]
 }

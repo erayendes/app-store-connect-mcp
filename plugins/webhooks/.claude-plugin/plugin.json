@@ -1,12 +1,24 @@
 {
   "name": "asc-webhooks",
+  "displayName": "Heimdall · Webhooks",
   "version": "3.1.0",
   "description": "Webhooks pushing App Store Connect events to your endpoint, their deliveries and pings.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"
   },
+  "homepage": "https://github.com/erayendes/app-store-connect-mcp",
   "license": "MIT",
   "privacyPolicyUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md",
-  "repository": "https://github.com/erayendes/app-store-connect-mcp"
+  "repository": "https://github.com/erayendes/app-store-connect-mcp",
+  "keywords": [
+    "app-store-connect",
+    "testflight",
+    "xcode",
+    "ios",
+    "macos",
+    "mcp",
+    "storekit",
+    "subscriptions"
+  ]
 }
