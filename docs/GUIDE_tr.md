@@ -2,6 +2,8 @@
 
 🇬🇧 [English](GUIDE_en.md) · 🇹🇷 Türkçe
 
+Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `general` + `analytics` profillerini tek süreçte, zorunlu salt okunur olarak başlatır. `ASC_READ_ONLY=false` olsa bile yazma araçları listelenmez. Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki verileri okumak için kimlik bilgileri gerekir. Tam kullanım için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın ve profillerinizi seçin. Bilinmeyen veya kaldırılmış bir profil adı hâlâ yalnızca `asc__profile_unknown` bildirimini gösterir.
+
 Kapsam, eksikler ve hangi durumda başka bir aracın uygun olduğu için [asc CLI, fastlane ve diğer MCP sunucularıyla karşılaştırmaya](COMPARISON_tr.md) bakın.
 
 ## Riskli işlemlerde onay
@@ -49,7 +51,7 @@ Aşağıdaki iş akışları bu tür uzun zincirleri tek adıma indiriyor. Sizin
 | yorumları çekip elle gruplamak | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-reviews` |
 | uygulamaları listeleyip her biri için sürüm çağrısı yapmak, sonra App Store durumlarını yorumlamak | `asc__account_status` — hangi uygulama yayında, hangisi yolda, sıradaki hamle sizde mi Apple'da mı | ASC-Core |
 
-Son sütundaki "ASC-Core", aracın setup'ın profillerinizin yanına kaydettiği ASC-Core sunucusunda olduğunu söyler. Profil sunucuları bu araçları taşımaz; yalnızca tek sunucu çalıştırabilen bir uygulama onları `--with-core` ile alır.
+Son sütundaki "ASC-Core", aracın setup'ın profillerinizin yanına kaydettiği ASC-Core sunucusunda olduğunu söyler. Profil sunucuları bu araçları taşımaz; tek sunucu çalıştırabilen bir uygulama onları `--with-core` ile alır. ASC-Default da bu sunucunun okuma araçlarını içerir.
 
 `pricing__equalize_price` yaklaşık 175 ülkede fiyatı birden değiştirir, yani doğrudan gelirinize dokunur. Bu yüzden, onayları `--no-confirm` ile kapatmadıysanız çalışmadan önce onayınızı ister.
 

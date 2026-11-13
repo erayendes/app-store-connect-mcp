@@ -50,6 +50,8 @@ import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } fro
 import { logFailure, logWrite, type Confirmation } from './core/audit-log.js';
 import {
   CORE_PROFILE,
+  DEFAULT_PROFILES,
+  defaultProfileNote,
   manualToolsFor,
   operationsFor,
   profilesForOperation,
@@ -163,6 +165,9 @@ export function servedToolCount(server: Server): number | undefined {
 }
 
 export function createServer(config: ServerConfig, selection: ProfileSelection): Server {
+  // Enforce the starter set's policy here too, so callers cannot turn writes
+  // back on by supplying a different config or ASC_READ_ONLY=false.
+  if (selection.defaultReadOnly) config = { ...config, readOnly: true };
   const tokens = new TokenProvider(config.credentials);
   // ASC_BASE_URL redirects everything to a local fixture server for testing;
   // host-pinning then pins to that origin instead of Apple's.
@@ -172,9 +177,9 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
   /**
    * The core profile's tools — app lookup, the meta tools, the media macros.
    * Served by ASC-Core itself, and folded into a profile server started with
-   * `--with-core`, for a channel that can run only one process.
+   * `--with-core`, and into the no-argument default set.
    */
-  const core = isCore || config.withCore ? resolveSelection(CORE_PROFILE) : undefined;
+  const core = isCore || config.withCore || selection.defaultReadOnly ? resolveSelection(CORE_PROFILE) : undefined;
 
   // "How do I reach that tool" answers name the sibling MCP server.
   const missingToolHint = (op: Operation): string | undefined => {
@@ -226,6 +231,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
   /** What this server is, in the unit a user configures: profiles. */
   const profileReport = (): Record<string, unknown> => ({
         profile: selection.profile.name,
+        ...(selection.defaultReadOnly ? { defaultProfiles: DEFAULT_PROFILES, note: defaultProfileNote() } : {}),
         subProfiles: selection.profile.subProfiles
           .filter((s) => s.name)
           .map((s) => ({
@@ -322,7 +328,8 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         resources: { listChanged: true },
         prompts: {},
       },
-      instructions: !core ? `${SERVER_INSTRUCTIONS}\n\n${CORE_POINTER}` : SERVER_INSTRUCTIONS,
+      instructions: [SERVER_INSTRUCTIONS, !core ? CORE_POINTER : '', selection.defaultReadOnly ? defaultProfileNote() : '']
+        .filter(Boolean).join('\n\n'),
       // A confirmation's state comes back through the client: forged, expired
       // or tampered state is refused before the handler ever sees it.
       requestState: { verify: gate.verify },
@@ -814,7 +821,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           macroOffered,
           profileReport,
           ownProfile: selection.profile.name,
-          exampleSpecs: [selection.partial
+          exampleSpecs: selection.defaultReadOnly ? [...DEFAULT_PROFILES] : [selection.partial
             ? `${selection.profile.name}:${[...loadedSubs].map((s) => s.name).join(',')}`
             : selection.profile.name],
           // Core answers for the whole catalogue: it is the one server every

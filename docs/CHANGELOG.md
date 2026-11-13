@@ -10,6 +10,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ### [Unreleased]
 
+- Starting without a profile now serves ASC-Default: core + general + analytics in one process, forced read-only. Tool listing works without credentials; instructions and `asc__status` explain the default and point to terminal setup for full use. Unknown or retired profile names still serve only `asc__profile_unknown`.
 - Added `doctor`, a read-only local report of Node and package versions, release channel, MCP client registrations, ASC-Core and credential availability. It reads no key contents and makes no network calls; `asc__status` remains the live connection check.
 - Setup and successful `asc__status` connection replies now show three copyable prompts for the selected profiles.
 - Setup has an “I don’t have an API key / I am not an Admin” path. It prints a role-specific message for the Account Holder or Admin and exits without changing credentials or registrations.
@@ -493,6 +494,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ### [Yayımlanmamış]
 
+- Profil vermeden başlatıldığında artık ASC-Default açılır: core + general + analytics tek süreçte, zorunlu salt okunur çalışır. Kimlik bilgileri olmadan araçlar listelenebilir; sunucu talimatları ve `asc__status`, varsayılan kümeyi açıklar ve tam kullanım için terminalde setup çalıştırmanızı ister. Bilinmeyen veya kaldırılmış profil adları hâlâ yalnızca `asc__profile_unknown` sunar.
 - `doctor` eklendi: Node ve paket sürümleri, yayın kanalı, MCP istemci kayıtları, ASC-Core ve kimlik bilgilerinin bulunabilirliği için salt okunur yerel rapor. Anahtar içeriğini okumaz ve ağ isteği yapmaz; canlı bağlantı kontrolü `asc__status` ile yapılır.
 - Setup sonunda ve başarılı `asc__status` bağlantı yanıtlarında seçilen profillere uygun üç hazır istem gösterilir.
 - Setup'a “I don’t have an API key / I am not an Admin” yolu eklendi. Account Holder veya Admin için gereken rolü içeren bir mesaj hazırlar; kimlik bilgilerini veya kayıtları değiştirmeden kapanır.

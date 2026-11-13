@@ -60,7 +60,9 @@ describe.skipIf(!built)('an unknown profile', () => {
     );
     expect(res.stdout).toContain('ASC-AppInfo');
     expect(res.stdout).toContain(`${PACKAGE} setup`);
-    expect(res.stdout).toContain(`${PACKAGE} register general`);
+    expect(res.stdout).toContain('general');
+    // Retired names are not mapped to a replacement profile.
+    expect(res.stdout).not.toContain(`${PACKAGE} register general`);
   });
 });
 

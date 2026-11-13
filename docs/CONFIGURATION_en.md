@@ -2,6 +2,8 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](CONFIGURATION_tr.md)
 
+Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
+
 Most people never need this page: [setup](SETUP_en.md) saves everything Heimdall needs. Read on if you want to lock the AI out of changes, try a change without making it, use a second App Store Connect account, or run Heimdall without setup (in CI, for example).
 
 There are two kinds of settings. **Flags** go at the end of `args` in your app's MCP settings. **Environment variables** go in an `env` block next to it:
@@ -58,7 +60,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 
 | Variable | What it's for |
 |:--|:--|
-| `ASC_READ_ONLY` | `true`, `1` or `yes` (any case) = `--read-only`. Anything else, including `false`, `0` and empty, leaves writes on. |
+| `ASC_READ_ONLY` | `true`, `1` or `yes` (any case) = `--read-only`. Anything else, including `false`, `0` and empty, leaves writes on for an explicit profile. ASC-Default always stays read-only. |
 | `ASC_DRY_RUN` | `1` or `true` = `--dry-run` |
 | `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (the release tools still ask) |
 | `ASC_NATIVE_CONFIRM` | `0` = no Mac dialog when the app can't ask; those changes are refused instead |

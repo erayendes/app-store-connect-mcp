@@ -12,11 +12,13 @@ than all of them.
 Profiles are cut by job. App lookup, `asc__search_tools`,
 `asc__discover_domains`, `asc__account_status` and the `media__*` tools are in
 none of them: they live in **ASC-Core**, a server of its own that `register` and
-`setup` add beside the profiles. A profile server carries them itself only when
+`setup` add beside the profiles. A profile server also carries them when
 started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or
 not, has its own `asc__status`. If app lookup or search is missing from the
 session, ASC-Core is not registered for this client; the fix is `register` or
 `setup` (below), not another profile.
+
+Without a profile argument, the server starts as **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only, even with `ASC_READ_ONLY=false`. It lists no write tools and can start and list tools without credentials; live account reads still need credentials. Its instructions and `asc__status` explain this default read-only set. For full use, tell the user to run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still serves only `asc__profile_unknown`; no old name is mapped to a new one.
 
 ## The credential boundary
 

@@ -22,8 +22,8 @@
         {
           "type": "positional",
           "valueHint": "profile",
-          "description": "Which slice of App Store Connect to serve. One of general, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets — plus core (app lookup, tool search, screenshots), which runs next to them, or add --with-core to fold it into one server. Narrow further with a colon — monetization:subscription-offers is 17 tools instead of 186. Required: without one the server only tells the agent to run setup.",
-          "isRequired": true
+          "description": "Which slice of App Store Connect to serve. One of general, distribution, monetization, marketing, access, testflight, analytics, provisioning, game-center, app-clips, xcode-cloud, webhooks, background-assets — plus core (app lookup, tool search, screenshots), which runs next to them, or add --with-core to fold it into one server. Narrow further with a colon — monetization:subscription-offers is 17 tools instead of 186. Optional: without a profile argument, ASC-Default serves core + general + analytics in one process, forced read-only. Tools can be listed without credentials. For full use, run npx -y @erayendes/asc-mcp setup in a terminal and pick profiles. Unknown or retired names still serve only a setup notice.",
+          "isRequired": false
         }
       ],
       "environmentVariables": [

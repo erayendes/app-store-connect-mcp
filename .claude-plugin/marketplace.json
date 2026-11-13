@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "Heimdall | ASC Skill",
-      "source": "./",
+      "source": "./plugins/skill",
       "description": "The Heimdall skill: what the servers below can do, which one owns what, and how to stay inside the credential boundary. Install it with whichever areas you pick.",
       "version": "3.0.0"
     },

@@ -60,6 +60,8 @@ Most App Store Connect MCP servers give you a hand-picked slice of the API. That
 
 **Heimdall does the opposite: it gives you the whole API, cut by the work you do.** Releases, TestFlight, subscriptions and in-app purchases, the store page and reviews, Game Center, Xcode Cloud, provisioning, webhooks, sales and finance reports: each is a profile, and a big one splits into sub-profiles, so `monetization:subscription` loads subscriptions without the rest of the money tools. **You pick what you need**, and add or remove profiles whenever you like.
 
+Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
+
 **ASC-Core comes with every profile.** Finding your apps, searching every tool, and the media tools are the same whatever you work on, so they run once, in a server of their own that setup registers next to your picks. The media tools handle every screenshot, video, image and file App Store Connect takes: store page media, App Clip and Game Center images, in-app purchase and subscription images, review screenshots and attachments, encryption documents, routing coverage, background asset and build upload files ([the full list](docs/MEDIA_TARGETS_en.md)).
 
 [Profiles](docs/PROFILES_en.md) shows what each one covers, down to every tool. You don't have to memorize any of it, though: ask *"Is there a tool for in-app events?"* and Heimdall tells you which profile has it.

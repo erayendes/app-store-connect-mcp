@@ -2,6 +2,8 @@
 
 🇬🇧 [English](SETUP_en.md) · 🇹🇷 Türkçe
 
+Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `general` + `analytics` profillerini tek süreçte, zorunlu salt okunur olarak başlatır. `ASC_READ_ONLY=false` olsa bile yazma araçları listelenmez. Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki verileri okumak için kimlik bilgileri gerekir. Tam kullanım için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın ve profillerinizi seçin. Bilinmeyen veya kaldırılmış bir profil adı hâlâ yalnızca `asc__profile_unknown` bildirimini gösterir.
+
 Heimdall, Node.js **20.19+**'in çalıştığı her yerde çalışır — macOS, Linux ve Windows. Yalnızca bir özellik macOS'a özgüdür: `.p8` anahtarını **macOS Keychain**'de saklamak. Linux ve Windows'ta anahtar dosyasının yolu kaydedilir. Bir fark daha var: Claude masaüstü uygulamasına otomatik kayıt şimdilik yalnızca macOS'ta yapılıyor.
 
 ## API anahtarı oluşturun
@@ -104,7 +106,7 @@ Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birka�
 - **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
 - Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
-- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir. Profil vermeden çalışan eski bir 2.x kaydına setup dokunmaz; onu uygulamanızın MCP ayarlarından kendiniz silin.
+- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir. Profil vermeden çalışan eski bir 2.x kaydına setup dokunmaz; bu kayıt artık salt okunur başlangıç kümesi ASC-Default olarak açılır. Setup sonrasında aynı okuma araçlarının tekrarlanmaması için bu kaydı uygulamanızın MCP ayarlarından kaldırabilirsiniz.
 
 ## Yüklü olmayan bir araç gerekirse
 

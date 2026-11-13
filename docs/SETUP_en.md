@@ -2,6 +2,8 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](SETUP_tr.md)
 
+Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
+
 Heimdall runs anywhere Node.js **20.19+** runs: macOS, Linux and Windows. One feature is macOS-only: keeping the `.p8` key in the **macOS Keychain**. On Linux and Windows, setup saves the path to the key file instead. One more difference: automatic registration with the Claude desktop app currently works on macOS only.
 
 ## Create an API key
@@ -104,7 +106,7 @@ You don't have to install everything up front. Start with the few profiles you n
 - **Run setup again**: `npx -y @erayendes/asc-mcp setup`.
 - It reuses your credentials and shows the pickers again.
 - Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected. An app you untick loses Heimdall.
-- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so. A 2.x entry that ran without a profile is left alone; delete it from your app's MCP settings yourself.
+- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so. A 2.x entry that ran without a profile is left alone and now starts ASC-Default, the read-only starter set. After setup, you can remove that entry from your app’s MCP settings to avoid duplicate read tools.
 
 ## When you need a tool you haven't installed
 
