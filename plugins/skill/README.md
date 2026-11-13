@@ -1,4 +1,4 @@
-# Heimdall | ASC Skill
+# heimdall
 
 This plug-in provides the Heimdall skill for working with App Store Connect and the App Store Server API. It explains which profile owns a task, how to find tools, and how to use the servers while keeping credentials inside Heimdall. Install it alongside the profile plug-ins you need. It starts no MCP server of its own.
 

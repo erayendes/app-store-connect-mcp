@@ -7,10 +7,10 @@ This plug-in registers one MCP server, **ASC-BackgroundAssets**, from [Heimdall]
 ## What it runs
 
 ```
-npx -y @erayendes/asc-mcp background-assets --with-core
+npx -y @erayendes/asc-mcp@3.0.0 background-assets --with-core
 ```
 
-The server runs locally on your machine and talks only to Apple's App Store Connect and App Store Server APIs. It sends nothing anywhere else and collects no telemetry.
+The package version is pinned to this plug-in's version, so a new Heimdall release reaches you only through a new version of this plug-in. The server runs locally on your machine and talks only to Apple's App Store Connect and App Store Server APIs. It sends nothing anywhere else and collects no telemetry.
 
 ## Before first use
 

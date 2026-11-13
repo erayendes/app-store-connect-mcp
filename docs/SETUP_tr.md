@@ -121,7 +121,7 @@ Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini sö
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo adresi girilmiş" width="560">
 
-4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin. Xcode her eklentiyi ayrı çalıştırdığı için her biri ASC-Core araçlarını kendi içinde taşır; ayrı bir çekirdek eklentisi yoktur.
+4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **heimdall** (skill) eklentisini ve ihtiyacınız olan `asc-*` alanlarını seçin. Xcode her eklentiyi ayrı çalıştırdığı için her biri ASC-Core araçlarını kendi içinde taşır; ayrı bir çekirdek eklentisi yoktur.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall profilleri, her biri onay kutulu" width="560">

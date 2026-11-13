@@ -102,9 +102,10 @@ describe('the packaged skill is loadable as a plugin', () => {
     // profile Xcode users cannot install. Server names match what `setup`
     // registers elsewhere, while plug-ins pin the reviewed package version.
     // `npm run generate` rewrites all of this from PROFILES.
-    // The entry names are what Xcode prints, so they are written for a person
-    // ("Heimdall | ASC App Info"); the manifests underneath keep the kebab-case
-    // server names. Sources tie the two together.
+    // Entry names are the manifests' kebab-case ids. Xcode prints this field,
+    // and it used to read "Heimdall | ASC TestFlight", but `claude plugin
+    // validate` rejects a name with spaces and the Claude directory installs
+    // by it. The readable name lives on in the server key.
     const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
     const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
     const entries: { name: string; source: string }[] = marketplace.plugins;
@@ -113,9 +114,7 @@ describe('the packaged skill is loadable as a plugin', () => {
     expect(entries.map((e) => e.source)).toEqual(['./plugins/skill', ...pluginProfiles.map((p) => `./plugins/${p.name}`)]);
     expect(existsSync(`plugins/${CORE_PROFILE}`)).toBe(false);
     expect(existsSync('plugins/app-info')).toBe(false);
-    expect(entries[0].name).toBe('Heimdall | ASC Skill');
-    for (const e of entries) expect(e.name).toMatch(/^Heimdall \| ASC [A-Z][A-Za-z ]+$/);
-    expect(entries.find((e) => e.source === './plugins/testflight')!.name).toBe('Heimdall | ASC TestFlight');
+    expect(entries.map((e) => e.name)).toEqual(['heimdall', ...pluginProfiles.map((p) => `asc-${p.name}`)]);
     for (const p of pluginProfiles) {
       const dir = `plugins/${p.name}`;
       const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));

@@ -121,7 +121,7 @@ Ask the AI. Heimdall finds the tool and, if needed, tells you how to add it. So 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode's Add Plug-in screen with the repository URL entered" width="560">
 
-4. Xcode shows a "Choose Plug-ins" screen with a checkbox for each plug-in. Select **Heimdall | ASC Skill** and the areas you need. Xcode runs each plug-in on its own, so every one carries the ASC-Core tools itself; there is no separate core plug-in.
+4. Xcode shows a "Choose Plug-ins" screen with a checkbox for each plug-in. Select **heimdall** (the skill) and the `asc-*` areas you need. Xcode runs each plug-in on its own, so every one carries the ASC-Core tools itself; there is no separate core plug-in.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode's Choose Plug-ins screen: Heimdall profiles, each with a checkbox" width="560">

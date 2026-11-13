@@ -49,7 +49,7 @@ Type `claude -p "What does the Nimbus Notes weekly subscription cost around the 
 Enter
 Type `  --mcp-config assets/demo/mcp-config.json --strict-mcp-config \`
 Enter
-Type `  --allowedTools "mcp__asc-monetization__pricing__get_subscription_price" </dev/null`
+Type `  --allowedTools "mcp__ASC-Monetization__pricing__get_subscription_price" </dev/null`
 Enter
 
 Sleep 30s

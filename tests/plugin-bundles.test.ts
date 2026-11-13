@@ -4,12 +4,22 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import { transformSync } from 'esbuild';
 import { describe, expect, it } from 'vitest';
-import { SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
+import { SERVER_COMMAND, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
 const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
 const entries: { name: string; source: string; version: string }[] = marketplace.plugins;
+
+// What `claude plugin validate` and the Claude directory accept for a plug-in
+// name: lowercase words joined by hyphens, and no word that only says what the
+// thing is. A space is a hard error in the validator.
+const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const GENERIC_WORDS = ['mcp', 'plugin', 'claude'];
+// Manifest fields the validator knows. A field outside this list is at best
+// ignored and at worst rejected, so a new one is added here on purpose.
+const MANIFEST_FIELDS = ['name', 'version', 'description', 'author', 'homepage', 'repository', 'license', 'keywords'];
+const ENTRY_FIELDS = ['name', 'source', 'description', 'version'];
 
 describe('plugin generation', () => {
   it.each(['8.7.6', '8.7.6-beta.12'])('regenerates every version from package.json at %s', (release) => {
@@ -31,7 +41,7 @@ describe('plugin generation', () => {
           writeFileSync: (path: string, value: string) => files.set(path, value),
           copyFileSync: (from: string, to: string) => files.set(to, readFileSync(from)),
         };
-        if (id === '../src/clients.js') return { SERVER_COMMAND, profileLabel, serverName };
+        if (id === '../src/clients.js') return { SERVER_COMMAND, serverName };
         if (id === '../src/profiles.js') return { CORE_PROFILE, PROFILES };
         return require(id);
       },
@@ -42,15 +52,26 @@ describe('plugin generation', () => {
     expect(json('.claude-plugin/plugin.json').version).toBe(release);
     for (const entry of generatedMarketplace.plugins) {
       expect(entry.version).toBe(release);
-      expect(json(`${entry.source}/.claude-plugin/plugin.json`).version).toBe(release);
+      const committed = JSON.parse(readFileSync(join(entry.source, '.claude-plugin/plugin.json'), 'utf8'));
+      expect(json(`${entry.source}/.claude-plugin/plugin.json`)).toEqual({ ...committed, version: release });
     }
     for (const profile of PROFILES.filter((p) => p.name !== CORE_PROFILE)) {
       const path = `plugins/${profile.name}`;
       expect(json(`${path}/.mcp.json`).mcpServers[serverName(profile.name)].args).toEqual([
         '-y', `@erayendes/asc-mcp@${release}`, profile.name, '--with-core',
       ]);
-      expect(files.get(resolve(path, 'README.md'))).toBe(readFileSync(`${path}/README.md`, 'utf8'));
+      // The README names the pinned version, so compare against the committed
+      // copy with that one string moved to the release under test.
+      expect(files.get(resolve(path, 'README.md'))).toBe(
+        readFileSync(`${path}/README.md`, 'utf8').replaceAll(`@erayendes/asc-mcp@${version}`, `@erayendes/asc-mcp@${release}`),
+      );
     }
+    expect(files.get(resolve('plugins/skill/README.md'))).toBe(readFileSync('plugins/skill/README.md', 'utf8'));
+    expect(generatedMarketplace).toEqual({
+      ...marketplace,
+      metadata: { ...marketplace.metadata, version: release },
+      plugins: marketplace.plugins.map((entry: object) => ({ ...entry, version: release })),
+    });
     expect(files.get(resolve('plugins/skill/skills/heimdall/SKILL.md'))).toEqual(readFileSync('skills/heimdall/SKILL.md'));
   });
 });
@@ -63,6 +84,53 @@ describe('directory plugin bundles', () => {
     for (const entry of entries) {
       expect(entry.source).toMatch(/^\.\/plugins\/[a-z-]+$/);
       expect(resolve(entry.source)).not.toBe(resolve('.'));
+    }
+  });
+
+  it('names every plugin the way the validator and the directory accept', () => {
+    expect(marketplace.name).toMatch(KEBAB);
+    expect(marketplace.owner.name).toBeTruthy();
+    expect(marketplace.metadata.description).toBeTruthy();
+    expect(new Set(entries.map((entry) => entry.name)).size).toBe(entries.length);
+    for (const entry of entries) {
+      expect(Object.keys(entry).filter((key) => !ENTRY_FIELDS.includes(key)), entry.name).toEqual([]);
+      const manifest = JSON.parse(readFileSync(join(entry.source, '.claude-plugin/plugin.json'), 'utf8'));
+      expect(Object.keys(manifest).filter((key) => !MANIFEST_FIELDS.includes(key)), entry.source).toEqual([]);
+      // The entry is what users install by, the manifest what loads; one name.
+      expect(entry.name, entry.source).toBe(manifest.name);
+      expect(manifest.name).toMatch(KEBAB);
+      expect(manifest.name.split('-').filter((word: string) => GENERIC_WORDS.includes(word)), manifest.name).toEqual([]);
+      expect(manifest.description, entry.source).toBeTruthy();
+      expect(entry.description, entry.source).toBeTruthy();
+      expect(manifest.author?.name, entry.source).toBeTruthy();
+      expect(manifest.license, entry.source).toBe('MIT');
+    }
+  });
+
+  it('shows in each README the exact command its .mcp.json runs', () => {
+    for (const entry of entries) {
+      if (!readdirSync(entry.source).includes('.mcp.json')) continue;
+      const readme = readFileSync(join(entry.source, 'README.md'), 'utf8');
+      const { mcpServers } = JSON.parse(readFileSync(join(entry.source, '.mcp.json'), 'utf8'));
+      for (const server of Object.values(mcpServers) as { command: string; args: string[] }[]) {
+        expect(readme, entry.source).toContain([server.command, ...server.args].join(' '));
+      }
+      // Only `setup` may go unpinned: it writes credentials, not a server entry.
+      for (const line of readme.split('\n').filter((l) => l.startsWith('npx '))) {
+        if (!line.endsWith(' setup')) expect(line, entry.source).toContain(`@erayendes/asc-mcp@${version} `);
+      }
+    }
+  });
+
+  it.each(entries)('carries no key material or credential settings in $source', (entry) => {
+    const visit = (path: string): string[] => lstatSync(path).isDirectory()
+      ? readdirSync(path).flatMap((child) => visit(join(path, child)))
+      : [path];
+    for (const file of visit(resolve(entry.source))) {
+      const text = readFileSync(file, 'utf8');
+      expect(text, file).not.toMatch(/-----BEGIN [A-Z ]*PRIVATE KEY-----/);
+      expect(file.endsWith('.p8'), file).toBe(false);
+      if (file.endsWith('.json')) expect(text, file).not.toMatch(/"(env|envFile)"|ASC_(KEY|ISSUER|PRIVATE)/);
     }
   });
 
