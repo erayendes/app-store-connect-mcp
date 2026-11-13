@@ -1,6 +1,6 @@
 {
   "name": "@erayendes/asc-mcp",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "mcpName": "io.github.erayendes/asc-mcp",
   "publishConfig": {
     "access": "public"
