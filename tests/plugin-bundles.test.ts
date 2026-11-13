@@ -77,6 +77,13 @@ describe('plugin generation', () => {
 });
 
 describe('directory plugin bundles', () => {
+  it('ships the listing icon in every plugin, since the directory takes it only on the first save', () => {
+    const icon = readFileSync('assets/brand/heimdall-icon.png');
+    for (const dir of readdirSync('plugins')) {
+      expect(readFileSync(join('plugins', dir, '.claude-plugin', 'icon.png')).equals(icon), dir).toBe(true);
+    }
+  });
+
   it('sources every plugin from its own folder, never the repository root', () => {
     expect(entries.length).toBeGreaterThan(0);
     expect(new Set(entries.map((entry) => entry.source)).size).toBe(entries.length);
