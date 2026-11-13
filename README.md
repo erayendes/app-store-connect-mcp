@@ -18,10 +18,10 @@ Heimdall does not replace [fastlane](https://fastlane.tools/). CI stays in fastl
 npx -y @erayendes/asc-mcp setup
 ```
 
-[![Install in Cursor](https://img.shields.io/badge/Cursor-Install_Heimdall-000000?style=flat&logo=cursor&logoColor=white)](https://cursor.com/en/install-mcp?name=Heimdall&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImdlbmVyYWwiLCItLXdpdGgtY29yZSJdfQ==)
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Heimdall-0098FF?style=flat&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=Heimdall&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40erayendes%2Fasc-mcp%22%2C%22general%22%2C%22--with-core%22%5D%7D)
+[![Install in Cursor](https://img.shields.io/badge/Cursor-Install_Heimdall-000000?style=flat&logo=cursor&logoColor=white)](https://cursor.com/en/install-mcp?name=ASC-Default&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCJdfQ==)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Heimdall-0098FF?style=flat&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=ASC-Default&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40erayendes%2Fasc-mcp%22%5D%7D)
 
-The two buttons add the `general` profile and ASC-Core to Cursor or VS Code without any credentials. To hand over your key, run `npx -y @erayendes/asc-mcp setup` in a terminal.
+The two buttons add **ASC-Default** to Cursor or VS Code: core, general and analytics, read-only. It starts without a key; reading your account needs one. To hand over your key and pick your profiles, run `npx -y @erayendes/asc-mcp setup` in a terminal, then remove the ASC-Default entry, since setup registers the profiles you picked.
 
 <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Asking an AI what a subscription costs worldwide; Heimdall answers in one tool call" width="720">
@@ -30,13 +30,17 @@ The two buttons add the `general` profile and ASC-Core to Cursor or VS Code with
 
 |  | Heimdall | A typical App Store Connect MCP | [asc CLI](https://github.com/rorkai/App-Store-Connect-CLI) |
 |---|---|---|---|
-| **Before a write** | You type CONFIRM for price, deletion, signing and access changes, and answer yes or no for anything that reaches customers. `--read-only` hides every write. On a Mac, a dialog the AI cannot press. | Usually nothing beyond the AI app's own tool approval; at most a read-only mode or a `confirm=true` argument the AI can set itself. | `--confirm` flags, which the agent passes itself. |
-| **StoreKit 2 and pricing** | App Store Server API tools for customer transactions. One call reads or sets a price in about 175 countries; offers and new subscriptions take one call each. | A hand-picked slice of the API (27 to a few hundred tools). None of the servers reviewed serve the StoreKit 2 Server API. | Covers the StoreKit Server API from the command line. |
+| **Before a write** | You type CONFIRM for price, deletion, signing and access changes, and answer yes or no for anything that reaches customers. `--read-only` hides every write. On a Mac, when the AI app can't show that prompt, a dialog the AI cannot press. | Usually nothing beyond the AI app's own tool approval; at most a read-only mode or a `confirm=true` argument the AI can set itself. | `--confirm` flags, which the agent passes itself. |
+| **StoreKit 2 and pricing** | App Store Server API tools for customer transactions. One call reads or sets a price in about 175 countries; offers and new subscriptions take one call each. | A hand-picked slice of the API (27 to a few hundred tools). The other servers we reviewed don't document StoreKit 2 Server API support. | Covers the StoreKit Server API from the command line. |
 | **Setup** | `npx -y @erayendes/asc-mcp setup`. A browser wizard keeps the key in the macOS Keychain and registers Heimdall in every AI app it finds. | Edit the AI app's JSON config by hand and point it at your key. | Install the CLI and its Agent Skills; it can also create API keys through an App Store Connect web session. |
 
 A longer comparison is in [Comparison](docs/COMPARISON_en.md).
 
-> **Heimdall 3.0 is out.** Profiles are cut by the work you do, four media tools replace 73, and everything you send to review goes in one call. Thank you for more than 6,800 npm downloads in three months. Everything that changed is in the [changelog](docs/CHANGELOG.md); if you see anything odd, please [open an issue](https://github.com/erayendes/app-store-connect-mcp/issues).
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo-pricing.gif" alt="An AI sets a subscription to $4.99 in the USA; Heimdall shows a CONFIRM form before it writes, then lists the new price in 22 countries" width="720">
+
+<sub>One anchor price, Apple equalizes the rest, and nothing is written until you type CONFIRM. Recorded against a stand-in account.</sub>
+
+> **Heimdall 3.1 is out.** Start without a key in a read-only default, check your setup with `doctor`, and install from Cursor or VS Code in one click. Thank you for more than 6,800 npm downloads in three months. Everything that changed is in the [changelog](docs/CHANGELOG.md); if you see anything odd, please [open an issue](https://github.com/erayendes/app-store-connect-mcp/issues).
 
 **Ask, and it answers. Tell it, and it's done.**
 

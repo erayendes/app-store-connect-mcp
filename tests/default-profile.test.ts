@@ -59,6 +59,8 @@ describe('the default read-only set', () => {
       expect(status.connection.error).toContain(`npx -y ${PACKAGE} setup`);
       const write = await client.callTool({ name: 'apps__update', arguments: { id: 'unused' } });
       expect(write.isError).toBe(true);
+      expect(JSON.stringify(write.content)).toContain('asc-mcp setup');
+      expect(JSON.stringify(write.content)).not.toContain('Restart without --read-only');
       expect(fetch).not.toHaveBeenCalled();
     } finally { await client.close(); fetch.mockRestore(); }
   });

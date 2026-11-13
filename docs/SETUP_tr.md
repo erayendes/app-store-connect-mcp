@@ -25,6 +25,8 @@ npx -y @erayendes/asc-mcp setup
 
 **Tarayıcıda yapın.** Setup önce tarayıcıda mı terminalde mi devam etmek istediğinizi sorar; tarayıcıyı seçin. Kendi bilgisayarınızda bir sayfa açılır ve sizi aşağıdaki dört adımdan geçirir.
 
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.gif" alt="Tarayıcıdaki kurulum baştan sona: iki profil seçiliyor, anahtar ekleniyor, üç yapay zekâ uygulaması bulunuyor ve üç hazır istemle özet gösteriliyor" width="720">
+
 ### Kimlik bilgisini bir kez kaydedin — Setup sihirbazı
 
 Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:

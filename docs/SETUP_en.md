@@ -25,6 +25,8 @@ npx -y @erayendes/asc-mcp setup
 
 **Do it in your browser.** Setup first asks whether to continue in the browser or the terminal; pick the browser. A page opens on your own computer and walks you through the four steps below.
 
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.gif" alt="The browser setup from start to finish: two profiles picked, a key added, three AI apps found, and the summary with three ready prompts" width="720">
+
 ### Save your credentials once — the setup wizard
 
 The wizard asks in the order you'd think it through, in the browser and the terminal alike:

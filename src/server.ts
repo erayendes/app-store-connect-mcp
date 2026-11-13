@@ -211,6 +211,10 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
       : undefined,
     missingToolHint,
     dryRun: config.dryRun,
+    // The default set is read-only whatever the flags say, so the --read-only advice would not help.
+    readOnlyRemedy: selection.defaultReadOnly
+      ? `This is the read-only default set; run \`npx -y @erayendes/asc-mcp setup\` in a terminal and pick the profiles you need.`
+      : undefined,
   });
 
   const loadedDomains = registry.loadedDomains();
