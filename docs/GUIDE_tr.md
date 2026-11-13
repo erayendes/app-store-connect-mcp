@@ -4,8 +4,6 @@
 
 Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `general` + `analytics` profillerini tek süreçte, zorunlu salt okunur olarak başlatır. `ASC_READ_ONLY=false` olsa bile yazma araçları listelenmez. Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki verileri okumak için kimlik bilgileri gerekir. Tam kullanım için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın ve profillerinizi seçin. Bilinmeyen veya kaldırılmış bir profil adı hâlâ yalnızca `asc__profile_unknown` bildirimini gösterir.
 
-Kapsam, eksikler ve hangi durumda başka bir aracın uygun olduğu için [asc CLI, fastlane ve diğer MCP sunucularıyla karşılaştırmaya](COMPARISON_tr.md) bakın.
-
 ## Riskli işlemlerde onay
 
 **Riskli değişikliklerden önce onay varsayılan olarak açıktır.**

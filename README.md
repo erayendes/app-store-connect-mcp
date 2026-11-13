@@ -4,8 +4,6 @@
 
 Price, offers and subscriptions in 175 countries, in one sentence.
 
-Heimdall does not replace [fastlane](https://fastlane.tools/). CI stays in fastlane, and everything you do by hand moves to Heimdall.
-
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
@@ -27,14 +25,6 @@ The two buttons add **ASC-Default** to Cursor or VS Code: core, general and anal
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Asking an AI what a subscription costs worldwide; Heimdall answers in one tool call" width="720">
 
 <sub>A real AI session, sped up. The App Store Connect account is a stand-in so the recording can be public.</sub>
-
-|  | Heimdall | A typical App Store Connect MCP | [asc CLI](https://github.com/rorkai/App-Store-Connect-CLI) |
-|---|---|---|---|
-| **Before a write** | You type CONFIRM for price, deletion, signing and access changes, and answer yes or no for anything that reaches customers. `--read-only` hides every write. On a Mac, when the AI app can't show that prompt, a dialog the AI cannot press. | Usually nothing beyond the AI app's own tool approval; at most a read-only mode or a `confirm=true` argument the AI can set itself. | `--confirm` flags, which the agent passes itself. |
-| **StoreKit 2 and pricing** | App Store Server API tools for customer transactions. One call reads or sets a price in about 175 countries; offers and new subscriptions take one call each. | A hand-picked slice of the API (27 to a few hundred tools). The other servers we reviewed don't document StoreKit 2 Server API support. | Covers the StoreKit Server API from the command line. |
-| **Setup** | `npx -y @erayendes/asc-mcp setup`. A browser wizard keeps the key in the macOS Keychain and registers Heimdall in every AI app it finds. | Edit the AI app's JSON config by hand and point it at your key. | Install the CLI and its Agent Skills; it can also create API keys through an App Store Connect web session. |
-
-A longer comparison is in [Comparison](docs/COMPARISON_en.md).
 
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo-pricing.gif" alt="An AI sets a subscription to $4.99 in the USA; Heimdall shows a CONFIRM form before it writes, then lists the new price in 22 countries" width="720">
 
