@@ -60,10 +60,27 @@ describe.skipIf(!built)('an unknown profile', () => {
     );
     expect(res.stdout).toContain('ASC-AppInfo');
     expect(res.stdout).toContain(`${PACKAGE} setup`);
+    expect(res.stdout).toContain('general');
+    // Retired names are not mapped to a replacement profile.
+    expect(res.stdout).not.toContain(`${PACKAGE} register general`);
   });
 });
 
 describe.skipIf(!built)('the binary starts', () => {
+  it('answers doctor without credentials, a client CLI, or an MCP session', () => {
+    const home = mkdtempSync(join(tmpdir(), 'asc-doctor-cli-'));
+    try {
+      const res = spawnSync(process.execPath, [DIST, 'doctor'], {
+        encoding: 'utf8', timeout: 20_000,
+        env: { HOME: home, USERPROFILE: home, PATH: '/nonexistent', ASC_CONFIG_DIR: home },
+      });
+      expect(res.status).toBe(0);
+      expect(res.stdout).toContain('Heimdall doctor');
+      expect(res.stdout).toContain('Credentials: missing');
+      expect(res.stdout).toContain('asc__status');
+      expect(res.stderr).toBe('');
+    } finally { rmSync(home, { recursive: true, force: true }); }
+  });
   it('answers --version when run directly', () => {
     expect(run(DIST, ['--version']).trim()).toBe(VERSION);
   });

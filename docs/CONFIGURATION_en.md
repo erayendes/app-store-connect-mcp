@@ -2,6 +2,8 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](CONFIGURATION_tr.md)
 
+Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
+
 Most people never need this page: [setup](SETUP_en.md) saves everything Heimdall needs. Read on if you want to lock the AI out of changes, try a change without making it, use a second App Store Connect account, or run Heimdall without setup (in CI, for example).
 
 There are two kinds of settings. **Flags** go at the end of `args` in your app's MCP settings. **Environment variables** go in an `env` block next to it:
@@ -37,7 +39,7 @@ By default Heimdall asks in two ways:
 
 Some AI apps can't show Heimdall's question; the Code tab in the Claude desktop app is one. On a Mac, Heimdall then opens a dialog of its own with the same summary, and the change runs only if you press its button, named for the change (Remove, Delete, Upload; Allow when no verb fits), or Return. Cancel (Don't Allow next to Allow) or Escape stops it. The AI can't see or click that dialog. It stays open until you answer; if the AI app cancels the call, the dialog closes with it.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-alert.png" alt="Heimdall's confirmation on a Mac, a standard macOS alert: Set the price of com.example.nimbus.pro.weekly in every country from 4.99 in United States? Nimbus Notes, subscription; starts as soon as possible; every other country gets Apple's equivalent price; current subscribers keep their price. Buttons: Cancel and Set." width="360"> On Windows and Linux, or with `ASC_NATIVE_CONFIRM=0`, those changes are refused there instead; make them in App Store Connect.
 
 ## Environment variables
 
@@ -58,7 +60,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 
 | Variable | What it's for |
 |:--|:--|
-| `ASC_READ_ONLY` | `true`, `1` or `yes` (any case) = `--read-only`. Anything else, including `false`, `0` and empty, leaves writes on. |
+| `ASC_READ_ONLY` | `true`, `1` or `yes` (any case) = `--read-only`. Anything else, including `false`, `0` and empty, leaves writes on for an explicit profile. ASC-Default always stays read-only. |
 | `ASC_DRY_RUN` | `1` or `true` = `--dry-run` |
 | `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (the release tools still ask) |
 | `ASC_NATIVE_CONFIRM` | `0` = no Mac dialog when the app can't ask; those changes are refused instead |

@@ -42,6 +42,8 @@ export interface RegistryOptions {
   missingToolHint?: (op: Operation) => string | undefined;
   /** Mutating calls stop after validation and return what WOULD have been sent. */
   dryRun?: boolean;
+  /** What to do about a refused write; the default is restarting without --read-only. */
+  readOnlyRemedy?: string;
 }
 
 export interface McpToolDefinition {
@@ -405,7 +407,7 @@ export class ToolRegistry {
       if (this.options.readOnly && !known.readOnly) {
         throw new AscApiError(
           `Tool "${name}" mutates App Store Connect and the server is running in read-only mode. ` +
-            `Restart without --read-only to use it.`,
+            (this.options.readOnlyRemedy ?? `Restart without --read-only to use it.`),
           0
         );
       }
@@ -418,7 +420,8 @@ export class ToolRegistry {
 
     if (this.options.readOnly && !op.readOnly) {
       throw new AscApiError(
-        `Tool "${name}" mutates App Store Connect and the server is running in read-only mode.`,
+        `Tool "${name}" mutates App Store Connect and the server is running in read-only mode.` +
+          (this.options.readOnlyRemedy ? ` ${this.options.readOnlyRemedy}` : ''),
         0
       );
     }

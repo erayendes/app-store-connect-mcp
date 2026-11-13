@@ -6,6 +6,7 @@
  */
 import { createSign, createPrivateKey, type KeyObject } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { PACKAGE } from '../clients.js';
 
 const TOKEN_LIFETIME_SEC = 20 * 60; // Apple's maximum
 const REFRESH_LEEWAY_SEC = 90;
@@ -39,7 +40,8 @@ function loadKey(creds: JwtCredentials): KeyObject {
     pem = readFileSync(creds.privateKeyPath, 'utf8');
   } else {
     throw new Error(
-      'No private key supplied. Set ASC_PRIVATE_KEY_PATH or ASC_PRIVATE_KEY.'
+      `No private key supplied. Set ASC_PRIVATE_KEY_PATH or ASC_PRIVATE_KEY, ` +
+        `or run \`npx -y ${PACKAGE} setup\` in a terminal.`
     );
   }
 
@@ -66,10 +68,7 @@ export class TokenProvider {
     return `${this.creds.issuerId}/${this.creds.keyId}`;
   }
 
-  constructor(private readonly creds: JwtCredentials) {
-    if (!creds.keyId) throw new Error('Missing key ID (ASC_KEY_ID).');
-    if (!creds.issuerId) throw new Error('Missing issuer ID (ASC_ISSUER_ID).');
-  }
+  constructor(private readonly creds: JwtCredentials) {}
 
   private getKey(): KeyObject {
     if (!this.key) this.key = loadKey(this.creds);
@@ -78,6 +77,11 @@ export class TokenProvider {
 
   /** Returns a cached token when one is still comfortably valid. */
   getToken(): string {
+    // Tool introspection needs no account. Fail before any request when an
+    // unconfigured default server is asked to read live data.
+    if (!this.creds.keyId || !this.creds.issuerId) {
+      throw new Error(`Missing App Store Connect credentials. Run \`npx -y ${PACKAGE} setup\` in a terminal.`);
+    }
     const now = Math.floor(Date.now() / 1000);
     if (this.cached && this.cached.expiresAt - now > REFRESH_LEEWAY_SEC) {
       return this.cached.token;

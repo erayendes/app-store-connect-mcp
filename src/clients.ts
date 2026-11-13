@@ -45,7 +45,7 @@ export const SERVER_COMMAND = 'npx';
  * means its servers too, not only its setup; a stable release writes the bare
  * name, which moves a beta tester back to stable the next time setup runs.
  */
-const VERSION = createRequire(import.meta.url)('../package.json').version as string;
+export const VERSION = createRequire(import.meta.url)('../package.json').version as string;
 export const PACKAGE = VERSION.includes('-') ? '@erayendes/asc-mcp@beta' : '@erayendes/asc-mcp';
 export const serverArgs = (spec: string): string[] => ['-y', PACKAGE, spec];
 /**
@@ -114,6 +114,8 @@ export type Target =
        * ten seconds on a machine with a dozen servers; the file answers at once.
        */
       listFile?: { path: string; key: string };
+      /** Local inventory for doctor; never starts a client CLI. */
+      localFile?: string;
       remove?: (name: string) => string[];
     }
   | {
@@ -196,6 +198,7 @@ export const CLIENTS: McpClient[] = [
         kind: 'cli',
         bin: 'codex',
         where: '~/.codex/config.toml',
+        localFile: home('.codex', 'config.toml'),
         add: (name, spec) => ['mcp', 'add', name, '--', SERVER_COMMAND, ...serverArgs(spec)],
         list: ['mcp', 'list', '--json'],
         remove: (name) => ['mcp', 'remove', name],
@@ -332,7 +335,9 @@ const targetPresent = (t: Target): boolean =>
   t.kind === 'cli' ? hasBinary(t.bin) : existsSync(t.path) || (t.app !== undefined && hasApp(t.app));
 
 /** Targets actually installed on this machine. A client with none is absent. */
-export const presentTargets = (client: McpClient): Target[] => client.targets.filter(targetPresent);
+export const presentTargets = (client: McpClient, localOnly = false): Target[] => client.targets.filter((t) =>
+  targetPresent(t) || (localOnly && t.kind === 'cli' &&
+    Boolean((t.localFile && existsSync(t.localFile)) || (t.listFile && existsSync(t.listFile.path)))));
 export const isPresent = (client: McpClient): boolean => presentTargets(client).length > 0;
 
 /**
@@ -639,9 +644,9 @@ function codexEntry(row: Record<string, unknown>): Record<string, unknown> | und
   return { command: SERVER_COMMAND, args: [...args] };
 }
 
-export function readRegistrations(client: McpClient): Registration[] {
+export function readRegistrations(client: McpClient, localOnly = false): Registration[] {
   const found: Registration[] = [];
-  for (const t of presentTargets(client)) {
+  for (const t of presentTargets(client, localOnly)) {
     if (t.kind === 'cli' && t.listFile) {
       const servers = readJsonServers({ kind: 'json', where: t.where, ...t.listFile }, t.bin === 'code');
       if (!servers && existsSync(t.listFile.path)) found.push({ name: '*', target: t });
@@ -649,6 +654,11 @@ export function readRegistrations(client: McpClient): Registration[] {
       continue;
     }
     if (t.kind === 'cli') {
+      if (localOnly) {
+        if (t.localFile) found.push(...readLocalToml(t, t.localFile));
+        else found.push({ name: '*', target: t });
+        continue;
+      }
       if (!t.list) {
         found.push({ name: '*', target: t });
         continue;
@@ -673,6 +683,88 @@ export function readRegistrations(client: McpClient): Registration[] {
     else addServers(found, t, servers);
   }
   return found;
+}
+
+/**
+ * Hide TOML strings and comments while retaining offsets and line breaks.
+ * Table-looking text inside a multiline instruction must not become a server.
+ */
+function tomlStructure(raw: string): string {
+  let masked = '';
+  for (let i = 0; i < raw.length;) {
+    const start = i;
+    if (raw[i] === '#') {
+      while (i < raw.length && raw[i] !== '\n') i++;
+    } else if (raw[i] === '"' || raw[i] === "'") {
+      const quote = raw[i];
+      const delimiter = raw.startsWith(quote.repeat(3), i) ? quote.repeat(3) : quote;
+      i += delimiter.length;
+      while (i < raw.length && !raw.startsWith(delimiter, i)) {
+        if (delimiter.length === 1 && /[\r\n]/.test(raw[i])) throw new Error('Invalid TOML string');
+        i += quote === '"' && raw[i] === '\\' ? 2 : 1;
+      }
+      if (i >= raw.length) throw new Error('Unterminated TOML string');
+      i += delimiter.length;
+    } else {
+      masked += raw[i++];
+      continue;
+    }
+    masked += raw.slice(start, i).replace(/[^\r\n]/g, ' ');
+  }
+  return masked;
+}
+
+/**
+ * Inventory only: read the string/array fields Codex writes, never round-trip
+ * TOML or treat an entry as safe to rewrite. Unfamiliar syntax is reported as
+ * incomplete rather than guessed. Env values are not parsed.
+ */
+function readLocalToml(target: Target, path: string): Registration[] {
+  if (!existsSync(path)) return [];
+  try {
+    const raw = readFileSync(path, 'utf8');
+    const structure = tomlStructure(raw);
+    const found: Registration[] = [];
+    const tables = [...structure.matchAll(/^[ \t]*\[([^\]\n]+)\][ \t]*$/gm)];
+    for (let i = 0; i < tables.length; i++) {
+      const header = raw.slice(tables[i].index!, tables[i].index! + tables[i][0].length);
+      const tableKey = /^\s*\[([^\]\n]+)\]/.exec(header)?.[1].trim() ?? '';
+      const key = /^mcp_servers\.(?:"([^"\\]+)"|'([^']+)'|([\w-]+))$/.exec(tableKey);
+      const name = key?.[1] ?? key?.[2] ?? key?.[3];
+      if (!name || !profileOfServer(name)) continue;
+      const start = tables[i].index! + tables[i][0].length;
+      const end = tables[i + 1]?.index ?? raw.length;
+      const body = raw.slice(start, end);
+      const bodyStructure = structure.slice(start, end);
+      // A small string scanner allows comments, literal strings and multiline
+      // arrays, but refuses multiline strings or non-string arguments.
+      const array = /^[ \t]*args\s*=\s*\[([^\]]*)\]/m.exec(bodyStructure);
+      const open = array ? bodyStructure.indexOf('[', array.index) : -1;
+      const args = array ? body.slice(open + 1, array.index + array[0].length - 1) : undefined;
+      let parsed: string[] | undefined;
+      if (args !== undefined) {
+        parsed = [];
+        let rest = args;
+        while (rest.trim()) {
+          rest = rest.replace(/^\s*(?:#[^\n]*(?:\n|$)\s*)*/, '');
+          if (!rest) break;
+          const token = /^("(?:[^"\\\n]|\\.)*"|'[^'\n]*')/.exec(rest);
+          if (!token) { parsed = undefined; break; }
+          parsed.push(token[0][0] === '"' ? JSON.parse(token[0]) : token[0].slice(1, -1));
+          rest = rest.slice(token[0].length).replace(/^\s*(?:#[^\n]*(?:\n|$)\s*)*/, '');
+          if (!rest) break;
+          if (rest[0] !== ',') { parsed = undefined; break; }
+          rest = rest.slice(1);
+        }
+      }
+      found.push({ name, target, ...(parsed ? entryParts({ args: parsed }) : {}) });
+    }
+    // A table we cannot understand must not turn into "nothing registered".
+    if (/mcp_servers/.test(raw) && !found.length) return [{ name: '*', target }];
+    return found;
+  } catch {
+    return [{ name: '*', target }];
+  }
 }
 
 /** Existing callers that only need profile names still get the parsed spec. */

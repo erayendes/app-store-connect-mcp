@@ -13,6 +13,7 @@ import {
 import { SPEC_VERSION } from './generated/operations.js';
 import {
   PROFILES,
+  defaultSelection,
   resolveSelection,
   toolCountFor,
   unknownProfileMessage,
@@ -26,14 +27,17 @@ export function helpText(): string {
 MCP server for the Apple App Store Connect API (spec v${SPEC_VERSION}).
 
 Usage:
-  npx -y ${PACKAGE} <profile> [options]
+  npx -y ${PACKAGE} [profile] [options]
   npx -y ${PACKAGE} setup
 
 One install backs many small MCP servers: pass a profile name and only that
 profile's tools are served (as "ASC-<Profile>"). Add one entry per profile to
 your client config and pick per project. Register "core" next to them: app
 lookup, tool search and the media tools for every screenshot, video, image and
-file live there and nowhere else. A profile is required.
+file live there. Without a profile argument, ASC-Default serves core + general
++ analytics in one process, forced read-only. Tools can be listed without
+credentials. For full use, run npx -y ${PACKAGE} setup in a terminal and pick
+profiles. An unknown or retired profile still serves only a setup notice.
 
 A profile can be narrowed to some of its sub-profiles with a colon:
   asc-mcp core                            app lookup, search, media (ASC-Core)
@@ -64,6 +68,9 @@ Commands:
                          it does clear entries left over from 2.x.
                          --clients=<ids>  limit to some clients; default is
                          every one found on this machine.
+  doctor                 Report local versions, client registrations, ASC-Core
+                         and credential availability. Read-only; no network
+                         calls or key contents. Use asc__status for a live check.
 
 Options:
   --read-only            Expose only tools that cannot modify anything.
@@ -111,6 +118,12 @@ async function main(): Promise<void> {
     if (argv.some((a) => a === flag || a.startsWith(`${flag}=`))) console.error(`${flag} was removed in 3.0 and is ignored.`);
   }
 
+  if (positional[0] === 'doctor') {
+    const { doctorReport } = await import('./doctor.js');
+    console.log(doctorReport());
+    return;
+  }
+
   if (positional[0] === 'register') {
     const { runRegister } = await import('./setup.js');
     const clients = argv
@@ -148,8 +161,7 @@ async function main(): Promise<void> {
 
   let selection: ProfileSelection;
   try {
-    if (!positional.length) throw new Error('No profile given. Run with --help for the list.');
-    selection = resolveSelection(positional[0]);
+    selection = positional.length ? resolveSelection(positional[0]) : defaultSelection();
   } catch (err) {
     // Someone at a terminal reads the error and fixes the argument.
     if (process.stdin.isTTY) {
@@ -162,7 +174,8 @@ async function main(): Promise<void> {
 
   let config;
   try {
-    config = loadConfig(argv);
+    config = loadConfig(argv, { allowMissingCredentials: selection.defaultReadOnly });
+    if (selection.defaultReadOnly) config.readOnly = true;
   } catch (err) {
     if (err instanceof ConfigError) {
       console.error(`\nConfiguration error\n\n${err.message}\n`);

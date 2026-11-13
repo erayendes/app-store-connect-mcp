@@ -12,6 +12,7 @@ import { PACKAGE, serverName } from '../clients.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import type { TokenProvider } from '../core/jwt.js';
+import { examplePrompts, registeredProfileSpecs } from '../activation.js';
 
 export const META_TOOLS: McpToolDefinition[] = [
   {
@@ -451,6 +452,8 @@ export async function executeMetaTool(
     macroOffered?: (name: string) => boolean;
     /** The profile this server serves, preferred when a tool lives in several. */
     ownProfile?: string;
+    /** The selected sub-profiles, including reads reached through asc__call. */
+    exampleSpecs?: string[];
     /** On core: discovery answers with every profile, not just this server. */
     catalogue?: boolean;
   }
@@ -626,6 +629,9 @@ export async function executeMetaTool(
               ok: true,
               appsVisible: res?.meta?.paging?.total ?? res?.data?.length ?? 0,
             };
+            result.examplePrompts = examplePrompts(ctx.ownProfile === 'core'
+              ? registeredProfileSpecs()
+              : ctx.exampleSpecs ?? [ctx.ownProfile ?? 'core']);
           }
         } catch (err) {
           baselineProbe = classifyProbe(err);

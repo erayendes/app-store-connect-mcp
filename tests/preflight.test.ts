@@ -164,6 +164,8 @@ describe('preflight__check_version', () => {
     expect(ready.blocking.filter((b: any) => b.check === 'screenshots')).toEqual([]);
     const failed = await run({ screenshots: [], placements: [{ ...image, attributes: { ...image.attributes, state: 'FAILED' } }] });
     expect(failed.blocking).toEqual(expect.arrayContaining([expect.objectContaining({ check: 'screenshots', fixWith: 'media__upload' })]));
+    const processing = await run({ screenshots: [], placements: [{ ...image, attributes: { ...image.attributes, state: 'ASSET_PROCESSING' } }] });
+    expect(processing.blocking).toEqual(expect.arrayContaining([expect.objectContaining({ check: 'screenshots', fixWith: 'media__list' })]));
   });
 
   it('says an open review submission does not carry this version', async () => {

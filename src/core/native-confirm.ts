@@ -16,6 +16,7 @@
  * missing), the answer is `unavailable` and the caller keeps failing closed.
  */
 import { execFile } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { TERRITORY_NAMES } from './territory-names.js';
 
 export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
@@ -33,35 +34,23 @@ export const DIALOG_FIRST_CLIENTS: ReadonlySet<string> = new Set(['claude-code']
 const MAX_BODY = 1500;
 export const nativeConfirmFits = (text: DialogText): boolean => text.body.length <= MAX_BODY;
 
-// A panel of its own through JXA, not NSAlert: an alert is a fixed narrow
-// column with one bold line and one block of plain text, and a write with
-// six fields read as a wall. Here the question is bold, the app and context
-// sit under it, each "Label: value" line lines up as a table, a line that is
-// not a fact is a dimmer note, and what the change really does stands apart
-// above the buttons. Return approves, Escape refuses. No time limit: it stays
-// until answered, or until the tool call is cancelled (below). The text
-// arrives as arguments, never spliced into the script, so a quote in an app
-// name stays text. A fifth argument renders it to a PNG instead of showing it.
+// A real NSAlert through JXA, so buttons, type, corners and placement are the
+// system's own and it reads as a macOS question, not a window from nowhere: a
+// floating panel showed up over every screen and nobody knew what it was. The
+// Heimdall icon says who asks; the bold title is the question, the context line
+// sits under it, each "Label: value" line lines up in a small grid, a line that
+// is not a fact is a dimmer note, and what the change really does closes it in
+// bold. Return approves, Escape refuses. No time limit: it stays until
+// answered, or until the tool call is cancelled (below). The text arrives as
+// arguments, never spliced into the script, so a quote in an app name stays
+// text. A sixth argument renders it to a PNG instead of showing it.
+const ICON = fileURLToPath(new URL('../../assets/brand/heimdall-icon-rounded-256.png', import.meta.url));
 const SCRIPT = String.raw`ObjC.import('AppKit');
-// argv: title, body, approve label, refuse label[, render path]
+// argv: title, body, approve label, refuse label, icon path[, render path]
 function run(argv) {
-  const [title, body, approve, refuse, renderTo] = argv;
+  const [title, body, approve, refuse, iconPath, renderTo] = argv;
   const app = $.NSApplication.sharedApplication;
   app.setActivationPolicy($.NSApplicationActivationPolicyAccessory);
-
-  const W = 440, P = 24, INNER = W - 2 * P;
-  const font = (size, weight) => $.NSFont.systemFontOfSizeWeight(size, weight);
-  const text = (s, f, color, width) => {
-    const t = $.NSTextField.wrappingLabelWithString(s);
-    t.font = f;
-    t.textColor = color;
-    t.preferredMaxLayoutWidth = width;
-    t.selectable = false;
-    // Measured against the width it gets, so a long line wraps instead of being cut.
-    const h = Math.ceil(t.cell.cellSizeForBounds($.NSMakeRect(0, 0, width, 10000)).height);
-    t.frame = $.NSMakeRect(0, 0, width, h);
-    return t;
-  };
 
   // The body: detail lines, a blank line, then what the change really does.
   // The last paragraph is the outcome; a body with no details starts with the blank line.
@@ -74,72 +63,77 @@ function run(argv) {
     return m ? { label: m[1], value: m[2] } : { value: l };
   });
 
-  const blocks = []; // [view, x, gapBefore]
-  const add = (view, x, gap) => blocks.push([view, x, gap]);
+  const alert = $.NSAlert.alloc.init;
+  alert.alertStyle = $.NSAlertStyleWarning;
+  const icon = $.NSImage.alloc.initWithContentsOfFile(iconPath);
+  if (!icon.isNil()) alert.icon = icon;
+  alert.messageText = title;
+  alert.informativeText = context || 'App Store Connect';
+  alert.addButtonWithTitle(approve); // first: the default, Return
+  alert.addButtonWithTitle(refuse).keyEquivalent = '\u001b';
 
-  add(text('Heimdall', font(11, $.NSFontWeightSemibold), $.NSColor.secondaryLabelColor, INNER), P, 0);
-  add(text(title, font(15, $.NSFontWeightBold), $.NSColor.labelColor, INNER), P, 6);
-  if (context) add(text(context, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, INNER), P, 4);
-
-  if (rows.length) {
-    const sep = $.NSBox.alloc.initWithFrame($.NSMakeRect(0, 0, INNER, 1));
-    sep.boxType = $.NSBoxSeparator;
-    add(sep, P, 14);
-    const labelW = Math.min(130, Math.max(0, ...rows.filter((r) => r.label).map((r) => text(r.label, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, 400).fittingSize.width)));
-    rows.forEach((r, i) => {
-      const gap = i === 0 ? 12 : 6;
-      if (r.label) {
-        const l = text(r.label, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, labelW);
-        const v = text(r.value, font(13, $.NSFontWeightRegular), $.NSColor.labelColor, INNER - labelW - 12);
-        const h = Math.max(l.frame.size.height, v.frame.size.height);
-        const row = $.NSView.alloc.initWithFrame($.NSMakeRect(0, 0, INNER, h));
-        l.frame = $.NSMakeRect(0, h - l.frame.size.height, labelW, l.frame.size.height);
-        v.frame = $.NSMakeRect(labelW + 12, h - v.frame.size.height, INNER - labelW - 12, v.frame.size.height);
-        row.addSubview(l);
-        row.addSubview(v);
-        add(row, P, gap);
-      } else {
-        // A line that is not a fact ("Groups that already have it stay as they are") reads as a note.
-        add(text(r.value, font(12, $.NSFontWeightRegular), $.NSColor.secondaryLabelColor, INNER), P, gap);
-      }
-    });
+  // The alert centres the details in its text column, so they take that column's
+  // width exactly. The column shifts as the alert sizes itself around them, so the
+  // details are built, laid out, measured against the title field and, if the
+  // width moved, built once more (it settles at 242 points on macOS 26).
+  const size = $.NSFont.smallSystemFontSize;
+  const details = (W) => {
+    const text = (s, color, bold) => {
+      const t = $.NSTextField.wrappingLabelWithString(s);
+      t.font = bold ? $.NSFont.boldSystemFontOfSize(size) : $.NSFont.systemFontOfSize(size);
+      t.textColor = color;
+      t.preferredMaxLayoutWidth = W - 2;
+      t.selectable = false;
+      return t;
+    };
+    const views = [];
+    const facts = rows.filter((r) => r.label);
+    if (facts.length) {
+      const labelW = Math.min(110, Math.max(...facts.map((r) => text(r.label, $.NSColor.secondaryLabelColor).fittingSize.width)));
+      const grid = $.NSGridView.gridViewWithViews($(facts.map((r) => {
+        const v = text(r.value, $.NSColor.labelColor);
+        v.preferredMaxLayoutWidth = W - 2 - labelW - 8;
+        return $([text(r.label, $.NSColor.secondaryLabelColor), v]);
+      })));
+      grid.rowSpacing = 3;
+      grid.columnSpacing = 8;
+      grid.columnAtIndex(0).width = labelW;
+      views.push(grid);
+    }
+    // A line that is not a fact ("Groups that already have it stay as they are") reads as a note.
+    for (const r of rows.filter((r) => !r.label)) views.push(text(r.value, $.NSColor.secondaryLabelColor));
+    if (outcome) views.push(text(outcome, $.NSColor.labelColor, true));
+    if (!views.length) return;
+    const stack = $.NSStackView.stackViewWithViews($(views));
+    stack.orientation = $.NSUserInterfaceLayoutOrientationVertical;
+    stack.alignment = $.NSLayoutAttributeLeading;
+    stack.spacing = 8;
+    const h = stack.fittingSize.height;
+    // The alert's own text sits 2 points inside its field; the details match it.
+    stack.frame = $.NSMakeRect(2, 0, W - 2, h);
+    // A plain view keeps the width it is given; a bare stack shrinks to its content and drifts.
+    const box = $.NSView.alloc.initWithFrame($.NSMakeRect(0, 0, W, h));
+    box.addSubview(stack);
+    // A replaced accessory stays in the window unless taken out.
+    if (!alert.accessoryView.isNil()) alert.accessoryView.removeFromSuperview;
+    alert.accessoryView = box;
+  };
+  const field = (v) => { const subs = v.subviews; for (let i = 0; i < subs.count; i++) { const s = subs.objectAtIndex(i); const f = s.isKindOfClass($.NSTextField) ? s : field(s); if (f) return f; } };
+  const column = () => {
+    alert.layout;
+    alert.window.contentView.superview.layoutSubtreeIfNeeded;
+    return Math.round(field(alert.window.contentView)?.frame.size.width || 242);
+  };
+  let W = column();
+  for (let i = 0; i < 3; i++) {
+    details(W);
+    const settled = column();
+    if (settled === W) break;
+    W = settled;
   }
-
-  if (outcome) {
-    const sep = $.NSBox.alloc.initWithFrame($.NSMakeRect(0, 0, INNER, 1));
-    sep.boxType = $.NSBoxSeparator;
-    add(sep, P, 14);
-    add(text(outcome, font(12, $.NSFontWeightMedium), $.NSColor.labelColor, INNER), P, 12);
-  }
-
-  // Buttons, right-aligned: refuse then approve, approve is the default (Return).
-  const BH = 32, BW = 110;
-  const ok = $.NSButton.buttonWithTitleTargetAction(approve, $(), $());
-  const no = $.NSButton.buttonWithTitleTargetAction(refuse, $(), $());
-  for (const b of [ok, no]) { b.bezelStyle = $.NSBezelStyleRounded; b.controlSize = $.NSControlSizeLarge; }
-  ok.keyEquivalent = '\r';
-  no.keyEquivalent = '\u001b';
-  const bw = Math.max(BW, ok.fittingSize.width + 24, no.fittingSize.width + 24);
-
-  const H = 22 + blocks.reduce((s, [v, , g]) => s + g + v.frame.size.height, 0) + 22 + BH + 20;
-  const panel = $.NSPanel.alloc.initWithContentRectStyleMaskBackingDefer($.NSMakeRect(0, 0, W, H), $.NSWindowStyleMaskTitled | $.NSWindowStyleMaskFullSizeContentView, $.NSBackingStoreBuffered, false);
-  panel.title = 'Heimdall';
-  panel.titleVisibility = $.NSWindowTitleHidden;
-  panel.titlebarAppearsTransparent = true;
-  const content = panel.contentView;
-  let y = H - 22;
-  for (const [v, x, g] of blocks) {
-    y -= g + v.frame.size.height;
-    v.setFrameOrigin($.NSMakePoint(x, y));
-    content.addSubview(v);
-  }
-  ok.frame = $.NSMakeRect(W - P - bw, 20, bw, BH);
-  no.frame = $.NSMakeRect(W - P - 2 * bw - 12, 20, bw, BH);
-  content.addSubview(ok);
-  content.addSubview(no);
 
   if (renderTo) {
-    const frame = content.superview;
+    const frame = alert.window.contentView.superview;
     frame.layoutSubtreeIfNeeded;
     const rep = frame.bitmapImageRepForCachingDisplayInRect(frame.bounds);
     frame.cacheDisplayInRectToBitmapImageRep(frame.bounds, rep);
@@ -147,18 +141,9 @@ function run(argv) {
     return 'rendered';
   }
 
-  ObjC.registerSubclass({ name: 'HeimdallAnswer', methods: {
-    'approve:': { types: ['void', ['id']], implementation: () => app.stopModalWithCode(1) },
-    'refuse:': { types: ['void', ['id']], implementation: () => app.stopModalWithCode(0) },
-  } });
-  const target = $.HeimdallAnswer.alloc.init;
-  ok.target = target; ok.action = 'approve:';
-  no.target = target; no.action = 'refuse:';
-  panel.level = $.NSFloatingWindowLevel;
-  panel.center;
   app.activateIgnoringOtherApps(true);
-  // JXA hands the modal response back as a string ("1"), not a number.
-  return Number(app.runModalForWindow(panel)) === 1 ? 'approved' : 'cancelled';
+  // JXA hands back both the modal response and NSAlertFirstButtonReturn as strings ("1000").
+  return Number(alert.runModal) === Number($.NSAlertFirstButtonReturn) ? 'approved' : 'cancelled';
 }`;
 
 export interface DialogText {
@@ -337,7 +322,7 @@ export function nativeConfirm(text: DialogText, signal?: AbortSignal): Promise<N
     // A cancelled tool call takes its alert with it, so a late click cannot
     // run a write the agent was already told failed.
     const buttons = text.action ? [text.action, 'Cancel'] : ['Allow', 'Don’t Allow'];
-    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ...buttons], { signal }, (error, stdout) => {
+    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ...buttons, ICON], { signal }, (error, stdout) => {
       if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'cancelled');
       resolve(signal?.aborted ? 'cancelled' : 'unavailable');
     });

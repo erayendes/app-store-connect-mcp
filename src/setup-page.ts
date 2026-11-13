@@ -183,6 +183,7 @@ a { color: var(--fg); }
     <h2><span class="n" id="n2">2/4</span>Your App Store Connect key</h2>
     <div class="need">
       <div id="need"></div>
+      <button type="button" class="btn btn-link-primary" id="adminHelp">I don’t have an API key / I am not an Admin</button>
       <div id="reuseBox" class="saved hidden">
         <div>Using your saved key: <span class="mono" id="savedKey"></span><span id="savedRole" class="role-tag"></span></div>
         <p id="reuseMsg" class="msg"></p>
@@ -643,6 +644,7 @@ a { color: var(--fg); }
         else if (l) rest.push(l);
       });
       if (r.next) rest.push(r.next);
+      if (r.prompts) rest.push('Try these prompts after restarting your MCP client:\\n' + r.prompts.map(function (p) { return '"' + p + '"'; }).join('\\n'));
       if (rest.length) { out.textContent = rest.join('\\n\\n'); out.classList.remove('hidden'); $('copy').classList.remove('hidden'); }
       $('bye').classList.remove('hidden');
     }).catch(function (e) {
@@ -654,6 +656,21 @@ a { color: var(--fg); }
   $('copy').onclick = function () {
     var b = this;
     navigator.clipboard.writeText($('out').textContent).then(function () { b.textContent = 'Copied'; });
+  };
+
+  $('adminHelp').onclick = function () {
+    this.disabled = true;
+    call('admin-help', selection()).then(function (r) {
+      finished = true;
+      var main = document.querySelector('main');
+      main.textContent = '';
+      main.appendChild(el('h2', '', 'Send this message to your App Store Connect admin'));
+      main.appendChild(el('pre', '', r.message));
+      var copy = el('button', 'btn btn-secondary', 'Copy message');
+      copy.onclick = function () { navigator.clipboard.writeText(r.message).then(function () { copy.textContent = 'Copied'; }); };
+      main.appendChild(copy);
+      main.appendChild(el('p', '', 'Setup stopped. Nothing was changed. Run setup again when the key is ready.'));
+    }).catch(function (e) { say(e.message); $('adminHelp').disabled = false; });
   };
 
   $('cancel').onclick = function () {

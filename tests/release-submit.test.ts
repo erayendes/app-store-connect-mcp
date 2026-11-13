@@ -96,6 +96,8 @@ function fakeHttp(o: Options = {}) {
       return { data: [{ id: 's-1', attributes: { assetDeliveryState: { state: 'COMPLETE' } } }] };
     }
     if (path === '/v1/reviewSubmissions/sub-1/items' || path === '/v1/reviewSubmissions/sub-new/items') {
+      const include = String(query?.include ?? '').split(',');
+      if (include.includes('appStoreVersionExperiment') && include.includes('appStoreVersionExperimentV2')) throw new Error('400 PARAMETER_ERROR.INVALID include');
       return { data: currentItems.map((row) => query?.include ? row : { id: row.id, type: row.type }) };
     }
     if (path.includes('/reviewSubmissions')) {

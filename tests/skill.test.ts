@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { installSkill, removeSkill, skillPathFor, clientTakesSkill } from '../src/skill.js';
-import { CLIENTS, SERVER_COMMAND, serverArgs, serverName } from '../src/clients.js';
+import { CLIENTS, SERVER_COMMAND, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const homes: string[] = [];
@@ -80,7 +80,7 @@ describe('skill installation', () => {
 });
 
 describe('the packaged skill is loadable as a plugin', () => {
-  it('ships a plugin manifest pointing at the same skills directory', () => {
+  it('keeps the root plugin for local skill evaluation', () => {
     // `ax:agent --skill=.` loads the repo root as a local plugin, which is how
     // the skill gets A/B'd without opening settingSources.
     const manifest = JSON.parse(readFileSync('.claude-plugin/plugin.json', 'utf8'));
@@ -88,26 +88,33 @@ describe('the packaged skill is loadable as a plugin', () => {
     expect(existsSync('skills/heimdall/SKILL.md')).toBe(true);
   });
 
-  it('offers Xcode one plug-in per profile, launched the way setup launches it', () => {
+  it('ships an independent skill plugin with a byte-for-byte generated skill copy', () => {
+    const manifest = JSON.parse(readFileSync('plugins/skill/.claude-plugin/plugin.json', 'utf8'));
+    expect(manifest.name).toBe('heimdall');
+    expect(readFileSync('plugins/skill/skills/heimdall/SKILL.md')).toEqual(readFileSync('skills/heimdall/SKILL.md'));
+    expect(existsSync('plugins/skill/.mcp.json')).toBe(false);
+  });
+
+  it('offers Xcode one plug-in per profile with core and an exact package version', () => {
     // Xcode 27 installs from the Git URL and shows a checkbox per marketplace
     // entry — the only place a user gets to pick areas, since a plug-in's
     // servers cannot be switched off afterwards. A profile missing here is a
-    // profile Xcode users cannot install; a different command or name is a
-    // server that will not match what `setup` registered everywhere else.
+    // profile Xcode users cannot install. Server names match what `setup`
+    // registers elsewhere, while plug-ins pin the reviewed package version.
     // `npm run generate` rewrites all of this from PROFILES.
-    // The entry names are what Xcode prints, so they are written for a person
-    // ("Heimdall | ASC App Info"); the manifests underneath keep the kebab-case
-    // server names. Sources tie the two together.
+    // Entry names are the manifests' kebab-case ids. Xcode prints this field,
+    // and it used to read "Heimdall | ASC TestFlight", but `claude plugin
+    // validate` rejects a name with spaces and the Claude directory installs
+    // by it. The readable name lives on in the server key.
     const marketplace = JSON.parse(readFileSync('.claude-plugin/marketplace.json', 'utf8'));
+    const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
     const entries: { name: string; source: string }[] = marketplace.plugins;
     // No plug-in for core itself: each one already carries the core tools.
     const pluginProfiles = PROFILES.filter((p) => p.name !== CORE_PROFILE);
-    expect(entries.map((e) => e.source)).toEqual(['./', ...pluginProfiles.map((p) => `./plugins/${p.name}`)]);
+    expect(entries.map((e) => e.source)).toEqual(['./plugins/skill', ...pluginProfiles.map((p) => `./plugins/${p.name}`)]);
     expect(existsSync(`plugins/${CORE_PROFILE}`)).toBe(false);
     expect(existsSync('plugins/app-info')).toBe(false);
-    expect(entries[0].name).toBe('Heimdall | ASC Skill');
-    for (const e of entries) expect(e.name).toMatch(/^Heimdall \| ASC [A-Z][A-Za-z ]+$/);
-    expect(entries.find((e) => e.source === './plugins/testflight')!.name).toBe('Heimdall | ASC TestFlight');
+    expect(entries.map((e) => e.name)).toEqual(['heimdall', ...pluginProfiles.map((p) => `asc-${p.name}`)]);
     for (const p of pluginProfiles) {
       const dir = `plugins/${p.name}`;
       const manifest = JSON.parse(readFileSync(`${dir}/.claude-plugin/plugin.json`, 'utf8'));
@@ -117,10 +124,10 @@ describe('the packaged skill is loadable as a plugin', () => {
       const { mcpServers } = JSON.parse(readFileSync(`${dir}/.mcp.json`, 'utf8'));
       // Xcode runs each plug-in alone, so each folds core in.
       expect(mcpServers).toEqual({
-        [serverName(p.name)]: { command: SERVER_COMMAND, args: [...serverArgs(p.name), '--with-core'] },
+        [serverName(p.name)]: { command: SERVER_COMMAND, args: ['-y', `@erayendes/asc-mcp@${version}`, p.name, '--with-core'] },
       });
     }
-    // The root carries the skill and nothing that would start a server: a
+    // The local evaluation root carries nothing that would start a server: a
     // root .mcp.json is what made the first cut install all thirteen at once.
     expect(existsSync('.mcp.json')).toBe(false);
   });

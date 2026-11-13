@@ -191,6 +191,34 @@ export interface ProfileSelection {
   subProfiles: SubProfile[];
   /** True when some of the profile's sub-profiles were left out. */
   partial: boolean;
+  /** The no-argument starter set; always served read-only. Not a named profile. */
+  defaultReadOnly?: boolean;
+}
+
+export const DEFAULT_PROFILES = ['core', 'general', 'analytics'] as const;
+
+/** Resolve the release channel at call time: clients.ts imports profiles.ts. */
+export function defaultProfileNote(): string {
+  return 'This is the default read-only set (core + general + analytics). ' +
+    `For full use, run \`npx -y ${PACKAGE} setup\` in a terminal and pick profiles.`;
+}
+
+/** One process for the no-argument starter set, without adding a selectable profile. */
+export function defaultSelection(): ProfileSelection {
+  const selections = DEFAULT_PROFILES.map((name) => resolveSelection(name));
+  const subProfiles: SubProfile[] = [{
+    name: '',
+    description: defaultProfileNote(),
+    operations: [...new Set(selections.flatMap(operationsFor))],
+    manualTools: [...new Set(selections.flatMap(manualToolsFor))],
+    rootResources: [...new Set(selections.flatMap((s) => s.subProfiles.flatMap((sub) => sub.rootResources)))],
+  }];
+  return {
+    profile: { name: 'default', description: defaultProfileNote(), subProfiles },
+    subProfiles,
+    partial: false,
+    defaultReadOnly: true,
+  };
 }
 
 export function resolveProfile(name: string): Profile | undefined {
@@ -333,20 +361,12 @@ export function registerCommand(spec: string): string {
  */
 export function unknownProfileMessage(spec: string, reason?: string): string {
   return (
-    (spec
-      ? `This MCP server was started with the App Store Connect profile "${spec}", which does ` +
-        `not exist in Heimdall — it was renamed or removed, or it is a typo.`
-      : // The combined server of 2.x, started with no profile (and maybe --domains).
-        `This MCP server was started without an App Store Connect profile. Heimdall serves ` +
-        `App Store Connect only through profiles since 3.0.`) +
-    (spec && reason ? `\n${reason.split('\n')[0]}` : '') +
+    `This MCP server was started with the App Store Connect profile "${spec}", which does ` +
+    `not exist in Heimdall — it was renamed or removed, or it is a typo.` +
+    (reason ? `\n${reason.split('\n')[0]}` : '') +
     `\n\nThis server carries no App Store Connect tools. Tell the user to run ` +
     `\`npx -y ${PACKAGE} setup\` in a terminal: it ` +
-    (spec
-      ? `removes entries whose profile no longer exists and lets them pick`
-      : // setup counts an entry without a profile as the user's own and leaves it.
-        `lets them pick profiles, but leaves this entry alone, so they also delete it from ` +
-        `their MCP client's settings. They pick`) +
+    `removes entries whose profile no longer exists and lets them pick` +
     ` from the current profiles below. Then restart the client.\n\nCurrent profiles:\n` +
     PROFILES.map((p) => `  ${p.name.padEnd(18)} ${p.description}`).join('\n')
   );

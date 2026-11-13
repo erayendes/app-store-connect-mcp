@@ -35,7 +35,8 @@ export const REVIEW_ITEM_TYPES = [
   'gameCenterLeaderboardVersion', 'gameCenterLeaderboardSetVersion',
   'inAppPurchaseVersion', 'subscriptionVersion', 'subscriptionGroupVersion', 'retentionMessageVersion',
 ] as const;
-const ITEM_INCLUDES = ['appStoreVersion', ...REVIEW_ITEM_TYPES].join(',');
+// Apple answers 400 when one request includes both experiment relationships; V2 is the live one.
+const ITEM_INCLUDES = ['appStoreVersion', ...REVIEW_ITEM_TYPES.filter((t) => t !== 'appStoreVersionExperiment')].join(',');
 type ReviewItem = { type: string; id: string };
 export const REVIEW_RESOURCE_TYPES: Record<string, string> = {
   appCustomProductPageVersion: 'appCustomProductPageVersions',
