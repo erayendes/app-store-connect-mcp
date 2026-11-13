@@ -1,11 +1,24 @@
 {
   "name": "asc-analytics",
+  "displayName": "Heimdall · Analytics",
   "version": "3.1.0",
   "description": "Sales and finance reports, analytics report requests, performance and diagnostic data — for questions about downloads, revenue and crashes.",
   "author": {
     "name": "Eray Endes",
     "url": "https://github.com/erayendes"
   },
+  "homepage": "https://github.com/erayendes/app-store-connect-mcp",
   "license": "MIT",
-  "repository": "https://github.com/erayendes/app-store-connect-mcp"
+  "privacyPolicyUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md",
+  "repository": "https://github.com/erayendes/app-store-connect-mcp",
+  "keywords": [
+    "app-store-connect",
+    "testflight",
+    "xcode",
+    "ios",
+    "macos",
+    "mcp",
+    "storekit",
+    "subscriptions"
+  ]
 }

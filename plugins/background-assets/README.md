@@ -20,7 +20,7 @@ Run this once in a real terminal to create or select your App Store Connect API 
 npx -y @erayendes/asc-mcp setup
 ```
 
-`setup` stores the key in the macOS Keychain (or references its file path elsewhere). No key is written into this plug-in.
+`setup` stores the key in the macOS Keychain (or references its file path elsewhere). No key is written into this plug-in. What Heimdall reads and keeps is in the [privacy policy](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md).
 
 ## Safety
 

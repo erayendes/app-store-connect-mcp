@@ -9,6 +9,7 @@
   "homepage": "https://github.com/erayendes/app-store-connect-mcp",
   "repository": "https://github.com/erayendes/app-store-connect-mcp",
   "license": "MIT",
+  "privacyPolicyUrl": "https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md",
   "keywords": [
     "app-store-connect",
     "testflight",
