@@ -153,7 +153,9 @@ describe.skipIf(!canListen)('setup --web, asking an admin', () => {
 
 describe('setup page script', () => {
   it('parses with the new copyable examples and admin help controls', () => {
-    const script = SETUP_PAGE.match(/<script>([\s\S]*?)<\/script>/)![1];
+    // Slice, not a regex: the page has exactly one inline script, and CodeQL reads a tag regex as an HTML filter.
+    const start = SETUP_PAGE.indexOf('<script>') + '<script>'.length;
+    const script = SETUP_PAGE.slice(start, SETUP_PAGE.indexOf('</script>', start));
     expect(() => new Script(script)).not.toThrow();
     expect(SETUP_PAGE).toContain('I don’t have an API key / I am not an Admin');
     expect(SETUP_PAGE).toContain('r.prompts');
