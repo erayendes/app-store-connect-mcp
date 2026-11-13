@@ -22,7 +22,7 @@ import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(resolve(root, '.claude-plugin', 'plugin.json'), 'utf8'));
 const { version } = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
-const { author, license, repository } = manifest;
+const { author, license, repository, privacyPolicyUrl } = manifest;
 // Directory releases must keep running the reviewed version, including the
 // exact prerelease. Client registration deliberately follows release channels.
 const pinnedPackage = `@erayendes/asc-mcp@${version}`;
@@ -67,7 +67,7 @@ Run this once in a real terminal to create or select your App Store Connect API 
 npx -y @erayendes/asc-mcp setup
 \`\`\`
 
-\`setup\` stores the key in the macOS Keychain (or references its file path elsewhere). No key is written into this plug-in.
+\`setup\` stores the key in the macOS Keychain (or references its file path elsewhere). No key is written into this plug-in. What Heimdall reads and keeps is in the [privacy policy](${privacyPolicyUrl}).
 
 ## Safety
 
@@ -95,7 +95,8 @@ write('.claude-plugin/plugin.json', { ...manifest, version });
 // the bundled copy; no symlink or path outside the bundle is needed at runtime.
 copyFileSync(resolve(root, 'skills/heimdall/SKILL.md'), resolve(root, 'plugins/skill/skills/heimdall/SKILL.md'));
 // The directory takes a listing icon only on a plug-in's first save, so every plug-in ships one from the start.
-const ICON = resolve(root, 'assets/brand/heimdall-icon.png');
+// Full-bleed square: the directory rounds the corners itself, so a pre-rounded icon showed white corners.
+const ICON = resolve(root, 'assets/brand/heimdall-icon-square.png');
 copyFileSync(ICON, resolve(root, 'plugins/skill/.claude-plugin/icon.png'));
 writeFileSync(resolve(root, 'plugins/skill/README.md'), `# ${manifest.name}
 
@@ -114,6 +115,7 @@ for (const p of PLUGIN_PROFILES) {
     description: p.description,
     author,
     license,
+    privacyPolicyUrl,
     repository,
   });
   write(`plugins/${p.name}/.mcp.json`, {

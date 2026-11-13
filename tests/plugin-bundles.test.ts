@@ -18,7 +18,7 @@ const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const GENERIC_WORDS = ['mcp', 'plugin', 'claude'];
 // Manifest fields the validator knows. A field outside this list is at best
 // ignored and at worst rejected, so a new one is added here on purpose.
-const MANIFEST_FIELDS = ['name', 'version', 'description', 'author', 'homepage', 'repository', 'license', 'keywords'];
+const MANIFEST_FIELDS = ['name', 'version', 'description', 'author', 'homepage', 'repository', 'license', 'privacyPolicyUrl', 'keywords'];
 const ENTRY_FIELDS = ['name', 'source', 'description', 'version'];
 
 describe('plugin generation', () => {
@@ -78,7 +78,7 @@ describe('plugin generation', () => {
 
 describe('directory plugin bundles', () => {
   it('ships the listing icon in every plugin, since the directory takes it only on the first save', () => {
-    const icon = readFileSync('assets/brand/heimdall-icon.png');
+    const icon = readFileSync('assets/brand/heimdall-icon-square.png');
     for (const dir of readdirSync('plugins')) {
       expect(readFileSync(join('plugins', dir, '.claude-plugin', 'icon.png')).equals(icon), dir).toBe(true);
     }
