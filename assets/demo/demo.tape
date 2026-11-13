@@ -37,6 +37,11 @@ Enter
 Type "setopt interactive_comments; node assets/demo/fixture-server.mjs 8787 >/dev/null 2>&1 &!"
 Enter
 Sleep 2s
+Type `export IS_DEMO=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`
+Enter
+# The recording must not pick up the recorder's own CLAUDE.md (language, rules) or print account notices.
+Type `claude() { command claude --setting-sources "" --append-system-prompt "Respond in English." "$@" 2>/dev/null; }`
+Enter
 Type "clear"
 Enter
 Show

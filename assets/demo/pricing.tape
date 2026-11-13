@@ -59,6 +59,11 @@ Sleep 1s
 # Do not record against a stale fixture if the port was already occupied.
 Type "kill -0 $demo_fixture_pid 2>/dev/null || exit 1"
 Enter
+Type `export IS_DEMO=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`
+Enter
+# The recording must not pick up the recorder's own instructions (language, rules).
+Type `claude() { command claude --append-system-prompt "Respond in English." "$@"; }`
+Enter
 Type "clear"
 Enter
 Show
@@ -82,6 +87,9 @@ Enter
 Wait+Screen@60s /Type CONFIRM to proceed/
 Sleep 3s
 Type "CONFIRM"
+Enter
+Sleep 1s
+# The form moves to Accept after the field; press it.
 Enter
 Sleep 30s
 
