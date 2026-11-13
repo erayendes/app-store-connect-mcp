@@ -2,7 +2,7 @@
 
 🇬🇧 [English](PROFILES_en.md) · 🇹🇷 Türkçe
 
-Heimdall, App Store Connect'i yaptığınız işe göre böler. 13 profil arasından seçersiniz ve her biri kendi başına küçük bir MCP sunucusudur: profil adını verirsiniz, yalnızca o işin araçları yüklenir. Büyük profiller ayrıca alt profillere ayrılır; toplam 50 alt profil var.
+Heimdall, App Store Connect'i yaptığınız işe göre böler. ASC-Core dahil 14 profil vardır ve her biri kendi başına küçük bir MCP sunucusudur: profil adını verirsiniz, yalnızca o işin araçları yüklenir. Büyük profiller ayrıca alt profillere ayrılır; toplam 51 alt profil var.
 
 Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı bulma, bütün araçlarda arama ve medya araçları. Bunlar her profilde aynı olduğu için her sunucunun içinde ayrı ayrı değil, bir kez çalışır.
 

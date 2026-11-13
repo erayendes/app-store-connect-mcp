@@ -15,7 +15,7 @@
 > Heimdall'ı üç ay önce yayınladım. O günden bu yana npm'den **6.800'den fazla indirildi**, her ay ortalama 1.700 kez kuruluyor. GitHub'da **50'yi aşkın yıldız** topladı ve 3 ayda **37 sürüm** çıktı. Bu ilgi için hepinize teşekkür ederim; 3.0'ı da tam olarak sizden gelen geri bildirimlerle kurdum.
 >
 > 3.0, Heimdall'ın şimdiye kadarki en büyük güncellemesi:
-> - **Profiller yaptığınız işe göre yeniden bölündü:** 13 profil, 50 alt profil.
+> - **Profiller yaptığınız işe göre yeniden bölündü:** 14 profil, 51 alt profil.
 > - **Görsel ve dosya yönetimi artık yalnızca dört araçla yapılıyor:** 73 ayrı aracı kaldırdık. Ekran görüntüsünden build dosyasına kadar her şeyi `media__list`, `media__upload`, `media__arrange` ve `media__delete` hallediyor.
 > - **İncelemeye gönderdiğiniz her şey tek çağrıyla gidiyor.**
 > - **Onay penceresi artık açık ve anlaşılır.**

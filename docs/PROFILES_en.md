@@ -2,7 +2,7 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](PROFILES_tr.md)
 
-Heimdall cuts App Store Connect by the work you do. You pick from 13 profiles, and each one is its own small MCP server: name a profile, and only that job's tools are loaded. A large profile splits further into sub-profiles, 50 in all.
+Heimdall cuts App Store Connect by the work you do. There are 14 profiles including ASC-Core, each its own small MCP server: name a profile, and only that job's tools are loaded. A large profile splits further into sub-profiles, 51 in all.
 
 Next to whatever you pick, setup registers **ASC-Core**: finding your apps, searching every tool, and the media tools. It is the same for every profile, so it runs once instead of inside each server.
 
