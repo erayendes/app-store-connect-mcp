@@ -58,6 +58,8 @@ npx -y @erayendes/asc-mcp setup
 
 Ask the user to restart their MCP client, then to say *"check the App Store Connect connection"* — that calls `asc__status`, which verifies the credentials with one lightweight request.
 
+For local installation problems, run `npx -y @erayendes/asc-mcp doctor`. It is read-only: it reports Node and package versions, release channel, client registrations and profiles, ASC-Core coverage, and credential availability without reading key contents or making network calls. It does not start client CLIs. Relay the next step it prints; restart the client after registration changes. `doctor` checks only local availability; use `asc__status` for the live connection check. If credentials are missing, the user runs `setup` in a real terminal. Do not inspect the key yourself.
+
 If the user would rather do the whole thing themselves, `setup` alone covers both steps: it collects the credentials *and* registers with every client it finds, ASC-Core included.
 
 **Coming from 2.x.** A config from 2.x names profiles that no longer exist (`app-info`, `monetization:subscription-pricing`). Such a server starts with a single tool that says so. Neither `setup` nor `register` maps an old profile to a new one: they delete such entries (when they are Heimdall's own and clean, as above; others are reported), and the user picks the profiles again — `app-info` is now `general`, the old money sub-profiles are `monetization:subscription`, `in-app-purchases`, `subscription-offers` and the rest.

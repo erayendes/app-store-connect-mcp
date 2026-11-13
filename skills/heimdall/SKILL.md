@@ -20,6 +20,8 @@ session, ASC-Core is not registered for this client; the fix is `register` or
 
 ## The credential boundary
 
+For local installation problems, run `npx -y @erayendes/asc-mcp doctor`. It is read-only: it reports Node and package versions, release channel, client registrations and profiles, ASC-Core coverage, and credential availability without reading key contents or making network calls. It does not start client CLIs. Relay the next step it prints; restart the client after registration changes. `doctor` checks only local availability; use `asc__status` for the live connection check. If credentials are missing, the user runs `setup` in a real terminal. Do not inspect the key yourself.
+
 Going after the API key is the single most common way a session goes wrong: in
 recorded runs, of the sessions that left the tools behind, the largest group
 went hunting for the private key and the next largest called Apple directly

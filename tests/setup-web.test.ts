@@ -10,7 +10,7 @@ import { createServer } from 'node:net';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { runInNewContext } from 'node:vm';
+import { runInNewContext, Script } from 'node:vm';
 // Listing the AI apps on this machine asks some of them over their CLI, which
 // takes seconds; the tests that read the state allow for it.
 import type { WebSetupHandle } from '../src/setup-web.js';
@@ -128,9 +128,34 @@ describe.skipIf(!canListen)('setup --web, a dry run', () => {
     const analytics = state.rows.find((r: any) => r.name === 'analytics').index;
     const applied = await (await post('apply', { clients: ['other'], picked: [analytics] })).json();
     expect(applied.lines[0]).toMatch(/Dry run/);
+    expect(applied.prompts).toHaveLength(3);
+    expect(applied.prompts[0]).toContain('analytics');
 
     await expect(setup.done).resolves.toBeUndefined();
   }, 30_000);
+});
+
+describe.skipIf(!canListen)('setup --web, asking an admin', () => {
+  it('returns a copyable role-specific message and finishes before asking for credentials', async () => {
+    const state = await (await post('state')).json();
+    const analytics = state.rows.find((r: any) => r.name === 'analytics').index;
+    const reply = await (await post('admin-help', { picked: [analytics] })).json();
+    expect(reply.message).toContain('Sales role');
+    expect(reply.message).toContain('https://appstoreconnect.apple.com/access/integrations/api');
+    expect(reply.message).toContain('secure handover');
+    await expect(setup.done).resolves.toBeUndefined();
+    expect(() => readFileSync(join(process.env.ASC_CONFIG_DIR!, 'config.json'))).toThrow();
+  }, 30_000);
+});
+
+describe('setup page script', () => {
+  it('parses with the new copyable examples and admin help controls', () => {
+    const script = SETUP_PAGE.match(/<script>([\s\S]*?)<\/script>/)![1];
+    expect(() => new Script(script)).not.toThrow();
+    expect(SETUP_PAGE).toContain('I don’t have an API key / I am not an Admin');
+    expect(SETUP_PAGE).toContain('r.prompts');
+    expect(SETUP_PAGE).toContain("call('admin-help', selection())");
+  });
 });
 
 describe('setup --web, registration confirmation', () => {

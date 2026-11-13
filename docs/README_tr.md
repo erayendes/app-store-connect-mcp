@@ -1,6 +1,10 @@
-# Heimdall — App Store Connect MCP
+# Heimdall: App Store Connect MCP
 
-**App Store Connect hesabınızın tamamı, tek bir araçta.**
+**App Store Connect'i yapay zekânızla yönetin. Parayla ilgili her değişiklik sizin onayınızı bekler.**
+
+175 ülkede fiyat, teklif ve abonelik, tek cümleyle.
+
+Heimdall, [fastlane](https://fastlane.tools/)'in yerini almaz. CI fastlane'de kalır, elle yaptığınız her şey Heimdall'a geçer.
 
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
@@ -10,19 +14,29 @@
 
 🇬🇧 [English](../README.md) · 🇹🇷 Türkçe
 
-> **Heimdall 3.0 çıktı! 🎉**
->
-> Heimdall'ı üç ay önce yayınladım. O günden bu yana npm'den **6.800'den fazla indirildi**, her ay ortalama 1.700 kez kuruluyor. GitHub'da **50'yi aşkın yıldız** topladı ve 3 ayda **37 sürüm** çıktı. Bu ilgi için hepinize teşekkür ederim; 3.0'ı da tam olarak sizden gelen geri bildirimlerle kurdum.
->
-> 3.0, Heimdall'ın şimdiye kadarki en büyük güncellemesi:
-> - **Profiller yaptığınız işe göre yeniden bölündü:** 13 profil, 50 alt profil.
-> - **Görsel ve dosya yönetimi artık yalnızca dört araçla yapılıyor:** 73 ayrı aracı kaldırdık. Ekran görüntüsünden build dosyasına kadar her şeyi `media__list`, `media__upload`, `media__arrange` ve `media__delete` hallediyor.
-> - **İncelemeye gönderdiğiniz her şey tek çağrıyla gidiyor.**
-> - **Onay penceresi artık açık ve anlaşılır.**
->
-> Ne değiştiğinin hepsi [sürüm notlarında](CHANGELOG.md).
->
-> Gördüğünüz her tuhaflığı [yazarsanız](https://github.com/erayendes/app-store-connect-mcp/issues) çok sevinirim.
+```bash
+npx -y @erayendes/asc-mcp setup
+```
+
+[![Cursor'a kurun](https://img.shields.io/badge/Cursor-Tek_t%C4%B1kla_kurun-000000?style=flat&logo=cursor&logoColor=white)](https://cursor.com/en/install-mcp?name=Heimdall&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBlcmF5ZW5kZXMvYXNjLW1jcCIsImdlbmVyYWwiLCItLXdpdGgtY29yZSJdfQ==)
+[![VS Code'a kurun](https://img.shields.io/badge/VS_Code-Tek_t%C4%B1kla_kurun-0098FF?style=flat&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=Heimdall&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40erayendes%2Fasc-mcp%22%2C%22general%22%2C%22--with-core%22%5D%7D)
+
+Bu iki düğme, `general` profilini ve ASC-Core'u kimlik bilgisi olmadan Cursor'a ya da VS Code'a ekler. Anahtarınızı vermek için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın.
+
+<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Bir yapay zekâya aboneliğin dünya genelindeki fiyatı soruluyor; Heimdall tek araç çağrısıyla cevaplıyor" width="720">
+
+<sub>Gerçek bir yapay zekâ oturumu, hızlandırılmış. Hesap, kayıt herkese açık olabilsin diye temsili bir hesap.</sub>
+
+|  | Heimdall | Tipik bir App Store Connect MCP'si | [asc CLI](https://github.com/rorkai/App-Store-Connect-CLI) |
+|---|---|---|---|
+| **Yazmadan önce** | Fiyat, silme, imzalama ve erişim değişikliklerinde CONFIRM yazarsınız; müşteriye ulaşan her şey için evet ya da hayır dersiniz. `--read-only` bütün yazma araçlarını gizler. Mac'te yapay zekânın basamadığı bir onay penceresi açılır. | Çoğunlukla yapay zekâ uygulamasının kendi araç onayından başka bir şey yok; olsa olsa salt okunur bir mod ya da yapay zekânın kendisinin verebildiği bir `confirm=true` parametresi. | Ajanın kendisinin geçtiği `--confirm` bayrakları. |
+| **StoreKit 2 ve fiyatlandırma** | Müşteri işlemleri için App Store Server API araçları. Tek çağrı yaklaşık 175 ülkede fiyatı okur ya da ayarlar; teklifler ve yeni abonelikler de birer çağrı. | API'nin elle seçilmiş bir dilimi (27 araçtan birkaç yüz araca kadar). İncelenen sunucuların hiçbiri StoreKit 2 Server API'yi sunmuyor. | StoreKit Server API'yi komut satırından kapsar. |
+| **Kurulum** | `npx -y @erayendes/asc-mcp setup`. Tarayıcıdaki sihirbaz anahtarı macOS Keychain'de saklar ve Heimdall'ı bulduğu her yapay zekâ uygulamasına kaydeder. | Yapay zekâ uygulamasının JSON yapılandırmasını elle düzenler ve anahtarınızın yolunu yazarsınız. | CLI'yi ve Agent Skills'i kurarsınız; App Store Connect web oturumu üzerinden API anahtarı da oluşturabilir. |
+
+Daha ayrıntılı karşılaştırma için [Karşılaştırma](COMPARISON_tr.md) sayfasına bakın.
+
+> **Heimdall 3.0 çıktı.** Profiller yaptığınız işe göre bölündü, 73 ayrı aracın yerini dört medya aracı aldı ve incelemeye gönderdiğiniz her şey tek çağrıyla gidiyor. Üç ayda npm'den 6.800'den fazla indirme için teşekkür ederim. Ne değiştiğinin hepsi [sürüm notlarında](CHANGELOG.md); gördüğünüz her tuhaflığı [yazarsanız](https://github.com/erayendes/app-store-connect-mcp/issues) çok sevinirim.
 
 **Sorun yanıtlasın, isteyin yapsın.**
 
@@ -35,11 +49,6 @@
 > - *"Xcode Cloud build'im neden patladı?"*
 
 Yani App Store Connect ekranlarında yapabildiğiniz işlerin neredeyse tamamını artık yapay zekâya söyleyerek yaptırabilirsiniz. Daha fazla kullanım örneği için [Rehber](GUIDE_tr.md#örnekler)i inceleyin.
-
-<!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Bir yapay zekâya aboneliğin dünya genelindeki fiyatı soruluyor; Heimdall tek araç çağrısıyla cevaplıyor" width="720">
-
-<sub>Gerçek bir yapay zekâ oturumu, hızlandırılmış. Hesap, kayıt herkese açık olabilsin diye temsili bir hesap.</sub>
 
 ### Heimdall
 
@@ -100,9 +109,6 @@ flowchart LR
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-alert.png" alt="Heimdall'ın Mac'teki onay penceresi, standart bir macOS uyarısı: Set the price of com.example.nimbus.pro.weekly in every country from 4.99 in United States? Nimbus Notes, abonelik; mümkün olan en kısa sürede başlar; diğer ülkeler Apple'ın karşılık fiyatını alır; mevcut aboneler fiyatlarını korur. Düğmeler: Cancel ve Set." width="360">
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
-
-### Fastlane'in yerine değil, yanında
-Heimdall, [Fastlane](https://fastlane.tools/)'in alternatifi değil, tamamlayıcısıdır. **Pipeline için Fastlane, elle yaptığınız her şey için Heimdall**.
 
 ### Kurulum
 

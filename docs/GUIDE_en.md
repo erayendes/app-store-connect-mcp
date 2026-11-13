@@ -2,6 +2,8 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](GUIDE_tr.md)
 
+For scope, trade-offs and when another tool fits better, see the [comparison with asc CLI, fastlane and other MCP servers](COMPARISON_en.md).
+
 ## Confirmation before risky changes
 
 **Confirmation before risky changes is on by default.**

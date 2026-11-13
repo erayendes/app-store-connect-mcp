@@ -51,6 +51,14 @@ Setup checks your credentials with Apple before saving them. A key Apple rejects
 
 When it's done, restart your app and say *"Check my App Store Connect connection."*
 
+Setup ends with three prompts you can copy into your AI app, chosen for the profiles you registered. A successful `asc__status` connection check also returns three examples. For example, the monetization profile suggests reading subscription prices and checking the subscription catalog.
+
+### If you do not have an API key
+
+After choosing your profiles, select **I don’t have an API key / I am not an Admin**. In the terminal, type **h** at the key question. Setup prints a message you can send to your App Store Connect Account Holder or Admin, with the role your selections need and the [API keys page](https://appstoreconnect.apple.com/access/integrations/api). Setup then exits without saving credentials or changing registrations.
+
+The message asks the administrator to create a team API key and arrange a secure handover of its `.p8` file. Send the message yourself. Run setup again in your own terminal when the key is ready; keep the private key out of AI chats.
+
 > - The key is stored in the **macOS Keychain**. Elsewhere, setup saves the path to the key file.
 > - **Everything that isn't secret** goes into `~/.config/asc-mcp/config.json`. Every profile reads this shared file.
 > - **If you've run setup before**, it finds your saved Key ID and Issuer ID and offers to reuse them, so you only pick profiles again.
@@ -128,6 +136,16 @@ Ask the AI. Heimdall finds the tool and, if needed, tells you how to add it. So 
 Read-only mode, trying changes without making them, a second App Store Connect account, running without setup: all in [Configuration](CONFIGURATION_en.md).
 
 ## Troubleshooting
+
+Start with the local report:
+
+```bash
+npx -y @erayendes/asc-mcp doctor
+```
+
+`doctor` reports your Node and package versions, stable or beta release channel, each MCP client found, and its Heimdall entries and profile selections. It checks ASC-Core separately for each settings file and reports credential availability from the environment or shared config: whether a Keychain item is present or a key file is readable. It reports a next step for each problem.
+
+The command reads local settings and checks key references. It leaves files unchanged, makes no network calls and never reads key file contents or retrieves the Keychain password. Client environment overrides that cannot be inspected are reported as unknown. It does not start client CLIs. Restart your MCP client after registration changes, then ask it to call `asc__status` to verify the connection with Apple. If credentials are missing, run `setup` yourself in a real terminal.
 
 | Symptom | What's going on | Fix |
 |:--|:--|:--|

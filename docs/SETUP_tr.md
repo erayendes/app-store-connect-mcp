@@ -51,6 +51,14 @@ Setup anahtar bilgilerini kaydetmeden önce Apple'a doğrular. Apple'ın reddett
 
 Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantısını kontrol et"* deyin.
 
+Setup sonunda, kaydettiğiniz profillere göre seçilmiş ve AI uygulamanıza kopyalayabileceğiniz üç hazır istem gösterilir. Başarılı bir `asc__status` bağlantı kontrolü de üç örnek döndürür. Örneğin monetization profili, abonelik fiyatlarını okumayı ve abonelik kataloğunu kontrol etmeyi önerir.
+
+### API anahtarınız yoksa
+
+Profillerinizi seçtikten sonra **I don’t have an API key / I am not an Admin** seçeneğini kullanın. Terminalde anahtar sorusunda **h** yazın. Setup, App Store Connect Account Holder veya Admin kullanıcınıza gönderebileceğiniz bir mesaj hazırlar. Mesaj, seçtiğiniz işler için gereken rolü ve [API anahtarları sayfasını](https://appstoreconnect.apple.com/access/integrations/api) içerir. Ardından kimlik bilgilerini kaydetmeden ve istemci kayıtlarını değiştirmeden kapanır.
+
+Mesaj, yöneticinizden bir ekip API anahtarı oluşturmasını ve `.p8` dosyasını size güvenli bir yolla iletmesini ister. Mesajı kendiniz gönderin. Anahtar hazır olduğunda setup'ı kendi terminalinizde yeniden çalıştırın; özel anahtarı AI sohbetlerine yazmayın.
+
 > - Anahtar **macOS Keychain**'de saklanır. macOS dışında dosya yoluyla referanslanır.
 > - **Gizli olmayan her şey** `~/.config/asc-mcp/config.json`'a yazılır. Her profil bu ortak yapılandırmayı okur.
 > - **`setup`'ı daha önce çalıştırdıysanız**, kayıtlı Key ID ve Issuer ID'nizi bulur ve bunları yeniden kullanıp yalnızca profilleri yeniden seçmeyi önerir.
@@ -128,6 +136,16 @@ Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini sö
 Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect hesabı, setup olmadan çalıştırmak: hepsi [Yapılandırma](CONFIGURATION_tr.md) sayfasında.
 
 ## Sorun giderme
+
+Önce yerel raporu çalıştırın:
+
+```bash
+npx -y @erayendes/asc-mcp doctor
+```
+
+`doctor`, Node ve paket sürümlerinizi, stable veya beta yayın kanalını, bulunan MCP istemcilerini ve her birindeki Heimdall kayıtlarıyla seçilen profilleri gösterir. ASC-Core'u her ayar dosyası için ayrı kontrol eder. Ortam değişkenleri veya ortak yapılandırmadaki kimlik bilgileri için Keychain öğesinin bulunup bulunmadığını ya da anahtar dosyasının okunabilirliğini denetler. Her sorun için bir sonraki adımı belirtir.
+
+Komut yerel ayarları okur ve anahtar referanslarını kontrol eder. Dosyaları değiştirmez, ağ isteği yapmaz, anahtar dosyasının içeriğini okumaz ve Keychain parolasını almaz. İncelenemeyen istemci ortam ayarları belirsiz olarak raporlanır. İstemci CLI'larını başlatmaz. Kayıt değişikliklerinden sonra MCP istemcinizi yeniden başlatın; Apple bağlantısını doğrulamak için istemcinizden `asc__status` çağırmasını isteyin. Kimlik bilgileri eksikse `setup`'ı gerçek bir terminalde kendiniz çalıştırın.
 
 | Belirti | Ne oluyor | Çözüm |
 |:--|:--|:--|

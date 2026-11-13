@@ -310,11 +310,13 @@ describe('version surfaces', () => {
     expect(read(file)).not.toContain('@erayendes/asc-mcp@beta');
   });
 
-  it('open both changelog sections with this version', () => {
+  it('opens both changelog sections with this version after optional unreleased notes', () => {
     const changelog = read('docs/CHANGELOG.md');
     for (const section of ['## English', '## Türkçe']) {
-      const rest = changelog.slice(changelog.indexOf(section));
-      expect(/^### \[([^\]]+)\]/m.exec(rest)?.[1], section).toBe(version);
+      const rest = changelog.slice(changelog.indexOf(section) + section.length).split(/^## /m)[0];
+      const entries = [...rest.matchAll(/^### \[([^\]]+)\]/gm)].map((m) => m[1]);
+      if (['Unreleased', 'Yayımlanmamış'].includes(entries[0])) entries.shift();
+      expect(entries[0], section).toBe(version);
     }
   });
 });

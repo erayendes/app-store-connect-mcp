@@ -8,6 +8,12 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- Added `doctor`, a read-only local report of Node and package versions, release channel, MCP client registrations, ASC-Core and credential availability. It reads no key contents and makes no network calls; `asc__status` remains the live connection check.
+- Setup and successful `asc__status` connection replies now show three copyable prompts for the selected profiles.
+- Setup has an “I don’t have an API key / I am not an Admin” path. It prints a role-specific message for the Account Holder or Admin and exits without changing credentials or registrations.
+
 ### [3.0.0] — 2026-11-08
 
 Hi,
@@ -484,6 +490,12 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- `doctor` eklendi: Node ve paket sürümleri, yayın kanalı, MCP istemci kayıtları, ASC-Core ve kimlik bilgilerinin bulunabilirliği için salt okunur yerel rapor. Anahtar içeriğini okumaz ve ağ isteği yapmaz; canlı bağlantı kontrolü `asc__status` ile yapılır.
+- Setup sonunda ve başarılı `asc__status` bağlantı yanıtlarında seçilen profillere uygun üç hazır istem gösterilir.
+- Setup'a “I don’t have an API key / I am not an Admin” yolu eklendi. Account Holder veya Admin için gereken rolü içeren bir mesaj hazırlar; kimlik bilgilerini veya kayıtları değiştirmeden kapanır.
 
 ### [3.0.0] — 2026-11-08
 

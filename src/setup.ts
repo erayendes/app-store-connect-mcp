@@ -32,6 +32,7 @@ import { TokenProvider, type JwtCredentials } from './core/jwt.js';
 import { loadConfig } from './core/config.js';
 import { AscHttpClient } from './core/http.js';
 import { AscApiError } from './core/errors.js';
+import { formatExamplePrompts, registeredProfileSpecs } from './activation.js';
 import { runChecklist, type ChecklistItem } from './checklist.js';
 import { installSkill, removeSkill } from './skill.js';
 import {
@@ -594,6 +595,23 @@ const KEYCHAIN_SERVICE = 'asc-mcp';
 /** Where the Key ID, Issuer ID and .p8 come from. */
 export const KEYS_URL = 'https://appstoreconnect.apple.com/access/integrations/api';
 
+/** A message to copy, never sent by setup. The role comes from the selected work. */
+export function adminRequestMessage(role: string): string {
+  return `Hello, I would like to use Heimdall with our App Store Connect account.\n` +
+    `Please create a team API key with the ${role} role for the work I selected:\n${KEYS_URL}\n` +
+    `Only the Account Holder or an Admin can create a team API key. If API access has not been enabled, ` +
+    `the Account Holder needs to enable it first.\n` +
+    `Please share the Key ID and Issuer ID with me, and arrange a secure handover of the .p8 file. ` +
+    `I will run Heimdall setup in my own terminal. Please keep the private key out of AI chats.`;
+}
+
+export async function offerAdminHelp(ask: Ask, role: string): Promise<boolean> {
+  const answer = await ask('\nPress Enter to continue with a key, or type h for "I don’t have an API key / I am not an Admin": ', false);
+  if (!/^h$/i.test(answer.trim())) return false;
+  console.log(`\nSend this message to your App Store Connect Account Holder or Admin:\n\n${adminRequestMessage(role)}\n\nSetup stopped. Nothing was changed. Run setup again when the key is ready.`);
+  return true;
+}
+
 /**
  * Store the private key and write the shared config. On macOS the key goes to
  * the Keychain. Elsewhere the config points at the .p8: at the file the user
@@ -789,6 +807,7 @@ export async function runSetup(): Promise<void> {
     console.log(`\n📦 Picked: ${tools} tools · about ${Math.max(1, Math.round((tools * TOKENS_PER_TOOL) / 1000))}k tokens for the AI to read.`);
     const { role, why } = neededRole(picked);
     console.log(`🔑 You need a key with the ${role} role. ${why}`);
+    if (await offerAdminHelp(ask, role)) return;
 
     // A saved key is offered first, with whether it fits.
     const existing = readSharedConfig();
@@ -892,6 +911,9 @@ export async function runSetup(): Promise<void> {
     };
     const reachable = clients.map(writable);
     await reconcileRegistration(reachable, chosen, registeredAcross(reachable), ask, CLIENTS.map(writable));
+    console.log(`\n${formatExamplePrompts(clients.some((c) => c.id === 'other')
+      ? [...registeredProfileSpecs(reachable), ...chosen]
+      : registeredProfileSpecs(reachable))}`);
   } finally {
     rl.close();
     // The picker leaves stdin flowing so later prompts work; release it now so

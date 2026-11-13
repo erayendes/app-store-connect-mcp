@@ -814,6 +814,9 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           macroOffered,
           profileReport,
           ownProfile: selection.profile.name,
+          exampleSpecs: [selection.partial
+            ? `${selection.profile.name}:${[...loadedSubs].map((s) => s.name).join(',')}`
+            : selection.profile.name],
           // Core answers for the whole catalogue: it is the one server every
           // setup registers, so "what else is there" is its question to answer.
           catalogue: Boolean(core),

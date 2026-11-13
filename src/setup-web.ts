@@ -56,9 +56,13 @@ import {
   saveCredentials,
   selectionToSpecs,
   verifyCredentials,
+  adminRequestMessage,
+  neededRole,
+  leafRows,
   type ClientPlan,
 } from './setup.js';
 import { SETUP_PAGE } from './setup-page.js';
+import { examplePrompts, formatExamplePrompts, registeredProfileSpecs } from './activation.js';
 
 export interface WebSetupOptions {
   /** Walk through every step but write nothing and skip Apple. */
@@ -254,8 +258,21 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       }
       for (const line of lines) console.log(line);
       if (next) console.log(`\n${next}`);
+      const specs = dryRun || chosenClients(body.clients).some((c) => c.id === 'other')
+        ? chosenSpecs(body.picked) : registeredProfileSpecs(chosenClients(body.clients));
+      const prompts = examplePrompts(specs);
+      console.log(`\n${formatExamplePrompts(specs)}`);
       setImmediate(finish);
-      return { lines, next };
+      return { lines, next, prompts };
+    },
+
+    async 'admin-help'(body) {
+      const { role } = neededRole(leafRows(rows, chosenSpecs(body.picked)));
+      const message = adminRequestMessage(role);
+      verified = undefined;
+      console.log(`\nSend this message to your App Store Connect Account Holder or Admin:\n\n${message}\n\nSetup stopped. Nothing was changed. Run setup again when the key is ready.`);
+      setImmediate(finish);
+      return { message };
     },
 
     async cancel() {

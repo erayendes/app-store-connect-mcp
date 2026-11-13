@@ -2,6 +2,8 @@
 
 🇬🇧 [English](GUIDE_en.md) · 🇹🇷 Türkçe
 
+Kapsam, eksikler ve hangi durumda başka bir aracın uygun olduğu için [asc CLI, fastlane ve diğer MCP sunucularıyla karşılaştırmaya](COMPARISON_tr.md) bakın.
+
 ## Riskli işlemlerde onay
 
 **Riskli değişikliklerden önce onay varsayılan olarak açıktır.**

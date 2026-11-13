@@ -64,6 +64,9 @@ Commands:
                          it does clear entries left over from 2.x.
                          --clients=<ids>  limit to some clients; default is
                          every one found on this machine.
+  doctor                 Report local versions, client registrations, ASC-Core
+                         and credential availability. Read-only; no network
+                         calls or key contents. Use asc__status for a live check.
 
 Options:
   --read-only            Expose only tools that cannot modify anything.
@@ -109,6 +112,12 @@ async function main(): Promise<void> {
   // A 2.x config may still pass these; say so rather than start without them.
   for (const flag of ['--domains', '--include-deprecated']) {
     if (argv.some((a) => a === flag || a.startsWith(`${flag}=`))) console.error(`${flag} was removed in 3.0 and is ignored.`);
+  }
+
+  if (positional[0] === 'doctor') {
+    const { doctorReport } = await import('./doctor.js');
+    console.log(doctorReport());
+    return;
   }
 
   if (positional[0] === 'register') {
