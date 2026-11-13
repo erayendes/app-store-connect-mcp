@@ -96,7 +96,7 @@ flowchart LR
 
 **If your AI app can't show the question** (like the Code tab in Claude Desktop), Heimdall asks in a window of its own on a Mac. Its button says what it does: Remove, Upload, Delete. The AI can neither see nor press it, and waits until you answer.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall's confirmation on a Mac: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png will be taken off this page; the file stays in the media library. Buttons: Cancel and Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-alert.png" alt="Heimdall's confirmation on a Mac, a standard macOS alert: Set the price of com.example.nimbus.pro.weekly in every country from 4.99 in United States? Nimbus Notes, subscription; starts as soon as possible; every other country gets Apple's equivalent price; current subscribers keep their price. Buttons: Cancel and Set." width="360">
 
 More in [Security](.github/SECURITY.md).
 

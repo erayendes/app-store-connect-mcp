@@ -97,7 +97,7 @@ flowchart LR
 
 **Yapay zekâ uygulamanız soruyu gösteremiyorsa** (Claude Desktop'taki Code sekmesi gibi) Heimdall, Mac'te kendi penceresiyle sorar. Düğmesi ne yapacağını söyler: Remove, Upload, Delete. Yapay zekâ bu pencereyi ne görebilir ne de basabilir; siz cevap verene kadar bekler.
 
-<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-panel.png" alt="Heimdall'ın Mac'teki onay penceresi: Remove a screenshot from the App Store page? Milowda Test App, iOS 1.0, Turkish; shot2.png sayfadan kaldırılacak, dosya medya kütüphanesinde kalacak. Düğmeler: Cancel ve Remove." width="552">
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/confirm-alert.png" alt="Heimdall'ın Mac'teki onay penceresi, standart bir macOS uyarısı: Set the price of com.example.nimbus.pro.weekly in every country from 4.99 in United States? Nimbus Notes, abonelik; mümkün olan en kısa sürede başlar; diğer ülkeler Apple'ın karşılık fiyatını alır; mevcut aboneler fiyatlarını korur. Düğmeler: Cancel ve Set." width="360">
 
 Detaylar için → [Güvenlik](../.github/SECURITY.md#türkçe).
 
