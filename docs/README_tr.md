@@ -4,8 +4,6 @@
 
 175 ülkede fiyat, teklif ve abonelik, tek cümleyle.
 
-Heimdall, [fastlane](https://fastlane.tools/)'in yerini almaz. CI fastlane'de kalır, elle yaptığınız her şey Heimdall'a geçer.
-
 [![npm version](https://img.shields.io/npm/v/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/%40erayendes%2Fasc-mcp.svg)](https://www.npmjs.com/package/@erayendes/asc-mcp)
 [![CI](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/erayendes/app-store-connect-mcp/actions/workflows/ci.yml)
@@ -27,14 +25,6 @@ Bu iki düğme Cursor'a ya da VS Code'a **ASC-Default**'u ekler: core, general v
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo.gif" alt="Bir yapay zekâya aboneliğin dünya genelindeki fiyatı soruluyor; Heimdall tek araç çağrısıyla cevaplıyor" width="720">
 
 <sub>Gerçek bir yapay zekâ oturumu, hızlandırılmış. Hesap, kayıt herkese açık olabilsin diye temsili bir hesap.</sub>
-
-|  | Heimdall | Tipik bir App Store Connect MCP'si | [asc CLI](https://github.com/rorkai/App-Store-Connect-CLI) |
-|---|---|---|---|
-| **Yazmadan önce** | Fiyat, silme, imzalama ve erişim değişikliklerinde CONFIRM yazarsınız; müşteriye ulaşan her şey için evet ya da hayır dersiniz. `--read-only` bütün yazma araçlarını gizler. Yapay zekâ uygulaması bu soruyu gösteremediğinde Mac'te yapay zekânın basamadığı bir onay penceresi açılır. | Çoğunlukla yapay zekâ uygulamasının kendi araç onayından başka bir şey yok; olsa olsa salt okunur bir mod ya da yapay zekânın kendisinin verebildiği bir `confirm=true` parametresi. | Ajanın kendisinin geçtiği `--confirm` bayrakları. |
-| **StoreKit 2 ve fiyatlandırma** | Müşteri işlemleri için App Store Server API araçları. Tek çağrı yaklaşık 175 ülkede fiyatı okur ya da ayarlar; teklifler ve yeni abonelikler de birer çağrı. | API'nin elle seçilmiş bir dilimi (27 araçtan birkaç yüz araca kadar). İncelediğimiz diğer sunucuların belgelerinde StoreKit 2 Server API desteği görünmüyor. | StoreKit Server API'yi komut satırından kapsar. |
-| **Kurulum** | `npx -y @erayendes/asc-mcp setup`. Tarayıcıdaki sihirbaz anahtarı macOS Keychain'de saklar ve Heimdall'ı bulduğu her yapay zekâ uygulamasına kaydeder. | Yapay zekâ uygulamasının JSON yapılandırmasını elle düzenler ve anahtarınızın yolunu yazarsınız. | CLI'yi ve Agent Skills'i kurarsınız; App Store Connect web oturumu üzerinden API anahtarı da oluşturabilir. |
-
-Daha ayrıntılı karşılaştırma için [Karşılaştırma](COMPARISON_tr.md) sayfasına bakın.
 
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/demo-pricing.gif" alt="Bir yapay zekâ ABD'de aboneliği 4,99 $ yapıyor; Heimdall yazmadan önce CONFIRM formu gösteriyor, ardından 22 ülkedeki yeni fiyatı listeliyor" width="720">
 

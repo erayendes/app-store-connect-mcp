@@ -38,8 +38,7 @@ Added `npx -y @erayendes/asc-mcp doctor`, a read-only local report of:
 
 #### First-screen docs, one-click install and plug-ins
 
-- **One-click install and refreshed README:** `README.md` and `docs/README_tr.md` now open with one-click Cursor and VS Code install buttons (adding the read-only ASC-Default, which starts without a key) and a three-row comparison table.
-- **Comparison page:** added [Comparison](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_en.md) (and [Türkçe](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_tr.md)), covering scope, write controls, where Heimdall is behind and when `asc CLI`, `fastlane` or another MCP fits better.
+- **One-click install and refreshed README:** `README.md` and `docs/README_tr.md` now open with one-click Cursor and VS Code install buttons (adding the read-only ASC-Default, which starts without a key).
 - **Plug-ins pinned to the release:** the plug-in generator now pins every `.mcp.json` to `@erayendes/asc-mcp@<version>`, generates a `README.md` for each profile plug-in explaining what runs and how the key is handled, and moves the skill plug-in into its own `plugins/skill/` bundle.
 - **New plug-in names in Xcode:** plug-ins are now named `heimdall` and `asc-<area>` (for example `asc-testflight`) instead of "Heimdall | ASC …", because the Claude plug-in directory only accepts lowercase names. If you added Heimdall to Xcode before, the plug-ins show up under the new names after the update; remove the old ones once the new ones are selected.
 
@@ -561,8 +560,7 @@ Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki canlı 
 
 #### İlk ekran, tek tıkla kurulum ve eklentiler
 
-- **Tek tıkla kurulum ve yenilenen README:** `README.md` ve `docs/README_tr.md` artık ilk ekranda anahtar olmadan açılan salt okunur ASC-Default'u ekleyen tek tıkla Cursor ve VS Code kurulum düğmelerini ve üç satırlık karşılaştırma tablosunu gösteriyor.
-- **Karşılaştırma sayfası:** [Karşılaştırma](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_tr.md) (ve [İngilizce](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_en.md)) eklendi; kapsamı, yazma kontrollerini, Heimdall'ın geride kaldığı alanları ve ne zaman `asc CLI`, `fastlane` veya başka bir MCP'nin daha uygun olduğunu anlatıyor.
+- **Tek tıkla kurulum ve yenilenen README:** `README.md` ve `docs/README_tr.md` artık ilk ekranda anahtar olmadan açılan salt okunur ASC-Default'u ekleyen tek tıkla Cursor ve VS Code kurulum düğmelerini gösteriyor.
 - **Sürüme sabitlenmiş eklentiler:** eklenti üreticisi artık her `.mcp.json` dosyasını `@erayendes/asc-mcp@<version>` sürümüne sabitliyor, her profil eklentisi için ne çalıştığını ve anahtarın nasıl tutulduğunu anlatan bir `README.md` üretiyor ve beceri eklentisini kendi `plugins/skill/` paketine taşıyor.
 - **Xcode'da yeni eklenti adları:** eklentilerin adı artık "Heimdall | ASC …" yerine `heimdall` ve `asc-<alan>` (örneğin `asc-testflight`), çünkü Claude eklenti dizini yalnızca küçük harfli adları kabul ediyor. Heimdall'ı Xcode'a daha önce eklediyseniz güncellemeden sonra eklentiler yeni adlarıyla görünür; yenilerini seçtikten sonra eskilerini kaldırın.
 
