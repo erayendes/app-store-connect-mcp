@@ -237,7 +237,9 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
       if (dryRun) {
         log('Dry run — nothing was written and Apple was not contacted.');
         // The terminal's own wording, so a dry run reads like the plan it rehearses.
-        for (const p of steps) for (const line of planLines(p)) if (line) log(line);
+        // One block per client: the page joins log entries with a blank line,
+        // which spread every path and server of a client apart.
+        for (const p of steps) log(planLines(p).filter(Boolean).map((l) => l.replace(/^\n+/, '')).join('\n'));
       } else {
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;
         const extras = {

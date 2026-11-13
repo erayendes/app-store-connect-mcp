@@ -128,6 +128,9 @@ describe.skipIf(!canListen)('setup --web, a dry run', () => {
     const analytics = state.rows.find((r: any) => r.name === 'analytics').index;
     const applied = await (await post('apply', { clients: ['other'], picked: [analytics] })).json();
     expect(applied.lines[0]).toMatch(/Dry run/);
+    // One block per client: its paths and servers sit on consecutive lines.
+    expect(applied.lines[1]).toContain('\n');
+    expect(applied.lines[1]).not.toContain('\n\n');
     expect(applied.prompts).toHaveLength(3);
     expect(applied.prompts[0]).toContain('analytics');
 
