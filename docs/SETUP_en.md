@@ -2,6 +2,8 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](SETUP_tr.md)
 
+Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
+
 Heimdall runs anywhere Node.js **20.19+** runs: macOS, Linux and Windows. One feature is macOS-only: keeping the `.p8` key in the **macOS Keychain**. On Linux and Windows, setup saves the path to the key file instead. One more difference: automatic registration with the Claude desktop app currently works on macOS only.
 
 ## Create an API key
@@ -22,6 +24,8 @@ npx -y @erayendes/asc-mcp setup
 ```
 
 **Do it in your browser.** Setup first asks whether to continue in the browser or the terminal; pick the browser. A page opens on your own computer and walks you through the four steps below.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.gif" alt="The browser setup from start to finish: two profiles picked, a key added, three AI apps found, and the summary with three ready prompts" width="720">
 
 ### Save your credentials once — the setup wizard
 
@@ -50,6 +54,14 @@ The wizard asks in the order you'd think it through, in the browser and the term
 Setup checks your credentials with Apple before saving them. A key Apple rejects is not saved; if Apple cannot be reached, setup says so and saves it anyway. Before the profiles are written to your apps, the wizard shows the plan and asks you to confirm once.
 
 When it's done, restart your app and say *"Check my App Store Connect connection."*
+
+Setup ends with three prompts you can copy into your AI app, chosen for the profiles you registered. A successful `asc__status` connection check also returns three examples. For example, the monetization profile suggests reading subscription prices and checking the subscription catalog.
+
+### If you do not have an API key
+
+After choosing your profiles, select **I don’t have an API key / I am not an Admin**. In the terminal, type **h** at the key question. Setup prints a message you can send to your App Store Connect Account Holder or Admin, with the role your selections need and the [API keys page](https://appstoreconnect.apple.com/access/integrations/api). Setup then exits without saving credentials or changing registrations.
+
+The message asks the administrator to create a team API key and arrange a secure handover of its `.p8` file. Send the message yourself. Run setup again in your own terminal when the key is ready; keep the private key out of AI chats.
 
 > - The key is stored in the **macOS Keychain**. Elsewhere, setup saves the path to the key file.
 > - **Everything that isn't secret** goes into `~/.config/asc-mcp/config.json`. Every profile reads this shared file.
@@ -96,7 +108,7 @@ You don't have to install everything up front. Start with the few profiles you n
 - **Run setup again**: `npx -y @erayendes/asc-mcp setup`.
 - It reuses your credentials and shows the pickers again.
 - Apps and profiles come pre-ticked the way they are now. Tick or untick; setup adds and removes them in every app you selected. An app you untick loses Heimdall.
-- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so. A 2.x entry that ran without a profile is left alone; delete it from your app's MCP settings yourself.
+- Coming from 2.x? Profile names changed in 3.0: `app-info` is now `general`, and most sub-profiles were cut again. Setup doesn't translate the old names. It removes the entries whose profile no longer exists, when they are Heimdall's own and carry no credentials or `envFile` of their own; any others it lists and leaves alone. Then you pick your profiles again. Until you do, a server with an old name shows a single tool that says so. A 2.x entry that ran without a profile is left alone and now starts ASC-Default, the read-only starter set. After setup, you can remove that entry from your app’s MCP settings to avoid duplicate read tools.
 
 ## When you need a tool you haven't installed
 
@@ -111,7 +123,7 @@ Ask the AI. Heimdall finds the tool and, if needed, tells you how to add it. So 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode's Add Plug-in screen with the repository URL entered" width="560">
 
-4. Xcode shows a "Choose Plug-ins" screen with a checkbox for each plug-in. Select **Heimdall | ASC Skill** and the areas you need. Xcode runs each plug-in on its own, so every one carries the ASC-Core tools itself; there is no separate core plug-in.
+4. Xcode shows a "Choose Plug-ins" screen with a checkbox for each plug-in. Select **heimdall** (the skill) and the `asc-*` areas you need. Xcode runs each plug-in on its own, so every one carries the ASC-Core tools itself; there is no separate core plug-in.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode's Choose Plug-ins screen: Heimdall profiles, each with a checkbox" width="560">
@@ -128,6 +140,16 @@ Ask the AI. Heimdall finds the tool and, if needed, tells you how to add it. So 
 Read-only mode, trying changes without making them, a second App Store Connect account, running without setup: all in [Configuration](CONFIGURATION_en.md).
 
 ## Troubleshooting
+
+Start with the local report:
+
+```bash
+npx -y @erayendes/asc-mcp doctor
+```
+
+`doctor` reports your Node and package versions, stable or beta release channel, each MCP client found, and its Heimdall entries and profile selections. It checks ASC-Core separately for each settings file and reports credential availability from the environment or shared config: whether a Keychain item is present or a key file is readable. It reports a next step for each problem.
+
+The command reads local settings and checks key references. It leaves files unchanged, makes no network calls and never reads key file contents or retrieves the Keychain password. Client environment overrides that cannot be inspected are reported as unknown. It does not start client CLIs. Restart your MCP client after registration changes, then ask it to call `asc__status` to verify the connection with Apple. If credentials are missing, run `setup` yourself in a real terminal.
 
 | Symptom | What's going on | Fix |
 |:--|:--|:--|

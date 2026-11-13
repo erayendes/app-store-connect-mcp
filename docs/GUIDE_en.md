@@ -2,6 +2,10 @@
 
 🇬🇧 English · 🇹🇷 [Türkçe](GUIDE_tr.md)
 
+Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
+
+For scope, trade-offs and when another tool fits better, see the [comparison with asc CLI, fastlane and other MCP servers](COMPARISON_en.md).
+
 ## Confirmation before risky changes
 
 **Confirmation before risky changes is on by default.**
@@ -47,7 +51,7 @@ The workflows below turn chains like that into a single step. You don't have to 
 | pulling reviews and sorting them by hand | `reviews_ai__triage`, `reviews_ai__daily_briefing`, `reviews_ai__draft_response` | `marketing:customer-reviews` |
 | listing your apps, checking each one's version, then making sense of their App Store status | `asc__account_status` — which app is live, which is on its way, and whether the next move is yours or Apple's | ASC-Core |
 
-"ASC-Core" means the tool is on ASC-Core, the server setup registers next to your profiles. A profile server does not carry it; an app that runs only one server gets it with `--with-core`.
+"ASC-Core" means the tool is on ASC-Core, the server setup registers next to your profiles. A profile server does not carry it; an app that runs only one server gets it with `--with-core`. ASC-Default includes its read tools too.
 
 `pricing__equalize_price` changes prices in about 175 countries at once, so it goes straight to your revenue. That's why it asks for your approval before it runs, unless you turned confirmations off with `--no-confirm`.
 

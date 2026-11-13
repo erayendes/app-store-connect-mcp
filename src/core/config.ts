@@ -97,7 +97,10 @@ function parseList(value: string | undefined): string[] | undefined {
   return items.length ? items : undefined;
 }
 
-export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig {
+export function loadConfig(
+  argv: string[] = process.argv.slice(2),
+  options: { allowMissingCredentials?: boolean } = {}
+): ServerConfig {
   const env = process.env;
 
   const flag = (name: string) => argv.includes(`--${name}`);
@@ -136,7 +139,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
     missing.push('ASC_PRIVATE_KEY_PATH (or ASC_PRIVATE_KEY, or ASC_PRIVATE_KEY_KEYCHAIN)');
   }
 
-  if (missing.length) {
+  if (missing.length && !options.allowMissingCredentials) {
     throw new ConfigError(
       `Missing required configuration: ${missing.join(', ')}.\n` +
         `Either run "npx -y ${PACKAGE} setup" once (shared by every profile), or ` +
@@ -158,8 +161,8 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): ServerConfig
 
   return {
     credentials: {
-      keyId: keyId!,
-      issuerId: issuerId!,
+      keyId: keyId ?? '',
+      issuerId: issuerId ?? '',
       privateKeyPath,
       privateKey,
     },

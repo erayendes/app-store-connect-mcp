@@ -3,12 +3,19 @@
     "ASC-Monetization": {
       "type": "stdio",
       "command": "node",
-      "args": ["dist/index.js", "monetization:subscription-pricing"],
+      "args": ["dist/index.js", "monetization:subscription", "--confirm"],
       "env": {
         "ASC_BASE_URL": "http://127.0.0.1:8787",
         "ASC_KEY_ID": "AAAAAAAAAA",
         "ASC_ISSUER_ID": "00000000-0000-0000-0000-000000000000",
-        "ASC_PRIVATE_KEY_PATH": "assets/demo/demo-key.pem"
+        "ASC_PRIVATE_KEY_PATH": "assets/demo/demo-key.pem",
+        "ASC_PRIVATE_KEY": "",
+        "ASC_PRIVATE_KEY_KEYCHAIN": "",
+        "ASC_READ_ONLY": "false",
+        "ASC_DRY_RUN": "false",
+        "ASC_NATIVE_CONFIRM": "0",
+        "ASC_CONFIG_DIR": "assets/demo/.runtime",
+        "ASC_STATE_DIR": "assets/demo/.runtime"
       }
     }
   }

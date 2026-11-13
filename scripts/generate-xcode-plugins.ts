@@ -8,34 +8,73 @@
  * MCP Servers" entry and no per-server switch exists afterwards. A repository
  * with a marketplace gets a "Choose Plug-ins" sheet with a checkbox per entry,
  * which is the picker `setup` offers everywhere else. So each profile is its
- * own plug-in, and the repository root (the skill, `.claude-plugin/plugin.json`)
- * is the fourteenth.
+ * own plug-in, with the skill in its own `plugins/skill/` bundle too.
  *
  * Generated from PROFILES so a profile cannot ship absent from Xcode or under a
  * name that differs from what `setup` registers. Run through `npm run generate`.
  */
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SERVER_COMMAND, profileLabel, serverArgs, serverName } from '../src/clients.js';
+import { SERVER_COMMAND, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(resolve(root, '.claude-plugin', 'plugin.json'), 'utf8'));
-const { version, author, license, repository } = manifest;
+const { version } = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
+const { author, license, repository } = manifest;
+// Directory releases must keep running the reviewed version, including the
+// exact prerelease. Client registration deliberately follows release channels.
+const pinnedPackage = `@erayendes/asc-mcp@${version}`;
 
 /**
- * What Xcode prints in its plug-in list is the marketplace entry's `name`, so
- * that one is written for a person: "Heimdall | ASC App Info". The plug-in
- * manifests underneath keep kebab-case ids (`asc-app-info`); the server each
- * one declares uses `serverName` (`ASC-AppInfo`), the same key `setup` writes,
- * so a server added both ways is listed once.
+ * One name per plug-in, used both in its manifest and in its marketplace
+ * entry: `heimdall` for the skill, `asc-<profile>` for each server. Until 3.1
+ * the marketplace entry carried a name written for a person ("Heimdall | ASC
+ * App Info") because Xcode prints that field and nothing else. `claude plugin
+ * validate` rejects a plug-in name with a space, and the Claude directory
+ * installs by that name (`asc-testflight@heimdall`), so Xcode now shows the
+ * kebab-case id too. The server each plug-in declares still uses `serverName`
+ * (`ASC-TestFlight`), the key `setup` writes, so a server added both ways is
+ * listed once.
  */
-const label = profileLabel;
-const displayName = (area: string): string => `Heimdall | ASC ${area}`;
+const pluginName = (profile: string): string => `asc-${profile}`;
 
 const write = (path: string, value: unknown) =>
   writeFileSync(resolve(root, path), JSON.stringify(value, null, 2) + '\n');
+
+// "What it runs" shows the exact command in `.mcp.json`, version included, so
+// a reviewer reading the README sees what the plug-in really starts.
+const profileReadme = (profile: string, description: string): string => `# ${pluginName(profile)}
+
+${description}
+
+This plug-in registers one MCP server, **${serverName(profile)}**, from [Heimdall](https://github.com/erayendes/app-store-connect-mcp), an open-source (MIT) server for the App Store Connect API and the App Store Server API.
+
+## What it runs
+
+\`\`\`
+npx -y ${pinnedPackage} ${profile} --with-core
+\`\`\`
+
+The package version is pinned to this plug-in's version, so a new Heimdall release reaches you only through a new version of this plug-in. The server runs locally on your machine and talks only to Apple's App Store Connect and App Store Server APIs. It sends nothing anywhere else and collects no telemetry.
+
+## Before first use
+
+Run this once in a real terminal to create or select your App Store Connect API key:
+
+\`\`\`
+npx -y @erayendes/asc-mcp setup
+\`\`\`
+
+\`setup\` stores the key in the macOS Keychain (or references its file path elsewhere). No key is written into this plug-in.
+
+## Safety
+
+Every write that changes prices, access or anything customers see asks you first: a typed CONFIRM for money, access and deletions, a yes/no for customer-facing changes. Where the AI app cannot show that prompt, Heimdall opens a macOS dialog and waits for your answer. Start the server with \`--read-only\` to hide every write tool.
+
+Full documentation: [docs/GUIDE_en.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/GUIDE_en.md).
+`;
 
 /**
  * A plug-in is one server, and Xcode runs each one on its own, so every
@@ -46,12 +85,27 @@ const write = (path: string, value: unknown) =>
 const PLUGIN_PROFILES = PROFILES.filter((p) => p.name !== CORE_PROFILE);
 
 rmSync(resolve(root, 'plugins'), { recursive: true, force: true });
+mkdirSync(resolve(root, 'plugins/skill/.claude-plugin'), { recursive: true });
+mkdirSync(resolve(root, 'plugins/skill/skills/heimdall'), { recursive: true });
+write('plugins/skill/.claude-plugin/plugin.json', { ...manifest, version });
+// The root remains a local plug-in for `ax:agent --skill=.`. It is never a
+// marketplace source; only the small standalone bundle is distributed there.
+write('.claude-plugin/plugin.json', { ...manifest, version });
+// Generated byte-for-byte from the canonical skill. Edit that source, never
+// the bundled copy; no symlink or path outside the bundle is needed at runtime.
+copyFileSync(resolve(root, 'skills/heimdall/SKILL.md'), resolve(root, 'plugins/skill/skills/heimdall/SKILL.md'));
+writeFileSync(resolve(root, 'plugins/skill/README.md'), `# ${manifest.name}
+
+This plug-in provides the Heimdall skill for working with App Store Connect and the App Store Server API. It explains which profile owns a task, how to find tools, and how to use the servers while keeping credentials inside Heimdall. Install it alongside the profile plug-ins you need. It starts no MCP server of its own.
+
+The bundled skill is generated from the repository's canonical skill whenever you run \`npm run generate\`. Maintainers must edit the canonical source and regenerate this bundle. The bundled copy must never be edited by hand.
+`);
 for (const p of PLUGIN_PROFILES) {
   const name = serverName(p.name);
   mkdirSync(resolve(root, 'plugins', p.name, '.claude-plugin'), { recursive: true });
   write(`plugins/${p.name}/.claude-plugin/plugin.json`, {
     // Plug-in ids are kebab-case; only the server key below is for people.
-    name: `asc-${p.name}`,
+    name: pluginName(p.name),
     version,
     description: p.description,
     author,
@@ -59,8 +113,9 @@ for (const p of PLUGIN_PROFILES) {
     repository,
   });
   write(`plugins/${p.name}/.mcp.json`, {
-    mcpServers: { [name]: { command: SERVER_COMMAND, args: [...serverArgs(p.name), '--with-core'] } },
+    mcpServers: { [name]: { command: SERVER_COMMAND, args: ['-y', pinnedPackage, p.name, '--with-core'] } },
   });
+  writeFileSync(resolve(root, `plugins/${p.name}/README.md`), profileReadme(p.name, p.description));
 }
 
 write('.claude-plugin/marketplace.json', {
@@ -72,15 +127,15 @@ write('.claude-plugin/marketplace.json', {
   },
   plugins: [
     {
-      name: displayName('Skill'),
-      source: './',
+      name: manifest.name,
+      source: './plugins/skill',
       description:
-        'The Heimdall skill: what the servers below can do, which one owns what, and how to stay ' +
+        'The Heimdall skill: what the asc-* plug-ins can do, which one owns what, and how to stay ' +
         'inside the credential boundary. Install it with whichever areas you pick.',
       version,
     },
     ...PLUGIN_PROFILES.map((p) => ({
-      name: displayName(label(p.name)),
+      name: pluginName(p.name),
       source: `./plugins/${p.name}`,
       description: p.description,
       version,

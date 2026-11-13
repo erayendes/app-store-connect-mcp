@@ -100,6 +100,9 @@ export class AscHttpClient {
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       await this.limiter.acquire();
+      // Missing credentials are a local configuration error, not a network
+      // failure to retry. Introspection-only default servers reach this path.
+      const token = this.tokens.getToken();
 
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -108,7 +111,7 @@ export class AscHttpClient {
         const res = await fetch(url, {
           method,
           headers: {
-            Authorization: `Bearer ${this.tokens.getToken()}`,
+            Authorization: `Bearer ${token}`,
             Accept: opts.accept ?? 'application/json',
             ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
           },

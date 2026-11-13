@@ -19,7 +19,7 @@ import {
 } from '../src/profiles.js';
 import { OPERATIONS } from '../src/generated/operations.js';
 import { toolNameFor } from '../src/core/registry.js';
-import { PACKAGE, serverName } from '../src/clients.js';
+import { PACKAGE, VERSION, serverName } from '../src/clients.js';
 import { NARROW_FIRST, ROLES } from '../src/setup.js';
 import { FILE_TARGETS, PAGE_TARGETS } from '../src/tools/media-catalog.js';
 
@@ -230,8 +230,8 @@ describe('names the docs use exist', () => {
   const MIGRATION = /2\.x|before 2\.5|no longer exist|artık olmayan|now `general`|artık `general`|earlier version|önceki bir sürüm|old name|eski ad|old profile|eski bir profil|was removed|kaldırılan/;
   // Only what actually loads: placed operations and the hand-written tools.
   // MACRO_COVERED, TWIN_OF and PROFILELESS operations are in no server.
-  const tools = new Set([...[...placedOps].map((op) => toolNameFor({ name: op })), ...manual, ...PROXY_PAIR]);
-  const servers = new Set(PROFILES.map((p) => serverName(p.name)));
+  const tools = new Set([...[...placedOps].map((op) => toolNameFor({ name: op })), ...manual, ...PROXY_PAIR, 'asc__profile_unknown']);
+  const servers = new Set([...PROFILES.map((p) => serverName(p.name)), serverName('default')]);
   const RETIRED_PROFILES = ['app-info'];
 
   it.each(DOCS)('%s', (file) => {
@@ -281,10 +281,13 @@ describe('version surfaces', () => {
     for (const [where, v] of Object.entries(seen)) expect(v, where).toBe(version);
   });
 
-  it('runs every plug-in on this release channel', () => {
+  it('runs every plug-in on this exact release', () => {
+    // The Claude directory blocks an unpinned npx launcher, and the exact
+    // version keeps a beta plug-in on the beta it was generated from.
     for (const dir of readdirSync('plugins')) {
+      if (dir === 'skill') continue; // the skill plug-in runs no server
       const servers = Object.values(JSON.parse(read(`plugins/${dir}/.mcp.json`)).mcpServers) as { args: string[] }[];
-      for (const s of servers) expect(s.args, dir).toContain(PACKAGE);
+      for (const s of servers) expect(s.args, dir).toContain(`@erayendes/asc-mcp@${VERSION}`);
     }
   });
 
@@ -310,11 +313,13 @@ describe('version surfaces', () => {
     expect(read(file)).not.toContain('@erayendes/asc-mcp@beta');
   });
 
-  it('open both changelog sections with this version', () => {
+  it('opens both changelog sections with this version after optional unreleased notes', () => {
     const changelog = read('docs/CHANGELOG.md');
     for (const section of ['## English', '## Türkçe']) {
-      const rest = changelog.slice(changelog.indexOf(section));
-      expect(/^### \[([^\]]+)\]/m.exec(rest)?.[1], section).toBe(version);
+      const rest = changelog.slice(changelog.indexOf(section) + section.length).split(/^## /m)[0];
+      const entries = [...rest.matchAll(/^### \[([^\]]+)\]/gm)].map((m) => m[1]);
+      if (['Unreleased', 'Yayımlanmamış'].includes(entries[0])) entries.shift();
+      expect(entries[0], section).toBe(version);
     }
   });
 });

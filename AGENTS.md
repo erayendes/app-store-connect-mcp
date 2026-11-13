@@ -8,7 +8,9 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 786 tools across 14 profiles: 734 generated from Apple's 1036 operations (the 185 that Apple deprecated or replaced are not built) and 52 hand-written.
 
-Profiles are cut by the work the user does: `general`, `distribution`, `monetization`, `marketing`, `testflight`, `access` and so on. App lookup, `asc__search_tools`, `asc__discover_domains`, `asc__account_status` and the `media__*` tools are in none of them — they live in **ASC-Core** (`core`), a server of its own that `register` and `setup` add next to the profiles. A profile server carries them itself only when started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or not, has its own `asc__status`. If app lookup or search is missing from the session, ASC-Core is not registered for this client; the fix is `register` or `setup`, not another profile.
+Profiles are cut by the work the user does: `general`, `distribution`, `monetization`, `marketing`, `testflight`, `access` and so on. App lookup, `asc__search_tools`, `asc__discover_domains`, `asc__account_status` and the `media__*` tools are in none of them — they live in **ASC-Core** (`core`), a server of its own that `register` and `setup` add next to the profiles. A profile server also carries them when started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or not, has its own `asc__status`. If app lookup or search is missing from the session, ASC-Core is not registered for this client; the fix is `register` or `setup`, not another profile.
+
+Without a profile argument, the server starts as **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only, even with `ASC_READ_ONLY=false`. It lists no write tools and can start and list tools without credentials; live account reads still need credentials. Its instructions and `asc__status` explain this default read-only set. For full use, tell the user to run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still serves only `asc__profile_unknown`; no old name is mapped to a new one.
 
 ## If a user asks you to install it
 
@@ -57,6 +59,8 @@ npx -y @erayendes/asc-mcp setup
 ### 3. Restart and check
 
 Ask the user to restart their MCP client, then to say *"check the App Store Connect connection"* — that calls `asc__status`, which verifies the credentials with one lightweight request.
+
+For local installation problems, run `npx -y @erayendes/asc-mcp doctor`. It is read-only: it reports Node and package versions, release channel, client registrations and profiles, ASC-Core coverage, and credential availability without reading key contents or making network calls. It does not start client CLIs. Relay the next step it prints; restart the client after registration changes. `doctor` checks only local availability; use `asc__status` for the live connection check. If credentials are missing, the user runs `setup` in a real terminal. Do not inspect the key yourself.
 
 If the user would rather do the whole thing themselves, `setup` alone covers both steps: it collects the credentials *and* registers with every client it finds, ASC-Core included.
 

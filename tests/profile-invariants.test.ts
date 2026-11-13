@@ -421,13 +421,11 @@ describe('unknown profiles', () => {
     for (const p of PROFILES) expect(message).toContain(p.name);
   });
 
-  // The 2.x combined server, started with no profile: setup counts such an
-  // entry as the user's own and leaves it, so the message must not promise it goes.
-  it('tells a server started with no profile to delete its own entry', () => {
-    const message = unknownProfileMessage('', 'No profile given.');
-    expect(message).toContain('without an App Store Connect profile');
-    expect(message).toContain('delete it from their MCP client');
-    expect(message).not.toMatch(/removes entries|No profile given/);
+  it('describes the safe no-argument starter set in help', () => {
+    const help = helpText();
+    expect(help).toContain('ASC-Default');
+    expect(help).toContain('forced read-only');
+    expect(help).not.toContain('A profile is required');
   });
 });
 
@@ -494,9 +492,10 @@ describe('server.json stays in step with the profiles', () => {
   );
 
   it('describes the profile argument at all', () => {
-    // Without one the server serves only the setup tombstone, so an installer must ask for it.
     expect(profileArg, 'server.json declares no profile argument').toBeTruthy();
-    expect(profileArg.isRequired).toBe(true);
+    expect(profileArg.isRequired).toBe(false);
+    expect(profileArg.description).toContain('ASC-Default');
+    expect(profileArg.description).toContain('read-only');
   });
 
   it('names every profile, and invents none', () => {

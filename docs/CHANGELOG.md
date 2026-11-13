@@ -8,6 +8,52 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [3.1.0] — 2026-11-13
+
+Hi,
+
+3.0 rebuilt how tools and profiles fit together. 3.1 focuses on the first ten minutes after someone finds Heimdall — getting started without a profile or a key yet, checking a broken setup, and pinning plug-ins to the release.
+
+#### Read-only start without a profile: `ASC-Default`
+
+Starting Heimdall without a profile argument now opens **ASC-Default**: `core`, `general` and `analytics` in one process, forced read-only even if `ASC_READ_ONLY=false` is set.
+
+Tools can be listed without credentials; reading live account data still needs an API key. Server instructions and `asc__status` explain the default set and point to `npx -y @erayendes/asc-mcp setup` in a terminal for full use. Unknown or retired profile names (such as `app-info`) still serve only `asc__profile_unknown`.
+
+#### Check your setup locally with `doctor`
+
+Added `npx -y @erayendes/asc-mcp doctor`, a read-only local report of:
+
+- Node and `@erayendes/asc-mcp` versions, plus stable or beta release channel,
+- each MCP client found on your machine, its Heimdall entries and selected profiles,
+- whether `ASC-Core` is registered (or included with `--with-core`) for each client config,
+- credential availability from environment variables or shared config — whether a Keychain item is present or a key file is readable — with a concrete next step for anything missing.
+
+`doctor` leaves files unchanged, runs no client CLIs, never reads private key contents and makes no network calls. `asc__status` remains the live connection check with Apple.
+
+#### Ready prompts and an "I don't have an API key" path
+
+- **Three example prompts after setup:** both `setup` and a healthy `asc__status` reply now print three copyable read-only prompts chosen for the profiles you picked.
+- **No API key yet:** in `setup`, after choosing profiles, select **I don't have an API key / I am not an Admin** (or type **h** in the terminal). It prints a copyable message for your Account Holder or Admin — including the exact role your profiles need and Apple's API keys link — and exits without changing credentials or client configs.
+
+#### First-screen docs, one-click install and plug-ins
+
+- **One-click install and refreshed README:** `README.md` and `docs/README_tr.md` now open with one-click Cursor and VS Code install buttons (adding the read-only ASC-Default, which starts without a key) and a three-row comparison table.
+- **Comparison page:** added [Comparison](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_en.md) (and [Türkçe](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_tr.md)), covering scope, write controls, where Heimdall is behind and when `asc CLI`, `fastlane` or another MCP fits better.
+- **Plug-ins pinned to the release:** the plug-in generator now pins every `.mcp.json` to `@erayendes/asc-mcp@<version>`, generates a `README.md` for each profile plug-in explaining what runs and how the key is handled, and moves the skill plug-in into its own `plugins/skill/` bundle.
+- **New plug-in names in Xcode:** plug-ins are now named `heimdall` and `asc-<area>` (for example `asc-testflight`) instead of "Heimdall | ASC …", because the Claude plug-in directory only accepts lowercase names. If you added Heimdall to Xcode before, the plug-ins show up under the new names after the update; remove the old ones once the new ones are selected.
+
+#### Fixes
+
+- **Confirmation on a Mac is a real macOS alert.** The custom floating panel is gone; the question now comes as a standard alert with the Heimdall icon, the system's own buttons and placement.
+- **Preflight blocks screenshots that are still processing**, so a version is not sent to review with images Apple has not finished.
+- **Submitting items no longer asks Apple for both experiment relationships at once**, which Apple rejected.
+- **The browser setup's dry-run summary** keeps each app's plan in one block instead of spreading every line a paragraph apart.
+
+---
+
+If you run into anything odd, please open an issue.
+
 ### [3.0.0] — 2026-11-08
 
 Hi,
@@ -484,6 +530,52 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [3.1.0] — 2026-11-13
+
+Selam,
+
+3.0'da araçların ve profillerin yapısını baştan kurmuştuk. 3.1 ise birinin Heimdall'ı ilk gördüğü andaki ilk on dakikaya odaklanıyor: henüz profil ya da anahtar yokken başlayabilmek, kurulumdaki bir sorunu yerelde kontrol edebilmek ve eklentileri sürüme sabitlemek.
+
+#### Profilsiz salt okunur başlangıç: `ASC-Default`
+
+Heimdall'ı bir profil vermeden başlattığınızda artık **ASC-Default** açılıyor: `core`, `general` ve `analytics` tek süreçte, `ASC_READ_ONLY=false` ayarlansa bile zorunlu salt okunur olarak çalışıyor.
+
+Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki canlı verileri okumak için yine bir API anahtarı gerekiyor. Sunucu talimatları ve `asc__status`, varsayılan kümeyi açıklıyor ve tam kullanım için terminalde `npx -y @erayendes/asc-mcp setup` çalıştırmanızı öneriyor. Bilinmeyen veya kaldırılmış profil adları (`app-info` gibi) hâlâ yalnızca `asc__profile_unknown` sunuyor.
+
+#### Kurulumu yerelde kontrol edin: `doctor`
+
+`npx -y @erayendes/asc-mcp doctor` eklendi. Makinenizdeki durumu özetleyen salt okunur bir yerel rapor veriyor:
+
+- Node ve `@erayendes/asc-mcp` sürümleri ile `stable` / `beta` yayın kanalı,
+- bulunan her MCP istemcisi, içindeki Heimdall kayıtları ve seçili profiller,
+- her istemci ayarında `ASC-Core`'un kayıtlı olup olmadığı (ya da `--with-core` ile dahil edilip edilmediği),
+- ortam değişkenlerinden veya ortak yapılandırmadan kimlik bilgilerinin bulunabilirliği (Keychain öğesinin varlığı veya anahtar dosyasının okunabilirliği) ve eksik olan her şey için bir sonraki adım.
+
+`doctor` dosyaları değiştirmez, istemci CLI'larını çalıştırmaz, özel anahtarın içeriğini hiç okumaz ve ağ isteği yapmaz. Apple ile canlı bağlantı kontrolü yine `asc__status` ile yapılır.
+
+#### Hazır istemler ve "API anahtarım yok" yolu
+
+- **Kurulumdan sonra üç örnek istem:** hem `setup` sonunda hem de başarılı bir `asc__status` yanıtında, seçtiğiniz profillere göre kopyalanabilir üç salt okunur istem gösteriliyor.
+- **Henüz anahtarınız yoksa:** `setup` içinde profilleri seçtikten sonra **I don't have an API key / I am not an Admin** seçeneğini kullanın (terminalde **h** yazın). Seçtiğiniz profillerin gerektirdiği rolü ve Apple'ın API anahtarları bağlantısını içeren, Account Holder veya Admin'inize gönderebileceğiniz bir mesaj hazırlar; kimlik bilgilerini ve istemci ayarlarını değiştirmeden kapanır.
+
+#### İlk ekran, tek tıkla kurulum ve eklentiler
+
+- **Tek tıkla kurulum ve yenilenen README:** `README.md` ve `docs/README_tr.md` artık ilk ekranda anahtar olmadan açılan salt okunur ASC-Default'u ekleyen tek tıkla Cursor ve VS Code kurulum düğmelerini ve üç satırlık karşılaştırma tablosunu gösteriyor.
+- **Karşılaştırma sayfası:** [Karşılaştırma](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_tr.md) (ve [İngilizce](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/COMPARISON_en.md)) eklendi; kapsamı, yazma kontrollerini, Heimdall'ın geride kaldığı alanları ve ne zaman `asc CLI`, `fastlane` veya başka bir MCP'nin daha uygun olduğunu anlatıyor.
+- **Sürüme sabitlenmiş eklentiler:** eklenti üreticisi artık her `.mcp.json` dosyasını `@erayendes/asc-mcp@<version>` sürümüne sabitliyor, her profil eklentisi için ne çalıştığını ve anahtarın nasıl tutulduğunu anlatan bir `README.md` üretiyor ve beceri eklentisini kendi `plugins/skill/` paketine taşıyor.
+- **Xcode'da yeni eklenti adları:** eklentilerin adı artık "Heimdall | ASC …" yerine `heimdall` ve `asc-<alan>` (örneğin `asc-testflight`), çünkü Claude eklenti dizini yalnızca küçük harfli adları kabul ediyor. Heimdall'ı Xcode'a daha önce eklediyseniz güncellemeden sonra eklentiler yeni adlarıyla görünür; yenilerini seçtikten sonra eskilerini kaldırın.
+
+#### Düzeltmeler
+
+- **Mac'teki onay artık gerçek bir macOS uyarısı.** Özel yüzen panel kaldırıldı; soru, Heimdall simgesiyle ve sistemin kendi düğmeleri ve yerleşimiyle standart bir uyarı olarak geliyor.
+- **Preflight, hâlâ işlenen ekran görüntülerini engelliyor.** Böylece Apple'ın işlemeyi bitirmediği görsellerle bir sürüm incelemeye gönderilmiyor.
+- **Öğeleri incelemeye gönderirken Apple'dan iki deney ilişkisi birden istenmiyor;** Apple bu isteği reddediyordu.
+- **Tarayıcıdaki kurulumun dry-run özeti** her uygulamanın planını tek blokta gösteriyor; satırlar artık paragraf paragraf dağılmıyor.
+
+---
+
+Gördüğünüz bir tuhaflık olursa yazın.
 
 ### [3.0.0] — 2026-11-08
 

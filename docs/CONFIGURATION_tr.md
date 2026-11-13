@@ -2,6 +2,8 @@
 
 🇬🇧 [English](CONFIGURATION_en.md) · 🇹🇷 Türkçe
 
+Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `general` + `analytics` profillerini tek süreçte, zorunlu salt okunur olarak başlatır. `ASC_READ_ONLY=false` olsa bile yazma araçları listelenmez. Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki verileri okumak için kimlik bilgileri gerekir. Tam kullanım için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın ve profillerinizi seçin. Bilinmeyen veya kaldırılmış bir profil adı hâlâ yalnızca `asc__profile_unknown` bildirimini gösterir.
+
 Çoğu kişinin bu sayfaya hiç ihtiyacı olmaz: [setup](SETUP_tr.md), Heimdall'ın ihtiyaç duyduğu her şeyi kaydeder. Yapay zekânın değişiklik yapmasını tamamen engellemek, bir değişikliği yapmadan denemek, ikinci bir App Store Connect hesabı kullanmak ya da Heimdall'ı setup olmadan (örneğin CI'da) çalıştırmak istiyorsanız okumaya devam edin.
 
 İki tür ayar var. **Bayraklar**, uygulamanızın MCP ayarlarında `args` listesinin sonuna yazılır. **Ortam değişkenleri** ise yanındaki `env` bloğuna:
@@ -58,7 +60,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 
 | Değişken | Ne için |
 |:--|:--|
-| `ASC_READ_ONLY` | `true`, `1` ya da `yes` (büyük/küçük harf fark etmez) = `--read-only`. `false`, `0` ve boş dahil başka her değer yazmayı açık bırakır. |
+| `ASC_READ_ONLY` | `true`, `1` ya da `yes` (büyük/küçük harf fark etmez) = `--read-only`. Açıkça bir profil seçtiğinizde `false`, `0` ve boş dahil başka her değer yazmayı açık bırakır. ASC-Default her zaman salt okunur kalır. |
 | `ASC_DRY_RUN` | `1` ya da `true` = `--dry-run` |
 | `ASC_CONFIRM_WRITES` | `1` / `true` = `--confirm`, `0` / `false` = `--no-confirm` (yayın araçları yine sorar) |
 | `ASC_NATIVE_CONFIRM` | `0` = uygulama soramıyorsa Mac penceresi açılmaz; bu değişiklikler reddedilir |

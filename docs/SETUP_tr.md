@@ -2,6 +2,8 @@
 
 🇬🇧 [English](SETUP_en.md) · 🇹🇷 Türkçe
 
+Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `general` + `analytics` profillerini tek süreçte, zorunlu salt okunur olarak başlatır. `ASC_READ_ONLY=false` olsa bile yazma araçları listelenmez. Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki verileri okumak için kimlik bilgileri gerekir. Tam kullanım için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın ve profillerinizi seçin. Bilinmeyen veya kaldırılmış bir profil adı hâlâ yalnızca `asc__profile_unknown` bildirimini gösterir.
+
 Heimdall, Node.js **20.19+**'in çalıştığı her yerde çalışır — macOS, Linux ve Windows. Yalnızca bir özellik macOS'a özgüdür: `.p8` anahtarını **macOS Keychain**'de saklamak. Linux ve Windows'ta anahtar dosyasının yolu kaydedilir. Bir fark daha var: Claude masaüstü uygulamasına otomatik kayıt şimdilik yalnızca macOS'ta yapılıyor.
 
 ## API anahtarı oluşturun
@@ -22,6 +24,8 @@ npx -y @erayendes/asc-mcp setup
 ```
 
 **Tarayıcıda yapın.** Setup önce tarayıcıda mı terminalde mi devam etmek istediğinizi sorar; tarayıcıyı seçin. Kendi bilgisayarınızda bir sayfa açılır ve sizi aşağıdaki dört adımdan geçirir.
+
+<img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web.gif" alt="Tarayıcıdaki kurulum baştan sona: iki profil seçiliyor, anahtar ekleniyor, üç yapay zekâ uygulaması bulunuyor ve üç hazır istemle özet gösteriliyor" width="720">
 
 ### Kimlik bilgisini bir kez kaydedin — Setup sihirbazı
 
@@ -50,6 +54,14 @@ Sihirbaz, tarayıcıda da terminalde de, sizin düşüneceğiniz sırayla sorar:
 Setup anahtar bilgilerini kaydetmeden önce Apple'a doğrular. Apple'ın reddettiği anahtar kaydedilmez; Apple'a ulaşılamazsa setup bunu söyler ve bilgileri yine de kaydeder. Profiller uygulamalara yazılmadan önce ise plan gösterilir ve bir kez onay istenir.
 
 Bittiğinde uygulamanızı yeniden başlatın ve *"App Store Connect bağlantısını kontrol et"* deyin.
+
+Setup sonunda, kaydettiğiniz profillere göre seçilmiş ve AI uygulamanıza kopyalayabileceğiniz üç hazır istem gösterilir. Başarılı bir `asc__status` bağlantı kontrolü de üç örnek döndürür. Örneğin monetization profili, abonelik fiyatlarını okumayı ve abonelik kataloğunu kontrol etmeyi önerir.
+
+### API anahtarınız yoksa
+
+Profillerinizi seçtikten sonra **I don’t have an API key / I am not an Admin** seçeneğini kullanın. Terminalde anahtar sorusunda **h** yazın. Setup, App Store Connect Account Holder veya Admin kullanıcınıza gönderebileceğiniz bir mesaj hazırlar. Mesaj, seçtiğiniz işler için gereken rolü ve [API anahtarları sayfasını](https://appstoreconnect.apple.com/access/integrations/api) içerir. Ardından kimlik bilgilerini kaydetmeden ve istemci kayıtlarını değiştirmeden kapanır.
+
+Mesaj, yöneticinizden bir ekip API anahtarı oluşturmasını ve `.p8` dosyasını size güvenli bir yolla iletmesini ister. Mesajı kendiniz gönderin. Anahtar hazır olduğunda setup'ı kendi terminalinizde yeniden çalıştırın; özel anahtarı AI sohbetlerine yazmayın.
 
 > - Anahtar **macOS Keychain**'de saklanır. macOS dışında dosya yoluyla referanslanır.
 > - **Gizli olmayan her şey** `~/.config/asc-mcp/config.json`'a yazılır. Her profil bu ortak yapılandırmayı okur.
@@ -96,7 +108,7 @@ Her şeyi baştan kurmanız gerekmez. Bu yüzden önce ihtiyacınız olan birka�
 - **Setup'ı yeniden çalıştırın** — `npx -y @erayendes/asc-mcp setup`.
 - Kimlik bilgilerinizi yeniden kullanır ve seçicileri tekrar gösterir.
 - Uygulamalar ve profiller mevcut hâlleriyle işaretli gelir. İşaretleyin/kaldırın; seçtiğiniz her uygulamada ekler ve siler. İşaretini kaldırdığınız uygulamadan Heimdall silinir.
-- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir. Profil vermeden çalışan eski bir 2.x kaydına setup dokunmaz; onu uygulamanızın MCP ayarlarından kendiniz silin.
+- 2.x'ten mi geliyorsunuz? 3.0'da profil adları değişti: `app-info` artık `general`, alt profillerin çoğu da yeniden bölündü. Setup eski adları yenilerine çevirmez. Profili artık olmayan kayıtları, Heimdall'ın kendi kayıtlarıysa ve kendi kimlik bilgilerini ya da `envFile` taşımıyorsa siler; diğerlerini listeler ve olduğu gibi bırakır. Ardından profillerinizi yeniden seçersiniz. O zamana kadar eski adlı bir sunucu, bunu söyleyen tek bir araç gösterir. Profil vermeden çalışan eski bir 2.x kaydına setup dokunmaz; bu kayıt artık salt okunur başlangıç kümesi ASC-Default olarak açılır. Setup sonrasında aynı okuma araçlarının tekrarlanmaması için bu kaydı uygulamanızın MCP ayarlarından kaldırabilirsiniz.
 
 ## Yüklü olmayan bir araç gerekirse
 
@@ -111,7 +123,7 @@ Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini sö
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-add-from-url.png" alt="Xcode'un Add Plug-in ekranı, depo adresi girilmiş" width="560">
 
-4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **Heimdall | ASC Skill**'i ve ihtiyacınız olan alanları seçin. Xcode her eklentiyi ayrı çalıştırdığı için her biri ASC-Core araçlarını kendi içinde taşır; ayrı bir çekirdek eklentisi yoktur.
+4. Xcode her eklenti için onay kutulu bir "Choose Plug-ins" ekranı gösterir. **heimdall** (skill) eklentisini ve ihtiyacınız olan `asc-*` alanlarını seçin. Xcode her eklentiyi ayrı çalıştırdığı için her biri ASC-Core araçlarını kendi içinde taşır; ayrı bir çekirdek eklentisi yoktur.
 
    <!-- Absolute URL on purpose: npm does not rewrite relative image paths. -->
    <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/xcode-choose-plugins.png" alt="Xcode'un Choose Plug-ins ekranı: Heimdall profilleri, her biri onay kutulu" width="560">
@@ -128,6 +140,16 @@ Yapay zekâya sorun. Heimdall o aracı bulur, gerekirse nasıl ekleneceğini sö
 Salt okunur mod, değişiklikleri yapmadan denemek, ikinci bir App Store Connect hesabı, setup olmadan çalıştırmak: hepsi [Yapılandırma](CONFIGURATION_tr.md) sayfasında.
 
 ## Sorun giderme
+
+Önce yerel raporu çalıştırın:
+
+```bash
+npx -y @erayendes/asc-mcp doctor
+```
+
+`doctor`, Node ve paket sürümlerinizi, stable veya beta yayın kanalını, bulunan MCP istemcilerini ve her birindeki Heimdall kayıtlarıyla seçilen profilleri gösterir. ASC-Core'u her ayar dosyası için ayrı kontrol eder. Ortam değişkenleri veya ortak yapılandırmadaki kimlik bilgileri için Keychain öğesinin bulunup bulunmadığını ya da anahtar dosyasının okunabilirliğini denetler. Her sorun için bir sonraki adımı belirtir.
+
+Komut yerel ayarları okur ve anahtar referanslarını kontrol eder. Dosyaları değiştirmez, ağ isteği yapmaz, anahtar dosyasının içeriğini okumaz ve Keychain parolasını almaz. İncelenemeyen istemci ortam ayarları belirsiz olarak raporlanır. İstemci CLI'larını başlatmaz. Kayıt değişikliklerinden sonra MCP istemcinizi yeniden başlatın; Apple bağlantısını doğrulamak için istemcinizden `asc__status` çağırmasını isteyin. Kimlik bilgileri eksikse `setup`'ı gerçek bir terminalde kendiniz çalıştırın.
 
 | Belirti | Ne oluyor | Çözüm |
 |:--|:--|:--|

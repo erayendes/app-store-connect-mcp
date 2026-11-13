@@ -129,7 +129,7 @@ jobs:
       # must add app lookup. A 2.x name (`app-info`) and the 2.x combined server
       # (no profile) must not fail: each opens the one-tool tombstone that tells
       # the agent to run setup.
-      - name: The installed server starts, serves a profile, and tombstones a 2.x entry
+      - name: The installed server starts, serves a profile, defaults to read-only, and tombstones a 2.x entry
         run: |
           set -euo pipefail
           cd /tmp/packtest
@@ -171,8 +171,11 @@ jobs:
             console.log('app-info serves:', tombstone.join(', '));
             const unprofiled = await list([]);
             console.log('no profile serves:', unprofiled.join(', '));
+            // No profile: the read-only ASC-Default set (core + general + analytics), no writes.
+            const noWrites = unprofiled.every((t) => !/__(create|update|delete|remove|replace|add|set)$/.test(t));
             const ok = general.length > 40 && withCore.includes('apps__list') &&
-              [tombstone, unprofiled].every((t) => t.length === 1 && t[0] === 'asc__profile_unknown');
+              tombstone.length === 1 && tombstone[0] === 'asc__profile_unknown' &&
+              unprofiled.includes('apps__list') && unprofiled.includes('sales_reports__list') && noWrites;
             process.exit(ok ? 0 : 1);
           })();
           "
