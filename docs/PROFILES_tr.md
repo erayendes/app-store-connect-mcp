@@ -4,7 +4,7 @@
 
 Heimdall, App Store Connect'i yaptığınız işe göre böler. ASC-Core dahil 14 profil vardır ve her biri kendi başına küçük bir MCP sunucusudur: profil adını verirsiniz, yalnızca o işin araçları yüklenir. Büyük profiller ayrıca alt profillere ayrılır; toplam 51 alt profil var.
 
-Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı bulma, bütün araçlarda arama ve medya araçları. Bunlar her profilde aynı olduğu için her sunucunun içinde ayrı ayrı değil, bir kez çalışır.
+Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı bulma, bütün araçlarda arama ve medya araçları. Bunlar her profilde aynı olduğu için her sunucunun içinde ayrı ayrı değil, bir kez çalışır. Medya araçları App Store Connect'in aldığı her ekran görüntüsünü, videoyu, görseli ve dosyayı yönetir: mağaza sayfası medyası, App Clip ve Game Center görselleri, uygulama içi satın alma ve abonelik görselleri, inceleme ekran görüntüleri ve ekleri, şifreleme belgeleri, routing coverage dosyası, background asset ve build yükleme dosyaları ([tam liste](MEDIA_TARGETS_tr.md)).
 
 | Profil | Sunucu | Ne için | Araç | Alt profiller |
 |:--|:--|:--|--:|:--|

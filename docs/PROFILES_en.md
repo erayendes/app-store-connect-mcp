@@ -4,7 +4,7 @@
 
 Heimdall cuts App Store Connect by the work you do. There are 14 profiles including ASC-Core, each its own small MCP server: name a profile, and only that job's tools are loaded. A large profile splits further into sub-profiles, 51 in all.
 
-Next to whatever you pick, setup registers **ASC-Core**: finding your apps, searching every tool, and the media tools. It is the same for every profile, so it runs once instead of inside each server.
+Next to whatever you pick, setup registers **ASC-Core**: finding your apps, searching every tool, and the media tools. It is the same for every profile, so it runs once instead of inside each server. The media tools handle every screenshot, video, image and file App Store Connect takes: store page media, App Clip and Game Center images, in-app purchase and subscription images, review screenshots and attachments, encryption documents, routing coverage, background asset and build upload files ([the full list](MEDIA_TARGETS_en.md)).
 
 | Profile | Server | What it is for | Tools | Sub-profiles |
 |:--|:--|:--|--:|:--|
