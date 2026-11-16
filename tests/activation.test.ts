@@ -31,6 +31,18 @@ describe('activation prompts', () => {
     expect(prompts.join(' ')).not.toMatch(/prices|preflight|offers/);
   });
 
+  it('has a written prompt for every sub-profile, not one glued from their names', () => {
+    for (const p of PROFILES) for (const s of p.subProfiles) {
+      const [prompt] = examplePrompts([`${p.name}:${s.name}`]);
+      expect(prompt, `${p.name}:${s.name}`).toMatch(/^[A-Z].{20,}\.$/);
+    }
+    expect(examplePrompts(['distribution:app-review-information,builds,publish,version'])).toEqual([
+      'Show the contact details and notes App Review sees for my app.',
+      'List my app’s latest uploaded builds.',
+      'Show my app’s open review submissions.',
+    ]);
+  });
+
   it('adds prompts only to an actually successful status connection check', async () => {
     const get = vi.fn().mockResolvedValue({ data: [{ id: 'app' }] });
     const ctx: any = {
