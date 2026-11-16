@@ -8,6 +8,15 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [3.1.1] — 2026-11-16
+
+No code changes in this release; it brings the npm page up to date with the repository.
+
+- **A new README.** Shorter and back in my own words, with current numbers and every badge, including the one-click Cursor and VS Code installs, in one row.
+- **Detail moved to its own page.** How the 786 tools are counted and what the media tools handle now live in [Profiles](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_en.md); the confirmation levels are in [Configuration](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/CONFIGURATION_en.md).
+- **Privacy policy.** [docs/PRIVACY.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md) says what Heimdall reads, what it keeps on your computer and where data goes.
+- **Plug-ins:** every plug-in ships the Heimdall icon, a display name such as "Heimdall · General", and a link to the privacy policy.
+
 ### [3.1.0] — 2026-11-13
 
 Hi,
@@ -529,6 +538,15 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [3.1.1] — 2026-11-16
+
+Bu sürümde kod değişikliği yok; npm sayfasını depoyla aynı hale getiriyor.
+
+- **Yeni README.** Daha kısa ve yeniden benim kelimelerimle; güncel rakamlar ve tek tık Cursor ve VS Code kurulumu dahil bütün rozetler tek satırda.
+- **Ayrıntılar kendi sayfasında.** 786 aracın nasıl sayıldığı ve medya araçlarının neleri yönettiği artık [Profiller](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PROFILES_tr.md) sayfasında; onay basamakları [Yapılandırma](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/CONFIGURATION_tr.md) sayfasında.
+- **Gizlilik politikası.** [docs/PRIVACY.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md) Heimdall'ın neyi okuduğunu, bilgisayarınızda neyi sakladığını ve verinin nereye gittiğini anlatıyor.
+- **Eklentiler:** her eklenti Heimdall simgesini, "Heimdall · General" gibi bir görünen adı ve gizlilik politikası bağlantısını taşıyor.
 
 ### [3.1.0] — 2026-11-13
 

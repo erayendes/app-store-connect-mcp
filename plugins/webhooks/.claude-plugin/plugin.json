@@ -1,7 +1,7 @@
 {
   "name": "asc-webhooks",
   "displayName": "Heimdall · Webhooks",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Webhooks pushing App Store Connect events to your endpoint, their deliveries and pings.",
   "author": {
     "name": "Eray Endes",
