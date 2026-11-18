@@ -8,6 +8,11 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Two-letter country codes work.** Say `TR`, `us` or `tur` and Heimdall sends `TUR` and `USA`: Apple wants the three-letter ISO code and answers two letters with an empty list instead of an error, so a subscription priced in the US used to read as "no price". The conversion covers all 175 App Store countries and every tool, including country filters on the raw tools, StoreKit storefront codes and countries inside a request body, and it happens before the confirmation, so the dialog shows the code that will be sent.
+- **What Apple's API doesn't tell you.** A new page, [docs/PITFALLS_en.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PITFALLS_en.md), collects the traps we hit on live accounts — answers that look right and are not, error codes that point the wrong way, ordering rules, and what only the website can do — with what Heimdall does about each.
+
 ### [3.1.1] — 2026-11-16
 
 No code changes in this release; it brings the npm page up to date with the repository.
@@ -538,6 +543,11 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **İki harfli ülke kodları çalışıyor.** `TR`, `us` ya da `tur` yazdığınızda Heimdall Apple'a `TUR` ve `USA` gönderir. Apple üç harfli ISO kodunu ister ve iki harfliye hata yerine boş liste döndürür; bu yüzden ABD'de fiyatı olan bir abonelik "fiyat yok" diye okunabiliyordu. Çeviri App Store'un 175 ülkesinin hepsini ve bütün araçları kapsar: ham araçların ülke filtreleri, StoreKit'in mağaza kodları ve istek gövdesindeki ülkeler de dahil. Onaydan önce yapılır; onay penceresinde gönderilecek kodu görürsünüz.
+- **Apple API'sinin söylemedikleri.** Yeni bir sayfa, [docs/PITFALLS_tr.md](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PITFALLS_tr.md), canlı hesaplarda karşılaştığımız tuzakları topluyor: doğru görünüp yanlış olan cevaplar, yanlış yöne gönderen hata kodları, sıra kuralları ve yalnızca web sitesinden yapılabilenler. Her birinin altında Heimdall'ın ne yaptığı yazıyor.
 
 ### [3.1.1] — 2026-11-16
 

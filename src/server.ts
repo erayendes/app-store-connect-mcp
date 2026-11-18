@@ -48,6 +48,7 @@ import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } from './core/risk.js';
 import { logFailure, logWrite, type Confirmation } from './core/audit-log.js';
+import { withAlpha3 } from './core/territory-names.js';
 import {
   CORE_PROFILE,
   DEFAULT_PROFILES,
@@ -133,8 +134,8 @@ export const VERSION: string = createRequire(import.meta.url)('../package.json')
 export const SERVER_INSTRUCTIONS = [
   'App Store Connect, through Heimdall. Three things the API will not tell you:',
   '',
-  '1. Territories are ISO-3166 alpha-3: USA, TUR, DEU — never US, TR, DE. Two letters',
-  '   is not rejected; it returns 200 and an empty list that reads as "no data here".',
+  '1. Territories are ISO-3166 alpha-3: USA, TUR, DEU. Heimdall turns US, TR, DE into',
+  '   them; Apple itself answers two letters with 200 and an empty list, not an error.',
   '2. List endpoints return relationship stubs, not values: /prices carries no price',
   '   until the price point is included.',
   '3. pricing__* answers a pricing question in one call, in place of the',
@@ -609,6 +610,8 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         name = toolNameFor(op);
         args = (args.arguments ?? {}) as Record<string, unknown>;
       }
+      // TR, us, tur: all become TUR before a preview, a confirmation or a request sees them.
+      args = withAlpha3(args);
 
       // Dry-run: registry writes return their would-send preview instead of
       // calling Apple, so confirmation would be noise. StoreKit tools bypass

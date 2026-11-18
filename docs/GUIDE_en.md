@@ -4,6 +4,8 @@
 
 Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` + `analytics` in one process, forced read-only. No write tools are listed, even with `ASC_READ_ONLY=false`. Tools can be listed without credentials; live account reads need credentials. For full use, run `npx -y @erayendes/asc-mcp setup` in a terminal and pick profiles. An unknown or retired profile name still gives only the `asc__profile_unknown` notice.
 
+Apple's API has traps that return a plausible answer instead of an error — three-letter territory codes, the two meanings of a 403, what has to go to review together. They are collected in [What Apple's API doesn't tell you](PITFALLS_en.md).
+
 ## Confirmation before risky changes
 
 **Confirmation before risky changes is on by default.**
