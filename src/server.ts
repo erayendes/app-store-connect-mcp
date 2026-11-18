@@ -48,6 +48,7 @@ import type { Operation } from './core/types.js';
 import { PACKAGE, serverName } from './clients.js';
 import { ASK_BY_DEFAULT, STRONG_CONFIRM_LEVELS, riskByBody, type RiskLevel } from './core/risk.js';
 import { logFailure, logWrite, type Confirmation } from './core/audit-log.js';
+import { dailyUpdateNotice, installChannel } from './core/update-check.js';
 import { withAlpha3 } from './core/territory-names.js';
 import {
   CORE_PROFILE,
@@ -106,6 +107,7 @@ function maxResponseChars(): number {
 // Read from package.json at runtime so the banner can't drift from the published
 // version. Not a JSON import: package.json sits outside tsconfig's rootDir.
 export const VERSION: string = createRequire(import.meta.url)('../package.json').version;
+const UPDATE_CHANNEL = installChannel(VERSION);
 
 /**
  * Sent once, at initialize, and carried for the whole session — MCP's own slot
@@ -975,6 +977,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
       // report back that it fired.
       const fullText = JSON.stringify(uncapped ?? result ?? { ok: true }, null, 2);
       const link = fullText.length > text.length ? resources.store(name, fullText) : undefined;
+      const updateNotice = dailyUpdateNotice(VERSION, UPDATE_CHANNEL);
 
       return {
         content: [
@@ -1001,6 +1004,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
             { type: 'text' as const, text: image.caption },
             { type: 'image' as const, data: image.data, mimeType: image.mimeType },
           ]),
+          ...(updateNotice ? [{ type: 'text' as const, text: updateNotice }] : []),
         ],
         // The text block stays either way: a client that ignores structured
         // output must still see the whole answer.

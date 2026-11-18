@@ -124,7 +124,7 @@ describe('the packaged skill is loadable as a plugin', () => {
       const { mcpServers } = JSON.parse(readFileSync(`${dir}/.mcp.json`, 'utf8'));
       // Xcode runs each plug-in alone, so each folds core in.
       expect(mcpServers).toEqual({
-        [serverName(p.name)]: { command: SERVER_COMMAND, args: ['-y', `@erayendes/asc-mcp@${version}`, p.name, '--with-core'] },
+        [serverName(p.name)]: { command: SERVER_COMMAND, args: ['--prefer-offline', '--no-audit', '-y', `@erayendes/asc-mcp@${version}`, p.name, '--with-core'] },
       });
     }
     // The local evaluation root carries nothing that would start a server: a

@@ -8,7 +8,8 @@ import { OPERATIONS, SPEC_VERSION } from '../generated/operations.js';
 import { STOREKIT_TOOLS } from '../storekit/index.js';
 import { MACRO_TOOLS } from './catalog.js';
 import { MACRO_COVERED, PROFILES, type SubProfile } from '../profiles.js';
-import { PACKAGE, serverName } from '../clients.js';
+import { PACKAGE, VERSION, serverName } from '../clients.js';
+import { installChannel, newerVersion, restartAdvice } from '../core/update-check.js';
 import type { AscHttpClient } from '../core/http.js';
 import { AscApiError } from '../core/errors.js';
 import type { TokenProvider } from '../core/jwt.js';
@@ -600,7 +601,10 @@ export async function executeMetaTool(
       const checkExpirations = args.check_expirations === true;
       const checkCapabilities = args.check_capabilities === true;
 
+      const newer = newerVersion(VERSION, installChannel(VERSION));
       const result: Record<string, unknown> = {
+        version: VERSION,
+        ...(newer ? { update: { available: newer, next: restartAdvice(VERSION, newer) } } : {}),
         specVersion: SPEC_VERSION,
         loadedDomains: ctx.loadedDomains,
         loadedTools: ctx.registry.size,

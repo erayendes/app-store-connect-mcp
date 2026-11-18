@@ -11,7 +11,7 @@ Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `ge
 ```json
 "ASC-General": {
   "command": "npx",
-  "args": ["-y", "@erayendes/asc-mcp", "general", "--read-only"],
+  "args": ["--prefer-offline", "--no-audit", "-y", "@erayendes/asc-mcp", "general", "--read-only"],
   "env": { "ASC_RATE_LIMIT_PER_HOUR": "1200" }
 }
 ```
@@ -80,6 +80,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 |:--|:--|
 | `ASC_MAX_RESPONSE_CHARS` | Yapay zekâya gönderilen en uzun cevap, karakter olarak (varsayılan 100000). Daha uzun bir liste bir notla kesilir; tam cevap yapay zekâdan geçmeden uygulamanızda kalır. |
 | `ASC_REDACT_PII` | `1`, test kullanıcılarının adlarını ve e-posta adreslerini yapay zekâdan gizler; e-postanın alan adı kalır. Paylaşılan konuşma kayıtları için işe yarar. Varsayılan olarak kapalı, çünkü "build'i kim henüz kurmadı?" sorusunun cevabı test kullanıcılarını listelemekten geçer. |
+| `ASC_NO_UPDATE_CHECK` | `1`, npm'e günde bir kez sorulan "yeni sürüm var mı?" sorusunu ve günün ilk cevabındaki güncelleme notunu kapatır. |
 | `ASC_KEEP_RAW_RESPONSES` | `1`, Apple'ın cevaplarını olduğu gibi geçirir. Varsayılan olarak link kalabalığı temizlenir; listeler yaklaşık %85 küçülür. |
 
 **Yorum yanıtı taslakları** (`reviews_ai__draft_response`).
@@ -128,7 +129,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
   ```json
   "ASC-ClientB": {
     "command": "npx",
-    "args": ["-y", "@erayendes/asc-mcp", "general"],
+    "args": ["--prefer-offline", "--no-audit", "-y", "@erayendes/asc-mcp", "general"],
     "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/path/AuthKey_B.p8" }
   }
   ```

@@ -253,11 +253,11 @@ fs.writeFileSync(path, JSON.stringify(doc));
     expect(code).toBe(0);
     expect(calls.map((args: string[]) => args[1])).toEqual(['add-json', 'remove', 'add-json', 'add-json']);
     expect(JSON.parse(calls[2][5])).toEqual({ ...old,
-      args: ['-y', PACKAGE, 'general', '--read-only'] });
+      args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only'] });
     expect(updated).toEqual(JSON.parse(calls[2][5]));
     // Core follows the profile's read-only, added as a whole entry too.
     expect(calls[3][4]).toBe('ASC-Core');
-    expect(JSON.parse(calls[3][5])).toEqual({ command: 'npx', args: ['-y', PACKAGE, 'core', '--read-only'] });
+    expect(JSON.parse(calls[3][5])).toEqual({ command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'core', '--read-only'] });
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -274,12 +274,12 @@ fs.writeFileSync(path, JSON.stringify(doc));
   it('gives core the read-only an entry has in its env', () => {
     const { home, cursor } = sandbox();
     writeFileSync(cursor, JSON.stringify({ mcpServers: {
-      'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'], env: { ASC_READ_ONLY: 'true' } },
+      'ASC-Analytics': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'analytics'], env: { ASC_READ_ONLY: 'true' } },
     } }));
     const { out } = register(home, ['webhooks', '--clients=cursor']);
     expect(out).toContain('+ ASC-Core  --read-only');
     expect(JSON.parse(readFileSync(cursor, 'utf8')).mcpServers['ASC-Core'].args)
-      .toEqual(['-y', PACKAGE, 'core', '--read-only']);
+      .toEqual(['--prefer-offline', '--no-audit', '-y', PACKAGE, 'core', '--read-only']);
     rmSync(home, { recursive: true, force: true });
   });
 
@@ -315,7 +315,7 @@ fs.writeFileSync(path, JSON.stringify(doc));
     const entries = JSON.parse(readFileSync(cursor, 'utf8')).mcpServers;
     expect(code).toBe(0);
     expect(entries['ASC-General']).toEqual({ command: 'npx',
-      args: ['-y', PACKAGE, 'general', '--read-only'],
+      args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 10 });
     expect(entries['ASC-Analytics']).toEqual(guarded);
     expect(out).toContain('ASC-Analytics  set up by hand; left as it is');

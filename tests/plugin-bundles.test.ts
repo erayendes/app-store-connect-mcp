@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import { transformSync } from 'esbuild';
 import { describe, expect, it } from 'vitest';
-import { SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
+import { NPX_OPTIONS, SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
@@ -41,7 +41,7 @@ describe('plugin generation', () => {
           writeFileSync: (path: string, value: string) => files.set(path, value),
           copyFileSync: (from: string, to: string) => files.set(to, readFileSync(from)),
         };
-        if (id === '../src/clients.js') return { SERVER_COMMAND, profileLabel, serverName };
+        if (id === '../src/clients.js') return { NPX_OPTIONS, SERVER_COMMAND, profileLabel, serverName };
         if (id === '../src/profiles.js') return { CORE_PROFILE, PROFILES };
         return require(id);
       },
@@ -58,7 +58,7 @@ describe('plugin generation', () => {
     for (const profile of PROFILES.filter((p) => p.name !== CORE_PROFILE)) {
       const path = `plugins/${profile.name}`;
       expect(json(`${path}/.mcp.json`).mcpServers[serverName(profile.name)].args).toEqual([
-        '-y', `@erayendes/asc-mcp@${release}`, profile.name, '--with-core',
+        '--prefer-offline', '--no-audit', '-y', `@erayendes/asc-mcp@${release}`, profile.name, '--with-core',
       ]);
       // The README names the pinned version, so compare against the committed
       // copy with that one string moved to the release under test.
@@ -153,7 +153,7 @@ describe('directory plugin bundles', () => {
       const { mcpServers } = JSON.parse(readFileSync(join(entry.source, '.mcp.json'), 'utf8'));
       for (const server of Object.values(mcpServers) as { command: string; args: string[] }[]) {
         expect(server.command).toBe('npx');
-        expect(server.args.slice(0, 2)).toEqual(['-y', `@erayendes/asc-mcp@${version}`]);
+        expect(server.args.slice(0, 4)).toEqual(['--prefer-offline', '--no-audit', '-y', `@erayendes/asc-mcp@${version}`]);
         servers++;
       }
     }
