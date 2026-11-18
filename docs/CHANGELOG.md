@@ -8,6 +8,12 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Heimdall tells you when an update is out.** Once a day it asks npm, in the background, for the newest version on your channel (stable or beta). When there is one, the first answer of the day carries a note for your AI app to pass on: restart the app and the new version starts on its own, since npx always runs the newest one. `asc__status` and `doctor` show it too. `ASC_NO_UPDATE_CHECK=1` turns the check off; [Privacy](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md) lists it.
+- **Heimdall starts without a network.** npx used to ask npm for the newest version on every start, and with no network it waited a minute or more, longer than any AI app waits, so Heimdall showed as failed until the app was restarted. Entries now start with `--prefer-offline --no-audit` and open from the local copy in about a second. New releases still arrive: Heimdall downloads each one into that copy in the background, and the update note above appears only once it is there. Run `setup` or `register` once to move existing entries; `doctor` points out the ones that still start through npm.
+- **Setup remembers your vendor number.** Run in the browser again, it opens with the saved number filled in.
+
 ### [3.1.1] — 2026-11-16
 
 No code changes in this release; it brings the npm page up to date with the repository.
@@ -538,6 +544,12 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Heimdall güncelleme çıktığında söylüyor.** Günde bir kez arka planda npm'e kanalınızdaki (stable ya da beta) en yeni sürümü sorar. Yeni bir sürüm varsa günün ilk cevabına yapay zekânızın size iletmesi için bir not ekler: uygulamanızı yeniden başlatın, yeni sürüm kendiliğinden açılır; npx her zaman en yenisini çalıştırır. `asc__status` ve `doctor` da gösterir. `ASC_NO_UPDATE_CHECK=1` kontrolü kapatır; [Gizlilik](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md) sayfasında yazıyor.
+- **Heimdall internet olmadan açılıyor.** npx her açılışta npm'e en yeni sürümü soruyordu; internet yokken bir dakikadan fazla bekliyordu. Bu, yapay zekâ uygulamalarının bekleme süresinden uzun olduğu için Heimdall uygulama yeniden başlatılana kadar başarısız görünüyordu. Girişler artık `--prefer-offline --no-audit` ile başlıyor ve bilgisayardaki kopyadan yaklaşık bir saniyede açılıyor. Yeni sürümler yine geliyor: Heimdall her yeni sürümü arka planda bu kopyaya indiriyor, güncelleme notu da ancak indirme bitince çıkıyor. Mevcut girişleri taşımak için `setup` ya da `register`'ı bir kez çalıştırın; `doctor` hâlâ npm üzerinden açılan girişleri gösterir.
+- **Setup vendor numaranızı hatırlıyor.** Tarayıcıda yeniden açtığınızda kayıtlı numara dolu gelir.
 
 ### [3.1.1] — 2026-11-16
 

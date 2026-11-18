@@ -16,7 +16,7 @@
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
+import { NPX_OPTIONS, SERVER_COMMAND, profileLabel, serverName } from '../src/clients.js';
 import { CORE_PROFILE, PROFILES } from '../src/profiles.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -54,7 +54,7 @@ This plug-in registers one MCP server, **${serverName(profile)}**, from [Heimdal
 ## What it runs
 
 \`\`\`
-npx -y ${pinnedPackage} ${profile} --with-core
+npx ${NPX_OPTIONS.join(' ')} -y ${pinnedPackage} ${profile} --with-core
 \`\`\`
 
 The package version is pinned to this plug-in's version, so a new Heimdall release reaches you only through a new version of this plug-in. The server runs locally on your machine and talks only to Apple's App Store Connect and App Store Server APIs. It sends nothing anywhere else and collects no telemetry.
@@ -123,7 +123,7 @@ for (const p of PLUGIN_PROFILES) {
     keywords,
   });
   write(`plugins/${p.name}/.mcp.json`, {
-    mcpServers: { [name]: { command: SERVER_COMMAND, args: ['-y', pinnedPackage, p.name, '--with-core'] } },
+    mcpServers: { [name]: { command: SERVER_COMMAND, args: [...NPX_OPTIONS, '-y', pinnedPackage, p.name, '--with-core'] } },
   });
   writeFileSync(resolve(root, `plugins/${p.name}/README.md`), profileReadme(p.name, p.description));
 }

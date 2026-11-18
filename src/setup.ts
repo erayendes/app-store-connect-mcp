@@ -63,6 +63,8 @@ import {
   isDead,
   isUserManaged,
   holdsAsAsked,
+  isCurrent,
+  isNpxOption,
   writableTargets,
 } from './clients.js';
 
@@ -453,7 +455,7 @@ export function registeredAcross(clients: McpClient[]): {
     const other = new Set<string>();
     const entries = readRegistrations(client);
     const found = new Map(entries.filter((r) => r.name !== '*').map((r) => [r.name, r.spec ?? profileOfServer(r.name)!]));
-    for (const reg of entries) if (reg.pkg && reg.pkg !== PACKAGE) other.add(reg.name);
+    for (const reg of entries) if (reg.pkg && !isCurrent(reg)) other.add(reg.name);
     perClient.set(client.id, entries);
     stale.set(client.id, other);
     for (const [name, spec] of found) {
@@ -971,7 +973,7 @@ export interface PlanFile {
 
 /** An entry with its flags (values hidden) — what a plan line shows. */
 const shownEntry = (reg: Registration): string => {
-  const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && arg !== '-y')
+  const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && !isNpxOption(arg))
     .map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
   return `${reg.name}${flags.length ? ` (${flags.join(' ')})` : ''}`;
 };
@@ -1042,7 +1044,7 @@ const subsOf = (spec: string): string[] => {
   }
 };
 const flagsOf = (reg: Registration): string[] => (reg.entry?.args as string[] | undefined)
-  ?.filter((arg) => arg.startsWith('-') && arg !== '-y').map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
+  ?.filter((arg) => arg.startsWith('-') && !isNpxOption(arg)).map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
 const words = (parts: string[]): string | undefined => parts.filter(Boolean).join(', ') || undefined;
 
 /** A new entry: its sub-profiles when only some are picked, then its flags. */

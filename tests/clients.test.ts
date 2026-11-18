@@ -137,7 +137,7 @@ describe('the registry itself', () => {
     const doc = JSON.parse(manualBlock(CLIENTS[0], ['distribution:version']));
     expect(doc.mcpServers['ASC-Distribution']).toEqual({
       command: 'npx',
-      args: ['-y', PACKAGE, 'distribution:version'],
+      args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'distribution:version'],
     });
   });
 });
@@ -275,14 +275,14 @@ describe('reading back what is registered', () => {
 
   it('parses the first non-option argument after the package as the spec', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
-      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] },
+      'ASC-AppInfo': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'app-info', '--read-only'] },
     } }));
     const first = readRegistrations(jsonClient())[0];
     expect(first.spec).toBe('app-info');
-    expect(first.entry?.args).toEqual(['-y', PACKAGE, 'app-info', '--read-only']);
+    expect(first.entry?.args).toEqual(['--prefer-offline', '--no-audit', '-y', PACKAGE, 'app-info', '--read-only']);
     expect(first.target).toMatchObject({ kind: 'json', path: join(dir, 'mcp.json') });
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: {
-      'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, '--read-only', 'app-info'] },
+      'ASC-AppInfo': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, '--read-only', 'app-info'] },
     } }));
     expect(readRegistrations(jsonClient())[0].spec).toBe('app-info');
   });
@@ -304,11 +304,11 @@ describe('reading back what is registered', () => {
     expect(lines.join('\n')).not.toContain('yes');
     applyPlan(plan, () => {});
     const after = JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-General'];
-    expect(after).toEqual({ ...entry, args: ['-y', PACKAGE, 'general', '--read-only', '--x=private-value'] });
+    expect(after).toEqual({ ...entry, args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only', '--x=private-value'] });
   });
 
   it('reports and leaves a credential-carrying entry untouched in planning and writing', () => {
-    const entry = { command: 'npx', args: ['-y', PACKAGE, 'general', '--read-only'],
+    const entry = { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only'],
       env: { ASC_KEY_ID: 'test-only-secret' }, note: 'mine' };
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'ASC-General': entry } }));
     const plan = planChanges([jsonClient()], ['general'], new Map([['temp', readRegistrations(jsonClient())]]),
@@ -363,7 +363,7 @@ describe('reading back what is registered', () => {
   });
 
   it('migrates a legacy name while preserving flags, env and other fields', () => {
-    const old = { command: 'npx', args: ['-y', PACKAGE, 'general', '--read-only'],
+    const old = { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 14 };
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { 'asc-general': old } }));
     const plan = planChanges([jsonClient()], ['general'], new Map([['temp', readRegistrations(jsonClient())]]),
@@ -506,15 +506,15 @@ fs.writeFileSync(path, JSON.stringify(data));
   });
 
   it('keeps the new server when a dead entry of the same name is removed', () => {
-    state({ 'ASC-Access': { command: 'npx', args: ['-y', PACKAGE, 'access:users'] } });
+    state({ 'ASC-Access': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'access:users'] } });
     const { results } = applyToClient(client(), ['access'], ['ASC-Access'], new Map(), { dead: new Map([['ASC-Access', 'ASC-Access (access:users)']]) });
     expect(results.every((r) => r.ok)).toBe(true);
-    expect(result().servers['ASC-Access'].args).toEqual(['-y', PACKAGE, 'access']);
+    expect(result().servers['ASC-Access'].args).toEqual(['--prefer-offline', '--no-audit', '-y', PACKAGE, 'access']);
     expect(result().calls.map((a: string[]) => a[1])).not.toContain('remove');
   });
 
   it('restores the complete old entry when the second add fails', () => {
-    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] };
+    const old = { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'app-info', '--read-only'] };
     state({ 'ASC-AppInfo': old }, 2);
     expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
     expect(result().calls.map((a: string[]) => a[1])).toEqual(['list', 'add', 'remove', 'add', 'add']);
@@ -522,7 +522,7 @@ fs.writeFileSync(path, JSON.stringify(data));
   });
 
   it('preserves flags on a successful Codex overwrite', () => {
-    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'] };
+    const old = { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'app-info', '--read-only'] };
     state({ 'ASC-AppInfo': old });
     expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(true);
     expect(result().servers['ASC-AppInfo']).toEqual(old);
@@ -590,9 +590,9 @@ fs.writeFileSync(path, JSON.stringify(data));
     expect(plan[0].toAdd).toEqual(['general', 'core']);
     expect(plan[0].coreAdded).toEqual(['ASC-Core (--read-only)']);
     applyPlan(plan, () => {});
-    expect(result().servers['ASC-General'].args).toEqual(['-y', PACKAGE, 'general', '--read-only']);
+    expect(result().servers['ASC-General'].args).toEqual(['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only']);
     // Core takes the profile's read-only, through Codex's own add as well.
-    expect(result().servers['ASC-Core'].args).toEqual(['-y', PACKAGE, 'core', '--read-only']);
+    expect(result().servers['ASC-Core'].args).toEqual(['--prefer-offline', '--no-audit', '-y', PACKAGE, 'core', '--read-only']);
     expect(plansForUnticked([], [client()])[0].toRemove).toEqual(['ASC-General', 'ASC-Core']);
   });
 
@@ -667,7 +667,7 @@ fs.writeFileSync(path, JSON.stringify(data));
     listFile: { path: join(dir, 'claude.json'), key: 'servers' },
   }] });
   it('passes the complete old entry as one argv element on restore', () => {
-    const old = { command: 'npx', args: ['-y', PACKAGE, 'app-info', '--read-only'],
+    const old = { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'app-info', '--read-only'],
       env: { DEMO_MODE: 'yes' }, timeout: 15 };
     writeFileSync(join(dir, 'claude.json'), JSON.stringify({ servers: { 'ASC-AppInfo': old }, calls: [], failNew: true }));
     expect(applyToClient(client(), ['app-info'], []).results[0].ok).toBe(false);
@@ -689,8 +689,8 @@ describe('release channel of a registration', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
       mcpServers: {
         'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] },
-        'ASC-General': { command: 'npx', args: ['-y', PACKAGE, 'general'] },
-        'ASC-Core': { command: 'npx', args: ['-y', PACKAGE, 'core'] },
+        'ASC-General': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general'] },
+        'ASC-Core': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'core'] },
       },
     }));
     const stale = new Set<string>();
@@ -764,7 +764,7 @@ describe('a channel move alone', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
       mcpServers: {
         'ASC-Analytics': { command: 'npx', args: ['-y', other, 'analytics'] },
-        'ASC-Core': { command: 'npx', args: ['-y', PACKAGE, 'core'] },
+        'ASC-Core': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'core'] },
       },
     }));
     const stale = new Set<string>();
@@ -780,7 +780,29 @@ describe('a channel move alone', () => {
     lines.length = 0;
     expect(applyPlan(plan, (l) => lines.push(l))).toMatch(/Done\. Restart Temp/);
     expect(lines).toEqual(['✓ Temp']);
-    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-Analytics'].args[1]).toBe(PACKAGE);
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-Analytics'].args).toContain(PACKAGE);
+  });
+});
+
+describe('an entry from before --prefer-offline', () => {
+  it('counts as one to rewrite, and gains the option without losing its flags', () => {
+    writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
+      mcpServers: {
+        'ASC-General': { command: 'npx', args: ['-y', PACKAGE, 'general', '--read-only'] },
+        'ASC-Core': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'core'] },
+      },
+    }));
+    const stale = new Set<string>();
+    const found = readRegistrations(jsonClient());
+    listRegistered(jsonClient(), stale);
+    expect([...stale]).toEqual(['ASC-General']);
+    const plan = planChanges([jsonClient()], ['general'], new Map([['temp', found]]), {
+      prune: true,
+      stale: new Map([['temp', stale]]),
+    });
+    applyPlan(plan, () => {});
+    expect(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).mcpServers['ASC-General'].args)
+      .toEqual(['--prefer-offline', '--no-audit', '-y', PACKAGE, 'general', '--read-only']);
   });
 });
 
@@ -788,8 +810,8 @@ describe('an app the user unticked', () => {
   it('plans to remove every Heimdall entry from it, and removes them', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
       mcpServers: {
-        'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'] },
-        'ASC-AppInfo': { command: 'npx', args: ['-y', PACKAGE, 'app-info'] },
+        'ASC-Analytics': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'analytics'] },
+        'ASC-AppInfo': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'app-info'] },
         other: { command: 'node', args: ['keep-me.js'] },
       },
     }));
@@ -807,7 +829,7 @@ describe('an app the user unticked', () => {
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({ mcpServers: { other: { command: 'node' } } }));
     expect(plansForUnticked([], [jsonClient()])).toEqual([]);
     writeFileSync(join(dir, 'mcp.json'), JSON.stringify({
-      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['-y', PACKAGE, 'analytics'] } },
+      mcpServers: { 'ASC-Analytics': { command: 'npx', args: ['--prefer-offline', '--no-audit', '-y', PACKAGE, 'analytics'] } },
     }));
     expect(plansForUnticked([jsonClient()], [jsonClient()])).toEqual([]);
   });

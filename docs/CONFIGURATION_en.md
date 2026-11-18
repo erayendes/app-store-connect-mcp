@@ -11,7 +11,7 @@ There are two kinds of settings. **Flags** go at the end of `args` in your app's
 ```json
 "ASC-General": {
   "command": "npx",
-  "args": ["-y", "@erayendes/asc-mcp", "general", "--read-only"],
+  "args": ["--prefer-offline", "--no-audit", "-y", "@erayendes/asc-mcp", "general", "--read-only"],
   "env": { "ASC_RATE_LIMIT_PER_HOUR": "1200" }
 }
 ```
@@ -80,6 +80,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 |:--|:--|
 | `ASC_MAX_RESPONSE_CHARS` | Largest answer sent to the AI, in characters (default 100000). A longer list is cut, with a note; the full answer stays available to your app without going through the AI. |
 | `ASC_REDACT_PII` | `1` hides testers' names and email addresses from the AI, keeping the email domain. Useful for shared transcripts. Off by default, because listing testers is how you answer "who hasn't installed the build?" |
+| `ASC_NO_UPDATE_CHECK` | `1` stops the once-a-day question to npm about a newer version, and with it the update note on the first answer of the day. |
 | `ASC_KEEP_RAW_RESPONSES` | `1` passes Apple's answers through untouched. By default link clutter is removed, which makes lists about 85% smaller. |
 
 **Review reply drafts** (`reviews_ai__draft_response`).
@@ -128,7 +129,7 @@ Two ways, no extra setup needed:
   ```json
   "ASC-ClientB": {
     "command": "npx",
-    "args": ["-y", "@erayendes/asc-mcp", "general"],
+    "args": ["--prefer-offline", "--no-audit", "-y", "@erayendes/asc-mcp", "general"],
     "env": { "ASC_KEY_ID": "…", "ASC_ISSUER_ID": "…", "ASC_PRIVATE_KEY_PATH": "/path/AuthKey_B.p8" }
   }
   ```

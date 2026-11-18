@@ -20,6 +20,7 @@ import {
   type ProfileSelection,
 } from './profiles.js';
 import { PACKAGE, serverName } from './clients.js';
+import { installChannel, refreshDistTags } from './core/update-check.js';
 
 /** Exported so a test can prove the profile list here never drifts from the code. */
 export function helpText(): string {
@@ -208,6 +209,8 @@ async function main(): Promise<void> {
   console.error(
     `${scope} v${VERSION} ready (spec ${SPEC_VERSION}${config.readOnly ? ', read-only' : ''})`
   );
+  // Background, at most once a day; the answer waits on disk for a tool call.
+  void refreshDistTags(VERSION, installChannel(VERSION));
 }
 
 /**

@@ -555,6 +555,7 @@ a { color: var(--fg); }
     if (s.existing) {
       // A saved key is the answer unless the user says otherwise, as in the terminal's [Y/n].
       $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden');
+      $('vendor').value = s.existing.vendorNumber || '';
       checkAdmin(true);
       reuse = true;
     }

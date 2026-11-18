@@ -16,6 +16,7 @@ When your AI app calls a tool, Heimdall reads from Apple's App Store Connect API
 
 - **To Apple:** the requests your AI app asks for, signed with your key, sent to Apple's servers over HTTPS.
 - **To your AI app:** the results of those requests, over the local connection the app started.
+- **To npm, once a day:** a request for the latest version number of `@erayendes/asc-mcp`, so Heimdall can tell you when an update is out. It carries nothing about you or your account; like any web request it shows npm your IP address. `ASC_NO_UPDATE_CHECK=1` turns it off.
 - **Nowhere else.** Heimdall sends nothing to the maintainer or any third party, and it has no telemetry, analytics or crash reporting.
 
 What your AI app does with the results is governed by that app's own privacy policy.
@@ -28,6 +29,7 @@ All of it stays on your machine, in `~/.config/asc-mcp` (or the folder `ASC_CONF
 - **Audit log (`audit.jsonl`):** every write Heimdall was asked to make, how it was confirmed and Apple's answer. Arguments are recorded with secrets masked and request bodies reduced to the fields they set.
 - **Failure log (`failures.jsonl`):** calls Apple refused, with Apple's request id, for support.
 - **Report cache:** sales and finance reports for periods that have closed, so they are not downloaded twice.
+- **Update check (`update-check.json`):** the latest version numbers npm reported, when it was asked, and the day the update note was last shown.
 
 You can delete these files at any time; Heimdall recreates what it needs. Uninstalling the package and removing the folder removes everything Heimdall stored.
 

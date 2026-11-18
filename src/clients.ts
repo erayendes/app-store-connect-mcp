@@ -47,7 +47,21 @@ export const SERVER_COMMAND = 'npx';
  */
 export const VERSION = createRequire(import.meta.url)('../package.json').version as string;
 export const PACKAGE = VERSION.includes('-') ? '@erayendes/asc-mcp@beta' : '@erayendes/asc-mcp';
-export const serverArgs = (spec: string): string[] => ['-y', PACKAGE, spec];
+/**
+ * npx asks npm for the newest version on every start, and with no network it
+ * waits a minute or more before failing — longer than any client waits. From
+ * the cache it starts in under a second; Heimdall itself puts each new release
+ * in that cache while it runs (core/update-check.ts), so the next start is it.
+ */
+export const PREFER_OFFLINE = '--prefer-offline';
+/** And no audit: the first start of a new release would wait over a minute on it offline. */
+export const NPX_OPTIONS = [PREFER_OFFLINE, '--no-audit'];
+/** npx's own options in an entry, which are not Heimdall flags. */
+export const isNpxOption = (arg: string): boolean => arg === '-y' || NPX_OPTIONS.includes(arg);
+export const serverArgs = (spec: string): string[] => [...NPX_OPTIONS, '-y', PACKAGE, spec];
+/** Ours, on this channel, and started from the cache: nothing for a run to rewrite. */
+export const isCurrent = (reg: { pkg?: string; entry?: Record<string, unknown> }): boolean =>
+  reg.pkg === PACKAGE && Array.isArray(reg.entry?.args) && (reg.entry!.args as unknown[]).includes(PREFER_OFFLINE);
 /**
  * What an app gets when its entries are rewritten only to change channel. To
  * the user that is not a move of anything: running this setup sets up this
@@ -403,7 +417,7 @@ export const CORE_SERVER = serverName(CORE_SPEC);
  * never: a flag's value may be a path, and an env value may be a secret.
  */
 export function describeEntry(reg: Registration): string {
-  const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && arg !== '-y')
+  const flags = (reg.entry?.args as string[] | undefined)?.filter((arg) => arg.startsWith('-') && !isNpxOption(arg))
     .map((arg) => arg.replace(/=.*/, '=<hidden>')) ?? [];
   const env = Object.keys(envOf(reg));
   const parts = [...(reg.spec ? [reg.spec] : []), ...flags, ...(env.length ? [`env ${env.join(', ')}`] : [])];
@@ -512,7 +526,7 @@ export function registrationBlock(entries: Registration[]) {
 export function holdsAsAsked(here: Registration[], spec: string, migrations: Map<string, string> = new Map()): boolean {
   const held = here.find((r) => r.name === serverName(spec) && !isDead(r));
   const legacy = migrations.get(serverName(spec));
-  return held !== undefined && !isUserManaged(held) && held.spec === spec && held.pkg === PACKAGE &&
+  return held !== undefined && !isUserManaged(held) && held.spec === spec && isCurrent(held) &&
     !(legacy !== undefined && here.some((r) => r.name === legacy));
 }
 
@@ -604,7 +618,7 @@ export function coreActionFor(
   // A user-managed ASC-Core is the user's; it is reported as such elsewhere.
   if (!block.canAdd(CORE_SPEC)) return { kind: 'none' };
   // Read-only where none is needed is stricter, not wrong: it stays.
-  if (existing && existing.spec === CORE_SPEC && existing.pkg === PACKAGE && (!decision.readOnly || isReadOnly(existing))) {
+  if (existing && existing.spec === CORE_SPEC && isCurrent(existing) && (!decision.readOnly || isReadOnly(existing))) {
     return { kind: 'settled' };
   }
   return { kind: 'add', readOnly: decision.readOnly };
@@ -624,7 +638,7 @@ function codexEntry(row: Record<string, unknown>): Record<string, unknown> | und
   const transport = row.transport;
   if (!transport || typeof transport !== 'object' || Array.isArray(transport)) return undefined;
   const t = transport as Record<string, unknown>;
-  const args = t.args;
+  const args: unknown = Array.isArray(t.args) ? t.args.filter((arg, i) => !(NPX_OPTIONS.includes(arg) && i < NPX_OPTIONS.length)) : t.args;
   const empty = (value: unknown): boolean => value == null ||
     (Array.isArray(value) && value.length === 0) ||
     (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0);
@@ -641,7 +655,7 @@ function codexEntry(row: Record<string, unknown>): Record<string, unknown> | und
       Object.keys(t).some((key) => !['type', 'command', 'args', 'env', 'env_vars', 'cwd'].includes(key)) ||
       Object.keys(row).some((key) => !['name', 'transport', 'enabled', 'disabled_reason', 'enabled_tools',
         'disabled_tools', 'startup_timeout_sec', 'tool_timeout_sec', 'auth_status', 'required'].includes(key))) return undefined;
-  return { command: SERVER_COMMAND, args: [...args] };
+  return { command: SERVER_COMMAND, args: [...(t.args as string[])] };
 }
 
 export function readRegistrations(client: McpClient, localOnly = false): Registration[] {
@@ -773,7 +787,7 @@ export function listRegistered(client: McpClient, stale?: Set<string>): Map<stri
   for (const reg of readRegistrations(client)) {
     if (reg.name === '*') continue;
     found.set(reg.name, reg.spec ?? profileOfServer(reg.name)!);
-    if (reg.pkg && reg.pkg !== PACKAGE) stale?.add(reg.name);
+    if (reg.pkg && !isCurrent(reg)) stale?.add(reg.name);
   }
   return found;
 }
@@ -1170,6 +1184,7 @@ function rewrittenEntry(entry: Record<string, unknown>, spec: string): Record<st
   const specAt = args.findIndex((arg, i) => i > pkgAt && !arg.startsWith('-'));
   args[pkgAt] = PACKAGE;
   args[specAt] = spec;
+  args.unshift(...NPX_OPTIONS.filter((option) => !args.includes(option)));
   return { ...entry, args };
 }
 

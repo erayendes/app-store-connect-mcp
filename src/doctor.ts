@@ -2,10 +2,11 @@
 import { accessSync, constants, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import {
-  CLIENTS, PACKAGE, VERSION, presentTargets, readRegistrations, coreDecision,
+  CLIENTS, PACKAGE, VERSION, isCurrent, presentTargets, readRegistrations, coreDecision,
   isDead, type McpClient,
 } from './clients.js';
 import { readSharedConfig } from './core/shared-config.js';
+import { installChannel, newerVersion } from './core/update-check.js';
 
 type MetadataExec = (file: string, args: string[], options: { stdio: 'ignore' }) => unknown;
 
@@ -56,6 +57,11 @@ export function credentialPresence(
   return `private key reference missing. ${remedy}`;
 }
 
+function updateLine(env: NodeJS.ProcessEnv): string[] {
+  const next = newerVersion(VERSION, installChannel(VERSION), env);
+  return next ? [`Update: ${next} is out. Next: restart your AI apps; npx starts the new version on its own.`] : [];
+}
+
 /** No client CLI is run, including when a config cannot be interpreted. */
 export function doctorReport(clients: McpClient[] = CLIENTS, env: NodeJS.ProcessEnv = process.env): string {
   const lines = [
@@ -63,6 +69,7 @@ export function doctorReport(clients: McpClient[] = CLIENTS, env: NodeJS.Process
     `Node: ${process.version}`,
     `Package: @erayendes/asc-mcp ${VERSION}`,
     `Release channel: ${PACKAGE.endsWith('@beta') ? 'beta' : 'stable'}`,
+    ...updateLine(env),
     `Credentials: ${credentialPresence(env)}`,
     '',
   ];
@@ -89,6 +96,9 @@ export function doctorReport(clients: McpClient[] = CLIENTS, env: NodeJS.Process
         if (reg.pkg && reg.pkg !== PACKAGE) {
           const spec = isDead(reg) ? undefined : reg.spec;
           lines.push(`    Package/channel differs from this doctor. Next: run npx -y ${PACKAGE} ${spec ? `register ${spec} --clients=${client.id}` : 'setup in a real terminal'}, then restart the client.`);
+        } else if (reg.pkg && !isCurrent(reg)) {
+          const spec = isDead(reg) ? undefined : reg.spec;
+          lines.push(`    Starts by asking npm, so it cannot start without a network. Next: run npx -y ${PACKAGE} ${spec ? `register ${spec} --clients=${client.id}` : 'setup in a real terminal'}, then restart the client.`);
         }
         if (!reg.entry) {
           lines.push('    Credential overrides could not be inspected. Next: review this entry in the client MCP settings, then call asc__status in that client.');
