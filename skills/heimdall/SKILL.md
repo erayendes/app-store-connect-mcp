@@ -234,9 +234,9 @@ the report, where the raw chain ends holding a link.
   Code tab), such a write opens a macOS dialog and waits for an answer: tell
   the user to look for it. If it is still refused, relay that; never edit
   client config, set `ASC_CONFIRM_WRITES`, or reach Apple another way.
-- Territories are ISO-3166 **alpha-3**: `USA`, `TUR`, `DEU` — never `US`, `TR`,
-  `DE`. The two-letter form is not rejected; it returns 200 and an empty list
-  that reads as "no data here".
+- Territories are ISO-3166 **alpha-3**: `USA`, `TUR`, `DEU`. Heimdall turns
+  `US`, `TR`, `DE` into them; Apple itself would answer the two-letter form
+  with 200 and an empty list that reads as "no data here".
 - A server started with `--read-only` (or `ASC_READ_ONLY=true`) does not list
   any tool that can change something; asking for a write there is asking for a
   tool that is not loaded, not a permission problem.

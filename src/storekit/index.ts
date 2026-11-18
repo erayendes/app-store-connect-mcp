@@ -418,7 +418,7 @@ export const STOREKIT_TOOLS: McpToolDefinition[] = [
         storefront_country_codes: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Only these storefronts, ISO-3166 alpha-3 (USA, TUR, DEU — not US, TR, DE). Omit for all.',
+          description: 'Only these storefronts, ISO-3166 alpha-3 (USA, TUR, DEU); US, TR and DE are turned into those. Omit for all.',
         },
       },
       required: ['product_id', 'extend_by_days', 'request_identifier'],

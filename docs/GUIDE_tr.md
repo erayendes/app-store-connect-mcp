@@ -4,6 +4,8 @@
 
 Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `general` + `analytics` profillerini tek süreçte, zorunlu salt okunur olarak başlatır. `ASC_READ_ONLY=false` olsa bile yazma araçları listelenmez. Kimlik bilgileri olmadan araçları listeleyebilirsiniz; hesabınızdaki verileri okumak için kimlik bilgileri gerekir. Tam kullanım için bir terminalde `npx -y @erayendes/asc-mcp setup` komutunu çalıştırın ve profillerinizi seçin. Bilinmeyen veya kaldırılmış bir profil adı hâlâ yalnızca `asc__profile_unknown` bildirimini gösterir.
 
+Apple'ın API'sinde hata yerine doğru görünen bir cevap döndüren tuzaklar var: üç harfli ülke kodları, 403'ün iki anlamı, incelemeye birlikte gitmesi gerekenler. Hepsi [Apple API'sinin söylemedikleri](PITFALLS_tr.md) sayfasında.
+
 ## Riskli işlemlerde onay
 
 **Riskli değişikliklerden önce onay varsayılan olarak açıktır.**

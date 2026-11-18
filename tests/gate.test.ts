@@ -48,7 +48,7 @@ import { MUTATING_TAILS } from '../scripts/ax-breach.js';
 describe('server instructions (offline)', () => {
   it.each([
     ['the alpha-3 territory format', /alpha-3/],
-    ['that a two-letter code is not rejected', /Two letters[\s\S]{0,40}not rejected/],
+    ['that two letters return an empty list, not an error', /two letters[\s\S]{0,40}empty list/],
     ['that list endpoints return stubs, not values', /stubs, not values/i],
     ['that a macro answers in one call', /pricing__\*[\s\S]{0,40}one call/],
   ])('states %s', (_what, pattern) => {
