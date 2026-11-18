@@ -187,8 +187,7 @@ const PARAM_NOTES: Array<[RegExp, string]> = [
   ],
   [
     /^filter\[(review)?[Tt]erritory\]$/,
-    'Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: ' +
-      '"US" is accepted and silently returns an empty list.',
+    'Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them.',
   ],
   // 11 parameters, and the one an agent gets wrong most: everything else it
   // knows an app by is the bundle ID, which matches nothing here.

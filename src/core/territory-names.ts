@@ -66,3 +66,38 @@ export const TERRITORY_NAMES: Record<string, string> = {
   XKS: 'Kosovo', YEM: 'Yemen', ZAF: 'South Africa', ZMB: 'Zambia',
   ZWE: 'Zimbabwe',
 };
+
+/**
+ * ISO-3166 alpha-2 → Apple's code, for the same 175 territories. People say
+ * TR and US; Apple answers those with 200 and an empty list, so they are
+ * turned into TUR and USA before a request is built. `XK` is Kosovo.
+ */
+const ALPHA3_OF: Record<string, string> = Object.fromEntries(
+  'AF:AFG AO:AGO AI:AIA AL:ALB AE:ARE AR:ARG AM:ARM AG:ATG AU:AUS AT:AUT AZ:AZE BE:BEL BJ:BEN BF:BFA BG:BGR BH:BHR BS:BHS BA:BIH BY:BLR BZ:BLZ BM:BMU BO:BOL BR:BRA BB:BRB BN:BRN BT:BTN BW:BWA CA:CAN CH:CHE CL:CHL CN:CHN CI:CIV CM:CMR CD:COD CG:COG CO:COL CV:CPV CR:CRI KY:CYM CY:CYP CZ:CZE DE:DEU DM:DMA DK:DNK DO:DOM DZ:DZA EC:ECU EG:EGY ES:ESP EE:EST FI:FIN FJ:FJI FR:FRA FM:FSM GA:GAB GB:GBR GE:GEO GH:GHA GM:GMB GW:GNB GR:GRC GD:GRD GT:GTM GY:GUY HK:HKG HN:HND HR:HRV HU:HUN ID:IDN IN:IND IE:IRL IQ:IRQ IS:ISL IL:ISR IT:ITA JM:JAM JO:JOR JP:JPN KZ:KAZ KE:KEN KG:KGZ KH:KHM KN:KNA KR:KOR KW:KWT LA:LAO LB:LBN LR:LBR LY:LBY LC:LCA LK:LKA LT:LTU LU:LUX LV:LVA MO:MAC MA:MAR MD:MDA MG:MDG MV:MDV MX:MEX MK:MKD ML:MLI MT:MLT MM:MMR ME:MNE MN:MNG MZ:MOZ MR:MRT MS:MSR MU:MUS MW:MWI MY:MYS NA:NAM NE:NER NG:NGA NI:NIC NL:NLD NO:NOR NP:NPL NR:NRU NZ:NZL OM:OMN PK:PAK PA:PAN PE:PER PH:PHL PW:PLW PG:PNG PL:POL PT:PRT PY:PRY QA:QAT RO:ROU RU:RUS RW:RWA SA:SAU SN:SEN SG:SGP SB:SLB SL:SLE SV:SLV RS:SRB ST:STP SR:SUR SK:SVK SI:SVN SE:SWE SZ:SWZ SC:SYC TC:TCA TD:TCD TH:THA TJ:TJK TM:TKM TO:TON TT:TTO TN:TUN TR:TUR TW:TWN TZ:TZA UG:UGA UA:UKR UY:URY US:USA UZ:UZB VC:VCT VE:VEN VG:VGB VN:VNM VU:VUT XK:XKS YE:YEM ZA:ZAF ZM:ZMB ZW:ZWE'.split(' ').map((pair) => pair.split(':'))
+);
+
+/** A territory code as Apple wants it: `tr`, `TR` and `tur` all become `TUR`. Anything unknown is returned as given. */
+export function toAlpha3(code: string): string {
+  const upper = code.trim().toUpperCase();
+  return ALPHA3_OF[upper] ?? (TERRITORY_NAMES[upper] ? upper : code);
+}
+
+const TERRITORY_KEY = /^(territory|territories|storefront_country_codes|filter(\[|_)(review)?[Tt]erritory\]?)$/;
+
+/**
+ * Every territory code in a tool's arguments, as Apple wants it: the
+ * territory parameters themselves, comma lists included, and `{ type:
+ * 'territories', id }` anywhere in a body. Runs once, before any tool.
+ */
+export function withAlpha3<T>(value: T, key = ''): T {
+  if (TERRITORY_KEY.test(key)) {
+    if (typeof value === 'string') return value.split(',').map(toAlpha3).join(',') as T;
+    if (Array.isArray(value)) return value.map((v) => (typeof v === 'string' ? toAlpha3(v) : v)) as T;
+  }
+  if (Array.isArray(value)) return value.map((v) => withAlpha3(v)) as T;
+  if (!value || typeof value !== 'object') return value;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value)) out[k] = withAlpha3(v, k);
+  if (out.type === 'territories' && typeof out.id === 'string') out.id = toAlpha3(out.id);
+  return out as T;
+}

@@ -3882,7 +3882,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -3960,7 +3960,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -4065,7 +4065,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -5265,7 +5265,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by attribute 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list.",
+        "description": "filter by attribute 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them.",
         "enum": [
           "ABW",
           "AFG",
@@ -5317,7 +5317,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[reviewTerritory]",
         "type": "array",
-        "description": "filter by id(s) of related 'reviewTerritory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'reviewTerritory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "exists[publishedResponse]",
@@ -6015,7 +6015,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "fields[appPricePoints]",
@@ -6978,7 +6978,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "fields[customerReviewSummarizations]",
@@ -7022,7 +7022,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by attribute 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list.",
+        "description": "filter by attribute 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them.",
         "enum": [
           "ABW",
           "AFG",
@@ -7074,7 +7074,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[reviewTerritory]",
         "type": "array",
-        "description": "filter by id(s) of related 'reviewTerritory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'reviewTerritory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "exists[publishedResponse]",
@@ -18085,7 +18085,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -18133,7 +18133,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "filter[inAppPurchaseV2]",
@@ -18170,7 +18170,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -18263,7 +18263,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -18578,7 +18578,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -18612,7 +18612,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -20398,7 +20398,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -22125,7 +22125,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -22267,7 +22267,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "filter[subscription]",
@@ -22315,7 +22315,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "filter[subscription]",
@@ -22489,7 +22489,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -22766,7 +22766,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -22815,7 +22815,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -22877,7 +22877,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "filter[upfrontPricePointId]",
@@ -22933,7 +22933,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -23004,7 +23004,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
@@ -23920,7 +23920,7 @@ export const OPERATIONS: Operation[] = [
       {
         "name": "filter[territory]",
         "type": "array",
-        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Not the two-letter form: \"US\" is accepted and silently returns an empty list."
+        "description": "filter by id(s) of related 'territory' Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
       },
       {
         "name": "limit",
