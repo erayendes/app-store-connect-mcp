@@ -1,10 +1,10 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.6
+// Source: Apple App Store Connect OpenAPI specification v4.6.1
 // Regenerate with: npm run generate
 
 import type { Operation } from '../core/types.js';
 
-export const SPEC_VERSION = "4.6";
+export const SPEC_VERSION = "4.6.1";
 
 export const OPERATIONS: Operation[] = [
   {
@@ -7207,6 +7207,7 @@ export const OPERATIONS: Operation[] = [
           "subscriptionStatusUrlVersionForSandbox",
           "contentRightsDeclaration",
           "streamlinedPurchasingEnabled",
+          "groupPurchaseInvitationMode",
           "accessibilityDeclarations",
           "appEncryptionDeclarations",
           "appStoreIcon",
@@ -7233,8 +7234,7 @@ export const OPERATIONS: Operation[] = [
           "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
-          "inAppPurchasesV2",
-          "promotedPurchases"
+          "inAppPurchasesV2"
         ]
       },
       {
@@ -7512,6 +7512,7 @@ export const OPERATIONS: Operation[] = [
           "subscriptionStatusUrlVersionForSandbox",
           "contentRightsDeclaration",
           "streamlinedPurchasingEnabled",
+          "groupPurchaseInvitationMode",
           "accessibilityDeclarations",
           "appEncryptionDeclarations",
           "appStoreIcon",
@@ -7538,8 +7539,7 @@ export const OPERATIONS: Operation[] = [
           "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
-          "inAppPurchasesV2",
-          "promotedPurchases"
+          "inAppPurchasesV2"
         ]
       },
       {
@@ -9792,6 +9792,7 @@ export const OPERATIONS: Operation[] = [
           "subscriptionStatusUrlVersionForSandbox",
           "contentRightsDeclaration",
           "streamlinedPurchasingEnabled",
+          "groupPurchaseInvitationMode",
           "accessibilityDeclarations",
           "appEncryptionDeclarations",
           "appStoreIcon",
@@ -9818,8 +9819,7 @@ export const OPERATIONS: Operation[] = [
           "performanceOverviews",
           "perfPowerMetrics",
           "appCustomProductPages",
-          "inAppPurchasesV2",
-          "promotedPurchases"
+          "inAppPurchasesV2"
         ]
       },
       {
@@ -22254,6 +22254,19 @@ export const OPERATIONS: Operation[] = [
     "risk": "revenue"
   },
   {
+    "name": "subscription_price_change_previews.create",
+    "domain": "misc",
+    "method": "POST",
+    "path": "/v1/subscriptionPriceChangePreviews",
+    "description": "Create a subscription price change preview.",
+    "readOnly": false,
+    "pathParams": [],
+    "queryParams": [],
+    "hasBody": true,
+    "bodyRef": "SubscriptionPriceChangePreviewCreateRequest",
+    "risk": "revenue"
+  },
+  {
     "name": "subscription_price_points.adjusted_equalizations.list",
     "domain": "subscriptions",
     "method": "GET",
@@ -22378,6 +22391,119 @@ export const OPERATIONS: Operation[] = [
         "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
         "enum": [
           "territory"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "subscription_price_tier_equalizations.create",
+    "domain": "misc",
+    "method": "POST",
+    "path": "/v1/subscriptionPriceTierEqualizations",
+    "description": "Create a subscription price tier equalization.",
+    "readOnly": false,
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned.",
+        "enum": [
+          "priceTierPricePoints"
+        ]
+      },
+      {
+        "name": "fields[subscriptionPriceTierEqualizations]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionPriceTierEqualizations Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "equalizedPrices",
+          "priceTierPricePoints"
+        ]
+      }
+    ],
+    "hasBody": true,
+    "bodyRef": "SubscriptionPriceTierEqualizationCreateRequest",
+    "risk": "revenue"
+  },
+  {
+    "name": "subscription_price_tiers.list",
+    "domain": "misc",
+    "method": "GET",
+    "path": "/v1/subscriptionPriceTiers",
+    "description": "List subscription price tiers.",
+    "readOnly": true,
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filter[subscription]",
+        "type": "array",
+        "description": "filter by subscription",
+        "required": true
+      },
+      {
+        "name": "filter[territory]",
+        "type": "array",
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
+      },
+      {
+        "name": "fields[subscriptionPriceTiers]",
+        "type": "array",
+        "description": "the fields to include for returned resources of type subscriptionPriceTiers Return only these attributes. A full row set can exceed 200 KB.",
+        "enum": [
+          "minQuantity",
+          "subscriptionPricePoint"
+        ]
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
+        "enum": [
+          "subscriptionPricePoint"
+        ]
+      }
+    ],
+    "hasBody": false
+  },
+  {
+    "name": "subscription_prices.additional_price_tiers.list",
+    "domain": "subscriptions",
+    "method": "GET",
+    "path": "/v1/subscriptionPrices/{id}/additionalPriceTiers",
+    "description": "List the additional price tiers belonging to a subscription price.",
+    "readOnly": true,
+    "pathParams": [
+      "id"
+    ],
+    "queryParams": [
+      {
+        "name": "filter[subscription]",
+        "type": "array",
+        "description": "filter by subscription"
+      },
+      {
+        "name": "filter[territory]",
+        "type": "array",
+        "description": "filter by territory Three-letter ISO-3166 alpha-3 code — USA, TUR, DEU, GBR. Heimdall turns US, TR into them."
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "description": "maximum resources per page"
+      },
+      {
+        "name": "include",
+        "type": "array",
+        "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
+        "enum": [
+          "subscriptionPricePoint"
         ]
       }
     ],
@@ -22946,7 +23072,8 @@ export const OPERATIONS: Operation[] = [
         "description": "comma-separated list of relationships to include Pull related records in the same call. Without it, checking a relationship costs one extra call per row returned. ALWAYS pass include=subscriptionPricePoint,territory — without it every row is an opaque id with no price and no currency, which reads as \"there is no price here\".",
         "enum": [
           "territory",
-          "subscriptionPricePoint"
+          "subscriptionPricePoint",
+          "additionalPriceTiers"
         ]
       }
     ],

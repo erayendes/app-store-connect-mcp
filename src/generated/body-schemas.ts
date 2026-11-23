@@ -1,5 +1,5 @@
 // AUTO-GENERATED — do not edit by hand.
-// Source: Apple App Store Connect OpenAPI specification v4.6
+// Source: Apple App Store Connect OpenAPI specification v4.6.1
 // Regenerate with: npm run generate
 
 /** Simplified JSON Schemas for request bodies, keyed by Operation.bodyRef. */
@@ -241,6 +241,10 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
          "FREQUENT"
         ]
        },
+       "datingAndRelationships": {
+        "type": "boolean",
+        "nullable": true
+       },
        "gambling": {
         "type": "boolean",
         "nullable": true
@@ -338,6 +342,10 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
          "INFREQUENT",
          "FREQUENT"
         ]
+       },
+       "sharedLocation": {
+        "type": "boolean",
+        "nullable": true
        },
        "socialMedia": {
         "type": "boolean",
@@ -6915,6 +6923,14 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
        "streamlinedPurchasingEnabled": {
         "type": "boolean",
         "nullable": true
+       },
+       "groupPurchaseInvitationMode": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+         "APPLE_HOSTED",
+         "DEVELOPER_HOSTED"
+        ]
        }
       },
       "additionalProperties": false
@@ -22073,6 +22089,230 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
   ],
   "additionalProperties": false
  },
+ "SubscriptionPriceChangePreviewCreateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "subscriptionPriceChangePreviews"
+      ]
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "proposedChanges": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "territoryId": {
+           "type": "string"
+          },
+          "startDate": {
+           "type": "string",
+           "format": "date"
+          },
+          "basePricePointId": {
+           "type": "string"
+          },
+          "additionalPriceTiers": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "minQuantity": {
+              "type": "integer"
+             },
+             "subscriptionPricePointId": {
+              "type": "string"
+             }
+            },
+            "required": [
+             "minQuantity",
+             "subscriptionPricePointId"
+            ],
+            "additionalProperties": false
+           }
+          }
+         },
+         "additionalProperties": false
+        },
+        "nullable": true
+       }
+      },
+      "additionalProperties": false
+     },
+     "relationships": {
+      "type": "object",
+      "properties": {
+       "subscription": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "subscriptions"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "subscription"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "relationships",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
+ "SubscriptionPriceTierEqualizationCreateRequest": {
+  "type": "object",
+  "properties": {
+   "data": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "enum": [
+       "subscriptionPriceTierEqualizations"
+      ]
+     },
+     "attributes": {
+      "type": "object",
+      "properties": {
+       "additionalPriceTiers": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "minQuantity": {
+           "type": "integer"
+          },
+          "subscriptionPricePointId": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "minQuantity",
+          "subscriptionPricePointId"
+         ],
+         "additionalProperties": false
+        },
+        "nullable": true
+       }
+      },
+      "additionalProperties": false
+     },
+     "relationships": {
+      "type": "object",
+      "properties": {
+       "subscription": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "subscriptions"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       },
+       "basePricePoint": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "object",
+          "properties": {
+           "type": {
+            "type": "string",
+            "enum": [
+             "subscriptionPricePoints"
+            ]
+           },
+           "id": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "id",
+           "type"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "required": [
+         "data"
+        ],
+        "additionalProperties": false
+       }
+      },
+      "required": [
+       "basePricePoint",
+       "subscription"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "relationships",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "data"
+  ],
+  "additionalProperties": false
+ },
  "SubscriptionPriceCreateRequest": {
   "type": "object",
   "properties": {
@@ -22190,6 +22430,34 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
          "data"
         ],
         "additionalProperties": false
+       },
+       "additionalPriceTiers": {
+        "type": "object",
+        "properties": {
+         "data": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "type": {
+             "type": "string",
+             "enum": [
+              "subscriptionPriceTiers"
+             ]
+            },
+            "id": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "type"
+           ],
+           "additionalProperties": false
+          }
+         }
+        },
+        "additionalProperties": false
        }
       },
       "required": [
@@ -22204,6 +22472,68 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
      "type"
     ],
     "additionalProperties": false
+   },
+   "included": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "type": {
+       "type": "string",
+       "enum": [
+        "subscriptionPriceTiers"
+       ]
+      },
+      "id": {
+       "type": "string"
+      },
+      "attributes": {
+       "type": "object",
+       "properties": {
+        "minQuantity": {
+         "type": "integer",
+         "nullable": true
+        }
+       },
+       "additionalProperties": false
+      },
+      "relationships": {
+       "type": "object",
+       "properties": {
+        "subscriptionPricePoint": {
+         "type": "object",
+         "properties": {
+          "data": {
+           "type": "object",
+           "properties": {
+            "type": {
+             "type": "string",
+             "enum": [
+              "subscriptionPricePoints"
+             ]
+            },
+            "id": {
+             "type": "string"
+            }
+           },
+           "required": [
+            "id",
+            "type"
+           ],
+           "additionalProperties": false
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "type"
+     ],
+     "additionalProperties": false
+    }
    }
   },
   "required": [
@@ -22966,6 +23296,65 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
         "type": {
          "type": "string",
          "enum": [
+          "subscriptionPriceTiers"
+         ]
+        },
+        "id": {
+         "type": "string"
+        },
+        "attributes": {
+         "type": "object",
+         "properties": {
+          "minQuantity": {
+           "type": "integer",
+           "nullable": true
+          }
+         },
+         "additionalProperties": false
+        },
+        "relationships": {
+         "type": "object",
+         "properties": {
+          "subscriptionPricePoint": {
+           "type": "object",
+           "properties": {
+            "data": {
+             "type": "object",
+             "properties": {
+              "type": {
+               "type": "string",
+               "enum": [
+                "subscriptionPricePoints"
+               ]
+              },
+              "id": {
+               "type": "string"
+              }
+             },
+             "required": [
+              "id",
+              "type"
+             ],
+             "additionalProperties": false
+            }
+           },
+           "additionalProperties": false
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "required": [
+        "type"
+       ],
+       "additionalProperties": false
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "type": "string",
+         "enum": [
           "subscriptionPromotionalOffers"
          ]
         },
@@ -23196,6 +23585,34 @@ export const BODY_SCHEMAS: Record<string, unknown> = {
               "type"
              ],
              "additionalProperties": false
+            }
+           },
+           "additionalProperties": false
+          },
+          "additionalPriceTiers": {
+           "type": "object",
+           "properties": {
+            "data": {
+             "type": "array",
+             "items": {
+              "type": "object",
+              "properties": {
+               "type": {
+                "type": "string",
+                "enum": [
+                 "subscriptionPriceTiers"
+                ]
+               },
+               "id": {
+                "type": "string"
+               }
+              },
+              "required": [
+               "id",
+               "type"
+              ],
+              "additionalProperties": false
+             }
             }
            },
            "additionalProperties": false
