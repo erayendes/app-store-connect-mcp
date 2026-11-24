@@ -5,8 +5,9 @@ import { createServer } from '../src/server.js';
 import { resolveSelection } from '../src/profiles.js';
 import { executeTestflightTool, TESTFLIGHT_TOOLS, buildTestflightPreview } from '../src/tools/testflight.js';
 
-function fakeHttp(options: { state?: string; expired?: boolean; assigned?: string[]; fail?: string; assignedHasMore?: boolean; duplicate?: boolean } = {}) {
+function fakeHttp(options: { state?: string; expired?: boolean; assigned?: string[]; fail?: string; assignedHasMore?: boolean; duplicate?: boolean; notes?: Record<string, string>; reviewed?: boolean } = {}) {
   const posts: Array<{ path: string; body: unknown }> = [];
+  const writes: string[] = [];
   const reads: Array<{ path: string; query: Record<string, unknown> | undefined; maxPages: number | undefined }> = [];
   const groups = [
     { id: 'g1', attributes: { name: 'Internal', isInternalGroup: true } },
@@ -23,18 +24,22 @@ function fakeHttp(options: { state?: string; expired?: boolean; assigned?: strin
         ? [{ id: 'b1', attributes: { version: '42', processingState: options.state ?? 'VALID', expired: options.expired ?? false } },
           ...(options.duplicate ? [{ id: 'b2', attributes: { version: '42', processingState: 'VALID', expired: false } }] : [])]
         : path === '/v1/betaGroups' ? groups.filter((g) => (options.assigned ?? []).includes(g.id))
-        : path.endsWith('/betaGroups') ? groups : [],
+        : path.endsWith('/betaGroups') ? groups
+        : path.endsWith('/betaBuildLocalizations') ? Object.entries(options.notes ?? {}).map(([locale, whatsNew], i) => ({ id: `l${i}`, attributes: { locale, whatsNew } }))
+        : path === '/v1/betaAppReviewSubmissions' && options.reviewed ? [{ id: 'r1', attributes: { betaReviewState: 'WAITING_FOR_REVIEW' } }] : [],
       hasMore: path === '/v1/betaGroups' && options.assignedHasMore === true,
     });
     },
+    patch: async (path: string, body: unknown) => { writes.push(`PATCH ${path}`); posts.push({ path, body }); },
     post: async (path: string, body: unknown) => {
+      writes.push(`POST ${path}`);
       posts.push({ path, body });
       if (options.fail && path.includes(`/betaGroups/${options.fail}/`)) {
         throw new AscApiError('Apple rejected the assignment', 409, [{ title: 'Conflict', detail: 'Build not eligible' }]);
       }
     },
   };
-  return { http: http as never, posts, reads };
+  return { http: http as never, posts, reads, writes };
 }
 
 const args = { app: '123', build: '42', groups: ['Internal', 'External'] };
@@ -133,6 +138,52 @@ describe('testflight__assign_build_to_groups', () => {
     // The audit log records the call as an error from this flag.
     expect(result.ok).toBe(false);
     expect((await run(fakeHttp().http)).ok).toBeUndefined();
+  });
+
+  it('sets What to Test, assigns the groups and submits beta review, in that order', async () => {
+    const { http, writes } = fakeHttp({ notes: { 'en-US': 'Old text', 'tr': 'Yeni dışa aktarmayı deneyin' } });
+    const result = await run(http, { ...args, what_to_test: { 'en-US': 'Try the new export', 'tr': 'Yeni dışa aktarmayı deneyin', 'de-DE': 'Neuen Export testen' }, submit_beta_review: true });
+    expect(result.whatToTest.map((n: any) => [n.locale, n.status])).toEqual([['en-US', 'set'], ['tr', 'already_set'], ['de-DE', 'set']]);
+    expect(result.betaReview.status).toBe('submitted');
+    expect(result.groups[1].note).toBeUndefined();
+    expect(writes).toEqual([
+      'PATCH /v1/betaBuildLocalizations/l0', 'POST /v1/betaBuildLocalizations',
+      'POST /v1/betaGroups/g1/relationships/builds', 'POST /v1/betaGroups/g2/relationships/builds',
+      'POST /v1/betaAppReviewSubmissions',
+    ]);
+  });
+
+  it('writes nothing when called again after every step is done', async () => {
+    const { http, writes } = fakeHttp({ notes: { 'en-US': 'Try it' }, assigned: ['g1', 'g2'], reviewed: true });
+    const result = await run(http, { ...args, what_to_test: { 'en-US': 'Try it' }, submit_beta_review: true });
+    expect(result.whatToTest[0].status).toBe('already_set');
+    expect(result.groups.map((g: any) => g.status)).toEqual(['already_assigned', 'already_assigned']);
+    expect(result.betaReview).toMatchObject({ status: 'already_submitted', state: 'WAITING_FOR_REVIEW' });
+    expect(writes).toEqual([]);
+  });
+
+  it('dry-run reports the notes and the review it would write', async () => {
+    const { http, writes } = fakeHttp();
+    const result = await run(http, { ...args, what_to_test: { 'en-US': 'Try it' }, submit_beta_review: true }, true);
+    expect(result.whatToTest[0].status).toBe('would_set');
+    expect(result.betaReview.status).toBe('would_submit');
+    expect(writes).toEqual([]);
+  });
+
+  it('refuses malformed What to Test before reading Apple', async () => {
+    for (const what_to_test of [[], { 'en-US': '' }, { 'en-US': 'x'.repeat(4001) }, 'text']) {
+      const { http, reads } = fakeHttp();
+      await expect(run(http, { ...args, what_to_test })).rejects.toThrow(/what_to_test/);
+      expect(reads).toEqual([]);
+    }
+    await expect(run(fakeHttp().http, { ...args, submit_beta_review: 'yes' })).rejects.toThrow(/submit_beta_review/);
+  });
+
+  it('names the notes and the review in its confirmation prompt', () => {
+    const preview = buildTestflightPreview({ ...args, what_to_test: { 'en-US': 'x', tr: 'y' }, submit_beta_review: true });
+    expect(preview).toContain('What to Test: en-US, tr');
+    expect(preview).toContain('beta app review');
+    expect(preview).not.toContain('does not submit');
   });
 
   it('refuses an incomplete assignment check before any POST', async () => {

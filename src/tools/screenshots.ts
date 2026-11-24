@@ -619,6 +619,25 @@ function checkFileArgs(name: string, target: FileTarget, adapter: FileAdapter, a
   }
 }
 
+/**
+ * A build Apple already has an upload for. A second one would be refused or
+ * duplicate it, and after a dropped call the caller cannot tell whether the
+ * first landed, so say where it stands instead. A FAILED upload is not in the way.
+ */
+async function refuseRepeatUpload(http: AscHttpClient, appId: string, args: Args) {
+  const version = str(args, 'build_version', true)!, short = str(args, 'build_short_version', true)!, platform = str(args, 'platform', true)!;
+  const found = await http.get<{ data?: Array<{ id: string; attributes?: Record<string, any> }> }>(`/v1/apps/${encodeURIComponent(appId)}/buildUploads`, {
+    'filter[cfBundleVersion]': version, 'filter[cfBundleShortVersionString]': short, 'filter[platform]': platform,
+    'fields[buildUploads]': 'cfBundleVersion,cfBundleShortVersionString,platform,state', limit: 10,
+  });
+  const earlier = (found?.data ?? []).find((u) => u.attributes?.cfBundleVersion === version && u.attributes?.cfBundleShortVersionString === short
+    && u.attributes?.platform === platform && u.attributes?.state?.state !== 'FAILED');
+  if (!earlier) return;
+  const label = `${platform} ${short} (${version})`, state = String(earlier.attributes?.state?.state ?? 'unknown state');
+  if (state === 'AWAITING_UPLOAD') fail(`An upload of ${label} was started and never finished: build upload ${earlier.id}. Upload the file into it with page_id "${earlier.id}", or delete it with media__delete (target build_upload_file, page_id "${earlier.id}") and upload again. Nothing was changed.`);
+  fail(`Apple already has ${label}: build upload ${earlier.id}, ${state}. Nothing was uploaded. Wait for it with build__wait_for_processing (build "${version}").`);
+}
+
 async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): Promise<FilePlan> {
   const target = str(args, 'target', true)! as FileTarget;
   const adapter = fileAdapter(target);
@@ -634,6 +653,7 @@ async function prepareFileWrite(name: string, args: Args, http: AscHttpClient): 
     if (upload && singleFile(adapter) && !adapter.delete && !adapter.attach && upload.size > MAX_PART_BYTES)
       fail(`File exceeds the ${MAX_PART_BYTES}-byte safe limit for a single-slot target without DELETE; nothing was reserved.`);
     const ownerApp = newBuild || standalone ? await resolveApp(http, str(args, 'app', true)!) : undefined;
+    if (newBuild) await refuseRepeatUpload(http, ownerApp!.id, args);
     const createBuild = newBuild ? mediaBody('build_uploads.create', {
       attributes: { cfBundleVersion: str(args, 'build_version', true), cfBundleShortVersionString: str(args, 'build_short_version', true), platform: str(args, 'platform', true) },
       relationships: { app: mediaRelationship('build_uploads.create', 'app', ownerApp!.id) },

@@ -8,6 +8,11 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Sending a TestFlight build out takes fewer calls and survives a dropped one.** `testflight__assign_build_to_groups` also sets the build's What to Test text per language and submits it for beta app review when asked, under the one confirmation it already had. Each step checks what is already done, so calling it again after a dropped call finishes the rest instead of repeating it, and the answer reports every step.
+- **A build is not uploaded twice.** `media__upload` checks whether Apple already has an upload of the same version and build number. If it does, nothing is uploaded and the answer says where the earlier one stands: still processing, done, or started and never finished, with the ID to finish or delete it. After a dropped upload call there is no more guessing whether it landed.
+
 ### [3.3.0] — 2026-11-24
 
 - **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
@@ -554,6 +559,11 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **TestFlight build'ini göndermek daha az çağrı sürüyor ve yarıda kalan bir çağrıdan sonra da tamamlanıyor.** `testflight__assign_build_to_groups`, istenirse build'in What to Test metnini dil dil yazıyor ve build'i beta app review'a gönderiyor; hepsi zaten sorduğu tek onayla. Her adım önce neyin yapıldığına bakıyor: yarıda kalan bir çağrıdan sonra yeniden çağırmak, yapılanları tekrarlamadan kalanı bitiriyor ve yanıt her adımı tek tek bildiriyor.
+- **Bir build iki kez yüklenmiyor.** `media__upload`, Apple'da aynı sürüm ve build numarasıyla bir yükleme olup olmadığına bakıyor. Varsa hiçbir şey yüklemiyor ve öncekinin durumunu söylüyor: hâlâ işleniyor, bitti ya da başlayıp hiç tamamlanmadı; tamamlamak ya da silmek için kimliğiyle birlikte. Yarıda kalan bir yükleme çağrısından sonra "yüklendi mi?" diye tahmin etmek gerekmiyor.
 
 ### [3.3.0] — 2026-11-24
 
