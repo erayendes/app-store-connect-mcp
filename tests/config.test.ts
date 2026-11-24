@@ -126,8 +126,10 @@ describe('loadConfig rateLimit', () => {
 });
 
 describe("setup's answers in the shared config", () => {
+  // Read once: these tests replace process.env, and Windows finds its temp folder there.
+  const TMP = tmpdir();
   const shared = (extra: Record<string, unknown>) => {
-    const dir = mkdtempSync(join(tmpdir(), 'asc-shared-'));
+    const dir = mkdtempSync(join(TMP, 'asc-shared-'));
     writeFileSync(join(dir, 'config.json'), JSON.stringify({ keyId: 'ABCD123456', issuerId: BASE.ASC_ISSUER_ID, privateKeyPath: '/k.p8', ...extra }));
     process.env = { ASC_CONFIG_DIR: dir };
   };
