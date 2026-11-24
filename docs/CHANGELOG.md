@@ -8,6 +8,11 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
+- **Setup asks how review replies should sound.** When you pick review replies, it asks for a brand voice, phrases a reply must never use and a support URL, all optional. They used to be environment variables only, and re-running setup dropped them. The variables still work and still win.
+
 ### [3.2.0] — 2026-11-19
 
 - **Heimdall tells you when an update is out.** Once a day it asks npm, in the background, for the newest version on your channel (stable or beta). When there is one, the first answer of the day carries a note for your AI app to pass on: restart the app and the new version starts on its own, since npx always runs the newest one. `asc__status` and `doctor` show it too. `ASC_NO_UPDATE_CHECK=1` turns the check off; [Privacy](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md) lists it.
@@ -546,6 +551,11 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Setup, Heimdall'ın değişikliklerde ne kadar dikkatli olacağını soruyor.** Riskli değişikliklerden önce sorsun (varsayılan), her değişiklikten önce sorsun ya da salt okunur olsun. Cevap anahtarınızın yanına kaydedilir; böylece her profil ona uyar ve hiçbir uygulamanın ayarına dokunulmaz, setup yeniden çalışınca da korunur. `register --read-only` (ya da `--confirm`, `--confirm-risky`) aynı ayarı anahtar olmadan yapar; yapay zekâ uygulamanız bunu sizin için yapabilir. Geçerli modu `asc__status` gösterir. Salt okunur mod eskiden her Heimdall kaydına elle bayrak eklemek demekti.
+- **Setup, yorum yanıtlarının üslubunu soruyor.** Yorum yanıtlarını seçtiğinizde marka sesini, yanıtta asla geçmemesi gereken ifadeleri ve destek adresini sorar; hepsi isteğe bağlı. Bunlar eskiden yalnızca ortam değişkeniydi ve setup yeniden çalışınca kayboluyordu. Değişkenler hâlâ çalışıyor ve önceliklidir.
 
 ### [3.2.0] — 2026-11-19
 

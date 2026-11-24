@@ -825,6 +825,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           http,
           tokens,
           readOnly: config.readOnly,
+          confirmWrites: config.confirmWrites,
           loadedDomains,
           storekitEnabled: Boolean(storekit),
           macroOffered,

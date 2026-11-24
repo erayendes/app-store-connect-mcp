@@ -16,7 +16,9 @@ import {
   writeSharedConfig,
   sharedConfigDir,
   sharedConfigPath,
+  type ReviewsBrand,
   type SharedConfig,
+  type WriteMode,
 } from './core/shared-config.js';
 import {
   CORE_PROFILE,
@@ -614,6 +616,70 @@ export async function offerAdminHelp(ask: Ask, role: string): Promise<boolean> {
   return true;
 }
 
+/** setup's question about writes, in its order; `--no-confirm` stays a CI flag and is not offered. */
+export const WRITE_MODES: ReadonlyArray<{ mode: WriteMode; label: string }> = [
+  { mode: 'strong', label: 'Ask before risky changes — prices, deletions, access' },
+  { mode: 'all', label: 'Ask before every change' },
+  { mode: 'readOnly', label: 'Read-only — never change anything' },
+];
+export const WRITE_MODE_QUESTION = 'How careful should Heimdall be with changes?';
+
+export async function askWriteMode(ask: Ask, current: WriteMode = 'strong'): Promise<WriteMode> {
+  console.log(`\n🛡️  ${WRITE_MODE_QUESTION}`);
+  WRITE_MODES.forEach((m, i) =>
+    console.log(`  ${i + 1}. ${m.label}${m.mode === current ? ' (current)' : m.mode === 'strong' ? ' (default)' : ''}`));
+  const fallback = WRITE_MODES.findIndex((m) => m.mode === current) + 1;
+  for (;;) {
+    const answer = (await ask(`Choose 1–3 [${fallback}]: `, false)).trim();
+    if (!answer) return current;
+    const picked = WRITE_MODES[Number(answer) - 1];
+    if (picked) return picked.mode;
+    console.log('   Type 1, 2 or 3.');
+  }
+}
+
+/** Review replies are drafted by the marketing profile's customer-reviews part. */
+export const draftsReviewReplies = (r: Row): boolean =>
+  r.profile.name === 'marketing' && (!r.subProfile?.name || r.subProfile.name === 'customer-reviews');
+
+export const isSupportUrl = (v: string): boolean => /^https?:\/\/\S+\.\S+$/.test(v);
+
+/** All optional; Enter keeps what is saved, "-" clears it. */
+export async function askReviewsBrand(ask: Ask, current: ReviewsBrand = {}): Promise<ReviewsBrand | undefined> {
+  console.log('\n💬 Review replies can follow your brand. All optional: Enter keeps what is in [brackets], - clears it.');
+  const shown = (v?: string) => (v ? ` [${v}]` : '');
+  const answer = async (q: string, cur?: string) => {
+    const a = (await ask(`${q}${shown(cur)}: `, false)).trim();
+    return a === '-' ? undefined : a || cur;
+  };
+  const voice = await answer('Brand voice, e.g. "friendly, short"', current.voice);
+  const banned = await answer('Phrases a reply must never use, comma-separated', current.bannedPhrases?.join(', '));
+  let supportUrl = await answer('Support URL to point customers to', current.supportUrl);
+  while (supportUrl && !isSupportUrl(supportUrl)) {
+    console.log('   A support URL starts with https://, e.g. https://example.com/support.');
+    supportUrl = await answer('Support URL to point customers to', undefined);
+  }
+  const bannedPhrases = banned?.split(',').map((p) => p.trim()).filter(Boolean);
+  const brand: ReviewsBrand = {
+    ...(voice ? { voice } : {}),
+    ...(bannedPhrases?.length ? { bannedPhrases } : {}),
+    ...(supportUrl ? { supportUrl } : {}),
+  };
+  return Object.keys(brand).length ? brand : undefined;
+}
+
+/**
+ * Add what setup asked beyond the key to the saved config. A key present with
+ * `undefined` clears that setting; a key absent leaves it alone. Returns the
+ * path when something changed.
+ */
+export function updateSharedConfig(extras: Partial<SharedConfig>): string | undefined {
+  const saved = readSharedConfig();
+  if (!saved) return undefined;
+  const next = { ...saved, ...extras };
+  return JSON.stringify(next) === JSON.stringify(saved) ? undefined : writeSharedConfig(next);
+}
+
 /**
  * Store the private key and write the shared config. On macOS the key goes to
  * the Keychain. Elsewhere the config points at the .p8: at the file the user
@@ -892,14 +958,21 @@ export async function runSetup(): Promise<void> {
         )) || undefined;
     }
 
+    const writeMode = await askWriteMode(ask, existing?.writeMode);
+    // Asked only when a pick drafts review replies; otherwise what is saved stays.
+    const brand = picked.some(draftsReviewReplies)
+      ? { reviewsBrand: await askReviewsBrand(ask, existing?.reviewsBrand) }
+      : credentials && existing?.reviewsBrand ? { reviewsBrand: existing.reviewsBrand } : {};
+
     if (credentials) {
       saveCredentials(
-        { keyId: credentials.keyId, issuerId: credentials.issuerId, vendorNumber },
+        { keyId: credentials.keyId, issuerId: credentials.issuerId, vendorNumber, writeMode, ...brand },
         credentials.pem,
         credentials.resolvedPath
       );
-    } else if (vendorNumber && existing) {
-      console.log(`\n✓ Shared config updated at ${writeSharedConfig({ ...existing, vendorNumber })}.`);
+    } else {
+      const updated = updateSharedConfig({ ...(vendorNumber ? { vendorNumber } : {}), writeMode, ...brand });
+      if (updated) console.log(`\n✓ Shared config updated at ${updated}.`);
     }
 
     const clients = await selectClients(ask);
@@ -1497,7 +1570,20 @@ const list = (names: string[]): string =>
  * `register` only ever adds: asking for one profile must not drop the six
  * someone set up last week.
  */
-export function runRegister(specs: string[], clientIds?: string[]): void {
+export function runRegister(specs: string[], clientIds?: string[], writeMode?: WriteMode): void {
+  // The same answer setup asks for, so an agent can set it without the key.
+  if (writeMode) {
+    const label = WRITE_MODES.find((m) => m.mode === writeMode)!.label;
+    if (!readSharedConfig()) {
+      console.log(`No credentials stored yet, so there is nowhere to save "${label}". Run setup yourself; it asks this too:\n  npx -y ${PACKAGE} setup`);
+    } else {
+      const updated = updateSharedConfig({ writeMode });
+      console.log(updated
+        ? `✓ Every profile: ${label}. Restart your AI apps for it to take effect.`
+        : `Already set: ${label}.`);
+    }
+    if (!specs.length) return;
+  }
   if (!specs.length) {
     throw new Error(
       'register needs at least one profile, e.g. "register monetization analytics".\n' +

@@ -21,6 +21,21 @@ export interface SharedConfig {
   bundleId?: string;
   appAppleId?: number;
   environment?: 'Sandbox' | 'Production';
+  /**
+   * How careful every profile is with changes, asked by setup: ask before
+   * risky ones (`strong`, the default), before every one (`all`), or change
+   * nothing (`readOnly`). Flags and env still win.
+   */
+  writeMode?: WriteMode;
+  /** Review reply drafts follow these; ASC_REVIEWS_* env still wins. */
+  reviewsBrand?: ReviewsBrand;
+}
+
+export type WriteMode = 'strong' | 'all' | 'readOnly';
+export interface ReviewsBrand {
+  voice?: string;
+  bannedPhrases?: string[];
+  supportUrl?: string;
 }
 
 export function sharedConfigDir(env: NodeJS.ProcessEnv = process.env): string {

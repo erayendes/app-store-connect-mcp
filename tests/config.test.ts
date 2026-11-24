@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { ConfigError } from '../src/core/errors.js';
 
 const readKeychainPassword = vi.fn();
@@ -119,5 +122,32 @@ describe('loadConfig rateLimit', () => {
     process.env.ASC_RATE_LIMIT_PER_HOUR = '0';
     process.env.ASC_RATE_LIMIT_PER_MINUTE = 'lots';
     expect(loadConfig([]).rateLimit).toBeUndefined();
+  });
+});
+
+describe("setup's answers in the shared config", () => {
+  const shared = (extra: Record<string, unknown>) => {
+    const dir = mkdtempSync(join(tmpdir(), 'asc-shared-'));
+    writeFileSync(join(dir, 'config.json'), JSON.stringify({ keyId: 'ABCD123456', issuerId: BASE.ASC_ISSUER_ID, privateKeyPath: '/k.p8', ...extra }));
+    process.env = { ASC_CONFIG_DIR: dir };
+  };
+
+  it('reads how careful to be, and lets a flag or env only make it stricter', () => {
+    shared({ writeMode: 'readOnly' });
+    expect(loadConfig([]).readOnly).toBe(true);
+    shared({ writeMode: 'all' });
+    expect(loadConfig([])).toMatchObject({ readOnly: false, confirmWrites: 'all' });
+    expect(loadConfig(['--read-only']).readOnly).toBe(true);
+    expect(loadConfig(['--no-confirm']).confirmWrites).toBe('off');
+    shared({});
+    expect(loadConfig([])).toMatchObject({ readOnly: false, confirmWrites: 'strong' });
+  });
+
+  it('reads the review brand, and env wins over it', () => {
+    const brand = { voice: 'friendly, short', bannedPhrases: ['sorry for the inconvenience'], supportUrl: 'https://example.com/help' };
+    shared({ reviewsBrand: brand });
+    expect(loadConfig([]).reviewsBrand).toEqual(brand);
+    process.env.ASC_REVIEWS_BRAND_VOICE = 'formal';
+    expect(loadConfig([]).reviewsBrand).toEqual({ voice: 'formal', bannedPhrases: undefined, supportUrl: undefined });
   });
 });
