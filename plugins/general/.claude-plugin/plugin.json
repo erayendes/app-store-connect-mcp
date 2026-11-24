@@ -1,7 +1,7 @@
 {
   "name": "asc-general",
   "displayName": "Heimdall · General",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "The app's identity and store facts: names and subtitles, categories, availability by country, age rating, EULA, accessibility labels, tags.",
   "author": {
     "name": "Eray Endes",

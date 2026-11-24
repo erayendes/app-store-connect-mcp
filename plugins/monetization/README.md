@@ -7,7 +7,7 @@ This plug-in registers one MCP server, **ASC-Monetization**, from [Heimdall](htt
 ## What it runs
 
 ```
-npx --prefer-offline --no-audit -y @erayendes/asc-mcp@3.2.0 monetization --with-core
+npx --prefer-offline --no-audit -y @erayendes/asc-mcp@3.3.0 monetization --with-core
 ```
 
 The package version is pinned to this plug-in's version, so a new Heimdall release reaches you only through a new version of this plug-in. The server runs locally on your machine and talks only to Apple's App Store Connect and App Store Server APIs. It sends nothing anywhere else and collects no telemetry.

@@ -48,6 +48,8 @@ export interface ConfirmDecision {
   stale?: true;
   /** Approved by typing CONFIRM rather than ticking a box. */
   strong?: boolean;
+  /** The user also ticked "don't ask again for this tool" (SERIES_MS). */
+  series?: boolean;
 }
 
 /** What the user sees before approving a write. */
@@ -714,13 +716,13 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
     verify: codec.verify,
 
     /** The question, as a result the client answers by calling again. */
-    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview, planFingerprint?: string): Promise<InputRequiredResult> {
+    async ask(ctx: ServerContext, name: string, args: unknown, preview: WritePreview, planFingerprint?: string, offerSeries = false): Promise<InputRequiredResult> {
       const now = Date.now();
       for (const [n, expiry] of open) if (expiry < now) open.delete(n);
       const nonce = randomUUID();
       open.set(nonce, now + PROMPT_TTL_MS);
 
-      const field: ElicitRequestFormParams['requestedSchema']['properties'] = preview.strong
+      const answer: ElicitRequestFormParams['requestedSchema']['properties'] = preview.strong
         ? {
             confirmation: {
               type: 'string',
@@ -735,12 +737,15 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
               description: 'Leave unchecked to cancel this write.',
             },
           };
+      const field = offerSeries
+        ? { ...answer, series: { type: 'boolean' as const, title: SERIES_LABEL, default: false } }
+        : answer;
       return inputRequired({
         inputRequests: {
           confirm: inputRequired.elicit({
             mode: 'form',
             message: preview.message,
-            requestedSchema: { type: 'object', properties: field, required: Object.keys(field) },
+            requestedSchema: { type: 'object', properties: field, required: Object.keys(answer) },
           }),
         },
         requestState: await codec.mint({ call: fingerprint(name, args), nonce, strong: preview.strong, planFingerprint }, ctx),
@@ -782,7 +787,7 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
       const confirmed = state.strong
         ? typeof content?.confirmation === 'string' && /^confirm$/i.test(content.confirmation.trim())
         : content?.confirm === true;
-      if (confirmed) return { allowed: true, strong: state.strong, planFingerprint: state.planFingerprint };
+      if (confirmed) return { allowed: true, strong: state.strong, planFingerprint: state.planFingerprint, ...(content?.series === true ? { series: true } : {}) };
       const action = (ctx.mcpReq.inputResponses?.confirm as { action?: string } | undefined)?.action;
       const unconfirmed = state.strong ? 'the answer was not CONFIRM' : 'the box was left unticked';
       return { allowed: false, reason: content ? unconfirmed : (action ?? 'no answer') };
@@ -791,3 +796,44 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
 }
 
 export type WriteGate = ReturnType<typeof createWriteGate>;
+
+/** How long "don't ask again" lasts for one tool. */
+export const SERIES_MS = 600_000;
+export const SERIES_LABEL = "Don't ask again for this kind of change for 10 minutes";
+
+/**
+ * A yes covers the whole change it was asked about, not one call of it. A
+ * macro that stops part-way (`finished: false` before the client's timeout, or
+ * `partial: true` at a failure) is finished by calling it again with the same
+ * arguments, and that call is not asked again: the user approved every
+ * country, not the first forty. The grant is for those exact arguments, lasts
+ * ten minutes from the last unfinished answer and ends when the call finishes.
+ *
+ * A series of one write done one call at a time (twelve screenshots deleted
+ * one by one) is the same change too, but its arguments differ each time, so
+ * the user decides: ticking "don't ask again" lets that tool run without a
+ * prompt for SERIES_MS.
+ */
+export function createContinuations(ttlMs = PROMPT_TTL_MS) {
+  const open = new Map<string, number>();
+  return {
+    allowTool(name: string): void {
+      open.set(`tool:${name}`, Date.now() + SERIES_MS);
+    },
+    covers(name: string, args: unknown): boolean {
+      const tool = open.get(`tool:${name}`);
+      if (tool !== undefined && tool >= Date.now()) return true;
+      const key = fingerprint(name, args);
+      const expiry = open.get(key);
+      if (expiry !== undefined && expiry >= Date.now()) return true;
+      open.delete(key);
+      return false;
+    },
+    record(name: string, args: unknown, result: unknown): void {
+      const r = result as { finished?: unknown; partial?: unknown } | undefined;
+      const key = fingerprint(name, args);
+      if (r?.finished === false || r?.partial === true) open.set(key, Date.now() + ttlMs);
+      else open.delete(key);
+    },
+  };
+}

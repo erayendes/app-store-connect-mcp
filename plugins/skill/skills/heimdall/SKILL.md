@@ -237,9 +237,13 @@ the report, where the raw chain ends holding a link.
 - Territories are ISO-3166 **alpha-3**: `USA`, `TUR`, `DEU`. Heimdall turns
   `US`, `TR`, `DE` into them; Apple itself would answer the two-letter form
   with 200 and an empty list that reads as "no data here".
-- A server started with `--read-only` (or `ASC_READ_ONLY=true`) does not list
-  any tool that can change something; asking for a write there is asking for a
-  tool that is not loaded, not a permission problem.
+- A server started with `--read-only` (or `ASC_READ_ONLY=true`, or setup's
+  "read-only" answer) does not list any tool that can change something; asking
+  for a write there is asking for a tool that is not loaded, not a permission
+  problem. To change how careful every profile is, run
+  `npx -y @erayendes/asc-mcp register --read-only` (or `--confirm`,
+  `--confirm-risky`) after the user says yes, then ask them to restart the
+  client.
 - A tool that is not in this session's list may still belong to this account.
   `asc__search_tools` (on ASC-Core) covers the 832 operations Heimdall builds,
   plus the StoreKit tools

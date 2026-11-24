@@ -1,7 +1,7 @@
 {
   "name": "asc-xcode-cloud",
   "displayName": "Heimdall · Xcode Cloud",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Apple's CI/CD: workflows, build runs, artifacts, test results, source control.",
   "author": {
     "name": "Eray Endes",

@@ -442,6 +442,8 @@ export async function executeMetaTool(
     http: AscHttpClient;
     tokens: TokenProvider;
     readOnly: boolean;
+    /** When this server asks before a write: risky ones (`strong`), every one (`all`) or never (`off`). */
+    confirmWrites?: 'off' | 'strong' | 'all';
     loadedDomains: string[];
     /** How to reach operations this server doesn't carry. */
     missingToolsHint?: (ops: Array<(typeof OPERATIONS)[number]>) => string;
@@ -610,6 +612,7 @@ export async function executeMetaTool(
         loadedTools: ctx.registry.size,
         totalOperations: OPERATIONS.length,
         readOnly: ctx.readOnly,
+        ...(ctx.confirmWrites && !ctx.readOnly ? { confirmWrites: ctx.confirmWrites } : {}),
         // Nobody weighs a context budget during setup; they weigh it when a
         // session starts filling up. That is the moment this answer is read.
         ...ctx.profileReport?.(),

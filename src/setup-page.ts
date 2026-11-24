@@ -145,6 +145,7 @@ textarea.input { height: auto; min-height: 96px; padding: var(--sp-2); font-fami
 .opt:first-child { border-top: 0; }
 .opt .t { font-weight: 500; }
 .opt .h { color: var(--fg-muted); font-size: var(--fs-ui); }
+.opt input[type=radio] { accent-color: var(--accent); margin: 3px 0 0; flex: none; }
 .found { font-size: var(--fs-micro); color: var(--green); margin-left: var(--sp-2); }
 .hint { font-size: var(--fs-ui); color: var(--fg-secondary); margin: var(--sp-3) 0 0; white-space: pre-line; }
 .hint:empty { display: none; }
@@ -232,6 +233,15 @@ a { color: var(--fg); }
       <input class="input mono" type="text" id="vendor" placeholder="85012345" autocomplete="off" spellcheck="false">
       <p class="help hidden" id="vendorAdmin">The very first request for a new report type needs an Admin key, once.</p>
     </div>
+
+    <div id="brandBox" class="hidden">
+      <label class="field" for="brandVoice">Review replies: brand voice <span class="hint">— optional, e.g. friendly, short</span></label>
+      <input class="input" type="text" id="brandVoice" autocomplete="off">
+      <label class="field" for="brandBanned">Phrases a reply must never use <span class="hint">— optional, comma-separated</span></label>
+      <input class="input" type="text" id="brandBanned" autocomplete="off">
+      <label class="field" for="brandUrl">Support URL <span class="hint">— optional, where replies point customers</span></label>
+      <input class="input" type="url" id="brandUrl" placeholder="https://example.com/support" autocomplete="off" spellcheck="false">
+    </div>
   </section>
 
   <section id="s3">
@@ -242,7 +252,9 @@ a { color: var(--fg); }
 
   <section id="s4" class="locked">
     <h2><span class="n" id="n4">4/4</span>Finish</h2>
-    <p class="lead" style="margin:0">Press Apply to set up Heimdall in the apps you ticked.</p>
+    <label class="field" style="margin-top:0">How careful should Heimdall be with changes?</label>
+    <div id="modes"></div>
+    <p class="lead" style="margin:var(--sp-3) 0 0">Press Apply to set up Heimdall in the apps you ticked.</p>
     <p id="plan" class="hint"></p>
     <p id="notes" class="hint"></p>
     <div class="row">
@@ -305,6 +317,15 @@ a { color: var(--fg); }
     var v = $('vendor').value.trim();
     return v !== '' && !(state.existing && state.existing.vendorNumber === v);
   }
+  function mode() { var m = document.querySelector('#modes input:checked'); return m ? m.value : 'strong'; }
+  function brandShown() { return !$('brandBox').classList.contains('hidden'); }
+  function brand() { return { voice: $('brandVoice').value.trim(), banned: $('brandBanned').value.trim(), url: $('brandUrl').value.trim() }; }
+  /** Anything beyond the key that Apply would save. */
+  function extrasChanged() {
+    var e = state.existing || {}, b = e.reviewsBrand || {}, now = brand();
+    return vendorChanged() || mode() !== (e.writeMode || 'strong') ||
+      (brandShown() && (now.voice !== (b.voice || '') || now.banned !== (b.bannedPhrases || []).join(', ') || now.url !== (b.supportUrl || '')));
+  }
   function say(text) { $('plan').textContent = text; }
   function refreshPlan() {
     var sel = selection(), seq = ++planSeq;
@@ -322,11 +343,11 @@ a { color: var(--fg); }
       $('notes').textContent = notes.join('\\n');
       // Only say something when Apply has nothing to do.
       say(r.plan.some(function (p) { return p.add.length || p.remove.length || p.rewrites.length || p.deadDeleted.length; })
-        ? '' : reuse && !vendorChanged()
+        ? '' : reuse && !extrasChanged()
           ? 'No changes — your apps already match this selection.'
           : 'Your apps already match this selection. Apply saves your key details.');
       // Nothing to change and nothing new to save: Apply would do nothing.
-      $('apply').disabled = reuse && !vendorChanged() && !r.plan.some(function (p) {
+      $('apply').disabled = reuse && !extrasChanged() && !r.plan.some(function (p) {
         return p.add.length || p.remove.length || p.rewrites.length || p.deadDeleted.length;
       });
     }).catch(function (e) { if (seq === planSeq && !applying && !finished) say(e.message); });
@@ -470,6 +491,7 @@ a { color: var(--fg); }
     }
     Array.prototype.forEach.call(document.querySelectorAll('.roleName'), function (n) { n.textContent = role || 'right'; });
     $('vendorBox').classList.toggle('hidden', !picked.some(function (r) { return r.vendor; }));
+    $('brandBox').classList.toggle('hidden', !picked.some(function (r) { return r.brand; }));
     $('vendorAdmin').classList.toggle('hidden', role === 'Admin');
     showFit();
     invalidatePlan();
@@ -556,6 +578,8 @@ a { color: var(--fg); }
       // A saved key is the answer unless the user says otherwise, as in the terminal's [Y/n].
       $('savedKey').textContent = s.existing.keyId; $('reuseBox').classList.remove('hidden');
       $('vendor').value = s.existing.vendorNumber || '';
+      var b = s.existing.reviewsBrand || {};
+      $('brandVoice').value = b.voice || ''; $('brandBanned').value = (b.bannedPhrases || []).join(', '); $('brandUrl').value = b.supportUrl || '';
       checkAdmin(true);
       reuse = true;
     }
@@ -579,6 +603,15 @@ a { color: var(--fg); }
     }
     $('clients').addEventListener('change', invalidatePlan);
     $('vendor').addEventListener('input', invalidatePlan);
+    var current = (s.existing && s.existing.writeMode) || 'strong';
+    s.writeModes.forEach(function (m) {
+      var row = el('label', 'opt'), r = el('input');
+      r.type = 'radio'; r.name = 'mode'; r.value = m.mode; r.checked = m.mode === current;
+      row.appendChild(r); row.appendChild(el('div', 't', m.label + (m.mode === 'strong' ? ' (default)' : '')));
+      $('modes').appendChild(row);
+    });
+    $('modes').addEventListener('change', invalidatePlan);
+    ['brandVoice', 'brandBanned', 'brandUrl'].forEach(function (id) { $(id).addEventListener('input', invalidatePlan); });
     renderRows();
     if (reuse) keyDone();
   }).catch(function (e) { document.querySelector('main').textContent = 'This link has expired or is invalid. To start again, run npx -y ${PACKAGE} setup --web in your terminal. (' + e.message + ')'; });
@@ -633,7 +666,8 @@ a { color: var(--fg); }
     applying = true; clearTimeout(planTimer); planSeq++;
     this.disabled = true; $('cancel').disabled = true;
     var body = selection();
-    body.reuse = reuse; body.vendorNumber = $('vendor').value;
+    body.reuse = reuse; body.vendorNumber = $('vendor').value; body.writeMode = mode();
+    if (brandShown()) { var b = brand(); body.brand = true; body.brandVoice = b.voice; body.brandBanned = b.banned; body.brandUrl = b.url; }
     var out = $('out'), res = $('res'); say('Applying…'); out.classList.add('hidden');
     call('apply', body).then(function (r) {
       finished = true; mark(1); mark(3); mark(4); say('');

@@ -69,6 +69,10 @@ Commands:
                          it does clear entries left over from 2.x.
                          --clients=<ids>  limit to some clients; default is
                          every one found on this machine.
+                         --read-only | --confirm | --confirm-risky  how careful
+                         every profile is with changes (setup asks the same);
+                         saved next to the key, so it needs setup run once.
+                         Works without a profile too.
   doctor                 Report local versions, client registrations, ASC-Core
                          and credential availability. Read-only; no network
                          calls or key contents. Use asc__status for a live check.
@@ -134,7 +138,12 @@ async function main(): Promise<void> {
       .map((s) => s.trim())
       .filter(Boolean);
     try {
-      runRegister(positional.slice(1), clients);
+      // How careful every profile is; saved next to the key, like setup's answer.
+      const writeMode = argv.includes('--read-only') ? 'readOnly'
+        : argv.includes('--confirm') ? 'all'
+        : argv.includes('--confirm-risky') ? 'strong'
+        : undefined;
+      runRegister(positional.slice(1), clients, writeMode);
     } catch (err) {
       console.error(`\n${(err as Error).message}\n`);
       process.exit(1);

@@ -16,7 +16,7 @@ import {
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName, type WritePreview } from './core/confirm.js';
+import { buildWritePreview, createContinuations, createWriteGate, resolveBodyRefs, SERIES_LABEL, withAppName, type WritePreview } from './core/confirm.js';
 import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits, type DialogText } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
@@ -323,6 +323,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
   );
 
   const gate = createWriteGate();
+  const continuations = createContinuations();
 
   const server = new Server(
     { name: serverName(selection.profile.name), version: VERSION },
@@ -669,10 +670,14 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                     ? 'public'
                     : 'low')) as RiskLevel);
         auditRisk = risk;
-        if (
+        const asks =
           (config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) &&
-          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name))
-        ) {
+          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name));
+        // Release and media writes are approved against a plan snapshot, so each call is asked.
+        const series = !RELEASE_TOOL_NAMES.has(name) && !MEDIA_TOOL_NAMES.has(name);
+        if (asks && series && continuations.covers(request.params.name, request.params.arguments)) {
+          confirmation = 'continued';
+        } else if (asks) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.
         const decision = gate.settle(ctx, request.params.name, request.params.arguments);
@@ -757,24 +762,27 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                 ),
                 storekitDialog(name, shown, { environment: config.storekit?.environment === 'Sandbox' ? 'Sandbox' : 'Production' })
               );
-          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
+          if (canElicit) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint, series);
           // The tool's own summary, up to the first full stop or dash, says what will happen.
           const what = servedTools()
             .find((t) => t.name === name)
             ?.description?.split(/\.\s| — /)[0]
             ?.replace(/ in one call$/, '')
             ?.replace(/\.$/, '');
-          const dialog = preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message, 'covered' in preview ? preview.covered : undefined);
+          const dialog = {
+            ...(preview.dialog ?? dialogText(('title' in preview ? preview.title : undefined) ?? what, preview.message, 'covered' in preview ? preview.covered : undefined)),
+            ...(series ? { series: SERIES_LABEL } : {}),
+          };
           if (!nativeConfirmFits(dialog)) {
             // Not to a dialog-first client's form: it would be declined unseen.
-            if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
+            if (elicitDeclared && !dialogFirst) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint, series);
             return refuse('blocked', { content: [{ type: 'text' as const, text: `"${name}" was blocked: its confirmation is too long for the native macOS dialog. Use a client that can show the full elicitation prompt, or send fewer items or shorter text. Nothing was changed.` }], isError: true });
           }
           const answer = await nativeConfirm(dialog, ctx.mcpReq.signal);
           // No GUI session (SSH, a headless Mac): the form it declared is the next best.
-          if (answer === 'unavailable' && elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint);
+          if (answer === 'unavailable' && elicitDeclared) return gate.ask(ctx, request.params.name, request.params.arguments, preview, planFingerprint, series);
           if (answer === 'unavailable') return refuse('blocked', blocked);
-          if (answer !== 'approved') {
+          if (answer !== 'approved' && answer !== 'approved-series') {
             return refuse('declined', {
               content: [
                 {
@@ -789,6 +797,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           }
           confirmation = 'macOS dialog';
           approvedPlanFingerprint = planFingerprint;
+          if (answer === 'approved-series') continuations.allowTool(name);
           // Approved in the dialog: fall through and run the write.
         }
         if (decision && !decision.allowed) {
@@ -809,6 +818,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         }
         if (decision?.allowed) {
           approvedPlanFingerprint = decision.planFingerprint;
+          if (decision.series) continuations.allowTool(name);
           confirmation = decision.strong ? 'typed CONFIRM' : 'checkbox';
         }
         }
@@ -825,6 +835,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
           http,
           tokens,
           readOnly: config.readOnly,
+          confirmWrites: config.confirmWrites,
           loadedDomains,
           storekitEnabled: Boolean(storekit),
           macroOffered,
@@ -958,6 +969,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         const text = (v: unknown) => (failed && typeof v === 'string' ? v : undefined);
         logWrite({ tool: name, risk: auditRisk, confirmation, outcome: failed ? 'error' : 'ok', args,
           error: text((result as any)?.error), appleRequestId: text((result as any)?.requestId) });
+        if (confirmation !== 'not asked') continuations.record(request.params.name, request.params.arguments, result);
       }
       // Images a macro attached go out as image content, never as base64 in the text.
       const images = ((result as any)?.[IMAGE_CONTENT] ?? []) as ImageContent[];
