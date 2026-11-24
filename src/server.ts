@@ -16,7 +16,7 @@ import {
 } from './core/registry.js';
 import { AscApiError } from './core/errors.js';
 import { ResourceStore } from './core/resources.js';
-import { buildWritePreview, createWriteGate, resolveBodyRefs, withAppName, type WritePreview } from './core/confirm.js';
+import { buildWritePreview, createContinuations, createWriteGate, resolveBodyRefs, withAppName, type WritePreview } from './core/confirm.js';
 import { DIALOG_FIRST_CLIENTS, dialogText, nativeConfirm, nativeConfirmAvailable, nativeConfirmFits, type DialogText } from './core/native-confirm.js';
 import type { ServerConfig } from './core/config.js';
 import { META_TOOLS, META_TOOL_NAMES, executeMetaTool } from './tools/meta.js';
@@ -323,6 +323,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
   );
 
   const gate = createWriteGate();
+  const continuations = createContinuations();
 
   const server = new Server(
     { name: serverName(selection.profile.name), version: VERSION },
@@ -669,10 +670,13 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
                     ? 'public'
                     : 'low')) as RiskLevel);
         auditRisk = risk;
-        if (
+        const asks =
           (config.confirmWrites !== 'off' || RELEASE_TOOL_NAMES.has(name)) &&
-          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name))
-        ) {
+          (config.confirmWrites === 'all' || STRONG_CONFIRM_LEVELS.has(risk) || ASK_BY_DEFAULT.has(name));
+        // Release and media writes are approved against a plan snapshot, so each call is asked.
+        if (asks && !RELEASE_TOOL_NAMES.has(name) && !MEDIA_TOOL_NAMES.has(name) && continuations.covers(request.params.name, request.params.arguments)) {
+          confirmation = 'continued';
+        } else if (asks) {
         // Fingerprinted from the request as sent: that is what the client
         // repeats on the retry, and what the user's answer has to match.
         const decision = gate.settle(ctx, request.params.name, request.params.arguments);
@@ -958,6 +962,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
         const text = (v: unknown) => (failed && typeof v === 'string' ? v : undefined);
         logWrite({ tool: name, risk: auditRisk, confirmation, outcome: failed ? 'error' : 'ok', args,
           error: text((result as any)?.error), appleRequestId: text((result as any)?.requestId) });
+        if (confirmation !== 'not asked') continuations.record(request.params.name, request.params.arguments, result);
       }
       // Images a macro attached go out as image content, never as base64 in the text.
       const images = ((result as any)?.[IMAGE_CONTENT] ?? []) as ImageContent[];

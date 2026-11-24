@@ -791,3 +791,30 @@ export function createWriteGate(key: Uint8Array = randomBytes(32)) {
 }
 
 export type WriteGate = ReturnType<typeof createWriteGate>;
+
+/**
+ * A yes covers the whole change it was asked about, not one call of it. A
+ * macro that stops part-way (`finished: false` before the client's timeout, or
+ * `partial: true` at a failure) is finished by calling it again with the same
+ * arguments, and that call is not asked again: the user approved every
+ * country, not the first forty. The grant is for those exact arguments, lasts
+ * ten minutes from the last unfinished answer and ends when the call finishes.
+ */
+export function createContinuations(ttlMs = PROMPT_TTL_MS) {
+  const open = new Map<string, number>();
+  return {
+    covers(name: string, args: unknown): boolean {
+      const key = fingerprint(name, args);
+      const expiry = open.get(key);
+      if (expiry !== undefined && expiry >= Date.now()) return true;
+      open.delete(key);
+      return false;
+    },
+    record(name: string, args: unknown, result: unknown): void {
+      const r = result as { finished?: unknown; partial?: unknown } | undefined;
+      const key = fingerprint(name, args);
+      if (r?.finished === false || r?.partial === true) open.set(key, Date.now() + ttlMs);
+      else open.delete(key);
+    },
+  };
+}
