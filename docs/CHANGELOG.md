@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Pricing a subscription in every country finishes.** `pricing__equalize_price` writes a subscription's price one country at a time, about 175 writes, and an AI app gives up on a tool call after about a minute. Each call used to start again from the first country, so a repeat rewrote the same countries until it was cut off again and never reached the rest. Now a call stops before that limit and says how many countries remain, and calling it again skips the countries that already carry the price.
+
 ### [3.2.0] — 2026-11-19
 
 - **Heimdall tells you when an update is out.** Once a day it asks npm, in the background, for the newest version on your channel (stable or beta). When there is one, the first answer of the day carries a note for your AI app to pass on: restart the app and the new version starts on its own, since npx always runs the newest one. `asc__status` and `doctor` show it too. `ASC_NO_UPDATE_CHECK=1` turns the check off; [Privacy](https://github.com/erayendes/app-store-connect-mcp/blob/main/docs/PRIVACY.md) lists it.
@@ -546,6 +550,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Aboneliğin bütün ülkelerde fiyatlanması tamamlanıyor.** `pricing__equalize_price` aboneliğin fiyatını ülke ülke, yaklaşık 175 yazmayla kuruyor; yapay zekâ uygulamaları ise bir araç çağrısını yaklaşık bir dakikada bırakıyor. Her çağrı ilk ülkeden yeniden başladığı için tekrar çağırmak aynı ülkeleri yeniden yazıyor, süre yine doluyor ve kalan ülkelere hiç ulaşılamıyordu. Artık çağrı bu sınırdan önce durup kaç ülke kaldığını söylüyor; yeniden çağrıldığında fiyatı zaten doğru olan ülkeleri atlıyor.
 
 ### [3.2.0] — 2026-11-19
 

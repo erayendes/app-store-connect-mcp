@@ -151,7 +151,9 @@ export const PRICING_TOOLS: McpToolDefinition[] = [
       'country, for an app, an in-app purchase or a subscription. Give the app, which kind ' +
       'of product, the anchor territory (e.g. TUR) and the price (e.g. "99.99"). Apple\'s ' +
       'own currency and tax maths decides each market — a price is NOT copied across ' +
-      'currencies, because 4.99 USD is not 4.99 EUR. REVENUE-level write covering about 175 ' +
+      'currencies, because 4.99 USD is not 4.99 EUR. A subscription takes one write per ' +
+      'country and can need several calls: each stops before the client times out, and the ' +
+      'same call again carries on where it stopped. REVENUE-level write covering about 175 ' +
       'countries; run it under --dry-run first to see the full derived table.',
     inputSchema: {
       type: 'object',
@@ -1357,6 +1359,45 @@ interface PricePoint {
   customerPrice: string;
 }
 
+/** Under the ~60 s most clients wait for one tool call, with room for the reads before it. */
+const EQUALIZE_BUDGET_MS = 40_000;
+
+/**
+ * `territory|pricePoint` for each country where the subscription already has
+ * the price a write would set: for a dated change, a row with that start date;
+ * otherwise the row in effect, with nothing scheduled after it to replace it.
+ */
+async function subscriptionPricesInPlace(
+  http: AscHttpClient,
+  subId: string,
+  startDate: string | undefined,
+  today: string
+): Promise<Set<string>> {
+  const { items } = await http.collect<any>(
+    `/v1/subscriptions/${encodeURIComponent(subId)}/prices`,
+    { include: 'territory,subscriptionPricePoint', limit: 200 },
+    10
+  );
+  const byTerritory = new Map<string, Array<{ start: string | null; point: string }>>();
+  for (const row of items) {
+    const code = String(row.relationships?.territory?.data?.id ?? '');
+    const point = String(row.relationships?.subscriptionPricePoint?.data?.id ?? '');
+    if (!code || !point) continue;
+    byTerritory.set(code, [...(byTerritory.get(code) ?? []), { start: row.attributes?.startDate ?? null, point }]);
+  }
+  const keys = new Set<string>();
+  for (const [code, rows] of byTerritory) {
+    if (startDate) {
+      for (const r of rows) if (r.start === startDate) keys.add(`${code}|${r.point}`);
+      continue;
+    }
+    if (rows.some((r) => r.start && r.start > today)) continue;
+    const current = rows.sort((a, b) => String(b.start ?? '').localeCompare(String(a.start ?? '')))[0];
+    keys.add(`${code}|${current.point}`);
+  }
+  return keys;
+}
+
 /** Shared shape for "find the tier matching this price in this territory". */
 async function findPricePoint(
   http: AscHttpClient,
@@ -1629,6 +1670,11 @@ async function equalizePrice(
     ...derived,
   ];
 
+  // A repeat resumes: a run the client gave up on must make progress next
+  // time, not rewrite the same countries until the timeout cuts it off again.
+  const inPlace = await subscriptionPricesInPlace(ctx.http, sub.id, startDate, new Date().toISOString().slice(0, 10));
+  const todo = plan.filter((row) => !inPlace.has(`${row.territory}|${row.pointId}`));
+
   const resolved = {
     app: `${app.name} (${app.id})`,
     productType: kind,
@@ -1637,7 +1683,8 @@ async function equalizePrice(
     preserveCurrentPrice: args.preserve_current_price,
     ...(startDate ? { startDate } : {}),
     countries: plan.length,
-    writes: plan.length,
+    alreadyThere: plan.length - todo.length,
+    writes: todo.length,
   };
 
   const bodyFor = (row: { pointId: string }) => ({
@@ -1659,7 +1706,7 @@ async function equalizePrice(
       dryRun: true,
       note:
         `Dry-run mode: fully resolved, nothing sent to Apple. This would be ` +
-        `${plan.length} separate writes — subscriptions have no base territory.`,
+        `${todo.length} separate writes — subscriptions have no base territory.`,
       resolved,
       derivedPrices: plan.map((p) => `${p.territory}: ${p.customerPrice}`),
       wouldSend: { method: 'POST', path: '/v1/subscriptionPrices', body: bodyFor(plan[0]) },
@@ -1671,7 +1718,21 @@ async function equalizePrice(
   // unknown state across the remaining countries; stopping leaves a partial one
   // that the result below names exactly, so it can be resumed or reverted.
   const written: string[] = [];
-  for (const row of plan) {
+  const deadline = Date.now() + EQUALIZE_BUDGET_MS;
+  for (const row of todo) {
+    if (Date.now() > deadline) {
+      return {
+        ok: true,
+        finished: false,
+        changed: { ...resolved, writes: written.length },
+        written,
+        remaining: todo.length - written.length,
+        note:
+          `Set ${written.length} countries and stopped before the client's timeout; ` +
+          `${todo.length - written.length} remain. Call again with the same arguments: ` +
+          `countries that already carry this price are skipped, so it carries on from here.`,
+      };
+    }
     try {
       await ctx.http.post('/v1/subscriptionPrices', bodyFor(row));
       written.push(row.territory);
@@ -1682,13 +1743,13 @@ async function equalizePrice(
         changed: { ...resolved, writes: written.length },
         written,
         failedAt: row.territory,
-        remaining: plan.length - written.length,
+        remaining: todo.length - written.length,
         error: (err as Error).message,
         ...(err instanceof AscApiError ? { status: err.status, requestId: err.requestId } : {}),
         note:
           `Stopped at ${row.territory}. The ${written.length} listed above are set; the ` +
-          `remaining ${plan.length - written.length} are unchanged. Fix the cause and run ` +
-          `again — writing a price that is already set is harmless.`,
+          `remaining ${todo.length - written.length} are unchanged. Fix the cause and run ` +
+          `again — countries that already carry this price are skipped.`,
       };
     }
   }
@@ -1698,6 +1759,7 @@ async function equalizePrice(
     changed: resolved,
     written: written.length,
     note:
+      (todo.length ? '' : 'Every country already carried this price; nothing was sent. ') +
       'Apple applies each change on its own schedule; check with ' +
       'pricing__get_subscription_price (omit the territory) to see them worldwide.',
   };
