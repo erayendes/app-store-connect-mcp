@@ -16,7 +16,8 @@ import { join } from 'node:path';
 import { stateDir } from './shared-config.js';
 
 /** How a write was let through, or why not. */
-export type Confirmation = 'typed CONFIRM' | 'checkbox' | 'macOS dialog' | 'not asked' | 'declined' | 'blocked';
+/** `continued`: the same call again after an approved one stopped part-way; not asked twice. */
+export type Confirmation = 'typed CONFIRM' | 'checkbox' | 'macOS dialog' | 'continued' | 'not asked' | 'declined' | 'blocked';
 
 export interface AuditEntry {
   tool: string;

@@ -522,11 +522,12 @@ describe('pricing__get_subscription_price worldwide', () => {
  * to keep that difference visible: a schedule covers every country in one POST,
  * a subscription needs one per country.
  */
-function equalizeHttp(opts: { failAt?: string } = {}) {
+function equalizeHttp(opts: { failAt?: string; prices?: any[]; onPost?: () => void } = {}) {
   const posts: Array<{ path: string; body: any }> = [];
   const http = {
     get: vi.fn(async (path: string, query?: any) => {
       if (path === '/v1/apps') return { data: [{ id: 'app-1', attributes: { name: 'Ask Quran' } }] };
+      if (path === '/v1/subscriptions/s1/prices') return { data: opts.prices ?? [] };
       if (path.includes('subscriptionGroups')) {
         return {
           data: [{ id: 'g1', attributes: {} }],
@@ -564,6 +565,7 @@ function equalizeHttp(opts: { failAt?: string } = {}) {
       if (opts.failAt && String(territory).includes(opts.failAt)) {
         throw new Error('Apple said no');
       }
+      opts.onPost?.();
       posts.push({ path, body });
       return { data: { id: 'created' } };
     }),
@@ -674,6 +676,46 @@ describe('pricing__equalize_price', () => {
     expect(result.remaining).toBe(1);
     // The two that landed stay landed — nothing is rolled back or hidden.
     expect(posts).toHaveLength(2);
+  });
+
+  const subArgs = { app: 'Ask Quran', product_type: 'subscription', product: 'weekly.1', territory: 'TUR', price: '3.99', preserve_current_price: true };
+  const priceRow = (territory: string, point: string, startDate: string | null = null) => ({
+    attributes: { startDate },
+    relationships: { territory: { data: { id: territory } }, subscriptionPricePoint: { data: { id: point } } },
+  });
+
+  it('resumes: skips countries that already carry the price, and only those', async () => {
+    const { http, posts } = equalizeHttp({
+      prices: [
+        priceRow('TUR', 'pp-tur'),
+        // An older price, replaced since: USA is set.
+        priceRow('USA', 'pp-usa-old'), priceRow('USA', 'pp-usa', '2026-01-01'),
+        // Right price today, but a change is scheduled after it: written again.
+        priceRow('DEU', 'pp-deu'), priceRow('DEU', 'pp-deu-hi', '2099-01-01'),
+      ],
+    });
+    const result: any = await run(subArgs, http);
+    expect(posts.map((p) => p.body.data.relationships.subscriptionPricePoint.data.id)).toEqual(['pp-deu']);
+    expect(result.changed).toMatchObject({ countries: 3, alreadyThere: 2, writes: 1 });
+
+    const done = equalizeHttp({ prices: [priceRow('TUR', 'pp-tur'), priceRow('USA', 'pp-usa'), priceRow('DEU', 'pp-deu')] });
+    const again: any = await run(subArgs, done.http);
+    expect(done.posts).toEqual([]);
+    expect(again.note).toMatch(/nothing was sent/);
+  });
+
+  it('stops before the client gives up and says to call again', async () => {
+    let now = 1_000_000;
+    const clock = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    try {
+      const { http, posts } = equalizeHttp({ onPost: () => { now += 25_000; } });
+      const result: any = await run(subArgs, http);
+      expect(posts).toHaveLength(2);
+      expect(result).toMatchObject({ ok: true, finished: false, written: ['TUR', 'USA'], remaining: 1 });
+      expect(result.note).toMatch(/Call again with the same arguments/);
+    } finally {
+      clock.mockRestore();
+    }
   });
 
   it('makes subscriptions declare what happens to existing subscribers', async () => {

@@ -185,6 +185,41 @@ describe.each(['legacy', 'modern'] as const)('the write gate on a %s connection'
     expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1']);
   });
 
+  it('offers "don\'t ask again", and takes the rest of the series without asking once it is ticked', async () => {
+    const apple = stubApple();
+    const { client, prompts } = await connect(era, { action: 'accept', content: { confirmation: 'CONFIRM', series: true } });
+
+    await client.callTool(CALL);
+    const res: any = await client.callTool({ ...CALL, arguments: { id: 'group-2' } });
+
+    expect(prompts).toHaveLength(1);
+    expect(res.isError ?? false).toBe(false);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1', 'DELETE /v1/betaGroups/group-2']);
+  });
+
+  it('asks for each write of a series when the box is left unticked', async () => {
+    stubApple();
+    const { client, prompts } = await connect(era, CONFIRM);
+
+    await client.callTool(CALL);
+    await client.callTool({ ...CALL, arguments: { id: 'group-2' } });
+
+    expect(prompts).toHaveLength(2);
+  });
+
+  it('takes a series from the macOS dialog\'s "don\'t ask again" box too', async () => {
+    const apple = stubApple();
+    vi.mocked(nativeConfirm).mockResolvedValueOnce('approved-series');
+    const { client } = await connect(era, CONFIRM, { noElicitation: true, nativeConfirm: true });
+
+    await client.callTool(CALL);
+    await client.callTool({ ...CALL, arguments: { id: 'group-2' } });
+
+    expect(vi.mocked(nativeConfirm)).toHaveBeenCalledOnce();
+    expect(vi.mocked(nativeConfirm).mock.calls[0][0].series).toMatch(/Don't ask again for this kind of change/);
+    expect(apple.deletes()).toEqual(['DELETE /v1/betaGroups/group-1', 'DELETE /v1/betaGroups/group-2']);
+  });
+
   it('asks a Claude Code client in the macOS dialog even though it declares forms', async () => {
     const apple = stubApple();
     vi.mocked(nativeConfirm).mockResolvedValueOnce('approved');

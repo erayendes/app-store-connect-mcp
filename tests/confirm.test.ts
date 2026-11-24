@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import type { ServerContext } from '@modelcontextprotocol/server';
-import { createWriteGate } from '../src/core/confirm.js';
+import { createContinuations, createWriteGate } from '../src/core/confirm.js';
 
 const checkbox = { message: 'preview', strong: false };
 const typed = { message: 'preview', strong: true };
@@ -138,5 +138,51 @@ describe('the write gate', () => {
     const edited = Buffer.from(body, 'base64url').toString().replace('"strong":true', '"strong":false');
     expect(edited).toContain('"strong":false');
     await expect(gate.verify(`${v}.${Buffer.from(edited).toString('base64url')}.${mac}`, ctx())).rejects.toThrow();
+  });
+});
+
+describe('continuing an approved write', () => {
+  const args = { app: 'Hydramic', territory: 'USA', price: '29.99' };
+
+  it('covers the same call again while it is unfinished, and only that call', () => {
+    const c = createContinuations();
+    expect(c.covers('pricing__equalize_price', args)).toBe(false);
+    c.record('pricing__equalize_price', args, { ok: true, finished: false });
+    expect(c.covers('pricing__equalize_price', { price: '29.99', territory: 'USA', app: 'Hydramic' })).toBe(true);
+    expect(c.covers('pricing__equalize_price', { ...args, price: '39.99' })).toBe(false);
+    expect(c.covers('pricing__make_offer', args)).toBe(false);
+    c.record('pricing__equalize_price', args, { ok: false, partial: true });
+    expect(c.covers('pricing__equalize_price', args)).toBe(true);
+    c.record('pricing__equalize_price', args, { ok: true, written: 40 });
+    expect(c.covers('pricing__equalize_price', args)).toBe(false);
+  });
+
+  it('lets one tool run without asking once the user ticked "don\'t ask again"', async () => {
+    const c = createContinuations();
+    c.allowTool('beta_groups__delete');
+    expect(c.covers('beta_groups__delete', { id: 'any' })).toBe(true);
+    expect(c.covers('beta_groups__update', { id: 'any' })).toBe(false);
+
+    const gate = createWriteGate();
+    const asked = await gate.ask(ctx(), 'beta_groups__delete', { id: '1' }, typed, undefined, true);
+    const schema = (asked.inputRequests!.confirm as any).params.requestedSchema;
+    expect(schema.properties.series.title).toMatch(/Don't ask again/);
+    expect(schema.required).toEqual(['confirmation']);
+    const state = await gate.verify(asked.requestState!, ctx());
+    expect(gate.settle(ctx(state, accept({ confirmation: 'CONFIRM', series: true })), 'beta_groups__delete', { id: '1' })).toMatchObject({ allowed: true, series: true });
+  });
+
+  it('never starts from a finished write, and lapses after its window', () => {
+    vi.useFakeTimers();
+    try {
+      const c = createContinuations(1_000);
+      c.record('pricing__equalize_price', args, { ok: true });
+      expect(c.covers('pricing__equalize_price', args)).toBe(false);
+      c.record('pricing__equalize_price', args, { ok: true, finished: false });
+      vi.advanceTimersByTime(1_001);
+      expect(c.covers('pricing__equalize_price', args)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
