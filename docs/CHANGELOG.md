@@ -8,7 +8,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [Unreleased]
+### [3.3.0] — 2026-11-24
 
 - **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
 - **Setup asks how review replies should sound.** When you pick review replies, it asks for a brand voice, phrases a reply must never use and a support URL, all optional. They used to be environment variables only, and re-running setup dropped them. The variables still work and still win.
@@ -555,7 +555,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [Yayımlanmamış]
+### [3.3.0] — 2026-11-24
 
 - **Setup, Heimdall'ın değişikliklerde ne kadar dikkatli olacağını soruyor.** Riskli değişikliklerden önce sorsun (varsayılan), her değişiklikten önce sorsun ya da salt okunur olsun. Cevap anahtarınızın yanına kaydedilir; böylece her profil ona uyar ve hiçbir uygulamanın ayarına dokunulmaz, setup yeniden çalışınca da korunur. `register --read-only` (ya da `--confirm`, `--confirm-risky`) aynı ayarı anahtar olmadan yapar; yapay zekâ uygulamanız bunu sizin için yapabilir. Geçerli modu `asc__status` gösterir. Salt okunur mod eskiden her Heimdall kaydına elle bayrak eklemek demekti.
 - **Setup, yorum yanıtlarının üslubunu soruyor.** Yorum yanıtlarını seçtiğinizde marka sesini, yanıtta asla geçmemesi gereken ifadeleri ve destek adresini sorar; hepsi isteğe bağlı. Bunlar eskiden yalnızca ortam değişkeniydi ve setup yeniden çalışınca kayboluyordu. Değişkenler hâlâ çalışıyor ve önceliklidir.

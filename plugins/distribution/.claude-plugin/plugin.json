@@ -1,7 +1,7 @@
 {
   "name": "asc-distribution",
   "displayName": "Heimdall · Distribution",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Shipping a version: App Store versions and localizations, builds, review details, submission and release, export compliance, EU alternative distribution.",
   "author": {
     "name": "Eray Endes",
