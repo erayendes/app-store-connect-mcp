@@ -27,11 +27,11 @@ Yani App Store Connect ekranlarında yapabildiğiniz işlerin neredeyse tamamın
 
 ### Heimdall
 
-Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **14 profil altında 51 alt profil ve 786 araç** içeren tek bir pakettir; her profil kendi küçük MCP sunucusu olarak çalışır.
+Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **14 profil altında 51 alt profil ve 790 araç** içeren tek bir pakettir; her profil kendi küçük MCP sunucusu olarak çalışır.
 
-Apple'ın API'sinde 1036 işlem var. Heimdall, Apple'ın kullanımdan kaldırdığı ya da yeni sürümüyle değiştirdiği 185 tanesini ve aynı işi yapan ya da hiçbir işe yaramayan 19 tanesini dışarıda bırakıyor. 
+Apple'ın API'sinde 1040 işlem var. Heimdall, Apple'ın kullanımdan kaldırdığı ya da yeni sürümüyle değiştirdiği 185 tanesini ve aynı işi yapan ya da hiçbir işe yaramayan 19 tanesini dışarıda bırakıyor. 
 
-Kalan 832 işlemden 734'ü araca dönüşüyor. Üstüne elle yazılmış 52 araç ekleniyor. Toplam 786 araç. Geri kalan 98 işlemi, birkaç ham çağrının işini tek çağrıda yapan medya araçları karşılıyor. 
+Kalan 836 işlemden 738'ü araca dönüşüyor. Üstüne elle yazılmış 52 araç ekleniyor. Toplam 790 araç. Geri kalan 98 işlemi, birkaç ham çağrının işini tek çağrıda yapan medya araçları karşılıyor. 
 
 _Kulağa ne kadar karışık geliyor değil mi? Ama sizin bunları düşünmenize gerek yok. Sadece yapay zekâya yapmasını istediğiniz işi verin._
 

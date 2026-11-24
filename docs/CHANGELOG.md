@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Apple's specification 4.6.1.** Four new subscription pricing tools in `monetization:subscription`: a preview of what a planned price change does in each country (whether existing subscribers can keep their price), quantity price tiers and their worldwide equalization, and the tiers of one subscription price. The preview and the equalization only calculate, so they do not ask for confirmation. Heimdall now has 790 tools.
+
 ### [3.3.0] — 2026-11-24
 
 - **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
@@ -554,6 +558,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Apple'ın spesifikasyonu 4.6.1.** `monetization:subscription`'a dört yeni abonelik fiyatı aracı geldi: planlanan bir fiyat değişikliğinin her ülkede ne yapacağını (mevcut abonelerin eski fiyatı koruyup korumayacağını) gösteren önizleme, adede göre fiyat kademeleri ve bunların dünya geneli eşitlemesi, bir abonelik fiyatının kademeleri. Önizleme ve eşitleme yalnızca hesap yapar, bu yüzden onay istemez. Heimdall artık 790 araç içeriyor.
 
 ### [3.3.0] — 2026-11-24
 

@@ -6,13 +6,13 @@ Tools:          836
   mutating:     375
   deprecated dropped: 185
   dropped by the profile sheet: 19
-Risk levels:    low:117 destructive:99 public:64 revenue:53 release:20 infrastructure:16 access:6
+Risk levels:    low:119 destructive:99 public:64 revenue:51 release:20 infrastructure:16 access:6
 Body schemas:   273 (272 KB resolved, avg 1018 chars)
 
 By domain:
   game_center          172
   apps                 115
-  subscriptions        109
+  subscriptions        112
   versions             91
   testflight           62
   iap                  55
@@ -27,4 +27,3 @@ By domain:
   webhooks             7
   reviews              5
   sandbox              3
-  misc                 3

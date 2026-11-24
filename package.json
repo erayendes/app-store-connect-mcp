@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "Heimdall — Run App Store Connect, TestFlight and StoreKit 2 from your AI. 786 tools across 14 profiles, generated from Apple's OpenAPI spec, plus one-call worldwide pricing, offers, submissions and review triage. Confirm-before-write safety and read-only mode. Works with any MCP client.",
+  "description": "Heimdall — Run App Store Connect, TestFlight and StoreKit 2 from your AI. 790 tools across 14 profiles, generated from Apple's OpenAPI spec, plus one-call worldwide pricing, offers, submissions and review triage. Confirm-before-write safety and read-only mode. Works with any MCP client.",
   "author": {
     "name": "Eray Endeş",
     "email": "erayendes@gmail.com",

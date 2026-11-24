@@ -22255,16 +22255,16 @@ export const OPERATIONS: Operation[] = [
   },
   {
     "name": "subscription_price_change_previews.create",
-    "domain": "misc",
+    "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionPriceChangePreviews",
-    "description": "Create a subscription price change preview.",
+    "description": "Check a planned subscription price change before making it. Send the proposed price point per country; Apple answers for each whether it is an increase existing subscribers can keep (INCREASE_PRESERVABLE), a decrease or mixed change they cannot, or no change. A calculation: nothing is saved.",
     "readOnly": false,
     "pathParams": [],
     "queryParams": [],
     "hasBody": true,
     "bodyRef": "SubscriptionPriceChangePreviewCreateRequest",
-    "risk": "revenue"
+    "risk": "low"
   },
   {
     "name": "subscription_price_points.adjusted_equalizations.list",
@@ -22398,10 +22398,10 @@ export const OPERATIONS: Operation[] = [
   },
   {
     "name": "subscription_price_tier_equalizations.create",
-    "domain": "misc",
+    "domain": "subscriptions",
     "method": "POST",
     "path": "/v1/subscriptionPriceTierEqualizations",
-    "description": "Create a subscription price tier equalization.",
+    "description": "Work out a quantity price ladder from one base price point: send the tiers (minQuantity and a price point each) and Apple answers the equalized subscription price points per territory. A calculation: nothing is saved.",
     "readOnly": false,
     "pathParams": [],
     "queryParams": [
@@ -22425,14 +22425,14 @@ export const OPERATIONS: Operation[] = [
     ],
     "hasBody": true,
     "bodyRef": "SubscriptionPriceTierEqualizationCreateRequest",
-    "risk": "revenue"
+    "risk": "low"
   },
   {
     "name": "subscription_price_tiers.list",
-    "domain": "misc",
+    "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionPriceTiers",
-    "description": "List subscription price tiers.",
+    "description": "List a subscription's quantity price tiers: each is a minimum quantity (minQuantity) and the price point that applies from it. Filter by subscription and territory.",
     "readOnly": true,
     "pathParams": [],
     "queryParams": [
@@ -22477,7 +22477,7 @@ export const OPERATIONS: Operation[] = [
     "domain": "subscriptions",
     "method": "GET",
     "path": "/v1/subscriptionPrices/{id}/additionalPriceTiers",
-    "description": "List the additional price tiers belonging to a subscription price.",
+    "description": "List the quantity price tiers attached to one subscription price (one country, one start date): each is a minimum quantity and its price point.",
     "readOnly": true,
     "pathParams": [
       "id"
