@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **See what Heimdall changed.** `npx -y @erayendes/asc-mcp audit` opens the write log as a page in your browser: one row per write with when, what in plain words, the change, how it was confirmed and Apple's answer, filtered by app, day and result, with failed writes standing out. It is built from the local log and opened from disk; nothing is sent anywhere.
+
 ### [3.3.0] — 2026-11-24
 
 - **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
@@ -554,6 +558,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Heimdall'ın neyi değiştirdiğini görün.** `npx -y @erayendes/asc-mcp audit`, yazma kaydını tarayıcınızda bir sayfa olarak açar: her yazma için bir satır; ne zaman, ne yapıldığı, değişiklik, nasıl onaylandığı ve Apple'ın cevabı. Uygulamaya, güne ve sonuca göre süzülebilir, başarısız yazmalar öne çıkar. Sayfa bilgisayardaki kayıttan üretilip diskten açılır; hiçbir yere bir şey gönderilmez.
 
 ### [3.3.0] — 2026-11-24
 

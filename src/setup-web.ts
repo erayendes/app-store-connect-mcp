@@ -372,7 +372,7 @@ export async function runWebSetup(options: WebSetupOptions = {}): Promise<void> 
   await done;
 }
 
-function openBrowser(url: string): void {
+export function openBrowser(url: string): void {
   const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer' : 'xdg-open';
   try {
     execFileSync(opener, [url], { stdio: 'ignore' });

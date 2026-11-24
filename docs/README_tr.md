@@ -106,6 +106,8 @@ Heimdall'ı yapay zekânıza kurdurmak ya da [Xcode 27'de kullanmak](SETUP_tr.md
 
 Bir şey yolunda gitmiyorsa `npx -y @erayendes/asc-mcp doctor` çalıştırın; hiçbir şeyi değiştirmeden kurulumu kontrol eder ve sıradaki adımı söyler.
 
+Heimdall'ın neyi değiştirdiğini ve onu sizin mi yapay zekânın mı onayladığını görmek için `npx -y @erayendes/asc-mcp audit` çalıştırın: yazma kaydını tarayıcınızda bir sayfa olarak açar.
+
 ### İsim ve proje hakkında
 **Heimdall**, İskandinav mitolojisinde Asgard ile **dokuz diyarı birbirine bağlayan gökkuşağı köprüsü** Bifröst'ün bekçisidir. Bu projedeki görevi, App Store Connect hesabınızı makinenize bağlayan yolları tutmak. Adını oradan alıyor.
 

@@ -103,6 +103,8 @@ Want your AI to install it for you, or to use it in [Xcode 27](docs/SETUP_en.md#
 
 If something isn't working, run `npx -y @erayendes/asc-mcp doctor`; it checks your setup without changing anything and tells you the next step.
 
+To see what Heimdall changed, and whether you or the AI approved it, run `npx -y @erayendes/asc-mcp audit`: it opens the write log as a page in your browser.
+
 ### About the name and the project
 In Norse mythology, **Heimdall** keeps watch over Bifröst, **the rainbow bridge that links Asgard to the nine realms**. Here, his job is to guard the road between your App Store Connect account and your machine. That's where the name comes from.
 
