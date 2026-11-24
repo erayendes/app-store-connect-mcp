@@ -19,7 +19,8 @@ import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { TERRITORY_NAMES } from './territory-names.js';
 
-export type NativeAnswer = 'approved' | 'cancelled' | 'unavailable';
+/** `approved-series`: approved with the box ticked that stops asking for this tool for a while. */
+export type NativeAnswer = 'approved' | 'approved-series' | 'cancelled' | 'unavailable';
 
 /**
  * Clients that declare elicitation forms but cannot be trusted to show them.
@@ -46,9 +47,9 @@ export const nativeConfirmFits = (text: DialogText): boolean => text.body.length
 // text. A sixth argument renders it to a PNG instead of showing it.
 const ICON = fileURLToPath(new URL('../../assets/brand/heimdall-icon-rounded-256.png', import.meta.url));
 const SCRIPT = String.raw`ObjC.import('AppKit');
-// argv: title, body, approve label, refuse label, icon path[, render path]
+// argv: title, body, approve label, refuse label, icon path[, render path[, series checkbox label]]
 function run(argv) {
-  const [title, body, approve, refuse, iconPath, renderTo] = argv;
+  const [title, body, approve, refuse, iconPath, renderTo, series] = argv;
   const app = $.NSApplication.sharedApplication;
   app.setActivationPolicy($.NSApplicationActivationPolicyAccessory);
 
@@ -71,6 +72,11 @@ function run(argv) {
   alert.informativeText = context || 'App Store Connect';
   alert.addButtonWithTitle(approve); // first: the default, Return
   alert.addButtonWithTitle(refuse).keyEquivalent = '\u001b';
+  // The system's own "don't ask again" box, unticked: a series of the same write is one answer.
+  if (series) {
+    alert.showsSuppressionButton = true;
+    alert.suppressionButton.title = series;
+  }
 
   // The alert centres the details in its text column, so they take that column's
   // width exactly. The column shifts as the alert sizes itself around them, so the
@@ -143,7 +149,8 @@ function run(argv) {
 
   app.activateIgnoringOtherApps(true);
   // JXA hands back both the modal response and NSAlertFirstButtonReturn as strings ("1000").
-  return Number(alert.runModal) === Number($.NSAlertFirstButtonReturn) ? 'approved' : 'cancelled';
+  if (Number(alert.runModal) !== Number($.NSAlertFirstButtonReturn)) return 'cancelled';
+  return series && Number(alert.suppressionButton.state) === Number($.NSControlStateValueOn) ? 'approved-series' : 'approved';
 }`;
 
 export interface DialogText {
@@ -152,6 +159,8 @@ export interface DialogText {
   body: string;
   /** The approving button, named for what it does ("Remove"); Allow when no verb fits. */
   action?: string;
+  /** Label of an unticked "don't ask again for a while" box; no box when absent. */
+  series?: string;
 }
 
 // A button named Cancel next to a Cancel button would say nothing, so that verb stays Allow.
@@ -322,8 +331,9 @@ export function nativeConfirm(text: DialogText, signal?: AbortSignal): Promise<N
     // A cancelled tool call takes its alert with it, so a late click cannot
     // run a write the agent was already told failed.
     const buttons = text.action ? [text.action, 'Cancel'] : ['Allow', 'Don’t Allow'];
-    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ...buttons, ICON], { signal }, (error, stdout) => {
-      if (!error) return resolve(stdout.trim() === 'approved' ? 'approved' : 'cancelled');
+    execFile('osascript', ['-l', 'JavaScript', '-e', SCRIPT, text.title, body, ...buttons, ICON, '', text.series ?? ''], { signal }, (error, stdout) => {
+      const out = stdout.trim();
+      if (!error) return resolve(out === 'approved' || out === 'approved-series' ? out : 'cancelled');
       resolve(signal?.aborted ? 'cancelled' : 'unavailable');
     });
   });

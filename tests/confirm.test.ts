@@ -157,6 +157,21 @@ describe('continuing an approved write', () => {
     expect(c.covers('pricing__equalize_price', args)).toBe(false);
   });
 
+  it('lets one tool run without asking once the user ticked "don\'t ask again"', async () => {
+    const c = createContinuations();
+    c.allowTool('beta_groups__delete');
+    expect(c.covers('beta_groups__delete', { id: 'any' })).toBe(true);
+    expect(c.covers('beta_groups__update', { id: 'any' })).toBe(false);
+
+    const gate = createWriteGate();
+    const asked = await gate.ask(ctx(), 'beta_groups__delete', { id: '1' }, typed, undefined, true);
+    const schema = (asked.inputRequests!.confirm as any).params.requestedSchema;
+    expect(schema.properties.series.title).toMatch(/Don't ask again/);
+    expect(schema.required).toEqual(['confirmation']);
+    const state = await gate.verify(asked.requestState!, ctx());
+    expect(gate.settle(ctx(state, accept({ confirmation: 'CONFIRM', series: true })), 'beta_groups__delete', { id: '1' })).toMatchObject({ allowed: true, series: true });
+  });
+
   it('never starts from a finished write, and lapses after its window', () => {
     vi.useFakeTimers();
     try {

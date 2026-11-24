@@ -12,6 +12,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 - **Pricing a subscription in every country finishes.** `pricing__equalize_price` writes a subscription's price one country at a time, about 175 writes, and an AI app gives up on a tool call after about a minute. Each call used to start again from the first country, so a repeat rewrote the same countries until it was cut off again and never reached the rest. Now a call stops before that limit and says how many countries remain, and calling it again skips the countries that already carry the price.
 - **One confirmation for the whole change.** When an approved write stops part-way, before the client's timeout or at a failure, calling it again with the same arguments within ten minutes is not asked again: you approved every country, not the first forty. Different arguments, release submissions and media writes are still asked each time. The audit log records these calls as `continued`.
+- **"Don't ask again for this kind of change for 10 minutes."** The confirmation, in the form and in the macOS dialog, has a box for a series of the same write done one at a time, such as deleting screenshots one by one. Ticked, that kind of change runs without asking for ten minutes. It starts unticked, and release submissions and media writes do not offer it.
 
 ### [3.2.0] — 2026-11-19
 
@@ -556,6 +557,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 - **Aboneliğin bütün ülkelerde fiyatlanması tamamlanıyor.** `pricing__equalize_price` aboneliğin fiyatını ülke ülke, yaklaşık 175 yazmayla kuruyor; yapay zekâ uygulamaları ise bir araç çağrısını yaklaşık bir dakikada bırakıyor. Her çağrı ilk ülkeden yeniden başladığı için tekrar çağırmak aynı ülkeleri yeniden yazıyor, süre yine doluyor ve kalan ülkelere hiç ulaşılamıyordu. Artık çağrı bu sınırdan önce durup kaç ülke kaldığını söylüyor; yeniden çağrıldığında fiyatı zaten doğru olan ülkeleri atlıyor.
 - **Bütün değişiklik için tek onay.** Onaylanmış bir yazma, istemcinin zaman aşımından önce ya da bir hatada yarıda kalırsa, aynı argümanlarla on dakika içinde yeniden çağrıldığında onay tekrar sorulmuyor: onay ilk kırk ülke için değil, bütün ülkeler için verildi. Argümanlar değişirse, sürüm gönderimlerinde ve medya yazmalarında onay yine her seferinde soruluyor. Denetim kaydı bu çağrıları `continued` olarak yazıyor.
+- **"Bu tür değişiklik için 10 dakika tekrar sorma."** Onay formunda ve macOS penceresinde, aynı yazmanın tek tek yapıldığı seriler için bir kutu var; örneğin ekran görüntülerini birer birer silmek. İşaretlenirse bu tür değişiklik on dakika boyunca sorulmadan yapılır. Kutu işaretsiz gelir; sürüm gönderimleri ve medya yazmaları bu kutuyu göstermez.
 
 ### [3.2.0] — 2026-11-19
 
