@@ -1,7 +1,7 @@
 {
   "name": "asc-testflight",
   "displayName": "Heimdall · TestFlight",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "TestFlight: builds for testing, beta groups and testers, external review, crash and screenshot feedback.",
   "author": {
     "name": "Eray Endes",

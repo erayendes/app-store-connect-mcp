@@ -1,7 +1,7 @@
 {
   "name": "asc-monetization",
   "displayName": "Heimdall · Monetization",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Money: subscriptions, in-app purchases, offers and codes, app pricing, StoreKit 2 transactions.",
   "author": {
     "name": "Eray Endes",
