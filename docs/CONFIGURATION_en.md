@@ -6,6 +6,13 @@ Without a profile argument, Heimdall starts **ASC-Default**: `core` + `general` 
 
 Most people never need this page: [setup](SETUP_en.md) saves everything Heimdall needs. Read on if you want to lock the AI out of changes, try a change without making it, use a second App Store Connect account, or run Heimdall without setup (in CI, for example).
 
+**Setup asks the two you are most likely to want**, and saves the answers next to your key, so every profile reads them and no app config is touched:
+
+- **How careful Heimdall is with changes:** ask before risky changes (the default), ask before every change, or read-only. `npx -y @erayendes/asc-mcp register --read-only` (or `--confirm`, `--confirm-risky`) sets the same answer without the key, so your AI app can do it for you. A flag or environment variable below still wins, and can only make it stricter.
+- **How review replies sound**, asked when you pick review replies: brand voice, phrases a reply must never use and the support URL. The `ASC_REVIEWS_*` variables below still win.
+
+`asc__status` shows the mode in effect. Restart your AI app after changing it.
+
 There are two kinds of settings. **Flags** go at the end of `args` in your app's MCP settings. **Environment variables** go in an `env` block next to it:
 
 ```json
@@ -83,7 +90,7 @@ Give the key one way only. If more than one is set, `ASC_PRIVATE_KEY` wins, then
 | `ASC_NO_UPDATE_CHECK` | `1` stops the once-a-day question to npm about a newer version, and with it the update note on the first answer of the day. |
 | `ASC_KEEP_RAW_RESPONSES` | `1` passes Apple's answers through untouched. By default link clutter is removed, which makes lists about 85% smaller. |
 
-**Review reply drafts** (`reviews_ai__draft_response`).
+**Review reply drafts** (`reviews_ai__draft_response`). Setup asks for these too; a variable set here wins over its answer.
 
 | Variable | What it's for |
 |:--|:--|

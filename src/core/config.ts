@@ -1,7 +1,7 @@
 import { ConfigError } from './errors.js';
 import { PACKAGE } from '../clients.js';
 import { readKeychainPassword } from './keychain.js';
-import { readSharedConfig } from './shared-config.js';
+import { readSharedConfig, type ReviewsBrand } from './shared-config.js';
 import type { JwtCredentials } from './jwt.js';
 import type { RateLimitOptions } from './rate-limit.js';
 
@@ -57,12 +57,8 @@ export interface ServerConfig {
    * hourly quota and block the humans sharing it.
    */
   rateLimit?: RateLimitOptions;
-  /** Optional brand settings for the reviews-AI draft tools (ASC_REVIEWS_*). */
-  reviewsBrand?: {
-    voice?: string;
-    bannedPhrases?: string[];
-    supportUrl?: string;
-  };
+  /** Optional brand settings for the reviews-AI draft tools (ASC_REVIEWS_*, then setup's answer). */
+  reviewsBrand?: ReviewsBrand;
 }
 
 /**
@@ -187,7 +183,8 @@ export function loadConfig(
           // verifying would present unverified data as fact.
           appleRootCerts: parseList(env.ASC_APPLE_ROOT_CERTS),
         },
-    readOnly: readOnlyFromArgs(argv) || readOnlyFromEnv(env.ASC_READ_ONLY),
+    // Flag, then env, then setup's answer: each can only make it stricter.
+    readOnly: readOnlyFromArgs(argv) || readOnlyFromEnv(env.ASC_READ_ONLY) || shared?.writeMode === 'readOnly',
     // `strong` by default: ask on the four levels the risk manifest calls
     // revenue, destructive, infrastructure and access, and stay out of the way
     // on the rest.
@@ -206,7 +203,9 @@ export function loadConfig(
             env.ASC_CONFIRM_WRITES === 'false' ||
             env.ASC_CONFIRM_WRITES === '0'
           ? 'off'
-          : 'strong',
+          : shared?.writeMode === 'all'
+            ? 'all'
+            : 'strong',
     nativeConfirm: env.ASC_NATIVE_CONFIRM !== '0' && env.ASC_NATIVE_CONFIRM !== 'false',
     withCore: flag('with-core'),
     baseUrl: env.ASC_BASE_URL || undefined,
@@ -220,6 +219,6 @@ export function loadConfig(
             bannedPhrases: parseList(env.ASC_REVIEWS_BANNED_PHRASES),
             supportUrl: env.ASC_REVIEWS_SUPPORT_URL || undefined,
           }
-        : undefined,
+        : shared?.reviewsBrand,
   };
 }

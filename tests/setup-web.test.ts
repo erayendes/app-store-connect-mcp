@@ -113,6 +113,9 @@ describe.skipIf(!canListen)('setup --web, a dry run', () => {
     expect(state.dryRun).toBe(true);
     expect(state.existing).toBeNull();
     expect(state.rows.length).toBeGreaterThan(0);
+    expect(state.writeModes.map((m: any) => m.mode)).toEqual(['strong', 'all', 'readOnly']);
+    expect(state.rows.find((r: any) => r.name === 'marketing').brand).toBe(true);
+    expect(state.rows.find((r: any) => r.name === 'analytics').brand).toBe(false);
 
     expect((await (await post('verify', { keyId: 'x', issuerId: 'y', pem: '' })).json()).verdict).toBe('bad-key-id');
     const ok = await post('verify', {
@@ -192,7 +195,7 @@ describe('setup --web, registration confirmation', () => {
     // Shown file by file: a channel move only is not shown; why core is held back is.
     expect(plan[0].files[0].rows.map((r) => r.name)).not.toContain('ASC-General');
     expect(plan[0].files[0].note).toMatch(/ASC-Core not added: .*different App Store Connect accounts/);
-    expect(SETUP_PAGE).toContain('reuse && !vendorChanged() && !r.plan.some');
+    expect(SETUP_PAGE).toContain('reuse && !extrasChanged() && !r.plan.some');
     // The page says why core is held back before Apply, since the result will not.
     expect(SETUP_PAGE).toContain("p.coreWithheld.forEach(function (why)");
     expect(readFileSync(path, 'utf8')).toContain('secret-test-value');
@@ -214,7 +217,7 @@ describe('setup --web, registration confirmation', () => {
     const expression = SETUP_PAGE.match(/\$\('apply'\)\.disabled = (reuse[\s\S]*?\n      \}\));/)?.[1];
     expect(expression).toBeDefined();
     const disabled = (reuse: boolean, changed: boolean, plan: typeof pagePlan): boolean =>
-      runInNewContext(expression!, { reuse, vendorChanged: () => changed, r: { plan } }) as boolean;
+      runInNewContext(expression!, { reuse, extrasChanged: () => changed, r: { plan } }) as boolean;
     expect(disabled(true, false, pagePlan)).toBe(true);
     expect(disabled(false, false, pagePlan)).toBe(false);
     expect(disabled(true, true, pagePlan)).toBe(false);

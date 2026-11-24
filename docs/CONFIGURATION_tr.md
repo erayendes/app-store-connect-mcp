@@ -6,6 +6,13 @@ Profil argümanı vermediğinizde Heimdall, **ASC-Default** adıyla `core` + `ge
 
 Çoğu kişinin bu sayfaya hiç ihtiyacı olmaz: [setup](SETUP_tr.md), Heimdall'ın ihtiyaç duyduğu her şeyi kaydeder. Yapay zekânın değişiklik yapmasını tamamen engellemek, bir değişikliği yapmadan denemek, ikinci bir App Store Connect hesabı kullanmak ya da Heimdall'ı setup olmadan (örneğin CI'da) çalıştırmak istiyorsanız okumaya devam edin.
 
+**Setup en çok isteyeceğiniz iki ayarı kendisi sorar** ve cevapları anahtarınızın yanına kaydeder; böylece her profil onları okur, hiçbir uygulamanın ayarına dokunulmaz:
+
+- **Heimdall değişikliklerde ne kadar dikkatli olsun:** riskli değişikliklerden önce sorsun (varsayılan), her değişiklikten önce sorsun ya da salt okunur olsun. `npx -y @erayendes/asc-mcp register --read-only` (ya da `--confirm`, `--confirm-risky`) aynı cevabı anahtar olmadan kaydeder; yapay zekâ uygulamanız bunu sizin için yapabilir. Aşağıdaki bayraklar ve ortam değişkenleri yine önceliklidir ve ayarı yalnızca daha sıkı yapabilir.
+- **Yorum yanıtlarının üslubu**, yorum yanıtlarını seçtiğinizde sorulur: marka sesi, yanıtta asla geçmemesi gereken ifadeler ve destek adresi. Aşağıdaki `ASC_REVIEWS_*` değişkenleri yine önceliklidir.
+
+Geçerli modu `asc__status` gösterir. Değiştirdikten sonra yapay zekâ uygulamanızı yeniden başlatın.
+
 İki tür ayar var. **Bayraklar**, uygulamanızın MCP ayarlarında `args` listesinin sonuna yazılır. **Ortam değişkenleri** ise yanındaki `env` bloğuna:
 
 ```json
@@ -83,7 +90,7 @@ Anahtarı yalnızca bir yoldan verin. Birden fazlası girilmişse önce `ASC_PRI
 | `ASC_NO_UPDATE_CHECK` | `1`, npm'e günde bir kez sorulan "yeni sürüm var mı?" sorusunu ve günün ilk cevabındaki güncelleme notunu kapatır. |
 | `ASC_KEEP_RAW_RESPONSES` | `1`, Apple'ın cevaplarını olduğu gibi geçirir. Varsayılan olarak link kalabalığı temizlenir; listeler yaklaşık %85 küçülür. |
 
-**Yorum yanıtı taslakları** (`reviews_ai__draft_response`).
+**Yorum yanıtı taslakları** (`reviews_ai__draft_response`). Bunları setup da sorar; burada ayarlanan değişken setup'taki cevabın önüne geçer.
 
 | Değişken | Ne için |
 |:--|:--|

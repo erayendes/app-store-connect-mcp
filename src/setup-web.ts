@@ -19,7 +19,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import type { AddressInfo } from 'node:net';
-import { readSharedConfig, writeSharedConfig } from './core/shared-config.js';
+import { readSharedConfig, type ReviewsBrand } from './core/shared-config.js';
 import { loadConfig } from './core/config.js';
 import type { JwtCredentials } from './core/jwt.js';
 import {
@@ -54,6 +54,10 @@ import {
   registeredAcross,
   rolesFor,
   saveCredentials,
+  WRITE_MODES,
+  draftsReviewReplies,
+  isSupportUrl,
+  updateSharedConfig,
   selectionToSpecs,
   verifyCredentials,
   adminRequestMessage,
@@ -156,7 +160,11 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         desktop: claudeDesktop(),
         setupCommand: `npx -y ${PACKAGE} setup`,
         version: HEIMDALL_VERSION,
-        existing: existing ? { keyId: existing.keyId, issuerId: existing.issuerId, vendorNumber: existing.vendorNumber ?? '' } : null,
+        existing: existing ? {
+          keyId: existing.keyId, issuerId: existing.issuerId, vendorNumber: existing.vendorNumber ?? '',
+          writeMode: existing.writeMode ?? 'strong', reviewsBrand: existing.reviewsBrand ?? null,
+        } : null,
+        writeModes: WRITE_MODES,
         clients: all.map((c) => ({
           id: c.id,
           label: c.label,
@@ -175,6 +183,7 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
           roles: rolesFor(r),
           parent: r.item.parent ?? null,
           vendor: r.profile.name === 'analytics',
+          brand: draftsReviewReplies(r),
         })),
         preselected: preselect(rows, registeredAcross(present).union),
       };
@@ -242,18 +251,26 @@ export async function startWebSetup(options: WebSetupOptions = {}): Promise<WebS
         for (const p of steps) log(planLines(p).filter(Boolean).map((l) => l.replace(/^\n+/, '')).join('\n'));
       } else {
         const text = (k: string) => String(body[k] ?? '').trim() || undefined;
-        const extras = {
-          vendorNumber: text('vendorNumber'),
+        const writeMode = WRITE_MODES.find((m) => m.mode === body.writeMode)?.mode ?? 'strong';
+        const supportUrl = text('brandUrl');
+        if (supportUrl && !isSupportUrl(supportUrl)) throw new HttpError(400, 'The support URL should start with https://.');
+        const banned = text('brandBanned')?.split(',').map((p) => p.trim()).filter(Boolean);
+        const asked: ReviewsBrand = {
+          ...(text('brandVoice') ? { voice: text('brandVoice') } : {}),
+          ...(banned?.length ? { bannedPhrases: banned } : {}),
+          ...(supportUrl ? { supportUrl } : {}),
         };
+        // The brand box shows only for a pick that drafts review replies; otherwise what is saved stays.
+        const brand = body.brand === true ? { reviewsBrand: Object.keys(asked).length ? asked : undefined } : {};
         if (!reuse && verified) {
-          saveCredentials({ keyId: verified.keyId, issuerId: verified.issuerId, ...extras }, verified.pem, undefined);
+          const kept = body.brand === true ? brand : { reviewsBrand: readSharedConfig()?.reviewsBrand };
+          saveCredentials({ keyId: verified.keyId, issuerId: verified.issuerId, vendorNumber: text('vendorNumber'), writeMode, ...kept }, verified.pem, undefined);
           verified = undefined;
-        } else if (reuse && extras.vendorNumber) {
+        } else if (reuse) {
           // Keeping the saved key does not mean keeping it incomplete: what was
           // filled in now is added to it, and nothing else is touched.
-          const saved = readSharedConfig()!;
-          const defined = Object.fromEntries(Object.entries(extras).filter(([, v]) => v !== undefined));
-          writeSharedConfig({ ...saved, ...defined });
+          const vendorNumber = text('vendorNumber');
+          updateSharedConfig({ ...(vendorNumber ? { vendorNumber } : {}), writeMode, ...brand });
         }
         // The page shows only one line per app; the key is already confirmed by step 2.
         next = applyPlan(steps, log);
