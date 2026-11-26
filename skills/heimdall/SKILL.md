@@ -100,6 +100,12 @@ npx -y @erayendes/asc-mcp register monetization:subscription,subscription-offers
 `--clients=claude,codex` limits which configs it touches (ids: `claude`,
 `codex`, `antigravity`, `vscode`, `cursor`, `windsurf`).
 
+`--scope=project` writes the project's own files instead, at the repository
+root (`.mcp.json`, `.codex/config.toml`, `.agents/mcp_config.json`,
+`.cursor/mcp.json`, `.vscode/mcp.json`), for Heimdall in one project only.
+Committed, they reach every worktree and teammate and hold no key. A teammate
+without a key gets one tool, `asc__setup_needed`, that says what to do.
+
 What `register` changes, which is what the user is saying yes to:
 
 - **It adds** the profiles you name, and `ASC-Core` beside them.

@@ -230,7 +230,7 @@ describe('names the docs use exist', () => {
   const MIGRATION = /2\.x|before 2\.5|no longer exist|artık olmayan|now `general`|artık `general`|earlier version|önceki bir sürüm|old name|eski ad|old profile|eski bir profil|was removed|kaldırılan/;
   // Only what actually loads: placed operations and the hand-written tools.
   // MACRO_COVERED, TWIN_OF and PROFILELESS operations are in no server.
-  const tools = new Set([...[...placedOps].map((op) => toolNameFor({ name: op })), ...manual, ...PROXY_PAIR, 'asc__profile_unknown']);
+  const tools = new Set([...[...placedOps].map((op) => toolNameFor({ name: op })), ...manual, ...PROXY_PAIR, 'asc__profile_unknown', 'asc__setup_needed']);
   const servers = new Set([...PROFILES.map((p) => serverName(p.name)), serverName('default')]);
   const RETIRED_PROFILES = ['app-info'];
 
