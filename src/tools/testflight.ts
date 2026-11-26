@@ -16,6 +16,7 @@ const MAX_LOG_BYTES = 4096;
 const MAX_LOG_LINES = 40;
 const MAX_IMAGES = 3;
 const MAX_WAIT_MINUTES = 15;
+const MAX_WHATS_NEW = 4000;
 const POLL_MS = 20_000;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -69,13 +70,18 @@ const commentsSchema = {
 
 export const TESTFLIGHT_TOOLS: McpToolDefinition[] = [{
   name: 'testflight__assign_build_to_groups',
-  description: 'Assign one processed, unexpired TestFlight build to named beta groups. Checks existing assignments and reports each group, including partial failures. External groups may need beta app review before testers can install the build. RELEASE-level write.',
+  description: 'Assign one processed, unexpired TestFlight build to named beta groups, optionally setting its What to Test text and submitting it for beta app review in the same call. Checks what is already done, so calling it again after a dropped call finishes the rest, and reports each step, including partial failures. External groups need beta app review before testers can install the build. RELEASE-level write.',
   inputSchema: {
     type: 'object',
     properties: {
       app: { type: 'string', description: 'App name, bundle ID, or numeric Apple ID.' },
       build: { type: 'string', description: 'Exact build number (Apple build version) or build ID. Required; ambiguous matches are refused.' },
       groups: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Exact beta group names or IDs.' },
+      what_to_test: {
+        type: 'object', additionalProperties: { type: 'string', minLength: 1, maxLength: MAX_WHATS_NEW },
+        description: 'What to Test text by locale, e.g. {"en-US": "Try the new export"}. A locale that already says this is left as it is.',
+      },
+      submit_beta_review: { type: 'boolean', description: 'Also submit the build for beta app review, which external groups need. An existing submission is left as it is.' },
     },
     required: ['app', 'build', 'groups'],
   },
@@ -387,17 +393,27 @@ export async function executeTestflightTool(
 /** The confirmation prompt for an assignment; arguments only, so no Apple call happens before approval. */
 export function buildTestflightPreview(args: Record<string, unknown>): string {
   const groups = Array.isArray(args.groups) ? args.groups.map(String) : [];
+  const locales = Object.keys(whatToTestOf(args));
   return [
     'Heimdall is about to give testers a build — a RELEASE-level write.',
     '',
     `  App:     ${String(args.app ?? '?')}`,
     `  Build:   ${String(args.build ?? '?')}`,
     `  Groups:  ${groups.join(', ') || '?'}`,
+    ...(locales.length ? [`  What to Test: ${locales.join(', ')}`] : []),
+    ...(args.submit_beta_review === true ? ['  Beta app review: submit'] : []),
     '',
-    'Every tester in these groups can install the build once it is assigned. External groups ' +
-      'may also need beta app review; this does not submit one. Groups that already have the ' +
-      'build are left as they are.',
+    'Every tester in these groups can install the build once it is assigned. ' +
+      (args.submit_beta_review === true ? 'The build also goes to Apple for beta app review. '
+        : 'External groups may also need beta app review; this does not submit one. ') +
+      'Steps that are already done are left as they are.',
   ].join('\n');
+}
+
+/** what_to_test as given, or nothing; validated where it is used for a write. */
+function whatToTestOf(args: Record<string, unknown>): Record<string, string> {
+  const value = args.what_to_test;
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, string> : {};
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -448,8 +464,9 @@ export function testflightDialog(args: Record<string, unknown>): DialogText {
       `${appLabel(args.app)} · TestFlight`,
       // The title shows three; past that the body names them, capped to fit the alert.
       ...(groups.length > 3 ? [`Groups: ${listed.join(', ')}${more ? ` and ${more} more` : ''}`] : []),
+      ...(Object.keys(whatToTestOf(args)).length ? [`What to Test: ${Object.keys(whatToTestOf(args)).join(', ')}`] : []),
       'Groups that already have it stay as they are.',
-      'External groups may also need beta app review; this does not submit one.',
+      args.submit_beta_review === true ? 'It also goes to Apple for beta app review.' : 'External groups may also need beta app review; this does not submit one.',
       '',
       'Every tester in these groups can install it.',
     ].join('\n'),
@@ -520,6 +537,14 @@ async function assignBuildToGroups(
   if (!Array.isArray(args.groups) || !args.groups.length || args.groups.some((g) => typeof g !== 'string' || !g.trim())) {
     throw new AscApiError('"groups" must be a nonempty array of group names or IDs.', 0);
   }
+  const wt = args.what_to_test;
+  if (wt !== undefined && (typeof wt !== 'object' || wt === null || Array.isArray(wt) || Object.entries(wt).some(([locale, text]) =>
+    !locale.trim() || typeof text !== 'string' || !text.trim() || text.length > MAX_WHATS_NEW))) {
+    throw new AscApiError(`"what_to_test" must map locales to nonempty text of at most ${MAX_WHATS_NEW} characters.`, 0);
+  }
+  if (args.submit_beta_review !== undefined && typeof args.submit_beta_review !== 'boolean') throw new AscApiError('"submit_beta_review" must be boolean.', 0);
+  const whatToTest = whatToTestOf(args);
+  const review = args.submit_beta_review === true;
 
   const app = await resolveApp(ctx.http, args.app);
   // Build IDs are UUIDs; build numbers are digits and dots, and teams often use
@@ -579,11 +604,54 @@ async function assignBuildToGroups(
     results.push({
       group: String(group.attributes?.name ?? group.id), groupId: group.id,
       status: assignedIds.has(group.id) ? 'already_assigned' : ctx.dryRun ? 'would_assign' : 'pending',
-      ...(group.attributes?.isInternalGroup === false ? { note: 'External group: beta app review may be required before testers can install this build.' } : {}),
+      ...(group.attributes?.isInternalGroup === false && !review ? { note: 'External group: beta app review may be required before testers can install this build.' } : {}),
     });
   }
 
-  if (ctx.dryRun) return { dryRun: true, app: `${app.name} (${app.id})`, build: build.id, groups: results };
+  const notes: Array<Record<string, unknown>> = [];
+  if (Object.keys(whatToTest).length) {
+    const existing = await ctx.http.collect<AssignResource>(`/v1/builds/${encodeURIComponent(build.id)}/betaBuildLocalizations`, {
+      'fields[betaBuildLocalizations]': 'locale,whatsNew', limit: 200,
+    }, 1);
+    if (existing.hasMore) throw new AscApiError('What to Test list is incomplete; nothing was changed.', 0);
+    for (const locale of Object.keys(whatToTest)) {
+      const have = existing.items.find((l) => l.attributes?.locale === locale);
+      notes.push({ locale, ...(have ? { id: have.id } : {}),
+        status: have?.attributes?.whatsNew === whatToTest[locale] ? 'already_set' : ctx.dryRun ? 'would_set' : 'pending' });
+    }
+  }
+  let betaReview: Record<string, unknown> | undefined;
+  if (review) {
+    const existing = await ctx.http.collect<AssignResource>('/v1/betaAppReviewSubmissions', {
+      'filter[build]': build.id, 'fields[betaAppReviewSubmissions]': 'betaReviewState', limit: 1,
+    }, 1);
+    const found = existing.items[0];
+    betaReview = found ? { status: 'already_submitted', id: found.id, state: found.attributes?.betaReviewState }
+      : { status: ctx.dryRun ? 'would_submit' : 'pending' };
+  }
+  const report = () => ({ app: `${app.name} (${app.id})`, build: build.id,
+    ...(notes.length ? { whatToTest: notes } : {}), groups: results, ...(betaReview ? { betaReview } : {}) });
+
+  if (ctx.dryRun) return { dryRun: true, ...report() };
+  const attempt = async (step: Record<string, unknown>, write: () => Promise<unknown>, done: string) => {
+    try {
+      const created = await write() as { data?: { id?: string } } | undefined;
+      step.status = done;
+      if (!step.id && created?.data?.id) step.id = created.data.id;
+    } catch (error) {
+      step.status = 'failed';
+      step.error = error instanceof AscApiError ? error.summary : String(error);
+    }
+  };
+  // Notes first: Apple wants What to Test before external testers or review see the build.
+  for (const note of notes) {
+    if (note.status !== 'pending') continue;
+    const whatsNew = whatToTest[String(note.locale)];
+    await attempt(note, () => note.id
+      ? ctx.http.patch(`/v1/betaBuildLocalizations/${encodeURIComponent(String(note.id))}`, { data: { type: 'betaBuildLocalizations', id: note.id, attributes: { whatsNew } } })
+      : ctx.http.post('/v1/betaBuildLocalizations', { data: { type: 'betaBuildLocalizations', attributes: { locale: note.locale, whatsNew },
+        relationships: { build: { data: { type: 'builds', id: build.id } } } } }), 'set');
+  }
   for (const result of results) {
     if (result.status !== 'pending') continue;
     try {
@@ -596,7 +664,12 @@ async function assignBuildToGroups(
       result.error = error instanceof AscApiError ? error.summary : String(error);
     }
   }
+  if (betaReview?.status === 'pending') {
+    await attempt(betaReview, () => ctx.http.post('/v1/betaAppReviewSubmissions', {
+      data: { type: 'betaAppReviewSubmissions', relationships: { build: { data: { type: 'builds', id: build.id } } } },
+    }), 'submitted');
+  }
   // ok: false is the macro contract for a partial failure; the audit log reads it.
-  const failed = results.some((r) => r.status === 'failed');
-  return { ...(failed ? { ok: false } : {}), app: `${app.name} (${app.id})`, build: build.id, groups: results };
+  const failed = [...notes, ...results, ...(betaReview ? [betaReview] : [])].some((r) => r.status === 'failed');
+  return { ...(failed ? { ok: false } : {}), ...report() };
 }

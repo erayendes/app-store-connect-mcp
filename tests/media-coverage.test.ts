@@ -436,6 +436,22 @@ describe('image and file target × action coverage', () => {
     } finally { await rm(directory, { recursive: true, force: true }); }
   });
 
+  it.each([['PROCESSING', /already has IOS 3\.0 \(42\): build upload up1, PROCESSING.*build__wait_for_processing/], ['AWAITING_UPLOAD', /never finished: build upload up1.*page_id "up1"/]])(
+    'reports an earlier %s upload of the same build instead of starting another', async (state, message) => {
+      const directory = await mkdtemp(join(tmpdir(), 'heimdall-build-repeat-'));
+      try {
+        const filePath = join(directory, 'app.ipa'); await writeFile(filePath, Buffer.from([0x50,0x4b,0x03,0x04,1,2,3,4]));
+        const upload = { id: 'up1', attributes: { cfBundleVersion: '42', cfBundleShortVersionString: '3.0', platform: 'IOS', state: { state } } };
+        const failed = { ...upload, id: 'up0', attributes: { ...upload.attributes, state: { state: 'FAILED' } } };
+        const http = { get: vi.fn(async (path: string) => path === '/v1/apps/app/buildUploads' ? { data: [failed, upload] }
+          : { data: [{ id: 'app', attributes: { name: 'Example', bundleId: 'example.app' } }] }), post: vi.fn(), patch: vi.fn() };
+        const args = { app: 'Example', target: 'build_upload_file', file_path: filePath, asset_type: 'ASSET', uti: 'com.apple.ipa', build_version: '42', build_short_version: '3.0', platform: 'IOS' };
+        await expect(buildMediaPreview('media__upload', args, http as any)).rejects.toThrow(message);
+        expect(http.get).toHaveBeenCalledWith('/v1/apps/app/buildUploads', expect.objectContaining({ 'filter[cfBundleVersion]': '42', 'filter[platform]': 'IOS' }));
+        expect(http.post).not.toHaveBeenCalled();
+      } finally { await rm(directory, { recursive: true, force: true }); }
+    });
+
   it.each(Object.keys(FILE_TARGETS) as FileTarget[])('rejects arrange and foreign app ownership for %s', async (target) => {
     const adapter = FILE_TARGETS[target];
     const http = fileHttp(target);
