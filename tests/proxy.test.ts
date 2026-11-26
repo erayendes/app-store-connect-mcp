@@ -173,6 +173,23 @@ describe('what a failure tells the caller', () => {
     expect(JSON.parse(formatError(locked, 'build_uploads__delete')).error.suggestedAction).toMatch(/in review or already released/);
   });
 
+  it('says what to do for the Apple errors seen on live accounts, and leaves the rest alone', () => {
+    // The titles and details are Apple's own, from failed calls on a live account.
+    const remedy = (status: number, title: string, detail: string, tool = 'x') =>
+      JSON.parse(formatError(new AscApiError('x', status, [{ title, detail }]), tool)).error.suggestedAction;
+    expect(remedy(409, 'The provided entity includes an attribute with a value that has already been used',
+      'Entity with locale: en-US already exists. Try updating.')).toMatch(/update it, instead of creating/);
+    expect(remedy(409, 'The provided entity includes an attribute with an invalid value',
+      "There is an entity with same 'locale'.")).toMatch(/update it, instead of creating/);
+    expect(remedy(409, 'The provided entity is missing a required relationship',
+      "You must provide a value for the relationship 'territory' with this request")).toMatch(/relationships\.territory[\s\S]*pricing__make_offer/);
+    expect(remedy(422, 'Another build is in review.',
+      'Another build in the same train is already in beta review. Please submit it again once it gets completed.')).toMatch(/one build per version/);
+    // Not one of them: the status hint stays.
+    expect(remedy(409, 'The request cannot be fulfilled because of the state of another resource.',
+      'Tester(s) cannot be assigned')).toMatch(/in review or already released/);
+  });
+
   it('marks a rate limit as worth retrying and a bad request as not', () => {
     const retryable = (status: number) =>
       JSON.parse(formatError(new AscApiError('x', status), 'apps__list')).error.retryable;
