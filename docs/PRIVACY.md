@@ -26,7 +26,7 @@ What your AI app does with the results is governed by that app's own privacy pol
 All of it stays on your machine, in `~/.config/asc-mcp` (or the folder `ASC_CONFIG_DIR` / `ASC_STATE_DIR` names), created readable by your user only:
 
 - **Credentials:** your Key ID and Issuer ID in `config.json`. On macOS the private key is stored in the Keychain; elsewhere the config points to the `.p8` file you chose. Heimdall never copies the key anywhere else.
-- **Audit log (`audit.jsonl`):** every write Heimdall was asked to make, how it was confirmed and Apple's answer. Arguments are recorded with secrets masked and request bodies reduced to the fields they set.
+- **Audit log (`audit.jsonl`):** every write Heimdall was asked to make, how it was confirmed and Apple's answer. Arguments are recorded with secrets masked and request bodies reduced to the fields they set. `npx -y @erayendes/asc-mcp audit` turns it into a page (`audit.html`, next to it) and opens it from disk; nothing is sent anywhere.
 - **Failure log (`failures.jsonl`):** calls Apple refused, with Apple's request id, for support.
 - **Report cache:** sales and finance reports for periods that have closed, so they are not downloaded twice.
 - **Update check (`update-check.json`):** the latest version numbers npm reported, when it was asked, and the day the update note was last shown.

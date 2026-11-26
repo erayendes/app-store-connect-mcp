@@ -10,6 +10,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ### [Unreleased]
 
+- **See what Heimdall changed.** `npx -y @erayendes/asc-mcp audit` opens the write log as a page in your browser: one row per write with when, what in plain words, the change, how it was confirmed and Apple's answer, filtered by app, day and result, with failed writes standing out. It is built from the local log and opened from disk; nothing is sent anywhere.
 - **Apple's specification 4.6.1.** Four new subscription pricing tools in `monetization:subscription`: a preview of what a planned price change does in each country (whether existing subscribers can keep their price), quantity price tiers and their worldwide equalization, and the tiers of one subscription price. The preview and the equalization only calculate, so they do not ask for confirmation. Heimdall now has 790 tools.
 - **Errors say the next step.** Some Apple errors say what went wrong but not what to do: a localization that already exists, an introductory offer without a country, a second build sent to beta review. For the ones seen on live accounts, the error Heimdall returns now names the fix, so the AI changes the call instead of repeating it. More are added as they turn up.
 
@@ -562,6 +563,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ### [Yayımlanmamış]
 
+- **Heimdall'ın neyi değiştirdiğini görün.** `npx -y @erayendes/asc-mcp audit`, yazma kaydını tarayıcınızda bir sayfa olarak açar: her yazma için bir satır; ne zaman, ne yapıldığı, değişiklik, nasıl onaylandığı ve Apple'ın cevabı. Uygulamaya, güne ve sonuca göre süzülebilir, başarısız yazmalar öne çıkar. Sayfa bilgisayardaki kayıttan üretilip diskten açılır; hiçbir yere bir şey gönderilmez.
 - **Apple'ın spesifikasyonu 4.6.1.** `monetization:subscription`'a dört yeni abonelik fiyatı aracı geldi: planlanan bir fiyat değişikliğinin her ülkede ne yapacağını (mevcut abonelerin eski fiyatı koruyup korumayacağını) gösteren önizleme, adede göre fiyat kademeleri ve bunların dünya geneli eşitlemesi, bir abonelik fiyatının kademeleri. Önizleme ve eşitleme yalnızca hesap yapar, bu yüzden onay istemez. Heimdall artık 790 araç içeriyor.
 - **Hatalar bir sonraki adımı söylüyor.** Apple'ın bazı hataları neyin yanlış gittiğini söylüyor ama ne yapılacağını söylemiyor: zaten var olan bir dil çevirisi, ülkesi verilmemiş bir tanıtım teklifi, beta incelemeye gönderilen ikinci bir build. Canlı hesaplarda görülenler için Heimdall'ın döndürdüğü hata artık çözümü de söylüyor; böylece yapay zekâ aynı çağrıyı tekrarlamak yerine çağrıyı düzeltiyor. Yenileri karşılaştıkça ekleniyor.
 
