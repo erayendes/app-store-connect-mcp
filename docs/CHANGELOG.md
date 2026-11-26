@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **The confirmation dialog no longer approves on Return.** It comes to the front, so a Return or a Space typed for another window could approve a change unseen. Now only a click on its button approves; Escape still cancels, and keyboard focus starts on Cancel.
+
 ### [3.3.0] — 2026-11-24
 
 - **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
@@ -554,6 +558,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Onay penceresi Enter ile onaylamıyor.** Pencere öne geldiği için başka bir pencereye yazarken basılan Enter ya da Boşluk, bir değişikliği görülmeden onaylayabiliyordu. Artık yalnızca düğmeye tıklamak onaylıyor; Esc yine iptal ediyor ve klavye odağı İptal'de başlıyor.
 
 ### [3.3.0] — 2026-11-24
 
