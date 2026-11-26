@@ -8,6 +8,10 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Errors say the next step.** Some Apple errors say what went wrong but not what to do: a localization that already exists, an introductory offer without a country, a second build sent to beta review. For the ones seen on live accounts, the error Heimdall returns now names the fix, so the AI changes the call instead of repeating it. More are added as they turn up.
+
 ### [3.3.0] — 2026-11-24
 
 - **Setup asks how careful Heimdall should be with changes.** Ask before risky changes (the default), before every change, or read-only. The answer is saved next to your key, so every profile follows it and no app config is touched; a re-run keeps it. `register --read-only` (or `--confirm`, `--confirm-risky`) sets it without the key, so your AI app can do it for you, and `asc__status` shows the mode in effect. Read-only mode used to mean adding a flag to every Heimdall entry by hand.
@@ -554,6 +558,10 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Hatalar bir sonraki adımı söylüyor.** Apple'ın bazı hataları neyin yanlış gittiğini söylüyor ama ne yapılacağını söylemiyor: zaten var olan bir dil çevirisi, ülkesi verilmemiş bir tanıtım teklifi, beta incelemeye gönderilen ikinci bir build. Canlı hesaplarda görülenler için Heimdall'ın döndürdüğü hata artık çözümü de söylüyor; böylece yapay zekâ aynı çağrıyı tekrarlamak yerine çağrıyı düzeltiyor. Yenileri karşılaştıkça ekleniyor.
 
 ### [3.3.0] — 2026-11-24
 
