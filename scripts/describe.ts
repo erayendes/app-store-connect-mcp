@@ -367,6 +367,21 @@ export const CURATED: Record<string, string> = {
     'without include=subscriptionPricePoint,territory carries no price at all. ' +
     'pricing__get_subscription_price resolves that in one call, for one country or for ' +
     'every one.',
+  'subscription_price_change_previews.create':
+    'Check a planned subscription price change before making it. Send the proposed price ' +
+    'point per country; Apple answers for each whether it is an increase existing ' +
+    'subscribers can keep (INCREASE_PRESERVABLE), a decrease or mixed change they cannot, ' +
+    'or no change. A calculation: nothing is saved.',
+  'subscription_price_tier_equalizations.create':
+    'Work out a quantity price ladder from one base price point: send the tiers (minQuantity ' +
+    'and a price point each) and Apple answers the equalized subscription price points per ' +
+    'territory. A calculation: nothing is saved.',
+  'subscription_price_tiers.list':
+    "List a subscription's quantity price tiers: each is a minimum quantity (minQuantity) and " +
+    'the price point that applies from it. Filter by subscription and territory.',
+  'subscription_prices.additional_price_tiers.list':
+    'List the quantity price tiers attached to one subscription price (one country, one start ' +
+    'date): each is a minimum quantity and its price point.',
   'subscription_price_points.equalizations.list':
     'Given one price point in a base country, list the equivalent (equalized) price ' +
     'points in every other territory — for per-country pricing aligned to one anchor price.',

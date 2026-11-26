@@ -16,7 +16,7 @@ Next to whatever you pick, setup registers **ASC-Core**: finding your apps, sear
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | App details | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Store page and reviews | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Prices and subscriptions | 186 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Prices and subscriptions | 190 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Certificates and devices | 41 | bundle, certificates, devices, profiles, wallet |
 | `testflight` | `ASC-TestFlight` | Beta testing | 82 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Notifications to your server | 9 | — |
@@ -58,7 +58,7 @@ Its media tools (`media__*`) handle every screenshot, video, image and file. Sto
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="The browser setup, step 1: each profile with its tool count and token cost; Monetization is open, with two of its sub-profiles ticked" width="560">
 
 Tick a profile in the [setup](SETUP_en.md) picker. When you move the cursor onto it, its sub-profiles open, all ticked; untick the ones you don't want.
-For example, `monetization` has 186 tools, but if you only work on subscriptions and their offers, the 65 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
+For example, `monetization` has 190 tools, but if you only work on subscriptions and their offers, the 69 tools in `monetization:subscription,subscription-offers` are enough. Either way, the server is still called `ASC-Monetization`.
 
 The tool counts on this page are what the server lists: its own tools plus `asc__status`. A server started with only some of its sub-profiles also gets `asc__call` and `asc__describe`, which reach the reads of the parts you left out.
 
@@ -74,7 +74,7 @@ A quick answer to "Which profiles should I install?" The counts include ASC-Core
 | Release manager | `distribution` + `general` | 146 |
 | ASO / marketing | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 98 |
-| Monetization | `monetization` | 202 |
+| Monetization | `monetization` | 206 |
 | Game developer | `game-center` + `distribution:version,publish` | 200 |
 | Customer support | `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build and signing | `provisioning` + `xcode-cloud` | 101 |
@@ -790,7 +790,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `apps__app_store_version_experiments_v2__list` — Lists the app's product page tests
 - `release__submit_items` — Sends a product page test to review
 
-### `monetization` · 186 tools
+### `monetization` · 190 tools
 
 **Server:** `ASC-Monetization` · **Key role:** App Manager
 
@@ -892,7 +892,7 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscription_groups__subscriptions__list` — Lists the subscriptions in a group
 - `subscriptions__promoted_purchase__get` — Shows a subscription's promotion settings on the App Store
 
-#### `monetization:subscription` · 53 tools
+#### `monetization:subscription` · 57 tools
 
 **What is inside:** Subscriptions and their groups: localizations, images, versions, prices, availability, grace period, submissions, and the price and preflight macros. Images are uploaded through ASC-Core's media tools.
 
@@ -933,7 +933,11 @@ Each profile with what it holds, when you need it, the narrowest [key role](ROLE
 - `subscription_price_points__adjusted_equalizations__list` — Lists what a subscription's price comes to per country, adjusted for the payment option
 - `subscription_price_points__equalizations__list` — Lists what a subscription's price comes to in other countries
 - `subscription_price_points__get` — Shows the details of a price a subscription can be set to
+- `subscription_price_change_previews__create` — Checks what a planned price change does in each country, without saving it
+- `subscription_price_tier_equalizations__create` — Works out a quantity price ladder in every country, without saving it
+- `subscription_price_tiers__list` — Lists a subscription's quantity price tiers
 - `subscription_prices__create` — Sets a subscription's price by country and start date
+- `subscription_prices__additional_price_tiers__list` — Lists the quantity price tiers of one subscription price
 - `subscription_prices__delete` — Deletes a subscription's scheduled price change
 - `subscription_versions__create` — Creates a new version of a subscription
 - `subscription_versions__get` — Shows a subscription version's number and review status
