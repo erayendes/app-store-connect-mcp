@@ -41,7 +41,9 @@ export const nativeConfirmFits = (text: DialogText): boolean => text.body.length
 // Heimdall icon says who asks; the bold title is the question, the context line
 // sits under it, each "Label: value" line lines up in a small grid, a line that
 // is not a fact is a dimmer note, and what the change really does closes it in
-// bold. Return approves, Escape refuses. No time limit: it stays until
+// bold. Nothing is the default: the alert jumps to the front, so a Return or a
+// Space typed for another window must not approve. Only a click approves;
+// Escape refuses. No time limit: it stays until
 // answered, or until the tool call is cancelled (below). The text arrives as
 // arguments, never spliced into the script, so a quote in an app name stays
 // text. A sixth argument renders it to a PNG instead of showing it.
@@ -70,8 +72,10 @@ function run(argv) {
   if (!icon.isNil()) alert.icon = icon;
   alert.messageText = title;
   alert.informativeText = context || 'App Store Connect';
-  alert.addButtonWithTitle(approve); // first: the default, Return
-  alert.addButtonWithTitle(refuse).keyEquivalent = '\u001b';
+  // First, so it sits on the right; made not the default just before it shows.
+  const ok = alert.addButtonWithTitle(approve);
+  const cancel = alert.addButtonWithTitle(refuse);
+  cancel.keyEquivalent = '\u001b';
   // The system's own "don't ask again" box, unticked: a series of the same write is one answer.
   if (series) {
     alert.showsSuppressionButton = true;
@@ -148,6 +152,11 @@ function run(argv) {
   }
 
   app.activateIgnoringOtherApps(true);
+  // With keyboard navigation on, Space presses the focused button; focus starts on the refusal.
+  alert.window.initialFirstResponder = cancel;
+  // NSAlert gives its first button Return unless it has a key of its own; an empty
+  // NSString counts as one (a JS '' arrives as nil and does not).
+  ok.keyEquivalent = $('');
   // JXA hands back both the modal response and NSAlertFirstButtonReturn as strings ("1000").
   if (Number(alert.runModal) !== Number($.NSAlertFirstButtonReturn)) return 'cancelled';
   return series && Number(alert.suppressionButton.state) === Number($.NSControlStateValueOn) ? 'approved-series' : 'approved';
