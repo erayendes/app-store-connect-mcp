@@ -1,7 +1,7 @@
 {
   "name": "asc-provisioning",
   "displayName": "Heimdall · Provisioning",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Code signing: bundle IDs and capabilities, certificates, devices, provisioning profiles, merchant and pass type IDs.",
   "author": {
     "name": "Eray Endes",
