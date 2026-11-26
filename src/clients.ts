@@ -152,6 +152,8 @@ export type Target =
        * edit made while it is open is lost. Its process name.
        */
       heldBy?: string;
+      /** A file in the user's project: git keeps its history, so no `.bak` beside it. */
+      inProject?: boolean;
     };
 
 export interface McpClient {
@@ -313,7 +315,7 @@ export function projectClients(root: string): McpClient[] {
   const at = (...parts: string[]): string => join(root, ...parts);
   const codexHome = at('.codex');
   const targets: Record<string, Target> = {
-    claude: { kind: 'json', label: 'Claude Code', path: at('.mcp.json'), where: '.mcp.json', key: 'mcpServers' },
+    claude: { kind: 'json', label: 'Claude Code', path: at('.mcp.json'), where: '.mcp.json', key: 'mcpServers', inProject: true },
     // `codex mcp add` writes $CODEX_HOME/config.toml, the same shape as the project file.
     codex: {
       kind: 'cli', bin: 'codex', where: '.codex/config.toml', localFile: join(codexHome, 'config.toml'),
@@ -322,9 +324,9 @@ export function projectClients(root: string): McpClient[] {
       list: ['mcp', 'list', '--json'],
       remove: (name) => ['mcp', 'remove', name],
     },
-    antigravity: { kind: 'json', path: at('.agents', 'mcp_config.json'), where: '.agents/mcp_config.json', key: 'mcpServers' },
-    vscode: { kind: 'json', path: at('.vscode', 'mcp.json'), where: '.vscode/mcp.json', key: 'servers' },
-    cursor: { kind: 'json', path: at('.cursor', 'mcp.json'), where: '.cursor/mcp.json', key: 'mcpServers' },
+    antigravity: { kind: 'json', path: at('.agents', 'mcp_config.json'), where: '.agents/mcp_config.json', key: 'mcpServers', inProject: true },
+    vscode: { kind: 'json', path: at('.vscode', 'mcp.json'), where: '.vscode/mcp.json', key: 'servers', inProject: true },
+    cursor: { kind: 'json', path: at('.cursor', 'mcp.json'), where: '.cursor/mcp.json', key: 'mcpServers', inProject: true },
   };
   return CLIENTS.filter((c) => targets[c.id]).map((c) => ({ ...c, label: c.id === 'claude' ? 'Claude Code' : c.label, targets: [targets[c.id]] }));
 }
@@ -1197,7 +1199,7 @@ function writeJsonServers(
   let doc: Record<string, unknown> = {};
   if (existsSync(t.path)) {
     doc = JSON.parse(readFileSync(t.path, 'utf8')) as Record<string, unknown>;
-    copyFileSync(t.path, `${t.path}.bak`);
+    if (!t.inProject) copyFileSync(t.path, `${t.path}.bak`);
   } else {
     mkdirSync(dirname(t.path), { recursive: true });
   }

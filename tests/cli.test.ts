@@ -411,12 +411,16 @@ describe.skipIf(!built)('register --scope=project', () => {
 
   it('writes Claude Code and Antigravity files at the repository root, not the global configs', () => {
     const { home, root, sub } = project();
+    writeFileSync(join(root, '.mcp.json'), JSON.stringify({ mcpServers: { other: { command: 'echo' } } }));
     const { out, code } = register(home, sub, ['analytics', '--clients=claude,antigravity']);
     expect(code).toBe(0);
     expect(out).toContain('Commit these files');
-    for (const file of [['.mcp.json'], ['.agents', 'mcp_config.json']]) {
-      expect(Object.keys(JSON.parse(readFileSync(join(root, ...file), 'utf8')).mcpServers)).toEqual(['ASC-Analytics', 'ASC-Core']);
-    }
+    expect(Object.keys(JSON.parse(readFileSync(join(root, '.mcp.json'), 'utf8')).mcpServers)).toEqual(['other', 'ASC-Analytics', 'ASC-Core']);
+    expect(Object.keys(JSON.parse(readFileSync(join(root, '.agents', 'mcp_config.json'), 'utf8')).mcpServers)).toEqual(['ASC-Analytics', 'ASC-Core']);
+    // Git keeps the history of a project file; a .bak would only get committed.
+    expect(existsSync(join(root, '.mcp.json.bak'))).toBe(false);
+    // The skill is global: installing it would follow Heimdall into every project.
+    expect(existsSync(join(home, '.claude', 'skills'))).toBe(false);
     expect(existsSync(join(sub, '.mcp.json'))).toBe(false);
     expect(existsSync(join(home, '.claude.json'))).toBe(false);
     expect(existsSync(join(home, '.gemini'))).toBe(false);
@@ -438,8 +442,9 @@ const name = args[2], cmd = args.slice(args.indexOf('--') + 1);
 fs.appendFileSync(file, '[mcp_servers.' + name + ']\\ncommand = ' + JSON.stringify(cmd[0]) + '\\nargs = ' + JSON.stringify(cmd.slice(1)) + '\\n\\n');
 `);
     chmodSync(bin, 0o755);
-    const { code } = register(home, root, ['analytics', '--clients=codex'], { PATH: `${home}:${process.env.PATH}` });
+    const { out, code } = register(home, root, ['analytics', '--clients=codex'], { PATH: `${home}:${process.env.PATH}` });
     expect(code).toBe(0);
+    expect(out).toContain('only in a project you have marked as trusted');
     expect(readFileSync(join(root, '.codex', 'config.toml'), 'utf8')).toContain('[mcp_servers.ASC-Analytics]');
     expect(existsSync(join(root, '.codex', 'tmp'))).toBe(false);
     rmSync(home, { recursive: true, force: true });

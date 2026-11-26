@@ -99,7 +99,7 @@ Heimdall'ı her yerde değil, tek bir projede kullanmak için o projede şunu ç
 npx -y @erayendes/asc-mcp register analytics --scope=project
 ```
 
-Bu komut deponun kök klasörüne projenin kendi dosyalarını yazar: `.mcp.json` (Claude Code), `.codex/config.toml` (Codex bunu yalnızca güvendiğiniz projelerde okur), `.agents/mcp_config.json` (Antigravity), `.cursor/mcp.json` ve `.vscode/mcp.json`. Claude Desktop ve Windsurf'te proje dosyası yoktur. Dosyaları commit'lediğinizde her worktree aynı sunuculara sahip olur. İçlerinde anahtar yoktur: projeyi anahtarsız açan bir ekip arkadaşı, `setup`'ı çalıştırmasını ya da sunucuyu kapatmasını söyleyen tek bir araç görür. Anahtarınız yine `setup`'tan gelir, her bilgisayarda bir kez.
+Bu komut deponun kök klasörüne projenin kendi dosyalarını yazar: `.mcp.json` (Claude Code bunları başlatmadan önce bir kez sorar; tüm projeler için de kayıtlı bir profilde o kayıt geçerli olur), `.codex/config.toml` (Codex bunu yalnızca güvendiğiniz projelerde okur), `.agents/mcp_config.json` (Antigravity), `.cursor/mcp.json` ve `.vscode/mcp.json`. Claude Desktop ve Windsurf'te proje dosyası yoktur. Dosyaları commit'lediğinizde her worktree aynı sunuculara sahip olur. İçlerinde anahtar yoktur: projeyi anahtarsız açan bir ekip arkadaşı, `setup`'ı çalıştırmasını ya da sunucuyu kapatmasını söyleyen tek bir araç görür. Anahtarınız yine `setup`'tan gelir, her bilgisayarda bir kez.
 
 ### Tarayıcıda ya da terminalde
 

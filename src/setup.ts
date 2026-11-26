@@ -1479,7 +1479,7 @@ function nextStep(clients: McpClient[]): string {
  * comments cannot cost anyone a working Claude setup. Returns what to do next,
  * for the caller to print.
  */
-export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): string | undefined {
+export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log, skills = true): string | undefined {
   const restart: McpClient[] = [];
   let failed = false;
   for (const { client, toAdd, toRemove, migrations, deadDeleted, explicitCore, files } of plan) {
@@ -1503,7 +1503,8 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
       .replace(/, \w+ '[^']*'( -> '[^']*')?/g, ''));
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
-    const skill = results.some((r) => r.ok)
+    // Not for a project: the skill is global and would follow Heimdall into every other project.
+    const skill = skills && results.some((r) => r.ok)
       ? listRegistered(client).size > 0 ? installSkill(client.id) : removeSkill(client.id)
       : undefined;
     if (skill && !skill.ok) problems.push(skill.message);
@@ -1625,7 +1626,7 @@ export function runRegister(specs: string[], clientIds?: string[], writeMode?: W
   if (codexHome) mkdirSync(codexHome, { recursive: true });
   let changed = false;
   try {
-    changed = registerWith(clients, specs);
+    changed = registerWith(clients, specs, root !== undefined);
   } finally {
     if (codexHome) {
       if (!hadTmp) rmSync(join(codexHome, 'tmp'), { recursive: true, force: true });
@@ -1634,12 +1635,13 @@ export function runRegister(specs: string[], clientIds?: string[], writeMode?: W
   }
   if (root && changed) {
     console.log(`\nWritten in ${root}. Commit these files so worktrees and teammates get the same servers; ` +
-      'they hold no key. A teammate without one sees a single tool that says how to set it up.');
+      'they hold no key. A teammate without one sees a single tool that says how to set it up.' +
+      (clients.some((c) => c.id === 'codex') ? '\nCodex reads .codex/config.toml only in a project you have marked as trusted.' : ''));
   }
 }
 
 /** Plans, prints and applies; true when anything was to change. */
-function registerWith(clients: McpClient[], specs: string[]): boolean {
+function registerWith(clients: McpClient[], specs: string[], project = false): boolean {
   const { perClient, stale } = registeredAcross(clients);
   const plan = planChanges(clients, specs, perClient, { prune: false, stale });
   if (!plan.length) {
@@ -1647,7 +1649,7 @@ function registerWith(clients: McpClient[], specs: string[]): boolean {
     return false;
   }
   printPlan(plan);
-  const next = applyPlan(plan);
+  const next = applyPlan(plan, console.log, !project);
   if (next) console.log(`\n${next}`);
 
   // Registration and credentials are separate steps on purpose: this one has no
