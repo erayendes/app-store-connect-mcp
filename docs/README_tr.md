@@ -27,11 +27,11 @@ Yani App Store Connect ekranlarında yapabildiğiniz işlerin neredeyse tamamın
 
 ### Heimdall
 
-Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **14 profil altında 51 alt profil ve 786 araç** içeren tek bir pakettir; her profil kendi küçük MCP sunucusu olarak çalışır.
+Apple'ın kendi OpenAPI spesifikasyonu (**App Store Connect API** ve **App Store Server API (StoreKit 2)**) kullanılarak oluşturulmuş **14 profil altında 51 alt profil ve 790 araç** içeren tek bir pakettir; her profil kendi küçük MCP sunucusu olarak çalışır.
 
-Apple'ın API'sinde 1036 işlem var. Heimdall, Apple'ın kullanımdan kaldırdığı ya da yeni sürümüyle değiştirdiği 185 tanesini ve aynı işi yapan ya da hiçbir işe yaramayan 19 tanesini dışarıda bırakıyor. 
+Apple'ın API'sinde 1040 işlem var. Heimdall, Apple'ın kullanımdan kaldırdığı ya da yeni sürümüyle değiştirdiği 185 tanesini ve aynı işi yapan ya da hiçbir işe yaramayan 19 tanesini dışarıda bırakıyor. 
 
-Kalan 832 işlemden 734'ü araca dönüşüyor. Üstüne elle yazılmış 52 araç ekleniyor. Toplam 786 araç. Geri kalan 98 işlemi, birkaç ham çağrının işini tek çağrıda yapan medya araçları karşılıyor. 
+Kalan 836 işlemden 738'ü araca dönüşüyor. Üstüne elle yazılmış 52 araç ekleniyor. Toplam 790 araç. Geri kalan 98 işlemi, birkaç ham çağrının işini tek çağrıda yapan medya araçları karşılıyor. 
 
 _Kulağa ne kadar karışık geliyor değil mi? Ama sizin bunları düşünmenize gerek yok. Sadece yapay zekâya yapmasını istediğiniz işi verin._
 
@@ -105,6 +105,8 @@ Setup iki iş yapar: anahtarınızı kaydeder ve seçtiğiniz profilleri, yine s
 Heimdall'ı yapay zekânıza kurdurmak ya da [Xcode 27'de kullanmak](SETUP_tr.md#xcode-27de-heimdall-kullanmak) için diğer tüm kurulum detayları [Kurulum](SETUP_tr.md) dokümanında.
 
 Bir şey yolunda gitmiyorsa `npx -y @erayendes/asc-mcp doctor` çalıştırın; hiçbir şeyi değiştirmeden kurulumu kontrol eder ve sıradaki adımı söyler.
+
+Heimdall'ın neyi değiştirdiğini ve onu sizin mi yapay zekânın mı onayladığını görmek için `npx -y @erayendes/asc-mcp audit` çalıştırın: yazma kaydını tarayıcınızda bir sayfa olarak açar.
 
 ### İsim ve proje hakkında
 **Heimdall**, İskandinav mitolojisinde Asgard ile **dokuz diyarı birbirine bağlayan gökkuşağı köprüsü** Bifröst'ün bekçisidir. Bu projedeki görevi, App Store Connect hesabınızı makinenize bağlayan yolları tutmak. Adını oradan alıyor.

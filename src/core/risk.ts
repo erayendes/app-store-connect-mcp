@@ -186,6 +186,15 @@ export const RULES: RiskRule[] = [
   },
 
   // --- money ------------------------------------------------------------
+  // Two POSTs that only calculate (spec 4.6.1): Apple answers what a price
+  // change would do, or a quantity ladder in every country, and keeps nothing
+  // — neither resource has a read, update or delete. Asking before one would
+  // ask before a question.
+  {
+    pattern: /^subscription_price_(change_previews|tier_equalizations)\.create$/,
+    level: 'low',
+    why: 'a calculation that changes nothing',
+  },
   {
     pattern: /price|subscription|in_app_purchase|offer|promoted_purchase|win_back/,
     level: 'revenue',

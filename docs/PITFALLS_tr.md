@@ -49,6 +49,9 @@ App Store Connect API'si çoğu zaman hata vermez; yanlış soruya doğru görü
 **409'un da iki anlamı var.** Çoğu zaman "kaynak bu durumda değiştirilemez" demektir (incelemedeki ya da yayındaki sürüm kilitlidir). Ama geçersiz bir değer de 409 (`ENTITY_ERROR`) döner.
 *Heimdall:* İkisini ayırır. Gövdeyi de göndermeden önce şemaya göre doğrular; yazım hatalı bir alan, alan yoluyla birlikte geri gelir.
 
+**Bazı hatalar neyin yanlış gittiğini söyler ama ne yapılacağını söylemez.** Oluştururken "Entity with locale: en-US already exists", tanıtım teklifinde eksik `territory`, "başka bir build zaten beta incelemede".
+*Heimdall:* Canlı hesaplarda görülen hatalarda döndürdüğü hata bir sonraki adımı da söyler: mevcut çeviriyi güncelleyin, ülkeyi verin ya da `pricing__make_offer` kullanın, süren incelemenin bitmesini bekleyin.
+
 **Production'da 401, anahtarın bozuk olduğunu göstermeyebilir.** App Store Server API, henüz App Store'da yayınlanmamış bir uygulama için Production'da 401 döner; Sandbox yayından önce de çalışır.
 *Heimdall:* Hata mesajına bunu ekler.
 

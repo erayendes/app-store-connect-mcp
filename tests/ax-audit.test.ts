@@ -52,7 +52,9 @@ const CEILING = {
    * creates left the list that way, spec 4.5.1's placement ordering among them.
    */
   // Spec 4.6 (+1): retentionOfferPrices, inline in a retention offer create like winBackOfferPrices.
-  unresolvedRefTypes: 42,
+  // Spec 4.6.1 (+1): subscriptionPriceTiers, inline in a subscription price create and update;
+  // a tier has no read of its own to name it by.
+  unresolvedRefTypes: 43,
   /** AXIS4 — path length: writes that need a lookup call first. */
   // Spec 4.5.1 (+5): update and delete for asset library images, videos and
   // placements. Changing a file means naming it, so these cannot avoid the id.
