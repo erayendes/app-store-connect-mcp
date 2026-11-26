@@ -1058,14 +1058,7 @@ export function createServer(config: ServerConfig, selection: ProfileSelection):
  * would put us back where we started.
  */
 export function createUnknownProfileServer(spec: string, reason?: string): Server {
-  const message = unknownProfileMessage(spec, reason);
-
-  const server = new Server(
-    { name: spec ? serverName(spec) : 'app-store-connect-mcp', version: VERSION },
-    { capabilities: { tools: {} } }
-  );
-
-  const tool = {
+  return createNoticeServer(spec ? serverName(spec) : 'app-store-connect-mcp', {
     name: 'asc__profile_unknown',
     description:
       (spec
@@ -1073,15 +1066,37 @@ export function createUnknownProfileServer(spec: string, reason?: string): Serve
           `not exist — renamed, removed or mistyped.`
         : `This MCP server is configured with no App Store Connect profile, which Heimdall no longer serves.`) +
       ` It carries no other tools. Call this for the current profiles and the fix to tell the user about.`,
-    inputSchema: { type: 'object' as const, properties: {} },
-    annotations: { readOnlyHint: true },
-  };
+  }, unknownProfileMessage(spec, reason));
+}
 
-  server.setRequestHandler('tools/list', async () => ({ tools: [tool] }));
+/**
+ * A profile server started on a computer with no App Store Connect key — a
+ * teammate opening a project whose `.mcp.json` registers Heimdall, most often.
+ * Same reasoning as above: one tool that says what to do, not a failed server.
+ */
+export function createSetupNeededServer(spec: string): Server {
+  return createNoticeServer(serverName(spec), {
+    name: 'asc__setup_needed',
+    description:
+      'This App Store Connect MCP server has no App Store Connect key on this computer, so it carries ' +
+      'no other tools. Call this for what to tell the user.',
+  }, SETUP_NEEDED);
+}
+
+export const SETUP_NEEDED =
+  `Heimdall has no App Store Connect key on this computer.\n\n` +
+  `To use App Store Connect here, the user runs \`npx -y ${PACKAGE} setup\` in a terminal ` +
+  `and restarts the client. Never ask them for the key or read it yourself.\n\n` +
+  `If this server came with a project they share and they do not use App Store Connect, ` +
+  `they can turn it off in the client's MCP settings (in Claude Code: /mcp).`;
+
+function createNoticeServer(serverId: string, tool: { name: string; description: string }, message: string): Server {
+  const server = new Server({ name: serverId, version: VERSION }, { capabilities: { tools: {} } });
+  const listed = { ...tool, inputSchema: { type: 'object' as const, properties: {} }, annotations: { readOnlyHint: true } };
+  server.setRequestHandler('tools/list', async () => ({ tools: [listed] }));
   server.setRequestHandler('tools/call', async () => ({
     content: [{ type: 'text' as const, text: message }],
   }));
-
   return server;
 }
 

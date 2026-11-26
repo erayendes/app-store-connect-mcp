@@ -8,6 +8,11 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
+### [Unreleased]
+
+- **Heimdall in one project only.** `register --scope=project` writes the project's own MCP files at the repository root (`.mcp.json` for Claude Code, `.codex/config.toml`, `.agents/mcp_config.json` for Antigravity, `.cursor/mcp.json`, `.vscode/mcp.json`) instead of each app's global settings. Committed, they give every worktree and teammate the same servers, and they hold no key.
+- **A server without a key says how to set one up.** A profile started on a computer with no App Store Connect key used to fail to connect, with the reason only in a log. It now starts with one tool, `asc__setup_needed`, that tells the AI to have you run `setup`, or to turn the server off if it came with a shared project you don't use it in.
+
 ### [3.4.0] — 2026-11-26
 
 - **The confirmation dialog no longer approves on Return.** It comes to the front, so a Return or a Space typed for another window could approve a change unseen. Now only a click on its button approves; Escape still cancels, and keyboard focus starts on Cancel.
@@ -563,6 +568,11 @@ A safety release. Every change is now checked on your machine, shown to you befo
 - Review tools that use your AI to read and answer customer reviews.
 
 ## Türkçe
+
+### [Yayımlanmamış]
+
+- **Heimdall yalnızca bir projede.** `register --scope=project`, her uygulamanın genel ayarları yerine deponun kök klasörüne projenin kendi MCP dosyalarını yazar (Claude Code için `.mcp.json`, `.codex/config.toml`, Antigravity için `.agents/mcp_config.json`, `.cursor/mcp.json`, `.vscode/mcp.json`). Commit'lendiğinde her worktree ve ekip arkadaşı aynı sunuculara sahip olur; dosyalarda anahtar yoktur.
+- **Anahtarı olmayan sunucu, nasıl kurulacağını söyler.** App Store Connect anahtarı olmayan bir bilgisayarda başlayan profil önceden bağlanamıyordu; nedeni yalnızca bir log'da kalıyordu. Artık tek araçla, `asc__setup_needed` ile başlıyor: yapay zekâya sizden `setup`'ı çalıştırmanızı istemesini ya da sunucu, kullanmadığınız ortak bir projeyle geldiyse onu kapatmasını söylüyor.
 
 ### [3.4.0] — 2026-11-26
 

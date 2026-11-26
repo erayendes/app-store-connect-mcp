@@ -130,6 +130,8 @@ export type Target =
       listFile?: { path: string; key: string };
       /** Local inventory for doctor; never starts a client CLI. */
       localFile?: string;
+      /** Environment for every run of the CLI — points Codex at a project's config. */
+      env?: Record<string, string>;
       remove?: (name: string) => string[];
     }
   | {
@@ -150,6 +152,8 @@ export type Target =
        * edit made while it is open is lost. Its process name.
        */
       heldBy?: string;
+      /** A file in the user's project: git keeps its history, so no `.bak` beside it. */
+      inProject?: boolean;
     };
 
 export interface McpClient {
@@ -285,6 +289,47 @@ export const CLIENTS: McpClient[] = [
     ],
   },
 ];
+
+const cliEnv = (t: Extract<Target, { kind: 'cli' }>): NodeJS.ProcessEnv | undefined =>
+  t.env && { ...process.env, ...t.env };
+
+/**
+ * The project a `register --scope project` writes into: the nearest folder
+ * up from `cwd` holding `.git` (a worktree has a `.git` file), as Codex
+ * decides it; `cwd` itself outside a repository.
+ */
+export function projectRoot(cwd = process.cwd()): string {
+  for (let dir = cwd; ; dir = dirname(dir)) {
+    if (existsSync(join(dir, '.git'))) return dir;
+    if (dirname(dir) === dir) return cwd;
+  }
+}
+
+/**
+ * Each client's project-level config in `root`, for the clients that have one.
+ * Claude Desktop and Windsurf read only their global file, so they are absent.
+ * Committed with the project, these reach every worktree and teammate; they
+ * hold no credentials, only which profiles to start.
+ */
+export function projectClients(root: string): McpClient[] {
+  const at = (...parts: string[]): string => join(root, ...parts);
+  const codexHome = at('.codex');
+  const targets: Record<string, Target> = {
+    claude: { kind: 'json', label: 'Claude Code', path: at('.mcp.json'), where: '.mcp.json', key: 'mcpServers', inProject: true },
+    // `codex mcp add` writes $CODEX_HOME/config.toml, the same shape as the project file.
+    codex: {
+      kind: 'cli', bin: 'codex', where: '.codex/config.toml', localFile: join(codexHome, 'config.toml'),
+      env: { CODEX_HOME: codexHome },
+      add: (name, spec) => ['mcp', 'add', name, '--', SERVER_COMMAND, ...serverArgs(spec)],
+      list: ['mcp', 'list', '--json'],
+      remove: (name) => ['mcp', 'remove', name],
+    },
+    antigravity: { kind: 'json', path: at('.agents', 'mcp_config.json'), where: '.agents/mcp_config.json', key: 'mcpServers', inProject: true },
+    vscode: { kind: 'json', path: at('.vscode', 'mcp.json'), where: '.vscode/mcp.json', key: 'servers', inProject: true },
+    cursor: { kind: 'json', path: at('.cursor', 'mcp.json'), where: '.cursor/mcp.json', key: 'mcpServers', inProject: true },
+  };
+  return CLIENTS.filter((c) => targets[c.id]).map((c) => ({ ...c, label: c.id === 'claude' ? 'Claude Code' : c.label, targets: [targets[c.id]] }));
+}
 
 /** The catch-all row. Has no targets, so it always prints and never writes. */
 export const OTHER_CLIENT: McpClient = { id: 'other', label: 'Other / not listed', targets: [] };
@@ -678,7 +723,7 @@ export function readRegistrations(client: McpClient, localOnly = false): Registr
         continue;
       }
       try {
-        const rows = JSON.parse(execFileSync(t.bin, t.list, { encoding: 'utf8' })) as unknown;
+        const rows = JSON.parse(execFileSync(t.bin, t.list, { encoding: 'utf8', env: cliEnv(t) })) as unknown;
         if (!Array.isArray(rows)) throw new Error('Invalid MCP list');
         for (const row of rows) {
           const name = (row as { name?: unknown })?.name;
@@ -1008,7 +1053,7 @@ export function applyToClient(
             ? [...fallback.slice(0, marker), entry.command, ...entry.args as string[]]
             : fallback;
         // JSON CLI arguments can expose non-credential env values in process listings.
-        execFileSync(t.bin, args, { stdio: 'ignore' });
+        execFileSync(t.bin, args, { stdio: 'ignore', env: cliEnv(t) });
       };
       for (const spec of adding) {
         const name = serverName(spec);
@@ -1024,7 +1069,7 @@ export function applyToClient(
             addEntry(name, spec, next);
           } catch (firstError) {
             if (!t.remove || !old?.entry || old.name !== name) throw firstError;
-            try { execFileSync(t.bin, t.remove(name), { stdio: 'ignore' }); }
+            try { execFileSync(t.bin, t.remove(name), { stdio: 'ignore', env: cliEnv(t) }); }
             catch { throw firstError; }
             try {
               addEntry(name, spec, next);
@@ -1058,7 +1103,7 @@ export function applyToClient(
           continue;
         }
         try {
-          execFileSync(t.bin, t.remove(name), { stdio: 'ignore' });
+          execFileSync(t.bin, t.remove(name), { stdio: 'ignore', env: cliEnv(t) });
           record(`rm:${name}`, removeLabel(name), true);
         } catch (err) {
           record(`rm:${name}`, removeLabel(name), false, cliError(err));
@@ -1154,7 +1199,7 @@ function writeJsonServers(
   let doc: Record<string, unknown> = {};
   if (existsSync(t.path)) {
     doc = JSON.parse(readFileSync(t.path, 'utf8')) as Record<string, unknown>;
-    copyFileSync(t.path, `${t.path}.bak`);
+    if (!t.inProject) copyFileSync(t.path, `${t.path}.bak`);
   } else {
     mkdirSync(dirname(t.path), { recursive: true });
   }

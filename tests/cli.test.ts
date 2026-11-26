@@ -387,3 +387,92 @@ fs.writeFileSync(path, JSON.stringify(doc));
     rmSync(home, { recursive: true, force: true });
   });
 });
+
+/**
+ * `register --scope=project` writes the project's own files, found from the
+ * repository root, so they can be committed and reach worktrees and teammates.
+ */
+describe.skipIf(!built)('register --scope=project', () => {
+  const fakeBin = process.platform === 'win32' ? it.skip : it;
+  const project = (): { home: string; root: string; sub: string } => {
+    const home = mkdtempSync(join(tmpdir(), 'asc-project-home-'));
+    const root = mkdtempSync(join(tmpdir(), 'asc-project-'));
+    mkdirSync(join(root, '.git'));
+    mkdirSync(join(root, 'src'));
+    return { home, root, sub: join(root, 'src') };
+  };
+  const register = (home: string, cwd: string, args: string[], extraEnv: Record<string, string> = {}): { out: string; code: number } => {
+    const res = spawnSync(process.execPath, [DIST, 'register', '--scope=project', ...args], {
+      cwd, encoding: 'utf8', timeout: 20_000,
+      env: { HOME: home, USERPROFILE: home, PATH: '/nonexistent', ...extraEnv },
+    });
+    return { out: `${res.stdout}${res.stderr}`, code: res.status ?? 1 };
+  };
+
+  it('writes Claude Code and Antigravity files at the repository root, not the global configs', () => {
+    const { home, root, sub } = project();
+    writeFileSync(join(root, '.mcp.json'), JSON.stringify({ mcpServers: { other: { command: 'echo' } } }));
+    const { out, code } = register(home, sub, ['analytics', '--clients=claude,antigravity']);
+    expect(code).toBe(0);
+    expect(out).toContain('Commit these files');
+    expect(Object.keys(JSON.parse(readFileSync(join(root, '.mcp.json'), 'utf8')).mcpServers)).toEqual(['other', 'ASC-Analytics', 'ASC-Core']);
+    expect(Object.keys(JSON.parse(readFileSync(join(root, '.agents', 'mcp_config.json'), 'utf8')).mcpServers)).toEqual(['ASC-Analytics', 'ASC-Core']);
+    // Git keeps the history of a project file; a .bak would only get committed.
+    expect(existsSync(join(root, '.mcp.json.bak'))).toBe(false);
+    // The skill is global: installing it would follow Heimdall into every project.
+    expect(existsSync(join(home, '.claude', 'skills'))).toBe(false);
+    expect(existsSync(join(sub, '.mcp.json'))).toBe(false);
+    expect(existsSync(join(home, '.claude.json'))).toBe(false);
+    expect(existsSync(join(home, '.gemini'))).toBe(false);
+    rmSync(home, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  fakeBin('writes Codex through CODEX_HOME and leaves no tmp/ behind', () => {
+    const { home, root } = project();
+    const bin = join(home, 'codex');
+    // Like the real CLI: refuses a missing CODEX_HOME and leaves tmp/ in it.
+    writeFileSync(bin, `#!/usr/bin/env node
+const fs = require('node:fs'), path = require('node:path');
+const dir = process.env.CODEX_HOME, file = path.join(dir, 'config.toml'), args = process.argv.slice(2);
+if (!fs.existsSync(dir)) process.exit(1);
+fs.mkdirSync(path.join(dir, 'tmp'), { recursive: true });
+if (args[1] === 'list') { process.stdout.write('[]'); process.exit(0); }
+const name = args[2], cmd = args.slice(args.indexOf('--') + 1);
+fs.appendFileSync(file, '[mcp_servers.' + name + ']\\ncommand = ' + JSON.stringify(cmd[0]) + '\\nargs = ' + JSON.stringify(cmd.slice(1)) + '\\n\\n');
+`);
+    chmodSync(bin, 0o755);
+    const { out, code } = register(home, root, ['analytics', '--clients=codex'], { PATH: `${home}:${process.env.PATH}` });
+    expect(code).toBe(0);
+    expect(out).toContain('only in a project you have marked as trusted');
+    expect(readFileSync(join(root, '.codex', 'config.toml'), 'utf8')).toContain('[mcp_servers.ASC-Analytics]');
+    expect(existsSync(join(root, '.codex', 'tmp'))).toBe(false);
+    rmSync(home, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('refuses a client that has no project file', () => {
+    const { home, root } = project();
+    const { out, code } = register(home, root, ['analytics', '--clients=windsurf']);
+    expect(code).toBe(1);
+    expect(out).toContain('No project config for: windsurf');
+    rmSync(home, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  });
+});
+
+/** A teammate opening a project that registers Heimdall, with no key of their own. */
+describe.skipIf(!built)('a profile with no credentials', () => {
+  it('serves the one tool that says to run setup, to a client that speaks', () => {
+    const rpc = (msg: object) => JSON.stringify({ jsonrpc: '2.0', ...msg }) + '\n';
+    const res = spawnSync(process.execPath, [DIST, 'analytics'], {
+      encoding: 'utf8', timeout: 20_000,
+      input: rpc({ id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } } }) +
+        rpc({ method: 'notifications/initialized' }) +
+        rpc({ id: 2, method: 'tools/call', params: { name: 'asc__setup_needed', arguments: {} } }),
+      env: { PATH: process.env.PATH ?? '', HOME: tmpdir(), ASC_CONFIG_DIR: mkdtempSync(join(tmpdir(), 'asc-empty-')) },
+    });
+    expect(res.stdout).toContain(`npx -y ${PACKAGE} setup`);
+    expect(res.stdout).toContain('/mcp');
+  });
+});

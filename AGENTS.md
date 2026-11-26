@@ -30,6 +30,8 @@ npx -y @erayendes/asc-mcp register monetization:subscription,subscription-offers
 
 This edits MCP client configs the user did not open — by default every client it finds, which is usually more than the one you are talking through. There is no confirmation prompt in the command, so the confirmation has to happen in the conversation. `--clients=codex,claude` limits it; `--clients` ids are `claude`, `codex`, `antigravity`, `vscode`, `cursor`, `windsurf`.
 
+`--scope=project` writes the project's own files instead, at the repository root: `.mcp.json` (Claude Code), `.codex/config.toml`, `.agents/mcp_config.json` (Antigravity), `.cursor/mcp.json`, `.vscode/mcp.json`. Use it when the user wants Heimdall in one project only; committed, the files reach every worktree and teammate, and they hold no key. Claude Desktop and Windsurf have no project file. A teammate without a key gets a server with one tool, `asc__setup_needed`, that says to run `setup` or turn the server off.
+
 What `register` changes, which is what the user is saying yes to:
 
 - **It adds** the profiles you name, and `ASC-Core` beside them.

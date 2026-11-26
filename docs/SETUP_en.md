@@ -91,6 +91,16 @@ No two AI apps share a settings file. Setup registers your profiles, with ASC-Co
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` | edited directly |
 | VS Code | your user MCP settings | `code --add-mcp` |
 
+### Only in one project
+
+To have Heimdall in one project and not everywhere, run this in that project (or ask your AI app to):
+
+```bash
+npx -y @erayendes/asc-mcp register analytics --scope=project
+```
+
+It writes the project's own files at the repository root: `.mcp.json` (Claude Code, which asks once before starting them; a profile also registered for all projects keeps that entry), `.codex/config.toml` (Codex, which reads it only in a project you trust), `.agents/mcp_config.json` (Antigravity), `.cursor/mcp.json` and `.vscode/mcp.json`. Claude Desktop and Windsurf have no project file. Commit them and every worktree has the same servers. They hold no key: a teammate who opens the project without one sees a single tool that says to run `setup` or turn the server off. Your key still comes from `setup`, once per computer.
+
 ### In the browser or the terminal
 
 `setup` first asks whether to continue in your browser or the terminal. We recommend the browser.

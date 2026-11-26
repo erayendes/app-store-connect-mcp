@@ -8,7 +8,7 @@
  */
 import { createInterface } from 'node:readline/promises';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, realpathSync, writeFileSync, chmodSync, mkdirSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync, chmodSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { writeKeychainPassword } from './core/keychain.js';
 import {
@@ -43,6 +43,8 @@ import {
   applyToClient,
   clientHint,
   isPresent,
+  projectClients,
+  projectRoot,
   listRegistered,
   manualBlock,
   serverName,
@@ -1477,7 +1479,7 @@ function nextStep(clients: McpClient[]): string {
  * comments cannot cost anyone a working Claude setup. Returns what to do next,
  * for the caller to print.
  */
-export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log): string | undefined {
+export function applyPlan(plan: ClientPlan[], log: (line: string) => void = console.log, skills = true): string | undefined {
   const restart: McpClient[] = [];
   let failed = false;
   for (const { client, toAdd, toRemove, migrations, deadDeleted, explicitCore, files } of plan) {
@@ -1501,7 +1503,8 @@ export function applyPlan(plan: ClientPlan[], log: (line: string) => void = cons
       .replace(/, \w+ '[^']*'( -> '[^']*')?/g, ''));
     // The skill follows the servers: installed once anything is registered,
     // removed when the last one goes. Only for clients that read SKILL.md.
-    const skill = results.some((r) => r.ok)
+    // Not for a project: the skill is global and would follow Heimdall into every other project.
+    const skill = skills && results.some((r) => r.ok)
       ? listRegistered(client).size > 0 ? installSkill(client.id) : removeSkill(client.id)
       : undefined;
     if (skill && !skill.ok) problems.push(skill.message);
@@ -1570,7 +1573,7 @@ const list = (names: string[]): string =>
  * `register` only ever adds: asking for one profile must not drop the six
  * someone set up last week.
  */
-export function runRegister(specs: string[], clientIds?: string[], writeMode?: WriteMode): void {
+export function runRegister(specs: string[], clientIds?: string[], writeMode?: WriteMode, scope: 'user' | 'project' = 'user'): void {
   // The same answer setup asks for, so an agent can set it without the key.
   if (writeMode) {
     const label = WRITE_MODES.find((m) => m.mode === writeMode)!.label;
@@ -1593,19 +1596,21 @@ export function runRegister(specs: string[], clientIds?: string[], writeMode?: W
   // Validate every spec before touching anything: a typo should cost nothing.
   for (const spec of specs) resolveSelection(spec);
 
-  const known = [...CLIENTS, OTHER_CLIENT];
+  const root = scope === 'project' ? projectRoot() : undefined;
+  const known = root ? projectClients(root) : [...CLIENTS, OTHER_CLIENT];
   let clients: McpClient[];
   if (clientIds?.length) {
     const unknown = clientIds.filter((id) => !known.some((c) => c.id === id));
     if (unknown.length) {
       throw new Error(
-        `Unknown client${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')}.\n` +
-          `Available: ${known.map((c) => c.id).join(', ')}`
+        `${root ? 'No project config for' : 'Unknown client'}${unknown.length > 1 ? 's' : ''}: ${unknown.join(', ')}.\n` +
+          `Available${root ? ' with --scope project' : ''}: ${known.map((c) => c.id).join(', ')}`
       );
     }
     clients = known.filter((c) => clientIds.includes(c.id));
   } else {
-    clients = CLIENTS.filter(isPresent);
+    // A project gets the files of the clients on this machine, not all five.
+    clients = root ? known.filter((c) => isPresent(CLIENTS.find((g) => g.id === c.id)!)) : CLIENTS.filter(isPresent);
     if (!clients.length) {
       throw new Error(
         'No MCP client found on this machine.\n' +
@@ -1614,14 +1619,37 @@ export function runRegister(specs: string[], clientIds?: string[], writeMode?: W
     }
   }
 
+  // Codex refuses a CODEX_HOME that does not exist and leaves a tmp/ in it.
+  const codexHome = root && clients.some((c) => c.id === 'codex') ? join(root, '.codex') : undefined;
+  const hadCodex = codexHome !== undefined && existsSync(codexHome);
+  const hadTmp = codexHome !== undefined && existsSync(join(codexHome, 'tmp'));
+  if (codexHome) mkdirSync(codexHome, { recursive: true });
+  let changed = false;
+  try {
+    changed = registerWith(clients, specs, root !== undefined);
+  } finally {
+    if (codexHome) {
+      if (!hadTmp) rmSync(join(codexHome, 'tmp'), { recursive: true, force: true });
+      if (!hadCodex && !readdirSync(codexHome).length) rmSync(codexHome, { recursive: true, force: true });
+    }
+  }
+  if (root && changed) {
+    console.log(`\nWritten in ${root}. Commit these files so worktrees and teammates get the same servers; ` +
+      'they hold no key. A teammate without one sees a single tool that says how to set it up.' +
+      (clients.some((c) => c.id === 'codex') ? '\nCodex reads .codex/config.toml only in a project you have marked as trusted.' : ''));
+  }
+}
+
+/** Plans, prints and applies; true when anything was to change. */
+function registerWith(clients: McpClient[], specs: string[], project = false): boolean {
   const { perClient, stale } = registeredAcross(clients);
   const plan = planChanges(clients, specs, perClient, { prune: false, stale });
   if (!plan.length) {
     console.log('No changes — every client already has these profiles.');
-    return;
+    return false;
   }
   printPlan(plan);
-  const next = applyPlan(plan);
+  const next = applyPlan(plan, console.log, !project);
   if (next) console.log(`\n${next}`);
 
   // Registration and credentials are separate steps on purpose: this one has no
@@ -1633,4 +1661,5 @@ export function runRegister(specs: string[], clientIds?: string[], writeMode?: W
         `authenticate until you run this yourself:\n  npx -y ${PACKAGE} setup`
     );
   }
+  return true;
 }

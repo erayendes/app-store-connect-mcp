@@ -6,6 +6,7 @@ import { loadConfig } from './core/config.js';
 import { ConfigError } from './core/errors.js';
 import {
   createServer,
+  createSetupNeededServer,
   createUnknownProfileServer,
   servedToolCount,
   VERSION,
@@ -69,6 +70,11 @@ Commands:
                          it does clear entries left over from 2.x.
                          --clients=<ids>  limit to some clients; default is
                          every one found on this machine.
+                         --scope=project  write the project's own files
+                         (.mcp.json, .codex/config.toml, .agents/, .cursor/,
+                         .vscode/) instead of each client's global config.
+                         Commit them: worktrees and teammates get the same
+                         servers, and no key is in them.
                          --read-only | --confirm | --confirm-risky  how careful
                          every profile is with changes (setup asks the same);
                          saved next to the key, so it needs setup run once.
@@ -153,7 +159,9 @@ async function main(): Promise<void> {
         : argv.includes('--confirm') ? 'all'
         : argv.includes('--confirm-risky') ? 'strong'
         : undefined;
-      runRegister(positional.slice(1), clients, writeMode);
+      const scope = argv.find((a) => a.startsWith('--scope='))?.slice('--scope='.length) ?? 'user';
+      if (scope !== 'user' && scope !== 'project') throw new Error(`--scope is "user" or "project", not "${scope}".`);
+      runRegister(positional.slice(1), clients, writeMode, scope);
     } catch (err) {
       console.error(`\n${(err as Error).message}\n`);
       process.exit(1);
@@ -198,8 +206,13 @@ async function main(): Promise<void> {
     if (selection.defaultReadOnly) config.readOnly = true;
   } catch (err) {
     if (err instanceof ConfigError) {
-      console.error(`\nConfiguration error\n\n${err.message}\n`);
-      process.exit(1);
+      if (process.stdin.isTTY) {
+        console.error(`\nConfiguration error\n\n${err.message}\n`);
+        process.exit(1);
+      }
+      // An MCP client on a computer with no key: say how to set it up, not "failed".
+      serveNotice(serverName(selection.profile.name), err.message, () => createSetupNeededServer(selection.profile.name));
+      return;
     }
     throw err;
   }
@@ -248,7 +261,12 @@ export const TOMBSTONE_WAIT_MS = 10_000;
  * was not one after all, so say it on stderr and fail like the terminal path.
  */
 function serveUnknownProfile(spec: string, reason: string): void {
-  const message = unknownProfileMessage(spec, reason);
+  serveNotice(spec ? serverName(spec) : 'asc-mcp', `${spec ? `unknown profile "${spec}". ` : ''}${reason}`,
+    () => createUnknownProfileServer(spec, reason), unknownProfileMessage(spec, reason));
+}
+
+/** Serve a one-tool notice server; with no client speaking, print the notice and fail. */
+function serveNotice(name: string, reason: string, create: () => ReturnType<typeof createServer>, message = reason): void {
   let spoken = false;
   const giveUp = () => {
     if (spoken) return;
@@ -262,9 +280,9 @@ function serveUnknownProfile(spec: string, reason: string): void {
   serveStdio(() => {
     spoken = true;
     clearTimeout(timer);
-    return createUnknownProfileServer(spec, reason);
+    return create();
   });
-  console.error(`${spec ? serverName(spec) : 'asc-mcp'} v${VERSION}: ${spec ? `unknown profile "${spec}". ` : ''}${reason.split('\n')[0]}`);
+  console.error(`${name} v${VERSION}: ${reason.split('\n')[0]}`);
 }
 
 /**
