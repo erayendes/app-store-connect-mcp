@@ -6,7 +6,7 @@
         "--prefer-offline",
         "--no-audit",
         "-y",
-        "@erayendes/asc-mcp@3.3.0",
+        "@erayendes/asc-mcp@3.4.0",
         "testflight",
         "--with-core"
       ]

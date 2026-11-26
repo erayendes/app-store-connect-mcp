@@ -8,7 +8,7 @@ Her sürümde neyin değiştiği, en yenisi en üstte. Sürüm numaraları [Sema
 
 ## English
 
-### [Unreleased]
+### [3.4.0] — 2026-11-26
 
 - **The confirmation dialog no longer approves on Return.** It comes to the front, so a Return or a Space typed for another window could approve a change unseen. Now only a click on its button approves; Escape still cancels, and keyboard focus starts on Cancel.
 - **Sending a TestFlight build out takes fewer calls and survives a dropped one.** `testflight__assign_build_to_groups` also sets the build's What to Test text per language and submits it for beta app review when asked, under the one confirmation it already had. Each step checks what is already done, so calling it again after a dropped call finishes the rest instead of repeating it, and the answer reports every step.
@@ -564,7 +564,7 @@ A safety release. Every change is now checked on your machine, shown to you befo
 
 ## Türkçe
 
-### [Yayımlanmamış]
+### [3.4.0] — 2026-11-26
 
 - **Onay penceresi Enter ile onaylamıyor.** Pencere öne geldiği için başka bir pencereye yazarken basılan Enter ya da Boşluk, bir değişikliği görülmeden onaylayabiliyordu. Artık yalnızca düğmeye tıklamak onaylıyor; Esc yine iptal ediyor ve klavye odağı İptal'de başlıyor.
 - **TestFlight build'ini göndermek daha az çağrı sürüyor ve yarıda kalan bir çağrıdan sonra da tamamlanıyor.** `testflight__assign_build_to_groups`, istenirse build'in What to Test metnini dil dil yazıyor ve build'i beta app review'a gönderiyor; hepsi zaten sorduğu tek onayla. Her adım önce neyin yapıldığına bakıyor: yarıda kalan bir çağrıdan sonra yeniden çağırmak, yapılanları tekrarlamadan kalanı bitiriyor ve yanıt her adımı tek tek bildiriyor.

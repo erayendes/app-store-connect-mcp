@@ -1,7 +1,7 @@
 {
   "name": "asc-access",
   "displayName": "Heimdall · Access",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Your App Store Connect team: members and roles, invitations, sandbox test accounts.",
   "author": {
     "name": "Eray Endes",
