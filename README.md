@@ -27,9 +27,9 @@ Almost anything you'd click through App Store Connect to do, you can now just as
 
 ### Heimdall
 
-One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 51 sub-profiles, 786 tools.** Each profile runs as its own small MCP server.
+One package for the **App Store Connect API** and the **App Store Server API (StoreKit 2)**, built from Apple's own OpenAPI specification. **14 profiles, 51 sub-profiles, 790 tools.** Each profile runs as its own small MCP server.
 
-Apple's specification lists 1036 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 832, 734 become tools, and 52 hand-written ones join them: 786 tools in all. The other 98 are covered by the media tools, which do in one call what took several raw ones.
+Apple's specification lists 1040 API operations. Heimdall leaves out the 185 that Apple has deprecated or replaced with a newer version, and 19 that repeat another operation from the other side or that no task needs. Of the remaining 836, 738 become tools, and 52 hand-written ones join them: 790 tools in all. The other 98 are covered by the media tools, which do in one call what took several raw ones.
 
 _Sounds complicated, doesn't it? You don't have to think about any of it. Just tell your AI the job you want done._
 
@@ -102,6 +102,8 @@ Your AI can do the second half for you with `register`; the key is always yours 
 Want your AI to install it for you, or to use it in [Xcode 27](docs/SETUP_en.md#using-heimdall-in-xcode-27)? Everything else is in [Setup](docs/SETUP_en.md).
 
 If something isn't working, run `npx -y @erayendes/asc-mcp doctor`; it checks your setup without changing anything and tells you the next step.
+
+To see what Heimdall changed, and whether you or the AI approved it, run `npx -y @erayendes/asc-mcp audit`: it opens the write log as a page in your browser.
 
 ### About the name and the project
 In Norse mythology, **Heimdall** keeps watch over Bifröst, **the rainbow bridge that links Asgard to the nine realms**. Here, his job is to guard the road between your App Store Connect account and your machine. That's where the name comes from.

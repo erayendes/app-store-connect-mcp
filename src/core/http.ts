@@ -442,11 +442,47 @@ export const ENTITY_HINT =
   'App Store Connect refused a value in the request, not the resource state: the text above ' +
   'names the attribute or relationship. Fix that value; the issues[] entries carry the details.';
 
+/**
+ * What to do about an Apple error whose words say what went wrong but not the
+ * way out, so the model fixes the call instead of retrying it or giving up.
+ * Matched on Apple's own title and detail, which name the case more reliably
+ * than the code does. Every entry was seen on a live account and has a test
+ * with that error's words; add one the same way. Anything unmatched keeps the
+ * status hint.
+ */
+export const REMEDIES: ReadonlyArray<{ match: RegExp; remedy: string }> = [
+  {
+    // app_store_version_localizations__create: "Entity with locale: en-US already exists. Try updating."
+    // beta_build_localizations__create: "There is an entity with same 'locale'."
+    match: /locale[^.]*already exists|entity with same 'locale'/i,
+    remedy:
+      'That language already has a localization here. List the existing localizations, take the ' +
+      'id of the one for this locale and update it, instead of creating a second one.',
+  },
+  {
+    // subscription_introductory_offers__create without a country.
+    match: /missing a required relationship[^']*'territory'/i,
+    remedy:
+      'This is set one country at a time: add relationships.territory (e.g. USA). To set the ' +
+      'offer in every country from one price, use pricing__make_offer.',
+  },
+  {
+    // beta_app_review_submissions__create while another build of the version is in review.
+    match: /already in beta review/i,
+    remedy:
+      'Only one build per version can be in TestFlight beta review at a time. Wait until that ' +
+      'review finishes, then submit this build; or give testers the build already in review.',
+  },
+];
+
 /** The hint for an Apple error: by status, unless the error codes say the status hint is wrong. */
 export function hintFor(status: number, errors: AscApiErrorDetail[]): string | undefined {
   // The agreement 403 is answered before the generic one: same status, and
   // the generic text would send the reader to the roles that cannot fix it.
   if (errors.some((e) => String(e.code ?? '').startsWith('FORBIDDEN.REQUIRED_AGREEMENTS'))) return AGREEMENT_HINT;
+  const said = errors.map((e) => `${e.title ?? ''} ${e.detail ?? ''}`).join(' ');
+  const known = REMEDIES.find((r) => r.match.test(said));
+  if (known) return known.remedy;
   // Apple answers an invalid value with 409 too (ENTITY_ERROR); the locked-state
   // hint sent readers of those to check a version that was never the problem.
   if (status === 409 && errors.length > 0 && errors.every((e) => String(e.code ?? '').startsWith('ENTITY_ERROR'))) return ENTITY_HINT;

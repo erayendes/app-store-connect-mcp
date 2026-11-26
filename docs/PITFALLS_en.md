@@ -49,6 +49,9 @@ The App Store Connect API rarely fails loudly; more often it gives a plausible a
 **So does a 409.** Usually it means "this resource cannot change in its current state" (a version in review or already released is locked). An invalid value also comes back as 409 (`ENTITY_ERROR`).
 *Heimdall:* It tells the two apart. It also validates the body against the schema before sending, so a mistyped field comes back with its path.
 
+**Some errors say what went wrong but not what to do.** "Entity with locale: en-US already exists" on a create, a missing `territory` on an introductory offer, "another build is already in beta review".
+*Heimdall:* For the errors seen on live accounts, the error it returns says the next step: update the existing localization, pass the country or use `pricing__make_offer`, wait for the review in progress.
+
 **A 401 in Production may not mean a broken key.** The App Store Server API answers 401 in Production for an app with no App Store release yet; Sandbox works before release.
 *Heimdall:* It adds that to the error message.
 

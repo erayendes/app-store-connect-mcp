@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Codex, Cursor, Antigravity, and 
 
 ## What this is
 
-Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 786 tools across 14 profiles: 734 generated from Apple's 1036 operations (the 185 that Apple deprecated or replaced are not built) and 52 hand-written.
+Heimdall is an MCP server for the App Store Connect API and the App Store Server API (StoreKit 2). It is published to npm as `@erayendes/asc-mcp` and runs via `npx` — there is **nothing to clone, build, or `npm install`** to use it. It is client-agnostic: standard MCP over stdio. It serves 790 tools across 14 profiles: 738 generated from Apple's 1040 operations (the 185 that Apple deprecated or replaced are not built) and 52 hand-written.
 
 Profiles are cut by the work the user does: `general`, `distribution`, `monetization`, `marketing`, `testflight`, `access` and so on. App lookup, `asc__search_tools`, `asc__discover_domains`, `asc__account_status` and the `media__*` tools are in none of them — they live in **ASC-Core** (`core`), a server of its own that `register` and `setup` add next to the profiles. A profile server also carries them when started with `--with-core`, as the Xcode plug-ins are. Every server, ASC-Core or not, has its own `asc__status`. If app lookup or search is missing from the session, ASC-Core is not registered for this client; the fix is `register` or `setup`, not another profile.
 
@@ -20,7 +20,7 @@ The install is two steps and they are not both yours. **You register. The user h
 
 Ask what the user works on. If they have not said, `analytics`, `marketing` and `general` are a sensible default. Each profile is a small scoped server; the table, down to every tool, is in [PROFILES_en.md](docs/PROFILES_en.md).
 
-A big profile takes a colon and a list of its sub-profiles — `monetization:subscription,subscription-offers` is 65 tools where `monetization` is 186. Worth suggesting for `monetization`, `game-center`, `distribution`, `testflight`, `general` and `marketing`. The server is still called `ASC-Monetization`.
+A big profile takes a colon and a list of its sub-profiles — `monetization:subscription,subscription-offers` is 69 tools where `monetization` is 190. Worth suggesting for `monetization`, `game-center`, `distribution`, `testflight`, `general` and `marketing`. The server is still called `ASC-Monetization`.
 
 **Say what you are about to do and wait for a yes**, then run:
 
@@ -68,7 +68,7 @@ If the user would rather do the whole thing themselves, `setup` alone covers bot
 
 ## While helping the user
 
-- **Finding a tool that isn't loaded:** call `asc__search_tools` or `asc__discover_domains`, both on ASC-Core. Search covers the 832 operations Heimdall builds, plus the StoreKit tools and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names the profile that owns a tool and prints the exact command to add it. Do not conclude an operation does not exist because it is not in this session's list.
+- **Finding a tool that isn't loaded:** call `asc__search_tools` or `asc__discover_domains`, both on ASC-Core. Search covers the 836 operations Heimdall builds, plus the StoreKit tools and Heimdall's macros (not the `reviews_ai__*` tools); under `--read-only` it leaves out the writes. It names the profile that owns a tool and prints the exact command to add it. Do not conclude an operation does not exist because it is not in this session's list.
 - **There is no way to add tools mid-session.** Some clients never show a changed tool list (the Claude desktop app's Code tab among them), and the tools do not appear next turn either. On a server started with only some of its sub-profiles, reads from the rest work at once through `asc__call`. For the tools themselves, run the `register` command the server's reply names — e.g. `npx -y @erayendes/asc-mcp register testflight:groups,testers` — after the user says yes, then ask them to restart their MCP client.
 - **When a 403 comes back,** call `asc__status` with `check_capabilities: true` before blaming the key: it probes `reports`, `metadata`, `reviews`, `userManagement` and `provisioning`, each `ok` / `forbidden` / `unauthorized` / `agreement` / `unknown`. `agreement` is an unsigned or expired agreement that only the Account Holder can clear, and no key fixes it; `unknown` is an inconclusive probe, not a denial. App Manager covers almost all day-to-day work; Admin is needed for user management and for the first-ever request of an analytics report type.
 - **Territories are ISO-3166 alpha-3:** `USA`, `TUR`, `DEU`. Heimdall turns `US`, `TR`, `DE` into them before calling Apple, which would answer the two-letter form with 200 and an empty list that reads as "no data here".
@@ -104,7 +104,7 @@ Several questions have a one-call answer that replaces walking a chain of resour
 | checking subscription catalog gaps before review | `preflight__check_subscription` — one subscription or up to 20 in a group; `monetization:subscription`, read-only, capped, no approval prediction |
 | open a submission, add the version, hand it over | `release__submit` (`distribution:publish`) |
 | the same for an in-app purchase, subscription, retention message, in-app event, custom product page, product page test, Game Center item or background asset | `release__submit_items` — on each of those sub-profiles; `with_app_version: true` when the item has to go in with the app's editable version, as an app's first in-app purchase or subscription does |
-| resolve a build and assign it to several beta groups | `testflight__assign_build_to_groups` (`testflight:groups`); give the build number or ID |
+| resolve a build, set What to Test, assign it to several beta groups, submit beta review | `testflight__assign_build_to_groups` (`testflight:groups`); give the build number or ID; call again after a dropped call and it finishes the rest |
 | polling a freshly uploaded build until it finishes processing | `build__wait_for_processing` (`testflight:test-builds`) — 1 minute by default, up to 15 when asked, then says to call again |
 | comparing store text across languages by eye | `metadata_ai__audit_localizations` (`distribution:version`) |
 | drafting the store text for the languages asked for | `metadata_ai__draft_translation` (`distribution:version`) — your own model drafts it |

@@ -73,6 +73,10 @@ Commands:
                          every profile is with changes (setup asks the same);
                          saved next to the key, so it needs setup run once.
                          Works without a profile too.
+  audit                  Open the log of every write Heimdall was asked to make
+                         (when, what, asked how, Apple's answer) as a page in
+                         your browser. Read from the local log; nothing is sent.
+                         --no-open  only write the page and print its path
   doctor                 Report local versions, client registrations, ASC-Core
                          and credential availability. Read-only; no network
                          calls or key contents. Use asc__status for a live check.
@@ -121,6 +125,12 @@ async function main(): Promise<void> {
   // A 2.x config may still pass these; say so rather than start without them.
   for (const flag of ['--domains', '--include-deprecated']) {
     if (argv.some((a) => a === flag || a.startsWith(`${flag}=`))) console.error(`${flag} was removed in 3.0 and is ignored.`);
+  }
+
+  if (positional[0] === 'audit') {
+    const { runAudit } = await import('./audit-view.js');
+    runAudit({ open: !argv.includes('--no-open') });
+    return;
   }
 
   if (positional[0] === 'doctor') {

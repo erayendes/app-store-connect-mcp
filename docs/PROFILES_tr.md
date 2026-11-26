@@ -16,7 +16,7 @@ Setup, seçtiklerinizin yanına **ASC-Core**'u da kaydeder: uygulamalarınızı 
 | `game-center` | `ASC-GameCenter` | Game Center | 149 | achievements, activities, challenges, groups, leaderboards, matchmaking, setup |
 | `general` | `ASC-General` | Uygulama bilgileri | 49 | android-link, app-accessibility, app-availabilities, app-categories, app-information, app-tags, legal |
 | `marketing` | `ASC-Marketing` | Mağaza sayfası ve yorumlar | 61 | app-events, custom-pp, customer-reviews, nominations, pp-optimization |
-| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 186 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
+| `monetization` | `ASC-Monetization` | Fiyatlar ve abonelikler | 190 | app-price, iap-offers, in-app-purchases, plan-promote, subscription, subscription-codes, subscription-offers, subscription-retention, subscription-win-back, transactions |
 | `provisioning` | `ASC-Provisioning` | Sertifikalar ve cihazlar | 41 | bundle, certificates, devices, profiles, wallet |
 | `testflight` | `ASC-TestFlight` | Beta testi | 82 | external-testing, feedbacks, groups, test-builds, testers |
 | `webhooks` | `ASC-Webhooks` | Sunucunuza bildirimler | 9 | — |
@@ -58,7 +58,7 @@ Medya araçları (`media__*`) her ekran görüntüsünü, videoyu, görseli ve d
 <img src="https://raw.githubusercontent.com/erayendes/app-store-connect-mcp/main/assets/setup-web-step1.png" alt="Tarayıcıda kurulum, 1. adım: her profil araç sayısı ve token maliyetiyle; Monetization açık, iki alt profili seçili" width="560">
 
 [Kurulum](SETUP_tr.md) seçicisinde bir profili işaretleyin; imleci üstüne getirdiğinizde alt profillerin hepsi işaretli olarak açılır, istemediğinizi kaldırın.
-Örneğin `monetization` 186 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 65 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
+Örneğin `monetization` 190 araç; ama yalnızca abonelikler ve teklifleriyle uğraşıyorsanız 69 araçlık `monetization:subscription,subscription-offers` yeterlidir. Her iki durumda da sunucunun adı `ASC-Monetization` kalır.
 
 Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçları ve `asc__status`. Alt profillerinin yalnızca bir kısmıyla başlatılan bir sunucuya ayrıca `asc__call` ve `asc__describe` gelir; bunlar dışarıda bıraktığınız kısımlardaki okumalara ulaşır.
 
@@ -74,7 +74,7 @@ Bu sayfadaki araç sayıları, sunucunun listelediği araçlardır: kendi araçl
 | Yayın yöneticisi | `distribution` + `general` | 146 |
 | ASO / pazarlama | `marketing` + `analytics` | 96 |
 | QA / TestFlight | `testflight` | 98 |
-| Monetizasyon | `monetization` | 202 |
+| Monetizasyon | `monetization` | 206 |
 | Oyun geliştirici | `game-center` + `distribution:version,publish` | 200 |
 | Müşteri desteği | `marketing:customer-reviews` + `monetization:transactions` | 51 |
 | Build ve imzalama | `provisioning` + `xcode-cloud` | 101 |
@@ -790,7 +790,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `apps__app_store_version_experiments_v2__list` — Uygulamanın ürün sayfası testlerini listeler
 - `release__submit_items` — Ürün sayfası testini incelemeye gönderir
 
-### `monetization` · 186 araç
+### `monetization` · 190 araç
 
 **Sunucu:** `ASC-Monetization` · **Anahtar rolü:** App Manager
 
@@ -892,7 +892,7 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscription_groups__subscriptions__list` — Bir gruptaki abonelikleri listeler
 - `subscriptions__promoted_purchase__get` — Aboneliğin App Store'daki tanıtım ayarlarını gösterir
 
-#### `monetization:subscription` · 53 araç
+#### `monetization:subscription` · 57 araç
 
 **İçinde ne var:** Abonelikler ve grupları: diller, görseller, sürümler, fiyatlar, satış ülkeleri, ödeme aksadığında süre tanıma, gönderim, fiyat ve ön kontrol makroları. Görseller ASC-Core'un medya araçlarıyla yüklenir.
 
@@ -933,7 +933,11 @@ Her profilin içinde ne olduğu, ne zaman gerektiği, onu karşılayan en dar [a
 - `subscription_price_points__adjusted_equalizations__list` — Abonelik fiyatının ödeme biçimine uyarlanmış ülke karşılıklarını listeler
 - `subscription_price_points__equalizations__list` — Abonelik fiyatının diğer ülkelerdeki karşılıklarını listeler
 - `subscription_price_points__get` — Abonelik için seçilebilir bir fiyatın ayrıntılarını gösterir
+- `subscription_price_change_previews__create` — Planlanan fiyat değişikliğinin her ülkede ne yapacağını kaydetmeden gösterir
+- `subscription_price_tier_equalizations__create` — Adede göre fiyat kademelerini her ülke için kaydetmeden hesaplar
+- `subscription_price_tiers__list` — Aboneliğin adede göre fiyat kademelerini listeler
 - `subscription_prices__create` — Abonelik için ülkeye ve başlangıç tarihine göre fiyat belirler
+- `subscription_prices__additional_price_tiers__list` — Bir abonelik fiyatının adede göre kademelerini listeler
 - `subscription_prices__delete` — Aboneliğin planlanmış fiyat değişikliğini siler
 - `subscription_versions__create` — Abonelik için yeni sürüm oluşturur
 - `subscription_versions__get` — Abonelik sürümünün numarasını ve inceleme durumunu gösterir
